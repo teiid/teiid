@@ -1,0 +1,48 @@
+testGetChildrenSortOf
+
+
+           {         
+	add a/b/foo a/fakeFile "Oct 3, 2003"
+	getChildren a 0
+	result [
+		??
+	]
+}
+
+testGetChildren{ //
+	add a/b/foo a/fakeFile "Oct 3, 2003"
+	getChildren a 1
+	result [
+		??
+	]
+}
+
+testWithBracesInScript
+{ 
+	run this}
+	how about this{
+	and this {...}
+	and {{{}}}
+	and this }}}{{{
+	and [ { } ]
+}
+
+invalidScript{cannot have commands on this line
+	closing brace must be on a line by itself}
+}
+
+testGetChildrenRecursive {
+	add a/b/foo a/fakeFile "Oct 3, 2003"
+	result [
+a
+b
+c
+]
+	getChildren a 2
+	result [
+x
+y
+z
+	]
+}
+

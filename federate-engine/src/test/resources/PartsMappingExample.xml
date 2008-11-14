@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<xmlMapping>
+    <mappingNode>
+    	<name>Catalogs</name>
+    	<minOccurs>1</minOccurs>
+    	<maxOccurs>1</maxOccurs>
+        <namespaceDeclaration>
+        	<prefix>xsi</prefix>
+        	<uri>http://www.w3.org/2001/XMLSchema-instance</uri>
+        </namespaceDeclaration>
+        <namespaceDeclaration>
+        	<prefix>fake</prefix>
+        	<uri>http://www.fake.org/fake</uri>
+        </namespaceDeclaration>
+        <namespaceDeclaration>
+        	<uri>http://www.default.org/default</uri>
+        </namespaceDeclaration>
+
+	    <mappingNode>
+	    	<name>Catalog</name>
+	    	<minOccurs>1</minOccurs>
+	    	<maxOccurs>1</maxOccurs>
+
+		    <mappingNode>
+		    	<name>Items</name>
+		    	<minOccurs>1</minOccurs>
+		    	<maxOccurs>1</maxOccurs>
+
+			    <mappingNode>
+			    	<name>Item</name>
+			    	<minOccurs>0</minOccurs>
+			    	<maxOccurs>unbounded</maxOccurs>
+			        <source>xmltest.rs1</source>
+
+				    <mappingNode>
+				    	<name>ItemID</name>
+				    	<nodeType>attribute</nodeType>
+				    	<minOccurs>0</minOccurs>
+				    	<maxOccurs>1</maxOccurs>
+				        <symbol>xmltest.rs1.itemNum</symbol>
+				    </mappingNode>
+				
+				    <mappingNode>
+				    	<name>Name</name>
+				    	<nodeType>element</nodeType>
+				    	<minOccurs>0</minOccurs>
+				    	<maxOccurs>1</maxOccurs>
+				        <symbol>xmltest.rs1.itemName</symbol>
+
+					    <mappingNode>
+					    	<name>nil</name>
+					    	<namespace>xsi</namespace>
+					    	<nodeType>attribute</nodeType>
+					    	<minOccurs>0</minOccurs>
+					    	<maxOccurs>1</maxOccurs>
+					        <criteria>xmltest.rs1.itemName is null</criteria>
+					        <default>true</default>
+					    </mappingNode>
+
+				    </mappingNode>
+
+				    <mappingNode>
+				    	<name>Quantity</name>
+				    	<nodeType>element</nodeType>
+				    	<minOccurs>0</minOccurs>
+				    	<maxOccurs>1</maxOccurs>
+				        <symbol>xmltest.rs1.itemQuantity</symbol>
+				    </mappingNode>
+			    </mappingNode>
+		    </mappingNode>
+	    </mappingNode>
+    </mappingNode>
+</xmlMapping>

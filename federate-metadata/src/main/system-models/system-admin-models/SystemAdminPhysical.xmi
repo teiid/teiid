@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:380d31c0-ccad-1f9e-a409-c737fc62362b" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" supportsDistinct="false" supportsJoin="false" supportsOrderBy="false" supportsOuterJoin="false" supportsWhereAll="false" ProducerName="MetaMatrix" ProducerVersion="5.0">
+    <modelImports xmi:uuid="mmuuid:64c14941-ccad-1f9e-a409-c737fc62362b" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance"/>
+    <modelImports xmi:uuid="mmuuid:64c14940-ccad-1f9e-a409-c737fc62362b" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema"/>
+  </mmcore:ModelAnnotation>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:83739001-ccad-1f9e-a409-c737fc62362b">
+    <diagram xmi:uuid="mmuuid:83739000-ccad-1f9e-a409-c737fc62362b" type="packageDiagramType" target="mmuuid/380d31c0-ccad-1f9e-a409-c737fc62362b">
+      <diagramEntity xmi:uuid="mmuuid:3cc37687-338d-1fac-a306-fc34788b24ae" name="getGroups" modelObject="mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc37689-338d-1fac-a306-fc34788b24ae" modelObject="mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc3768b-338d-1fac-a306-fc34788b24ae" modelObject="mmuuid/03f5d6b7-338d-1fac-a306-fc34788b24ae"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc3768c-338d-1fac-a306-fc34788b24ae" modelObject="mmuuid/03f5d6bd-338d-1fac-a306-fc34788b24ae"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc3768d-338d-1fac-a306-fc34788b24ae" modelObject="mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc3768f-338d-1fac-a306-fc34788b24ae" modelObject="mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae" xPosition="388" yPosition="97"/>
+      <diagramEntity xmi:uuid="mmuuid:3cc37694-338d-1fac-a306-fc34788b24ae" name="getRolesForUser" modelObject="mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae" xPosition="412" yPosition="27"/>
+      <diagramEntity xmi:uuid="mmuuid:7a839080-1b7f-1fc9-9c07-ad52dc529b5e" name="getGroupsForUser" modelObject="mmuuid/66028a80-1b7f-1fc9-9c07-ad52dc529b5e" xPosition="40" yPosition="30"/>
+      <diagramEntity xmi:uuid="mmuuid:662ff480-b8ae-1fc9-8d3b-c7725b29f3ce" modelObject="mmuuid/653bd080-b8ae-1fc9-8d3b-c7725b29f3ce" xPosition="60" yPosition="40"/>
+      <diagramEntity xmi:uuid="mmuuid:677c8d80-e55b-1fd6-ab08-ea702498499b" modelObject="mmuuid/fa877c80-e55a-1fd6-ab08-ea702498499b"/>
+    </diagram>
+  </diagram:DiagramContainer>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6a4-338d-1fac-a306-fc34788b24ae" name="getGroups" nameInSource="">
+    <parameters xmi:uuid="mmuuid:03f5d6a6-338d-1fac-a306-fc34788b24ae" name="groupIdentifier" nameInSource="arg1" nativeType="java.lang.String" length="32" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:0c4d3401-33e7-1fac-a306-fc34788b24ae" name="Groups">
+      <columns xmi:uuid="mmuuid:c1c47140-33f6-1fac-a306-fc34788b24ae" name="Name" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:c1c47141-33f6-1fac-a306-fc34788b24ae" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6aa-338d-1fac-a306-fc34788b24ae" name="getHosts" nameInSource="getHosts">
+    <parameters xmi:uuid="mmuuid:03f5d6ae-338d-1fac-a306-fc34788b24ae" name="hostname" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="100" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:03f5d6ab-338d-1fac-a306-fc34788b24ae" name="Hosts">
+      <columns xmi:uuid="mmuuid:03f5d6ad-338d-1fac-a306-fc34788b24ae" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:03f5d6ac-338d-1fac-a306-fc34788b24ae" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6b7-338d-1fac-a306-fc34788b24ae" name="getProcesses" nameInSource="getProcesses">
+    <parameters xmi:uuid="mmuuid:03f5d6bc-338d-1fac-a306-fc34788b24ae" name="vmname" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="100" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:03f5d6b8-338d-1fac-a306-fc34788b24ae" name="Processes">
+      <columns xmi:uuid="mmuuid:03f5d6bb-338d-1fac-a306-fc34788b24ae" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:03f5d6b9-338d-1fac-a306-fc34788b24ae" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:03f5d6ba-338d-1fac-a306-fc34788b24ae" name="HostIdentifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6bd-338d-1fac-a306-fc34788b24ae" name="getQueueWorkerPools" nameInSource="getQueueWorkerPools">
+    <parameters xmi:uuid="mmuuid:03f5d6be-338d-1fac-a306-fc34788b24ae" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="100" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:aa521041-7a7d-1fb0-8b20-c6a3623f44ab" name="QueueWorkerPool">
+      <columns xmi:uuid="mmuuid:051b3200-7a82-1fb0-8b20-c6a3623f44ab" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:051b3201-7a82-1fb0-8b20-c6a3623f44ab" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b55c6ec0-7a84-1fb0-8b20-c6a3623f44ab" name="Enqueues" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:dedf0980-7a91-1fb0-8b20-c6a3623f44ab" name="Dequeues" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:f0ffb480-7a95-1fb0-8b20-c6a3623f44ab" name="Threads" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b85d7940-7bc2-1fb0-8b20-c6a3623f44ab" name="TotalDequeues" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:220d4d80-7bc7-1fb0-8b20-c6a3623f44ab" name="TotalEnqueues" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:ac57b080-7bcb-1fb0-8b20-c6a3623f44ab" name="TotalHighwaterMark" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6c0-338d-1fac-a306-fc34788b24ae" name="getRequests" nameInSource="getRequests">
+    <parameters xmi:uuid="mmuuid:acf99e80-b8c1-1fc9-8d3b-c7725b29f3ce" name="identifier" nameInSource="" nativeType="java.lang.String" length="100" precision="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:03f5d6c2-338d-1fac-a306-fc34788b24ae" name="Requests">
+      <columns xmi:uuid="mmuuid:03f5d6c4-338d-1fac-a306-fc34788b24ae" name="Name" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:03f5d6c3-338d-1fac-a306-fc34788b24ae" name="Identifier" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:03f5d6c5-338d-1fac-a306-fc34788b24ae" name="ConnectorBindingName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:ebb23400-347e-1fac-a306-fc34788b24ae" name="UserName" length="50" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:4b5f8dc0-3485-1fac-a306-fc34788b24ae" name="SqlCommand" length="2048" updateable="false" caseSensitive="false" signed="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:e3056800-348c-1fac-a306-fc34788b24ae" name="RequestID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:dd310a00-3492-1fac-a306-fc34788b24ae" name="SessionID" length="9" precision="7">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:de2da9c0-34a3-1fac-a306-fc34788b24ae" name="NodeID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:4eb9c000-34ab-1fac-a306-fc34788b24ae" name="TransactionID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:66d75500-9d5a-1fb0-8b20-c6a3623f44ab" name="ProcessingDate" nameInSource="" length="50">
+        <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6c9-338d-1fac-a306-fc34788b24ae" name="getSessions" nameInSource="getSessions">
+    <parameters xmi:uuid="mmuuid:03f5d6cb-338d-1fac-a306-fc34788b24ae" name="identifier" nameInSource="" nativeType="java.lang.String" length="100" precision="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:4e6e37c1-387f-1fac-b233-825933df310a" name="Sessions">
+      <columns xmi:uuid="mmuuid:b5044d40-38a1-1fac-b233-825933df310a" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b5044d41-38a1-1fac-b233-825933df310a" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:0e55f3c0-38b2-1fac-b233-825933df310a" name="ApplicationName" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d4155a00-144c-1fc9-9c07-ad52dc529b5e" name="SessionID" length="9" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:4f1039c0-1455-1fc9-9c07-ad52dc529b5e" name="State" nameInSource="StateAsString" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:cce80540-145e-1fc9-9c07-ad52dc529b5e" name="UserName" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:0241a280-1461-1fc9-9c07-ad52dc529b5e" name="VDBName" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:df17f280-1462-1fc9-9c07-ad52dc529b5e" name="VDBVersion" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:bb476940-1466-1fc9-9c07-ad52dc529b5e" name="IPAddress" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:eeb8be80-1468-1fc9-9c07-ad52dc529b5e" name="HostName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:964caf80-1478-1fc9-9c07-ad52dc529b5e" name="ProductName" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:03f5d6db-338d-1fac-a306-fc34788b24ae" name="getRolesForUser" nameInSource="">
+    <parameters xmi:uuid="mmuuid:03f5d6dc-338d-1fac-a306-fc34788b24ae" name="userIdentifier" nameInSource="arg1" nativeType="java.lang.String" length="32" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:b1572441-0e3b-1fad-b233-825933df310a" name="Roles">
+      <columns xmi:uuid="mmuuid:cd994e00-0e3e-1fad-b233-825933df310a" name="RoleName" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:d4cd05c0-356f-1fac-b929-ae294c4ca9ce">
+    <annotations xmi:uuid="mmuuid:653bd082-b8ae-1fc9-8d3b-c7725b29f3ce" description="The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}. No wild cards currently supported, must be explicit" annotatedObject="mmuuid/653bd080-b8ae-1fc9-8d3b-c7725b29f3ce"/>
+  </mmcore:AnnotationContainer>
+  <relational:Procedure xmi:uuid="mmuuid:66028a80-1b7f-1fc9-9c07-ad52dc529b5e" name="getGroupsForUser" nameInSource="">
+    <parameters xmi:uuid="mmuuid:66028a81-1b7f-1fc9-9c07-ad52dc529b5e" name="userName" nameInSource="arg1" nativeType="java.lang.String" length="32" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:b12bb840-1bf9-1fc9-9c07-ad52dc529b5e" name="explicitOnly">
+      <type href="http://www.w3.org/2001/XMLSchema#boolean"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:d4c95b00-1b8f-1fc9-9c07-ad52dc529b5e" name="Groups">
+      <columns xmi:uuid="mmuuid:d4c95b03-1b8f-1fc9-9c07-ad52dc529b5e" name="Name" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d4c95b02-1b8f-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:653bd080-b8ae-1fc9-8d3b-c7725b29f3ce" name="cancelRequest" nameInSource="cancelRequest">
+    <parameters xmi:uuid="mmuuid:75e18200-b8b7-1fc9-8d3b-c7725b29f3ce" name="identifier" nameInSource="" nativeType="java.lang.String" length="100" precision="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:fa877c80-e55a-1fd6-ab08-ea702498499b" name="assignRoleToGroup" nameInSource="assignRoleToGroup">
+    <parameters xmi:uuid="mmuuid:fa877c81-e55a-1fd6-ab08-ea702498499b" name="roleName" nameInSource="arg1" nativeType="java.lang.String" length="32" precision="32" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:fa877c82-e55a-1fd6-ab08-ea702498499b" name="groupIdentifier" nameInSource="arg2" nativeType="java.lang.String" length="32" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+</xmi:XMI>

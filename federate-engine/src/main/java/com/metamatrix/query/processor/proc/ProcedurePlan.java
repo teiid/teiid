@@ -1,0 +1,387 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.query.processor.proc;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.processor.BaseProcessorPlan;
+import com.metamatrix.query.processor.DescribableUtil;
+import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.processor.TempTableDataManager;
+import com.metamatrix.query.processor.program.Program;
+import com.metamatrix.query.processor.program.ProgramInstruction;
+import com.metamatrix.query.processor.program.ProgramUtil;
+import com.metamatrix.query.tempdata.TempTableStore;
+import com.metamatrix.query.tempdata.TempTableStoreImpl;
+import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.query.util.ErrorMessageKeys;
+import com.metamatrix.query.util.LogConstants;
+import com.metamatrix.query.util.TypeRetrievalUtil;
+/**
+ */
+public class ProcedurePlan extends BaseProcessorPlan {
+
+	// State passed during construction
+	private ProcedureEnvironment env;
+    //this reference should never be used for anything except toString method
+    private Program originalProgram;
+
+	// State initialized by processor
+	private ProcessorDataManager dataMgr;
+    private BufferManager bufferMgr;
+    private int batchSize;
+
+    private boolean done = false;
+    private QueryProcessor internalProcessor;
+    private TupleSourceID internalResultID;
+
+    // Temp state for final results
+    private TupleSource finalTupleSource;
+    private int beginBatch = 1;
+    private List batchRows;
+    private boolean lastBatch = false;    
+
+    /**
+     * Constructor for ProcedurePlan.
+     */
+    public ProcedurePlan(ProcedureEnvironment env) {
+    	this.env = env;
+        this.env.initialize(this);
+		this.originalProgram = (Program)this.env.getProgramStack().peek();
+    }
+
+    /**
+     * @see ProcessorPlan#initialize(ProcessorDataManager, Object)
+     */
+    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
+        this.bufferMgr = bufferMgr;
+        this.batchSize = bufferMgr.getProcessorBatchSize();
+        TempTableStoreImpl tempTableStore = new TempTableStoreImpl(bufferMgr, context.getConnectionID(), (TempTableStore)context.getTempTableStore());
+        this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
+        env.setTempTableStore(tempTableStore);
+        setContext(context);
+    }
+
+    public void reset() {
+        super.reset();
+
+        done = false;
+        internalProcessor = null;
+        internalResultID = null;
+
+        finalTupleSource = null;
+        beginBatch = 1;
+        batchRows = null;
+        lastBatch = false;
+
+        //reset program stack
+        originalProgram.resetProgramCounter();
+        if(env.getProgramStack().empty()){
+        	env.getProgramStack().push(originalProgram);
+        }
+        env.reset();
+		LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "ProcedurePlan reset"); //$NON-NLS-1$
+    }
+
+    public ProcessorDataManager getDataManager() {
+        return this.dataMgr;
+    }
+
+    /**
+     * Request for data from a node
+     * @param command Command to execute from node
+     * @return The <code>TupleSourceID</code> for the results
+     */
+    TupleSourceID registerRequest(Object command)
+        throws MetaMatrixComponentException {
+        
+        Assertion.assertTrue((command instanceof ProcessorPlan), QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0050, command.getClass()));
+
+        if(this.internalProcessor != null){
+            return this.internalResultID;
+        }
+        
+        // this is typically a query or an insert being executed from within the
+        // procedure and is mostly a relational plan
+        ProcessorPlan subPlan = (ProcessorPlan) command;
+
+        //this may not be the first time the plan is being run
+        subPlan.reset();
+
+        // Run query processor on command
+        List schema = subPlan.getOutputElements();
+        CommandContext subContext = (CommandContext) getContext().clone();
+        subContext.setTempTableStore(env.getTempTableStore());
+        this.internalResultID = this.bufferMgr.createTupleSource(schema, TypeRetrievalUtil.getTypeNames(schema), subContext.getConnectionID(), TupleSourceType.PROCESSOR);
+        subContext.setTupleSourceID(internalResultID);
+        internalProcessor = new QueryProcessor(subPlan, subContext, this.bufferMgr, this.dataMgr);
+
+        return this.internalResultID;
+    }
+
+    /**
+     * Method for ProcessorEnvironment to remove a tuple source when it is done with it.
+     */
+    void removeTupleSource(TupleSourceID tupleSourceID)
+    throws MetaMatrixComponentException {
+        try {
+			this.bufferMgr.removeTupleSource(tupleSourceID);
+		} catch (TupleSourceNotFoundException e) {
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0021, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0021, (String)null));
+		} catch (MetaMatrixComponentException e) {
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0022, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0022, (String) null));
+		}
+        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"removed tuple source", tupleSourceID, "for result set"}); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    /**
+     * Get list of resolved elements describing output columns for this plan.
+     * @return List of SingleElementSymbol
+     */
+    public List getOutputElements() {
+//        ArrayList output = new ArrayList(1);
+//        ElementSymbol count = new ElementSymbol("Count"); //$NON-NLS-1$
+//        count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+//        output.add(count);
+//        return output;
+    	return env.getOutputElements();
+    }
+
+    public void open()
+        throws MetaMatrixComponentException {
+    }
+
+    /**
+     * @see ProcessorPlan#nextBatch()
+     */
+    public TupleBatch nextBatch()
+        throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
+
+        // Already returned results?
+        if(done) {
+            // Already returned all results
+            TupleBatch emptyTerminationBatch = new TupleBatch(beginBatch, new List[0]);
+            emptyTerminationBatch.setTerminationFlag(true);
+            return emptyTerminationBatch;
+
+        }
+        // First attempt to process
+        if(this.finalTupleSource == null) {
+            // Still need to process - this should either
+            // throw a BlockedException or return a finalTupleSource
+            this.finalTupleSource = processProcedure();
+        }
+
+        // Next, attempt to return batches if processing completed
+        while(! isBatchFull()) {
+            // May throw BlockedException and exit here
+            List tuple = this.finalTupleSource.nextTuple();
+            if(tuple == null) {
+                terminateBatches();
+                done = true;
+                break;
+            }
+            addBatchRow(tuple);
+        }
+
+        return pullBatch();
+    }
+
+    /**
+     * <p>Process the procedure, using the stack of Programs supplied by the
+     * ProcessorEnvironment.  With each pass through the loop, the
+     * current Program is gotten off the top of the stack, and the
+     * current instruction is gotten from that program; each call
+     * to an instruction's process method may alter the Program
+     * Stack and/or the current instruction pointer of a Program,
+     * so it's important that this method's loop refer to the
+     * call stack of the ProcessorEnvironment each time, and not
+     * cache things in local variables.  If the current Program's
+     * current instruction is null, then it's time to pop that
+     * Program off the stack.</p>
+     *
+     * @return List a single tuple containing one Integer: the update
+     * count resulting from the procedure execution.
+     */
+    private TupleSource processProcedure()
+        throws MetaMatrixComponentException, MetaMatrixProcessingException, BlockedException {
+
+        // execute plan
+	    ProgramInstruction inst = null;
+
+	    while (!this.env.getProgramStack().empty()){
+            Program program = env.peek();
+            inst = program.getCurrentInstruction();
+	        if (inst == null){
+                this.env.pop();
+                continue;
+            }
+            if (inst instanceof RepeatedInstruction) {
+                RepeatedInstruction loop = (RepeatedInstruction)inst;
+                if (loop.testCondition(env)) {
+                    inst.process(env);
+                    env.push(loop.getNestedProgram());
+                    continue;
+                } 
+                loop.postInstruction(env);
+            } else {
+                inst.process(this.env);
+            }
+            program.incrementProgramCounter();
+	    }
+
+        return this.env.getFinalTupleSource();
+    }
+
+
+    public TupleSource getResults(TupleSourceID tupleID)
+        throws MetaMatrixComponentException, BlockedException, MetaMatrixProcessingException {
+
+		TupleSource results;
+
+        try {
+            this.internalProcessor.process(Integer.MAX_VALUE); //TODO: put a better value here
+
+            // didn't throw processor blocked, so must be done
+            results = this.bufferMgr.getTupleSource(this.internalResultID);
+        } catch(MetaMatrixComponentException e) {
+            throw e;
+        } catch (MetaMatrixProcessingException e) {
+        	throw e;
+        } catch(MetaMatrixCoreException e) {
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0023, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0023, e.getMessage()));
+        }
+
+        // clean up internal stuff
+        this.internalProcessor = null;
+
+        return results;
+    }
+
+    public void close()
+        throws MetaMatrixComponentException {
+        // Defect 14544 - remove the tuple batches for the internal tuple source from the buffer manager.
+        // This is the last tuple source created by the procedure plan.
+        if (internalResultID != null) {
+            try {
+                bufferMgr.removeTupleSource(internalResultID);
+                internalResultID = null;
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        if(env.getTempTableStore()!=null) {
+        	env.getTempTableStore().removeTempTables();
+        }
+    }
+
+    public String toString() {
+        return "ProcedurePlan:\n" + ProgramUtil.programToString(this.originalProgram); //$NON-NLS-1$
+    }
+
+	/**
+	 * The plan is only clonable in the pre-execution stage, not the execution state
+ 	 * (things like program state, result sets, etc). It's only safe to call that
+ 	 * method in between query processings, inother words, it's only safe to call
+ 	 * clone() on a plan after nextTuple() returns null, meaning the plan has
+ 	 * finished processing.
+ 	 */
+	public Object clone(){
+		ProcedureEnvironment clonedEnv = new ProcedureEnvironment();
+    	clonedEnv.getProgramStack().push(originalProgram.clone());
+        clonedEnv.setUpdateProcedure(this.env.isUpdateProcedure());
+        clonedEnv.setOutputElements(this.env.getOutputElements());
+        return new ProcedurePlan(clonedEnv);
+    }
+
+    protected void addBatchRow(List row) {
+        if(this.batchRows == null) {
+            this.batchRows = new ArrayList(this.batchSize);
+        }
+        this.batchRows.add(row);
+    }
+
+    protected void terminateBatches() {
+        this.lastBatch = true;
+    }
+
+    protected boolean isBatchFull() {
+        return (this.batchRows != null) && (this.batchRows.size() == this.batchSize);
+    }
+
+    protected TupleBatch pullBatch() {
+        TupleBatch batch = null;
+        if(this.batchRows != null) {
+            batch = new TupleBatch(this.beginBatch, this.batchRows);
+            beginBatch += this.batchRows.size();
+        } else {
+            batch = new TupleBatch(this.beginBatch, Collections.EMPTY_LIST);
+        }
+
+        batch.setTerminationFlag(this.lastBatch);
+
+        // Reset batch state
+        this.batchRows = null;
+        this.lastBatch = false;
+
+        // Return batch
+        return batch;
+    }
+
+    public Map getDescriptionProperties() {
+        Map props = this.originalProgram.getDescriptionProperties();
+        props.put(PROP_TYPE, "Procedure Plan"); //$NON-NLS-1$
+        props.put(PROP_OUTPUT_COLS, DescribableUtil.getOutputColumnProperties(getOutputElements()));
+
+        return props;
+    }
+    
+    /** 
+     * @see com.metamatrix.query.processor.ProcessorPlan#getChildPlans()
+     * @since 4.2
+     */
+    public Collection getChildPlans() {
+        return this.originalProgram.getChildPlans();
+    }
+}

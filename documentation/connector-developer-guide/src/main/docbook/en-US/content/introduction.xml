@@ -1,0 +1,131 @@
+<chapter id="introduction">
+  <title>Connectors in the MetaMatrix System</title>
+  <para>In the MetaMatrix System, a connector handles all request-and-response related communications between the
+    data tier of the MetaMatrix Server and the individual enterprise information sources, which can include
+    databases, data feeds, flat files, or any other entity you have modeled</para>
+  <para>In the MetaMatrix Server, a connector is used to:</para>
+  <itemizedlist>
+    <listitem>
+      <para>Translate a MetaMatrix-specific command into a native command.</para>
+    </listitem>
+    <listitem>
+      <para>Execute the command.</para>
+    </listitem>
+    <listitem>
+      <para>Return batches of results to the MetaMatrix Server.</para>
+    </listitem>
+  </itemizedlist>
+  <para>The MetaMatrix Server is responsible for reassembling the results from one or more connectors into an
+    answer for the user’s command.</para>
+  <para>
+    For a more detailed workflow, see the chapter
+    <link linkend="connector_api">
+      <emphasis>“Connector API.”</emphasis>
+    </link>
+  </para>
+  <sect1>
+    <title>Do You Need a New Connector?</title>
+    <para>MetaMatrix can provide several connectors for common enterprise information system types. If
+      you can use one of these enterprise information systems, you do not need to develop a custom one. Instead,
+      you can contact your MetaMatrix Technical Account Manager and ask about purchasing the connector you need.
+    </para>
+    <para>MetaMatrix offers the following connectors:</para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <emphasis>JDBC:</emphasis>
+          Connects to many relational databases. The JDBC Connector is validated against the following database
+          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL and Sybase. In addition, the JDBC Connector can
+          often be used with other 3rd-party drivers and provides a wide range of extensibility options to
+          specialize behavior against those drivers.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Text:</emphasis>
+          Connects to ASCII text files.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>XML</emphasis>
+          Connects to XML files on disk or by invoking Web services on other enterprise systems.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>If your enterprise information system can use one of these connectors, you do not need to develop your
+      own. Instead, you can contact MetaMatrix about acquiring the connector you need.</para>
+  </sect1>
+  <sect1>
+    <title>Required Items to Write a Custom Connector</title>
+    <para>To write a connector, follow this procedure:</para>
+    <orderedlist numeration="arabic">
+      <listitem>
+        <para>Gather all necessary information about your Enterprise Information System (EIS). You will need
+          to know:</para>
+        <itemizedlist>
+          <listitem>
+            <para>API for accessing the system</para>
+          </listitem>
+          <listitem>
+            <para>Configuration and connection information for the system</para>
+          </listitem>
+          <listitem>
+            <para>Metadata</para>
+          </listitem>
+          <listitem>
+            <para>Required properties for the connector, such as URL, user name, etc.</para>
+          </listitem>
+          <listitem>
+            <para>The CDK development kit (jars and tools).</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>Implement the required interfaces defined by the Connector API.</para>
+        <itemizedlist>
+          <listitem>
+            <para>Connector – starting point.</para>
+          </listitem>
+          <listitem>
+            <para>Connection – represents a connection to the source, which is typically pooled within
+              the Connector</para>
+          </listitem>
+          <listitem>
+            <para>ConnectorCapabilities – specifies what kinds of commands your connector can
+              execute</para>
+          </listitem>
+          <listitem>
+            <para>Execution (and sub-interfaces) – specifies how to execute each type of command</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>Test your connector with Connector Development Kit (CDK) test utilities.</para>
+      </listitem>
+      <listitem>
+        <para>Deploy your connector type into a MetaMatrix Server using the MetaMatrix Console.</para>
+        <itemizedlist>
+          <listitem>
+            <para>Create your connector type definition file. Import the connector type definition file
+            </para>
+          </listitem>
+          <listitem>
+            <para>Create a connector binding using the connector type</para>
+          </listitem>
+          <listitem>
+            <para>Deploy a Virtual Database with metadata corresponding to your EIS</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>Execute queries via the MetaMatrix JDBC API or QueryBuilder</para>
+      </listitem>
+    </orderedlist>
+    <para>
+      This guide covers how to do each of these steps in detail. It also provides additional information for
+      advanced topics, such as connection pooling, streaming large objects, and transactions. For a sample
+      connector code, please check the wiki pages at <ulink url="http://federateproject.org">federate community</ulink>
+    </para>
+  </sect1>
+</chapter>

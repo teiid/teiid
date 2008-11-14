@@ -1,0 +1,773 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational" xmlns:transformation="http://www.metamatrix.com/metamodels/Transformation">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:5f7bda00-0cbf-1fc9-9c07-ad52dc529b5e" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="MetaMatrix" ProducerVersion="5.0">
+    <modelImports xmi:uuid="mmuuid:c37a7e40-1a33-1fc9-9c07-ad52dc529b5e" name="SystemAdminPhysical" modelLocation="SystemAdminPhysical.xmi" uuid="mmuuid:380d31c0-ccad-1f9e-a409-c737fc62362b" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
+    <modelImports xmi:uuid="mmuuid:bbc0f4c2-0cc0-1fc9-9c07-ad52dc529b5e" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="PHYSICAL" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <modelImports xmi:uuid="mmuuid:bbc0f4c1-0cc0-1fc9-9c07-ad52dc529b5e" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="PHYSICAL" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <modelImports xmi:uuid="mmuuid:32e2c800-0783-101e-861a-a893857ac5a5" name="System" modelLocation="../System.xmi" uuid="mmuuid:70ffc880-29d8-1de6-8a38-9d76e1f90f2e" modelType="VIRTUAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
+  </mmcore:ModelAnnotation>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e" name="getGroups" nameInSource="">
+    <parameters xmi:uuid="mmuuid:6154dfc7-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfc3-0cbf-1fc9-9c07-ad52dc529b5e" name="Groups">
+      <columns xmi:uuid="mmuuid:6154dfc5-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfc4-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e" name="getHosts" nameInSource="getHosts">
+    <parameters xmi:uuid="mmuuid:6154dfc9-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfca-0cbf-1fc9-9c07-ad52dc529b5e" name="Hosts">
+      <columns xmi:uuid="mmuuid:6154dfcc-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfcb-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e" name="getProcesses" nameInSource="getProcesses">
+    <parameters xmi:uuid="mmuuid:6154dfce-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfcf-0cbf-1fc9-9c07-ad52dc529b5e" name="Processes">
+      <columns xmi:uuid="mmuuid:6154dfd0-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfd2-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfd1-0cbf-1fc9-9c07-ad52dc529b5e" name="HostIdentifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e" name="getQueueWorkerPools" nameInSource="getQueueWorkerPools">
+    <parameters xmi:uuid="mmuuid:6154dfd4-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfd5-0cbf-1fc9-9c07-ad52dc529b5e" name="QueueWorkerPool">
+      <columns xmi:uuid="mmuuid:6154dfd7-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfdc-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfda-0cbf-1fc9-9c07-ad52dc529b5e" name="Enqueues" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfd6-0cbf-1fc9-9c07-ad52dc529b5e" name="Dequeues" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfd8-0cbf-1fc9-9c07-ad52dc529b5e" name="Threads" length="5" precision="5">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfdd-0cbf-1fc9-9c07-ad52dc529b5e" name="TotalDequeues" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfd9-0cbf-1fc9-9c07-ad52dc529b5e" name="TotalEnqueues" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfdb-0cbf-1fc9-9c07-ad52dc529b5e" name="TotalHighwaterMark" length="9" precision="9">
+        <type href="http://www.w3.org/2001/XMLSchema#int"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfde-0cbf-1fc9-9c07-ad52dc529b5e" name="getRequests" nameInSource="getRequests">
+    <parameters xmi:uuid="mmuuid:6154dfea-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="50" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfdf-0cbf-1fc9-9c07-ad52dc529b5e" name="Requests">
+      <columns xmi:uuid="mmuuid:6154dfe1-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe0-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe8-0cbf-1fc9-9c07-ad52dc529b5e" name="ConnectorBindingName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe6-0cbf-1fc9-9c07-ad52dc529b5e" name="UserName" length="50" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe9-0cbf-1fc9-9c07-ad52dc529b5e" name="SqlCommand" length="2048" updateable="false" caseSensitive="false" signed="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe4-0cbf-1fc9-9c07-ad52dc529b5e" name="RequestID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe7-0cbf-1fc9-9c07-ad52dc529b5e" name="SessionID" length="9" caseSensitive="false">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe2-0cbf-1fc9-9c07-ad52dc529b5e" name="NodeID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe3-0cbf-1fc9-9c07-ad52dc529b5e" name="TransactionID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfe5-0cbf-1fc9-9c07-ad52dc529b5e" name="ProcessingDate" nameInSource="" length="50">
+        <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" name="getSessions" nameInSource="getSessions">
+    <parameters xmi:uuid="mmuuid:6154dfec-0cbf-1fc9-9c07-ad52dc529b5e" name="identifier" nameInSource="arg1" nativeType="java.lang.String" length="50" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154dfed-0cbf-1fc9-9c07-ad52dc529b5e" name="Sessions">
+      <columns xmi:uuid="mmuuid:6154dfef-0cbf-1fc9-9c07-ad52dc529b5e" name="Name" nameInSource="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dfee-0cbf-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:6154dff0-0cbf-1fc9-9c07-ad52dc529b5e" name="ApplicationName" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3780-1489-1fc9-9c07-ad52dc529b5e" name="SessionID" length="9" updateable="false" caseSensitive="false">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3781-1489-1fc9-9c07-ad52dc529b5e" name="State" nameInSource="StateAsString" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3782-1489-1fc9-9c07-ad52dc529b5e" name="UserName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3783-1489-1fc9-9c07-ad52dc529b5e" name="VDBName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3784-1489-1fc9-9c07-ad52dc529b5e" name="VDBVersion" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3785-1489-1fc9-9c07-ad52dc529b5e" name="IPAddress" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3786-1489-1fc9-9c07-ad52dc529b5e" name="HostName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:d1ff3787-1489-1fc9-9c07-ad52dc529b5e" name="ProductName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:6154e008-0cbf-1fc9-9c07-ad52dc529b5e" name="getRolesForUser" nameInSource="">
+    <parameters xmi:uuid="mmuuid:6154e00b-0cbf-1fc9-9c07-ad52dc529b5e" name="userIdentifier" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:6154e009-0cbf-1fc9-9c07-ad52dc529b5e" name="Roles">
+      <columns xmi:uuid="mmuuid:6154e00a-0cbf-1fc9-9c07-ad52dc529b5e" name="RoleName" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:6b9562c0-0cbf-1fc9-9c07-ad52dc529b5e">
+    <diagram xmi:uuid="mmuuid:6b9562c1-0cbf-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:ab3f4500-0cc2-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:ab3f4501-0cc2-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/6b9562c3-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="207" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:1bcfaa40-4874-1fd6-9319-c997e587bf2e" xPosition="257" yPosition="50">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:e5982080-0cbf-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:31fb1e80-0cd1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="23"/>
+      <diagramEntity xmi:uuid="mmuuid:31fb1e81-0cd1-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/e5982081-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="267" yPosition="88"/>
+      <diagramEntity xmi:uuid="mmuuid:31fb1e82-0cd1-1fc9-9c07-ad52dc529b5e" xPosition="430" yPosition="10">
+        <modelObject href="#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:f830de80-0cbf-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:5d37bac0-0cdd-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="22"/>
+      <diagramEntity xmi:uuid="mmuuid:5d37bac1-0cdd-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/f830de81-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="289" yPosition="95"/>
+      <diagramEntity xmi:uuid="mmuuid:5d37bac2-0cdd-1fc9-9c07-ad52dc529b5e" xPosition="452" yPosition="10">
+        <modelObject href="#mmuuid/03f5d6b7-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:0bbdc080-0cc0-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:62f11280-0cde-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="23"/>
+      <diagramEntity xmi:uuid="mmuuid:62f11281-0cde-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/0bbdc081-0cc0-1fc9-9c07-ad52dc529b5e" xPosition="293" yPosition="133"/>
+      <diagramEntity xmi:uuid="mmuuid:62f11282-0cde-1fc9-9c07-ad52dc529b5e" xPosition="456" yPosition="10">
+        <modelObject href="#mmuuid/03f5d6bd-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:1f4aa280-0cc0-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfde-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:7f047600-0cdf-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfde-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="23"/>
+      <diagramEntity xmi:uuid="mmuuid:7f047601-0cdf-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/1f4aa281-0cc0-1fc9-9c07-ad52dc529b5e" xPosition="334" yPosition="148"/>
+      <diagramEntity xmi:uuid="mmuuid:c3f92c80-8b7a-1fda-b727-e7322eee82ac" xPosition="448" yPosition="15">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:32d78480-0cc0-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:7b622c80-0ce0-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:7b622c81-0ce0-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/32d78481-0cc0-1fc9-9c07-ad52dc529b5e" xPosition="242" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:782ab240-f85f-1039-960b-d505a8a725f2" xPosition="292" yPosition="50">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:96803680-0cc0-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/6154e008-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:87e88400-0ce4-1fc9-9c07-ad52dc529b5e" name="getRolesForUser" modelObject="mmuuid/6154e008-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="22"/>
+      <diagramEntity xmi:uuid="mmuuid:87e88401-0ce4-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/96803681-0cc0-1fc9-9c07-ad52dc529b5e" xPosition="265" yPosition="80"/>
+      <diagramEntity xmi:uuid="mmuuid:87e88402-0ce4-1fc9-9c07-ad52dc529b5e" xPosition="428" yPosition="10">
+        <modelObject href="#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:34ded0c0-0cc1-1fc9-9c07-ad52dc529b5e" type="packageDiagramType" target="mmuuid/5f7bda00-0cbf-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:39850040-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="518" yPosition="471"/>
+      <diagramEntity xmi:uuid="mmuuid:39850041-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="264" yPosition="263"/>
+      <diagramEntity xmi:uuid="mmuuid:39850042-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="518" yPosition="263"/>
+      <diagramEntity xmi:uuid="mmuuid:39850043-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="264" yPosition="456"/>
+      <diagramEntity xmi:uuid="mmuuid:39850044-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfde-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="10"/>
+      <diagramEntity xmi:uuid="mmuuid:39850045-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="772" yPosition="308"/>
+      <diagramEntity xmi:uuid="mmuuid:3a69e202-0cc1-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/6154e008-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="323"/>
+      <diagramEntity xmi:uuid="mmuuid:98e60c40-12fd-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e"/>
+      <diagramEntity xmi:uuid="mmuuid:12451d81-1a31-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/f4924180-13f2-1fc9-9c07-ad52dc529b5e"/>
+      <diagramEntity xmi:uuid="mmuuid:12451d82-1a31-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/b0557e80-1490-1fc9-9c07-ad52dc529b5e"/>
+      <diagramEntity xmi:uuid="mmuuid:41162800-b826-1fc9-8d3b-c7725b29f3ce" modelObject="mmuuid/e56e0d04-1b96-1fc9-9c07-ad52dc529b5e"/>
+      <diagramEntity xmi:uuid="mmuuid:6f064381-e04c-1fcb-a614-9e948c691751" modelObject="mmuuid/d1ea3684-55e9-1fca-8b3c-8f9df8d89560"/>
+      <diagramEntity xmi:uuid="mmuuid:529a1a42-bf2d-1fd0-9b3e-e8c091f7fd75" modelObject="mmuuid/8e8949c4-66d6-1fcd-8f34-f885f819779e"/>
+      <diagramEntity xmi:uuid="mmuuid:b7b89740-e57d-1fd6-ab08-ea702498499b" modelObject="mmuuid/083765c4-4a65-1fd6-9319-c997e587bf2e"/>
+      <diagramEntity xmi:uuid="mmuuid:c13e8d40-8b62-1fda-b727-e7322eee82ac" modelObject="mmuuid/0c6c0a44-e59e-1fd6-ab08-ea702498499b"/>
+      <diagramEntity xmi:uuid="mmuuid:f4bf83c0-9384-1fda-b71f-a19e484a01c0" modelObject="mmuuid/5171c400-8b8a-1fda-b727-e7322eee82ac"/>
+      <diagramEntity xmi:uuid="mmuuid:3a05d800-077b-101e-861a-a893857ac5a5" modelObject="mmuuid/890e7fc5-077a-101e-861a-a893857ac5a5"/>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:15a97a00-12e5-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:e2a4f380-12e6-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="23"/>
+      <diagramEntity xmi:uuid="mmuuid:e2a4f381-12e6-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/f8cc3b05-12dc-1fc9-9c07-ad52dc529b5e" xPosition="267" yPosition="88"/>
+      <diagramEntity xmi:uuid="mmuuid:e2a4f382-12e6-1fc9-9c07-ad52dc529b5e" xPosition="430" yPosition="10">
+        <modelObject href="#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:f68a4b80-13f3-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/f4924180-13f2-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:6eb40380-13f4-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/f4924180-13f2-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="22"/>
+      <diagramEntity xmi:uuid="mmuuid:6eb40381-13f4-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/f4924186-13f2-1fc9-9c07-ad52dc529b5e" xPosition="271" yPosition="95"/>
+      <diagramEntity xmi:uuid="mmuuid:28b99480-49f7-1fd6-9319-c997e587bf2e">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:ed0370c0-1491-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/b0557e80-1490-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:cc87e640-1492-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/b0557e80-1490-1fc9-9c07-ad52dc529b5e" xPosition="10" yPosition="36"/>
+      <diagramEntity xmi:uuid="mmuuid:cc87e641-1492-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/b149a280-1490-1fc9-9c07-ad52dc529b5e" xPosition="302" yPosition="155"/>
+      <diagramEntity xmi:uuid="mmuuid:c92b3f00-49f1-1fd6-9319-c997e587bf2e" xPosition="457" yPosition="38">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:c04c5300-1b97-1fc9-9c07-ad52dc529b5e" type="transformationDiagramType" target="mmuuid/e56e0d04-1b96-1fc9-9c07-ad52dc529b5e">
+      <diagramEntity xmi:uuid="mmuuid:c0498a80-1bb0-1fc9-9c07-ad52dc529b5e" modelObject="mmuuid/e56e0d04-1b96-1fc9-9c07-ad52dc529b5e" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:c0498a81-1bb0-1fc9-9c07-ad52dc529b5e" name="T" modelObject="mmuuid/c04c5301-1b97-1fc9-9c07-ad52dc529b5e" xPosition="220" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:d63e8640-cfb7-1019-b32e-e9c73adb0956" xPosition="270" yPosition="50">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/66028a80-1b7f-1fc9-9c07-ad52dc529b5e"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:4f9effc5-55ea-1fca-8b3c-8f9df8d89560" type="transformationDiagramType" target="mmuuid/d1ea3684-55e9-1fca-8b3c-8f9df8d89560">
+      <diagramEntity xmi:uuid="mmuuid:a4aec9c0-55ed-1fca-8b3c-8f9df8d89560" modelObject="mmuuid/d1ea3684-55e9-1fca-8b3c-8f9df8d89560" xPosition="10" yPosition="36"/>
+      <diagramEntity xmi:uuid="mmuuid:a4aec9c1-55ed-1fca-8b3c-8f9df8d89560" name="T" modelObject="mmuuid/4f9effc0-55ea-1fca-8b3c-8f9df8d89560" xPosition="313" yPosition="82"/>
+      <diagramEntity xmi:uuid="mmuuid:15005b40-4c7c-1fd6-9319-c997e587bf2e" xPosition="476" yPosition="10">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:35401f00-66d7-1fcd-8f34-f885f819779e" type="transformationDiagramType" target="mmuuid/8e8949c4-66d6-1fcd-8f34-f885f819779e">
+      <diagramEntity xmi:uuid="mmuuid:21b7bac0-66e0-1fcd-8f34-f885f819779e" modelObject="mmuuid/8e8949c4-66d6-1fcd-8f34-f885f819779e" xPosition="10" yPosition="10"/>
+      <diagramEntity xmi:uuid="mmuuid:21b7bac1-66e0-1fcd-8f34-f885f819779e" name="T" modelObject="mmuuid/35401f01-66d7-1fcd-8f34-f885f819779e" xPosition="302" yPosition="68"/>
+      <diagramEntity xmi:uuid="mmuuid:ece970c0-66e1-1fcd-8f34-f885f819779e" xPosition="465" yPosition="10">
+        <modelObject href="#mmuuid/653bd080-b8ae-1fc9-8d3b-c7725b29f3ce"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:b4794c45-4a65-1fd6-9319-c997e587bf2e" type="transformationDiagramType" target="mmuuid/083765c4-4a65-1fd6-9319-c997e587bf2e">
+      <diagramEntity xmi:uuid="mmuuid:d5279b00-4a6e-1fd6-9319-c997e587bf2e" name="getRolesForCurrentUser" modelObject="mmuuid/083765c4-4a65-1fd6-9319-c997e587bf2e" xPosition="10" yPosition="49"/>
+      <diagramEntity xmi:uuid="mmuuid:d5279b01-4a6e-1fd6-9319-c997e587bf2e" name="T" modelObject="mmuuid/b4794c40-4a65-1fd6-9319-c997e587bf2e" xPosition="321" yPosition="82"/>
+      <diagramEntity xmi:uuid="mmuuid:8eae7040-4a82-1fd6-9319-c997e587bf2e" xPosition="484" yPosition="10">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:9f86bb40-e59e-1fd6-ab08-ea702498499b" type="transformationDiagramType" target="mmuuid/0c6c0a44-e59e-1fd6-ab08-ea702498499b">
+      <diagramEntity xmi:uuid="mmuuid:81dc5880-e5a7-1fd6-ab08-ea702498499b" modelObject="mmuuid/0c6c0a44-e59e-1fd6-ab08-ea702498499b" xPosition="10" yPosition="10"/>
+      <diagramEntity xmi:uuid="mmuuid:81dc5881-e5a7-1fd6-ab08-ea702498499b" name="T" modelObject="mmuuid/9f86bb41-e59e-1fd6-ab08-ea702498499b" xPosition="313" yPosition="64"/>
+      <diagramEntity xmi:uuid="mmuuid:3efcfb80-e5a9-1fd6-ab08-ea702498499b" xPosition="476" yPosition="10">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/fa877c80-e55a-1fd6-ab08-ea702498499b"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:f7918200-8b8d-1fda-b727-e7322eee82ac" type="transformationDiagramType" target="mmuuid/5171c400-8b8a-1fda-b727-e7322eee82ac">
+      <diagramEntity xmi:uuid="mmuuid:44efea40-8b8f-1fda-b727-e7322eee82ac" modelObject="mmuuid/5171c400-8b8a-1fda-b727-e7322eee82ac" xPosition="10" yPosition="23"/>
+      <diagramEntity xmi:uuid="mmuuid:44efea41-8b8f-1fda-b727-e7322eee82ac" name="T" modelObject="mmuuid/5256a5c0-8b8a-1fda-b727-e7322eee82ac" xPosition="334" yPosition="150"/>
+      <diagramEntity xmi:uuid="mmuuid:44efea42-8b8f-1fda-b727-e7322eee82ac" xPosition="497" yPosition="10">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:1a7df1c0-077b-101e-861a-a893857ac5a5" type="packageDiagramType" target="mmuuid/890e7fc5-077a-101e-861a-a893857ac5a5"/>
+    <diagram xmi:uuid="mmuuid:2ce5a0c0-0793-101e-861a-a893857ac5a5" type="transformationDiagramType" target="mmuuid/284eb380-0793-101e-861a-a893857ac5a5">
+      <diagramEntity xmi:uuid="mmuuid:2dd9c4c0-0793-101e-861a-a893857ac5a5" modelObject="mmuuid/284eb380-0793-101e-861a-a893857ac5a5" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:2dd9c4c1-0793-101e-861a-a893857ac5a5" name="T" modelObject="mmuuid/284eb382-0793-101e-861a-a893857ac5a5" xPosition="167" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:2dd9c4c2-0793-101e-861a-a893857ac5a5" xPosition="217" yPosition="50">
+        <modelObject href="../System.xmi#mmuuid/7ce634df-2953-1de6-8a38-9d76e1f90f2e"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:f3060e00-f865-1039-960b-d505a8a725f2" type="transformationDiagramType" target="mmuuid/d805d2c0-f865-1039-960b-d505a8a725f2">
+      <diagramEntity xmi:uuid="mmuuid:f3060e01-f865-1039-960b-d505a8a725f2" modelObject="mmuuid/d805d2c0-f865-1039-960b-d505a8a725f2" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:f3eaefc0-f865-1039-960b-d505a8a725f2" name="T" modelObject="mmuuid/d805d2ca-f865-1039-960b-d505a8a725f2" xPosition="223" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:e23301c0-f89a-1039-960b-d505a8a725f2" modelObject="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" xPosition="273" yPosition="50"/>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:0bd73340-f871-1039-960b-d505a8a725f2" type="transformationDiagramType">
+      <diagramEntity xmi:uuid="mmuuid:0bd73341-f871-1039-960b-d505a8a725f2" xPosition="30" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:0bd73342-f871-1039-960b-d505a8a725f2" name="T" modelObject="mmuuid/028ad44b-f871-1039-960b-d505a8a725f2" xPosition="253" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:0bd73343-f871-1039-960b-d505a8a725f2" xPosition="303" yPosition="50">
+        <modelObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+      </diagramEntity>
+    </diagram>
+  </diagram:DiagramContainer>
+  <transformation:TransformationContainer xmi:uuid="mmuuid:6b9562c2-0cbf-1fc9-9c07-ad52dc529b5e">
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:6b9562c3-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfc2-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:6b9562c4-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6a4-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfc7-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:6b9562c5-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getGroups(arg1);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:6b9562c7-0cbf-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getGroups">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:64cce0c0-0cc5-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfc5-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:64cce0c1-0cc5-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfc4-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:e5982081-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfc8-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:e5982082-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6aa-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfc9-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:e5982083-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getHosts(hostname);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:e5982084-0cbf-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getHosts">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:6716b340-0cd1-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfcc-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:6716b341-0cd1-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfcb-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:f830de81-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfcd-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f830de82-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6b7-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfce-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f830de83-0cbf-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getProcesses(arg1);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:f830de84-0cbf-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getProcesses">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6b7-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:99c6a8c0-0cdd-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd0-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:99c6a8c1-0cdd-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd2-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:99c6a8c2-0cdd-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd1-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6b7-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:0bbdc081-0cc0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfd3-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:0cb1e480-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6bd-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfd4-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:0cb1e481-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getQueueWorkerPools(arg1);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:0cb1e482-0cc0-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getQueueWorkerPools">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6bd-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c00-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd7-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c01-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfdc-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c02-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfda-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c03-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd6-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c04-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd8-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c05-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfdd-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c06-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfd9-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:a3320c07-0cde-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfdb-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6bd-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:1f4aa281-0cc0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfde-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfde-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:1f4aa282-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6c0-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfea-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:1f4aa283-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getRequests(arg1);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:1f4aa284-0cc0-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getRequests">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c0-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe1-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c1-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe0-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c2-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe8-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c3-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe6-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c4-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe9-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c5-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe4-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c6-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe7-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c7-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe2-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c8-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe3-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:bb8421c9-0cdf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfe5-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:32d78481-0cc0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:32d78482-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6c9-338d-1fac-a306-fc34788b24ae(mmuuid:6154dfec-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:32d78483-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getSessions(arg1);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:32d78484-0cc0-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getSessions">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b42fccc0-0ce0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfef-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b42fccc1-0ce0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dfee-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b523f0c0-0ce0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154dff0-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff3788-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3780-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff3789-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3781-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378a-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3782-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378b-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3783-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378c-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3784-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378d-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3785-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378e-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3786-1489-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d1ff378f-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d1ff3787-1489-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:96803681-0cc0-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154e008-0cbf-1fc9-9c07-ad52dc529b5e" target="mmuuid/6154e008-0cbf-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:96803682-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6db-338d-1fac-a306-fc34788b24ae(mmuuid:6154e00b-0cbf-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:96803683-0cc0-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getRolesForUser(userIdentifier);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:96803684-0cc0-1fc9-9c07-ad52dc529b5e" alias="SystemAdminPhysical.getRolesForUser">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:c0b62440-0ce4-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/6154e00a-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:f8cc3b05-12dc-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e" target="mmuuid/f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f8cc3b08-12dc-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6aa-338d-1fac-a306-fc34788b24ae('*');&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f8cc3b09-12dc-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getHosts('*');&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:a30ed140-12ec-1fc9-9c07-ad52dc529b5e" alias="getHosts">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f8cc3b06-12dc-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f8cc3b03-12dc-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f8cc3b07-12dc-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f8cc3b02-12dc-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6aa-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:f4924186-13f2-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f4924180-13f2-1fc9-9c07-ad52dc529b5e" target="mmuuid/f4924180-13f2-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f4924187-13f2-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6a4-338d-1fac-a306-fc34788b24ae('*');&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:f4924189-13f2-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getGroups('*');&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:caf30d80-1426-1fc9-9c07-ad52dc529b5e" alias="getGroups">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f492418c-13f2-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f4924184-13f2-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f492418b-13f2-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f4924183-13f2-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6a4-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:b149a280-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e80-1490-1fc9-9c07-ad52dc529b5e" target="mmuuid/b0557e80-1490-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:b149a28c-1490-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6c9-338d-1fac-a306-fc34788b24ae('*');&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:b149a28e-1490-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getSessions('*');&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:18178b00-1ac0-1fc9-9c07-ad52dc529b5e" alias="getSessions">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a284-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e8a-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a287-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e84-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a28b-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e87-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a281-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e85-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a289-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e8b-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a282-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e89-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a286-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e8d-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a285-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e88-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a288-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e83-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a283-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e86-1490-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:b149a28a-1490-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/b0557e8c-1490-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:c04c5301-1b97-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/e56e0d04-1b96-1fc9-9c07-ad52dc529b5e" target="mmuuid/e56e0d04-1b96-1fc9-9c07-ad52dc529b5e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:c04c5302-1b97-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:66028a80-1b7f-1fc9-9c07-ad52dc529b5e(mmuuid:6d3910c0-1b9e-1fc9-9c07-ad52dc529b5e, mmuuid:b4cb3940-1c11-1fc9-9c07-ad52dc529b5e);&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:c04c5303-1b97-1fc9-9c07-ad52dc529b5e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdmin.getGroupsForUser(SystemAdminVirtual.getGroupsForUser.userName, SystemAdminVirtual.getGroupsForUser.explicitOnly);&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:76251ac0-1bb3-1fc9-9c07-ad52dc529b5e" alias="getGroupsForUser">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/66028a80-1b7f-1fc9-9c07-ad52dc529b5e"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:264e9983-1ba5-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/264e9980-1ba5-1fc9-9c07-ad52dc529b5e"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:264e9984-1ba5-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/264e9981-1ba5-1fc9-9c07-ad52dc529b5e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/66028a80-1b7f-1fc9-9c07-ad52dc529b5e"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:4f9effc0-55ea-1fca-8b3c-8f9df8d89560" outputs="mmuuid/d1ea3684-55e9-1fca-8b3c-8f9df8d89560" target="mmuuid/d1ea3684-55e9-1fca-8b3c-8f9df8d89560">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:4f9effc1-55ea-1fca-8b3c-8f9df8d89560" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;DECLARE string VARIABLES.ROLE;&#xa;SELECT getRolesForUser.RoleName INTO #temproles FROM (EXEC mmuuid:03f5d6db-338d-1fac-a306-fc34788b24ae(user())) AS getRolesForUser;&#xa;VARIABLES.ROLE = SELECT #temproles.RoleName FROM #temproles WHERE #temproles.RoleName = 'Admin.System.UserAdmin';&#xa;IF(VARIABLES.ROLE = 'Admin.System.UserAdmin')&#xa;BEGIN&#xa;SELECT 'true' AS hasRole;&#xa;END&#xa;ELSE&#xa;BEGIN&#xa;SELECT 'false' AS hasRole;&#xa;END&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:4f9effc2-55ea-1fca-8b3c-8f9df8d89560" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;DECLARE string VARIABLES.ROLE;&#xa;SELECT getRolesForUser.RoleName INTO #temproles FROM (EXEC SystemAdminPhysical.getRolesForUser(user())) AS getRolesForUser;&#xa;VARIABLES.ROLE = SELECT #temproles.RoleName FROM #temproles WHERE #temproles.RoleName = 'Admin.System.UserAdmin';&#xa;IF(VARIABLES.ROLE = 'Admin.System.UserAdmin')&#xa;BEGIN&#xa;SELECT 'true' AS hasRole;&#xa;END&#xa;ELSE&#xa;BEGIN&#xa;SELECT 'false' AS hasRole;&#xa;END&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:a355d880-4c7b-1fd6-9319-c997e587bf2e" alias="getRolesForUser">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:cd73c782-56c3-1fca-8b3c-8f9df8d89560" outputs="mmuuid/cd73c781-56c3-1fca-8b3c-8f9df8d89560"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:35401f01-66d7-1fcd-8f34-f885f819779e" outputs="mmuuid/8e8949c4-66d6-1fcd-8f34-f885f819779e" target="mmuuid/8e8949c4-66d6-1fcd-8f34-f885f819779e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:35401f02-66d7-1fcd-8f34-f885f819779e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:653bd080-b8ae-1fc9-8d3b-c7725b29f3ce(mmuuid:a282fa80-66da-1fcd-8f34-f885f819779e);&#xa;SELECT '0' AS return;&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:35401f03-66d7-1fcd-8f34-f885f819779e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdmin.cancelRequest(SYSTEMADMINVIRTUAL.CANCELREQUEST.REQUESTID);&#xa;SELECT '0' AS return;&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:3830cac0-66e1-1fcd-8f34-f885f819779e" alias="cancelRequest">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/653bd080-b8ae-1fc9-8d3b-c7725b29f3ce"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:695c4b80-66df-1fcd-8f34-f885f819779e" outputs="mmuuid/68682780-66df-1fcd-8f34-f885f819779e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/653bd080-b8ae-1fc9-8d3b-c7725b29f3ce"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:b4794c40-4a65-1fd6-9319-c997e587bf2e" outputs="mmuuid/083765c4-4a65-1fd6-9319-c997e587bf2e" target="mmuuid/083765c4-4a65-1fd6-9319-c997e587bf2e">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:b4794c41-4a65-1fd6-9319-c997e587bf2e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6db-338d-1fac-a306-fc34788b24ae(user());&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:b4794c42-4a65-1fd6-9319-c997e587bf2e" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getRolesForUser(user());&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:0039eec0-4a82-1fd6-9319-c997e587bf2e" alias="getRolesForUser">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:0cc04641-4a86-1fd6-9319-c997e587bf2e" outputs="mmuuid/0cc04640-4a86-1fd6-9319-c997e587bf2e"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6db-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:9f86bb41-e59e-1fd6-ab08-ea702498499b" outputs="mmuuid/0c6c0a44-e59e-1fd6-ab08-ea702498499b" target="mmuuid/0c6c0a44-e59e-1fd6-ab08-ea702498499b">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:9f86bb42-e59e-1fd6-ab08-ea702498499b" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:fa877c80-e55a-1fd6-ab08-ea702498499b(mmuuid:967864c0-e5a0-1fd6-ab08-ea702498499b, mmuuid:575a5580-e5a2-1fd6-ab08-ea702498499b);&#xa;SELECT {b'true'} AS RESULT;&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:9f86bb43-e59e-1fd6-ab08-ea702498499b" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.assignRoleToGroup(roleName, groupIdentifier);&#xa;SELECT {b'true'} AS RESULT;&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:eb2f2000-e5a8-1fd6-ab08-ea702498499b" alias="assignRoleToGroup">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/fa877c80-e55a-1fd6-ab08-ea702498499b"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:17e33780-e5a9-1fd6-ab08-ea702498499b" outputs="mmuuid/16ef1380-e5a9-1fd6-ab08-ea702498499b"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/fa877c80-e55a-1fd6-ab08-ea702498499b"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:5256a5c0-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c400-8b8a-1fda-b727-e7322eee82ac" target="mmuuid/5171c400-8b8a-1fda-b727-e7322eee82ac">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:5256a5c8-8b8a-1fda-b727-e7322eee82ac" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:03f5d6c0-338d-1fac-a306-fc34788b24ae('*');&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:5256a5c9-8b8a-1fda-b727-e7322eee82ac" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdminPhysical.getRequests('*');&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:1cbb3ac0-90fd-1fda-b727-e7322eee82ac" alias="getRequests">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c2-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c407-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c6-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c402-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c3-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c405-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c1-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c406-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c7-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c409-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5cd-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c40b-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5cc-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c404-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5cb-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c403-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c5-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c40a-8b8a-1fda-b727-e7322eee82ac"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:5256a5c4-8b8a-1fda-b727-e7322eee82ac" outputs="mmuuid/5171c408-8b8a-1fda-b727-e7322eee82ac"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6c0-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:284eb382-0793-101e-861a-a893857ac5a5" outputs="mmuuid/284eb380-0793-101e-861a-a893857ac5a5" target="mmuuid/284eb380-0793-101e-861a-a893857ac5a5">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:284eb384-0793-101e-861a-a893857ac5a5" selectSql="SELECT ((((('jdbc:metamatrix:' || mmuuid:8cfee540-c1d3-1de7-b515-bad6cb0abb8d) || '@') || decodestring(env('metamatrix.encryption.secure.sockets'), 'true,mms,false,mm')) || '://') || ((env('metamatrix.host.bind.address') || ':') || env('vm.socketPort'))) AS URL FROM mmuuid:7ce634df-2953-1de6-8a38-9d76e1f90f2e">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:284eb385-0793-101e-861a-a893857ac5a5" selectSql="SELECT ((((('jdbc:metamatrix:' || System.VirtualDatabases.Name) || '@') || decodestring(env('metamatrix.encryption.secure.sockets'), 'true,mms,false,mm')) || '://') || ((env('metamatrix.host.bind.address') || ':') || env('vm.socketPort'))) AS URL FROM System.VirtualDatabases"/>
+        <aliases xmi:uuid="mmuuid:284eb386-0793-101e-861a-a893857ac5a5" alias="VirtualDatabases">
+          <aliasedObject href="../System.xmi#mmuuid/7ce634df-2953-1de6-8a38-9d76e1f90f2e"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:284eb383-0793-101e-861a-a893857ac5a5" outputs="mmuuid/284eb381-0793-101e-861a-a893857ac5a5">
+        <inputs href="http://www.metamatrix.com/models/System.xmi#mmuuid/8cfee540-c1d3-1de7-b515-bad6cb0abb8d"/>
+      </nested>
+      <inputs href="http://www.metamatrix.com/models/System.xmi#mmuuid/7ce634df-2953-1de6-8a38-9d76e1f90f2e"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:d805d2ca-f865-1039-960b-d505a8a725f2" inputs="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c0-f865-1039-960b-d505a8a725f2" target="mmuuid/d805d2c0-f865-1039-960b-d505a8a725f2">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:d805d2d1-f865-1039-960b-d505a8a725f2" selectSql="SELECT USERSSESSION.NAME, USERSSESSION.APPLICATIONNAME, USERSSESSION.SESSIONID, USERSSESSION.IPADDRESS, USERSSESSION.VDBNAME, USERSSESSION.VDBVERSION, USERSSESSION.STATE, USERNAME, HOSTNAME, PRODUCTNAME, USERSSESSION.IDENTIFIER FROM (EXEC mmuuid:6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e(env('sessionid'))) AS UsersSession">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:d805d2d2-f865-1039-960b-d505a8a725f2" selectSql="SELECT USERSSESSION.NAME, USERSSESSION.APPLICATIONNAME, USERSSESSION.SESSIONID, USERSSESSION.IPADDRESS, USERSSESSION.VDBNAME, USERSSESSION.VDBVERSION, USERSSESSION.STATE, USERNAME, HOSTNAME, PRODUCTNAME, USERSSESSION.IDENTIFIER FROM (EXEC SystemAdmin.getSessions(env('sessionid'))) AS UsersSession"/>
+        <aliases xmi:uuid="mmuuid:6bf191c0-f89a-1039-960b-d505a8a725f2" alias="UsersSession" aliasedObject="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e"/>
+        <aliases xmi:uuid="mmuuid:6bf191c1-f89a-1039-960b-d505a8a725f2" alias="getSessions" aliasedObject="mmuuid/6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e"/>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2d0-f865-1039-960b-d505a8a725f2" inputs="mmuuid/6154dfef-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c4-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2d5-f865-1039-960b-d505a8a725f2" inputs="mmuuid/6154dff0-0cbf-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c3-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2cb-f865-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3780-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c5-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2d4-f865-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3785-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c8-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2d6-f865-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3783-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c2-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2ce-f865-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3784-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c7-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:d805d2cd-f865-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3781-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/d805d2c6-f865-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f870db0f-f9ef-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3782-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f870db00-f9ef-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f870db10-f9ef-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3786-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f870db05-f9ef-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:f964ff00-f9ef-1039-960b-d505a8a725f2" inputs="mmuuid/d1ff3787-1489-1fc9-9c07-ad52dc529b5e" outputs="mmuuid/f870db0a-f9ef-1039-960b-d505a8a725f2"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:028ad44b-f871-1039-960b-d505a8a725f2">
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:028ad455-f871-1039-960b-d505a8a725f2" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC mmuuid:6154dfeb-0cbf-1fc9-9c07-ad52dc529b5e(env('sessionid'));&#xa;END">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:028ad457-f871-1039-960b-d505a8a725f2" selectSql="CREATE VIRTUAL PROCEDURE&#xa;BEGIN&#xa;EXEC SystemAdmin.getSessions(env('sessionid'));&#xa;END"/>
+        <aliases xmi:uuid="mmuuid:028ad456-f871-1039-960b-d505a8a725f2" alias="getSessions">
+          <aliasedObject href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c0-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c1-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c2-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c3-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c4-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c5-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c6-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c7-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c8-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670c9-f88c-1039-960b-d505a8a725f2"/>
+      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:45a670ca-f88c-1039-960b-d505a8a725f2"/>
+      <inputs href="SystemAdminPhysical.xmi#mmuuid/03f5d6c9-338d-1fac-a306-fc34788b24ae"/>
+    </transformationMappings>
+  </transformation:TransformationContainer>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:bbc0f4c0-0cc0-1fc9-9c07-ad52dc529b5e"/>
+  <relational:Procedure xmi:uuid="mmuuid:f8cc3b00-12dc-1fc9-9c07-ad52dc529b5e" name="getAllHosts" nameInSource="getHosts">
+    <result xmi:uuid="mmuuid:f8cc3b01-12dc-1fc9-9c07-ad52dc529b5e" name="Hosts">
+      <columns xmi:uuid="mmuuid:f8cc3b03-12dc-1fc9-9c07-ad52dc529b5e" name="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:f8cc3b02-12dc-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:f4924180-13f2-1fc9-9c07-ad52dc529b5e" name="getAllGroups" nameInSource="">
+    <result xmi:uuid="mmuuid:f4924181-13f2-1fc9-9c07-ad52dc529b5e" name="Groups">
+      <columns xmi:uuid="mmuuid:f4924184-13f2-1fc9-9c07-ad52dc529b5e" name="Name" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:f4924183-13f2-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:b0557e80-1490-1fc9-9c07-ad52dc529b5e" name="getAllSessions" nameInSource="getSessions">
+    <result xmi:uuid="mmuuid:b0557e82-1490-1fc9-9c07-ad52dc529b5e" name="Sessions">
+      <columns xmi:uuid="mmuuid:b0557e8a-1490-1fc9-9c07-ad52dc529b5e" name="Name" nameInSource="Name" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e84-1490-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e87-1490-1fc9-9c07-ad52dc529b5e" name="ApplicationName" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e85-1490-1fc9-9c07-ad52dc529b5e" name="SessionID" length="9" precision="9" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e8b-1490-1fc9-9c07-ad52dc529b5e" name="State" nameInSource="StateAsString" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e89-1490-1fc9-9c07-ad52dc529b5e" name="UserName" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e8d-1490-1fc9-9c07-ad52dc529b5e" name="VDBName" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e88-1490-1fc9-9c07-ad52dc529b5e" name="VDBVersion" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e83-1490-1fc9-9c07-ad52dc529b5e" name="IPAddress" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e86-1490-1fc9-9c07-ad52dc529b5e" name="HostName" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:b0557e8c-1490-1fc9-9c07-ad52dc529b5e" name="ProductName" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:e56e0d04-1b96-1fc9-9c07-ad52dc529b5e" name="getGroupsForUser">
+    <parameters xmi:uuid="mmuuid:6d3910c0-1b9e-1fc9-9c07-ad52dc529b5e" name="userName" nameInSource="arg1" nativeType="java.lang.String" length="100" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:b4cb3940-1c11-1fc9-9c07-ad52dc529b5e" name="explicitOnly">
+      <type href="http://www.w3.org/2001/XMLSchema#boolean"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:c04c5305-1b97-1fc9-9c07-ad52dc529b5e" name="Groups">
+      <columns xmi:uuid="mmuuid:264e9980-1ba5-1fc9-9c07-ad52dc529b5e" name="Name" length="32">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:264e9981-1ba5-1fc9-9c07-ad52dc529b5e" name="Identifier" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:d1ea3684-55e9-1fca-8b3c-8f9df8d89560" name="hasUserAdminRole">
+    <result xmi:uuid="mmuuid:4f9effc4-55ea-1fca-8b3c-8f9df8d89560" name="NewProcedureResult">
+      <columns xmi:uuid="mmuuid:cd73c781-56c3-1fca-8b3c-8f9df8d89560" name="hasRole" length="10" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:8e8949c4-66d6-1fcd-8f34-f885f819779e" name="cancelRequest">
+    <parameters xmi:uuid="mmuuid:a282fa80-66da-1fcd-8f34-f885f819779e" name="requestID" nameInSource="" nativeType="java.lang.String" length="50" precision="4">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:35401f05-66d7-1fcd-8f34-f885f819779e" name="NewProcedureResult">
+      <columns xmi:uuid="mmuuid:68682780-66df-1fcd-8f34-f885f819779e" name="return" length="1" defaultValue="-1" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:083765c4-4a65-1fd6-9319-c997e587bf2e" name="getRolesForCurrentUser">
+    <result xmi:uuid="mmuuid:b4794c44-4a65-1fd6-9319-c997e587bf2e" name="NewProcedureResult">
+      <columns xmi:uuid="mmuuid:0cc04640-4a86-1fd6-9319-c997e587bf2e" name="RoleName" length="100">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:0c6c0a44-e59e-1fd6-ab08-ea702498499b" name="assignRoleToGroup">
+    <parameters xmi:uuid="mmuuid:967864c0-e5a0-1fd6-ab08-ea702498499b" name="roleName" length="32">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:575a5580-e5a2-1fd6-ab08-ea702498499b" name="groupIdentifier" length="32">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <result xmi:uuid="mmuuid:9f86bb45-e59e-1fd6-ab08-ea702498499b" name="NewProcedureResult">
+      <columns xmi:uuid="mmuuid:16ef1380-e5a9-1fd6-ab08-ea702498499b" name="RESULT">
+        <type href="http://www.w3.org/2001/XMLSchema#boolean"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:5171c400-8b8a-1fda-b727-e7322eee82ac" name="getAllRequests" nameInSource="getRequests">
+    <result xmi:uuid="mmuuid:5171c401-8b8a-1fda-b727-e7322eee82ac" name="Requests">
+      <columns xmi:uuid="mmuuid:5171c407-8b8a-1fda-b727-e7322eee82ac" name="Name" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c402-8b8a-1fda-b727-e7322eee82ac" name="Identifier" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c405-8b8a-1fda-b727-e7322eee82ac" name="ConnectorBindingName" length="100" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c406-8b8a-1fda-b727-e7322eee82ac" name="UserName" length="50" updateable="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c409-8b8a-1fda-b727-e7322eee82ac" name="SqlCommand" length="2048" updateable="false" caseSensitive="false" signed="false">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c40b-8b8a-1fda-b727-e7322eee82ac" name="RequestID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c404-8b8a-1fda-b727-e7322eee82ac" name="SessionID" length="9" precision="7">
+        <type href="http://www.w3.org/2001/XMLSchema#long"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c403-8b8a-1fda-b727-e7322eee82ac" name="NodeID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c40a-8b8a-1fda-b727-e7322eee82ac" name="TransactionID" length="50">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+      <columns xmi:uuid="mmuuid:5171c408-8b8a-1fda-b727-e7322eee82ac" name="ProcessingDate" nameInSource="" length="50" updateable="false">
+        <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+      </columns>
+    </result>
+  </relational:Procedure>
+  <relational:Schema xmi:uuid="mmuuid:890e7fc5-077a-101e-861a-a893857ac5a5" name="SystemInfo">
+    <tables xsi:type="relational:BaseTable" xmi:uuid="mmuuid:284eb380-0793-101e-861a-a893857ac5a5" name="JDBCURL" supportsUpdate="false">
+      <columns xmi:uuid="mmuuid:284eb381-0793-101e-861a-a893857ac5a5" name="URL" length="322">
+        <type href="http://www.w3.org/2001/XMLSchema#string"/>
+      </columns>
+    </tables>
+  </relational:Schema>
+  <relational:BaseTable xmi:uuid="mmuuid:d805d2c0-f865-1039-960b-d505a8a725f2" name="UserSession" supportsUpdate="false">
+    <columns xmi:uuid="mmuuid:d805d2c4-f865-1039-960b-d505a8a725f2" name="Name" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c3-f865-1039-960b-d505a8a725f2" name="ApplicationName" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c5-f865-1039-960b-d505a8a725f2" name="SessionID">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c8-f865-1039-960b-d505a8a725f2" name="IPAddress" length="10">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c2-f865-1039-960b-d505a8a725f2" name="VDBName" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c7-f865-1039-960b-d505a8a725f2" name="VDBVersion" length="10">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c6-f865-1039-960b-d505a8a725f2" name="State" length="10">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:f870db00-f9ef-1039-960b-d505a8a725f2" name="USERNAME" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:f870db05-f9ef-1039-960b-d505a8a725f2" name="HOSTNAME" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:f870db0a-f9ef-1039-960b-d505a8a725f2" name="PRODUCTNAME" length="100">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d805d2c9-f865-1039-960b-d505a8a725f2" name="Identifier" length="100" selectable="false" accessPatterns="mmuuid/6eaf7940-f89a-1039-960b-d505a8a725f2">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <accessPatterns xmi:uuid="mmuuid:6eaf7940-f89a-1039-960b-d505a8a725f2" name="AccessPattern" columns="mmuuid/d805d2c9-f865-1039-960b-d505a8a725f2"/>
+  </relational:BaseTable>
+</xmi:XMI>

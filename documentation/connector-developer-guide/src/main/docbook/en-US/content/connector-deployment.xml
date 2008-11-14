@@ -1,0 +1,472 @@
+<chapter id="connector_deployment">
+  <title>Connector Deployment</title>
+  
+  <sect1>
+    <title>Overview</title>
+    <para>Once you have written and compiled the code for your connector, there are several
+      steps to deploy your connector to a MetaMatrix Server:</para>
+    <itemizedlist>
+      <listitem>
+        <para>Creating a Connector Type Definition file that defines the properties required
+          to initialize your connector.</para>
+      </listitem>
+      <listitem>
+        <para>Identifying the Extension Modules (jars and resources) required for the
+          Connector to run.</para>
+      </listitem>
+      <listitem>
+        <para>Creating the Connector Archive file to bundle the Connector Type Definition
+          file and the Extension Modules.</para>
+      </listitem>
+      <listitem>
+        <para>Importing the Connector Archive file in the MetaMatrix Console.</para>
+      </listitem>
+      <listitem>
+        <para>Creating a Connector Binding using your Connector Type.</para>
+      </listitem>
+    </itemizedlist>
+    <para>This chapter will help you perform these steps.  </para>
+  </sect1>
+   
+  <sect1>
+    <title>Connector Type Definition File</title>
+    <para>A Connector Type Definition file defines a connector in the MetaMatrix Server.  The
+      Connector Type Definition file defines some key properties that allow the MetaMatrix Server to
+      use your connector as well as specifying other properties your connector might need.  </para>
+    <para>A Connector Type Definition file is in XML format and typically has the extension “.cdk”.
+       It defines a default name for the connector type, the properties expected by the connector,
+      and other information that allows the properties to be displayed correctly in the Console when
+      a Connector Binding is created from the Connector Type.  </para>
+    <para> An example of this file can be found in <link linkend="appendix-a">Appendix A.</link>
+      It may be helpful to refer to this file while reading this section. The template file can
+      also be created using the Connector Development Kit.</para>
+    
+    <sect2>
+      <title>Required Properties</title>
+      <para>The Connector API requires the following properties for the MetaMatrix Server to load
+      and use your connector.</para>
+      <table frame='all'>
+        <title>Required Connector Properties</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*" />
+        <thead>
+          <row>
+            <entry>
+              <para>Property Attribute</para>
+            </entry>
+            <entry>
+              <para>Example Value</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>          
+        </thead>        
+        <tbody>
+          <row>
+            <entry>
+              <para>ConnectorClass</para>
+            </entry>
+            <entry>
+              <para>com.my.connector.MyConnector</para>
+            </entry>
+            <entry>
+              <para>Fully-qualified name of class implementing the Connector interface.</para>
+            </entry>
+          </row>
+            
+          <row>
+            <entry>
+              <para>ConnectorClassPath</para>
+            </entry>
+            <entry>
+              <para>extensionjar:mycode.jar;</para>
+            </entry>
+            <entry>
+              <para>Semi-colon delimited list of jars defining the classpath of this
+                connector.  Typically this includes the actual code for your connector as well as
+                any 3rd party dependencies.</para>
+            </entry>
+          </row>
+        </tbody>
+        </tgroup>
+      </table>
+            
+      <para>For more information on the Connector Classpath, see the section <link linkend="understanding_classpath">Understanding the Connector Classpath</link></para>  
+    </sect2>
+    
+    <sect2>    
+      <title>Connector Properties</title>
+      <para>Most connectors will require some initialization parameters to connect to the
+        underlying enterprise information system.  These properties can be defined in the Connector
+        Type Definition file along with their default values and other property metadata.  The actual
+        property values can be changed when the connector is deployed in the MetaMatrix Console.</para>
+      <para>Each connector property carries with it several attributes that are used by the
+        MetaMatrix Console to integrate the connector seamlessly into the MetaMatrix Server.</para>
+      
+      <table frame='all'>
+        <title>All Properties</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*"/>
+        <thead>
+          <row>
+            <entry>
+              <para>Property Name</para>
+            </entry>
+            <entry>
+              <para>Example Value</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>          
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>Name</para>
+            </entry>
+            <entry>
+              <para>ExampleProperty</para>
+            </entry>
+            <entry>
+              <para>Property name – should only contain letters, no spaces or other
+                punctuation.  This is the name of the property as it will be passed to the connector
+                in the ConnectorEnvironment.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DisplayName</para>
+            </entry>
+            <entry>
+              <para>Example property</para>
+            </entry>
+            <entry>
+              <para>The property name as displayed in the Console.  Typically this is a nicely
+                formatted version of the Name attribute.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ShortDescription</para>
+            </entry>
+            <entry>
+              <para>The example property is used to control something.</para>
+            </entry>
+            <entry>
+              <para>A short description that is displayed as a tooltip of the property in the
+                MetaMatrix Console.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DefaultValue</para>
+            </entry>
+            <entry>
+              <para>Xyz</para>
+            </entry>
+            <entry>
+              <para>A default value for the property.  This value will be auto-filled when a
+                connector binding is created from the Connector Type.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Multiplicity</para>
+            </entry>
+            <entry>
+              <para>0..1</para>
+            </entry>
+            <entry>
+              <para>If the multiplicity is set to “1”, then this property is required.  If the
+                multiplicity is set to “0..1”, the property is optional and will not be displayed in
+                the connector binding properties panel until the user clicks the “Optional
+                properties” checkbox.   Any required property without a value is displayed in red in
+                the connector binding properties panel.  Other values for the multiplicity are not
+                supported.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsHidden</para>
+            </entry>
+            <entry>
+              <para>false</para>
+            </entry>
+            <entry>
+              <para>If set to”true”, the property will be hidden in all connector binding property
+                panels and the value cannot be set.  Hidden properties should always set a default
+                value.  </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsModifiable</para>
+            </entry>
+            <entry>
+              <para>true</para>
+            </entry>
+            <entry>
+              <para>If set to “false”, the property is visible but not modifiable in the
+                properties panel.  </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsMasked</para>
+            </entry>
+            <entry>
+              <para>false</para>
+            </entry>
+            <entry>
+              <para>If set to “true”, the property will be masked with *’s when it is entered and
+                saved in an encrypted form.  This attribute is typically used with passwords.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsPreferred</para>
+            </entry>
+            <entry>
+              <para>true</para>
+            </entry>
+            <entry>
+              <para>All “preferred” properties are sorted in alphabetical order at the top of the
+                connector binding properties panel.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsExpert</para>
+            </entry>
+            <entry>
+              <para>true</para>
+            </entry>
+            <entry>
+              <para>Depending on the property display, the property can be optionally
+                displayed for advanced users.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IsConstrainedToAllowedValues</para>
+            </entry>
+            <entry>
+              <para>true</para>
+            </entry>
+            <entry>
+              <para>Constrains the property to a subset of values, that are listed as
+                subelements to the PropertyDefinition.  For example,</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PropertyType</para>
+            </entry>
+            <entry>
+              <para>String</para>
+            </entry>
+            <entry>
+              <para>The short name of a built-in Java primitive wrapper Object type.  Other
+                possible values include Integer, Boolean, etc.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ValueDelimiter</para>
+            </entry>
+            <entry>
+              <para>,</para>
+            </entry>
+            <entry>
+              <para>Denotes how to delimit multiple values (not currently utilized by the Console).</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Extension Modules</title>
+    
+    <sect2>
+      <title>Extension Modules</title>
+      <para>Extension Modules are used in the MetaMatrix Server to store code that extends
+        the MetaMatrix Server in a central managed location.  Extension Module JAR files are stored in
+        the repository database and all MetaMatrix processes access this database to obtain extension
+        code.  Custom connector code is typically deployed as extension models.</para>
+    </sect2>
+    <sect2 id="understanding_classpath">
+      <title>Understanding the Connector Classpath</title>
+      <para>Each connector is started in an isolated classloader instance. This classloader loads
+        classes via the MetaMatrix Extension Modules before loading classes from the MetaMatrix system
+        classpath. Ideally, all of your connector classes should be loaded from extension modules,
+        which are configured in the MetaMatrix Console.  </para>
+      <para>The ConnectorClasspath property of your connector defines the extension module jars
+        that are included in your connector’s classpath.  The connector classpath is defined as a
+        semi-colon delimited list of extension modules.  Extension module jar files must be prefixed
+        with “extensionjar:”</para>
+    </sect2>    
+  </sect1>
+   
+  
+  <sect1>
+    <title>Connector Archive File</title>
+    <para>The Connector Archive file is a bundled version of all files needed by this Connector
+      to execute in the MetaMatrix server. This file includes the Connector Type Definition file and
+      all the Extension Modules required by the Connector to create a connector archive file (CAF)..
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>The archive is a standard zip file.</para>
+      </listitem>
+      <listitem>
+        <para>Start the CDK tool by executing cdk.bat</para>
+      </listitem>
+      <listitem>
+        <para>Execute “CreateArchive” command by supplying:</para>
+        <orderedlist>
+          <listitem>
+            <para>Path to the name of the archive file to create</para>
+          </listitem>
+          <listitem>
+            <para>Path to the Connector Type Definition file</para>
+          </listitem>
+          <listitem>
+            <para>Path to the directory where the required Extension Modules (jar files) are stored
+              (note that only .jar files specified in the ConnectorClassPath property of the Connector
+              Type definition file are bundled.</para>
+          </listitem>
+      </orderedlist>
+      </listitem>
+    </itemizedlist>
+    
+    <para>The file created by the CDK can be opened with any zip file utility to verify the
+      required files are included.</para>
+    <para>The archive file can be tested in the CDK tool by loading it using the command
+      “loadArchive”.  Refer to Chapter 4 for more information on the CDK tool</para>
+  </sect1>
+  <sect1>
+    <title>Importing the Connector Archive</title>
+    
+    <sect2>
+    <title>Into MetaMatrix Server</title>
+    <para>To use a new connector type definition in the MetaMatrix Server, the Connector Archive
+      file must be imported in the MetaMatrix Console or using the Admin API.  To perform this task,
+      perform the following steps:</para>
+    <orderedlist>
+      <listitem>
+        <para>Start the MetaMatrix Console and connect to your MetaMatrix Server.</para>
+      </listitem>
+      <listitem>
+        <para>Select Connector Types from the tree at the left of the Console.  This will
+          display a list of existing Connector Types on the right.</para>
+      </listitem>
+      <listitem>
+        <para>Click the Import… button on the bottom of the Connector Type list.  This will
+          open the Import Connector Type Wizard.</para>
+      </listitem>
+      <listitem>
+        <para>Select your Connector Archive file and click the Next button.</para>
+      </listitem>
+      <listitem>
+        <para>Click Finish to create the Connector Type.  At this point you will see the new
+          Connector Type in the list of Connector Types.  </para>
+      </listitem>
+      <listitem>
+        <para>Select Extension Modules from the tree at the left of the Console, and make sure
+          all the required Extension Modules are added.</para>
+      </listitem>
+    </orderedlist>
+    </sect2>
+    
+    <sect2>
+      <title>Into Enterprise or Dimension Designer</title>
+      <para>To use the new connector type during the development of the VDB for testing using the
+      SQLExplorer, Connector Archive File must be imported into the Designer tools. To perform this
+      task, perform the following steps.</para>
+      <orderedlist>
+        <listitem>
+          <para>Start the Enterprise or Dimension designer</para>
+        </listitem>
+        <listitem>
+          <para>Open the project and in the “vdb” execute panel, click on the “Open the
+            Configuration Manager” link. For more information consult the designer’s guide.</para>
+        </listitem>
+      </orderedlist>
+      <orderedlist>
+        <listitem>
+          <para>In the result window, click “Import a Connector Type (.cdk,.caf)” link and follow
+            directions.</para>
+        </listitem>
+      </orderedlist>
+      <para>The Connector Type can now be used to create Connector Bindings.  </para>
+    </sect2>
+  </sect1>
+  
+  <sect1>
+    <title>Creating a Connector Binding</title>
+    
+    <sect2>
+      <title>In Console</title>
+     <para>To actually use your connector in the MetaMatrix System, you must create a Connector
+      Binding that specifies the specific property values for an instance of the Connector Type.  To
+      create a Connector Binding, perform the following steps:</para>
+      <orderedlist>
+        <listitem>
+          <para>Start the MetaMatrix Console and connect to your MetaMatrix Server.</para>
+        </listitem>
+        <listitem>
+          <para>Select Connector Bindings from the tree at the left of the Console.  This will
+            display a list of existing Connector Bindings on the right.</para>
+        </listitem>
+        <listitem>
+          <para>Click the New… button below the list of Connector Bindings.  This will launch the
+            Create New Connector Binding Wizard.  </para>
+        </listitem>
+        <listitem>
+          <para>In Step 1, you must specify a name for your connector binding and select your
+            connector type from the Connector Type list.  Click the Next button to continue.</para>
+        </listitem>
+        <listitem>
+          <para>In Step 2, the connector properties from your connector type definition file will be
+            displayed.  Default values are used to pre-fill the value fields if they exist.  Required
+            properties are displayed with bold text.  Required properties with no value specified are
+            displayed in red text.  These fields must be completed before the Next button will enable.
+             Optional properties may be displayed by checking the Optional Properties checkbox.  When
+            you have completed all required values, click the Next button.</para>
+        </listitem>
+        <listitem>
+          <para>In Step 3, you are given the opportunity to set the enabled state of the new binding
+            in each PSC.  Typically, no modifications need to be made.  For more information, see the
+            MetaMatrix Console User’s Guide.  Click the Finish button to complete the wizard and
+            create your connector binding.  The Connector Binding list now displays your new connector
+            binding.  </para>
+        </listitem>
+      </orderedlist>
+      <para>To actually start your connector binding, please consult the MetaMatrix Console User’s
+        Guide for detailed information.</para>
+    </sect2>
+    
+    <sect2>
+      <title>In Designer</title>
+      <para>Connector Binding properties can also be defined in the Designer for the given
+      Connector Type, if the corresponding Connector Archive File is imported into the Designer. If
+      you try to execute your VDB with SQLExplorer in the Designer, this tool will present you with
+      a window to specify such Connector Bindings. The user is required specify these binding
+      properties before they can test using the SQLExplorer. For more information on how this can be
+      accomplished please refer to the Enterprise Designer User’s Guide.</para>
+      <para>Also, note that the bindings specified in the Designer tool are automatically bundled
+      into the VDB for deployment, so if there are any properties that needs to be changed from
+      development environment to the production environment, those properties need to be modified
+      when a VDB is deployed to the MetaMatrix Server using the Console to correct resources.</para>
+    </sect2>
+  </sect1>
+</chapter>

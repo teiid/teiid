@@ -1,0 +1,3 @@
+text.library.location = src/test/resources/MultiParts/*.csv
+text.library.qualifier = "
+text.library.delimiter = ,

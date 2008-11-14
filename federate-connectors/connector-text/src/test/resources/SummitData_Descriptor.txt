@@ -1,0 +1,3 @@
+SummitData.SUMMITDATA.skipHeaderLines = 1
+SummitData.SUMMITDATA.location = src/test/resources/SUMMITDATA3.txt
+SummitData.SUMMITDATA.delimiter = ,

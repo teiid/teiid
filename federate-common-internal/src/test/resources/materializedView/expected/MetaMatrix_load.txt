@@ -1,0 +1,2 @@
+-- MetaMatrix script. Populate view1 cache table.
+SELECT column1, column2, column3 INTO materializationStageTableName FROM virtualGroupName OPTION NOCACHE;

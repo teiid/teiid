@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<preface>
+  <title>Preface</title>
+  <para> Federate Embedded offers the power of the a federated relational query engine for use with any Java
+    application - without the need for a separate server process. Accessing your federated data is as easy as
+    making JDBC connection to any relational data source. This guide will take you through </para>
+    <itemizedlist>
+      <listitem><para>Deployment of Federate Embedded in your environment</para></listitem>
+      <listitem><para>Building and deploying Virtual Database(VDB)</para></listitem>
+      <listitem><para>Connecting to your VDB and issuing federated queries against your VDB and getting results back</para></listitem>
+    </itemizedlist>
+        
+  <para> Commercial development support, production support, and training for Federate is available through JBoss.
+    Federate is a Professional Open Source project and a critical component of the JBoss Enterprise Data Services
+    Platform.</para>
+  <note>
+    <para>
+      Before proceeding please make sure you have read the
+      <ulink url="../Federation-Basics">Federation Basics</ulink>
+      and understand different terminologies used, resources needed and artifacts that need to be generated before
+      developing a successful example. It is also expected that the reader is familiar with SQL and relational
+      database schema design and development
+    </para>
+  </note>
+</preface>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-cache-jbosscache</artifactId>
+  <name>JBoss Cache</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>JBossCache provider.</description>
+  
+  <dependencies>
+        
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+    </dependency>
+
+    <dependency>
+		<groupId>jboss</groupId>
+   		<artifactId>jboss-cache</artifactId>    
+    </dependency>        
+    
+    <dependency>
+    	<groupId>com.google.code.guice</groupId>
+		<artifactId>guice</artifactId>
+    </dependency>  
+        
+  </dependencies>
+  
+</project>

@@ -1,0 +1,90 @@
+<appendix id="assertion_list">
+  <title>Assert Commands Available</title>
+  <para>The following are the list of assert commands available in the MMAdmin to be used with the scripts.
+  </para>
+  <sect1>
+    <title>Assertions for SQL results</title>
+    <programlisting><![CDATA[
+/**
+ * Assert that the result set has given number of rows.
+ * @param count – Number of rows expected
+ */
+assertRowCount(int count); 
+
+
+/**
+ * Assert that the result set contents match those of supplied rows
+ * @param expectedRows – expected rows 
+ */
+assertResultsSetEquals(String[] expectedRows);
+
+/**
+ * Assert that the result set contents match those of supplied rows in
+ * a file
+ * @param expectedRows – expected rows 
+ */
+assertResultsSetEquals(File expected)        
+        ]]></programlisting>
+  </sect1>
+  <sect1>
+    <title>Assertions for checking any values</title>
+    <programlisting><![CDATA[
+/**
+ * assert that the given expression is true or false
+ */
+void assertTrue(boolean condition);
+void assertTrue(String message, boolean condition);
+void assertFalse(boolean condition);
+void assertFalse(String message, boolean condition);
+
+
+/**
+ * Assert that two supplied values are equal
+ */
+void assertEquals(boolean expected, boolean actual);
+void assertEquals(byte expected, byte actual);
+void assertEquals(char expected, char actual);
+void assertEquals(double expected,  double actual,double delta) ;
+void assertEquals(float expected, float actual,float delta);
+void assertEquals(int expected, int actual);
+void assertEquals(Object expected, Object actual);
+void assertEquals(long expected, long actual);
+void assertEquals(short expected, short actual) ;
+void assertEquals(String message,  boolean expected,  boolean actual);
+void assertEquals(String message, byte expected,byte actual);
+void assertEquals(String message, char expected,char actual);
+void assertEquals(String message, double expected,double actual,double delta);
+void assertEquals(String message, float expected,float actual,float delta);
+void assertEquals(String message, int expected, int actual);
+void assertEquals(String message, Object expected,Object actual);
+void assertEquals(String expected, String actual);
+void assertEquals(String message,String expected,String actual);
+void assertEquals(String message,long expected,long actual)
+void assertEquals(String message,short expected,short actual);
+
+/** 
+ * Assert that the given object is either Null or Not Null
+ */
+void assertNotNull(Object object);
+void assertNotNull(String message, Object object);
+void assertNull(Object object) ;
+void assertNull(String message, Object object);
+
+/**
+ * Assertion to check if two supplied objects same objects or not
+ * the difference here is these use == vs equals in the equals methods.
+ */
+void assertNotSame(Object expected, Object actual) ;
+void assertNotSame(String message,Object expected,Object actual);
+void assertSame(Object expected, Object actual);
+void assertSame(String message,Object expected,Object actual);
+
+
+/**
+ * Assertion to fail the program explicitly
+ */
+void fail();
+void fail(String message);    
+    ]]></programlisting>    
+  </sect1>
+</appendix>

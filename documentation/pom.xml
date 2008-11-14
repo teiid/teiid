@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-docs</artifactId>
+  <packaging>pom</packaging>
+  <name>Federate Documents</name>
+  <description>Federate Documentation</description>
+  <modules>
+    <module>admin-guide</module>
+    <module>reference</module>
+    <module>connector-developer-guide</module>
+    <module>embedded-guide</module>
+    <module>server-extensions-guide</module>
+  </modules>
+  <repositories>
+    <repository>
+      <id>apiviz.release</id>
+      <name>APIviz releases</name>
+      <url>http://apiviz.googlecode.com/svn/site/repo/mvn/release</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jboss</id>
+      <url>http://repository.jboss.com/maven2</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jboss-org</id>
+      <url>http://repository.jboss.org/maven2</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jboss-snapshot</id>
+      <url>http://snapshots.jboss.org/maven2</url>
+    </pluginRepository>
+  </pluginRepositories>
+</project>

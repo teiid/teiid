@@ -1,0 +1,408 @@
+<chapter id="connector_api">
+  <title>Connector API</title>
+  <sect1>
+    <title>Overview</title>
+    <para>A component called the Connector Manager is controlling access to your connector. This chapter reviews
+      the basics of how the Connector Manager interacts with your connector while leaving reference details and
+      advanced topics to be covered in later chapters.</para>
+    <para>
+      A custom connector must implement the following interfaces to connect and query an enterprise Data Source.
+      These interfaces are in package called
+      <emphasis>com.metamatrix.data.api:</emphasis>    
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <emphasis>Connector</emphasis>
+          - This interface is the starting point for all interaction with your connector. It allows the Connector
+          Manager to obtain a connection and perform lifecycle events.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Connection</emphasis>
+          - This interface represents a connection to your data source. It is used as a starting point for actual
+          command executions.  Connections provided to the Connector Manager will be obtained and closed for each
+          command execution. Typically, the Connector should pool connections to the physical source when those
+          connections are expensive to create.  MetaMatrix provides an extensible connection pool implementation
+          for your use, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
+          chapter.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>ConnectorCapabilities</emphasis>
+          - This interface allows a connector to describe the execution capabilities of the connector. MetaMatrix
+          provides a base implementation of this class called BasicConnectorCapabilities.  You can either extend
+          this basic implementation or implement your own implementation.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Execution (and sub-interfaces)</emphasis>
+          - These interfaces represent a command execution with your Connector.  There is a sub-interface for
+          executing each kinds of command:  query, update, and procedure.  Your connector can specify via the
+          ConnectorCapabilities which of these command types it can handle.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Batch</emphasis>
+          - This interface represents a batch of results being sent to the MetaMatrix Server from the custom
+          connector. MetaMatrix provides a default implementation of this class called BasicBatch.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>The most important interfaces provided by MetaMatrix to the connector are the following:</para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <emphasis>ConnectorEnvironment</emphasis>
+          – an interface describing access to external resources for your connector.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>ConnectorLogger</emphasis>
+          – an interface for writing logging information to MetaMatrix logs.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>SecurityContext / ExecutionContext</emphasis>
+          – interfaces defining the security information and execution context available to the connector when
+          executing a command.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+  <sect1>
+    <title>Connector Lifecycle</title>
+    <sect2>
+      <title>Initialization</title>
+      <para>
+        A Connector will be initialized one time via the initialize() method, which passes in a
+        <emphasis>ConnectorEnvironment</emphasis>
+        object provided by the
+        <emphasis>Connector Manager</emphasis>
+        . The
+        <emphasis>ConnectorEnvironment provides</emphasis>
+        the following resources to the connector:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>Configuration properties – name / value pairs as provided by the connector binding in
+            the MetaMatrix Console</para>
+        </listitem>
+        <listitem>
+          <para>Logging – ConnectorLogger interface allows a Connector to log messages and errors to
+            MetaMatrix’s log files.</para>
+        </listitem>
+        <listitem>
+          <para>Runtime metadata – access to the runtime metadata of the model deployed in the MetaMatrix
+            Server for your physical source</para>
+        </listitem>
+        <listitem>
+          <para>Large object replacement – ability to stream the results of large values (such as blobs and
+            clobs) through the MetaMatrix system</para>
+        </listitem>
+        <listitem>
+          <para>Type facility – an interface defining runtime datatypes and type conversion facility.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>Starting and Stopping</title>
+      <para>Other methods on the connector allow the Connector Manager to start() or stop() the connector.
+        Typically the connector is started or stopped in response to system startup, system shutdown, or an
+        administrator changing these states on connector bindings in the MetaMatrix Console or through Admin API. A
+        connector should perform whatever actions are necessary in these methods to create or destroy all connector
+        states, including connections to the actual physical source.</para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Connections to Source</title>
+    <sect2>
+      <title>Obtaining connections</title>
+      <para>The connector must implement the getConnection() method to allow the Connector Manager to obtain a
+        connection. The getConnection() method is passed a SecurityContext, which contains information about the
+        context in which this query is being executed.</para>
+      <para>The SecurityContext contains the following information:</para>
+      <itemizedlist>
+        <listitem>
+          <para>User name</para>
+        </listitem>
+        <listitem>
+          <para>Virtual database name</para>
+        </listitem>
+        <listitem>
+          <para>Virtual database version</para>
+        </listitem>
+        <listitem>
+          <para>Trusted token</para>
+        </listitem>
+      </itemizedlist>
+      <para>The trusted token is used to pass security information specific to your application through the
+        MetaMatrix Server. The client can pass the trusted token when they connect via JDBC. This token is then
+        passed to the Membership Service and may be created, replaced, or modified at that time. In some cases, you
+        may wish to provide a customer Membership Service implementation to handle security needs specific to your
+        organization. For more information on implementing a custom Membership Service, contact MetaMatrix
+        technical support.</para>
+    </sect2>
+    <sect2>
+      <title>Releasing Connections</title>
+      <para>Once the Connector Manager has obtained a connection, it will use that connection only for the
+        lifetime of the request.  When the request has completed, the release() method will be called on the
+        connection.</para>
+      <para>
+        This usage presumes that the connection objects are pooled in the connector implementation.  In some cases
+        (such as when a connection is stateless) there may be no need to maintain a persistent connection. In that
+        case, connections can be created for every request and destroyed after every request.  In other cases (such
+        as when a connection is stateful and expensive to create), these connections should be pooled.  MetaMatrix
+        provides an extensible connection pool for this purpose, as described in chapter
+        <link linkend="connection_pooling">Connection Pooling</link>.
+      </para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Executing Commands</title>
+    <sect2>
+      <title>Execution Modes</title>
+      <para>The Connector API uses a connection to obtain an execution interface for the command it is
+        executing. Connectors may support any subset of the available execution modes. The execution modes are
+        defined by constants in the ConnectorCapabilities.EXECUTION_MODE class. The following execution modes are
+        available:</para>
+      <para />
+      <table frame='all'>
+        <title>Types of Execution Modes</title>
+        <tgroup cols='4' align='left' colsep='1' rowsep='1'>
+          <colspec colname='c1' colwidth="1*" />
+          <colspec colname='c2' colwidth="1*" />
+          <colspec colname='c3' colwidth="1*" />
+          <colspec colname='c4' colwidth="2*" />
+          <thead>
+            <row>
+              <entry>Execution Mode</entry>
+              <entry>Execution Interface</entry>
+              <entry>Command interface(s)</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <emphasis>Synchronous Query</emphasis>
+              </entry>
+              <entry>
+                <code>SynchQueryExecution</code>
+              </entry>
+              <entry>
+                <code>IQuery</code>
+              </entry>
+              <entry>A query, corresponding to a SQL SELECT statement</entry>
+            </row>
+            <row>
+              <entry>
+                <emphasis>Update</emphasis>
+              </entry>
+              <entry>
+                <code>UpdateExecution</code>
+              </entry>
+              <entry>
+                <code>IInsert, IUpdate, IDelete</code>
+              </entry>
+              <entry>An insert, update, or delete, corresponding to a SQL INSERT, UPDATE, or DELETE command
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <emphasis>Procedure Execution</emphasis>
+              </entry>
+              <entry>
+                <code>ProcedureExecution</code>
+              </entry>
+              <entry>
+                <code>IProcedure</code>
+              </entry>
+              <entry>A procedure execution that may return a result set and/or output values.</entry>
+            </row>
+            <row>
+              <entry>
+                <emphasis>Asynchronous Query</emphasis>
+              </entry>
+              <entry>
+                <code>AsynchQueryExecution</code>
+              </entry>
+              <entry>
+                <code>IQuery</code>
+              </entry>
+              <entry>Polled asynchronous execution of a SQL SELECT statement</entry>
+            </row>
+            <row>
+              <entry>
+                <emphasis>Batched Update</emphasis>
+              </entry>
+              <entry>
+                <code>BatchedUpdatesExecution</code>
+              </entry>
+              <entry>
+                <code>ICommand[]</code>
+              </entry>
+              <entry>Execute multiple commands in a batch</entry>
+            </row>
+            <row>
+              <entry>
+                <emphasis>Bulk Insert</emphasis>
+              </entry>
+              <entry>
+                <code>BatchedUpdatesExecution</code>
+              </entry>
+              <entry>
+                <code>IInsert</code>
+              </entry>
+              <entry>Insert a large set of data using the same INSERT command</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <para />
+      <para>Following is a class diagram further defining the relationships between the execution
+        interfaces:</para>
+      <figure id="execution-interface-hierarchy">
+        <title>Execution Interfaces Class Diagram</title>
+        <graphic align="center" scale="100" fileref="../images/execution-interface-hierarchy.png" />
+      </figure>
+      <para />
+      <para>All of the execution interfaces extend the base execution interface that defines how executions are
+        cancelled and closed. SynchQueryExecution, AsynchQueryExecution, and ProcedureExecution all extend the
+        BatchedExecution interface, which defines how batched results are returned from an execution.</para>
+    </sect2>
+    <sect2>
+      <title>Synchronous Query Execution</title>
+      <para>
+        Most commands executed against connectors are queries. Queries correspond to the SELECT statement in SQL.
+        The actual queries themselves are sent to connectors in the form of a set of objects, which are further
+        described in Chapter <link linkend="command_language">Command Language</link>.
+      </para>
+      
+      <para>NOTE:        Currently, the MetaMatrix Connector API only supports synchronous queries, meaning
+        that the execute() method is expected to block until results are available. In the future, the Connector
+        API may be expanded to also cover asynchronous queries where a response is returned at a later time over a
+        message bus, socket, or other asynchronous messaging framework.</para>
+        
+      <para>The following diagram represents the typical sequence of events when executing a query:</para>
+      
+      <figure id="query-execution-sequence">
+        <title>Query Execution Sequence Diagram</title>
+        <graphic align="center" scale="100" fileref="../images/query-execution-sequence.png" />
+      </figure>
+      
+      <para>While the command is being executed, the connector retrieves results in batches via the
+        BatchedExecution interface. Each time nextBatch() is called, the SynchQueryExecution implementation should
+        return a batch of no more than maxBatchSize records. The final batch of records should set the isLast flag
+        to true.</para>
+        
+      <para>The maxBatchSize parameter passed to the nextBatch method corresponds to the Connector Batch Size
+        that can be set on a system-wide bases in the MetaMatrix Console (under System Properties in the buffer
+        section..)  The Connector Batch Size should typically be set in conjunction with the Processor Batch Size
+        from the same category.  For more information on these parameters, see the MetaMatrix Console User Guide.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Asynchronous Query Execution</title>
+      <para>In some scenarios, a connector needs to execute queries asynchronously and poll for results.  In this
+        case, your connector should use the asynchronous query execution mode instead of the synchronous query
+        execution mode.  The connector capabilities specify which will be used (only one can be supported at the
+        same time).  </para>
+        
+      <para>The following diagram represents the typical sequence of events when executing a query
+        asynchronously:</para>
+        
+      <figure id="async-query-execution-sequence">
+        <title>Async Query Execution Sequence Diagram</title>
+        <graphic align="center" scale="100" fileref="../images/async-query-execution-sequence.png" />
+      </figure>
+      
+      <para>While the command is being executed, the connector retrieves results in batches via the
+        BatchedExecution interface. The AsynchQueryExecution interface works similarly to the SynchQueryExecution
+        interface with one important difference.  If the nextBatch method returns an empty batch with the isLast
+        flag set to false, then the Connector Manager interprets this as no data being available.  In this case,
+        the Connector Manager will wait for the poll interval before asking again for a batch.</para>
+        
+      <para>The nextBatch() is not expected to sleep or otherwise block for results as this would tie up a
+        Connector Manager thread which could be doing other work.  Instead, the Connector Manager is designed to
+        avoid tying up worker threads while waiting for the poll interval, so the connector is expected to return
+        from the nextBatch() method as quickly as possible.</para>
+      <para />
+    </sect2>
+    <sect2>
+      <title>Update Execution</title>
+      <para>Insert, update, and delete commands correspond to the INSERT, UPDATE, and DELETE commands in
+        SQL. They are used to insert a single row into a data source, update one or more rows in a data source, or
+        delete one or more rows in a data source. Each of these commands returns a count specifying the number of
+        rows updated in the physical source in response to the command.</para>
+      <para>The following diagram represents the typical sequence of events when executing an insert, update, or
+        delete:</para>
+      <figure id="update-query-execution-sequence">
+        <title>Update Query Execution Sequence Diagram</title>
+        <graphic align="center" scale="100" fileref="../images/update-query-execution-sequence.png" />
+      </figure>
+      <para>With an update execution, the execute method is the only call in the execution.  No subsequent
+        interaction will take place.  </para>
+    </sect2>
+    <sect2>
+      <title>Batched Update / Bulk Insert Execution</title>
+      <para>Batched update and bulk insert execution are very similar to update execution except multiple
+        commands are passed to the connector in a single method call.  In the case of a bulk insert, a single
+        template INSERT command is passed with a set of data rows that need to be inserted with the command.  In
+        the case of batched update, a series of arbitrary commands is sent and the batch must be executed together
+        for efficiency.  </para>
+    </sect2>
+    <sect2>
+      <title>Procedure Execution</title>
+      <para>Procedure commands correspond to the execution of a stored procedure or some other functional
+        construct. A procedure takes zero or more input values and can return a result set and zero or more output
+        values.  Examples of procedure execution would be a stored procedure in a relational database or a call to
+        a web service.</para>
+      <para>The following diagram represents the typical sequence of events when executing a procedure:</para>
+      <figure id="procedure-query-execution-sequence">
+        <title>Procedure Query Execution Sequence Diagram</title>
+        <graphic align="center" scale="100" fileref="../images/procedure-query-execution-sequence.png" />
+      </figure>
+      <para>If a result set is expected when a procedure is executed, all rows from it will be retrieved via the
+        BatchedExecution interface first. Then, if any output values are expected, they will be retrieved via the
+        getOutputValue() method, which will be called once for each expected output value.</para>
+    </sect2>
+    <sect2>
+      <title>Command Completion</title>
+      <para>All normal command executions end with the calling of close() on the Execution object.  Your
+        implementation of this method should do the appropriate clean-up work for all state in the Execution
+        object.</para>
+    </sect2>
+    <sect2>
+      <title>Command Cancellation</title>
+      <para>Commands submitted to MetaMatrix may be aborted in several scenarios:</para>
+      <itemizedlist>
+        <listitem>
+          <para>Client cancellation via the JDBC API (or other client APIs)</para>
+        </listitem>
+        <listitem>
+          <para>Administrative cancellation via the MetaMatrix Console or Admin API</para>
+        </listitem>
+        <listitem>
+          <para>Clean-up during session termination</para>
+        </listitem>
+        <listitem>
+          <para>Clean-up if a query fails during processing</para>
+        </listitem>
+      </itemizedlist>
+      <para>In these cases, if the command being executed on the connector has not yet finished, MetaMatrix will
+        call the cancel() method on the execution interface in a separate thread from the thread that may be
+        blocked calling the execute() method.</para>
+      <para>Your connector implementation may choose to do nothing in response to this cancellation message. In
+        this instance, MetaMatrix will call close() on the execution object after current synchronous processing
+        has completed. Implementing the cancel() method allows for faster termination of queries being processed
+        and may allow the underlying data source to terminate its operations faster as well.</para>
+    </sect2>
+  </sect1>
+</chapter>

@@ -1,0 +1,78 @@
+<appendix id="faq">
+  <title>Frequently Asked Questions</title>
+  <qandaset>
+    <qandaentry>
+      <question>
+        <para>Are there any pre-built scripts available?</para>
+      </question>
+      <answer>
+        <para>Yes, there are a few utility scripts are available in the "samples" directory with ".bsh" extension.</para>
+      </answer>
+    </qandaentry>
+    
+    <qandaentry>
+      <question>
+        <para>I have written a very useful script to do XYZ, I would like this to be part of the distribution?</para>
+      </question>
+      <answer>
+        <para>Yes, we would love to hear from users. Please submit the script to Technical Support, and if this script found to be useful and generic enough for all the customers, we will include the script in the scripts library in the following releases.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question>
+        <para>What is different between "connect(&lt;url&gt;)" method and "connectAsAdmin()"?</para>
+      </question>
+      <answer>
+        <para>Connect connects to the MetaMatrix system using a VDB name, so you should be able to run any SQL command which is based on that VDB along with Admin method calls. If you use "connectAsAdmin" then you can run all the admin calls but you can not run any SQL commands, and you do not need a VDB to connect to the MetaMatrix system.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question>
+        <para>How can I turn on the debug?</para>
+      </question>
+      <answer>
+        <para>At command prompt type</para>
+        <programlisting><![CDATA[
+mmadmin $ debug= true;   // to turn it ON
+mmadmin $ debug= false; // to turn it OFF        
+        ]]></programlisting>        
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question>
+        <para>Is IDE support available for writing the scripts?</para>
+      </question>
+      <answer>
+        <para>Full IDE support is not available, however eclipse can be used as the editor for developing the scripts. Just set the “.bsh” extension association with Java editor, so all the color syntax is available for your script.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question>
+        <para>Is debugging support available?</para>
+      </question>
+      <answer>
+        <para>No. Not for the scripts. However, if the scripts are calling into other Java code, those calls can be intercepted and can be run through debugger.</para>
+      </answer>
+    </qandaentry>
+    
+    <qandaentry>
+      <question>
+        <para>How to turn OFF interactive mode? How can I capture results to a file?</para>
+      </question>
+      <answer>
+        <para>Once you start the shell in the interactive mode, at the prompt enter the following</para>
+        <programlisting><![CDATA[
+          bsh.interactive=false;
+        ]]></programlisting>    
+        <para>this will turn off the interactive features like spitting the results to console. This is good way to capture
+        the results of the executed query. Use <emphasis>printResults(File)</emphasis> method to capture the previously executed
+        SQL command's results to the file handle supplied</para>    
+      </answer>
+    </qandaentry>    
+    
+  </qandaset>
+</appendix>

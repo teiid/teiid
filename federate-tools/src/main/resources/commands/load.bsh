@@ -1,0 +1,31 @@
+/**
+ * Load the specified module.
+ * @param module  The module to load.  Should be one of:
+ * <ul>
+ * <li>"dqp": Admin API for the embedded DQP. 
+ * <li>"server": Admin API for the MetaMatrix Server. 
+ * </ul>
+ */
+load(String module) {
+    
+    //common modules
+    sourceInto( getResource("/scripts/context.bsh"), this.caller.namespace );
+    sourceInto( getResource("/scripts/assert.bsh"), this.caller.namespace );
+    sourceInto( getResource("/scripts/util.bsh"), this.caller.namespace );
+    
+    // DQP and server modules
+    if (module.equalsIgnoreCase("dqp")) {
+        //print("loading module: dqp...");
+        sourceInto( getResource("/scripts/dqp.bsh"), this.caller.namespace );
+    } else if (module.equalsIgnoreCase("server")) {
+        //print("loading module: server...");
+        sourceInto( getResource("/scripts/server.bsh"), this.caller.namespace );
+    } else {
+        print("unknown module: "+module);
+    }
+}
+
+
+
+
+

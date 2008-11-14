@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="CurrencyExchangeService" targetNamespace="http://www.metamatrix.com/CurrencyExchangeService.wsdl" xmlns:tns="http://www.metamatrix.com/CurrencyExchangeService.wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:con="http://eviware.com/soapui/config">
+  <message name="getRateRequest">
+    <part name="country1" type="xsd:string"/>
+    <part name="country2" type="xsd:string"/>
+  </message>
+  <message name="getRateResponse">
+    <part name="Result" type="xsd:float"/>
+  </message>
+  <portType name="CurrencyExchangePortType">
+    <operation name="getRate">
+      <input message="tns:getRateRequest"/>
+      <output message="tns:getRateResponse"/>
+    </operation>
+  </portType>
+  <binding name="CurrencyExchangeBinding" type="tns:CurrencyExchangePortType">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="getRate">
+      <soap:operation soapAction=""/>
+      <input>
+        <soap:body use="encoded" namespace="urn:xmethods-CurrencyExchange" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:xmethods-CurrencyExchange" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="CurrencyExchangeService">
+    <documentation>Returns the exchange rate between the two currencies</documentation>
+    <port name="CurrencyExchangePort" binding="tns:CurrencyExchangeBinding">
+      <soap:address location="http://localhost:7001/axis/services/CurrencyExchangeService"/>
+    </port>
+  </service>
+</definitions>

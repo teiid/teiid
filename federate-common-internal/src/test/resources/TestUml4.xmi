@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="ASCII"?>
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<mmcore:ModelAnnotation xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmi:uuid="mmuuid:98783900-c3e0-1f07-9a25-c5dc8f8cd8d9" primaryMetamodelUri="http:///org/eclipse/uml2.ecore" modelType="LOGICAL"/>

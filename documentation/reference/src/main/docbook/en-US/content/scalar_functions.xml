@@ -1,0 +1,2097 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="scalar_functions">
+  <title>Scalar Functions</title>
+  <para>
+    Federate provides an extensive set of built-in scalar functions. See
+    also
+    <link linkend="sql_support">SQL Support</link>
+    and
+    <link linkend="datatypes">Datatypes</link>
+    . In addition, Federate provides the capability for
+    <link linkend="udfs">user defined functions or UDFs</link>
+    .
+  </para>
+  <sect1 id="numeric_functions">
+    <title>Numeric Functions</title>
+    <para>Numeric functions return numeric values (integer, long,
+      float, double, biginteger, bigdecimal). They generally take
+      numeric values as inputs, though some take strings.</para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>+ - * /</para>
+            </entry>
+            <entry>
+              <para>Standard numeric operators</para>
+            </entry>
+            <entry>
+              <para>x in {integer, long, float, double, biginteger,
+                bigdecimal}, return type is same as x</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ABS(x)</para>
+            </entry>
+            <entry>
+              <para>Absolute value of x</para>
+            </entry>
+            <entry>
+              <para>See standard numeric operators above</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ACOS(x)</para>
+            </entry>
+            <entry>
+              <para>Arc cosine of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ASIN(x)</para>
+            </entry>
+            <entry>
+              <para>Arc sine of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ATAN(x)</para>
+            </entry>
+            <entry>
+              <para>Arc tangent of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ATAN2(x,y)</para>
+            </entry>
+            <entry>
+              <para>Arc tangent of x and y</para>
+            </entry>
+            <entry>
+              <para>x, y in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CEILING(x)</para>
+            </entry>
+            <entry>
+              <para>Ceiling of x</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>COS(x)</para>
+            </entry>
+            <entry>
+              <para>Cosine of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>COT(x)</para>
+            </entry>
+            <entry>
+              <para>Cotangent of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DEGREES(x)</para>
+            </entry>
+            <entry>
+              <para>Convert x degrees to radians</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>EXP(x)</para>
+            </entry>
+            <entry>
+              <para>e^x</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FLOOR(x)</para>
+            </entry>
+            <entry>
+              <para>Floor of x</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATBIGDECIMAL(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is bigdecimal, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATBIGINTEGER(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is biginteger, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATDOUBLE(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is double, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATFLOAT(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is float, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATINTEGER(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is integer, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATLONG(x, y)</para>
+            </entry>
+            <entry>
+              <para>Formats x using format y</para>
+            </entry>
+            <entry>
+              <para>x is long, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LOG(x)</para>
+            </entry>
+            <entry>
+              <para>Natural log of x (base e)</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LOG10(x)</para>
+            </entry>
+            <entry>
+              <para>Log of x (base 10)</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MOD(x, y)</para>
+            </entry>
+            <entry>
+              <para>Modulus (remainder of x / y)</para>
+            </entry>
+            <entry>
+              <para>x in {integer, long, float, double, biginteger},
+                return type is same as x</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEBIGDECIMAL(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns bigdecimal</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEBIGINTEGER(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns biginteger</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEDOUBLE(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEFLOAT(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns float</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEINTEGER(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSELONG(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parses x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y are strings, returns long</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PI()</para>
+            </entry>
+            <entry>
+              <para>Value of Pi</para>
+            </entry>
+            <entry>
+              <para>return is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>POWER(x,y)</para>
+            </entry>
+            <entry>
+              <para>x to the y power</para>
+            </entry>
+            <entry>
+              <para>x in {integer, long, float, double, biginteger}, if
+                x is biginteger then return type is biginteger, else
+                double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RADIANS(x)</para>
+            </entry>
+            <entry>
+              <para>Convert x radians to degrees</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RAND()</para>
+            </entry>
+            <entry>
+              <para>Returns a random number, using generator
+                established so far in the query or initializing with
+                system clock if necessary.</para>
+            </entry>
+            <entry>
+              <para>Returns double.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RAND(x)</para>
+            </entry>
+            <entry>
+              <para>Returns a random number, using new generator
+                seeded with x.</para>
+            </entry>
+            <entry>
+              <para>x is integer, returns double.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ROUND(x,y)</para>
+            </entry>
+            <entry>
+              <para>Round x to y places; negative values of y
+                indicate places to the right of the decimal point</para>
+            </entry>
+            <entry>
+              <para>x in {integer, float, double} y is integer, return
+                is same type as x</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SIGN(x)</para>
+            </entry>
+            <entry>
+              <para>1 if x &gt; 0, 0 if x = 0, -1 if x &lt; 0</para>
+            </entry>
+              <entry>
+                <para>x in {integer, long, float, double, biginteger, bigdecimal},
+                  return type is integer</para>
+              </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SIN(x)</para>
+            </entry>
+            <entry>
+              <para>Sine value of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SQRT(x)</para>
+            </entry>
+            <entry>
+              <para>Square root of x</para>
+            </entry>
+            <entry>
+              <para>x in {double, float}, return type is double</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TAN(x)</para>
+            </entry>
+            <entry>
+              <para>Tangent of x</para>
+            </entry>
+            <entry>
+              <para>x in {double}, return type is double</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <sect2>
+      <title>Parsing Numeric Datatypes from Strings</title>
+      <para>
+        Federate offers a set of functions you can use to parse numbers from
+        strings. For each string, you need to provide the formatting of the
+        string. These functions use the convention established by the
+        java.text.DecimalFormat class to define the formats you can use with
+        these functions. You can learn more about how this class defines
+        numeric string formats by visiting the Sun Java Web site at the
+        following
+        <ulink
+          url="http://java.sun.com/j2se/1.4.2/docs/api/java/text/DecimalFormat.html">URL for Sun Java</ulink>
+        .
+      </para>
+      <para>For example, you could use these function calls, with the
+        formatting string that adheres to the java.text.DecimalFormat
+        convention, to parse strings and return the datatype you need:
+      </para>
+      <informaltable frame="all">
+        <tgroup cols="4">
+          <thead>
+            <row>
+              <entry>
+                <para>Input String</para>
+              </entry>
+              <entry>
+                <para>Function Call to Format String</para>
+              </entry>
+              <entry>
+                <para>Output Value</para>
+              </entry>
+              <entry>
+                <para>Output Datatype</para>
+              </entry>
+            </row>          
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>'$25.30'</para>
+              </entry>
+              <entry>
+                <para>parseDouble(cost, '$#,##0.00;($#,##0.00)')</para>
+              </entry>
+              <entry>
+                <para>25.3</para>
+              </entry>
+              <entry>
+                <para>double</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'25%'</para>
+              </entry>
+              <entry>
+                <para>parseFloat(percent, '#,##0%')</para>
+              </entry>
+              <entry>
+                <para>25</para>
+              </entry>
+              <entry>
+                <para>float</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'2,534.1'</para>
+              </entry>
+              <entry>
+                <para>parseFloat(total, '#,##0.###;-#,##0.###')
+                </para>
+              </entry>
+              <entry>
+                <para>2534.1</para>
+              </entry>
+              <entry>
+                <para>float</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'1.234E3'</para>
+              </entry>
+              <entry>
+                <para>parseLong(amt, '0.###E0')</para>
+              </entry>
+              <entry>
+                <para>1234</para>
+              </entry>
+              <entry>
+                <para>long</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'1,234,567'</para>
+              </entry>
+              <entry>
+                <para>parseInteger(total, '#,##0;-#,##0')
+                </para>
+              </entry>
+              <entry>
+                <para>1234567</para>
+              </entry>
+              <entry>
+                <para>integer</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+    <sect2>
+      <title>Formatting Numeric Datatypes as Strings</title>
+      <para>
+        Federate offers a set of functions you can use to convert numeric
+        datatypes into strings. For each string, you need to provide the
+        formatting. These functions use the convention established within
+        the java.text.DecimalFormat class to define the formats you can
+        use with these functions. You can learn more about how this class
+        defines numeric string formats by visiting the Sun Java Web site
+        at the following
+        <ulink
+          url="http://java.sun.com/j2se/1.4.2/docs/api/java/text/DecimalFormat.html">URL for Sun Java</ulink>
+        .
+      </para>
+      <para>For example, you could use these function calls, with the
+        formatting string that adheres to the java.text.DecimalFormat
+        convention, to format the numeric datatypes into strings:</para>
+      <informaltable frame="all">
+        <tgroup cols="4">
+          <thead>
+            <row>
+              <entry>
+                <para>Input Value</para>
+              </entry>
+              <entry>
+                <para>Input Datatype</para>
+              </entry>
+              <entry>
+                <para>Function Call to Format String</para>
+              </entry>
+              <entry>
+                <para>Output String</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>25.3</para>
+              </entry>
+              <entry>
+                <para>double</para>
+              </entry>
+              <entry>
+                <para>formatDouble(cost, '$#,##0.00;($#,##0.00)')</para>
+              </entry>
+              <entry>
+                <para>'$25.30'</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>25</para>
+              </entry>
+              <entry>
+                <para>float</para>
+              </entry>
+              <entry>
+                <para>formatFloat(percent, '#,##0%')</para>
+              </entry>
+              <entry>
+                <para>'25%'</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>2534.1</para>
+              </entry>
+              <entry>
+                <para>float</para>
+              </entry>
+              <entry>
+                <para>formatFloat(total, '#,##0.###;-#,##0.###')
+                </para>
+              </entry>
+              <entry>
+                <para>'2,534.1'</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>1234</para>
+              </entry>
+              <entry>
+                <para>long</para>
+              </entry>
+              <entry>
+                <para>formatLong(amt, '0.###E0')</para>
+              </entry>
+              <entry>
+                <para>'1.234E3'</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>1234567</para>
+              </entry>
+              <entry>
+                <para>integer</para>
+              </entry>
+              <entry>
+                <para>formatInteger(total, '#,##0;-#,##0')
+                </para>
+              </entry>
+              <entry>
+                <para>'1,234,567'</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+  </sect1>
+  <sect1 id="string_functions">
+    <title>String Functions</title>
+    <para>String functions generally take strings as inputs and return strings as outputs. </para>
+    <para>Unless specified, all of the arguments and return types in the following table are strings and all indexes are 1-based. The 0 index is considered to be before the start of the string.</para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>x || y</para>
+            </entry>
+            <entry>
+              <para>Concatenation operator</para>
+            </entry>
+            <entry>
+              <para>x,y in {string}, return type is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ASCII(x)</para>
+            </entry>
+            <entry>
+              <para>Provide ASCII value of character x</para>
+            </entry>
+            <entry>
+              <para>return type is integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CHR(x) CHAR(x)</para>
+            </entry>
+            <entry>
+              <para>Provide the character for ASCII value x</para>
+            </entry>
+            <entry>
+              <para>x in {integer}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CONCAT(x, y)</para>
+            </entry>
+            <entry>
+              <para>Concatenates x and y with ANSI semantics. If
+                x and/or y is null, returns null.</para>
+            </entry>
+            <entry>
+              <para>x, y, is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CONCAT2(x, y)</para>
+            </entry>
+            <entry>
+              <para>Concatenates x and y with non-ANSI null
+                semantics. If x and y is null, returns null. If only x or y
+                is null, returns the other value.</para>
+            </entry>
+            <entry>
+              <para>x, y, is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>INITCAP(x)</para>
+            </entry>
+            <entry>
+              <para>Make first letter of each word in string x capital
+                and all others lowercase</para>
+            </entry>
+            <entry>
+              <para>x in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>INSERT(str1, start, length, str2)</para>
+            </entry>
+            <entry>
+              <para>Insert string2 into string1</para>
+            </entry>
+            <entry>
+              <para>str1 in {string}, start in {integer}, length in
+                {integer}, str2 in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LCASE(x)</para>
+            </entry>
+            <entry>
+              <para>Lowercase of x</para>
+            </entry>
+            <entry>
+              <para>x in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LEFT(x, y)</para>
+            </entry>
+            <entry>
+              <para>Get left y characters of x</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LENGTH(x)</para>
+            </entry>
+            <entry>
+              <para>Length of x</para>
+            </entry>
+            <entry>
+              <para>return type is integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LOCATE(x, y)</para>
+            </entry>
+            <entry>
+              <para>Find position of x in y starting at beginning of y
+              </para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, return integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LOCATE(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Find position of x in y starting at z</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, z in {integer}, return
+                integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LPAD(x, y)</para>
+            </entry>
+            <entry>
+              <para>Pad input string x with spaces on the left to the
+                length of y</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {integer}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LPAD(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Pad input string x on the left to the length of y
+                using character z</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, z in {character}, return
+                string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>LTRIM(x)</para>
+            </entry>
+            <entry>
+              <para>Left trim x of white space</para>
+            </entry>
+            <entry>
+              <para>x in {string}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>REPEAT(str1,instances)</para>
+            </entry>
+            <entry>
+              <para>Repeat string1 a specified number of times</para>
+            </entry>
+            <entry>
+              <para>str1 in {string}, instances in {integer} return
+                string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>REPLACE(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Replace all y in x with z</para>
+            </entry>
+            <entry>
+              <para>x,y,z in {string}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RIGHT(x, y)</para>
+            </entry>
+            <entry>
+              <para>Get right y characters of x</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RPAD(input string x, pad length y)</para>
+            </entry>
+            <entry>
+              <para>Pad input string x with spaces on the right to the
+                length of y</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {integer}, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RPAD(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Pad input string x on the right to the length of y
+                using character z</para>
+            </entry>
+            <entry>
+              <para>x in {string}, y in {string}, z in {character}, return
+                string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>RTRIM(x)</para>
+            </entry>
+            <entry>
+              <para>Right trim x of white space</para>
+            </entry>
+            <entry>
+              <para>x is string, return string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SUBSTRING(x, y)</para>
+            </entry>
+            <entry>
+              <para>Get substring from x, from position y to the end of x
+              </para>
+            </entry>
+            <entry>
+              <para>y in {integer}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SUBSTRING(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Get substring from x from position y with length z
+              </para>
+            </entry>
+            <entry>
+              <para>y, z in {integer}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TRANSLATE(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Translate string x by replacing each character
+                in y with the character in z at the same position</para>
+            </entry>
+            <entry>
+              <para>x in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>UCASE(x)</para>
+            </entry>
+            <entry>
+              <para>Uppercase of x</para>
+            </entry>
+            <entry>
+              <para>x in {string}</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+  <sect1>
+    <title>Date/Time Functions</title>
+    <para>Date and time functions return dates, times, or timestamps. </para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>        
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>CURDATE()</para>
+            </entry>
+            <entry>
+              <para>Return current date</para>
+            </entry>
+            <entry>
+              <para>returns date</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CURTIME()</para>
+            </entry>
+            <entry>
+              <para>Return current time</para>
+            </entry>
+            <entry>
+              <para>returns time</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>NOW()</para>
+            </entry>
+            <entry>
+              <para>Return current timestamp (date and time)</para>
+            </entry>
+            <entry>
+              <para>returns timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DAYNAME(x)</para>
+            </entry>
+            <entry>
+              <para>Return name of day</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DAYOFMONTH(x)</para>
+            </entry>
+            <entry>
+              <para>Return day of month</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DAYOFWEEK(x)</para>
+            </entry>
+            <entry>
+              <para>Return day of week (Sunday=1)</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DAYOFYEAR(x)</para>
+            </entry>
+            <entry>
+              <para>Return Julian day number</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATDATE(x, y)</para>
+            </entry>
+            <entry>
+              <para>Format date x using format y</para>
+            </entry>
+            <entry>
+              <para>x is date, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATTIME(x, y)</para>
+            </entry>
+            <entry>
+              <para>Format time x using format y</para>
+            </entry>
+            <entry>
+              <para>x is time, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>FORMATTIMESTAMP(x, y)</para>
+            </entry>
+            <entry>
+              <para>Format timestamp x using format y</para>
+            </entry>
+            <entry>
+              <para>x is timestamp, y is string, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>HOUR(x)</para>
+            </entry>
+            <entry>
+              <para>Return hour (in military 24-hour format)</para>
+            </entry>
+            <entry>
+              <para>x in {time, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MINUTE(x)</para>
+            </entry>
+            <entry>
+              <para>Return minute</para>
+            </entry>
+            <entry>
+              <para>x in {time, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MONTH(x)</para>
+            </entry>
+            <entry>
+              <para>Return month</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MONTHNAME(x)</para>
+            </entry>
+            <entry>
+              <para>Return name of month</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSEDATE(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parse date from x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y in {string}, returns date</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSETIME(x, y)</para>
+            </entry>
+            <entry>
+              <para>Parse time from x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y in {string}, returns time</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>PARSETIMESTAMP(x,y)</para>
+            </entry>
+            <entry>
+              <para>Parse timestamp from x using format y</para>
+            </entry>
+            <entry>
+              <para>x, y in {string}, returns timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SECOND(x)</para>
+            </entry>
+            <entry>
+              <para>Return seconds</para>
+            </entry>
+            <entry>
+              <para>x in {time, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TIMESTAMPCREATE(date, time)</para>
+            </entry>
+            <entry>
+              <para>Create a timestamp from a date and time</para>
+            </entry>
+            <entry>
+              <para>date in {date}, time in {time}, returns timestamp
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TIMESTAMPADD(interval, count,
+                timestamp)</para>
+            </entry>
+            <entry>
+              <para>Add a specified interval (hour, day of week, month)
+                to the timestamp, where intervals can have the following
+                definition:</para>
+              <orderedlist>
+                <listitem>
+                  <para>SQL_TSI_FRAC_SECOND - fractional
+                    seconds (billionths of a second)</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_SECOND - seconds</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_MINUTE - minutes</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_HOUR - hours</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_DAY - days</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_WEEK - weeks</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_MONTH - months</para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_QUARTER - quarters (3 months)
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>SQL_TSI_YEAR - years</para>
+                </listitem>
+              </orderedlist>
+            </entry>
+            <entry>
+              <para>The interval constant may be specified either as a
+                string literal or a constant value. Interval in {string},
+                count in {integer}, timestamp in {date, time, timestamp}
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TIMESTAMPDIFF(interval,
+                startTime, endTime)</para>
+            </entry>
+            <entry>
+              <para>Calculate the approximate number of whole
+                intervals in (endTime - startTime) using a specific interval
+                type (as defined by the constants in TIMESTAMPADD). If
+                (endTime &gt; startTime), a positive number will be returned. If (endTime &lt; startTime), a negative number will be returned. Calculations are approximate and may be less accurate over longer time spans.</para>
+            </entry>
+            <entry>
+              <para>Interval in {string}; startTime, endTime in {date,
+                time, timestamp}, returns a long.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>WEEK(x)</para>
+            </entry>
+            <entry>
+              <para>Return week in year</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>YEAR(x)</para>
+            </entry>
+            <entry>
+              <para>Return four-digit year</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MODIFYTIMEZONE (timestamp, startTimeZone,
+                endTimeZone)</para>
+            </entry>
+            <entry>
+              <para>Returns a timestamp based upon the incoming timestamp
+                adjusted for the differential between the start and end time
+                zones.  i.e. if the server is in GMT-6, then modifytimezone({ts
+                '2006-01-10 04:00:00.0'},'GMT-7', 'GMT-8') will return the
+                timestamp {ts '2006-01-10 05:00:00.0'} as read in GMT-6.  The
+                value has been adjusted 1 hour ahead to compensate for the
+                difference between GMT-7 and GMT-8.</para>
+            </entry>
+            <entry>
+              <para>startTimeZone and endTimeZone are strings,
+                returns a timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MODIFYTIMEZONE (timestamp, endTimeZone)</para>
+            </entry>
+            <entry>
+              <para>Return a timestamp in the same manner as
+                modifytimezone(timestamp, startTimeZone, endTimeZone), but will
+                assume that the startTimeZone is the same as the server process.
+              </para>
+            </entry>
+            <entry>
+              <para>Timestamp is a timestamp; endTimeZone is a string,
+                returns a timestamp</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <sect2>
+      <title>Parsing Date Datatypes from Strings</title>
+      <para>
+        Federate does not implicitly convert strings that
+        contain dates presented in different formats, such as ‘19970101’ and
+        ‘31/1/1996’ to date-related datatypes. You can, however, use the
+        parseDate, parseTime, and parseTimestamp functions, described in the
+        next section, to explicitly convert strings with a different format
+        to the appropriate datatype. These functions use the convention
+        established within the java.text.SimpleDateFormat class to define
+        the formats you can use with these functions. You can learn more
+        about how this class defines date and time string formats by
+        visiting the
+        <ulink
+          url="http://java.sun.com/j2se/1.4.2/docs/api/java/text/SimpleDateFormat.html">Sun Java Web site</ulink>
+        .
+      </para>
+      <para>For example, you could use these function calls, with the
+        formatting string that adheres to the java.text.SimpleDateFormat
+        convention, to parse strings and return the datatype you need:
+      </para>
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>
+                <para>String</para>
+              </entry>
+              <entry>
+                <para>Function Call To Parse String</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>'1997010'</para>
+              </entry>
+              <entry>
+                <para>parseDate(myDateString, 'yyyyMMdd')</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'31/1/1996'</para>
+              </entry>
+              <entry>
+                <para>parseDate(myDateString, 'dd''/''MM''/''yyyy')</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'22:08:56 CST'</para>
+              </entry>
+              <entry>
+                <para>parseTime (myTime, 'HH:mm:ss z')</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>'03.24.2003 at 06:14:32'</para>
+              </entry>
+              <entry>
+                <para>parseTimestamp(myTimestamp, 'MM.dd.yyyy ''at'' hh:mm:ss')</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+    <sect2>
+      <title>Specifying Time Zones</title>
+      <para>Time zones can be specified in several formats. Common
+        abbreviations such as EST for "Eastern Standard Time" are allowed
+        but discouraged, as they can be ambiguous. Unambiguous time zones
+        are defined in the form continent or ocean/largest city. For
+        example, America/New_York, America/Buenos_Aires, or Europe/London.
+        Additionally, you can specify a custom time zone by GMT offset:
+        GMT[+/-]HH:MM.</para>
+      <para>For example: GMT-05:00</para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Type Conversion Functions</title>
+    <para>
+    Within your queries, you can convert between datatypes using the
+    CONVERT or CAST keyword. See also <link linkend="type_conversions">Data Type Conversions</link>
+    .
+    </para>
+    <informaltable frame="all">
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>CONVERT(x, type)</para>
+            </entry>
+            <entry>
+              <para>Convert x to type, where type is a MetaMatrix
+                Base Type</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CAST(x AS type)</para>
+            </entry>
+            <entry>
+              <para>Convert x to type, where type is a MetaMatrix
+                Base Type</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <para>These functions are identical other than syntax; CAST is the standard SQL syntax, CONVERT is the standard JDBC/ODBC syntax. </para>
+  </sect1>
+  <sect1>
+    <title>Choice Functions</title>
+    <para>Choice functions provide a way to select from two values based on some characteristic of one of the values. </para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <tbody>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>IFNULL(x,y)</para>
+            </entry>
+            <entry>
+              <para>If x is null, return y; else return x</para>
+            </entry>
+            <entry>
+              <para>x, y, and the return type must be the same type but
+                can be any type</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>NVL(x,y)</para>
+            </entry>
+            <entry>
+              <para>If x is null, return y; else return x</para>
+            </entry>
+            <entry>
+              <para>x, y, and the return type must be the same type but
+                can be any type</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <para>IFNULL and NVL are aliases of each other. They are the same function. </para>
+  </sect1>
+  <sect1>
+    <title>Decode Functions</title>
+    <para>Decode functions allow you to have the MetaMatrix Server
+      examine the contents of a column in a result set and alter, or
+      decode, the value so that your application can better use the
+      results.</para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>DECODESTRING(x, y)</para>
+            </entry>
+            <entry>
+              <para>Decode column x using string of value pairs y
+                and return the decoded column as a string</para>
+            </entry>
+            <entry>
+              <para>all string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DECODESTRING(x, y, z)</para>
+            </entry>
+            <entry>
+              <para>Decode column x using string of value pairs y
+                with delimiter z and return the decoded column as a string
+              </para>
+            </entry>
+            <entry>
+              <para>all string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DECODEINTEGER(x, y)</para>
+            </entry>
+            <entry>
+              <para>Decode column x using string of value pairs y
+                and return the decoded column as an integer</para>
+            </entry>
+            <entry>
+              <para>all string parameters, return integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>DECODEINTEGER(x,y,z)</para>
+            </entry>
+            <entry>
+              <para>Decode column x using string of value pairs y
+                with delimiter z and return the decoded column as an
+                integer</para>
+            </entry>
+            <entry>
+              <para>all string parameters, return integer</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <para>Within each function call, you include the following arguments:</para>
+    <orderedlist>
+      <listitem>
+        <para>x is the input value for the decode operation. This will
+          generally be a column name.</para>
+      </listitem>
+      <listitem>
+        <para>y is the literal string that contains a delimited set of
+          input values and output values.</para>
+      </listitem>
+      <listitem>
+        <para>z is an optional parameter on these methods that allows you
+          to specify what delimiter the string specified in y uses.</para>
+      </listitem>
+    </orderedlist>
+    <para>For example, your application might query a table called
+      PARTS that contains a column called IS_IN_STOCK which contains a
+      Boolean value that you need to change into an integer for your
+      application to process. In this case, you can use the DECODEINTEGER
+      function to change the Boolean values to integers:</para>
+    <programlisting>SELECT DECODEINTEGER(IS_IN_STOCK, 'false, 0, true, 1') FROM PartsSupplier.PARTS;</programlisting> 
+    <para>When the MetaMatrix System encounters the value false in the
+      result set, it replaces the value with 0.</para>
+    <para>If, instead of using integers, your application requires
+      string values, you can use the DECODESTRING function to return the
+      string values you need:</para>
+    <programlisting>SELECT DECODESTRING(IS_IN_STOCK, 'false, no, true, yes, null') FROM PartsSupplier.PARTS;</programlisting>
+    <para>In addition to two input/output value pairs, this sample query
+      provides a value to use if the column does not contain any of the
+      preceding input values. If the row in the IS_IN_STOCK column does
+      not contain true or false, the MetaMatrix Server inserts a null into
+      the result set.</para>
+    <para>When you use these DECODE functions, you can provide as many
+      input/output value pairs if you want within the string. By default,
+      the MetaMatrix System expects a comma delimiter, but you can add a
+      third parameter to the function call to specify a different
+      delimiter:</para>
+    <programlisting>SELECT DECODESTRING(IS_IN_STOCK, 'false:no:true:yes:null',’:’) FROM PartsSupplier.PARTS;</programlisting>
+    <para>You can use keyword null in the DECODE string as either an
+      input value or an output value to represent a null value. However,
+      if you need to use the literal string null as an input or output
+      value (which means the word null appears in the column and not a
+      null value) you can put the word in quotes: "null".</para>
+    <programlisting>SELECT DECODESTRING( IS_IN_STOCK, 'null,no,"null",no,nil,no,false,no,true,yes' ) FROM PartsSupplier.PARTS;</programlisting>
+    <para>If the DECODE function does not find a matching output value
+      in the column and you have not specified a default value, the DECODE
+      function will return the original value the MetaMatrix Server found
+      in that column.</para>
+  </sect1>
+  <sect1>
+    <title>Lookup Function</title>
+    <para>The Lookup function allows you to cache a physical group’s
+    data in memory and access it through a scalar function. This caching
+    accelerates response time to queries that use the lookup groups, known
+    in business terminology as lookup tables or code groups.</para>
+    <para>A StatePostalCodes group used to translate postal codes to
+      complete state names might represent an example of this type of
+      lookup group. One element, PostalCode, represents a key element.
+      Other groups within the model refer to this two-letter code. A
+      second element, StateDisplayName, would represent the complete name
+      of the state. Hence, a query to this lookup group would typically
+      provide the PostalCode and expect the StateDisplayName in response.
+    </para>
+    <para>When you call this function for the first time, the
+      MetaMatrix System caches the lookup group when you first request a
+      value for any combination of codeGroup, returnElement, and
+      keyElement. The MetaMatrix System uses this cached map for all
+      queries, in all sessions, that later access this lookup group. The
+      codeGroup requires use of the fully-qualified name, and the
+      returnElement and keyElement parameters should use shortened column
+      names.</para>
+    <para>Because the MetaMatrix System caches and indexes this
+      information in memory, this function provides quick access after the
+      MetaMatrix System initially caches the lookup group. The MetaMatrix
+      System unloads these cached lookup groups when you stop and restart
+      the MetaMatrix System. Thus, you should not use this function for
+      data that is subject to updates. Instead, you can use it against
+      static data that does not change over time.</para>
+    <note>
+      <itemizedlist>
+        <listitem>
+          <para>The keyElement column is expected to contain unique key
+            values. If the column contains duplicate values, only the last
+            loaded value will be used for lookup purposes. In some cases, this
+            may cause unexpected results, so it is strongly recommended that
+            only columns without duplicate values be used as the keyElement. The
+            lookup caches can be flushed via the svcmgr.</para>
+        </listitem>
+        <listitem>
+          <para>Cached lookup groups might consume significant memory. You
+            can limit the number and maximum size of these code groups by
+            setting properties of the QueryService through the MetaMatrix
+            Console.</para>
+        </listitem>
+      </itemizedlist>
+    </note>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>LOOKUP(codeGroup, returnElement,
+                keyElement, keyValue)</para>
+            </entry>
+            <entry>
+              <para>In the lookup group codeGroup, find the row where
+                keyElement has the value keyValue and return the
+                associated returnElement</para>
+            </entry>
+            <entry>
+              <para>codeGroup must be a fully-qualified string
+                literal containing metadata identifiers, keyValue datatype
+                must match datatype of the keyElement, return datatype
+                matches that of returnElement. returnElement and
+                keyElement parameters should use their shortened names.
+              </para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+    <sect2>
+      <!-- TODO: move to administrative section -->
+      <title>Clearing the Cache</title>
+      <para>You can force a cache clearing by using the expert mode of
+        the svcmgr command, found under the \bin directory of your
+        MetaMatrix server installation.</para>
+      <para>Launch the appropriate command:</para>
+      <orderedlist>
+        <listitem>
+          <para><command>svcmgr.cmd</command> (Windows)</para>
+        </listitem>
+        <listitem>
+          <para><command>svcmgr.sh</command> (Solaris or Linux)</para>
+        </listitem>
+      </orderedlist>
+      <para>From the command line enter ClearCodeTableCaches.</para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>System Functions</title>
+    <para>System functions provide access to information in the MetaMatrix system from within a query. </para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para><code>USER()</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve the name of the user executing the
+                query</para>
+            </entry>
+            <entry>
+              <para>return is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>ENV(key)</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve an environment property. The only key
+                currently allowed is ‘sessionid’, although this will expand
+                in the future.</para>
+            </entry>
+            <entry>
+              <para>key in {string}, return is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>COMMANDPAYLOAD()</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve the string form of the command payload
+                or null if no command payload was specified. The command
+                payload is set by a method on the MetaMatrix JDBC API
+                extensions on a per-query basis.</para>
+            </entry>
+            <entry>
+              <para>Returns a string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>COMMANDPAYLOAD(key)</code></para>
+            </entry>
+            <entry>
+              <para>Cast the command payload object to a
+                java.util.Properties object and look up the specified key in
+                the object</para>
+            </entry>
+            <entry>
+              <para>key in {string}, return is string</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+  <sect1>
+    <title>XML Functions</title>
+    <para>XML functions provide functionality for working with XML data. </para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para><code>XPATHVALUE(doc, xpath)</code></para>
+            </entry>
+            <entry>
+              <para>Takes a document and an XPATH query and returns a
+                string value for the result. An attempt is made to provide a
+                meaningful result for non-text nodes.</para>
+            </entry>
+            <entry>
+              <para>Doc and xpath are strings. Return value is a string.
+              </para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+  <sect1>
+    <title>Security Functions</title>
+    <para>Security functions provide the ability to interact
+    with the security system within MetaMatrix.</para>
+    <informaltable frame="all">
+      <tgroup cols="3">
+        <thead>
+          <row>
+            <entry>
+              <para>Function</para>
+            </entry>
+            <entry>
+              <para>Definition</para>
+            </entry>
+            <entry>
+              <para>Datatype Constraint</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para><code>hasRole(roleType, roleName)</code>
+              </para>
+            </entry>
+            <entry>
+              <para>Whether the current caller has the role
+                roleName of roleType.</para>
+            </entry>
+            <entry>
+              <para>roleType must be one of ('data','admin' ,
+                'repository') and roleName must be a string, the return
+                type is Boolean.</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+  <sect1 id="udfs">
+    <title>User Defined Functions</title>
+    <para>If you need to extends Federate's scalar function library,
+      then Federate provides a means to define custom scalar functions or
+      User Defined Functions(UDF). The following steps need to be taken in
+      creating a UDF.</para>
+    <sect2 id="define_udf">
+      <title>UDF Definition</title>
+      <para>The FunctionDefinition.xmi file provides metadata to the
+        query engine on User Defined Functions. See our product document on
+        "Creating User-defined Functions" for a more extensive reference on
+        creating that file through the Designer Tool.</para>
+      <itemizedlist>
+        <para>The following are used to define a UDF.</para>
+        <listitem>
+          <para>
+            <emphasis>Function Name</emphasis>
+            When you create the function name, keep these requirements in
+            mind:
+            <itemizedlist>
+              <listitem>
+                <para>You cannot use a reserved word, which includes
+                  existing MetaMatrix System function names.  You cannot
+                  overload existing MetaMatrix System functions.</para>
+              </listitem>
+              <listitem>
+                <para>The function name must be unique among user-defined
+                  functions for the number of arguments.  You can use the
+                  same function name for different numbers of types of
+                  arguments.  Hence, you can overload your user-defined
+                  functions.</para>
+              </listitem>
+              <listitem>
+                <para>The function name can only contain letters,
+                  numbers, and the underscore (_).  Your function name must
+                  start with a letter.</para>
+              </listitem>
+              <listitem>
+                <para>The function name cannot exceed 128 characters.
+                </para>
+              </listitem>
+            </itemizedlist>
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>Input Parameters</emphasis>
+            - defines a type specific signature list. All arguments are considered
+            required.</para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>Return Type</emphasis> - the expected type of the returned scalar value.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>Pushdown</emphasis>
+            - can be one of REQUIRED, NEVER, ALLOWED. Indicates the expected
+            pushdown behavior. If NEVER or ALLOWED are specified then a Java
+            implementation of the function should be supplied.</para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>invocationClass/invocationMethod
+            </emphasis>
+            - optional properties indicating the static method to invoke when
+            the UDF is not pushed down.
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>Deterministic</emphasis> - if the method will always return the same result for the same input parameters.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>Source Supported UDF</title>
+      <para>While Federate provides an extensive scalar function
+        library, it contains only those functions that can be evaluated
+        within the query engine. In many circumstances, especially for
+        performance, a user defined function allows for calling a source
+        specific function.</para>
+      <para>For example, suppose you want to use the Oracle-specific functions score and contains:
+      </para>
+      <informalexample>
+        <programlisting>SELECT score(1), ID, FREEDATA FROM Docs WHERE contains(freedata, 'nick', 1) &gt; 0</programlisting>
+      </informalexample>
+      <para>
+        The
+        <function>score</function>
+        and
+        <function>contains</function>
+        functions are not part of built-in scalar function library. While
+        you could write your own custom scalar function to mimic their
+        behavior, it's more likely that you would want to use the actual
+        Oracle functions that are provided by Oracle when using the Oracle
+        Free Text functionality.</para>
+      <para>
+        In addition to the normal steps outlined in the section to create and install a function model (FunctionDefinitions.xmi), you will need to extend the appropriate connector(s).
+      </para>
+      <itemizedlist>
+        <para>For example, to extend the Oracle Connector</para>
+        <listitem>
+          <para><emphasis>Required</emphasis> - extend OracleCapabilities and set up SCORE and CONTAINS as supported functions (this lets MetaMatrix know that the connector can accept these functions).</para>
+        </listitem>
+        <listitem>
+          <para>Optionally extend the OracleSQLTranslator to insert new FunctionModifiers to handle translation of these functions. Given that the syntax of these functions is same as other typical functions, this probably isn't needed - the default translation should work.</para>
+        </listitem>
+        <listitem>
+          <para>Create a new connector type - the easiest way is to export the Oracle ANSI connector type from the Console and just modify the properties such as the connector name (to differentiate it from base Oracle connector) and the capabilities class (to use the extended version) and possibly the translation class (if that was extended for b. Also, connector classpath needs to be extended to include a new jar of your changes above.</para>
+        </listitem>
+        <listitem>
+          <para>Install the code as an extension module and add your new connector type in the Console.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>Non-pushdown Support for User-Defined Functions</title>
+      <para>Non-pushdown support requires a Java function
+        that matches the metadata supplied in the FunctionDefinitions.xmi
+        file. You must create a Java method that contains the function’s
+        logic. This Java method should accept the necessary arguments, which
+        the Federate System will pass to it at runtime, and function should
+        return the calculated or altered value.</para>
+      <sect3>
+        <title>Java Code</title>
+        <itemizedlist>
+          <para>Code Requirements</para>
+          <listitem>
+            <para>The java class containing the function method must be defined public.
+            </para>
+          </listitem>
+          <listitem>
+            <para>The function method must be public and static.</para>
+          </listitem>
+          <listitem>
+            <para>
+              Number of input arguments must match the function metadata defined in section
+              <link linkend="define_udf">Install user-defined functions</link>
+            </para>
+          </listitem>
+          <listitem>
+            <para>All input arguments defined on function must be java.lang.Object.</para>
+          </listitem>
+          <listitem>
+            <para>Returned value must be declared as java.lang.Object.</para>
+          </listitem>
+          <listitem>
+            <para>Any exception can be thrown, but Federate will rethrow the exception as a <classname>FunctionExecutionException</classname>.</para>
+          </listitem>          
+        </itemizedlist>
+        <example>
+          <title>Sample code</title>
+          <programlisting><![CDATA[package userdefinedfunctions;
+
+public class TempConv {
+              
+    /**
+     * Converts the given Celsius temperature to Fahrenheit, and returns the
+     * value.
+     * @param doubleCelsiusTemp 
+     * @return Fahrenheit 
+     */
+    public static Object celsiusToFahrenheit(Object doubleCelsiusTemp){
+        double celsiusTemp = ((Double)doubleCelsiusTemp).doubleValue();
+        double fahrenheitTemp = (celsiusTemp)*9/5 + 32;
+        return new Double(fahrenheitTemp);
+    }
+}]]></programlisting>
+        </example>
+      </sect3>
+      <sect3>
+        <title>Post Code Activities</title>
+        <orderedlist>
+          <listitem>
+            <para> After coding the functions you should compile the Java
+              code into a Java Archive (JAR) file, so that you can add it to
+              the Federate System as an Extension Module.</para>
+          </listitem>
+          <listitem>
+            <para> After adding the jar file as an extension module, the
+              name of jar file need to be added to user defined functions
+              classpath using Console tool.</para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+    </sect2>
+    <sect2>
+      <title>Installing user-defined functions</title>
+      <para>
+        Once a user-defined function model (FunctionDefinitions.xmi) has been
+        created in in the Designer Tool, it should be installed by replacing
+        the existing version under the Extension Modules (for the Enterprise
+        product this will be done through the Console). That will allow the
+        query engine to know about and use functions</para>
+    </sect2>
+  </sect1>
+</chapter>

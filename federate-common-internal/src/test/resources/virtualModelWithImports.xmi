@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="ASCII"?>
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:Relational="http://www.metamatrix.com/metamodels/Relational" xmlns:Sdt="http://www.metamatrix.com/metamodels/SimpleDatatypes" xmlns:Transformation="http://www.metamatrix.com/metamodels/Transformation" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:e30f25c0-13d6-1ed4-852d-b1622e809d4f" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL">
+    <modelImports xmi:uuid="mmuuid:f9d42040-f963-1ed8-9d28-f41f16f2dfc0" name="PartsSupplierOracle" path="file:/E:/eclipse/ModelProjects/sample/PartsSupplierOracle.xmi" uuid="mmuuid:58f98200-2b10-1ed7-aa27-f6fd14fe02db" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
+    <modelImports xmi:uuid="mmuuid:fbad2600-f963-1ed8-9d28-f41f16f2dfc0" name="SimpleDatatypes-instance" path="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" uuid="mmuuid:6b862080-3019-1e20-921b-eeee28353879" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/SimpleDatatypes"/>
+  </mmcore:ModelAnnotation>
+  <Diagram:DiagramContainer xmi:uuid="mmuuid:ff038501-13d6-1ed4-852d-b1622e809d4f">
+    <diagram xmi:uuid="mmuuid:ff038500-13d6-1ed4-852d-b1622e809d4f" type="packageDiagramType" target="mmuuid/e30f25c0-13d6-1ed4-852d-b1622e809d4f">
+      <diagramEntity xmi:uuid="mmuuid:2ee252c0-13db-1ed4-852d-b1622e809d4f" name="Parts" xPosition="54" yPosition="77" height="133" width="193" modelObject="mmuuid/5e448fc6-13da-1ed4-852d-b1622e809d4f"/>
+      <diagramEntity xmi:uuid="mmuuid:44b50940-13df-1ed4-852d-b1622e809d4f" name="Supplier" xPosition="364" yPosition="48" height="151" width="201" modelObject="mmuuid/240ab886-13de-1ed4-852d-b1622e809d4f"/>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:22c8ca00-13db-1ed4-852d-b1622e809d4f" type="transformationDiagramType" target="mmuuid/5e448fc6-13da-1ed4-852d-b1622e809d4f">
+      <diagramEntity xmi:uuid="mmuuid:ab97b3c0-13e3-1ed4-852d-b1622e809d4f" xPosition="10" yPosition="81" height="133" width="164" modelObject="mmuuid/5e448fc6-13da-1ed4-852d-b1622e809d4f"/>
+      <diagramEntity xmi:uuid="mmuuid:ac7c9581-13e3-1ed4-852d-b1622e809d4f" name="T" xPosition="252" yPosition="98" height="40" width="40" modelObject="mmuuid/ab97b3c1-13e3-1ed4-852d-b1622e809d4f"/>
+      <diagramEntity xmi:uuid="mmuuid:e7423fc0-13e4-1ed4-852d-b1622e809d4f" xPosition="360" yPosition="10" height="181" width="193">
+        <modelObject href="PartsSupplierOracle.xmi#mmuuid/5cdc6a80-13a9-1ed4-852d-b1622e809d4f"/>
+      </diagramEntity>
+    </diagram>
+    <diagram xmi:uuid="mmuuid:37a75c80-13df-1ed4-852d-b1622e809d4f" type="transformationDiagramType" target="mmuuid/240ab886-13de-1ed4-852d-b1622e809d4f">
+      <diagramEntity xmi:uuid="mmuuid:113d6d40-13ef-1ed4-852d-b1622e809d4f" xPosition="10" yPosition="99" height="151" width="197" modelObject="mmuuid/240ab886-13de-1ed4-852d-b1622e809d4f"/>
+      <diagramEntity xmi:uuid="mmuuid:12319141-13ef-1ed4-852d-b1622e809d4f" name="T" xPosition="263" yPosition="127" height="40" width="40" modelObject="mmuuid/12319140-13ef-1ed4-852d-b1622e809d4f"/>
+      <diagramEntity xmi:uuid="mmuuid:feb47140-13ef-1ed4-852d-b1622e809d4f" xPosition="361" yPosition="10" height="133" width="225">
+        <modelObject href="PartsSupplierOracle.xmi#mmuuid/0b069900-13aa-1ed4-852d-b1622e809d4f"/>
+      </diagramEntity>
+    </diagram>
+  </Diagram:DiagramContainer>
+  <Relational:BaseTable xmi:uuid="mmuuid:5e448fc6-13da-1ed4-852d-b1622e809d4f" name="Parts">
+    <columns xmi:uuid="mmuuid:c4ceab40-13e4-1ed4-852d-b1622e809d4f" name="PART_ID" length="4">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:ce1b0a40-13e4-1ed4-852d-b1622e809d4f" name="PART_NAME" length="255">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d0035240-13e4-1ed4-852d-b1622e809d4f" name="PART_COLOR" length="30">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d0e83400-13e4-1ed4-852d-b1622e809d4f" name="PART_WEIGHT" length="255">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+  </Relational:BaseTable>
+  <Relational:BaseTable xmi:uuid="mmuuid:240ab886-13de-1ed4-852d-b1622e809d4f" name="Supplier">
+    <columns xmi:uuid="mmuuid:de19e280-13ef-1ed4-852d-b1622e809d4f" name="SUPPLIER_ID" length="10">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:df0e0680-13ef-1ed4-852d-b1622e809d4f" name="SUPPLIER_NAME" length="30">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:e0e70c40-13ef-1ed4-852d-b1622e809d4f" name="SUPPLIER_STATUS">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:5bbcf140-b9ae-1e21-b812-969c8fc8b016"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:e2cf5440-13ef-1ed4-852d-b1622e809d4f" name="SUPPLIER_CITY" length="30">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:e4a85a00-13ef-1ed4-852d-b1622e809d4f" name="SUPPLIER_STATE" length="2">
+      <type xsi:type="Sdt:SimpleDatatype" href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#mmuuid:bf6c34c0-c442-1e24-9b01-c8207cd53eb7"/>
+    </columns>
+  </Relational:BaseTable>
+  <Transformation:TransformationContainer xmi:uuid="mmuuid:ac7c9580-13e3-1ed4-852d-b1622e809d4f">
+    <transformationMappings xsi:type="Transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:ab97b3c1-13e3-1ed4-852d-b1622e809d4f" outputs="mmuuid/5e448fc6-13da-1ed4-852d-b1622e809d4f" target="mmuuid/5e448fc6-13da-1ed4-852d-b1622e809d4f">
+      <helper xsi:type="Transformation:SqlTransformation" xmi:uuid="mmuuid:c77cd0c0-13e3-1ed4-852d-b1622e809d4f" selectSql="SELECT * FROM mmuuid:5cdc6a80-13a9-1ed4-852d-b1622e809d4f">
+        <nested xsi:type="Transformation:SqlTransformation" xmi:uuid="mmuuid:c870f4c0-13e3-1ed4-852d-b1622e809d4f" selectSql="SELECT * FROM PartsSupplierOracle.PARTSSUPPLIER.PARTS"/>
+        <aliases xmi:uuid="mmuuid:99f39980-13e4-1ed4-852d-b1622e809d4f" alias="PARTS">
+          <aliasedObject href="PartsSupplierOracle.xmi#mmuuid/5cdc6a80-13a9-1ed4-852d-b1622e809d4f"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:d4a981c0-13e4-1ed4-852d-b1622e809d4f" outputs="mmuuid/c4ceab40-13e4-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/7aa9cf80-13a9-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:d6828780-13e4-1ed4-852d-b1622e809d4f" outputs="mmuuid/ce1b0a40-13e4-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/d5062280-13a9-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:d7676940-13e4-1ed4-852d-b1622e809d4f" outputs="mmuuid/d0035240-13e4-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/d7c40a00-13a9-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:d94fb140-13e4-1ed4-852d-b1622e809d4f" outputs="mmuuid/d0e83400-13e4-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/d9ac5200-13a9-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <inputs href="PartsSupplierOracle.xmi#mmuuid/5cdc6a80-13a9-1ed4-852d-b1622e809d4f"/>
+    </transformationMappings>
+    <transformationMappings xsi:type="Transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:12319140-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/240ab886-13de-1ed4-852d-b1622e809d4f" target="mmuuid/240ab886-13de-1ed4-852d-b1622e809d4f">
+      <helper xsi:type="Transformation:SqlTransformation" xmi:uuid="mmuuid:211843c0-13ef-1ed4-852d-b1622e809d4f" selectSql="SELECT * FROM mmuuid:0b069900-13aa-1ed4-852d-b1622e809d4f">
+        <nested xsi:type="Transformation:SqlTransformation" xmi:uuid="mmuuid:21fd2580-13ef-1ed4-852d-b1622e809d4f" selectSql="SELECT * FROM PartsSupplierOracle.PARTSSUPPLIER.SUPPLIER"/>
+        <aliases xmi:uuid="mmuuid:aae695c0-13ef-1ed4-852d-b1622e809d4f" alias="SUPPLIER">
+          <aliasedObject href="PartsSupplierOracle.xmi#mmuuid/0b069900-13aa-1ed4-852d-b1622e809d4f"/>
+        </aliases>
+      </helper>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:e85a6580-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/de19e280-13ef-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/0dd3c2c0-13aa-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:e94e8980-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/df0e0680-13ef-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/10a0ec80-13aa-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:ea42ad80-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/e0e70c40-13ef-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/1279f240-13aa-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:ec1bb340-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/e2cf5440-13ef-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/1452f800-13aa-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <nested xsi:type="Transformation:TransformationMapping" xmi:uuid="mmuuid:ed009500-13ef-1ed4-852d-b1622e809d4f" outputs="mmuuid/e4a85a00-13ef-1ed4-852d-b1622e809d4f">
+        <inputs href="PartsSupplierOracle.xmi#mmuuid/162bfdc0-13aa-1ed4-852d-b1622e809d4f"/>
+      </nested>
+      <inputs href="PartsSupplierOracle.xmi#mmuuid/0b069900-13aa-1ed4-852d-b1622e809d4f"/>
+    </transformationMappings>
+  </Transformation:TransformationContainer>
+</xmi:XMI>

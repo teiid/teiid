@@ -1,0 +1,88 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.types;
+
+/**
+ * This interface represents the transformation from one data type to
+ * another.  For instance, from java.lang.String to java.lang.Integer
+ * where java.lang.String is the the source type, "java.lang.String"
+ * is the source name, etc.
+ */
+public interface Transform {
+
+	/**
+	 * This method transforms a value of the source type into a value
+	 * of the target type.
+	 * @param value Incoming value of source type
+	 * @return Outgoing value of target type
+	 * @throws TransformationException if value is an incorrect input type or
+	 * the transformation fails
+	 */
+	public Object transform(Object value) throws TransformationException;
+
+	/**
+	 * Type of the incoming value.
+	 * @return Source type
+	 */
+	public Class getSourceType();
+
+	/**
+	 * Name of the source type.
+	 * @return Name of source type
+	 */
+	public String getSourceTypeName();
+
+	/**
+	 * Type of the outgoing value.
+	 * @return Target type
+	 */
+	public Class getTargetType();
+
+	/**
+	 * Name of the target type.
+	 * @return Name of target type
+	 */
+	public String getTargetTypeName();
+
+	/**
+	 * Get nice display name for GUIs.
+	 * @return Display name
+	 */
+	public String getDisplayName();
+
+	/**
+	 * Get description.
+	 * @return Description of transform
+	 */
+	public String getDescription();
+
+	/**
+	 * Flag if the transformation from source to target is 
+	 * a narrowing transformation that may lose information.
+	 * @return True if transformation is narrowing
+	 */
+	public boolean isNarrowing();
+
+}

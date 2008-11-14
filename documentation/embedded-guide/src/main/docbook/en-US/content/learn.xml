@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="learn">
+  <title>Learning about Virtual Database and Example Explained</title>
+  <sect1>
+    <title>What is VDB?</title>
+    <para> VDB is an artifact that defines logical schema model that combines two or more physical data sources to
+      provide easy data integration between them. This is accomplished by use of virtual tables, virtual views and
+      virtual procedures with their corresponding transformation queries defined in SQL based upon the physical
+      data sources. The physical sources can be any other JDBC sources or CSV or Excel files or even a Web Service.
+    </para>
+    <para>When you write your JDBC application it only knows virtual (logical) schema defined in this VDB,
+      however during the execution of a query based on this virtual schema, it will be interpreted by Federate
+      engine and makes the appropriate calls to the actual physical sources in an efficient way and gathers results
+      and combines/translates them as requested and returns the top level results to user.</para>
+  </sect1>
+  <sect1>
+    <title>Concepts Explained</title>
+    <para>Federate Embedded is a container for deploying your VDB. Before you can access your data in
+      federated manner, we need to build a VDB first. We need to make use of Federate Designer tool to accomplish
+      this. This below picture shows the relation between all the tools involved.</para>
+    <figure id="lifecycle">
+      <title>Lifecycle of Events</title>
+      <graphic align="center" scale="100" fileref="../images/steps.png" />
+    </figure>
+    <para>The Federate Designer tool lets you define physical data sources you are trying integrate together,
+      then it reads all the required metadata (schema) from these sources. Once the metadata is read, then the
+      designer provides the user with required tools to build logical data model on top of the already read
+      metadata. Once the virtual schema is built, then user can package it into a VDB. So, a VDB can be further
+      defined as a collection of logical (virtual) data models.</para>
+  </sect1>
+  <sect1>
+    <title>Example - Portfolio Application Explained</title>
+    <para>Now let's start in building a small "Portfolio" example, that has accounts with multiple stock
+      securities and let's you view up-to date value of an account based on the provided external market data. For
+      example purposes the "Account" specific data exists in a relational database and the "market data" exists in
+      a comma separated file (CSV). This example will take you through all the steps required in building virtual
+      database in combining the both relational source and CSV file and deploying and querying that virtual
+      database in your application.</para>
+    <figure id="steps">
+      <title>Various Steps involved in creating the example</title>
+      <graphic align="center" scale="100" fileref="../images/steps-defined.png" />
+    </figure>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <link linkend="step-1">Step-1: Create schema and load sample data in the Relational Database</link>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <link linkend="step-2">Step-2: Identify the CSV file and its contents</link>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <link linkend="step-3">Step-3: Build a VDB</link>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <link linkend="step-4">Step-4: Deploy the VDB</link>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <link linkend="step-5">Step-5: Access the VDB using JDBC API</link>
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      In this example, we will use
+      <ulink url="http://db.apache.org/derby/">"Derby"</ulink>
+      as the relational database.
+      <ulink url="http://db.apache.org/derby/derby_downloads.html">Download</ulink>
+      and install Derby on your machine, or if you have access to installed instance use that instance. It is
+      expected that you create a database called "accounts" in this Derby instance that is used by this example
+      application.
+    </para>
+    <note>
+      <para>
+        you can substitute Derby for any database of your choice, as long as you have a JDBC driver to access it.
+        The schema file defined below is specific to Derby, however they can be easily converted to in using other
+        databases. One option you have for using JDBC drivers is to use
+        <ulink url="http://www.datadirect.com">DataDirect</ulink>
+        drivers, however are they subject to certain license restrictions.
+      </para>
+    </note>
+    <para>
+      Below find the corresponding schema. For complete schema along with sample data, please refer to
+      <emphasis>"examples/portfolio"</emphasis>
+      directory of the downloaded kit.
+    </para>
+    <programlisting><![CDATA[      
+          - -Contains the name and address of a Customer who owns portfolio account 
+          CREATE TABLE CUSTOMER
+          (
+             SSN char(10),
+             FIRSTNAME varchar(64),
+             LASTNAME varchar(64),
+             ST_ADDRESS varchar(256),
+             APT_NUMBER varchar(32),
+             CITY varchar(64),
+             STATE varchar(32),
+             ZIPCODE varchar(10),
+             PHONE varchar(15)
+          );
+          
+          --Contains Customer's account number and its current status
+          CREATE TABLE ACCOUNT
+          (
+             ACCOUNT_ID integer,
+             SSN char(10),
+             STATUS char(10),
+             TYPE char(10),
+             DATEOPENED timestamp,
+             DATECLOSED timestamp
+          );
+          
+          --Contains information about stock symbol, company name etc.
+          CREATE TABLE PRODUCT (
+             ID integer,
+             SYMBOL varchar(16),
+             COMPANY_NAME varchar(256)
+          );
+          
+          --Contains each Account's holdings of Stocks   
+          CREATE TABLE HOLDINGS
+          (
+             TRANSACTION_ID integer,
+             ACCOUNT_ID integer,
+             PRODUCT_ID integer,
+             PURCHASE_DATE timestamp,
+             SHARES_COUNT integer
+          );                  
+    ]]>
+    </programlisting>
+    <para>
+      The CSV file format is defined as below for this example, which has 'stock symbol' and its corresponding
+      'value' per stock. For complete data file look in the
+      <emphasis>"examples/portfolio"</emphasis>
+      directory of the downloaded kit.
+    </para>
+    <programlisting><![CDATA[
+         IBM,83.46
+         MSFT,21.19
+         RHT,11.84
+         BA, 44.58
+         ORCL,17.37 
+    ]]>    
+    </programlisting>
+  </sect1>
+  <sect1 id="step-1">
+    <title>Step-1: Create schema and load sample data in the Relational Database</title>
+    <para>We need to start the Derby and create the "accounts" database with the above schema. The directions
+      below are given for Linux environment, for starting the Derby instance, however find the similar commands if
+      you are working with Windows environment. Start a terminal session, and change directory to where Derby is
+      installed and execute following commands</para>
+    <programlisting><![CDATA[
+      export DERBY_HOME=`pwd`
+      ./bin/startNetworkServer
+    ]]>        
+    </programlisting>
+    <para>The above starts the Derby in network mode. Now, start another terminal and we will start 'ij' tool of
+      the Derby (like SQL*PLus for Oracle) to create the schema, and use the "customer-schema.sql" file in
+      "examples/portfolio" directory</para>
+    <programlisting><![CDATA[
+      export DERBY_HOME=`pwd`
+      ./bin/ij /path/to/customer-schema.sql
+      ]]>        
+    </programlisting>
+    <para>
+      Make sure that you did not have any issues in creating the schema needed for going forward in this example.
+      You can use 'ij' tool to make sure the tables got created. or if you like use any tools like
+      <ulink url="http://www.squirrelsql.org/">SQuirreL</ulink>
+      , or
+      <ulink url="http://www.eclipse.org/datatools/">Eclipse's Data Tools</ulink>
+      plugin to connect to Derby instance and check the schema
+    </para>
+  </sect1>
+  <sect1 id="step-2">
+    <title>Step-2: Identify the CSV file and its contents</title>
+    <para>In order to use a Text file as the source, we need to define two different types of files. A descriptor
+      file and one or more data files. Conceptually, a Descriptor file defines schema, and each data file defines
+      data inside a table</para>
+    <orderedlist>
+      <listitem>
+        <para>Text Descriptor File - The Text Descriptor file contains information that describes the structure
+          of the text file you want to use as a data source, path to the file name and delimiter information etc.
+          Below shown a sample format of the file</para>
+        <programlisting><![CDATA[
+            MarketData.Price.location = /path/to/marketdata-price.txt
+            MarketData.Price.delimiter = ,
+            MarketData.Price.headerLine = 1
+         ]]>        
+        </programlisting>
+        <para>The below table shows some of the availble properties that can be used in a Descriptor file</para>
+        <table frame="all">
+          <title>Connection Properties</title>
+          <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' colwidth="1*" />
+            <colspec colname='c2' colwidth="1*" />
+            <thead>
+              <row>
+                <entry>
+                  <para>Property</para>
+                </entry>
+                <entry>
+                  <para>Description</para>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <para>location</para>
+                </entry>
+                <entry>
+                  <para>The path to the file on the local system or URL to remote file.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>delimiter</para>
+                </entry>
+                <entry>
+                  <para>The character the file uses to delimit the fields within each line in the file</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>headerLine</para>
+                </entry>
+                <entry>
+                  <para>The line number in on which the names of the columns are defined</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>skipHeaderLines</para>
+                </entry>
+                <entry>
+                  <para>The number of top lines to skip in a text file.(include one for the header)</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <para>note that each property line starts with "schema" information and followed by logical "table"
+          name and then the "property". In the above sample file "MarketData" is "schema" information, "Price" is
+          table name. This information defines text files as a sudo relational source to the Federate Embedded
+          engine. The above defined content is for a 'single' table, however you can repeat those lines in defining
+          multiple tables in the same Descriptor file but each "location" property for a given "table" can point to
+          different data file.</para>
+      </listitem>
+      <listitem>
+        <para>Data File: This the file that is identified by "location" property in the Descriptor file. Each
+          data file contains column information for the table defined and all the assosiated data for that table.
+          The column information is typically defined on line 1 as header line in the file, and all the following
+          lines contain the actual rwo data. Each single line corresponds to single row. The sample file is shown
+          below.</para>
+        <programlisting><![CDATA[
+           SYMBOL,PRICE
+           IBM,83.46
+           MSFT,21.19
+           RHT,11.84
+           BA, 44.58
+           ORCL,17.37           
+         ]]>        
+        </programlisting>
+      </listitem>
+    </orderedlist>
+    <para>Just locate the sample data files provided or create your own data files. Make sure that the
+      descriptor file contains correct URL or the full path to the data file. Now, both our sources are ready to be
+      used to build a VDB</para>
+  </sect1>
+</chapter>

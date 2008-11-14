@@ -1,0 +1,622 @@
+source(getResource("/scripts/adminapi.bsh"));
+
+import java.util.Date;
+import java.util.Properties;
+
+import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
+import com.metamatrix.common.util.PropertiesUtils;
+
+// ********************************************************************************************
+//  Wrappers for methods in the ServerAdmin interface.
+//  For the methods of the DQPAdmin and Admin (shared) interfaces, see adminapi.bsh, dqp.bsh.
+// ********************************************************************************************
+
+// Configuration methods
+
+
+
+/**
+ * Add a Host with Properties to MetaMatrix System
+ *
+ * @param hostIdentifier
+ *            Name of {@link com.metamatrix.admin.api.objects.Host Host} to add
+ * @param properties
+ *            name,value
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void addHost(String hostIdentifier, Properties properties) {
+    checkAdmin();
+	currentContext().internalAdmin.addHost(hostIdentifier, properties);
+}
+
+
+/**
+ * Enable Host in Configuration
+ *
+ * @param hostIdentifier
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void enableHost(String hostIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.enableHost(hostIdentifier);
+}
+
+/**
+ * Disable Host in Configuration
+ *
+ * @param identifier
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void disableHost(String identifier) {
+    checkAdmin();
+    currentContext().internalAdmin.disableHost(identifier);
+}
+
+/**
+ * Delete Host in Configuration
+ * <p>
+ * Note that this method may invalidate your connection to the Admin API, if you are connected to the host you are deleting.  
+ * You may receive an exception on the next call to the API, and then it will recover.
+ * As a workaround, you can close your connection and obtain a new connection.
+ * @param identifier
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void deleteHost(String identifier) {
+    checkAdmin();
+	currentContext().internalAdmin.deleteHost(identifier);
+}
+
+
+
+/**
+ * Add Process to specified host in the processIdentifier
+ *
+ * @param processIdentifier
+ *            Process Identifiers is Host Name.Process Name e.g. "myhost.MetaMatrixProcess"
+ * @param properties
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void addProcess(String processIdentifier, Properties properties) {
+    checkAdmin();
+	currentContext().internalAdmin.addProcess(processIdentifier, properties);
+}
+
+
+/**
+ * Enable Process in Configuration
+ *
+ * @param identifier
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void enableProcess(String identifier) {
+    checkAdmin();
+	currentContext().internalAdmin.enableProcess(identifier);
+}
+
+/**
+ * Disable Process in Configuration
+ *
+ * @param identifier
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void disableProcess(String identifier) {
+    checkAdmin();
+	currentContext().internalAdmin.disableProcess(identifier);
+}
+
+/**
+ * Delete Process in Configuration
+ *
+ * <p>
+ * Note that this method may invalidate your connection to the Admin API, if you are connected to the process you are deleting.  
+ * You may receive an exception on the next call to the API, and then it will recover.
+ * As a workaround, you can close your connection and obtain a new connection.
+ * @param identifier
+ *            Process Identifer
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void deleteProcess(String identifier) {
+    checkAdmin();
+	currentContext().internalAdmin.deleteProcess(identifier);
+}
+
+
+/**
+ * Deploy the VDB from the MetaMatrix Repository
+ *
+ * @param name
+ * @param version
+ * @param repositoryLocation
+ * @return status object indicating any warnings.
+ * <p>A status code of <code>AdminStatus.CODE_SUCCESS</code> will be returned there are no problems.
+ * <p>A status code of <code>AdminStatus.CODE_DECRYPTION_FAILED</code> will be returned if the VDB was added,
+ * but some connector binding passwords could not be decrypted.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+VDB addVDB(String name, String version, String repositoryLocation) {
+    print("Adding VDB " + vdbName + " from " + repositoryLocation);
+    checkAdmin();    
+    result = currentContext().internalAdmin.addVDB(name, version, repositoryLocation);
+    debug(result);
+    return result;
+}
+
+/**
+ * Import the Configuration from a file in XML format.
+ * NOTE: This imports the specified data to the "Next Startup" configuration. 
+ * The server must be restarted for the new configuration to take effect.  
+ * 
+ * @param filename Name of configuration file, in XML format, as exported by {@link #exportConfiguration()}
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void importConfiguration(String filename) {
+    checkAdmin();    
+    currentContext().internalAdmin.importConfiguration(readTextFile(filename));
+}
+
+/**
+ * Deassign a {@link ConnectorBinding} from a {@link VDB}'s Model
+ *
+ * @param connectorBindingName
+ *            Name of the ConnectorBinding
+ * @param vdbName
+ *            Name of the VDB
+ * @param vdbVersion
+ *            Version of the VDB
+ * @param modelName
+ *            Name of the Model to unmap Connector Binding
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ */
+void deassignBindingFromModel(String connectorBindingName,String vdbName,String vdbVersion,String modelName){
+    checkAdmin();    
+    currentContext().internalAdmin.deassignBindingFromModel(connectorBindingName, vdbName, vdbVersion, modelName);
+}
+
+/**
+ * Assign {@link ConnectorBinding}s to a {@link VDB}'s Model.  If the supplied model does not 
+ * support MultiSource bindings, then only the first binding in the supplied array is assigned and
+ * the remainder are ignored.
+ *
+ * @param connectorBindingNames
+ *            Names of the ConnectorBindings
+ * @param vdbName
+ *            Name of the VDB
+ * @param vdbVersion
+ *            Version of the VDB
+ * @param modelName
+ *            Name of the Model to map Connector Bindings
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ */
+void assignBindingsToModel(String[] connectorBindingNames, String vdbName, String vdbVersion, String modelName) {
+    checkAdmin();    
+    currentContext().internalAdmin.assignBindingsToModel(connectorBindingNames, vdbName, vdbVersion, modelName);
+}
+
+/**
+ * Deassign {@link ConnectorBinding}s from a {@link VDB}'s Model.  Any of the supplied array of
+ * bindings are deassigned from the supplied model.
+ *
+ * @param connectorBindingNames
+ *            Names of the ConnectorBindings
+ * @param vdbName
+ *            Name of the VDB
+ * @param vdbVersion
+ *            Version of the VDB
+ * @param modelName
+ *            Name of the Model to unmap Connector Bindings
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ */
+void deassignBindingsFromModel(String[] connectorBindingNames, String vdbName, String vdbVersion, String modelName){
+    checkAdmin();    
+    currentContext().internalAdmin.deassignBindingsFromModel(connectorBindingNames, vdbName, vdbVersion, modelName);
+}
+
+
+
+// Monitoring methods
+
+/**
+ * Get the hosts that correspond to the specified identifier pattern.
+ *
+ * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.Host Host}
+ * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#DELIMITER DELIMITER}"
+ * if all hosts are desired.
+ * @return Collection of {@link com.metamatrix.admin.api.objects.Host Host}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getHosts(String hostIdentifier) {
+    checkAdmin();
+    
+    result = currentContext().internalAdmin.getHosts(hostIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the processes that correspond to the specified identifier pattern.
+ *
+ * @param processIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.ProcessObject ProcessObject}
+ * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#DELIMITER DELIMITER}"
+ * if all Processes are desired.
+ * @return Collection of {@link com.metamatrix.admin.api.objects.ProcessObject ProcessObject}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getProcesses(String processIdentifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getProcesses(processIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Connection Pools that correspond to the specified identifer pattern.
+ *
+ * @param poolIdentifier the unique poolIdentifier for for a {@link com.metamatrix.admin.api.objects.ConnectionPool ConnectionPool}
+ * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#DELIMITER DELIMITER}"
+ * if all Connection Pools are desired.
+ * @return Collection of {@link com.metamatrix.admin.api.objects.ConnectionPool ConnectionPool}s
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getConnectionPools(String poolIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getConnectionPools(poolIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the {@link com.metamatrix.admin.api.objects.DQP DQP}s that correspond to the specified identifer pattern.
+ *
+ * @param dqpIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.DQP DQP}
+ * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#DELIMITER DELIMITER}"
+ * if all Resources are desired.
+ * @return Collection of {@link com.metamatrix.admin.api.objects.DQP DQP}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getDQPs(String dqpIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getDQPs(dqpIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Resources that correspond to the specified identifer pattern.
+ *
+ * @param resourceIdentifier the unique resourceIdentifier for for a {@link com.metamatrix.admin.api.objects.Resource Resource}
+ * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#DELIMITER DELIMITER}"
+ * if all Resources are desired.
+ * @return Collection of {@link com.metamatrix.admin.api.objects.Resource Resource}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getResources(String resourceIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getResources(resourceIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Export the logs from the MetaMatrix system, az a zipfile
+ * 
+ * @param filename
+ *            Name of file to write the logs to
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void exportLogs(String filename) {
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportLogs(), filename);    
+}
+
+
+//RuntimeState methods
+
+/**
+ * Stop and restart the entire system.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * NOTE: If <code>waitUntilDone</code> is true, this method will wait until the server is able to connect to,
+ * but it may not wait until non-essential services are available.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void bounceSystem(boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.bounceSystem(waitUntilDone);
+}
+
+/**
+ * Synchronize the entire system.  Synchronization will attempt to make the
+ * runtime state match the configuration.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void synchronizeSystem(boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.synchronizeSystem(waitUntilDone);
+}
+
+/**
+ * Stop the entire system.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void stopSystem() {
+    checkAdmin();
+    currentContext().internalAdmin.stopSystem();
+}
+
+
+/**
+ * Start the Host for this cluster
+ * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.Host Host}
+ * in the system.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void startHost(String hostIdentifier, boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.startHost(hostIdentifier, waitUntilDone);
+}
+
+/**
+ * Stop the Host for this cluster
+ * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.Host Host}
+ * in the system.
+ * @param stopNow  If true, stop the host forcefully.  If false, wait until any pending work is done.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void stopHost(String hostIdentifier, boolean stopNow, boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.stopHost(hostIdentifier, stopNow, waitUntilDone);
+}
+
+/**
+ * Start a Process in the system.
+ * @param processIdentifier the unique identifier for for a
+ * {@link com.metamatrix.admin.api.objects.ProcessObject ProcessObject} in the system.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void startProcess(String processIdentifier, boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.startProcess(processIdentifier, waitUntilDone);
+}
+
+/**
+ * Stop Process running in the system.
+ * @param processIdentifier the unique identifier for for a
+ * {@link com.metamatrix.admin.api.objects.ProcessObject ProcessObject} in the system.
+ * @param stopNow a <code>boolean</code> value indicating whether to halt the process immediately
+ * or let it finish processing first.
+ * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
+ * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
+ * may not be finished.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void stopProcess(String processIdentifier, boolean stopNow, boolean waitUntilDone) {
+    checkAdmin();
+    currentContext().internalAdmin.stopProcess(processIdentifier, stopNow, waitUntilDone);
+}  
+    
+    
+//Security methods
+
+/**
+ * Get the Collection of administrative role names possessed by the given group, if any.
+ *
+ * @param groupIdentifier
+ *            The unique identifier for the {@link Group}. This is group name. A user is a {@link Principal} and a
+ *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+ *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @return The Collection of {@link Role}s.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getRolesForGroup(String groupIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getRolesForGroup(groupIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Collection of administrative role names possessed by the given user, if any.
+ *
+ * @param userIdentifier
+ *            The unique identifier for the {@link User}. This is generally a user name. A user is a {@link Principal} and a
+ *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+ *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @return The Collection of <code>String</code> role names.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getRolesForUser(String userIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getRolesForUser(userIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the group memberships for the given user. 
+ *
+ * @param userIdentifier
+ *            The unique identifier for the {@link User}. This is generally a user name. A user is a {@link Principal} and a
+ *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+ *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @return The collection of groups in which the given user has membership.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getGroupsForUser(String userIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getGroupsForUser(userIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the group denoted by the given <code>groupIdentifier</code>.
+ *
+ * @param groupIdentifier
+ *            The unique identifier for the {@link Group}. This is generally a group name. A group is a {@link Principal} and
+ *            a Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains. <br>
+ *            Note that by supplying the {@link AdminObject#WILDCARD WILDCARD} identifier, all all users in the system will
+ *            retrieved.</br>
+ * @return The Collection of users.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getGroups(String groupIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getGroups(groupIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Assign to the given {@link Group} the given Administrative Role.
+ *
+ * @param roleIdentifier
+ *            one of {@link AdminRoles}.
+ * @param groupIdentifier
+ *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void assignRoleToGroup(String roleIdentifier, String groupIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.assignRoleToGroup(roleIdentifier, groupIdentifier);
+}
+
+/**
+ * Remove an administrative role from the given {@link Group}.
+ *
+ * @param roleIdentifier
+ *            one of {@link AdminRoles}
+ * @param groupIdentifier
+ *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void removeRoleFromGroup(String roleIdentifier, String groupIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.removeRoleFromGroup(roleIdentifier, groupIdentifier);
+}
+
+
+/**
+ * Import the data Roles for given vdb and version into the connected server
+ * @param vdbName - target name of the VDB, the roles to be imported under
+ * @param vdbVersion - target version of the vdb, the roles to be imported under
+ * @param filename - character data array containing the XML file which defines the roles 
+ * @param options - options to overwrite in case the matching roles already exist.
+ * @throws AdminException
+ */
+void importDataRoles(String vdbName, String vdbVersion, String filename, int options) {
+    checkAdmin();    
+    currentContext().internalAdmin.importDataRoles(vdbName, vdbVersion, readTextFile(filename), new AdminOptions(options));    
+}
+
+/**
+ * Import the data Roles for given vdb and version into the connected server
+ * @param vdbName - target name of the VDB, the roles to be imported under
+ * @param vdbVersion - target version of the vdb, the roles to be imported under
+ * @param filename - character data array containing the XML file which defines the roles 
+ * @throws AdminException
+ */
+void importDataRoles(String vdbName, String vdbVersion, String filename) {
+    checkAdmin();    
+    currentContext().internalAdmin.importDataRoles(vdbName, vdbVersion, readTextFile(filename), null);    
+}
+
+
+/**
+ * Export the data roles defined for the given vdb fromthe current system
+ * @param vdbName - Name of the vdb
+ * @param vdbVersion - version of the vdb
+ * @param filename - name of the file to export the contents under.
+ * @return - char[] stream containing the XML contents of the roles.
+ * @throws AdminException
+ */
+void exportDataRoles(String vdbName, String vdbVersion, String filename) {
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportDataRoles(vdbName, vdbVersion), filename);  
+}
+
+
+/** 
+ * @param domainprovidername is the name to be assigned to the newly created {@link AuthenticationProvider}
+ * @param providertypename is the type of provider to create.  
+ * There are 3 installed provider types and they are: 
+ * <ul>
+ *      <li> <code>File Membership Domain Provider</code>
+ *      <li> <code>LDAP Membership Domain Provider</code> 
+ *      <li><code>Custom Membership Domain Provider</code>
+ * </ul>
+ * @param properties are the settings specified by the providertype to be used
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 5.5.2
+ */
+void addAuthorizationProvider(String domainprovidername, String providertypename, Properties properties) {
+    checkAdmin();
+    currentContext().internalAdmin.addAuthorizationProvider(domainprovidername, providertypename, properties);       
+}
+
+
+
+
+

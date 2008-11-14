@@ -1,0 +1,783 @@
+<chapter id="connector_development_kit">
+  <title>Using the Connector Development Kit</title>
+  <sect1>
+    <title>Overview</title>
+    <para>The Connector Developer Kit (CDK) is a set of programmatic and command line utilities
+      for testing connectors.  The programmatic components of the CDK are useful for unit testing
+      your connector and the command line utilities is useful for integration testing and regression
+      testing (due to scripting abilities).</para>
+    <para>This chapter covers usage of both aspects of the CDK.  For more detailed information
+      about the CDK programmatic utilities, please see the Connector API Javadoc, which include the
+      CDK Javadoc.</para>
+  </sect1>
+  <sect1>
+    <title>Programmatic Utilities</title>
+    <para>All components provided by the CDK are in the package com.metamatrix.cdk.api.  </para>
+    <sect2>
+      <title>Language Translation</title>
+      <para>Commands are sent to the Connector API in terms of the language interfaces
+        discussed earlier in this guide.  Typically, a connector must write logic to read and
+        sometimes manipulate these objects.  The CDK language translation utilities can be used to
+        write unit tests for translation code or command execution.</para>
+      <para>The utilities are provided in the class TranslationUtility.  This class has the
+        following methods:</para>
+        
+      <table frame='all'>
+        <title>Language Translation</title>
+        <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+          <colspec colname='c1' colwidth="1*" />
+          <colspec colname='c2' colwidth="2*" />
+          <thead>
+            <row>
+              <entry>
+                <para>Method Name</para>
+              </entry>
+              <entry>
+                <para>Description</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>TranslationUtility(String vdbFile)</para>
+              </entry>
+              <entry>
+                <para>Constructor – takes the path to a file which is a valid metadata
+                  archive created by the MetaMatrix Designer.  These files have the suffix “.vdb”.  
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>createRuntimeMetadata()</para>
+              </entry>
+              <entry>
+                <para>Creates an instance of RuntimeMetadata that can be used to test code
+                  that uses runtime metadata when translating or executing commands.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>parseCommand(String sql)</para>
+              </entry>
+              <entry>
+                <para>Take a single-source command and return an ICommand that can be used to
+                  test translation or execution of commands.</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </sect2>
+    
+    <sect2>
+      <title>Command Execution</title>
+      <para>The primary purpose of a Connector is to execute commands against an information
+        source.  The query execution utilities allow you to test the execution of commands
+        programmatically.  This utility does not run the MetaMatrix query engine or the connector
+        manager although does simulate what happens when those components use a Connector to execute
+        a command.</para>
+      <para>The command execution utilities are provided in the class ConnectorHost.  This class
+        has the following methods:</para>
+        
+      <table frame='all'>
+        <title>Command Execution</title>
+        <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+          <colspec colname='c1' colwidth="1*" />
+          <colspec colname='c2' colwidth="2*" />
+          <thead>
+            <row>
+              <entry>
+                <para>Method Name</para>
+              </entry>
+              <entry>
+                <para>Description</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>ConnectorHost</para>
+              </entry>
+              <entry>
+                <para>Constructor – takes a Connector instance, a set of connector
+                  property values, and the path to a VDB archive file</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>setBatchSize</para>
+              </entry>
+              <entry>
+                <para>Sets the batch size to use when executing commands.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>setSecurityContext</para>
+              </entry>
+              <entry>
+                <para>Sets the security context values currently being used to execute commands.
+                   This method may be called multiple times during the use of a single instance of
+                  ConnectorHost to change the current context.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>getConnectorEnvironmentProperties</para>
+              </entry>
+              <entry>
+                <para>Helper method to retrieve the properties passed to the ConnectorHost
+                  constructor.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>executeCommand</para>
+              </entry>
+              <entry>
+                <para>Execute a command and return the results using this connector.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>executeBatchedUpdates</para>
+              </entry>
+              <entry>
+                <para>Execute a set of commands as a batched update.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>getCommand</para>
+              </entry>
+              <entry>
+                <para>Use the host metadata to get the ICommand for a SQL string.</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <para />
+      <para>Here is some example code showing how to use ConnectorHost to test a connector:
+      </para>
+      <programlisting><![CDATA[
+// Prepare state for testing
+MyConnector connector = new MyConnector();
+Properties props = new Properties();
+props.setProperty(“user”, “myuser”);
+props.setProperty(“password”, “mypassword”);
+String vdbFile = “c:/mymetadata.vdb”;
+
+// Create host
+ConnectorHost host = new ConnectorHost(connector, props, vdbFile);
+
+// Execute query
+List results = host.executeCommand(“SELECT col FROM group WHERE col = 5”);
+
+// Compare actual results to expected results
+// . . .     
+    ]]></programlisting>
+      <para>The executeCommand() method will return results as a List of rows.  Each row is
+        itself a List of objects in column order.  So, each row should have the same number of items
+        corresponding to the columns in the SELECT clause of the query.  In the case of an INSERT,
+        UPDATE, or DELETE, a single “row” will be returned with a single column that contains the
+        update count.</para>
+    </sect2>
+    
+  </sect1>
+  
+  <sect1>
+    <title>Connector Environment</title>
+    <para>Many parts of the Connector API require use of the Connector Environment.  The
+      EnvironmentUtility can be used to obtain and control a Connector Environment instance.</para>
+      
+    <table frame='all'>
+      <title>Command Execution</title>
+      <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*" />
+        <colspec colname='c2' colwidth="2*" />
+        <thead>
+          <row>
+            <entry>
+              <para>Method Name</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>createSecurityContext</para>
+            </entry>
+            <entry>
+              <para>Creates a securityContext instance.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>createStdoutLogger</para>
+            </entry>
+            <entry>
+              <para>Creates an instance of ConnectorLogger that prints log messages to
+                system.out( )</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>createEnvironment</para>
+            </entry>
+            <entry>
+              <para>Creates an instance of connectorEnvironment for use in your testing
+                environment.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>createExecutionContext</para>
+            </entry>
+            <entry>
+              <para>Creates an ExecutionContext instance.</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <para />
+    <para>In addition, some implementations of ConnectorLogger are provided which can be used as
+      needed to build a custom logger for testing.  BaseLogger is a base logger class that can be
+      extended to create your own ConnectorLogger implementation.  SysLogger is a utility
+      implementation that logs to System.out.</para>
+  </sect1>
+  
+  <sect1>
+    <title>Command Line Tester</title>
+    <sect2>
+      <title>Using the Command Line Tester</title>
+      <para>The command line tester is available in the mmtools kit along with the other
+        MetaMatrix products in the tools directory. The tester can be executed in interactive mode by running </para>
+        
+        <programlisting><![CDATA[
+          <unzipped folder>S\cdk\cdk.bat
+        ]]></programlisting>
+        <para>Typing “help” in the command line tester provides a list of all available options.  These options are listed here with some additional detail:</para>
+      
+      <table frame='all'>
+        <title>Connector Lifecycle</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*"/>
+        
+        <thead>
+          <row>
+            <entry>
+              <para>Option</para>
+            </entry>
+            <entry>
+              <para>Arguments</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+            <row>
+              <entry>
+                <para>Load Archive</para>
+              </entry>
+              <entry>
+                <para>PathToArchiveFileName</para>
+              </entry>
+              <entry>
+                <para>Load the Connector archive file, which loads the Connector type definition
+                  file and all the extension modules into the CDK shell.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Load</para>
+              </entry>
+              <entry>
+                <para>ConnectorClass vdbFile</para>
+              </entry>
+              <entry>
+                <para>Load a connector by specifying the connector class name and the VDB metadata archive file</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>LoadFromScript</para>
+              </entry>
+              <entry>
+                <para>ScriptFile</para>
+              </entry>
+              <entry>
+                <para>Load a connector from a script</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>LoadProperties</para>
+              </entry>
+              <entry>
+                <para>PathToPropertyFile</para>
+              </entry>
+              <entry>
+                <para>Load a set of properties for your connector from a file</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SetProperty</para>
+              </entry>
+              <entry>
+                <para>PropertyName PropertyValue</para>
+              </entry>
+              <entry>
+                <para>Set the value of a property</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>GetProperties</para>
+              </entry>
+              <entry>
+                <para />
+              </entry>
+              <entry>
+                <para>List all properties currently set on the connector</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Start</para>
+              </entry>
+              <entry>
+                <para />
+              </entry>
+              <entry>
+                <para>Start the connector</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Stop</para>
+              </entry>
+              <entry>
+                <para />
+              </entry>
+              <entry>
+                <para>Stop the connector</para>
+              </entry>
+            </row>        
+        </tbody>
+        </tgroup>
+      </table>   
+
+      <table frame='all'>
+        <title>Command Execution</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*"/>
+        
+        <thead>
+          <row>
+            <entry>
+              <para>Option</para>
+            </entry>
+            <entry>
+              <para>Arguments</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+            <row>
+              <entry>
+                <para>Select</para>
+              </entry>
+              <entry>
+                <para>Sql</para>
+              </entry>
+              <entry>
+                <para>Run a SELECT statement.  This option takes multi-line input terminated with “;”</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Insert</para>
+              </entry>
+              <entry>
+                <para>Sql</para>
+              </entry>
+              <entry>
+                <para>Execute an INSERT statement.  This option takes multi-line input terminated with a “;”.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Update</para>
+              </entry>
+              <entry>
+                <para>Sql</para>
+              </entry>
+              <entry>
+                <para>Execute an UPDATE statement.  This option takes multi-line input terminated with “;”</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Delete</para>
+              </entry>
+              <entry>
+                <para>Sql</para>
+              </entry>
+              <entry>
+                <para>Execute a DELETE statement.  This option takes multi-line input terminated with a “;”.</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SetBatchSize</para>
+              </entry>
+              <entry>
+                <para>BatchSize</para>
+              </entry>
+              <entry>
+                <para>Set the batch size used when retrieving results</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SetSecurityContext</para>
+              </entry>
+              <entry>
+                <para>VDBName VDBVersion UserName</para>
+              </entry>
+              <entry>
+                <para>Set the properties of the current security context</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SetPrintStackOnError</para>
+              </entry>
+              <entry>
+                <para>PrintStackOnError</para>
+              </entry>
+              <entry>
+                <para>Set whether to print the stack trace when an error is received</para>
+              </entry>
+            </row>        
+        </tbody>
+        </tgroup>
+      </table> 
+      
+      <table frame='all'>
+        <title>Scripting</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*"/>
+        
+        <thead>
+          <row>
+            <entry>
+              <para>Option</para>
+            </entry>
+            <entry>
+              <para>Arguments</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+            <row>
+              <entry>
+                <para>SetScriptFile</para>
+              </entry>
+              <entry>
+                <para>PathToScriptFile</para>
+              </entry>
+              <entry>
+                <para>Set the script file to use</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Run</para>
+              </entry>
+              <entry>
+                <para>ScriptName</para>
+              </entry>
+              <entry>
+                <para>Run a script with the file name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Runall</para>
+              </entry>
+              <entry>
+                <para />
+              </entry>
+              <entry>
+                <para>Run all scripts loaded by loadFromScript</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>RunScript</para>
+              </entry>
+              <entry>
+                <para>PathToScriptFile ScriptNameWithinFile</para>
+              </entry>
+              <entry>
+                <para>Run a particular script in a script file</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>SetFailOnError</para>
+              </entry>
+              <entry>
+                <para>FailOnError</para>
+              </entry>
+              <entry>
+                <para>Set whether to fail a script when an error is encountered or continue on</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Result</para>
+              </entry>
+              <entry>
+                <para>ExpectedResults</para>
+              </entry>
+              <entry>
+                <para>Compares actual results from the previous command with the expected
+                  results.  This command is only available when using the command line tester in script
+                  mode.</para>
+              </entry>
+            </row>        
+        </tbody>
+        </tgroup>
+      </table> 
+            
+      <table frame='all'>
+        <title>Miscellaneous</title>        
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1' colwidth="1*"/>
+        <colspec colname='c2' colwidth="1*"/>
+        <colspec colname='c3' colwidth="2*"/>
+        
+        <thead>
+          <row>
+            <entry>
+              <para>Option</para>
+            </entry>
+            <entry>
+              <para>Arguments</para>
+            </entry>
+            <entry>
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>CreateArchive</para>
+            </entry>
+            <entry>
+              <para>PathTOArchiveFileName</para>
+              <para>PathToCDKFileName</para>
+              <para>PathToDirectoryForExtensionModules</para>
+            </entry>
+            <entry>
+              <para>Creates a connector archive file based on the properties supplied.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>CreateTemplate</para>
+            </entry>
+            <entry>
+              <para>PathToTemplateFile</para>
+            </entry>
+            <entry>
+              <para>Create a template connector type file at the given file name.</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Help</para>
+            </entry>
+            <entry>
+              <para />
+            </entry>
+            <entry>
+              <para>List all options</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Quit</para>
+            </entry>
+            <entry>
+              <para />
+            </entry>
+            <entry>
+              <para>Quit the command line tester</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </sect2>
+    
+  <sect2>
+    <title>Loading Your Connector</title>
+    <para>Preparing your connector to execute commands consists of the following steps:</para>
+    <orderedlist>
+      <listitem>
+        <para>Add your connector code to the CDK classpath.  The cdk.bat script looks for this code
+          in the CONNECTORPATH environment variable.  This variable can be set with the DOS shell
+          command “SET CONNECTORPATH=c:\path\to\connector.jar”.  Alternately, you can modify the value
+          of the CONNECTORPATH environment variable in the cdk.bat file.</para>
+      </listitem>
+      <listitem>
+        <para>Start the command line tester.  You can start the tester by executing the cdk.bat
+          file in the cdk directory of the MetaMatrix Tools installation.  </para>
+      </listitem>
+      <listitem>
+        <para>Load your connector class and the associated runtime metadata.  You can load your
+          connector by using the “load” command and specifying the fully-qualified class name of your
+          Connector implementation and the path to a VDB file.  The VDB runtime metadata archive
+          should contain the metadata you want to use while testing.</para>
+      </listitem>
+      <listitem>
+        <para>Set any properties required by your connector.  This can be accomplished with the
+          setProperty command for individual properties or the loadProperties command to load a set of
+          properties from either a properties file or a connector binding file.  You can use the
+          “getProperties” command to view the current property settings.</para>
+      </listitem>
+      <listitem>
+        <para>Start the connector.  Use the “start” command in the command-line tester to start your connector.  </para>
+      </listitem>
+    </orderedlist>
+    
+    <para>Following is an example transcript of how this process might look in a DOS command window.  User input is in bold.</para>
+
+    <programlisting><![CDATA[
+D:\metamatrix\console\cdk> set CONNECTORPATH=D:\myconn\myconn.jar
+D:\metamatrix\console\cdk> cdk
+========================== ENV SETTINGS ==========================
+MM_ROOT        = D:\metamatrix\console
+MM_JAVA        = D:\metamatrix\console\jre
+CONNECTORPATH  = D:\myconn\myconn.jar
+CLASSPATH      = ;D:\metamatrix\console\cdk\metamatrix-cdk.jar;D:\myconn\myconn.jar;
+==================================================================
+
+D:\metamatrix\console>D:\metamatrix\tools400wl7\console\jre\bin\java -Xmx256m -Dmetamatrix.config.none -Dmetamatrix.log=4 com.metamatrix.cdk.ConnectorShell
+Starting
+Started
+>load com.metamatrix.myconn.MyConnector d:\myconn\myconn.vdb
+>setproperty user joe
+>start
+>     
+    ]]></programlisting> 
+    
+  </sect2>
+  
+  <sect2>
+    <title>Executing Commands</title>
+    <para>Commands can be executed against your connector using the SELECT, INSERT, UPDATE, and DELETE commands.  Procedure execution is not currently supported via the command line tester.  Commands may span multiple lines and should be terminated with a “;”.  </para>
+    <para>When a command is executed, the results are printed to the console.  Following is an example session executing a SELECT command with the command line tester.  User input is in bold.</para>
+    <programlisting><![CDATA[
+>SELECT Name, Value FROM MyModel.MyGroup WHERE Name = ‘xyz’;
+String Integer
+xyz 5
+xyz 10
+>      
+    ]]></programlisting> 
+
+    <para/>      
+  </sect2>
+  
+  <sect2>
+    <title>Scripting</title>
+    <para>One of the most useful capabilities of the command-line tester is the ability to capture
+      a sequence of commands in a script and automate the execution of the script.  This allows for
+      the rapid creation of regression and acceptance tests.  </para>
+    <para>A script file may contain multiple scripts, where each script is grouped together with { }
+      and a name.  Following is an example of a script file.  This script file also uses the special
+      script-only command RESULTS that will compare the results of the last execution with the
+      specified expected results.</para>
+    <programlisting><![CDATA[
+test {
+  load com.metamatrix.myconn.MyConnector d:\myconn\myconn.vdb
+  setproperty user joe
+  start
+  
+  SELECT Name, Value FROM MyModel.MyGroup WHERE Name = ‘xyz’; 
+  results [
+  String Integer
+  xyz 5
+  xyz 10
+  ]
+}      
+    ]]></programlisting> 
+    
+    <para/>
+    <para>To execute this file, run the command line tester in scripting mode and specify the script
+      file and the script within the file:</para>
+      
+    <programlisting><![CDATA[
+D:\metamatrix\console\cdk>cdk runscript d:\myconn\my.script test
+========================== ENV SETTINGS ==========================
+MM_ROOT        = D:\metamatrix\console
+MM_JAVA        = D:\metamatrix\console\jre
+CONNECTORPATH  = D:\myconn\myconn.jar
+CLASSPATH      = ;D:\metamatrix\console\cdk\metamatrix-cdk.jar;D:\myconn\myconn.jar;
+==================================================================
+
+D:\metamatrix\console>D:\metamatrix\tools400wl7\console\jre\bin\java -Xmx256m -Dmetamatrix.config.none -Dmetamatrix.log=4 com.metamatrix.cdk.ConnectorShell runscript my.script 
+Starting
+Started
+>Executing: load com.metamatrix.myconn.MyConnector d:\myconn\myconn.vdb
+>Executing: setproperty user joe
+>Executing: start
+>Executing: select Name, Value from MyModel.MyGroup where Name = ‘xyz’;
+String Integer
+xyz 5
+xyz 15
+
+>Test /metamatrix/tools400wl7/console/cdk/yahoo.script.test failed.  CompareResults Error: Value mismatch at row 2 and column 2: expected = 10, actual = 15
+
+>Finished
+D:\metamatrix\console\cdk>      
+    ]]></programlisting> 
+
+    <para/>
+    <para>The script run above illustrates the output when the test result fails due to differences
+      between expected and actual results.  In this case the value was expected to be 10 in the script
+      but was actually 15.  The setFailOnError command can be used to fail the execution of the entire
+      script if an error occurs.  </para>
+    <para>Scripts can also be run in interactive mode by using the setScriptFile and run
+      commands.  This can be useful to record portions of your interactive testing to avoid re-typing
+      later.</para>    
+  </sect2>
+  </sect1>
+</chapter>

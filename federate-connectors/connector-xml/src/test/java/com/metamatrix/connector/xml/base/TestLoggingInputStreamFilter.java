@@ -1,0 +1,162 @@
+package com.metamatrix.connector.xml.base;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import junit.framework.TestCase;
+
+import com.metamatrix.data.api.ConnectorLogger;
+
+public class TestLoggingInputStreamFilter extends TestCase {
+
+	LoggingInputStreamFilter filter;
+	TestLogger logger;
+	private static final String TEST_VAL = "The quick brown fox jumps over the lazy dog";
+	
+	protected void setUp() throws Exception {
+		super.setUp();
+		logger = new TestLogger();
+		InputStream stream = new ByteArrayInputStream(TEST_VAL.getBytes());
+		filter = new LoggingInputStreamFilter(stream, logger);
+	}
+	
+	public void testResetFail() {
+		try {
+			filter.reset();
+		} catch(IOException e) {
+			return;
+		}
+		fail("should have thrown IOException");
+	}
+	
+	public void testsupportsMarkFalse() {
+		assertFalse(filter.markSupported());
+	}
+	
+	public void testRead() {
+		try {
+			boolean finished = false;
+			int val;
+			StringBuffer buffer = new StringBuffer();
+			while (!finished) {
+				val = filter.read();
+				if(-1 != val) {
+					buffer.append(new Character(((char)val)).toString());
+				} else {
+					finished = true;
+				}
+			}
+			assertEquals(TEST_VAL, buffer.toString());
+			assertEquals("XML Connector Framework: response body is: " + TEST_VAL, logger.getMessage());
+		} catch(IOException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	public void testReadArray() {
+		try{
+			byte[] res = new byte[TEST_VAL.length() + 1];
+			int len = filter.read(res);
+			assertEquals(TEST_VAL.length(), len);
+			assertEquals("XML Connector Framework: response body is: " + TEST_VAL, logger.getMessage());
+			assertEquals(TEST_VAL, new String(res).trim());
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	public void testReadOffsetA() {
+		try{
+			byte[] res = new byte[TEST_VAL.length() + 1];
+			int len = filter.read(res, 0, 5);
+			filter.close();
+			assertEquals(5, len);
+			assertEquals("XML Connector Framework: response body is: " + "The q", logger.getMessage());
+			assertEquals("The q", new String(res).trim());
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	public void testReadOffsetB() {
+		try{
+			byte[] res = new byte[TEST_VAL.length() + 1];
+			int len = filter.read(res, 0, TEST_VAL.length());
+			filter.close();
+			assertEquals(TEST_VAL.length(), len);
+			assertEquals("XML Connector Framework: response body is: " + TEST_VAL,
+					logger.getMessage());
+			assertEquals(TEST_VAL, new String(res).trim());
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	public void testReadOffsetC() {
+		try{
+			byte[] res = new byte[TEST_VAL.length() + 1];
+			int len = filter.read(res, 0, TEST_VAL.length());
+			assertEquals(TEST_VAL.length(), len);
+			assertEquals(null, logger.getMessage());
+			assertEquals(TEST_VAL, new String(res).trim());
+			len = filter.read(res, 0, TEST_VAL.length());
+			assertEquals(-1, len);
+			assertEquals(TEST_VAL, new String(res).trim());
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	public void testSkip() {
+			try {
+				long count = filter.skip(100);
+				assertEquals(TEST_VAL.length(), count);
+				assertEquals("XML Connector Framework: response body is: " + TEST_VAL, logger.getMessage());
+			} catch (IOException e) {
+				fail(e.getMessage());
+			}
+		
+	}
+
+		
+	private class TestLogger implements ConnectorLogger {
+		
+		String logMessage;
+		
+		public String getMessage() {
+			return logMessage;
+		}
+		
+		public void logDetail(String arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void logError(String arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void logError(String arg0, Throwable arg1) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void logInfo(String arg0) {
+			logMessage = arg0;
+			
+		}
+
+		public void logTrace(String arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void logWarning(String arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+}

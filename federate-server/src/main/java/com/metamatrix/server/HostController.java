@@ -1,0 +1,955 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.server;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.StartupStateController;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnType;
+import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.util.NetUtils;
+import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.util.FileUtils;
+import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.util.ErrorMessageKeys;
+import com.metamatrix.platform.util.LogMessageKeys;
+import com.metamatrix.platform.util.MetaMatrixController;
+import com.metamatrix.platform.util.VMResources;
+import com.metamatrix.platform.vm.util.VMUtils;
+
+public class HostController extends Thread {
+
+    private final static int COMMAND_START_ALL_VMS       = 0; // Start all deployed vms for this host.
+    private final static int COMMAND_START_VM            = 1; // Start deployed vm for this host.
+    private final static int COMMAND_KILL_ALL_VMS        = 2; // kill all vms.
+    private final static int COMMAND_KILL_VM             = 3; // kill vm
+    private final static int COMMAND_PING                = 4;
+    private final static int COMMAND_EXIT                = 5; // Kill all vm's and die.
+    private final static int COMMAND_INVALID             = 6;
+
+    public final static String START_ALL_VMS = "StartAllVMs"; //$NON-NLS-1$
+    public final static String START_VM = "StartVM"; //$NON-NLS-1$
+    public final static String KILL_ALL_VMS = "KillAllVMs"; //$NON-NLS-1$
+    public final static String KILL_VM = "KillVM"; //$NON-NLS-1$
+    public final static String EXIT = "Exit"; //$NON-NLS-1$
+    public final static String PING = "Ping"; //$NON-NLS-1$
+
+    public final static int DEFAULT_WAIT_TIME = 1 * 60; // 1 minute
+    public final static int DEFAULT_PORT = 15001;
+    private int port = DEFAULT_PORT;
+
+    private final static String[] commands = {"StartAllVMs", "StartVM", "KillAllVMs", "KillVM", "Ping", "Exit" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+    
+    public static final String VM_STARTER_COMMAND_PROPERTY_NAME = "vm.starter.command"; //$NON-NLS-1$
+
+    private static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME; 
+    private static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME; 
+
+
+    private static final String DEFAULT_VM_STARTER_COMMAND = "java com.metamatrix.common.comm.platform.socket.SocketVMController"; //$NON-NLS-1$
+    private static final String VM_MINIMUM_HEAP_SIZE_ARG_PREFIX = "-ms"; //$NON-NLS-1$
+    private static final String VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX = "-mx"; //$NON-NLS-1$
+    private static final String VM_HEAP_SIZE_ARG_POSTFIX = "m";     // megabytes //$NON-NLS-1$
+    private static final String JAVA_IO_TEMP_OPTION = "-D" + FileUtils.JAVA_IO_TEMP_DIR;     //temp directory //$NON-NLS-1$
+        
+    // Hotspot options
+    private static final String VM_HOTSPOT_OPTION = "-hotspot"; //$NON-NLS-1$
+    private static final String VM_SERVER_OPTION = "-server"; //$NON-NLS-1$
+    private static final String VM_CLASSIC_OPTION = "-classic"; //$NON-NLS-1$    
+
+    private static Host host=null;
+    
+    private Map processMap = new HashMap(3);
+    private ServerSocket serverSocket;
+    boolean hcKilled = false;
+    private boolean isListening = false;
+    private StarterThread starterThread = null;
+        
+    private ClusteredRegistryState registry;
+
+    // Initialized TextManager with I18N namespaces
+    static {
+		VMResources.initResourceBundles();
+    }
+
+
+    /**
+     * Construct HostController
+     * @param host HostName
+     * @param port Port to listen on. If -1 then get port from operational configuration
+     * @param startMetaMatrix - if true same as startMM, nextStartup config is copied to operational and all processes are started on all hosts
+     * @param startProcess - if true local process are started (overridden by startMetaMatrix
+     * @param wait - time in seconds to wait for appServer to startup before attempting to start processes.
+     */
+    public HostController(String hostname, boolean startProcesses, int wait) throws Exception {
+
+        // Create an instance of the registry.
+    	// This will implicitely create a JGroups Distributed hashtable.
+    	// This is a workaround for a jgroups problem, there must be 1 instance
+    	// of a JChannel/Group started, if more than 1 channel start at the same time
+    	// then they do not join the same group. By starting an instance in host
+    	// controller there will be an instance running by the time the vm's come up.
+    	// There is still a potential problem if 2 host-controller start up at 
+    	// the exact same time on two different hosts. 
+        super("HostControllerThread"); //$NON-NLS-1$
+        
+        init();
+        
+        this.port = getPortNumber();
+        
+        String vmName =  CurrentConfiguration.getVM().getFullName();
+		Injector injector = Guice.createInjector(new ServerGuiceModule(host, vmName));
+        
+		this.registry = injector.getInstance(ClusteredRegistryState.class);
+        
+        
+        addShutdown();        
+        
+
+        if (startProcesses ) {
+            starterThread = new StarterThread(this,  wait);
+            starterThread.start();
+        }
+
+                
+    }
+    
+    private void init() {
+        // initialize hostName
+       
+        try {
+                        
+            VMNaming.setLogicalHostName(host.getFullName());
+            VMNaming.setHostAddress(host.getHostAddress());
+            VMNaming.setBindAddress(host.getBindAddress());
+            
+                       
+            // setup the log file
+            String hostFileName = StringUtil.replaceAll(host.getFullName(), ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            VMUtils.startLogFile(host.getLogDirectory(), hostFileName + "_hc.log"); //$NON-NLS-1$
+            
+            // only clean the data directory if the vm(s) are not running
+            if (!isAProcessRunning()) {
+                
+                // If the java-i-tmp directory doesn't exist, it needs to be created
+                // because extension jars class loading will fail because
+                // java internals can' write to a non-existent directory.
+                String temp_dir = host.getTempDirectory();
+                File tempDir = new File(temp_dir);
+                if (tempDir.exists()) {           
+                    FileUtils.removeDirectoryAndChildren(tempDir);
+                }
+                
+                String dataDir = host.getDataDirectory();
+                File dataF = new File(dataDir);
+                if (dataF.exists()) {           
+                    FileUtils.removeDirectoryAndChildren(dataF);
+                    dataF.mkdirs();
+                }
+                
+                if (!tempDir.exists()) {           
+                    tempDir.mkdirs();
+                }
+
+            }
+           
+
+        } catch (Exception e) {
+            logMessage(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, host.getFullName()));
+        }
+                
+    }    
+         
+
+    private void addShutdown() {
+        try {
+            logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0001));
+            Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
+        } catch (Exception e) {
+            logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0002));
+            // If running as an NT service, we cannot add a shutdown hook.
+            // -Xrs flag is required in java command line.
+            // This prevents service from being terminated when user logs off.
+        }
+
+    }    
+
+    void closeServerSocket() {
+        try {
+            logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0003));
+            serverSocket.close();
+        } catch (Exception e) {
+            logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0002));//$NON-NLS-1$
+        }
+    }
+
+    boolean isListening() {
+        return this.isListening;
+    }
+
+    String getHostname() {
+        return host.getFullName();
+    }
+    
+    Host getHost() {
+        return host;
+    }
+    
+    boolean isAProcessRunning() {
+        try {
+            List<VMRegistryBinding> vms = this.registry.getVMs(null);
+            for (VMRegistryBinding vm:vms) {
+                if (getHostname().equalsIgnoreCase(vm.getHostName())) {
+                    try {
+                        return true;
+                    } catch (Exception e) {
+                        //Ignore, we tried to gracefully shutdown, vm will get killed during MetaMatrixController.startserver()
+                    }
+                }
+            }
+        } catch (Throwable err) {
+            //Ignore we are 
+        }
+        return false;
+    }
+  
+    
+   // Run
+    public void run() {
+
+        logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0004, getHostname()));
+        try {
+            // the listener should use the bindaddress
+			InetAddress inet = InetAddress.getByName(getHost().getBindAddress());
+
+			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0012, Integer.toString(port), getHost().getBindAddress()));
+            serverSocket = SocketHelper.getInternalServerSocket(port, 50, inet);
+        } catch (Exception e) {
+            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0003,  port);
+            logCritical("ERROR " + msg);//$NON-NLS-1$
+//            LogManager.stop();
+            System.exit(1);
+        }
+        this.isListening = true;
+        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0005, port));
+        try {
+            while (true) {
+                Socket socket = serverSocket.accept();
+                ServerThread thread = new ServerThread(this, socket);
+                thread.start();
+            }
+        } catch (Exception e) {
+            if (!hcKilled) { // if ^C was entered then this exception is expected.
+                String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0004);
+                logCritical("ERROR " + msg);//$NON-NLS-1$
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private int getPortNumber() throws Exception {
+
+        try {
+            String portString = host.getPort();           
+            return Integer.parseInt(portString);
+
+        } catch (Exception e) {
+            logMessage(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0005));
+            throw e;
+        }
+    }
+
+
+    public static void logInfo(String msg) {
+//        LogManager.logInfo(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
+        System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
+    }
+
+    public static void logCritical(String msg) {
+//        LogManager.logCritical(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
+        System.out.println("-------------------------------------------------------\n"); //$NON-NLS-1$
+        System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
+        System.out.println("-------------------------------------------------------\n"); //$NON-NLS-1$
+    }
+
+
+    public class StarterThread extends Thread {
+
+        private HostController hc;
+        private int wait;
+
+        public StarterThread(HostController hc, int wait) {
+            super("StarterThread");  //$NON-NLS-1$
+            this.hc = hc;
+            this.wait = wait;
+        }
+        
+
+        public void run() {
+
+            // wait for host controller to start listening.
+            while (!hc.isListening()) {
+                try {
+                    Thread.sleep(wait);
+                } catch (Exception e) {}
+            }
+            try {
+
+                // start processes on this host using operational configuration
+                String host = hc.getHostname();
+                logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0008, host));
+                MetaMatrixController.startHost(host);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0007));
+            }
+        }
+    }
+
+    private class ShutdownThread extends Thread {
+
+        private HostController hostController;
+
+        public ShutdownThread(HostController hc) {
+            super("ShutdownTread"); //$NON-NLS-1$
+            hostController = hc;
+        }
+
+        public void run() {
+            hostController.hcKilled = true;
+            hostController.closeServerSocket();
+            
+            // loop through and shutdown all vms for this host
+            try {
+                List<VMRegistryBinding> vms = HostController.this.registry.getVMs(null);
+                for (VMRegistryBinding vm:vms) {
+                    if (hostController.getHostname().equalsIgnoreCase(vm.getHostName())) {
+                        try {
+                            vm.getVMController().shutdown();
+                        } catch (Exception e) {
+                            //Ignore, we tried to gracefully shutdown, vm will get killed during MetaMatrixController.startserver()
+                        }
+                    }
+                }
+            } catch (Throwable err) {
+                //Ignore we are 
+            }
+
+            Iterator processes = processMap.keySet().iterator();
+            while (processes.hasNext()) {
+                String vmName = (String) processes.next();
+                logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0009, vmName));
+                Process process = (Process) processMap.get(vmName);
+                process.destroy();
+                process = null;
+            }
+            processMap.clear();
+        }
+    }
+
+    private class ServerThread extends Thread {
+
+        private BufferedReader in;
+        private Socket socket;
+        private HostController hc;
+
+        public ServerThread(HostController hostController, Socket socket) throws Exception {
+            this.socket = socket;
+            this.hc = hostController;
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
+        
+        public void run() {
+            boolean done = false;
+            while (!done) {
+                String command = readCommand();
+                if (command != null) {
+                    processCommand(command);
+                } else {
+                    done = true;
+                }
+            }
+            try {
+                socket.close();
+            } catch (Exception e) {
+            }
+        }
+
+        private String readCommand() {
+
+            try {
+                String line = in.readLine();
+                return line;
+            } catch (IOException e) {
+                e.printStackTrace();
+                logMessage(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0008));
+                // Defect 16329 - return null so that this thread does not continue to read from the inputstream.
+                return null;
+            }
+        }
+
+        private void processCommand( String commandLine ) {
+
+            List parsedCommand = StringUtil.split(commandLine, " \t"); //$NON-NLS-1$
+            int numTokens = parsedCommand.size();
+
+            if(numTokens == 0) {
+                return;
+            }
+
+            // Pull command string out
+            String command = parsedCommand.get(0).toString().toLowerCase();
+
+            int commandType = COMMAND_INVALID;
+            for(int i = 0; i < COMMAND_INVALID; i++) {
+                if(command.equalsIgnoreCase(commands[i])) {
+                    commandType = i;
+                    break;
+                }
+            }
+
+            switch (commandType) {
+
+                case COMMAND_START_ALL_VMS:
+                    doStartAllVMs();
+                    break;
+
+                case COMMAND_START_VM:
+                    if (numTokens < 2) {
+                        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0010));
+                    } else {
+                        String vmName = (String) parsedCommand.get(1);
+                        doStartVM(vmName);
+                    }
+                    break;
+
+                case COMMAND_KILL_ALL_VMS:
+                    doKillAllVMs();
+                    break;
+
+                case COMMAND_KILL_VM:
+                    if (numTokens < 2) {
+                        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0010));
+                    } else {
+                        String vmName = (String) parsedCommand.get(1);
+                        doKillVM(vmName);
+                    }
+                    break;
+
+                case COMMAND_PING:
+                    doPing();
+                    break;
+
+                case COMMAND_EXIT:
+                    doExit();
+                    break;
+
+                case COMMAND_INVALID:
+                    break;
+            }
+        }
+
+        void doStartAllVMs() {
+            logMessage("StartAllVMs"); //$NON-NLS-1$
+
+            try {
+                String hostname = hc.getHostname();
+                CurrentConfiguration.verifyBootstrapProperties();
+                ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+//                Configuration currentConfig = CurrentConfiguration.getConfiguration(true);
+                Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostname);
+
+                if ( deployedVMs != null && deployedVMs.size() > 0) {
+                    Iterator vmIterator = deployedVMs.iterator();
+
+                    while ( vmIterator.hasNext() ) {
+                        VMComponentDefn deployedVM = (VMComponentDefn) vmIterator.next();
+
+                        // Get all of the properties for the deployed VM plus all of the
+                        // properties inherited from parents and the configuration.
+                        // The properties defined on this VM override inherited properties.
+                        Properties vmPropsAndConfigProps = new Properties();
+                        Properties props = currentConfig.getDefaultPropertyValues(deployedVM.getComponentTypeID());
+                        Properties vmProps = currentConfig.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
+                        vmPropsAndConfigProps.putAll(props);
+                        vmPropsAndConfigProps.putAll(hc.getHost().getProperties());
+                        vmPropsAndConfigProps.putAll(vmProps);
+                        
+                        // pass the instance name and its properties
+                        startVM( deployedVM.getID().getName(), hostname, deployedVM.isEnabled(), vmPropsAndConfigProps );
+                    }
+                } else {
+//                    String msg = "Unable to start VM's on host \"" + hostname +
+//                                "\" due to the configuration has no VM's deployed to this host.";
+    //                logError(msg);
+    //                throw new ConfigurationException(msg);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                logMessage(e.getMessage());
+            }
+        }
+
+        private void doStartVM(String vmName) {
+
+            logMessage("StartVM " + vmName); //$NON-NLS-1$
+
+            try {
+                Host h = hc.getHost();
+                CurrentConfiguration.verifyBootstrapProperties();
+                ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+
+                VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(h.getFullName(), vmName);
+
+                if (deployedVM != null) {
+                    // Get all of the properties for the deployed VM plus all of the
+                    // properties inherited from parents and the configuration.
+                    // The properties defined on this VM override inherited properties.
+                    Properties vmPropsAndConfigProps = new Properties();
+                    Properties props = currentConfig.getDefaultPropertyValues(deployedVM.getComponentTypeID());
+                    Properties vmProps = currentConfig.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
+                    vmPropsAndConfigProps.putAll(props);
+                    vmPropsAndConfigProps.putAll(hc.getHost().getProperties());                    
+                    vmPropsAndConfigProps.putAll(vmProps);
+
+                    // pass the instance name and its properties
+                    startVM( deployedVM.getID().getName(), h.getFullName(), deployedVM.isEnabled(), vmPropsAndConfigProps );
+
+                } 
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void doKillAllVMs() {
+
+            logMessage("KillAllVMs"); //$NON-NLS-1$
+            
+            // must copy the map so that when
+            // doKillVM tries to remove it from the map
+            // while its being iterated over.
+            Map copyMap = new HashMap();
+            copyMap.putAll(processMap);
+
+            Iterator processes = copyMap.keySet().iterator();
+            while (processes.hasNext()) {
+                String vmName = (String) processes.next();
+                doKillVM(vmName);
+            }
+            processMap.clear();
+        }
+
+        private void doKillVM(String vmName) {
+
+            logMessage("KillVM " + vmName); //$NON-NLS-1$
+            
+            // find the vm and shut it down.
+            List<VMRegistryBinding> vms = HostController.this.registry.getVMs(null);
+            for (VMRegistryBinding vm:vms) {
+                if (vm.getHostName().equalsIgnoreCase(hc.getHostname())) {
+                    if (vm.getVMName().equalsIgnoreCase(vmName)) {
+                        try {
+                            vm.getVMController().shutdownNow();
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            Process process = (Process) processMap.get(vmName.toUpperCase());
+            if (process != null) {
+                processMap.remove(vmName.toUpperCase());
+                process.destroy();
+            }
+        }
+
+        private void doPing() {
+        }
+
+        private void doExit() {
+            doKillAllVMs();
+            System.exit(0);
+        }
+             
+
+        private void startVM(String vmName, String hostName, boolean enabled, Properties props) throws Exception {
+
+            String name = vmName.toUpperCase();
+            if (processMap.containsKey(name)) {
+                logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0011,vmName));
+                doKillVM(vmName);
+            }
+            
+            if (enabled) {
+                processMap.put(name, startDeployVM(vmName, hostName, props, host));
+            } else {
+                logMessage(PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", vmName));//$NON-NLS-1$
+
+            }
+        }
+    }
+
+    private void logMessage(String msg) {
+//        LogManager.logInfo(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
+        System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
+    }
+
+    private static void printUsage() {
+
+        String msg = "java com.metamatrix.platform.host.HostController [-port portNum] [-startProcesses] [-wait] [-help]" + //$NON-NLS-1$
+                     "\nWhere:" + //$NON-NLS-1$
+                     "\n                  -help" + //$NON-NLS-1$
+                     "\n                  -host hostName (deprecated, see -config)" + //$NON-NLS-1$                                         
+                     "\n                  -config hostName" + //$NON-NLS-1$
+                     "\n                  -noprocesses" ; //$NON-NLS-1$
+
+        System.out.println(msg);
+    }
+    
+    /**
+     * Optional arg; portNum
+     * if exists then hostController listens on portNum
+     * else hostController reads in hostPort from CurrentConfiguration.
+     */
+    public static void main(String args[]) {
+        HostController controller = null;
+        String hostname = null;
+        int wait = DEFAULT_WAIT_TIME;
+        boolean startProcesses = true;
+            
+
+        int parmIndex = args.length;
+        for (int i = 0; i < parmIndex; i++) {
+            String command = args[i];
+            if (command.equalsIgnoreCase("-config") || command.equalsIgnoreCase("-host")) { //$NON-NLS-1$ //$NON-NLS-2$
+                i++;
+                if (i == parmIndex) {
+                    printUsage();
+                    System.exit(-1);
+                } else {
+                    
+                    hostname = args[i];
+                }
+                
+            } else if (command.equalsIgnoreCase("-noprocesses")) { //$NON-NLS-1$
+                startProcesses = false;
+                
+            } else if (command.equalsIgnoreCase("-help")) { //$NON-NLS-1$
+                printUsage();
+                System.exit(-1);
+            }
+        }
+
+       
+		String logMsg = "startserver "; //$NON-NLS-1$
+		for (int i = 0; i < args.length; i++) {
+			logMsg += args[i] + " "; //$NON-NLS-1$
+		}
+
+        try {
+            // if the hostname was not passed, then add the hostname
+            // to the logmsg to let the user know which hostname
+            // is being used, for informational purposes
+            if (hostname == null) {
+                hostname = NetUtils.getHostname();
+                logMsg += "resolved host " + hostname;  //$NON-NLS-1$
+            } 
+            
+            logCritical(logMsg);
+           
+            // find the host in the last used configuration 
+            host =CurrentConfiguration.findHost(hostname);
+            
+            if (host != null) {
+                hostname = host.getFullName();
+                
+                // if this host is still running do not try to start
+                if (NetUtils.ping(host.getHostAddress(), Integer.parseInt(host.getPort()))) {                            
+                   logCritical(PlatformPlugin.Util.getString("HostController.Host_is_already_running_startprocesses", hostname)); //$NON-NLS-1$ //$NON-NLS-2$/
+                    MetaMatrixController.startHost(host.getName());
+                    System.exit(1);
+                    
+                }
+            }                       
+            
+            checkToPromoteNextStartupConfig(hostname);
+            
+            // if the host was not resolved,
+            // then try after the configuration was updated
+            if (host == null) {
+                host = CurrentConfiguration.findHost(hostname);
+                if (host == null) {
+                    logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, hostname)); //$NON-NLS-1$
+                    System.exit(-1);
+                }
+                
+                hostname = host.getFullName();
+                
+            }           
+
+            controller = new HostController(hostname, startProcesses, wait);
+            controller.start();
+        } catch (Exception e) {
+            logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0011));//$NON-NLS-1$
+            System.exit(1);
+        }
+    }
+    
+    private static boolean checkToPromoteNextStartupConfig(String hostname) {
+        try {
+            
+          // if another host is not running, then it must be assumed that this is the first
+          // and that the configuration must be initialized
+          if (!isAHostRunning(hostname)) {
+//              logCritical("Copying NextStartup configuration to Startup configuration."); //$NON-NLS-1$
+              StartupStateController.performSystemInitialization(true);
+              return true;
+          }
+
+          
+      } catch (Exception e) {
+      }
+      return false;
+    }
+       
+   private static boolean isAHostRunning(String hostname) {
+        try {
+            
+            Collection hosts = CurrentConfiguration.getConfigurationModel().getHosts();
+            if (hosts.size() > 1) {
+               
+                for (Iterator it=hosts.iterator(); it.hasNext();) {
+                    Host h = (Host) it.next();
+                    if (NetUtils.ping(h.getHostAddress(), Integer.parseInt(h.getPort()))) {                            
+                        return true;
+                    } 
+                 }
+            }
+          
+      } catch (Exception e) {
+      }        
+        
+        return false;
+    }      
+    
+   
+   private static Process startDeployVM( String vmName, String hostName, Properties vmprops, Host host ) {
+       String command = buildVMCommand(vmName,hostName,vmprops, "true", host); //$NON-NLS-1$
+       return execCommand(command);
+   }
+
+   private static String buildVMCommand( String vmname, String hostName, Properties vmprops, String startDeployedServices, Host host ) {
+
+       String command = getVMStarterCommand();
+
+       // Add the heap size specifications ...
+       String minHeapSizeValue = vmprops.getProperty(VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME);
+       String maxHeapSizeValue = vmprops.getProperty(VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME);
+
+       List tokens = new ArrayList(11);
+       StringTokenizer tokenizer = new StringTokenizer(command);
+       String token = null;
+       String existingMinHeap = null;
+       String existingMaxHeap = null;
+       String hotspotOption = null;
+       String vmNameCommandLineParam = "-D" + VMNaming.VM_NAME_PROPERTY + "=" + getCommandArgument(vmname); //$NON-NLS-1$ //$NON-NLS-2$
+       boolean hasJavaIOTemp = false;
+       
+      
+       if ( tokenizer.hasMoreTokens() ) {
+           token = tokenizer.nextToken();
+           tokens.add(token);       // should be "java"
+       }
+       while ( tokenizer.hasMoreTokens() ) {
+           token = tokenizer.nextToken();
+           if ( token.startsWith(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX) ) {
+               existingMinHeap = token;
+           } else if ( token.startsWith(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX) ) {
+               existingMaxHeap = token;
+           } else if ( token.equalsIgnoreCase(VM_CLASSIC_OPTION)) {   // check for hotspot options
+               hotspotOption = VM_CLASSIC_OPTION;                     // hotspot option must be first param after "java "
+           } else if ( token.equalsIgnoreCase(VM_HOTSPOT_OPTION)) {
+               hotspotOption = VM_HOTSPOT_OPTION;
+           } else if ( token.equalsIgnoreCase(VM_SERVER_OPTION)) {
+               hotspotOption = VM_SERVER_OPTION;
+           } else if ( token.startsWith(JAVA_IO_TEMP_OPTION)) {
+               hasJavaIOTemp = true;   
+               tokens.add(token);
+           } else {
+               tokens.add(token);
+           }
+       }
+
+       // now build up the command.
+       if ( tokens.size() > 1 ) {
+
+           Iterator iter = tokens.iterator();
+           StringBuffer newCommand = new StringBuffer(iter.next().toString()); // "java"
+           newCommand.append(" "); //$NON-NLS-1$
+
+           // hotspot option must be first option
+           if (hotspotOption != null) {
+               newCommand.append(hotspotOption);
+               newCommand.append(" "); //$NON-NLS-1$
+           }
+
+           // insert vm name property
+           newCommand.append(vmNameCommandLineParam);
+           newCommand.append(" "); //$NON-NLS-1$
+           
+           if (!hasJavaIOTemp) {
+               String tempdir = host.getTempDirectory();
+               String tempCommandLineParam = JAVA_IO_TEMP_OPTION + "=" + getCommandArgument(tempdir); //$NON-NLS-1$ 
+               newCommand.append(tempCommandLineParam);
+               newCommand.append(" "); //$NON-NLS-1$
+           }
+
+           String minHeapValue = null;
+           String maxHeapValue = null;
+           if ( minHeapSizeValue != null ) {
+               minHeapValue = minHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX;
+           } else {
+               if ( existingMinHeap != null ) {
+                   minHeapValue = existingMinHeap.substring(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX.length());
+               }
+           }
+           if ( maxHeapSizeValue != null ) {
+               if ( isFirstHeapSizeLarger(maxHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX,minHeapValue) ) {
+                   maxHeapValue = maxHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX;
+               }
+           }
+           if ( maxHeapValue == null ) {
+               if ( existingMaxHeap != null ) {
+                   maxHeapValue = existingMaxHeap.substring(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX.length());
+                   if ( ! isFirstHeapSizeLarger(maxHeapValue,minHeapValue) ) {
+                       minHeapValue = null;
+                   }
+               }
+           }
+           if ( minHeapValue != null ) {
+               newCommand.append(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX);
+               newCommand.append(minHeapValue);
+               newCommand.append(" "); //$NON-NLS-1$
+           }
+           if ( maxHeapValue != null ) {
+               newCommand.append(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX);
+               newCommand.append(maxHeapValue);
+               newCommand.append(" "); //$NON-NLS-1$
+           }
+           while ( iter.hasNext() ) {
+               newCommand.append(" "); //$NON-NLS-1$
+               newCommand.append(iter.next().toString());
+
+           }
+           command = newCommand.toString();
+       }
+
+       // Start a new named VM running in DEPLOY mode on this machine
+       String cmd = command + " " + getCommandArgument(vmname) + " " + getCommandArgument(hostName) + " " + startDeployedServices; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+       //+ " " + getCommandArgument(logFile);  //$NON-NLS-4$
+       return cmd;
+   }
+
+   private static boolean isFirstHeapSizeLarger( String first, String second ) {
+       if ( first.length() == second.length() ) {
+           return first.compareTo(second) >= 0;
+       }
+       if ( first.length() < second.length() ) {
+           return false;
+       }
+       return true;
+   }
+
+   private static String getCommandArgument(String arg) {
+       if (arg.indexOf(' ') > 0) {
+           return StringUtil.replaceAll(arg, " ", "_"); //$NON-NLS-1$ //$NON-NLS-2$
+       }
+       return arg;
+   }
+
+   private static String getVMStarterCommand() {
+
+       // Attempt to get the starter command from the system props
+       String starterCommand = System.getProperty( VM_STARTER_COMMAND_PROPERTY_NAME );
+       if ( starterCommand == null || starterCommand.length() == 0 ) {
+           // Starter command property wasn't specified via the system props, so
+           // attempt to get the starter command from the property service
+           starterCommand = CurrentConfiguration.getProperty(VM_STARTER_COMMAND_PROPERTY_NAME);
+
+           if ( starterCommand == null || starterCommand.length() == 0 ) {
+               logCritical(PlatformPlugin.Util.getString(LogMessageKeys.VM_0048, VM_STARTER_COMMAND_PROPERTY_NAME, DEFAULT_VM_STARTER_COMMAND));
+               starterCommand = DEFAULT_VM_STARTER_COMMAND;
+           }
+       }
+       return starterCommand;
+   }
+
+   /**
+    * Execute the specified command. The command executed MUST be an executable.
+    */
+   private static Process execCommand(String cmd) {
+       Runtime rt = Runtime.getRuntime();
+       Process process = null;
+       try {
+           logInfo( PlatformPlugin.Util.getString(LogMessageKeys.VM_0049, cmd));
+           process = rt.exec(cmd);
+           logInfo(PlatformPlugin.Util.getString(LogMessageKeys.VM_0050));
+       } catch (Exception e) {
+           System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.VM_0051, cmd));
+           logCritical(e.getMessage());
+       }
+       return process;
+   }
+   
+}
+

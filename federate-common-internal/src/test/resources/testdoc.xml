@@ -1,0 +1,20 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header>
+    <RequestID>12345</RequestID>
+  </Header>
+  <shipTo country="US"/>
+  <billTo>
+    <zip>95819</zip>
+  </billTo>
+  <root>
+    <child>
+      <ReadOnly>false</ReadOnly>
+    </child>
+  </root>
+  <item partNum="872-AA">
+    <productName>Lawnmower</productName>
+  </item>
+  <item partNum="926-AA">
+    <productName>Baby Monitor</productName>
+  </item>
+</SOAP-ENV:Envelope>

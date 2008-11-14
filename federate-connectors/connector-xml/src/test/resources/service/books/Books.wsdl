@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.metamatrix/Books" xmlns:schema1="http://www.metamatrix.com/BooksView_Input" xmlns:schema2="http://www.metamatrix.com/BooksView_Output" name="MetaMatrixDataServices" targetNamespace="http://com.metamatrix/Books">
+  <types>
+    <xsd:schema xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://com.metamatrix/Books">
+      <xsd:import namespace="http://www.metamatrix.com/BooksView_Input" schemaLocation="BooksView_Input.xsd" />
+      <xsd:import namespace="http://www.metamatrix.com/BooksView_Output" schemaLocation="BooksView_Output.xsd" />
+    </xsd:schema>
+  </types>
+  <message name="BooksView_Books_getBooks_AuthorBooks_InputMsg">
+    <documentation>Input message for operation BooksView_Books/getBooks.</documentation>
+    <part name="BooksView_Books_getBooks_AuthorBooks_InputMsg" element="schema1:AuthorBooks_Input" />
+  </message>
+  <message name="BooksView_Books_getBooks_Books_OutputMsg">
+    <documentation>Output message for operation BooksView_Books/getBooks.</documentation>
+    <part name="BooksView_Books_getBooks_Books_OutputMsg" element="schema2:Books_Output" />
+  </message>
+  <portType name="BooksView_Books">
+    <operation name="getBooks">
+      <input name="AuthorBooks_InputMsg" message="tns:BooksView_Books_getBooks_AuthorBooks_InputMsg" />
+      <output name="Books_OutputMsg" message="tns:BooksView_Books_getBooks_Books_OutputMsg" />
+    </operation>
+  </portType>
+  <binding name="BooksView_Books" type="tns:BooksView_Books">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+    <operation name="getBooks">
+      <soap:operation style="document" soapAction="BooksView_WS.BooksView_Books.getBooks" />
+      <input name="AuthorBooks_InputMsg">
+        <soap:body use="literal" />
+      </input>
+      <output name="Books_OutputMsg">
+        <soap:body use="literal" />
+      </output>
+    </operation>
+  </binding>
+  <service name="MetaMatrixDataServices">
+    <port name="BooksView_Books" binding="tns:BooksView_Books">
+      <soap:address location="http://localhost:7001/axis/services/BooksView_Books" />
+    </port>
+  </service>
+</definitions>
+

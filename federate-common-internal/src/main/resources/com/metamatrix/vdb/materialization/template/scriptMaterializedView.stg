@@ -1,0 +1,81 @@
+group materialized_views;
+
+truncateTable( table ) ::= "TRUNCATE TABLE $table$;"
+
+rename( old, new ) ::= "RENAME TABLE $old$ TO $new$;"
+
+// ======================================================================================
+// The truncate template.
+// ======================================================================================
+truncate( viewName, columnNames, virtualGroupName, materializationTableNameInSrc, materializationTableName, 
+    materializationStageTableNameInSrc, materializationStageTableName, databaseDialect ) ::= <<
+
+
+-- $databaseDialect$ script. Truncate $viewName$ cache table.
+$truncateTable(table=materializationStageTableNameInSrc)$
+>>
+
+// ======================================================================================
+// The load template.
+// ======================================================================================
+load( viewName, columnNames, virtualGroupName, materializationTableNameInSrc, materializationTableName, 
+    materializationStageTableNameInSrc, materializationStageTableName, databaseDialect ) ::= <<
+
+
+-- $databaseDialect$ script. Populate $viewName$ cache table.
+$populateLoad()$
+>>
+
+// ======================================================================================
+// The swap template.
+// ======================================================================================
+swap( viewName, columnNames, virtualGroupName, materializationTableNameInSrc, materializationTableName, 
+    materializationStageTableNameInSrc, materializationStageTableName, databaseDialect ) ::= <<
+
+
+-- $databaseDialect$ script. Swap $viewName$ cache tables.
+$renameTables()$>>
+
+// ======================================================================================
+// The connection properties template.
+// ======================================================================================
+connectionProps( date, VDB, VERS, HOST, PORT, MMDRIVER, MMPWD, MMUSER, MMPROTOCOL, MATURL, MATDRIVER, 
+			    MATPWD, MATUSER, TRUNC_SCRIPT, LOAD_SCRIPT, SWAP_SCRIPT, LOG_FILE ) ::= <<
+$connProps()$
+>>
+
+// ======================================================================================
+// Expansion templates.
+// ======================================================================================
+temp( it ) ::= "$it$_TEMP"
+
+populateLoad() ::= <<
+SELECT $columnNames; separator=", "$ INTO $materializationStageTableName$ FROM $virtualGroupName$ OPTION NOCACHE;>>
+
+renameTables() ::= <<
+$rename(old=materializationTableNameInSrc, new=materializationTableNameInSrc:temp())$
+$rename(old=materializationStageTableNameInSrc, new=materializationTableNameInSrc)$
+$rename(old=materializationTableNameInSrc:temp(), new=materializationStageTableNameInSrc)$
+>>
+
+connProps() ::= <<
+# $VDB$ version $VERS$ Materizalized View connection properties
+# Created: $date$
+metamatrix.transformation.mm.Database=jdbc\:metamatrix\:$VDB$@$MMPROTOCOL$\://$HOST$\:$PORT$;version\=$VERS$;txnAutoWrap\=OFF
+metamatrix.transformation.mm.Driver=$MMDRIVER$
+metamatrix.transformation.mm.Password=$MMPWD$
+metamatrix.transformation.mm.User=$MMUSER$
+
+metamatrix.transformation.target.Database=$MATURL$
+metamatrix.transformation.target.Driver=$MATDRIVER$
+metamatrix.transformation.target.Password=$MATPWD$
+metamatrix.transformation.target.User=$MATUSER$
+
+metamatrix.transformation.target.delimiter=;
+
+metamatrix.transformation.target.cleansql=$TRUNC_SCRIPT$
+metamatrix.transformation.target.mtvsqlfile=$LOAD_SCRIPT$
+metamatrix.transformation.target.renamesql=$SWAP_SCRIPT$
+
+metamatrix.logfile=$LOG_FILE$
+>>

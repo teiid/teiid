@@ -1,0 +1,144 @@
+<chapter id="lob_support">
+  <title>Handling Large Objects</title>
+  <para>This chapter examines how to use facilities provided by the MetaMatrix Connector API to
+    use large objects such as blobs, clobs, and xml in your connector.</para>
+  
+  <sect1>
+    <title>Large Objects</title>
+  
+    <sect2>
+      <title>Data Types</title>
+      <para>MetaMatrix supports three large object runtime data types:  blob, clob, and xml.
+         A blob is a “binary large object”, a clob is a “character large object”, and “xml” is a “xml
+        document”.  Columns modeled as a blob, clob, or xml are treated similarly by the connector
+        framework to support memory-safe streaming.  </para>
+    </sect2>
+    <sect2>
+      <title>Why Use Large Object Support?</title>
+      <para>The MetaMatrix Server allows a Connector to return a large object through the
+        MetaMatrix Connector API by just returning a reference to the actual large object.  The
+        MetaMatrix Server or JDBC Driver can then access the data via a stream rather than retrieving
+        the data all at once.  This is useful for several reasons:</para>
+      <orderedlist>
+        <listitem>
+          <para>Reduces memory usage when returning the result set to the user.</para>
+        </listitem>
+        <listitem>
+          <para>Improves performance by passing less data in the result set.</para>
+        </listitem>
+        <listitem>
+          <para>Allows access to large objects when needed rather than assuming that users will
+            always use the large object data.</para>
+        </listitem>
+        <listitem>
+          <para>Allows the passing of arbitrarily large data values within a fixed MetaMatrix
+            memory usage.  </para>
+        </listitem>
+      </orderedlist>
+      <para>However, these benefits can only truly be gained if the Connector itself does not
+        materialize an entire large object all at once.  For example, the JDBC API supports a
+        streaming interface for blob and clob data.    </para>
+    </sect2>
+  </sect1>
+  
+  <sect1>
+    <title>Handling Large Objects</title>
+    <para>The Connector API supports the handling of the large objects (Blob/Clob/SQLXML) through
+      the creation of special purpose wrapper “type” objects. Each type of LOB object has a
+      respective wrapper object.</para>
+      
+      <table frame="all">
+        <title>Connection Pool properties</title>
+        <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+          <colspec colname='c1' colwidth="1*" />
+          <colspec colname='c2' colwidth="2*" />
+          <tbody>
+            <row>
+              <entry>
+                <para>java.sql.Blob</para>
+              </entry>
+              <entry>
+                <para>com.metamatrix.common.types.BlobType</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>java.sql.Clob</para>
+              </entry>
+              <entry>
+                <para>com.metematrix.common.types.ClobType</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>com.metamatrix.core.sql.SQLXML</para>
+              </entry>
+              <entry>
+                <para>com.metematrix.common.types.XMLType</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    
+    <para>In the example below, the physical source returns an object type of Clob, then the
+      connector should return the corresponding ClobType object.</para>
+      
+    <programlisting><![CDATA[
+//Example BatchedExecution.execute method
+
+List columnValues = new ArrayList();
+
+// building the reference
+Clob clob = results.getClob();
+ClobType clobReference = new ClobType(clob);
+…
+// this is needed to keep the connection open.
+executionContext.keepExecutionAlive(true);
+
+// adding the reference to batch of results
+columnValues.add(clobReference);
+batch.addRow(columnValues);    
+    ]]></programlisting>  
+          
+    <para>Once the wrapped object is returned, the streaming of LOB is automatically supported. These LOB objects then can
+      be used to serve to client results, used in server for query processing, or used in user defined
+      functions.</para>
+    
+    <para>A connector execution is usually closed and the underlying connection is either
+      closed/released as soon as all rows for that execution have been retrieved.  However, LOB
+      objects may need to be read after their initial retrieval of results.  It is very important that the
+      default closing behavior should be prevented to correctly stream the contents of the LOB based data.
+      This behavior is communicated to the server through setting a flag in “ExecutionContext” interface by invoking</para>
+    
+    <programlisting><![CDATA[      
+      executionContext.keepExecutionAlive(true);
+    ]]></programlisting>  
+        
+    <para>with this call, the server will close the connector execution object only after all returned LOB
+      objects can no longer be read. i.e. when user Statement object is closed. Note that single call to keepExecutionAlive is needed per
+      execution – and it must be called before the first batch is returned from connector</para>
+      
+    <para>The SQLXML interface allows large xml documents to
+      be processed by the server without creating memory issues. XML Source Connectors also use this
+      interface to supply documents to the MetaMatrix XQuery engine.</para>
+    <para>A new, and important, limitation of using the LOB type objects introduced in the 5.5
+      version of the MetaMatrix Server is that streaming is not supported from remote connectors. This
+      is an issue in clustered environments if connectors intended to return LOBs are deployed on only
+      a subset of the hosts or in failover situations. The most appropriate workaround to this
+      limitation is to deploy connectors intended to return LOBs on each host in the cluster. There is
+      currently no workaround to support streaming LOBs from connectors in remote failover situations.</para>
+  </sect1>
+  
+  <sect1>
+    <title>Inserting or Updating Large Objects</title>
+    <para>The MetaMatrix JDBC API also allows the insertion or update of large objects.  However,
+      the JDBC API does not currently stream large objects on insert or update.  So, the MetaMatrix
+      JDBC API will read all of the data and pass it back to the connector in a single materialized
+      value.  </para>
+    <para>In these cases LOBs will be passed to the Connector in the language objects as an
+      ILiteral containing a java.sql.Blob,  java.sql.Clob, or java.sql.SQLXML.  You
+      can use these interfaces to retrieve the data in the large object and use it for insert or
+      update.</para>
+  </sect1>
+</chapter>

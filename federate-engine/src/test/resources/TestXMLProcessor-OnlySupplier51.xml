@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Catalogs>
+   <Catalog>
+      <Items>
+         <Item ItemID="001">
+            <Name>Lamp</Name>
+            <Quantity>5</Quantity>
+            <Suppliers>
+               <Supplier SupplierID="51">
+                  <Name>Chucky</Name>
+                  <Zip>11111</Zip>
+                  <Orders/>
+               </Supplier>
+            </Suppliers>
+         </Item>
+         <Item ItemID="002">
+            <Name>Screwdriver</Name>
+            <Quantity>100</Quantity>
+            <Suppliers/>
+         </Item>
+         <Item ItemID="003">
+            <Name>Goat</Name>
+            <Quantity>4</Quantity>
+            <Suppliers/>
+         </Item>
+      </Items>
+   </Catalog>
+</Catalogs>

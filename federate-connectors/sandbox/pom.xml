@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <parent>
+    <artifactId>federate-connectors</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>sandbox</artifactId>
+  <packaging>pom</packaging>
+  <name>Sandbox</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>Experimental connectors in progress</description>
+  <modules>
+    <module>connector-yahoo</module>
+    <module>connector-exec</module>
+    <module>connector-object</module>
+    <module>connector-oracle-spatial</module>
+  </modules>
+</project>

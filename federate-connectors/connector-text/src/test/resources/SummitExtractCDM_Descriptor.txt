@@ -1,0 +1,3 @@
+SummitExtractCDM.SUMMITEXTRACTCDM.skipHeaderLines=0
+SummitExtractCDM.SUMMITEXTRACTCDM.location=src/test/resources/cdm_dos.txt
+SummitExtractCDM.SUMMITEXTRACTCDM.delimiter=

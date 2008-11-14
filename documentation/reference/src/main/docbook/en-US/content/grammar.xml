@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<appendix id="grammar">
+<title>BNF Grammar</title>
+<sect1 id="terminals">
+<title>Terminals</title>
+<para>
+<informaltable>
+<tgroup cols="1">
+<tbody>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; SKIP : {" "| "\t"| "\n"| "\r"}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; MORE : {"/*" : IN_MULTI_LINE_COMMENT}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;IN_MULTI_LINE_COMMENT&gt; SPECIAL : {&lt;MULTI_LINE_COMMENT: "*/"&gt; : DEFAULT}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;IN_MULTI_LINE_COMMENT&gt; MORE : {&lt;~[]&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;STRING: "string"&gt;| &lt;BOOLEAN: "boolean"&gt;| &lt;BYTE: "byte"&gt;| &lt;SHORT: "short"&gt;| &lt;CHAR: "char"&gt;| &lt;INTEGER: "integer"&gt;| &lt;LONG: "long"&gt;| &lt;BIGINTEGER: "biginteger"&gt;| &lt;FLOAT: "float"&gt;| &lt;DOUBLE: "double"&gt;| &lt;BIGDECIMAL: "bigdecimal"&gt;| &lt;DATE: "date"&gt;| &lt;TIME: "time"&gt;| &lt;TIMESTAMP: "timestamp"&gt;| &lt;OBJECT: "object"&gt;| &lt;BLOB: "blob"&gt;| &lt;CLOB: "clob"&gt;| &lt;XML: "xml"&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;CAST: "cast"&gt;| &lt;CONVERT: "convert"&gt;| &lt;TIMESTAMPADD: "timestampadd"&gt;| &lt;TIMESTAMPDIFF: "timestampdiff"&gt;| &lt;COUNT: "count"&gt;| &lt;SUM: "sum"&gt;| &lt;AVG: "avg"&gt;| &lt;MIN: "min"&gt;| &lt;MAX: "max"&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;ALL: "all"&gt;| &lt;AND: "and"&gt;| &lt;ANY: "any"&gt;| &lt;AS: "as"&gt;| &lt;ASC: "asc"&gt;| &lt;BEGIN: "begin"&gt;| &lt;BETWEEN: "between"&gt;| &lt;BREAK: "break"&gt;| &lt;BY: "by"&gt;| &lt;CASE: "case"&gt;| &lt;CONTINUE: "continue"&gt;| &lt;CREATE: "create"&gt;| &lt;CRITERIA: "criteria"&gt;| &lt;CROSS: "cross"&gt;| &lt;DEBUG: "debug"&gt;| &lt;DECLARE: "declare"&gt;| &lt;DELETE: "delete"&gt;| &lt;DESC: "desc"&gt;| &lt;DISTINCT: "distinct"&gt;| &lt;DROP: "drop"&gt;| &lt;ELSE: "else"&gt;| &lt;END: "end"&gt;| &lt;ERROR: "error"&gt;| &lt;ESCAPE: "escape"&gt;| &lt;EXCEPT: "except"&gt;| &lt;EXEC: "exec"&gt;| &lt;EXECUTE: "execute"&gt;| &lt;EXISTS: "exists"&gt;| &lt;FALSE: "false"&gt;| &lt;FN: "fn"&gt;| &lt;FOR: "for"&gt;| &lt;FROM: "from"&gt;| &lt;FULL: "full"&gt;| &lt;GROUP: "group"&gt;| &lt;HAS: "has"&gt;| &lt;HAVING: "having"&gt;| &lt;IF: "if"&gt;| &lt;IN: "in"&gt;| &lt;INNER: "inner"&gt;| &lt;INSERT: "insert"&gt;| &lt;INTERSECT: "intersect"&gt;| &lt;INTO: "into"&gt;| &lt;IS: "is"&gt;| &lt;JOIN: "join"&gt;| &lt;LEFT: "left"&gt;| &lt;LIKE: "like"&gt;| &lt;LIMIT: "limit"&gt;| &lt;LOCAL: "local"&gt;| &lt;LOOP: "loop"&gt;| &lt;MAKEDEP: "makedep"&gt;| &lt;MAKENOTDEP: "makenotdep"&gt;| &lt;NOCACHE: "nocache"&gt;| &lt;NOT: "not"&gt;| &lt;NULL: "null"&gt;| &lt;ON: "on"&gt;| &lt;OJ: "oj"&gt;| &lt;OPTION: "option"&gt;| &lt;OR: "or"&gt;| &lt;ORDER: "order"&gt;| &lt;OUTER: "outer"&gt;| &lt;PLANONLY: "planonly"&gt;| &lt;PROCEDURE: "procedure"&gt;| &lt;RIGHT: "right"&gt;| &lt;SELECT: "select"&gt;| &lt;SET: "set"&gt;| &lt;SHOWPLAN: "showplan"&gt;| &lt;SOME: "some"&gt;| &lt;TABLE: "table"&gt;| &lt;TEMPORARY: "temporary"&gt;| &lt;THEN: "then"&gt;| &lt;TRANSLATE: "translate"&gt;| &lt;TRUE: "true"&gt;| &lt;UNION: "union"&gt;| &lt;UNKNOWN: "unknown"&gt;| &lt;UPDATE: "update"&gt;| &lt;USING: "using"&gt;| &lt;VALUES: "values"&gt;| &lt;VIRTUAL: "virtual"&gt;| &lt;WHEN: "when"&gt;| &lt;WHERE: "where"&gt;| &lt;WITH: "with"&gt;| &lt;WHILE: "while"&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;SQL_TSI_FRAC_SECOND: "SQL_TSI_FRAC_SECOND"&gt;| &lt;SQL_TSI_SECOND: "SQL_TSI_SECOND"&gt;| &lt;SQL_TSI_MINUTE: "SQL_TSI_MINUTE"&gt;| &lt;SQL_TSI_HOUR: "SQL_TSI_HOUR"&gt;| &lt;SQL_TSI_DAY: "SQL_TSI_DAY"&gt;| &lt;SQL_TSI_WEEK: "SQL_TSI_WEEK"&gt;| &lt;SQL_TSI_MONTH: "SQL_TSI_MONTH"&gt;| &lt;SQL_TSI_QUARTER: "SQL_TSI_QUARTER"&gt;| &lt;SQL_TSI_YEAR: "SQL_TSI_YEAR"&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;ALL_IN_GROUP: (&lt;GROUP_PART&gt; | &lt;MMUUID_PART&gt;) &lt;PERIOD&gt; &lt;STAR&gt;&gt;| &lt;VARIABLE: &lt;ID&gt; | &lt;MMUUID&gt;&gt;| &lt;#ID: &lt;GROUP_PART&gt; ((&lt;PERIOD&gt; | &lt;SLASH&gt;) (&lt;QUOTED_ID&gt; | &lt;MMUUID_PART&gt;))?&gt;| &lt;#ELEMENT: &lt;GROUP_PART&gt; (&lt;PERIOD&gt; | &lt;SLASH&gt;) &lt;QUOTED_ID&gt;&gt;| &lt;#GROUP_PART: ("#")? (&lt;QUOTED_ID&gt; (&lt;PERIOD&gt; | &lt;SLASH&gt;))? &lt;QUOTED_ID&gt;&gt;| &lt;#QUOTED_ID: &lt;DOTTED_ID&gt; | "\"" &lt;DOTTED_ID&gt; "\""&gt;| &lt;#DOTTED_ID: &lt;ID_PART&gt; ((&lt;PERIOD&gt; | &lt;SLASH&gt;) &lt;ID_PART&gt;)*&gt;| &lt;#ID_PART: ("@")? &lt;LETTER&gt; (&lt;ID_CHAR&gt;)*&gt;| &lt;#ID_CHAR: &lt;LETTER&gt; | "_" | &lt;DIGIT&gt;&gt;| &lt;#MMUUID: &lt;MMUUID_PART&gt; (&lt;PERIOD&gt; &lt;MMUUID_PART&gt;)?&gt;| &lt;#MMUUID_PART: "mmuuid:" (&lt;MMUUID_CHAR&gt;)*&gt;| &lt;#MMUUID_CHAR: ["a"-"f"] | ["0"-"9"] | "-"&gt;| &lt;DATETYPE: "{" "d"&gt;| &lt;TIMETYPE: "{" "t"&gt;| &lt;TIMESTAMPTYPE: "{" "ts"&gt;| &lt;BOOLEANTYPE: "{" "b"&gt;| &lt;INTEGERVAL: (&lt;MINUS&gt;)? (&lt;DIGIT&gt;)+&gt;| &lt;FLOATVAL: (&lt;MINUS&gt;)? (&lt;DIGIT&gt;)* &lt;PERIOD&gt; (&lt;DIGIT&gt;)+ (["e","E"] (["+","-"])? (&lt;DIGIT&gt;)+)?&gt;| &lt;STRINGVAL: ("N")? (&lt;STRINGA&gt; | &lt;STRINGB&gt;)&gt;| &lt;#STRINGA: "\'" (~["\'"])* ("\'\'" (~["\'"])*)* "\'"&gt;| &lt;#STRINGB: "\"" (~["\""])* ("\"\"" (~["\""])*)* "\""&gt;| &lt;#LETTER: ["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]&gt;| &lt;#DIGIT: ["0"-"9"]&gt;| &lt;#COLON: ":"&gt;}  </entry>
+ </row>
+ <!-- Token -->
+ <row>
+  <entry>
+&lt;DEFAULT&gt; TOKEN : {&lt;COMMA: ","&gt;| &lt;PERIOD: "."&gt;| &lt;LPAREN: "("&gt;| &lt;RPAREN: ")"&gt;| &lt;LBRACE: "{"&gt;| &lt;RBRACE: "}"&gt;| &lt;EQ: "="&gt;| &lt;NE: "&lt;&gt;"&gt;| &lt;NE2: "!="&gt;| &lt;LT: "&lt;"&gt;| &lt;LE: "&lt;="&gt;| &lt;GT: "&gt;"&gt;| &lt;GE: "&gt;="&gt;| &lt;STAR: "*"&gt;| &lt;SLASH: "/"&gt;| &lt;PLUS: "+"&gt;| &lt;MINUS: "-"&gt;| &lt;QMARK: "?"&gt;| &lt;DOLLAR: "$"&gt;| &lt;SEMICOLON: ";"&gt;| &lt;CONCAT_OP: "||"&gt;}  </entry>
+ </row>
+</tbody>
+</tgroup>
+</informaltable>
+</para>
+</sect1>
+<sect1 id="non-terminals">
+<title>Non-Terminals</title>
+<para>
+<informaltable>
+<tgroup cols="2">
+<colspec align="right" colwidth="1*"/>
+<colspec align="left" colwidth="2*"/>
+<tbody>
+<row>
+<entry valign="top"><anchor id="prod1"/>command ::= </entry>
+<entry valign="top">( ( <link linkend="prod2">createUpdateProcedure</link> ) | <link linkend="prod3">userCommand</link> | <link linkend="prod4">callableStatement</link> ) ( &lt;SEMICOLON&gt; )? &lt;EOF&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod3"/>userCommand ::= </entry>
+<entry valign="top">( <link linkend="prod5">queryExpression</link> | <link linkend="prod6">storedProcedure</link> | <link linkend="prod7">insert</link> | <link linkend="prod8">update</link> | <link linkend="prod9">delete</link> | <link linkend="prod10">dropTable</link> | <link linkend="prod11">createTempTable</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod10"/>dropTable ::= </entry>
+<entry valign="top">&lt;DROP&gt; &lt;TABLE&gt; &lt;VARIABLE&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod11"/>createTempTable ::= </entry>
+<entry valign="top">&lt;CREATE&gt; &lt;LOCAL&gt; &lt;TEMPORARY&gt; &lt;TABLE&gt; &lt;VARIABLE&gt; &lt;LPAREN&gt; <link linkend="prod12">createElementsWithTypes</link> &lt;RPAREN&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod13"/>errorStatement ::= </entry>
+<entry valign="top">&lt;ERROR&gt; <link linkend="prod14">expression</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod15"/>statement ::= </entry>
+<entry valign="top">( <link linkend="prod16">ifStatement</link> | <link linkend="prod17">loopStatement</link> | <link linkend="prod18">whileStatement</link> | <link linkend="prod19">delimitedStatement</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod19"/>delimitedStatement ::= </entry>
+<entry valign="top">( <link linkend="prod20">sqlStatement</link> | <link linkend="prod13">errorStatement</link> | <link linkend="prod21">assignStatement</link> | <link linkend="prod22">declareStatement</link> | <link linkend="prod23">continueStatement</link> | <link linkend="prod24">breakStatement</link> ) &lt;SEMICOLON&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod25"/>block ::= </entry>
+<entry valign="top">( <link linkend="prod15">statement</link> | ( &lt;BEGIN&gt; ( <link linkend="prod15">statement</link> )* &lt;END&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod24"/>breakStatement ::= </entry>
+<entry valign="top">&lt;BREAK&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod23"/>continueStatement ::= </entry>
+<entry valign="top">&lt;CONTINUE&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod18"/>whileStatement ::= </entry>
+<entry valign="top">&lt;WHILE&gt; &lt;LPAREN&gt; <link linkend="prod26">criteria</link> &lt;RPAREN&gt; <link linkend="prod25">block</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod17"/>loopStatement ::= </entry>
+<entry valign="top">&lt;LOOP&gt; &lt;ON&gt; &lt;LPAREN&gt; <link linkend="prod5">queryExpression</link> &lt;RPAREN&gt; &lt;AS&gt; &lt;VARIABLE&gt; <link linkend="prod25">block</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod16"/>ifStatement ::= </entry>
+<entry valign="top">&lt;IF&gt; &lt;LPAREN&gt; <link linkend="prod26">criteria</link> &lt;RPAREN&gt; <link linkend="prod25">block</link> ( &lt;ELSE&gt; <link linkend="prod25">block</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod27"/>criteriaSelector ::= </entry>
+<entry valign="top">( ( &lt;EQ&gt; | &lt;NE&gt; | &lt;NE2&gt; | &lt;LE&gt; | &lt;GE&gt; | &lt;LT&gt; | &lt;GT&gt; | &lt;IN&gt; | &lt;LIKE&gt; | ( &lt;IS&gt; &lt;NULL&gt; ) | &lt;BETWEEN&gt; ) )? &lt;CRITERIA&gt; ( &lt;ON&gt; &lt;LPAREN&gt; &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* &lt;RPAREN&gt; )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod28"/>hasCriteria ::= </entry>
+<entry valign="top">&lt;HAS&gt; <link linkend="prod27">criteriaSelector</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod22"/>declareStatement ::= </entry>
+<entry valign="top">&lt;DECLARE&gt; <link linkend="prod29">dataType</link> &lt;VARIABLE&gt; ( &lt;EQ&gt; <link linkend="prod30">assignStatementOperand</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod21"/>assignStatement ::= </entry>
+<entry valign="top">&lt;VARIABLE&gt; &lt;EQ&gt; <link linkend="prod30">assignStatementOperand</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod30"/>assignStatementOperand ::= </entry>
+<entry valign="top">( ( <link linkend="prod7">insert</link> ) | <link linkend="prod8">update</link> | <link linkend="prod9">delete</link> | <link linkend="prod6">storedProcedure</link> | ( <link linkend="prod14">expression</link> ) | <link linkend="prod5">queryExpression</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod20"/>sqlStatement ::= </entry>
+<entry valign="top">( ( <link linkend="prod31">dynamicCommand</link> ) | <link linkend="prod3">userCommand</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod32"/>translateCriteria ::= </entry>
+<entry valign="top">&lt;TRANSLATE&gt; <link linkend="prod27">criteriaSelector</link> ( &lt;WITH&gt; &lt;LPAREN&gt; &lt;VARIABLE&gt; &lt;EQ&gt; <link linkend="prod14">expression</link> ( &lt;COMMA&gt; &lt;VARIABLE&gt; &lt;EQ&gt; <link linkend="prod14">expression</link> )* &lt;RPAREN&gt; )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod2"/>createUpdateProcedure ::= </entry>
+<entry valign="top">&lt;CREATE&gt; ( &lt;VIRTUAL&gt; )? ( &lt;UPDATE&gt; )? &lt;PROCEDURE&gt; <link linkend="prod25">block</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod31"/>dynamicCommand ::= </entry>
+<entry valign="top">( &lt;EXECUTE&gt; | &lt;EXEC&gt; ) &lt;STRING&gt; <link linkend="prod14">expression</link> ( &lt;AS&gt; <link linkend="prod12">createElementsWithTypes</link> ( &lt;INTO&gt; &lt;VARIABLE&gt; )? )? ( &lt;USING&gt; <link linkend="prod33">setClauseList</link> )? ( &lt;UPDATE&gt; ( ( &lt;INTEGERVAL&gt; ) | ( &lt;STAR&gt; ) ) )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod33"/>setClauseList ::= </entry>
+<entry valign="top">&lt;VARIABLE&gt; &lt;EQ&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; &lt;EQ&gt; )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod12"/>createElementsWithTypes ::= </entry>
+<entry valign="top">&lt;VARIABLE&gt; <link linkend="prod29">dataType</link> ( &lt;COMMA&gt; &lt;VARIABLE&gt; <link linkend="prod29">dataType</link> )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod4"/>callableStatement ::= </entry>
+<entry valign="top">&lt;LBRACE&gt; ( &lt;QMARK&gt; &lt;EQ&gt; )? &lt;VARIABLE&gt; &lt;VARIABLE&gt; ( &lt;LPAREN&gt; ( <link linkend="prod34">executeUnnamedParams</link> ) &lt;RPAREN&gt; )? &lt;RBRACE&gt; ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod6"/>storedProcedure ::= </entry>
+<entry valign="top">( ( &lt;EXEC&gt; | &lt;EXECUTE&gt; ) &lt;VARIABLE&gt; &lt;LPAREN&gt; ( <link linkend="prod36">executeNamedParams</link> | <link linkend="prod34">executeUnnamedParams</link> ) &lt;RPAREN&gt; ) ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod34"/>executeUnnamedParams ::= </entry>
+<entry valign="top">( <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod36"/>executeNamedParams ::= </entry>
+<entry valign="top">( <link linkend="prod37">paramName</link> &lt;EQ&gt; <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod37">paramName</link> &lt;EQ&gt; <link linkend="prod14">expression</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod37"/>paramName ::= </entry>
+<entry valign="top">&lt;VARIABLE&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod7"/>insert ::= </entry>
+<entry valign="top">&lt;INSERT&gt; &lt;INTO&gt; &lt;VARIABLE&gt; ( &lt;LPAREN&gt; &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* &lt;RPAREN&gt; )? ( ( &lt;VALUES&gt; <link linkend="prod38">rowValues</link> ) | ( <link linkend="prod5">queryExpression</link> ) ) ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod38"/>rowValues ::= </entry>
+<entry valign="top">&lt;LPAREN&gt; <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* &lt;RPAREN&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod8"/>update ::= </entry>
+<entry valign="top">&lt;UPDATE&gt; &lt;VARIABLE&gt; &lt;SET&gt; <link linkend="prod33">setClauseList</link> ( <link linkend="prod39">where</link> )? ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod9"/>delete ::= </entry>
+<entry valign="top">&lt;DELETE&gt; &lt;FROM&gt; &lt;VARIABLE&gt; ( <link linkend="prod39">where</link> )? ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod5"/>queryExpression ::= </entry>
+<entry valign="top"><link linkend="prod40">queryExpressionBody</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod40"/>queryExpressionBody ::= </entry>
+<entry valign="top"><link linkend="prod41">queryTerm</link> ( ( &lt;UNION&gt; | &lt;EXCEPT&gt; ) ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod41">queryTerm</link> )* ( <link linkend="prod42">orderby</link> )? ( <link linkend="prod43">limit</link> )? ( <link linkend="prod35">option</link> )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod41"/>queryTerm ::= </entry>
+<entry valign="top"><link linkend="prod44">queryPrimary</link> ( &lt;INTERSECT&gt; ( &lt;ALL&gt; | &lt;DISTINCT&gt; )? <link linkend="prod44">queryPrimary</link> )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod44"/>queryPrimary ::= </entry>
+<entry valign="top">( <link linkend="prod45">query</link> | ( &lt;LPAREN&gt; <link linkend="prod40">queryExpressionBody</link> &lt;RPAREN&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod45"/>query ::= </entry>
+<entry valign="top"><link linkend="prod46">select</link> ( <link linkend="prod47">into</link> )? ( <link linkend="prod48">from</link> ( <link linkend="prod39">where</link> )? ( <link linkend="prod49">groupBy</link> )? ( <link linkend="prod50">having</link> )? )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod47"/>into ::= </entry>
+<entry valign="top">&lt;INTO&gt; ( &lt;VARIABLE&gt; )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod46"/>select ::= </entry>
+<entry valign="top">&lt;SELECT&gt; ( &lt;ALL&gt; | ( &lt;DISTINCT&gt; ) )? ( &lt;STAR&gt; | ( <link linkend="prod51">selectSymbol</link> ( &lt;COMMA&gt; <link linkend="prod51">selectSymbol</link> )* ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod51"/>selectSymbol ::= </entry>
+<entry valign="top">( ( &lt;ALL_IN_GROUP&gt; ) | ( <link linkend="prod14">expression</link> ) ( ( &lt;AS&gt; )? ( &lt;VARIABLE&gt; | &lt;STRINGVAL&gt; ) )? )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod52"/>aggregateSymbol ::= </entry>
+<entry valign="top">( ( &lt;COUNT&gt; &lt;LPAREN&gt; &lt;STAR&gt; &lt;RPAREN&gt; ) | ( ( &lt;COUNT&gt; | &lt;SUM&gt; | &lt;AVG&gt; | &lt;MIN&gt; | &lt;MAX&gt; ) &lt;LPAREN&gt; ( &lt;DISTINCT&gt; )? <link linkend="prod14">expression</link> &lt;RPAREN&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod48"/>from ::= </entry>
+<entry valign="top">&lt;FROM&gt; ( <link linkend="prod53">tableReference</link> ( &lt;COMMA&gt; <link linkend="prod53">tableReference</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod53"/>tableReference ::= </entry>
+<entry valign="top">( ( &lt;LBRACE&gt; &lt;OJ&gt; <link linkend="prod54">tableReferenceUnescaped</link> &lt;RBRACE&gt; ) | <link linkend="prod54">tableReferenceUnescaped</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod54"/>tableReferenceUnescaped ::= </entry>
+<entry valign="top">( <link linkend="prod55">joinedTable</link> | <link linkend="prod56">tablePrimary</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod55"/>joinedTable ::= </entry>
+<entry valign="top"><link linkend="prod56">tablePrimary</link> ( ( <link linkend="prod57">crossJoin</link> | <link linkend="prod58">qualifiedJoin</link> ) )+</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod57"/>crossJoin ::= </entry>
+<entry valign="top">( ( &lt;CROSS&gt; | &lt;UNION&gt; ) &lt;JOIN&gt; <link linkend="prod56">tablePrimary</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod58"/>qualifiedJoin ::= </entry>
+<entry valign="top">( ( ( &lt;RIGHT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;LEFT&gt; ( &lt;OUTER&gt; )? ) | ( &lt;FULL&gt; ( &lt;OUTER&gt; )? ) | &lt;INNER&gt; )? &lt;JOIN&gt; <link linkend="prod53">tableReference</link> &lt;ON&gt; <link linkend="prod26">criteria</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod56"/>tablePrimary ::= </entry>
+<entry valign="top">( <link linkend="prod59">unaryFromClause</link> | <link linkend="prod60">subqueryFromClause</link> | ( &lt;LPAREN&gt; <link linkend="prod55">joinedTable</link> &lt;RPAREN&gt; ) ) ( ( &lt;MAKEDEP&gt; ) | ( &lt;MAKENOTDEP&gt; ) )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod60"/>subqueryFromClause ::= </entry>
+<entry valign="top">&lt;LPAREN&gt; ( <link linkend="prod5">queryExpression</link> | <link linkend="prod6">storedProcedure</link> ) &lt;RPAREN&gt; ( &lt;AS&gt; )? &lt;VARIABLE&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod59"/>unaryFromClause ::= </entry>
+<entry valign="top">( &lt;VARIABLE&gt; ( ( &lt;AS&gt; )? &lt;VARIABLE&gt; )? )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod39"/>where ::= </entry>
+<entry valign="top">&lt;WHERE&gt; <link linkend="prod26">criteria</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod26"/>criteria ::= </entry>
+<entry valign="top"><link linkend="prod61">compoundCritOr</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod61"/>compoundCritOr ::= </entry>
+<entry valign="top"><link linkend="prod62">compoundCritAnd</link> ( &lt;OR&gt; <link linkend="prod62">compoundCritAnd</link> )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod62"/>compoundCritAnd ::= </entry>
+<entry valign="top"><link linkend="prod63">notCrit</link> ( &lt;AND&gt; <link linkend="prod63">notCrit</link> )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod63"/>notCrit ::= </entry>
+<entry valign="top">( &lt;NOT&gt; )? <link linkend="prod64">primary</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod64"/>primary ::= </entry>
+<entry valign="top">( <link linkend="prod65">predicate</link> | ( &lt;LPAREN&gt; <link linkend="prod26">criteria</link> &lt;RPAREN&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod65"/>predicate ::= </entry>
+<entry valign="top">( <link linkend="prod66">subqueryCompareCriteria</link> | <link linkend="prod67">compareCrit</link> | <link linkend="prod68">matchCrit</link> | <link linkend="prod69">betweenCrit</link> | <link linkend="prod70">setCrit</link> | <link linkend="prod71">existsCriteria</link> | <link linkend="prod28">hasCriteria</link> | <link linkend="prod32">translateCriteria</link> | <link linkend="prod72">isNullCrit</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod67"/>compareCrit ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link> ( &lt;EQ&gt; | &lt;NE&gt; | &lt;NE2&gt; | &lt;LT&gt; | &lt;LE&gt; | &lt;GT&gt; | &lt;GE&gt; ) <link linkend="prod14">expression</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod73"/>subquery ::= </entry>
+<entry valign="top">&lt;LPAREN&gt; ( <link linkend="prod5">queryExpression</link> | <link linkend="prod6">storedProcedure</link> ) &lt;RPAREN&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod66"/>subqueryCompareCriteria ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link> ( &lt;EQ&gt; | &lt;NE&gt; | &lt;NE2&gt; | &lt;LT&gt; | &lt;LE&gt; | &lt;GT&gt; | &lt;GE&gt; ) ( &lt;ANY&gt; | &lt;SOME&gt; | &lt;ALL&gt; ) <link linkend="prod73">subquery</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod68"/>matchCrit ::= </entry>
+<entry valign="top">( <link linkend="prod14">expression</link> ( &lt;NOT&gt; )? &lt;LIKE&gt; <link linkend="prod14">expression</link> ( <link linkend="prod74">escapeChar</link> | ( &lt;LBRACE&gt; <link linkend="prod74">escapeChar</link> &lt;RBRACE&gt; ) )? )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod74"/>escapeChar ::= </entry>
+<entry valign="top">&lt;ESCAPE&gt; &lt;STRINGVAL&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod69"/>betweenCrit ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link> ( &lt;NOT&gt; )? &lt;BETWEEN&gt; <link linkend="prod14">expression</link> &lt;AND&gt; <link linkend="prod14">expression</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod72"/>isNullCrit ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link> &lt;IS&gt; ( &lt;NOT&gt; )? &lt;NULL&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod70"/>setCrit ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link> ( &lt;NOT&gt; )? &lt;IN&gt; ( ( <link linkend="prod73">subquery</link> ) | ( &lt;LPAREN&gt; <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* &lt;RPAREN&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod71"/>existsCriteria ::= </entry>
+<entry valign="top">&lt;EXISTS&gt; <link linkend="prod73">subquery</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod49"/>groupBy ::= </entry>
+<entry valign="top">&lt;GROUP&gt; &lt;BY&gt; ( <link linkend="prod75">groupByItem</link> ( &lt;COMMA&gt; <link linkend="prod75">groupByItem</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod75"/>groupByItem ::= </entry>
+<entry valign="top"><link linkend="prod14">expression</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod50"/>having ::= </entry>
+<entry valign="top">&lt;HAVING&gt; <link linkend="prod26">criteria</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod42"/>orderby ::= </entry>
+<entry valign="top">&lt;ORDER&gt; &lt;BY&gt; ( &lt;VARIABLE&gt; | &lt;STRINGVAL&gt; | &lt;INTEGERVAL&gt; ) ( &lt;ASC&gt; | &lt;DESC&gt; )? ( &lt;COMMA&gt; ( &lt;VARIABLE&gt; | &lt;STRINGVAL&gt; | &lt;INTEGERVAL&gt; ) ( &lt;ASC&gt; | &lt;DESC&gt; )? )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod43"/>limit ::= </entry>
+<entry valign="top">&lt;LIMIT&gt; ( &lt;INTEGERVAL&gt; | &lt;QMARK&gt; ) ( &lt;COMMA&gt; ( &lt;INTEGERVAL&gt; | &lt;QMARK&gt; ) )?</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod35"/>option ::= </entry>
+<entry valign="top">&lt;OPTION&gt; ( &lt;SHOWPLAN&gt; | &lt;PLANONLY&gt; | &lt;DEBUG&gt; | &lt;MAKEDEP&gt; &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* | &lt;MAKENOTDEP&gt; &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* | &lt;NOCACHE&gt; ( &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* )? )*</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod14"/>expression ::= </entry>
+<entry valign="top"><link linkend="prod76">concatExpression</link></entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod76"/>concatExpression ::= </entry>
+<entry valign="top">( <link linkend="prod77">plusExpression</link> ( &lt;CONCAT_OP&gt; <link linkend="prod77">plusExpression</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod77"/>plusExpression ::= </entry>
+<entry valign="top">( <link linkend="prod78">timesExpression</link> ( <link linkend="prod79">plusOperator</link> <link linkend="prod78">timesExpression</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod79"/>plusOperator ::= </entry>
+<entry valign="top">( &lt;PLUS&gt; | &lt;MINUS&gt; )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod78"/>timesExpression ::= </entry>
+<entry valign="top">( <link linkend="prod80">basicExpression</link> ( <link linkend="prod81">timesOperator</link> <link linkend="prod80">basicExpression</link> )* )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod81"/>timesOperator ::= </entry>
+<entry valign="top">( &lt;STAR&gt; | &lt;SLASH&gt; )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod80"/>basicExpression ::= </entry>
+<entry valign="top">( &lt;QMARK&gt; | <link linkend="prod82">literal</link> | ( &lt;LBRACE&gt; &lt;FN&gt; <link linkend="prod83">function</link> &lt;RBRACE&gt; ) | ( <link linkend="prod52">aggregateSymbol</link> ) | ( <link linkend="prod83">function</link> ) | ( &lt;VARIABLE&gt; ) | ( &lt;LPAREN&gt; <link linkend="prod14">expression</link> &lt;RPAREN&gt; ) | <link linkend="prod73">subquery</link> | <link linkend="prod84">caseExpression</link> | <link linkend="prod85">searchedCaseExpression</link> )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod84"/>caseExpression ::= </entry>
+<entry valign="top">&lt;CASE&gt; <link linkend="prod14">expression</link> ( &lt;WHEN&gt; <link linkend="prod14">expression</link> &lt;THEN&gt; <link linkend="prod14">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod14">expression</link> )? &lt;END&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod85"/>searchedCaseExpression ::= </entry>
+<entry valign="top">&lt;CASE&gt; ( &lt;WHEN&gt; <link linkend="prod26">criteria</link> &lt;THEN&gt; <link linkend="prod14">expression</link> )+ ( &lt;ELSE&gt; <link linkend="prod14">expression</link> )? &lt;END&gt;</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod83"/>function ::= </entry>
+<entry valign="top">( ( &lt;CONVERT&gt; &lt;LPAREN&gt; <link linkend="prod14">expression</link> &lt;COMMA&gt; <link linkend="prod29">dataType</link> &lt;RPAREN&gt; ) | ( &lt;CAST&gt; &lt;LPAREN&gt; <link linkend="prod14">expression</link> &lt;AS&gt; <link linkend="prod29">dataType</link> &lt;RPAREN&gt; ) | ( ( &lt;TIMESTAMPADD&gt; | &lt;TIMESTAMPDIFF&gt; ) &lt;LPAREN&gt; <link linkend="prod86">intervalType</link> &lt;COMMA&gt; <link linkend="prod14">expression</link> &lt;COMMA&gt; <link linkend="prod14">expression</link> &lt;RPAREN&gt; ) | ( ( &lt;LEFT&gt; | &lt;RIGHT&gt; | &lt;CHAR&gt; ) &lt;LPAREN&gt; ( <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;INSERT&gt; ) &lt;LPAREN&gt; ( <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* )? &lt;RPAREN&gt; ) | ( ( &lt;TRANSLATE&gt; ) &lt;LPAREN&gt; ( <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* )? &lt;RPAREN&gt; ) | ( &lt;VARIABLE&gt; &lt;LPAREN&gt; ( <link linkend="prod14">expression</link> ( &lt;COMMA&gt; <link linkend="prod14">expression</link> )* )? &lt;RPAREN&gt; ) )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod29"/>dataType ::= </entry>
+<entry valign="top">( &lt;STRING&gt; | &lt;BOOLEAN&gt; | &lt;BYTE&gt; | &lt;SHORT&gt; | &lt;CHAR&gt; | &lt;INTEGER&gt; | &lt;LONG&gt; | &lt;BIGINTEGER&gt; | &lt;FLOAT&gt; | &lt;DOUBLE&gt; | &lt;BIGDECIMAL&gt; | &lt;DATE&gt; | &lt;TIME&gt; | &lt;TIMESTAMP&gt; | &lt;OBJECT&gt; | &lt;BLOB&gt; | &lt;CLOB&gt; | &lt;XML&gt; )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod86"/>intervalType ::= </entry>
+<entry valign="top">( &lt;SQL_TSI_FRAC_SECOND&gt; | &lt;SQL_TSI_SECOND&gt; | &lt;SQL_TSI_MINUTE&gt; | &lt;SQL_TSI_HOUR&gt; | &lt;SQL_TSI_DAY&gt; | &lt;SQL_TSI_WEEK&gt; | &lt;SQL_TSI_MONTH&gt; | &lt;SQL_TSI_QUARTER&gt; | &lt;SQL_TSI_YEAR&gt; )</entry>
+</row>
+<row>
+<entry valign="top"><anchor id="prod82"/>literal ::= </entry>
+<entry valign="top">( &lt;STRINGVAL&gt; | &lt;INTEGERVAL&gt; | &lt;FLOATVAL&gt; | &lt;FALSE&gt; | &lt;TRUE&gt; | &lt;NULL&gt; | ( &lt;BOOLEANTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMESTAMPTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;DATETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) )</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+</para>
+</sect1>
+</appendix>

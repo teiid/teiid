@@ -1,0 +1,17 @@
+<deployment
+    xmlns="http://xml.apache.org/axis/wsdd/"
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+
+  <!-- Services from DistanceService WSDL service -->
+
+  <service name="Distance" provider="java:RPC" style="rpc" use="encoded">
+      <parameter name="wsdlTargetNamespace" value="http://webservices.imacination.com/distance/Distance.jws"/>
+      <parameter name="wsdlServiceElement" value="DistanceService"/>
+      <parameter name="wsdlServicePort" value="Distance"/>
+      <parameter name="className" value="com.imacination.webservices.distance.Distance_jws.Distance"/>
+      <parameter name="wsdlPortType" value="Distance"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <parameter name="allowedMethods" value="*"/>
+
+  </service>
+</deployment>

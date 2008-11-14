@@ -1,0 +1,233 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.query.optimizer.relational.plantree;
+
+import java.util.*;
+
+import com.metamatrix.query.sql.symbol.*;
+
+public class PlanNode {
+
+    // --------------------- Node State --------------------------
+
+    /** The type of node, as defined by NodeConstants.Types. */
+    private int type;
+
+    /** The parent of this node, null if root. */
+    private PlanNode parent;
+
+    /** Child nodes, usually just 1 or 2, but occasionally more */
+    private LinkedList<PlanNode> children = new LinkedList<PlanNode>();
+    
+    /** Type-specific node properties, as defined in NodeConstants.Info. */
+    private Map<NodeConstants.Info, Object> nodeProperties;
+
+    // --------------------- Planning Info --------------------------
+
+    /** The set of groups that this node deals with. */
+    private Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+        
+    // =========================================================================
+    //                         C O N S T R U C T O R S
+    // =========================================================================
+
+    public PlanNode() {    
+    }    
+    
+    // =========================================================================
+    //                     A C C E S S O R      M E T H O D S
+    // =========================================================================
+
+    public int getType() {
+        return type;
+    }    
+
+    public void setType(int type) {
+        this.type = type;
+    }    
+
+    public PlanNode getParent() {
+        return parent;
+    }
+
+    public void setParent(PlanNode parent) {
+        this.parent = parent;
+    }
+
+    public List<PlanNode> getChildren() {
+        return this.children;
+    }
+    
+    public int getChildCount() {
+        return this.children.size();
+    }
+        
+    public PlanNode getFirstChild() {
+        if ( getChildCount() > 0 ) {
+            return this.children.getFirst();
+        }
+        return null;
+    }
+    
+    public PlanNode getLastChild() {
+        if ( getChildCount() > 0 ) {
+            return this.children.getLast();
+        }
+        return null;
+    }
+        
+    public void addFirstChild(PlanNode child) {
+        this.children.addFirst(child);
+    }
+    
+    public void addLastChild(PlanNode child) {
+        this.children.addLast(child);
+    }
+    
+    public void addChildren(List<PlanNode> otherChildren) {
+        this.children.addAll(otherChildren);
+    }
+    
+    public boolean removeChild(PlanNode child) {
+        return this.children.remove(child);
+    }    
+                        
+    public Object getProperty(NodeConstants.Info propertyID) {
+        if(nodeProperties == null) {
+            return null;
+        }
+        return nodeProperties.get(propertyID);
+    }
+
+    public void setProperty(NodeConstants.Info propertyID, Object value) {
+        if(nodeProperties == null) {
+            nodeProperties = new HashMap<NodeConstants.Info, Object>();
+        }    
+        nodeProperties.put(propertyID, value);
+    }
+
+    public Object removeProperty(Object propertyID) {
+        if(nodeProperties == null) {
+            return null;
+        }   
+        return nodeProperties.remove(propertyID);
+    }
+    
+    /**
+     * Indicates if there is a non-null value for the property
+     * key or not
+     * @param propertyID one of the properties from {@link NodeConstants}
+     * @return whether this node has a non-null value for that property
+     */
+    public boolean hasProperty(NodeConstants.Info propertyID) {
+        return (getProperty(propertyID) != null);
+    }
+
+    /**
+     * Indicates if there is a non-null and non-empty Collection value for the property
+     * key or not
+     * @param propertyID one of the properties from {@link NodeConstants} which is 
+     * known to be a Collection object of some sort
+     * @return whether this node has a non-null and non-empty Collection 
+     * value for that property
+     */
+    public boolean hasCollectionProperty(NodeConstants.Info propertyID) {
+        Collection<Object> value = (Collection<Object>)getProperty(propertyID);
+        return (value != null && !value.isEmpty());
+    }
+    
+    public void addGroup(GroupSymbol groupID) {
+        groups.add(groupID);
+    }
+
+    public void addGroups(Collection<GroupSymbol> newGroups) {
+        this.groups.addAll(newGroups);
+    }
+        
+    public Set<GroupSymbol> getGroups() {
+        return groups;
+    }
+
+    // =========================================================================
+    //            O V E R R I D D E N    O B J E C T     M E T H O D S
+    // =========================================================================
+
+    /**
+     * Print plantree structure starting at this node
+     * @return String representing this node and all children under this node
+     */
+    public String toString() {
+        StringBuffer str = new StringBuffer();
+        getRecursiveString(str, 0);
+        return str.toString();
+    }
+
+    /**
+     * Just print single node to string instead of node+recursive plan.
+     * @return String representing just this node
+     */
+    public String nodeToString() {
+        StringBuffer str = new StringBuffer();
+        getNodeString(str);
+        return str.toString();
+    }
+    
+    // Define a single tab
+    private static final String TAB = "  "; //$NON-NLS-1$
+    
+    private void setTab(StringBuffer str, int tabStop) {
+        for(int i=0; i<tabStop; i++) {
+            str.append(TAB);
+        }            
+    }
+    
+    void getRecursiveString(StringBuffer str, int tabLevel) {
+        setTab(str, tabLevel);
+        getNodeString(str);
+        str.append(")\n");  //$NON-NLS-1$
+        
+        // Recursively add children at one greater tab level
+        for (PlanNode child : children) {
+            child.getRecursiveString(str, tabLevel+1);
+        }        
+    }
+
+    void getNodeString(StringBuffer str) {
+        str.append(NodeConstants.getNodeTypeString(this.type));
+        str.append("(groups="); //$NON-NLS-1$
+        str.append(this.groups);
+        if(nodeProperties != null) {
+            str.append(", props="); //$NON-NLS-1$
+            str.append(nodeProperties);
+        }
+    }
+    
+    public boolean hasBooleanProperty(NodeConstants.Info propertyKey) {
+        return Boolean.TRUE.equals(getProperty(propertyKey));
+    }
+        
+} // END CLASS
+
+

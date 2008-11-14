@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="transaction_support">
+  <title>Transaction Support</title>
+  <para>
+    Federate utilizes XA transactions for both participating in global
+    transactions and for demarcating its own local and command scoped
+    transactions.
+    <ulink url="http://www.jboss.org/jbosstm/">JBoss Transactions</ulink>
+    is used by Federate as its internal transaction manager.  See <ulink url="http://www.jboss.org/jbosstm/docs/index.html">
+    this documentation</ulink> for the advanced features provided by JBoss Transactions.
+  </para>
+  <table>
+    <title>Federate Transaction Scopes</title>
+    <tgroup cols="2">
+      <thead>
+        <row>
+          <entry>Scope</entry>
+          <entry>Description</entry>
+        </row>
+      </thead>
+      <tbody>
+        <row>
+          <entry>Command</entry>
+          <entry>Treats the user command as if all source commands are executed within the scope of the same transaction.  The <link linkend="autowrap">AutoWrap</link> execution property controls the behavior of command level transactions.</entry>
+        </row>
+        <row>
+          <entry>Local</entry>
+          <entry>The transaction boundary is local defined by a single client session.</entry>
+        </row>
+        <row>
+          <entry>Global</entry>
+          <entry>Federate participates in a global transaction as an XA Resource.</entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </table>
+  <sect1 id="autowrap">
+    <title>AutoWrap Execution Property</title>
+    <para>Since user level commands may execute multiple source
+      commands, users can specify the AutoWrap execution property to control
+      the transactional behavior of a user command when not in a local or
+      global transaction.</para>
+    <table>
+      <title>AutoWrap Settings</title>
+      <tgroup cols="2">
+        <colspec colwidth="1*"/>
+        <colspec colwidth="3*"/>
+        <thead>
+          <row>
+            <entry>Setting</entry>
+            <entry>Description</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>OFF</entry>
+            <entry>Do not wrap each command in a transaction.  Individual source commands may commit or rollback regardless of the success or failure of the overall command.</entry>
+          </row>
+          <row>
+            <entry>ON</entry>
+            <entry>Wrap each command in a transaction.  This mode is the safest, but may be burdonsome on performance.</entry>
+          </row>
+          <row>
+            <entry>OPTIMISTIC</entry>
+            <entry><emphasis>This is the default setting.</emphasis> Will not automatically wrap a command in a transaction, instead throw an exception if the command executed is potentially unsafe to execute outside of a transaction.</entry>
+          </row>
+          <row>
+            <entry>PESSIMITIC</entry>
+            <entry>Will automatically wrap commands in a transaction, but only if the command seems to be unsafe.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <para>The concept of command safety with respect to a transaction
+      is determined by Federate based upon command type and available
+      metadata. Whenever any INSERT, UPDATE, DELETE, or EXECUTE (with
+      update count greater than 0) command is detected and the success or
+      failure of that command is not the same as the user level command,
+      then the command is deemed unsafe without a transaction.</para>
+    <para>The update count may be set on dynamic SQL as part of the
+      command and on all other procedures as part of the procedure
+      metadata in the model.</para>
+  </sect1>
+  <sect1>
+    <title>JDBC and Transactions</title>
+    <sect2>
+      <title>JDBC API Functionality</title>
+      <itemizedlist>
+        <para>The transaction scopes above map to these JDBC modes:
+        </para>
+        <listitem>
+          <para>Command - Connection autoCommit property set to true.   
+          </para>
+        </listitem>
+        <listitem>
+          <para>Local - Connection autoCommit property set to false.  The transaction is committed by setting autoCommit to true or calling <function>java.sql.Connection.commit</function>.  The transaction can be rolled back by a call to <function>java.sql.Connection.rollback</function>  
+          </para>
+        </listitem>
+        <listitem>
+          <para>Global - the XAResource interface provided by an XAConnection is used to control the transaction.  Note that XAConnections are available only if Federate is consumed through its XADataSource, <classname>com.metamatrix.jdbc.MMDataSource</classname>.  JEE containers or data access APIs typically control XA transactions on behalf of application code.  
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>J2EE Usage Models</title>
+      <itemizedlist>
+        <para>J2EE provides three ways to manage transactions for beans:</para>
+        <listitem>
+          <para>Client-controlled – the client of a bean begins and ends a transaction explicitly.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Bean-managed – the bean itself begins and ends a transaction explicitly.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Container-managed – the app server container begins and ends a transaction automatically.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>In any of these cases, transactions may be either local or XA transactions, depending on how the code and descriptors are written. Some kinds of beans (stateful session beans and entity beans) are not required by the spec to support non-transactional sources, although the spec does allow an app server to optionally support this with the caution that this is not portable or predictable. Generally speaking, to support most typical EJB activities in a portable fashion requires some kind of transaction support.</para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Limitations and Workarounds</title>
+    <itemizedlist>
+      <listitem>
+        <para>The client setting of transaction isolation level is not used.  The transaction isolation level can be set on each XA connector, however this isolation level is fixed and cannot be changed at runtime for specific connections/commands. 
+        </para>
+      </listitem>
+      <listitem>
+        <para>Since the client transaction isolation level is not used, Federate internally assumes a level of READ_COMMITTED.  This implies that explicit transactions are not required for user level commands performing multiple reads.  
+        </para>
+      </listitem>
+      <listitem>
+        <para>Temporary tables are not transactional.  For example, a global temporary table will retain all inserts performed during a local transaction that was rolled back.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Connectors may be set to immutable to prevent their participation in transactions.  This is useful in situations where update commands are being issued against a source that lacks XA transaction capabilities.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

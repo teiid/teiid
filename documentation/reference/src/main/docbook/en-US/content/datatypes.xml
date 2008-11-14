@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="datatypes">
+  <title>Datatypes</title>
+  <sect1>
+    <title>Supported Types</title>
+    <para>Federate supports a core set of runtime types. Runtime
+      types can be different than semantic types defined in type fields
+      at design time. The runtime type can also be specified at design
+      time or it will be automatically chosen as the closest base type
+      to the semantic type.</para>
+    <table>
+      <title>Federate Runtime Types</title>
+      <tgroup cols="5"  colsep="1" rowsep="1">
+        <colspec colwidth=".75*" />
+        <colspec colwidth="1.5*" />
+        <colspec colwidth="1.25*" />
+        <colspec colwidth="1*" />
+        <colspec colwidth=".75*" />
+        <thead>
+          <row>
+            <entry>Type</entry>
+            <entry>Description</entry>
+            <entry>Java Runtime Class</entry>
+            <entry>JDBC Type</entry>
+            <entry>ODBC Type</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>string</entry>
+            <entry>variable length character string with a
+              maximum length of 4000</entry>
+            <entry>java.lang.String</entry>
+            <entry>VARCHAR</entry>
+            <entry>VARCHAR</entry>
+          </row>
+          <row>
+            <entry>char</entry>
+            <entry>a single Unicode character</entry>
+            <entry>java.lang.Character</entry>
+            <entry>CHAR</entry>
+            <entry>CHAR</entry>
+          </row>
+          <row>
+            <entry>boolean</entry>
+            <entry>a single bit, or Boolean, with two possible values
+            </entry>
+            <entry>java.lang.Boolean</entry>
+            <entry>BIT</entry>
+            <entry>SMALLINT</entry>
+          </row>
+          <row>
+            <entry>byte</entry>
+            <entry>numeric, integral type, signed 8-bit</entry>
+            <entry>java.lang.Byte</entry>
+            <entry>TINYINT</entry>
+            <entry>SMALLINT</entry>
+          </row>
+          <row>
+            <entry>short</entry>
+            <entry>numeric, integral type, signed 16-bit</entry>
+            <entry>java.lang.Short</entry>
+            <entry>SMALLINT</entry>
+            <entry>SMALLINT</entry>
+          </row>
+          <row>
+            <entry>integer</entry>
+            <entry>numeric, integral type, signed 32-bit</entry>
+            <entry>java.lang.Integer</entry>
+            <entry>INTEGER</entry>
+            <entry>INTEGER</entry>
+          </row>
+          <row>
+            <entry>long</entry>
+            <entry>numeric, integral type, signed 64-bit</entry>
+            <entry>java.lang.Long</entry>
+            <entry>BIGINT</entry>
+            <entry>NUMERIC</entry>
+          </row>
+          <row>
+            <entry>biginteger</entry>
+            <entry>numeric, integral type, arbitrary precision
+              of up to 1000 digits</entry>
+            <entry>java.lang.BigInteger</entry>
+            <entry>NUMERIC</entry>
+            <entry>NUMERIC</entry>
+          </row>
+          <row>
+            <entry>float</entry>
+            <entry>numeric, floating point type, 32-bit IEEE 754
+              floating-point numbers</entry>
+            <entry>java.lang.Float</entry>
+            <entry>REAL</entry>
+            <entry>FLOAT</entry>
+          </row>
+          <row>
+            <entry>double</entry>
+            <entry>numeric, floating point type, 64-bit IEEE 754
+              floating-point numbers</entry>
+            <entry>java.lang.String</entry>
+            <entry>DOUBLE</entry>
+            <entry>DOUBLE</entry>
+          </row>
+          <row>
+            <entry>bigdecimal</entry>
+            <entry>numeric, floating point type, arbitrary
+              precision of up to 1000 digits</entry>
+            <entry>java.math.BigDecimal</entry>
+            <entry>NUMERIC</entry>
+            <entry>NUMERIC</entry>
+          </row>
+          <row>
+            <entry>date</entry>
+            <entry>datetime, representing a single day (year,
+              month, day)</entry>
+            <entry>java.sql.Date</entry>
+            <entry>DATE</entry>
+            <entry>DATE</entry>
+          </row>
+          <row>
+            <entry>time</entry>
+            <entry>datetime, representing a single time (hours,
+              minutes, seconds, milliseconds)</entry>
+            <entry>java.sql.Time</entry>
+            <entry>TIME</entry>
+            <entry>TIME</entry>
+          </row>
+          <row>
+            <entry>timestamp</entry>
+            <entry>datetime, representing a single date and
+              time (year, month, day, hours, minutes, seconds,
+              milliseconds, nanoseconds)</entry>
+            <entry>java.sql.Timestamp</entry>
+            <entry>TIMESTAMP</entry>
+            <entry>TIMESTAMP</entry>
+          </row>
+          <row>
+            <entry>object</entry>
+            <entry>any arbitrary Java object, must implement
+              java.lang.Serializable</entry>
+            <entry>Any</entry>
+            <entry>JAVA_OBJECT</entry>
+            <entry>VARCHAR</entry>
+          </row>
+          <row>
+            <entry>blob</entry>
+            <entry>binary large object, representing a stream of
+              bytes</entry>
+            <entry>
+              java.sql.Blob
+              <footnote>
+                <para>The concrete type is expected to be
+                  com.metamatrix.common.types.BlobType</para>
+              </footnote>
+            </entry>
+            <entry>BLOB</entry>
+            <entry>VARCHAR</entry>
+          </row>
+          <row>
+            <entry>clob</entry>
+            <entry>character large object, representing a
+              stream of characters</entry>
+            <entry>
+              java.sql.Clob
+              <footnote>
+                <para>The concrete type is expected to be
+                  com.metamatrix.common.types.ClobType</para>
+              </footnote>
+            </entry>
+            <entry>CLOB</entry>
+            <entry>VARCHAR</entry>
+          </row>
+          <row>
+            <entry>xml</entry>
+            <entry>XML document</entry>
+            <entry>
+              java.sql.SQLXML
+              <footnote>
+                <para>The concrete type is expected to be
+                  com.metamatrix.common.types.XMLType</para>
+              </footnote>
+            </entry>
+            <entry>JAVA_OBJECT</entry>
+            <entry>VARCHAR</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </sect1>
+  <sect1 id="type_conversions">
+    <title>Type Conversions</title>
+    <para>
+      Data types may be converted from one form to another either
+      explicitly or implicitly. Implicit conversions automatically occur
+      in criteria and expressions to ease development. Explicit datatype
+      conversions require the use of the
+      <code>CONVERT</code>
+      function or
+      <code>CAST</code>
+      keyword.
+    </para>
+    <itemizedlist>
+      <para>Type Conversion Considerations</para>
+      <listitem>
+        <para>Any type may be implicitly converted to the OBJECT
+          type.</para>
+      </listitem>
+      <listitem>
+        <para>The OBJECT type may be explicitly converted to any
+          other type.</para>
+      </listitem>
+      <listitem>
+        <para>
+          The
+          <literal>NULL</literal>
+          value may be converted to any type.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Any valid implicit conversion is also a valid explicit
+          conversion.</para>
+      </listitem>
+      <listitem>
+        <para>Situations involving literal values that would
+          normally require explicit conversions may have the explicit
+          conversion applied implicitly if no loss of information
+          occurs.</para>
+      </listitem>
+      <listitem>
+        <para>When Federate detects that an explicit conversion can
+          not be applied implicitly in criteria, the criteria will be
+          treated as false. For example:</para>
+        <programlisting>SELECT * FROM my.group WHERE created_by = ‘not a date’</programlisting>
+        <para>
+          Given that created_by is typed as date, rather than converting
+          <literal>'not a date'</literal>
+          to a date value, the criteria will remain as a string
+          comparison and therefore be false.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Explicit conversions that are not allowed between
+          two types will result in an exception before execution.
+          Allowed explicit conversions may still fail during processing
+          if the runtime values are not actually convertable.</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+    </para>
+    <table>
+      <title>Type Conversions</title>
+      <tgroup cols="3">
+        <colspec colwidth=".5*"/>
+        <colspec colwidth="1*"/>
+        <colspec colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>Source Type</entry>
+            <entry>Valid Implicit Target Types</entry>
+            <entry>Valid Explicit Target Types</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>string</entry>
+            <entry>clob</entry>
+            <entry>char, boolean, byte, short, integer, long,
+              biginteger, float, double, bigdecimal, xml</entry>
+          </row>
+          <row>
+            <entry>char</entry>
+            <entry>string</entry>
+            <entry></entry>
+          </row>
+          <row>
+            <entry>boolean</entry>
+            <entry>string, byte, short, integer, long,
+              biginteger, float, double, bigdecimal</entry>
+            <entry></entry>
+          </row>
+          <row>
+            <entry>byte</entry>
+            <entry>string, short, integer, long, biginteger,
+              float, double, bigdecimal</entry>
+            <entry>boolean</entry>
+          </row>
+          <row>
+            <entry>short</entry>
+            <entry>string, integer, long, biginteger, float,
+              double, bigdecimal</entry>
+            <entry>boolean, byte</entry>
+          </row>
+          <row>
+            <entry>integer</entry>
+            <entry>string, long, biginteger, float, double,
+              bigdecimal</entry>
+            <entry>boolean, byte, short</entry>
+          </row>
+          <row>
+            <entry>long</entry>
+            <entry>string, biginteger, bigdecimal</entry>
+            <entry>boolean, byte, short, integer, float, double
+            </entry>
+          </row>
+          <row>
+            <entry>biginteger</entry>
+            <entry>string, bigdecimal</entry>
+            <entry>boolean, byte, short, integer, long, float,
+              double</entry>
+          </row>
+          <row>
+            <entry>bigdecimal</entry>
+            <entry>string</entry>
+            <entry>boolean, byte, short, integer, long,
+              biginteger, float, double</entry>
+          </row>
+          <row>
+            <entry>date</entry>
+            <entry>string, timestamp</entry>
+            <entry></entry>
+          </row>
+          <row>
+            <entry>time</entry>
+            <entry>string, timestamp</entry>
+            <entry></entry>
+          </row>
+          <row>
+            <entry>timestamp</entry>
+            <entry>string</entry>
+            <entry>date, time</entry>
+          </row>
+          <row>
+            <entry>clob</entry>
+            <entry></entry>
+            <entry>string</entry>
+          </row>
+          <row>
+            <entry>xml</entry>
+            <entry></entry>
+            <entry>string</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </sect1>
+  <sect1>
+    <title>Special Conversion Cases</title>
+    <sect2>
+      <title>Conversion of String Literals</title>
+      <para> Federate automatically converts string literals within a
+        SQL statement to their implied types. This typically occurs in a
+        criteria comparison where an element with a different datatype
+        is compared to a literal string:</para>
+      <programlisting>SELECT * FROM my.group WHERE created_by = ‘2003-01-02’</programlisting>
+      <para> Here if the created_by element has the datatype of date,
+        Federate automatically converts the string literal to a date
+        datatype as well.</para>
+    </sect2>
+    <sect2>
+      <title>Converting to Boolean</title>
+      <para> Federate can automatically convert literal strings and
+        numeric type values to Boolean values as follows:</para>
+      <informaltable frame="all">
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry>Type</entry>
+              <entry>Literal Value</entry>
+              <entry>Boolean Value</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry morerows="2">String</entry>
+              <entry>'true'</entry>
+              <entry>true</entry>
+            </row>
+            <row>
+              <entry>'false'</entry>
+              <entry>false</entry>
+            </row>
+            <row>
+              <entry>other</entry>
+              <entry>false</entry>
+            </row>
+            <row>
+              <entry morerows="2">Numeric</entry>
+              <entry>1</entry>
+              <entry>true</entry>
+            </row>
+            <row>
+              <entry>0</entry>
+              <entry>false</entry>
+            </row>
+            <row>
+              <entry>other</entry>
+              <entry>
+                <emphasis>error</emphasis>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+    <sect2>
+      <title>Date/Time/Timestamp Type Conversions
+      </title>
+      <para>Federate can implicitly convert properly formatted
+        literal strings to their associated date-related datatypes as
+        follows:</para>
+      <informaltable frame="all">
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>String Literal Format</entry>
+              <entry>Possible Implicit Conversion Type</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>yyyy-mm-dd</entry>
+              <entry>DATE</entry>
+            </row>
+            <row>
+              <entry>hh:mm:ss</entry>
+              <entry>TIME</entry>
+            </row>
+            <row>
+              <entry>
+                yyyy-mm-dd hh:mm:ss.fffffffff
+                <footnote>
+                  <para>fractional seconds are optional</para>
+                </footnote>
+              </entry>
+              <entry>TIMESTAMP</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+      <para>
+        The formats above are those expected by the JDBC date types. To
+        use other formats see the functions
+        <code>PARSEDATE</code>
+        ,
+        <code>PARSETIME</code>
+        ,
+        <code>PARSETIMESTAMP</code>
+        .
+      </para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Escaped Literal Syntax</title>
+    <para>Rather than relying on implicit conversion, datatype
+      values may be expressed directly in SQL using escape syntax to
+      define the type. Note that the supplied string value must match
+      the expected format exactly or an exception will occur.</para>
+    <table>
+      <title>Escaped Literal Syntax</title>
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>Datatype</entry>
+            <entry>Escaped Syntax</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>BOOLEAN</entry>
+            <entry>{b'true'} or {b'false'}</entry>
+          </row>
+          <row>
+            <entry>DATE</entry>
+            <entry>{d'yyyy-mm-dd'}</entry>
+          </row>
+          <row>
+            <entry>TIME</entry>
+            <entry>{t'hh-mm-ss'}</entry>
+          </row>
+          <row>
+            <entry>TIMESTAMP</entry>
+            <entry>
+              {ts'yyyy-mm-dd hh:mm:ss.fffffffff'}
+              <footnote>
+                <para>fractional seconds are optional</para>
+              </footnote>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </sect1>
+</chapter>

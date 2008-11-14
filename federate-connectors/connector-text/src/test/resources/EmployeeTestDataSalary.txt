@@ -1,0 +1,4 @@
+Employees.EmpTable.location = src/test/resources/EmpData.txt
+Employees.EmpTable.qualifier = "
+Employees.EmpTable.delimiter = ,
+Employees.EmpTable.skipHeaderLines = 1

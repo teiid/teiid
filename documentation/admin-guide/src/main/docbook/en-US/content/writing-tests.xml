@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="writing_tests">
+  <title>Writing Tests using MMAdmin</title>
+  <para>
+    <ulink url="http://junit.org">JUnit</ulink>
+    testing framework is integrated into the MMAdmin, so you can write regression tests and run tests in the JUnit
+    style. To write a test,
+    <orderedlist>
+      <listitem>
+        <para>start a method name which begins with "testxxxx()"</para>
+      </listitem>
+      <listitem>
+        <para>use method body to write actual test. Method body can contain any MMAdmin based script using Admin
+          API and JDBC commands</para>
+      </listitem>
+      <listitem>
+        <para>finally use “assertions” to validate results.</para>
+      </listitem>
+    </orderedlist>
+    For example:
+  </para>
+  <programlisting><![CDATA[ 
+testCountRows(){
+	connect();
+	execute("select * from table");
+
+	// make sure you have 100 rows
+	assertRowCount(100);		
+
+	disconnect();
+}
+
+testResults(){
+	connect();
+	execute("select * from table");
+
+	// defines the all the values you are expecting
+	String[] expected ={
+		{"col1[string]", "col2[int]"},
+		{"VALUE1", "100"}
+		..
+	};
+	
+	// make sure your results match to expected
+	assertResultSet(expected);		
+	disconnect();
+}
+
+// now actually run the above defined tests
+runTests();
+      ]]></programlisting>
+  <para>In the above example, “testCountRows”, made connection to a MetaMatrix system and issued a query and made
+    sure that certain table has required number of rows. Where as “testResults” asserted that results match to a
+    certain set of pre-built results.</para>
+  <para>
+    Note the “runTests()” call at the end of the script, as this is the call which triggers the execution of the
+    tests defined in the script. There are various types asserts you can use in your scripts, for the all the
+    available assert types please refer to
+    <link linkend="assertion_list">Assertion Library</link>
+  </para>
+</chapter>

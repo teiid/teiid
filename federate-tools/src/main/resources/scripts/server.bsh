@@ -1,0 +1,214 @@
+/**
+ * This is connection helper to a MetaMatrix Server using JDBC
+ */
+
+source(getResource("/scripts/jdbc.bsh"));
+source(getResource("/scripts/serveradmin.bsh"));
+
+
+import java.sql.*;
+
+// These values are default values, a user can supply a property file called
+// "connection.properties" those values will replace one below 
+String user_host = InetAddress.getLocalHost().getHostName();
+int user_port = 31000;
+String user_id = "metamatrixadmin";
+String user_pwd = "mm";
+String user_protocol = "mm:"; // colon is important
+String user_driver = "com.metamatrix.jdbc.MMDriver";
+String user_vdb = "BQT";
+
+/**
+ * Connect to the server using the properties specified in the connection.properties file.
+ * use currentConnectionName() to get connection name
+ */
+Connection connect () {
+    return connect(user_host, user_port, user_vdb, user_id, user_pwd);
+}
+
+/**
+ * Connect to the server;  use currentConnectionName() to get connection name
+ * @param host - host name
+ * @param port - port
+ * @param vdb - vdb name 
+ * @param user - user name
+ * @param password - password for the user
+ * @param optional_url - optional URL properties like txnAutoWrap etc. Need to be semi-colon [;] separated.
+ * @return Connection - connection object
+ */
+Connection connect (String host, int port, String vdb, String user, String password, String optional_url) {
+    String contextName = genConnectionName(); 
+    newContext(contextName);
+    String url = "jdbc:metamatrix:"+vdb+"@"+user_protocol+"//"+host+":"+port+";user="+user+";password="+password+";ApplicationName="+contextName;
+    if (optional_url != null && optional_url.length() > 0) {
+        url = url + ";" + optional_url;
+    }
+	com.metamatrix.jdbc.api.Connection mmConn = connectDriver(user_driver, url);
+	currentContext().internalAdmin = mmConn.getAdminAPI();
+    currentContext().internalPrompt = contextName+"["+vdb+"@"+host+"] $ ";
+	return mmConn;
+}
+
+/**
+ * Current Connection Name.
+ */
+String currentConnectionName() {
+    if ((getConnection() != null || currentContext().internalAdmin != null) && currentContext().name != void && currentContext().name != null) {
+        return currentContext().name;
+    }
+    throw new Exception("No Connection exists; or it is not a named connection");
+}
+
+void useConnection(name) {
+    useContext(name); 
+}
+
+/*
+ * Connect to the Server; use currentConnectionName() to get connection name
+ * @param url - complete url for connection
+ */
+Connection connect (String url) {
+    if (url.startsWith("jdbc:metamatrix:")) {
+        String contextName = genConnectionName();
+        newContext(contextName);        
+		com.metamatrix.jdbc.api.Connection mmConn = connectDriver(user_driver, url);    
+        currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
+        currentContext().internalAdmin = mmConn.getAdminAPI();
+		return mmConn;	
+    }
+    else {
+        print("Wrong syntax for the URL.. connection failed");
+    }
+}
+
+/**
+* Get a ServerAdmin connection to the specified server.
+* 
+* @param username
+* @param password
+* @param url - URL in the format "mm://servername:port" or "jdbc:metamatrix:VDB@mm://servername:port".
+*/
+void connectAsAdmin(String username, String password, String url) {
+
+    if (MMURL.isValidServerURL(url)) {
+        String contextName = genConnectionName();
+        newContext(contextName);        
+
+        //url is in "server URL format": connect via ServerAdminFactory
+        currentContext().internalAdmin = ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url);
+        currentContext().internalPrompt = currentConnectionName()+"["+url+"] $ ";
+        
+    } else {
+        String contextName = genConnectionName();
+        newContext(contextName);        
+        
+        //url is in "jdbc URL format": connect via MMServerConnection
+        currentContext().internalConnection = connectDriver("com.metamatrix.jdbc.MMDriver", url, username, password);
+        currentContext().internalAdmin = currentContext().internalConnection.getAdminAPI();
+    }
+}
+
+/***
+ * Connect as Admin using the defaults from connection.properties
+ */
+void connectAsAdmin() {
+    connectAsAdmin(user_id, user_pwd, "mm://"+user_host+":"+user_port);
+}
+
+/**
+ * Disconnect the connection from the server
+ */
+void disconnect() {
+    closeConnection();
+    
+    if (currentContext().internalAdmin != null) {
+        currentContext().internalAdmin.close();
+        currentContext().internalAdmin=null;
+    }  
+    currentContext().internalPrompt = null;
+}
+
+private loadConnectionProperties(String propsFile){
+    Properties p = new Properties();
+    
+    try {
+        p.load(new FileInputStream(propsFile));
+    }catch(e) {
+    }
+    
+    if (p.getProperty("server.host") != null) {
+        user_host = p.getProperty("server.host");
+    }
+
+    if (p.getProperty("server.port") != null) {
+        try {
+        user_port = Integer.parseInt(p.getProperty("server.port"));
+        }catch(e) {
+        }
+    }
+
+    if (p.getProperty("server.username") != null) {
+        user_id = p.getProperty("server.username");
+    }   
+
+    if (p.getProperty("server.password") != null) {
+        user_pwd = p.getProperty("server.password");
+}
+
+    if (p.getProperty("vdb.name") != null) {
+        user_vdb = p.getProperty("vdb.name");
+    }    
+
+    if (p.getProperty("server.optional-url") != null) {
+        user_optional_url = p.getProperty("server.optional-url");
+    }    
+    
+}
+
+//help methods
+
+/**
+ * List all of the methods currently available.
+ */
+void help() {
+    java.util.List urls = new ArrayList();
+    urls.add(getResource("/scripts/adminapi.bsh"));
+    urls.add(getResource("/scripts/serveradmin.bsh"));
+    urls.add(getResource("/scripts/server.bsh"));
+    urls.add(getResource("/scripts/jdbc.bsh"));
+    help(urls);
+}
+
+/**
+ * List the javadoc for method(s) with the specified name.
+ * 
+ * @param methodName
+ *            Name of the method for which to specify javadoc.
+ */
+void help(String methodName) {
+    java.util.List urls = new ArrayList();
+    urls.add(getResource("/scripts/adminapi.bsh"));
+    urls.add(getResource("/scripts/serveradmin.bsh"));
+    urls.add(getResource("/scripts/server.bsh"));
+    urls.add(getResource("/scripts/jdbc.bsh"));
+    help(urls, methodName);
+}
+
+int connCount = 0;
+private synchronized String genConnectionName() {
+    connCount++;
+    return connection_prefix+"-"+connCount;
+}
+
+exit(){
+    for (This ctx:allContexts()) {
+        gotoContext(ctx);
+        disconnect();
+    }    
+    
+    if ( bsh.system.shutdownOnExit != false )
+        System.exit(0);        
+}
+
+// Load the properties
+loadConnectionProperties("connection.properties");

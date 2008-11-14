@@ -1,0 +1,51 @@
+import bsh.This;
+
+//TODO: deprecate the stacking nature of the context and only allow flat?
+
+if(global.scriptContext == void) {
+    global.contextMap = new HashMap();
+    global.flatContextMap = new HashMap();    
+    global.contextMap.put(Thread.currentThread(), object());    
+}
+
+This newContext() {
+    newContext = object();
+    parent = global.contextMap.get(Thread.currentThread());    
+    newContext.parentContext = parent;    
+    global.contextMap.put(Thread.currentThread(), newContext);
+    return newContext;
+}
+
+void parentContext() {
+    if(currentContext().parentContext != void && currentContext().parentContext != null) {
+        gotoContext(currentContext().parentContext);
+    }
+}
+
+void gotoContext(This context) {
+    global.contextMap.put(Thread.currentThread(), context);
+}
+
+This currentContext() {
+    return global.contextMap.get(Thread.currentThread());
+}
+
+// Named contexts.
+This newContext(name) {
+    ctx = newContext();
+    currentContext().name = name;
+    global.flatContextMap.put(name, ctx);
+    return ctx;
+}
+
+void useContext(name) {
+    for (This ctx:global.flatContextMap.values()) {
+        if (ctx.name != void && ctx.name.equals(name)) {
+            return gotoContext(ctx);
+        }
+    }
+}
+
+Collection allContexts() {
+    return global.flatContextMap.values();
+}

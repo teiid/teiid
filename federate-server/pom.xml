@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-server</artifactId>
+  <name>Server</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>Standalone server/cluster infrastructure.</description>
+  
+  <build>
+    <!-- Zips all the .sql files into single file and adds as artifact to the maven repository -->
+  	<plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2-beta-2</version>      
+        <configuration>
+              <descriptors>
+                  <descriptor>src/assembly/repository-sql.xml</descriptor>
+              </descriptors>
+              <outputDirectory>target/distribution</outputDirectory>
+              <workDirectory>target/assembly/work</workDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase> 
+            <goals>
+              <goal>attached</goal> 
+            </goals>
+          </execution>
+        </executions>        
+      </plugin>      
+    </plugins>
+  </build>
+  
+  <dependencies>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-metadata</artifactId>
+    </dependency>
+    
+    <!-- this dependency can easily be removed -->
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-txn-jbossts</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+      <type>test-jar</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-internal</artifactId>
+      <type>test-jar</type>
+    </dependency>
+            
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-metadata</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+    	<groupId>com.google.code.guice</groupId>
+		<artifactId>guice</artifactId>
+    </dependency>
+    
+    <dependency>
+		<groupId>jboss</groupId>
+   		<artifactId>jboss-cache</artifactId>    
+    </dependency>    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-cache-jbosscache</artifactId>
+    </dependency>
+  </dependencies>
+  
+</project>

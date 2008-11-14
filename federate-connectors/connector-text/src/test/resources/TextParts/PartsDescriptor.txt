@@ -1,0 +1,19 @@
+Parts.PARTS.location = src/test/resources/TextParts/TextParts.csv
+Parts.PARTS.qualifier = "
+Parts.PARTS.delimiter = ,
+Parts.PARTS.skipHeaderLines = 1
+
+Parts.PARTS_NoNameInSource.location = src/test/resources/TextParts/TextParts.csv
+Parts.PARTS_NoNameInSource.qualifier = "
+Parts.PARTS_NoNameInSource.delimiter = ,
+Parts.PARTS_NoNameInSource.skipHeaderLines = 1
+
+Parts.PARTS_AlphaNameInSource.location = src/test/resources/TextParts/TextParts.csv
+Parts.PARTS_AlphaNameInSource.qualifier = "
+Parts.PARTS_AlphaNameInSource.delimiter = ,
+Parts.PARTS_AlphaNameInSource.skipHeaderLines = 1
+
+Parts.PARTS_AlphaDiffNameInSource.location = src/test/resources/TextParts/TextParts2.csv
+Parts.PARTS_AlphaDiffNameInSource.qualifier = "
+Parts.PARTS_AlphaDiffNameInSource.delimiter = ,
+Parts.PARTS_AlphaDiffNameInSource.skipHeaderLines = 1

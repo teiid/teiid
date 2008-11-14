@@ -1,0 +1,64 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.client;
+
+import java.lang.reflect.Method;
+
+import com.metamatrix.admin.api.exception.AdminComponentException;
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+
+public class ExceptionUtil {
+	
+	public static Throwable convertException(Method method, Throwable exception) {
+		boolean canThrowComponent = false;
+		boolean canThrowAdmin = false;
+		boolean canThrowXATransactionException = false;
+        Class[] exceptionClasses = method.getExceptionTypes();
+        for (int i = 0; i < exceptionClasses.length; i++) {
+			if (exception.getClass().isAssignableFrom(exceptionClasses[i])) {
+				return exception;
+			}
+			canThrowAdmin |= AdminException.class == exceptionClasses[i];
+			canThrowComponent |= MetaMatrixComponentException.class == exceptionClasses[i];
+			canThrowXATransactionException |= XATransactionException.class == exceptionClasses[i];
+		}
+        if (canThrowAdmin) {
+        	return new AdminComponentException(exception.getMessage());
+        }
+        if (canThrowComponent) {
+        	return new MetaMatrixComponentException(exception);
+        }
+        if (canThrowXATransactionException) {
+        	return new XATransactionException(exception);
+        }
+        if (RuntimeException.class.isAssignableFrom(exception.getClass())) {
+        	return exception;
+        }
+        return new MetaMatrixRuntimeException(exception);
+	}
+}

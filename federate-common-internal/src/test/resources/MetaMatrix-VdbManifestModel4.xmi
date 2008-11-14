@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:vdb="http://www.metamatrix.com/metamodels/VirtualDatabase">
+  <vdb:VirtualDatabase xmi:uuid="mmuuid:698cda02-5479-1f93-8b1e-9e2dfc4e3733" name="MyVdb" uuid="mmuuid:698cda02-5479-1f93-8b1e-9e2dfc4e3733" timeLastChanged="2005-07-25T00:00:00.000-06:00" timeLastProduced="2005-07-25T00:00:00.000-06:00" timeLastChangedAsDate="2005-07-25T00:00:00.000-0500" timeLastProducedAsDate="2005-07-25T00:00:00.000-0500">
+    <markers xmi:uuid="mmuuid:71003340-5479-1f93-8b1e-9e2dfc4e3733" severity="WARNING" message="The VDB has no models" target="MyVdb"/>
+    <nonModels xmi:uuid="mmuuid:6a71bbc1-5479-1f93-8b1e-9e2dfc4e3733" name="SampleRelational.xmi" path="/ProjectForSimpleVdb/SampleRelational.xmi" checksum="2645090403"/>
+  </vdb:VirtualDatabase>
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:698cda01-5479-1f93-8b1e-9e2dfc4e3733" primaryMetamodelUri="http://www.metamatrix.com/metamodels/VirtualDatabase"/>
+</xmi:XMI>

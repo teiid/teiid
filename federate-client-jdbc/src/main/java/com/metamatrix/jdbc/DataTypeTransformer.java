@@ -1,0 +1,234 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.jdbc;
+
+import java.math.BigDecimal;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
+
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
+
+/**
+ * <p>This class is used to transform objects into desired data types. The static
+ * method on this class are used by Metadatresults, ResultsWrapper and
+ * MMCallableStatement classes.</p>
+ */
+final class DataTypeTransformer {
+
+    // Prevent instantiation
+    private DataTypeTransformer() {}
+
+    /**
+     * Gets an object value and transforms it into a java.math.BigDecimal object.
+     * @param value, the object to be transformed
+     * @return a BigDecimal object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final BigDecimal getBigDecimal(Object value) throws SQLException {
+    	return transform(value, BigDecimal.class, "BigDecimal"); //$NON-NLS-1$
+    }
+    
+    static final <T> T transform(Object value, Class<T> type, String typeName) throws SQLException {
+    	return transform(value, type, type, typeName);
+    }
+    
+    static final <T> T transform(Object value, Class<T> type, Class runtimeType, String typeName) throws SQLException {
+    	if (value == null || type.isAssignableFrom(value.getClass())) {
+    		return (T)value;
+    	}
+    	try {
+    		return (T)DataTypeManager.transformValue(value, runtimeType);
+    	} catch (TransformationException e) {
+            throw createConversionError(value, typeName, e); //$NON-NLS-1$
+    	} 
+    }
+    
+    private static MMSQLException createConversionError(Object value, String type, TransformationException e) {
+        String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", type, value); //$NON-NLS-1$
+        return MMSQLException.create(e, msg);        
+    }
+    
+    /**
+     * Gets an object value and transforms it into a java.lang.Boolean object.
+     * @param value, the object to be transformed
+     * @return a Boolean object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Boolean getBoolean(Object value) throws SQLException {
+    	return transform(value, Boolean.class, "Boolean"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Byte object.
+     * @param value, the object to be transformed
+     * @return a Byte object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Byte getByte(Object value) throws SQLException {
+    	return transform(value, Byte.class, "Byte"); //$NON-NLS-1$
+    }
+    
+    static final byte[] getBytes(Object value) throws SQLException {
+        if (value == null) {
+            return null;
+        } else if (value instanceof byte[]) {
+        	return (byte[])value;
+        } else if (value instanceof Blob) {
+            Blob blob = (Blob)value;
+            long length = blob.length();
+            if (length > Integer.MAX_VALUE) {
+                throw new MMSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.blob_too_big")); //$NON-NLS-1$
+            }
+            return blob.getBytes(1, (int)length);
+        }
+        throw new MMSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.cannot_get_bytes")); //$NON-NLS-1$
+    }
+    
+    static final Character getCharacter(Object value) throws SQLException {
+    	return transform(value, Character.class, "Character"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.sql.Date object.
+     * @param value, the object to be transformed
+     * @param Calendar object to be used to construct the Date object.
+     * @return a Date object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Date getDate(Object value) throws SQLException {
+    	return transform(value, Date.class, "Date"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Double object.
+     * @param value, the object to be transformed
+     * @return a Doublr object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Double getDouble(Object value) throws SQLException {
+    	return transform(value, Double.class, "Double"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Float object.
+     * @param value, the object to be transformed
+     * @return a Float object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Float getFloat(Object value) throws SQLException {
+    	return transform(value, Float.class, "Float"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Integer object.
+     * @param value, the object to be transformed
+     * @return a Integer object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Integer getInteger(Object value) throws SQLException {
+    	return transform(value, Integer.class, "Integer"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Long object.
+     * @param value, the object to be transformed
+     * @return a Long object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Long getLong(Object value) throws SQLException {
+    	return transform(value, Long.class, "Long"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.lang.Short object.
+     * @param value, the object to be transformed
+     * @return a Short object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Short getShort(Object value) throws SQLException {
+    	return transform(value, Short.class, "Short"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.sql.Time object.
+     * @param value, the object to be transformed
+     * @param Calendar object to be used to construct the Time object.
+     * @return a Time object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Time getTime(Object value) throws SQLException {
+    	return transform(value, Time.class, "Time"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.sql.Timestamp object.
+     * @param value, the object to be transformed
+     * @param Calendar object to be used to construct the Timestamp object.
+     * @return a Timestamp object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Timestamp getTimestamp(Object value) throws SQLException {
+    	return transform(value, Timestamp.class, "Timestamp"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.sql.Timestamp object.
+     * @param value, the object to be transformed
+     * @param Calendar object to be used to construct the Timestamp object.
+     * @return a Timestamp object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Blob getBlob(Object value) throws SQLException {
+    	return transform(value, Blob.class, DefaultDataClasses.BLOB, "Blob"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a java.sql.Timestamp object.
+     * @param value, the object to be transformed
+     * @param Calendar object to be used to construct the Timestamp object.
+     * @return a Timestamp object
+     * @throws SQLException if failed to transform to the desired datatype
+     */
+    static final Clob getClob(Object value) throws SQLException {
+    	return transform(value, Clob.class, DefaultDataClasses.CLOB, "Clob"); //$NON-NLS-1$
+    }
+
+    /**
+     * Gets an object value and transforms it into a SQLXML object.
+     * @param value, the object to be transformed
+     * @return a SQLXML object
+     * @throws SQLException if failed to transform to the desired datatype
+     */    
+    static final SQLXML getSQLXML(Object value) throws SQLException {
+    	return transform(value, SQLXML.class, DefaultDataClasses.XML, "SQLXML"); //$NON-NLS-1$
+    }    
+}

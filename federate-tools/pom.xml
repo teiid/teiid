@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-tools</artifactId>
+  <name>Tools</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>This project contains tools such as MMAdmin.</description>
+  <dependencies>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>beanshell</groupId>
+      <artifactId>bsh</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+</project>

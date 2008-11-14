@@ -1,0 +1,106 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.util;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+/**
+ */
+public class TestWSDLServletUtil extends TestCase {
+	
+	public static String HTTP = "http";   //$NON-NLS-1$
+	public static String HTTPS = "https"; //$NON-NLS-1$
+
+    public TestWSDLServletUtil(String name) {
+        super(name);
+    }
+
+    public void testGetMMSAPIUrlAllNullServerNameSecure() {
+        String url = WSDLServletUtil.getSqlQueryWebServiceUrl(null, true);
+        assertEquals("https://null:8443/metamatrix-soap/services/SqlQueryWebService?wsdl", url); //$NON-NLS-1$
+    }
+    
+    public void testGetMMSAPIUrlAllNullServerNameNonSecure() {
+        String url = WSDLServletUtil.getSqlQueryWebServiceUrl(null, false);
+        assertEquals("http://null:8080/metamatrix-soap/services/SqlQueryWebService?wsdl", url); //$NON-NLS-1$
+    }
+    
+    public void testGetMMSAPIUrlValidParametersSecure() {
+        String url = WSDLServletUtil.getSqlQueryWebServiceUrl("slntmm01",true);  //$NON-NLS-1$
+        assertEquals("https://slntmm01:8443/metamatrix-soap/services/SqlQueryWebService?wsdl", url); //$NON-NLS-1$
+    }
+    
+    public void testGetMMSAPIUrlValidParametersNonSecure() {
+        String url = WSDLServletUtil.getSqlQueryWebServiceUrl("slntmm01",false); //$NON-NLS-1$
+        assertEquals("http://slntmm01:8080/metamatrix-soap/services/SqlQueryWebService?wsdl", url); //$NON-NLS-1$
+    }
+    
+    public void testFormatUrlValidParametersNonSecure() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mm://chicago:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTP,"chicago","8080",serverURLs,"testVDB","1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+        assertEquals("http://chicago:8080/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mm://chicago:31000&VDBName=testVDB&VDBVersion=1", url); //$NON-NLS-1$
+    }
+    
+    public void testFormatUrlValidParametersSecure() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mms://chicago:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTPS,"chicago","8443",serverURLs,"testVDB","1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+        assertEquals("https://chicago:8443/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mms://chicago:31000&VDBName=testVDB&VDBVersion=1", url); //$NON-NLS-1$
+    }
+    
+    public void testFormatUrlValidParametersSecureNoPort() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mms://chicago:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTPS,"chicago",null,serverURLs,"testVDB","1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        assertEquals("https://chicago/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mms://chicago:31000&VDBName=testVDB&VDBVersion=1", url); //$NON-NLS-1$
+    }
+
+    public void testFormatUrlValidParametersSecureNoPortNoVdbVersion() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mms://chicago:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTPS,"chicago",null,serverURLs,"testVDB",null); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("https://chicago/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mms://chicago:31000&VDBName=testVDB", url); //$NON-NLS-1$
+    }
+
+    public void testFormatUrlValidParametersSecureNoVdbVersion() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mms://chicago:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTPS,"chicago","8443",serverURLs,"testVDB",""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+        assertEquals("https://chicago:8443/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mms://chicago:31000&VDBName=testVDB", url); //$NON-NLS-1$
+    } 
+    
+    public void testFormatUrlMultipleServers() {
+    	List serverURLs = new ArrayList();
+    	serverURLs.add("mm://chicago:31000"); //$NON-NLS-1$
+    	serverURLs.add("boston:31000"); //$NON-NLS-1$
+        String url = WSDLServletUtil.formatURL(HTTP,"chicago","8080",serverURLs,"testVDB","1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+        assertEquals("http://chicago:8080/metamatrix-soap/servlet/ArtifactDocumentService/MetaMatrixDataServices.wsdl?ServerURL=mm://chicago:31000%2Cboston:31000&VDBName=testVDB&VDBVersion=1", url); //$NON-NLS-1$
+    }
+    
+}

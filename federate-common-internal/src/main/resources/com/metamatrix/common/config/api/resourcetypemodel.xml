@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    JBoss, Home of Professional Open Source.
+    Copyright (C) 2008 Red Hat, Inc.
+    Copyright (C) 2000-2007 MetaMatrix, Inc.
+    Licensed to Red Hat, Inc. under one or more contributor 
+    license agreements.  See the copyright.txt file in the
+    distribution for a full listing of individual contributors.	
+    
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+    
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+    
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301 USA.
+
+-->
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<ConfigurationDocument>
+	<Header>
+		<ApplicationCreatedBy>ConfigurationAdministration</ApplicationCreatedBy>
+		<ApplicationVersionCreatedBy>4.2</ApplicationVersionCreatedBy>
+		<UserCreatedBy>Configuration</UserCreatedBy>
+		<ConfigurationVersion>4.2</ConfigurationVersion>
+		<MetaMatrixSystemVersion>4.2</MetaMatrixSystemVersion>
+		<Time>2004-06-30T15:23:53.919-06:00</Time>
+	</Header>
+	<ComponentTypes>
+		<ComponentType Name="Logging" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="TransactionLogging" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="Audit" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="IDGenerator" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="ExtensionSourceManager" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.extensionsource.connection.Factory" DisplayName="Connection Factory" ShortDescription="The factory used to create connections." DefaultValue="com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleTransactionFactory" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="RuntimeMetadata" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.metadata.runtime.connection.Factory" DisplayName="Connection Factory" ShortDescription="The factory used to create connections." DefaultValue="com.metamatrix.metadata.runtime.spi.jdbc.JDBCConnectorFactory" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="AuthorizationService" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="security.authorization.connection.Factory" DisplayName="Connection Factory" ShortDescription="The factory used to create connections." DefaultValue="com.metamatrix.platform.security.authorization.spi.jdbc.JDBCAuthorizationTransactionFactory" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="SessionService" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="security.session.connection.Factory" DisplayName="Connection Factory" ShortDescription="The factory used to create connections." DefaultValue="com.metamatrix.platform.security.session.spi.jdbc.JDBCServiceSessionFactory" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="ConfigurationService" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.common.pooling.resource.name" DisplayName="Connection Pool" ShortDescription="The connection pool assigned to this resource." DefaultValue="JDBC Shared Connection Pool" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.config.connection.Factory" DisplayName="Connection Factory" ShortDescription="The factory used to create connections." DefaultValue="com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="XATransactionManager" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.log_base_dir" DisplayName="Logging Dir" ShortDescription="The relative location to the Host log directory where transaction logs are stored." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="true" IsMasked="false" IsModifiable="false" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.max_timeout" DisplayName="Txn Timeout" ShortDescription="The default timeout (in milliseconds) for transactions." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.max_log_filesize_in_mb" DisplayName="Log File Size(MB)" ShortDescription="Max transaction console log File size" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.max_rolled_log_files" DisplayName="Max Log Files" ShortDescription="The Maximum number of rolled console log files to keep" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.separate_log" DisplayName="Separate Log" ShortDescription="Merge Txn Log with process log" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.xatxnmgr.txnstatus_port" DisplayName="Recovery Port" ShortDescription="Transaction Recovery Port (0-any available port)" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="WebServices" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.webserver.host" DisplayName="WebServer Host" ShortDescription="The WebServer host name." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.webserver.port" DisplayName="WebServer Port" ShortDescription="The WebServer port number." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="JGroups" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="udp.multicast_supported" DisplayName="Multicast Supported" ShortDescription="Indicates if multicast supported." DefaultValue="true" Multiplicity="1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="udp.mcast_messagebus_port" DisplayName="MessageBus Multicast Port" ShortDescription="The multicast port number." DefaultValue="5555" Multiplicity="1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="udp.mcast_jndi_port" DisplayName="JNDI Registry Multicast Port" ShortDescription="The multicast port number." DefaultValue="5556" Multiplicity="1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="udp.mcast_addr" DisplayName="Multicast Address" ShortDescription="The multicast address." DefaultValue="224.30.10.10" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="ping.gossip_host" DisplayName="Ping Host Address" ShortDescription="The host address when multicast is not used." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>				
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="ping.gossip_port" DisplayName="Ping Host Port" ShortDescription="The host port when multicast is not used." DefaultValue="5555" Multiplicity="1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="ping.gossip_refresh" DisplayName="Ping Gossip Refresh" ShortDescription="Indicates how often the gossip server tries to refresh." DefaultValue="15000" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>	
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="ping.gossip_timout" DisplayName="Ping Gossip Timeout" ShortDescription="Indicates how soon the gossip server will timeout." DefaultValue="2000" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>	
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="ping.gossip_initialmembers" DisplayName="Ping Gossip Initial Num Mbrs" ShortDescription="Indicates the initial size of members to be joined." DefaultValue="3" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>	
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="jgroups.other.channel.settings" DisplayName="JGroups Other Settings" ShortDescription="This is the additional settings when creating the JGroups Channel." DefaultValue="MERGE2(min_interval=5000;max_interval=10000):FD_SOCK:VERIFY_SUSPECT(timeout=1500):pbcast.NAKACK(gc_lag=50;retransmit_timeout=300,600,1200,2400,4800):UNICAST(timeout=5000):pbcast.STABLE(desired_avg_gossip=20000):FRAG(frag_size=4096;down_thread=false;up_thread=false):pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=false;print_local_addr=true):pbcast.STATE_TRANSFER" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>	
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="metamatrix.cluster.name" DisplayName="MetaMatrix System Name" ShortDescription="The name of the metamatrix system." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="false" IsPreferred="true"/>
+			</ComponentTypeDefn>					
+			<ChangeHistory>
+				<Property Name="LastChangedBy">ConfigurationStartup</Property>
+				<Property Name="CreatedBy">ConfigurationStartup</Property>
+			</ChangeHistory>
+		</ComponentType>
+		<ComponentType Name="SSL" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.keystore.filename" DisplayName="Keystore Filename" ShortDescription="Name and location of keystore file." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.keystore.Password" DisplayName="Password" ShortDescription="Keystore Password" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="true" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.keystoretype" DisplayName="KeyStore Type" ShortDescription="Keystore Type" DefaultValue="JKS" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.protocol" DisplayName="SSL Protocol" ShortDescription="SLL Protocol" DefaultValue="SSLv3" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.keymanagementalgorithm" DisplayName="Key Management Algorithm" ShortDescription="Key Management Protocol" DefaultValue="SunX509" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.truststore.filename" DisplayName="TrustStore Filename" ShortDescription="Name and location of truststore file." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.truststore.Password" DisplayName="TrustStore Password" ShortDescription="TrustStore Password" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="true" IsModifiable="true" IsPreferred="true"/>
+			</ComponentTypeDefn>			
+			<ComponentTypeDefn Deprecated="false">
+				<PropertyDefinition Name="com.metamatrix.ssl.authenticationMode" DisplayName="Authentication Mode" ShortDescription="Prefered authentication mode" DefaultValue="1-way" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true">
+			    	<AllowedValue>anonymous</AllowedValue>
+                    <AllowedValue>1-way</AllowedValue>
+                    <AllowedValue>2-way</AllowedValue>
+				</PropertyDefinition>
+			</ComponentTypeDefn>			
+		</ComponentType>
+	</ComponentTypes>
+
+</ConfigurationDocument>
+

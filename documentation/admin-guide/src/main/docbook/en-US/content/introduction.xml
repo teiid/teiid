@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="introduction">
+  <title>Introduction Federate Admin Shell</title>
+  <sect1>
+    <title>Introduction to MMAdmin</title>
+    <para>
+      MMAdmin is a script based programing environment that enables user to access, monitor and control MetaMatrix
+      Server and MMQuery environments. This tool is built using programming language called BeanShell (
+      <ulink url="http://beanshell.org/">http://beanshell.org</ulink>
+      ). MMAdmin can be used in ad-hoc scripting, or to run pre-defined scripts. It is not a graphical tool; it's a
+      command line driven environment.
+    </para>
+    <orderedlist>
+      <listitem>
+        <para>It is a fully functional programming environment with resource flow control and exception
+          management. Under the covers it is a fully functional Java programming environment.</para>
+      </listitem>
+      <listitem>
+        <para>It is an Administrative tool. The user can connect to a running MetaMatrix Server and invoke any of
+          the Admin API methods, such as "addVDB" or "stopConnector", to control MetaMatrix System just like using
+          Console. Since, this is script driven, these tasks can be automated and re-run at a later time.</para>
+      </listitem>
+      <listitem>
+        <para>It is a data access tool. The user can connect to a VDB, issue any SQL commands, and view the
+          results of the query.</para>
+      </listitem>
+      <listitem>
+        <para>It is a migration tool. This can be used to develop scripts like moving the Virtual Databases
+          (VDB), Connector Bindings, and Configuration from one development environment to another. This will
+          enable users to test and automate their migration scripts before production deployments.</para>
+      </listitem>
+      <listitem>
+        <para>
+          It is a testing tool. The JUnit (
+          <ulink url="http://junit.org/">http://junit.org</ulink>
+          ) test framework is built into it. User can write regression tests for checking system health, or data
+          integrity that can be used to validate a system functionality automatically instead of manual
+          verification by QA personnel.
+        </para>
+      </listitem>
+    </orderedlist>
+    <sect2>
+      <title>Where can you find MMAdmin?</title>
+      Where can you find MMAdmin
+      <para>MMAdmin is bundled with the MetaMatrix under “tools” package in "mmadmin.tar" file. Untar this
+        file to any directory using WinZip or tar command. Once you have unzipped the tar file, in root directory
+        you will find “mmadmin” executable script to invoke the tool.</para>
+      <para>Windows: Double click or execute "mmadmin.cmd"</para>
+      <para>*nix: Execute the "mmadmin" script</para>
+      <para>to invoke MMAdmin. This will initialize the shell and present you with a prompt:</para>
+      <programlisting><![CDATA[      
+          mmadmin $
+      ]]></programlisting>       
+      <para>Note:  JDBC client API jar files are required on the same machine in order to successfully invoke
+        MMAdmin. Usually these jar files are found in “Server” or “Console” installation directories under “client”
+        directory.</para>
+      <para />
+    </sect2>
+  </sect1>
+</chapter>

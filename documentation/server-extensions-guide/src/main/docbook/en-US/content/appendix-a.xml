@@ -1,0 +1,48 @@
+<appendix id="advanced_topics">
+  <title>Advanced Topics</title>
+  <sect1>
+    <title>Authentication Interceptor</title>
+    <para>In some circumstances a trusted payload may be applicable to authenticating in several membership
+      domains or may be a secondary authentication method for a built-in LDAP membership domain.  In these
+      situations a custom membership domain (intercepting domain) may be introduced at the beginning of the domain
+      list to authenticate into other domains.  To achieve this, the SuccessfulAuthenticationToken returned by the
+      intercepting domain should contain a fully qualified user name to a target domain.  </para>
+    <para />
+    <para>The interceptor domain may be solely focused on authentication.  If it only authenticates into other
+      domains, then the interceptor domain may provide dummy implementations of the getGroupNames and
+      getGroupNamesforUser methods.</para>
+  </sect1>
+  <sect1>
+    <title>Deployment Considerations</title>
+    <para>Membership domains are not individual services that can be independently configured within a
+      cluster, rather they are dependent upon Membership Service instances.  Each installed membership domain
+      instance will be active on each MMProcess with a Membership Service.  </para>
+    <para />
+    <para>NOTE: Since the Membership Service cannot be restarted changes to membership domain configurations
+      require bouncing the MetaMatrix Server before taking effect.  It follows also that if a custom membership is
+      not written to recover gracefully from connectivity or other environmental issues a server restart is
+      required to re-initialize the membership domain.</para>
+  </sect1>
+  <sect1>
+    <title>Migration From Previous Versions</title>
+    <para>It is recommended that customers who have utilized the internal JDBC membership domain from releases
+      prior to MetaMatrix 5.5 migrate those users and groups to an LDAP compliant directory server.  Several free
+      and open source directory servers can be used including:</para>
+    <para>
+      The Fedora Directory Server
+      <ulink url="http://directory.fedoraproject.org/">http://directory.fedoraproject.org/</ulink>
+    </para>
+    <para>
+      Open LDAP
+      <ulink url="http://www.openldap.org/">http://www.openldap.org/</ulink>
+    </para>
+    <para>
+      Apache Directory Server
+      <ulink url="http://directory.apache.org/">http://directory.apache.org/</ulink>
+    </para>
+    <para>Implementations of the MembershipDomainInterface interface from releases prior to
+      MetaMatrix 5.5 will need to be manually migrated to the new MembershipDomain interface. </para>
+    <para>If there are additional questions or the need for guidance in the migration process, please contact
+      technical support.</para>
+  </sect1>
+</appendix>

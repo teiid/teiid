@@ -1,0 +1,17 @@
+<deployment
+    xmlns="http://xml.apache.org/axis/wsdd/"
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+
+  <!-- Services from StockQuotes WSDL service -->
+
+  <service name="StockQuotes" provider="java:RPC" style="rpc" use="literal">
+      <parameter name="wsdlTargetNamespace" value="http://service.soap.xmlsource.connector.metamatrix.com/"/>
+      <parameter name="wsdlServiceElement" value="StockQuotes"/>
+      <parameter name="schemaQualified" value="http://service.soap.xmlsource.connector.metamatrix.com/"/>
+      <parameter name="wsdlServicePort" value="StockQuotesSoap"/>
+      <parameter name="className" value="com.metamatrix.connector.xmlsource.soap.service.StockQuotes"/>
+      <parameter name="wsdlPortType" value="StockQuotesSoap"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <parameter name="allowedMethods" value="*"/>
+  </service>
+</deployment>

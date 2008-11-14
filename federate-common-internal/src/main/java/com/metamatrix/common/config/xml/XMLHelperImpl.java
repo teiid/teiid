@@ -1,0 +1,2211 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.config.xml;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.jdom.Element;
+
+import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.api.ComponentDefn;
+import com.metamatrix.common.config.api.ComponentObject;
+import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeDefn;
+import com.metamatrix.common.config.api.ComponentTypeID;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationInfo;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
+import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.ConnectorBindingID;
+import com.metamatrix.common.config.api.ConnectorBindingType;
+import com.metamatrix.common.config.api.DeployedComponent;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.ProductServiceConfig;
+import com.metamatrix.common.config.api.ProductServiceConfigID;
+import com.metamatrix.common.config.api.ProductType;
+import com.metamatrix.common.config.api.ProductTypeID;
+import com.metamatrix.common.config.api.ResourceDescriptor;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.api.ServiceComponentDefnID;
+import com.metamatrix.common.config.api.SharedResource;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
+import com.metamatrix.common.config.model.BasicComponentObject;
+import com.metamatrix.common.config.model.BasicComponentType;
+import com.metamatrix.common.config.model.BasicUtil;
+import com.metamatrix.common.config.util.ConfigurationPropertyNames;
+import com.metamatrix.common.config.util.InvalidConfigurationElementException;
+import com.metamatrix.common.namedobject.BaseID;
+import com.metamatrix.common.object.Multiplicity;
+import com.metamatrix.common.object.MultiplicityExpressionException;
+import com.metamatrix.common.object.PropertyDefinition;
+import com.metamatrix.common.object.PropertyDefinitionImpl;
+import com.metamatrix.common.object.PropertyType;
+import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.MetaMatrixProductVersion;
+//import com.metamatrix.common.util.LogCommonConstants;
+/**
+* This helper class is used to create JDOM XML Elements from configuration objects
+* and to create Configuration objects from JDOM XML Elements.
+*
+*
+*  NOTE - The helper cannot have any calls to LogManager because the bootstrapping of
+* 		 	the CurrentConfiguration
+*           uses this class and the CurrentConfiguration has to come up before
+*           logging is available.
+*
+*/
+public class XMLHelperImpl  implements XMLHelper, ConfigurationPropertyNames{
+
+
+    
+    /**
+    * This method is used to create a Configuration JDOM Element from a
+    * Configuration object.
+    *
+    * @param configuration the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createConfigurationElement(Configuration configuration) {
+        // first we set up the organizational structure of a configuration
+        Assertion.isNotNull(configuration);
+        Element productServiceConfigsElement = new Element(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ELEMENT);
+        Element serviceDefnsElement = createServiceComponentDefnsElement();
+        Element deployedComponentsElement = new Element(XMLElementNames.Configurations.Configuration.DeployedComponents.ELEMENT);
+        Element vmComponentDefnsElement = new Element(XMLElementNames.Configurations.Configuration.VMComponentDefns.ELEMENT);
+        Element resourcePoolsElement = new Element(XMLElementNames.Configurations.Configuration.ResourcePools.ELEMENT);
+
+
+        Element configElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.ELEMENT, configuration);
+
+//        Element logConfigurationElement = createLogConfigurationElement(configuration.getLogConfiguration());
+
+        configElement.addContent(productServiceConfigsElement);
+        configElement.addContent(serviceDefnsElement);
+        configElement.addContent(deployedComponentsElement);
+        configElement.addContent(vmComponentDefnsElement);
+//        configElement.addContent(logConfigurationElement);
+        configElement.addContent(resourcePoolsElement);
+
+        return configElement;
+    }
+
+    /**
+    * This method is used to create a LogConfiguration JDOM Element from a
+    * LogConfiguration object.
+    *
+    * @param info the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+//    public Element createLogConfigurationElement(LogConfiguration logConfiguration) {
+//        Assertion.isNotNull(logConfiguration);
+//
+//        
+//        Element logConfigurationElement = new Element(XMLElementNames.Configurations.Configuration.LogConfiguration.ELEMENT);
+//        Element propertiesElement = null;
+//        try {
+//            propertiesElement = createPropertiesElement(BasicLogConfiguration.getLogConfigurationProperties(logConfiguration));
+//        	logConfigurationElement.addContent(propertiesElement);
+//
+//        }catch(LogConfigurationException e) {
+//        	String msg = CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0031);
+//        	System.out.println(msg);
+//        }
+//
+//
+//        return logConfigurationElement;
+//        return null;
+//    }
+
+
+    /**
+    * This method is used to create a ConfigurationInfo JDOM Element from a
+    * ConfigurationInfo object.
+    *
+    * @param info the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createConfigurationInfoElement(ConfigurationInfo info) {
+        Assertion.isNotNull(info);
+
+        Element configurationInfoElement = new Element(XMLElementNames.Configurations.Configuration.ConfigurationInfo.ELEMENT);
+
+        Date date = info.getLastChangedDate();
+        if (date != null) {
+            configurationInfoElement.setAttribute(XMLElementNames.Configurations.Configuration.ConfigurationInfo.Attributes.LAST_CHANGED_DATE, date.toString());
+        }
+
+        date = info.getCreationDate();
+        if (date !=null) {
+            configurationInfoElement.setAttribute(XMLElementNames.Configurations.Configuration.ConfigurationInfo.Attributes.CREATION_DATE, date.toString());
+        }
+        return configurationInfoElement;
+    }
+    
+//    public DeployedComponent createDeployedVMComponentDefnx(Element element,
+//                                                           ConfigurationID configID, 
+//                                                           HostID hostID,
+//    //                                                       VMComponentDefnID vmID,
+//    //                                                       ProductServiceConfigID pscID,
+//                                                           ComponentTypeID typeID,
+//                                                           ConfigurationObjectEditor editor) 
+//                                                           throws InvalidConfigurationElementException{
+//              Assertion.isNotNull(element);
+//              Assertion.isNotNull(editor);
+//              Assertion.isNotNull(configID);
+//              Assertion.isNotNull(hostID);
+//   //           Assertion.isNotNull(vmID);
+//              
+//              DeployedComponent component=null;
+//             
+//              if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.Process.ELEMENT)) {
+//                  throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
+//              }
+//                                   
+//              String name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Process.Attributes.NAME);
+////              checkElementValue(name, "NAME", ErrorMessageKeys.CONFIG_ERR_0048);
+//
+//              String componentTypeIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.COMPONENT_TYPE);
+//
+//              checkElementValue(componentTypeIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+//            
+//              
+////              ComponentType type = null;
+////              Iterator it = componentTypeMap.keySet().iterator();
+////              while (it.hasNext() ) {
+////                  ComponentTypeID id = (ComponentTypeID) it.next();
+////                  if (id.getFullName().equals(componentTypeIDString)) {
+////                      type = (ComponentType) componentTypeMap.get(id);
+////                      break;
+////                  }
+////              }
+//
+////              if (type == null) {
+////                  throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, name} ), element);
+////              }  
+//              
+//              VMComponentDefnID vmID = new VMComponentDefnID(configID, hostID, name);
+// //             component = editor.createDeployedVMComponent(name, configID, hostID, vmID, typeID);
+////              createDeployedServiceComponent(name, configID, hostID,vmID, svcid, pscID, (ComponentTypeID) type.getID());
+//              
+//              
+//            return component;  
+//            }
+    
+
+    /**
+    * This method is used to create a DeployedComponent JDOM Element from a
+    * DeployedComponent object.
+    *
+    * @param deployedComponent the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+//    public Element createDeployedComponentElement(DeployedComponent deployedComponent) {
+//        Assertion.isNotNull(deployedComponent);
+//
+//        String vmComponentName = null;
+//        String productConfigName = null;
+//
+//        VMComponentDefnID vmComponentID = deployedComponent.getVMComponentDefnID();
+//        ProductServiceConfigID productConfigID = deployedComponent.getProductServiceConfigID();
+//
+//        Element deployedComponentElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.ELEMENT, deployedComponent);
+//
+//        // we treat these IDs specially because they are optional for Deployed
+//        // Components that are VM's
+//        if (vmComponentID!=null) {
+//            vmComponentName = vmComponentID.getName();
+//            deployedComponentElement.setAttribute(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.VM_COMPONENT_DEFN_ID, vmComponentName);
+//        }
+//
+//        if (productConfigID!=null) {
+//            productConfigName = productConfigID.getName();
+//            deployedComponentElement.setAttribute(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.PRODUCT_SERVICE_CONFIG_ID, productConfigName);
+//        }
+//
+//        BaseID id = deployedComponent.getServiceComponentDefnID();
+//        if (id!=null) {
+//            deployedComponentElement.setAttribute(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID, id.getName());
+//        }
+//
+//        id = deployedComponent.getHostID();
+//        if (id!=null) {
+//            deployedComponentElement.setAttribute(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.HOST_ID, id.getName());
+//        }
+//
+//        return deployedComponentElement;
+//    }
+//
+    /**
+    * This method is used to create a VMComponentDefn JDOM Element from a
+    * VMComponentDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createVMComponentDefnElement(VMComponentDefn defn) {
+        Assertion.isNotNull(defn);
+
+        Element vmComponentDefnElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.ELEMENT, defn);
+        return vmComponentDefnElement;
+    }
+
+    /**
+    * This method is used to create a ServiceComponentDefn JDOM Element from a
+    * ServiceComponentDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createServiceComponentDefnElement(ServiceComponentDefn defn) {
+        Assertion.isNotNull(defn);
+
+        Element serviceComponentDefnElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.ELEMENT, defn);
+        serviceComponentDefnElement.setAttribute(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.QUEUED_SERVICE, new Boolean(defn.isQueuedService()).toString());
+        serviceComponentDefnElement.setAttribute(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.ROUTING_UUID, defn.getRoutingUUID());
+        return serviceComponentDefnElement;
+    }
+
+    /**
+    * This method is used to create a ServiceComponentDefn JDOM Element from a
+    * ServiceComponentDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+//    public Element createServiceComponentDefnElement(ResourceDescriptor defn) {
+//        Assertion.isNotNull(defn);
+//
+//        Element serviceComponentDefnElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.ELEMENT, defn);
+//        return serviceComponentDefnElement;
+//    }
+
+    /**
+    * This method is used to create a ProductServiceConfig JDOM Element from a
+    * ProductServiceConfig object.
+    *
+    * @param config the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createProductServiceConfigElement(ProductServiceConfig config) {
+        Assertion.isNotNull(config);
+
+        Element productServiceConfigElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.ELEMENT, config);
+
+        Iterator iterator = config.getServiceComponentDefnIDs().iterator();
+        while (iterator.hasNext()) {
+            ServiceComponentDefnID id = (ServiceComponentDefnID)iterator.next();
+            boolean isEnabled = config.isServiceEnabled(id);
+
+            Element idElement = createIDElement(XMLElementNames.Configurations.Configuration.ServiceComponentDefnID.ELEMENT, id.getName());
+
+			idElement.setAttribute(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.Attributes.IS_ENABLED, (new Boolean(isEnabled)).toString());
+
+            productServiceConfigElement.addContent(idElement);
+        }
+        return productServiceConfigElement;
+    }
+
+    /**
+    * This method is used to create a ComponentType JDOM Element from a
+    * ComponentType object.
+    *
+    * @param type the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createComponentTypeElement(ComponentType type) {
+        Assertion.isNotNull(type);
+
+        Element componentTypeElement = new Element(XMLElementNames.ComponentTypes.ComponentType.ELEMENT);
+        Iterator iterator = type.getComponentTypeDefinitions().iterator();
+        while (iterator.hasNext()) {
+            ComponentTypeDefn defn = (ComponentTypeDefn)iterator.next();
+            Element componentTypeDefnElement = createComponentTypeDefnElement(defn);
+            Element propertyDefinitionElement = createPropertyDefinitionElement(defn.getPropertyDefinition());
+            componentTypeDefnElement.addContent(propertyDefinitionElement);
+            componentTypeElement.addContent(componentTypeDefnElement);
+        }
+        componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
+        componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
+        componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (new Boolean(type.isDeployable())).toString());
+        componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (new Boolean(type.isDeprecated())).toString());
+        componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (new Boolean(type.isMonitored())).toString());
+
+        // we only add these if they are not null
+        BaseID superID = type.getSuperComponentTypeID();
+        String superIDString;
+        if (superID != null) {
+            superIDString = superID.getName();
+            componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
+
+        }
+
+        BaseID parentID = type.getParentComponentTypeID();
+        String parentIDString;
+        if (parentID!=null)     {
+            parentIDString = parentID.getName();
+            componentTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE, parentIDString);
+
+        }
+
+        Element chgHistoryElement = createChangeHistoryElement(type);
+        componentTypeElement.addContent(chgHistoryElement);
+
+
+        return componentTypeElement;
+    }
+
+    /**
+    * This method is used to create a PropertyDefinition JDOM Element from a
+    * PropertyDefinition object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createPropertyDefinitionElement(PropertyDefinition defn) {
+        Assertion.isNotNull(defn);
+
+
+        Element propertyDefinitionElement = new Element(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
+
+        String name = defn.getName();
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME, name);
+
+        String displayName = defn.getDisplayName();
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME,displayName);
+
+        String shortDescription = defn.getShortDescription();
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION, shortDescription);
+
+
+        String defaultValue;
+        Object value = defn.getDefaultValue();
+        if (value!=null) {
+
+            defaultValue = value.toString();
+            propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE, defaultValue);
+
+        }
+
+        String multiplicity;
+        Multiplicity mult = defn.getMultiplicity();
+        if (mult!=null) {
+            multiplicity = mult.toString();
+            propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY, multiplicity);
+        }
+
+        String propertyType;
+        PropertyType type = defn.getPropertyType();
+        if (type != null) {
+            propertyType = type.getDisplayName();
+            propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE, propertyType);
+        }
+
+        String valueDelimiter = defn.getValueDelimiter();
+        if (valueDelimiter == null) {
+            valueDelimiter = PropertyDefinitionImpl.DEFAULT_DELIMITER;
+        }
+
+        String isConstrainedToAllowedValues = (new Boolean(defn.isConstrainedToAllowedValues())).toString();
+        String isExpert = (new Boolean(defn.isExpert())).toString();
+        String isHidden = (new Boolean(defn.isHidden())).toString();
+        String isMasked = (new Boolean(defn.isMasked())).toString();
+        String isModifiable =(new Boolean(defn.isModifiable())).toString();
+        String isPreferred = (new Boolean(defn.isPreferred())).toString();
+
+
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER, valueDelimiter);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES, isConstrainedToAllowedValues);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT, isExpert);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN, isHidden);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED, isMasked);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE, isModifiable);
+        propertyDefinitionElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED, isPreferred);
+
+        List allowedValues = defn.getAllowedValues();
+        Iterator iterator = allowedValues.iterator();
+        while (iterator.hasNext()) {
+            Element allowedValueElement = new Element(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
+            allowedValueElement.addContent((iterator.next()).toString());
+            propertyDefinitionElement.addContent(allowedValueElement);
+        }
+
+        return propertyDefinitionElement;
+
+    }
+
+    /**
+    * This method is used to create a ComponentTypeDefn JDOM Element from a
+    * ComponentTypeDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createComponentTypeDefnElement(ComponentTypeDefn defn) {
+        Assertion.isNotNull(defn);
+
+        Element componentTypeDefnElement = new Element(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+        componentTypeDefnElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.Attributes.DEPRECATED, (new Boolean(defn.isDeprecated())).toString());
+        return componentTypeDefnElement;
+    }
+
+    /**
+    * This method is used to create a ProductType JDOM Element from a
+    * ProductType object.
+    *
+    * @param type the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createProductTypeElement(ProductType type) {
+        Assertion.isNotNull(type);
+        
+        Element productTypeElement = new Element(XMLElementNames.ProductTypes.ProductType.ELEMENT);
+        
+
+        Iterator iterator = type.getComponentTypeIDs().iterator();
+        while (iterator.hasNext()) {
+            ComponentTypeID id = (ComponentTypeID)iterator.next();
+            Element componentTypeIDElement = createIDElement(XMLElementNames.ComponentTypeID.ELEMENT, id.getName());
+            productTypeElement.addContent(componentTypeIDElement);
+        }
+
+        productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
+        productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
+        productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (new Boolean(type.isDeployable())).toString());
+        productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (new Boolean(type.isDeprecated())).toString());
+        productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (new Boolean(type.isMonitored())).toString());
+
+        // we only add these if they are not null
+        BaseID superID = type.getSuperComponentTypeID();
+        String superIDString;
+        if (superID != null) {
+            superIDString = superID.getName();
+            productTypeElement.setAttribute(XMLElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
+
+        }
+
+
+        Element chgHistoryElement = createChangeHistoryElement(type);
+        productTypeElement.addContent(chgHistoryElement);
+
+
+        return productTypeElement;
+
+    }
+
+    /**
+    * This method is used to create a Host JDOM Element from a
+    * Host object.
+    *
+    * @param host the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createHostElement(Host host) {
+        Assertion.isNotNull(host);
+
+        Element hostElement = createComponentObjectElement(XMLElementNames.Hosts.Host.ELEMENT, host);
+        return hostElement;
+    }
+    
+    
+    public Properties getHeaderProperties(Element element) throws InvalidConfigurationElementException{
+//        Properties props=new Properties();
+        
+        if (!element.getName().equals(XMLElementNames.Header.ELEMENT)) {
+            throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        return XMLHelperUtil.getHeaderProperties(element);
+//        List elements = element.getChildren();
+//        Iterator it = elements.iterator();
+//        while(it.hasNext()) {
+//            final Element e = (Element) it.next();
+//            props.setProperty(e.getName(), e.getText());
+//        }
+        
+//        Element appElement = element.getChild(XMLElementNames.Header.ApplicationCreatedBy.ELEMENT);
+//        if (appElement != null) {
+//            props.setProperty(XMLElementNames.Header.ApplicationCreatedBy.ELEMENT, appElement.getText());
+//        }
+//        
+//        Element appVElement = element.getChild(XMLElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
+//        if (appVElement != null) {
+//            props.setProperty(XMLElementNames.Header.ApplicationVersionCreatedBy.ELEMENT, appVElement.getText());
+//        } else {
+//            throw new InvalidConfigurationElementException("The header section in the configuration does not contain the Application Version Property", element); //$NON-NLS-1$ //$NON-NLS-2$
+// 
+//        }
+//        
+//        Element ucElement = element.getChild(XMLElementNames.Header.UserCreatedBy.ELEMENT);
+//        if (ucElement != null) {
+//            props.setProperty(XMLElementNames.Header.UserCreatedBy.ELEMENT, ucElement.getText());
+//        }    
+//        
+//        Element svElement = element.getChild(XMLElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
+//        if (svElement != null) {
+//            props.setProperty(XMLElementNames.Header.MetaMatrixSystemVersion.ELEMENT, svElement.getText());
+//        } else {
+//            throw new InvalidConfigurationElementException("The header section in the configuration does not contain the MetaMatrix Server Version Element", element); //$NON-NLS-1$ //$NON-NLS-2$            
+//        } 
+//        
+//        Element tElement = element.getChild(XMLElementNames.Header.Time.ELEMENT);
+//        if (tElement != null) {
+//            props.setProperty(XMLElementNames.Header.Time.ELEMENT, tElement.getText());
+//        }         
+        
+        
+//        return props;
+    }
+
+
+    /**
+    * <p>This method is used to create a Header JDOM Element from a
+    * Properties object.  The properties object can contain any of the
+    * following properties that will be included in the header:<p>
+    * <pre>
+    * XMLElementNames.Header.ApplicationCreatedDate.ELEMENT
+    * XMLElementNames.Header.ApplicationVersionCreatedBy.ELEMENT
+    * XMLElementNames.Header.UserName.ELEMENT
+    * XMLElementNames.Header.DocumentTypeVersion.ELEMENT
+    * XMLElementNames.Header.MetaMatrixServerVersion.ELEMENT
+    * XMLElementNames.Header.Time.ELEMENT
+    * <pre>
+    * <p>Any of these properties that are not included in the properties object
+    * will not be included in the header Element that is returned.
+    *
+    * @param props the properties object that contains the values for the Header
+    * @return a JDOM XML Element
+    */
+    public Element createHeaderElement(Properties props) {
+        Assertion.isNotNull(props);
+
+        Element headerElement = new Element(XMLElementNames.Header.ELEMENT);
+        String applicationCreatedByContent = props.getProperty(XMLElementNames.Header.ApplicationCreatedBy.ELEMENT);
+        String applicationVersionCreatedByContent = props.getProperty(XMLElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
+        String userNameContent = props.getProperty(XMLElementNames.Header.UserCreatedBy.ELEMENT);
+        String configVersionContent = props.getProperty(XMLElementNames.Header.ConfigurationVersion.ELEMENT);
+        String serverVersionContent = props.getProperty(XMLElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
+        String timeContent = props.getProperty(XMLElementNames.Header.Time.ELEMENT);
+
+
+        if (configVersionContent !=null) {
+            Element configurationVersion = new Element(XMLElementNames.Header.ConfigurationVersion.ELEMENT);
+            configurationVersion.addContent(configVersionContent);
+            headerElement.addContent(configurationVersion);
+        }        
+        
+        if (applicationCreatedByContent !=null) {
+            Element applicationCreatedBy = new Element(XMLElementNames.Header.ApplicationCreatedBy.ELEMENT);
+            applicationCreatedBy.addContent(applicationCreatedByContent);
+            headerElement.addContent(applicationCreatedBy);
+        }
+
+        if (applicationVersionCreatedByContent != null) {
+            Element applicationVersionCreatedBy = new Element(XMLElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
+            applicationVersionCreatedBy.addContent(applicationVersionCreatedByContent);
+            headerElement.addContent(applicationVersionCreatedBy);
+        }
+
+        if (userNameContent != null) {
+            Element userName = new Element(XMLElementNames.Header.UserCreatedBy.ELEMENT);
+            userName.addContent(userNameContent);
+            headerElement.addContent(userName);
+        }
+
+//        if (documentTypeVersionContent != null) {
+//            Element documentTypeVersion = new Element(XMLElementNames.Header.DocumentTypeVersion.ELEMENT);
+//            documentTypeVersion.addContent(documentTypeVersionContent);
+//            headerElement.addContent(documentTypeVersion);
+//        }
+
+        if (serverVersionContent != null) {
+            Element serverVersion = new Element(XMLElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
+            serverVersion.addContent(serverVersionContent);
+            headerElement.addContent(serverVersion);
+        }
+
+        if (timeContent != null) {
+            Element time = new Element(XMLElementNames.Header.Time.ELEMENT);
+            time.addContent(timeContent);
+            headerElement.addContent(time);
+        }
+        return headerElement;
+
+    }
+
+    private ComponentObject setDateHistory(ComponentObject defn, Element element, ConfigurationObjectEditor editor) {
+
+        String lastChangedBy=null;
+        String lastChangedDate=null;
+        String createdDate=null;
+        String createdBy=null;
+
+        Properties props = getChangeHistoryFromElement(element);
+
+        lastChangedBy = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+        lastChangedDate = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+        createdBy = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+        createdDate = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+
+    	defn = editor.setCreationChangedHistory(defn, createdBy, createdDate);
+    	defn = editor.setLastChangedHistory(defn, lastChangedBy, lastChangedDate);
+
+    	return defn;
+
+    }
+
+    private ComponentType setDateHistory(ComponentType type, Element element, ConfigurationObjectEditor editor) {
+        String lastChangedBy=null;
+        String lastChangedDate=null;
+        String createdDate=null;
+        String createdBy=null;
+
+        Properties props = getChangeHistoryFromElement(element);
+
+	    lastChangedBy = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+    	lastChangedDate = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+        createdBy = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+	    createdDate = props.getProperty(XMLElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+
+
+    	type = editor.setCreationChangedHistory(type, createdBy, createdDate);
+    	type = editor.setLastChangedHistory(type, lastChangedBy, lastChangedDate);
+
+    	return type;
+
+    }
+
+
+     private Properties getChangeHistoryFromElement(Element parentElement) {
+
+    	Element propertiesElement = parentElement.getChild(XMLElementNames.ChangeHistory.ELEMENT);
+
+    	if (propertiesElement == null ) {
+        	return new Properties();
+    	}
+
+		Properties props = new Properties();
+
+        List properties = propertiesElement.getChildren(XMLElementNames.ChangeHistory.Property.ELEMENT);
+		if (properties == null) {
+			return new Properties();
+		}
+        Iterator iterator = properties.iterator();
+        while (iterator.hasNext()) {
+            Element propertyElement = (Element)iterator.next();
+            String propertyName = propertyElement.getAttributeValue(XMLElementNames.ChangeHistory.Property.Attributes.NAME);
+            String propertyValue = propertyElement.getText();
+
+            props.setProperty(propertyName, (propertyValue!=null?propertyValue:"")); //$NON-NLS-1$
+
+        }
+        return props;
+
+    }
+
+
+    private Element createChangeHistoryElement(ComponentType obj) {
+
+// call to create the structure for the properties
+       Element changeHistoryElement = new Element(XMLElementNames.ChangeHistory.ELEMENT);
+
+        String lastChangedBy=null;
+        String lastChangedDate=null;
+        String createdDate=null;
+        String createdBy=null;
+
+       	lastChangedBy = obj.getLastChangedBy();
+      	lastChangedDate = ((BasicComponentType) obj).getLastChangedDateString();
+
+        createdBy = obj.getCreatedBy();
+        createdDate = ((BasicComponentType) obj).getCreatedDateString();
+
+
+		if (lastChangedBy == null || lastChangedBy.trim().length() == 0) {
+
+		} else {
+
+        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+    	}
+
+		if (lastChangedDate == null) {
+    	} else {
+
+			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+		}
+
+    	if (createdBy == null || createdBy.trim().length() == 0) {
+    	} else {
+
+        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+    	}
+
+    	if (createdDate == null) {
+        } else {
+			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.CREATION_DATE,createdDate);
+    	}
+
+    	return changeHistoryElement;
+
+
+    }
+
+    private Element createChangeHistoryElement(ComponentObject obj) {
+
+        Element changeHistoryElement = new Element(XMLElementNames.ChangeHistory.ELEMENT);
+
+        String lastChangedBy=null;
+        String lastChangedDate=null;
+        String createdDate=null;
+        String createdBy=null;
+
+       	lastChangedBy = obj.getLastChangedBy();
+      	lastChangedDate = ((BasicComponentObject) obj).getLastChangedDateString();
+
+        createdBy = obj.getCreatedBy();
+        createdDate = ((BasicComponentObject) obj).getCreatedDateString();
+
+
+		if (lastChangedBy == null || lastChangedBy.trim().length() == 0) {
+
+		} else {
+
+        changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+		}
+
+		if (lastChangedDate == null) {
+
+    	} else {
+
+			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+
+		}
+
+    	if (createdBy == null || createdBy.trim().length() == 0) {
+    	} else {
+
+        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+    	}
+
+    	if (createdDate == null) {
+        } else {
+			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
+    	}
+
+    	return changeHistoryElement;
+    }
+
+
+    /**
+    * This method is used to create a Properties JDOM Element from a
+    * Properties object.
+    *
+    * @param props the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createPropertiesElement(Properties props) {
+        Assertion.isNotNull(props);
+
+        Properties sortprops = PropertiesUtils.sort(props);
+        Element propertiesElement = new Element(XMLElementNames.Properties.ELEMENT);
+        Enumeration enumeration = sortprops.propertyNames();
+        while (enumeration.hasMoreElements()) {
+            String propName = (String)enumeration.nextElement();
+            propertiesElement = addPropertyElement(propertiesElement, propName, props.getProperty(propName));
+        }
+
+        return propertiesElement;
+    }
+
+
+    private Element addPropertyElement(Element propertiesElement, String propName, String propValue) {
+            Element property = new Element(XMLElementNames.Properties.Property.ELEMENT);
+            property.setAttribute(XMLElementNames.Properties.Property.Attributes.NAME, propName);
+            property.addContent(propValue);
+            propertiesElement.addContent(property);
+            return propertiesElement;
+
+	}
+
+
+
+    /**
+    * This method is used to create a Configuration ID JDOM Element from a
+    * Configuration ID object.
+    *
+    * @param type the ID type to be created. @see XMLElementNames.Configurations.Configuration.XXXID.ELEMENT for valid values
+    * @param name the calue of the name attribute of the ID element to create.
+    * @return a JDOM XML Element
+    */
+    public Element createIDElement(String type, String name) {
+
+        Element idElement = new Element(type);
+        idElement.setAttribute(XMLElementNames.ID.Attributes.NAME, name);
+        return idElement;
+    }
+
+    /**
+    * This method is used to create a Configurations JDOM Element from a
+    * Configuration ID object.  This element is for structural organization
+    * only and does not represent any real configuration object.
+    *
+    * @return a JDOM XML Element
+    */
+    public Element createConfigurationsElement() {
+        return new Element(XMLElementNames.Configurations.ELEMENT);
+    }
+
+    /**
+    * This method is used to create a Hosts JDOM Element from a
+    * Configuration ID object.  This element is for structural organization
+    * only and does not represent any real configuration object.
+    *
+    * @return a JDOM XML Element
+    */
+    public Element createHostsElement() {
+        return new Element(XMLElementNames.Hosts.ELEMENT);
+    }
+
+    /**
+    * This method is used to create a ServiceComponentDefns JDOM Element.
+    * This element is for structural organization
+    * only and does not represent any real configuration object.
+    *
+    * @return a JDOM XML Element
+    */
+    public Element createServiceComponentDefnsElement() {
+        return new Element(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ELEMENT);
+    }
+
+    /**
+    * This method is used to create a ComponentTypes JDOM Element from a
+    * Configuration ID object.  This element is for structural organization
+    * only and does not represent any real configuration object.
+    *
+    * @return a JDOM XML Element
+    */
+    public Element createComponentTypesElement() {
+        return new Element(XMLElementNames.ComponentTypes.ELEMENT);
+    }
+
+    public Element createProductTypesElement() {
+        return new Element(XMLElementNames.ProductTypes.ELEMENT);
+    }
+    
+    public Element createProductServiceConfigsElement()  {
+        throw new UnsupportedOperationException("createProductServiceConfigsElement is unsupported in the 3.0 version of configuration"); //$NON-NLS-1$
+        
+    }
+    
+
+    public Element createConnectorBindingsElement() {
+        return new Element(XMLElementNames.ConnectorComponents.ELEMENT);
+    }
+
+
+    /**
+    * This method is used to create a root JDOM Element.
+    * This element is for structural organization
+    * only and does not represent any real configuration object.
+    *
+    * @return a JDOM XML Element
+    */
+    public Element createRootConfigurationDocumentElement() {
+        return new Element(XMLElementNames.ELEMENT);
+    }
+
+
+    /**
+    * This method is used to create a ComponentObject JDOM Element from a
+    * ComponentObject object.
+    *
+    * @param type The subclass type of the configuration object to be created.
+    * @see XMLElementNames.Configurations.Configuration.XXXX.ELEMENT
+    * @param componentObject the object to create the Element for.
+    * @return a JDOM XML Element
+    */
+    private Element createComponentObjectElement(String type, ComponentObject componentObject) {
+        Element componentObjectElement = new Element(type);
+        componentObjectElement.setAttribute(XMLElementNames.ComponentObject.Attributes.NAME, componentObject.getName());
+        BaseID id = componentObject.getComponentTypeID();
+        if (id !=null) {
+            componentObjectElement.setAttribute(XMLElementNames.ComponentObject.Attributes.COMPONENT_TYPE, id.getName());
+        }
+
+			// this will add the changed history information
+		Element properties = createPropertiesElement( componentObject.getProperties());
+		componentObjectElement.addContent(properties);
+
+        Element chgHistoryElement = createChangeHistoryElement(componentObject);
+        componentObjectElement.addContent(chgHistoryElement);
+
+
+        return componentObjectElement;
+    }
+
+
+
+// ##############################################################################
+//
+//              Configuration Object Creation Methods
+//
+// ##############################################################################
+
+
+    /**
+    * This method will create a Host configuration object from an XML element
+    * that represents a Host.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the Host configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public Host createHost(Element element, ConfigurationID configID, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.Hosts.Host.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0032, element.getName()), element);
+        }
+        if (name == null) {
+            name = element.getAttributeValue(XMLElementNames.Hosts.Host.Attributes.NAME);
+        }
+
+        Host host = editor.createHost(configID, name);
+
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+
+        host = (Host) setDateHistory(host, element, editor);
+
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            host = (Host)addProperties(propertiesElement, host, editor);
+
+            return host;
+        }
+
+        return host;
+    }
+
+    //
+    /**
+    * This method is used to create a ResourceDescriptor JDOM Element from a
+    * ServiceComponentDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createResourcePoolElement(ResourceDescriptor resource) {
+        Assertion.isNotNull(resource);
+
+        Element resourceElement = createComponentObjectElement(XMLElementNames.Configurations.Configuration.ResourcePools.ResourcePool.ELEMENT, resource);
+        return resourceElement;
+    }
+
+
+    /**
+    * This method will create a Resource configuration object from an XML element
+    * that represents a Resource.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the SharedResource configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ResourceDescriptor createResourcePool(Element element, ConfigurationID configID, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.ResourcePools.ResourcePool.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()), element);
+        }
+
+        String name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ResourcePools.ResourcePool.Attributes.NAME);
+
+        checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0053);
+
+        String type = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ResourcePools.ResourcePool.Attributes.COMPONENT_TYPE);
+
+        checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0054);
+
+		ComponentTypeID id = new ComponentTypeID(type);
+
+        // create the descriptor used to get the resource
+        ResourceDescriptor descriptor = editor.createResourceDescriptor(configID, id, name);
+
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+
+        descriptor = (ResourceDescriptor) setDateHistory(descriptor, element, editor);
+
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            descriptor = (ResourceDescriptor)addProperties(propertiesElement, descriptor, editor);
+
+        }
+
+
+        return descriptor;
+    }
+
+    public Element createResourcePoolsElement() {
+       return new Element(XMLElementNames.Configurations.Configuration.ResourcePools.ELEMENT);
+    }
+
+
+    //
+    /**
+    * This method is used to create a ServiceComponentDefn JDOM Element from a
+    * ServiceComponentDefn object.
+    *
+    * @param defn the Object to be converted to a JDOM XML Element
+    * @return a JDOM XML Element
+    */
+    public Element createSharedResourceElement(SharedResource resource) {
+        Assertion.isNotNull(resource);
+
+        Element resourceElement = createComponentObjectElement(XMLElementNames.Resources.Resource.ELEMENT, resource);
+        return resourceElement;
+    }
+
+
+    /**
+    * This method will create a Resource configuration object from an XML element
+    * that represents a Resource.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the SharedResource configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public SharedResource createSharedResource(Element element, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.Resources.Resource.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0034, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0034, element.getName()), element);
+        }
+
+        String name = element.getAttributeValue(XMLElementNames.Resources.Resource.Attributes.NAME);
+
+        checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0055);
+
+        String type = element.getAttributeValue(XMLElementNames.Resources.Resource.Attributes.COMPONENT_TYPE);
+
+        checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0056);
+
+		ComponentTypeID id = new ComponentTypeID(type);
+
+        // create the descriptor used to get the resource
+        SharedResource descriptor = editor.createSharedResource(
+                                            id,
+                                            name);
+
+
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+
+        descriptor = (SharedResource) setDateHistory(descriptor, element, editor);
+
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            descriptor = (SharedResource)addProperties(propertiesElement, descriptor, editor);
+        }
+
+        return descriptor;
+    }
+
+    public Element createSharedResourcesElement() {
+       return new Element(XMLElementNames.Resources.ELEMENT);
+    }
+
+    /**
+    * This method will create a ComponentType configuration object from an XML element
+    * that represents a ComponentType.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the ComponentType configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ComponentType createComponentType(Element element, ConfigurationObjectEditor editor, String name, boolean maintainParentID) throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.ComponentTypes.ComponentType.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0035, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0035, element.getName()), element);
+        }
+
+        // retreive the attributes of this ComponentType from the JDOM element
+        String parentType = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE);
+        String superType = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
+        String componentTypeCode = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE);
+        String deployable = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE);
+        String monitorable = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE);
+
+        // we will use the passed in name unless it is null...
+        if (name == null) {
+            name = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.NAME);
+        }
+
+        // convert them into their proper data types
+        int typeCode = Integer.parseInt(componentTypeCode);
+
+        ComponentTypeID parentTypeID = null;
+        ComponentTypeID superTypeID = null;
+
+        if (parentType != null && parentType.length() > 0) {
+           parentTypeID = new ProductTypeID(parentType);
+        }
+
+        if (superType !=null && superType.length() > 0) {
+            superTypeID = new ComponentTypeID(superType);
+        }
+
+        boolean isDeployable = (Boolean.valueOf(deployable)).booleanValue();
+        boolean isMonitorable =  (Boolean.valueOf(monitorable)).booleanValue();
+
+        // create the ComponentTypeObject
+        ComponentType type = editor.createComponentType(typeCode, name, parentTypeID, superTypeID, isDeployable, isMonitorable);
+
+        // get the ComponentTypeDefn sub-Elements of this ComponentType
+        // and create them also.
+        List componentTypeDefnElements = element.getChildren(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+
+
+        type = setDateHistory(type, element, editor);
+
+        return addComponentTypeDefns(componentTypeDefnElements, type, editor);
+
+    }
+
+
+
+    /**
+    * This method will create a ProductType configuration object from an XML element
+    * that represents a ProductType.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @param componentTypeMap this is a map of ComponentTypeID--->ComponentType
+    * it must contain all of the Component types that the ProductType
+    * that is represented by the passed in XML element references.
+    * @return the ProductType configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ProductType createProductType(Element element, ConfigurationObjectEditor editor, Map componentTypeMap, String name)throws  InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.ProductTypes.ProductType.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0036, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0036, element.getName()), element);
+        }
+
+        // retreive the attributes of this ComponentType from the JDOM element
+        String deployable = element.getAttributeValue(XMLElementNames.ProductTypes.ProductType.Attributes.DEPLOYABLE);
+//        String monitorable = element.getAttributeValue(XMLElementNames.ProductTypes.ProductType.Attributes.MONITORABLE);
+
+        // we will use the passed in name unless it is null...
+        if (name == null) {
+            name = element.getAttributeValue(XMLElementNames.ProductTypes.ProductType.Attributes.NAME);
+        }
+
+        boolean isDeployable = (Boolean.valueOf(deployable)).booleanValue();
+ //       boolean isMonitorable = (Boolean.valueOf(monitorable)).booleanValue();
+
+        List componentTypeIDs = element.getChildren(XMLElementNames.ComponentTypeID.ELEMENT);
+        List componentTypes = new ArrayList();
+        Iterator iter = componentTypeIDs.iterator();
+        while (iter.hasNext()) {
+            Element componentTypeIDElement = (Element)iter.next();
+            String componentTypeIDName = componentTypeIDElement.getAttributeValue(XMLElementNames.ComponentTypeID.Attributes.NAME);
+            ComponentTypeID componentTypeID = new ComponentTypeID(componentTypeIDName);
+            ComponentType componentType = (ComponentType)componentTypeMap.get(componentTypeID);
+            if (componentType == null) {
+            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0037, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0037, new Object[] {componentTypeID, name}), element);
+            }
+            componentTypes.add(componentType);
+        }
+
+        // create the ComponentTypeObject
+        ProductType type = editor.createProductType(name, componentTypes, isDeployable, false);
+
+        return type;
+//        // get the ComponentTypeDefn sub-Elements of this ComponentType
+//        // and create them also.
+//        Collection componentTypeDefnElements = element.getChildren(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+//
+//        type = (ProductType) setDateHistory(type, element, editor);
+//
+//        return (ProductType)addComponentTypeDefns(componentTypeDefnElements, type, editor);
+    }
+
+    /**
+    * This method will create a Configuration configuration object from an XML element
+    * that represents a Configuration.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the Configuration configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public Configuration createConfiguration(Element element, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
+
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.ELEMENT)) {
+            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0038, element.getName()), element);
+        }
+
+        if (name==null) {
+            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.Attributes.NAME);
+        }
+
+        Configuration config = editor.createConfiguration(name);
+
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+
+        config = (Configuration) setDateHistory(config, element, editor);
+
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            config = (Configuration)addProperties(propertiesElement, config, editor);
+
+            return config;
+        }
+
+        return config;
+    }
+
+    /**
+    * This method will create a LogConfiguration configuration object from an XML element
+    * that represents a LogConfiguration.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the LogConfiguration configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+//    public LogConfiguration createLogConfiguration(Element element) throws InvalidConfigurationElementException{
+//        Assertion.isNotNull(element);
+//
+//        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.LogConfiguration.ELEMENT)) {
+//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0039, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0039, element.getName()), element);
+//        }
+//
+//        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+//        Properties properties = new Properties();
+//
+//
+//        List props = propertiesElement.getChildren(XMLElementNames.Properties.Property.ELEMENT);
+//        Iterator iterator = props.iterator();
+//        while (iterator.hasNext()) {
+//            Element propertyElement = (Element)iterator.next();
+//            String propertyName = propertyElement.getAttributeValue(XMLElementNames.Properties.Property.Attributes.NAME);
+//            String propertyValue = propertyElement.getText();
+//            properties.setProperty(propertyName, propertyValue);
+//        }
+//
+//        LogConfiguration config = null;
+//
+//        try {
+//            config = BasicLogConfiguration.createLogConfiguration(properties);
+//        }catch(LogConfigurationException e) {
+//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0040, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0040,e.getMessage()), element);
+//
+//        }
+//
+//        return config;
+//        return null;
+//
+//    }
+
+    public Element createConnectorBindingElement(ConnectorBinding connector, boolean isExportConfig)  {
+        
+        Assertion.isNotNull(connector);
+    
+        Element connectorElement = createComponentObjectElement(XMLElementNames.ConnectorComponents.ConnectorComponent.ELEMENT, connector);
+
+        connectorElement.setAttribute(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.QUEUED_SERVICE, new Boolean(connector.isQueuedService()).toString());
+        // vah - 09-24-2003
+        // when exporting a configuration, export the routing uuid to
+        // otherwise do not export it so that upon import 
+        // the routingUUID to be regenerated.
+        // This is done to help ensure there are no duplicate UUIDs
+        if (isExportConfig) {
+            connectorElement.setAttribute(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID, connector.getRoutingUUID());
+        }
+
+        return connectorElement;
+    
+    }
+
+    
+    public ConnectorBinding createConnectorBinding(ConfigurationID configurationID, Element element, ConfigurationObjectEditor editor, String name, boolean isImportConfig)throws InvalidConfigurationElementException {
+
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+
+        if (!element.getName().equals(XMLElementNames.ConnectorComponents.ConnectorComponent.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0041, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0041,element.getName()), element);
+        }
+
+        if (name==null) {
+            name = element.getAttributeValue(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.NAME);
+        }
+
+        String componentType = element.getAttributeValue(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.COMPONENT_TYPE);
+
+        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0057);
+
+        ComponentTypeID id = new ComponentTypeID(componentType);
+
+//        element.getAttributeValue(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.QUEUED_SERVICE);
+
+        String routingUUID = null;
+        // vah - 09-24-2003
+        // when importing a configuration use the routing uuid,
+        // otherwise do not use it (which will cause the routingUUID to be regenerated)
+        // This is done to help ensure there are no duplicate UUIDs
+        if (isImportConfig) {  
+            routingUUID = element.getAttributeValue(XMLElementNames.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID);
+        }
+
+        ConnectorBinding defn = null;
+        defn = editor.createConnectorComponent(configurationID, id, name, routingUUID);
+
+        defn = (ConnectorBinding) setDateHistory(defn, element, editor);
+
+        // add the properties to this ComponentObject...
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            return (ConnectorBinding)addProperties(propertiesElement, defn, editor);
+        }
+
+        return defn;
+    }
+
+
+    /**
+    * This method will create a ServiceComponentDefn configuration object from an XML element
+    * that represents a ServiceComponentDefn.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the ServiceComponentDefn configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ComponentDefn createServiceComponentDefn(Element element, Configuration config, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
+		ConfigurationID configID = null;
+		if (config != null) {
+			configID = (ConfigurationID) config.getID();
+    	}
+		return createServiceComponentDefn(element,  configID, editor, name);
+
+    }
+
+    public ComponentDefn createServiceComponentDefn(Element element, ConfigurationID configID, ConfigurationObjectEditor editor, String name)throws InvalidConfigurationElementException {
+
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+        Assertion.isNotNull(configID);
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0042, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0042,element.getName()), element);
+        }
+
+        if (name==null) {
+            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.NAME);
+        }
+
+        String componentType = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.COMPONENT_TYPE);
+
+        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0058);
+
+        ComponentTypeID id = new ComponentTypeID(componentType);
+
+//        element.getAttributeValue(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.QUEUED_SERVICE);
+
+        String routingUUID = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.ROUTING_UUID);
+
+        ComponentDefn defn = null;
+        boolean isResourcePool = isResourcePool(componentType);
+
+        if (configID == null) {
+/*
+            if (!isResourcePool) {
+                if (routingUUID == null){
+                    //allow the object editor to generate a UUID
+                    defn = (ComponentDefn) editor.createServiceComponentDefn(id, name);
+                } else {
+                    //use the UUID specified in the XML file
+                    defn = (ComponentDefn) editor.createServiceComponentDefn(id, name, routingUUID);
+                }
+
+                editor.setEnabled((ServiceComponentDefn) defn, isEnabled);
+            } else {
+                   defn = editor.createResourceDescriptor(id, name);
+
+
+            }
+*/
+        }else {
+            if (!isResourcePool) {
+
+                if (routingUUID == null){
+                    //allow the object editor to generate a UUID
+                    defn = editor.createServiceComponentDefn(configID, id, name);
+                } else {
+                    //use the UUID specified in the XML file
+                    defn = editor.createServiceComponentDefn(configID, id, name, routingUUID);
+                }
+
+            } else {
+
+                defn = editor.createResourceDescriptor(configID, id, name);
+
+            }
+
+        }
+
+        defn = (ComponentDefn) setDateHistory(defn, element, editor);
+
+        // add the properties to this ComponentObject...
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            return (ComponentDefn)addProperties(propertiesElement, defn, editor);
+        }
+
+        return defn;
+
+    }
+
+    private boolean isResourcePool(String componentTypeName) {
+        boolean result = false;
+
+        if (componentTypeName.equals(SharedResource.JDBC_COMPONENT_TYPE_NAME) ||
+            componentTypeName.equals(SharedResource.JMS_COMPONENT_TYPE_NAME) ||
+            componentTypeName.equals(SharedResource.MISC_COMPONENT_TYPE_NAME) ||
+            componentTypeName.equals(SharedResource.SEARCHBASE_COMPONENT_TYPE_NAME) ) {
+                return true;
+            }
+
+
+        return result;
+
+    }
+    
+    public boolean is42ConfigurationCompatible(Element element) throws InvalidConfigurationElementException {
+        return XMLHelperUtil.is42ConfigurationCompatible(element);
+    }
+    
+
+    /**
+    * This method will create a ProductServiceConfig configuration object from an XML element
+    * that represents a ProductServiceConfig.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the ProductServiceConfig configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ProductServiceConfig createProductServiceConfig(Element element, ConfigurationID configID, ConfigurationObjectEditor editor, String name)throws InvalidConfigurationElementException {
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+        Assertion.isNotNull(configID);
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0043, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0043,element.getName()), element);
+        }
+
+        if (name==null) {
+            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.Attributes.NAME);
+        }
+
+        String componentType = element.getAttributeValue(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.Attributes.COMPONENT_TYPE);
+        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0059);
+
+        
+ //       ConfigurationID configID = (ConfigurationID)config.getID();
+        ProductTypeID id = new ProductTypeID(componentType);
+
+        // this new editor is used only as a way to create a product service config
+        // the passed in editor is then used to add the PSC to the configuration
+        // as passed in.
+        // we dont want to add the actions again to the passed in editor.
+        ProductServiceConfig productServiceConfig = editor.createProductServiceConfig(configID, id, name);
+
+	 	Collection serviceComponentDefnIDs = element.getChildren(XMLElementNames.Configurations.Configuration.ServiceComponentDefnID.ELEMENT);
+
+        if (id.getFullName().equals(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
+	        Iterator iterator = serviceComponentDefnIDs.iterator();
+	        while (iterator.hasNext()) {
+	            Element serviceComponentDefnIDElement = (Element)iterator.next();
+	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLElementNames.ID.Attributes.NAME);
+
+	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.Attributes.IS_ENABLED);
+
+	            if (enabled == null) {
+	            	enabled = Boolean.TRUE.toString();
+	            }
+
+	            ConnectorBindingID serviceComponentDefnID = new ConnectorBindingID(configID, serviceComponentDefnName);
+	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
+	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, new Boolean(enabled).booleanValue());
+
+	        }
+
+
+        } else {
+
+	        Iterator iterator = serviceComponentDefnIDs.iterator();
+	        while (iterator.hasNext()) {
+	            Element serviceComponentDefnIDElement = (Element)iterator.next();
+	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLElementNames.ID.Attributes.NAME);
+
+	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLElementNames.Configurations.Configuration.ProductServiceConfigs.ProductServiceConfig.Attributes.IS_ENABLED);
+
+	            if (enabled == null) {
+	            	enabled = Boolean.TRUE.toString();
+	            }
+
+	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnName);
+	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
+
+	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, new Boolean(enabled).booleanValue());
+
+	        }
+
+        }
+
+        productServiceConfig = (ProductServiceConfig) setDateHistory(productServiceConfig, element, editor);
+
+        // add the properties to this ComponentObject...
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            productServiceConfig = (ProductServiceConfig)addProperties(propertiesElement, productServiceConfig, editor);
+            return productServiceConfig;
+        }
+
+        return productServiceConfig;
+    }
+
+    public Element createDeployedProductServiceConfigElement(ProductServiceConfig config)  {
+        throw new UnsupportedOperationException("createDeployedProductServiceConfigElement method is not supported in the 3.0 version of configuration"); //$NON-NLS-1$
+    }
+
+
+
+    public DeployedComponent createDeployedComponent(Element element,
+                                                     ConfigurationID configID, 
+                                                     HostID hostID,
+                                                     VMComponentDefnID vmID,
+                                                     ProductServiceConfigID pscID,
+                                                     Map componentTypeMap,
+                                                     ConfigurationObjectEditor editor) 
+                                                     throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+        Assertion.isNotNull(configID);
+        Assertion.isNotNull(hostID);
+        Assertion.isNotNull(vmID);
+        
+        DeployedComponent component;
+       
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
+        }
+                             
+        String name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.NAME);
+//        checkElementValue(name, "NAME", ErrorMessageKeys.CONFIG_ERR_0048);
+
+        String componentTypeIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.COMPONENT_TYPE);
+        String serviceComponentDefnIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
+
+        checkElementValue(componentTypeIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+        checkElementValue(serviceComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+      
+        
+        ComponentType type = null;
+        Iterator it = componentTypeMap.keySet().iterator();
+        while (it.hasNext() ) {
+            ComponentTypeID id = (ComponentTypeID) it.next();
+            if (id.getFullName().equals(componentTypeIDString)) {
+                type = (ComponentType) componentTypeMap.get(id);
+                break;
+            }
+        }
+
+        if (type == null) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, serviceComponentDefnIDString} ), element);
+        }  
+        
+        ServiceComponentDefnID svcid = null;
+        if (type.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
+
+            svcid = new ConnectorBindingID(configID, serviceComponentDefnIDString);
+
+        } else {
+
+
+            svcid = new ServiceComponentDefnID(configID, serviceComponentDefnIDString);
+
+        }
+        
+        component = editor.createDeployedServiceComponent(name, configID, hostID,vmID, svcid, pscID, (ComponentTypeID) type.getID());
+        
+        
+      return component;  
+      }
+
+
+    /**
+    * This method will create a DeployedComponent configuration object from an XML element
+    * that represents a DeployedComponent.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @param serviceComponentDefnMap a map of ServiceComponentDefnID-->ServiceComponentDefn
+    * this map must contain at the very least the ServiceComponentDefn that
+    * is the service definition of the deployed component that the XML element
+    * references.  This is used if the deployedComponent is a Service. Otherwise
+    * it is ignored.
+    * @param vmComponentDefnMap a map of vmComponentDefnID-->vmComponentDefn
+    * this map must contain at the very least the vmComponentDefn that
+    * is the VM definition of the deployed component that the XML element
+    * references.  This is used if the deployedComponent is a VM. Otherwise
+    * it is ignored.
+    * @return the DeployedComponent configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public DeployedComponent createDeployedComponent(Element element,
+             Configuration config, ConfigurationObjectEditor editor,
+             Map serviceComponentDefnMap, Map vmComponentDefnMap, Map componentTypeMap, String name)
+             throws InvalidConfigurationElementException{
+
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+        Assertion.isNotNull(config);
+
+        DeployedComponent component;
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.ELEMENT)) {
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
+        }
+
+        if (name == null) {
+            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.NAME);
+        }
+
+        String productServiceConfigIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.PRODUCT_SERVICE_CONFIG_ID);
+        String vmComponentDefnIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.VM_COMPONENT_DEFN_ID);
+        String serviceComponentDefnIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
+        String HostIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.HOST_ID);
+
+        checkElementValue(vmComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0045);
+        checkElementValue(HostIDString, name, ErrorMessageKeys.CONFIG_ERR_0046);
+
+        ConfigurationID configID = (ConfigurationID)config.getID();
+
+        HostID hostID = new HostID(HostIDString);
+        
+        VMComponentDefnID vmComponentDefnID = new VMComponentDefnID(configID, hostID, vmComponentDefnIDString);
+        // this will check to see if this is actually a DeployedVMServiceComponent
+        // these special deployed components dont have values for these ID's
+        String componentTypeIDString = element.getAttributeValue(XMLElementNames.Configurations.Configuration.DeployedComponents.DeployedComponent.Attributes.COMPONENT_TYPE);
+
+        if (serviceComponentDefnIDString == null && productServiceConfigIDString == null) {
+            Element vmelement = (Element)vmComponentDefnMap.get(vmComponentDefnIDString);
+
+            VMComponentDefn defn = createVMComponentDefn(vmelement, configID, hostID, editor, null);
+
+//          VMComponentDefn vmComponentDefn =
+//          xmlHelper.createVMComponentDefn(vmComponentDefnElement, (ConfigurationID) config.getID() , editor, null);
+            
+//            VMComponentDefn defn = (VMComponentDefn)vmComponentDefnMap.get(vmComponentDefnIDString);
+            if (defn==null) {
+                ComponentType type = null;
+                Iterator it = componentTypeMap.keySet().iterator();
+                while (it.hasNext() ) {
+                    ComponentTypeID id = (ComponentTypeID) it.next();
+                    if (id.getFullName().equals(componentTypeIDString)) {
+                        type = (ComponentType) componentTypeMap.get(id);
+                        break;
+                    }
+                }                
+                
+                defn = (VMComponentDefn) BasicUtil.createComponentDefn(ComponentType.VM_COMPONENT_TYPE_CODE, configID, hostID, (ComponentTypeID) type.getID(), name);
+                
+//           		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0047, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0047, new Object[] {name, vmComponentDefnID} ), element);
+
+            }
+
+//          DeployedComponentID id = new DeployedComponentID(name, configID,  hostId, (VMComponentDefnID) vmComponentDefn.getID());
+          
+             
+            component = BasicUtil.createDeployedVMComponent(name, configID, defn.getHostID(), (VMComponentDefnID) defn.getID(), defn.getComponentTypeID());
+
+            
+//            component = editor.createDeployedVMComponent(name, config, defn);
+
+        // else this element represents a normal ServiceComponentDefn object
+        }else {
+        	checkElementValue(productServiceConfigIDString, name, ErrorMessageKeys.CONFIG_ERR_0048);
+        	checkElementValue(serviceComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+
+        	ComponentType type = null;
+        	Iterator it = componentTypeMap.keySet().iterator();
+        	while (it.hasNext() ) {
+        		ComponentTypeID id = (ComponentTypeID) it.next();
+        		if (id.getFullName().equals(componentTypeIDString)) {
+        			type = (ComponentType) componentTypeMap.get(id);
+        			break;
+        		}
+        	}
+
+        	if (type == null) {
+            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, serviceComponentDefnIDString} ), element);
+        	}
+        	ProductServiceConfigID productServiceConfigID = null;
+        	if (type instanceof ConnectorBindingType) {
+
+	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
+
+	            ConnectorBindingID bindingID = new ConnectorBindingID(configID, serviceComponentDefnIDString);
+		        ConnectorBinding bdefn = (ConnectorBinding)serviceComponentDefnMap.get(bindingID);
+
+	            if (bdefn==null) {
+            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0051, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0051, new Object[] {name, serviceComponentDefnIDString} ), element);
+	            }
+	            component =editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, bdefn, productServiceConfigID);
+
+        	} else {
+
+	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
+
+	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnIDString);
+	            ServiceComponentDefn defn = (ServiceComponentDefn)serviceComponentDefnMap.get(serviceComponentDefnID);
+
+	            if (defn==null) {
+            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0052, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0052, new Object[] {name, serviceComponentDefnIDString} ), element);
+	            }
+	            component =  editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, defn, productServiceConfigID);
+
+        	}
+
+        }
+
+        component = (DeployedComponent) setDateHistory(component, element, editor);
+
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+           return (DeployedComponent)addProperties(propertiesElement, component, editor);
+        }
+
+        return component;
+    }
+
+    /**
+    * This method will create a VMComponentDefn configuration object from an XML element
+    * that represents a VMComponentDefn.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the VMComponentDefn configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public VMComponentDefn createVMComponentDefn(Element element, ConfigurationID configID, HostID hostID, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
+        Assertion.isNotNull(element);
+        Assertion.isNotNull(editor);
+        Assertion.isNotNull(configID);
+
+        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.ELEMENT)) {
+            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        if (name==null) {
+            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.Attributes.NAME);
+        }
+
+        String componentType = element.getAttributeValue(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.Attributes.COMPONENT_TYPE);
+
+        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0060);
+
+        ComponentTypeID id = new ComponentTypeID(componentType);
+
+        VMComponentDefn defn = editor.createVMComponentDefn(configID, hostID, id, name);
+
+    	defn = (VMComponentDefn) setDateHistory(defn, element, editor);
+
+        // add the properties to this ComponentObject...
+        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+        if (propertiesElement != null) {
+            // now we add the system properties to the configuration object
+            return (VMComponentDefn)addProperties(propertiesElement, defn, editor);
+        }
+
+        return defn;
+    }
+    
+//    public VMComponentDefn createVMComponentDefn(Element element, ConfigurationID configID, ConfigurationObjectEditor editor, String name)throws InvalidConfigurationElementException {
+//        
+//        Assertion.isNotNull(element);
+//        Assertion.isNotNull(editor);
+//        Assertion.isNotNull(configID);
+//
+//        if (!element.getName().equals(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.ELEMENT)) {
+//            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+//        }
+//
+//        if (name==null) {
+//            name = element.getAttributeValue(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.Attributes.NAME);
+//        }
+//
+//        String componentType = element.getAttributeValue(XMLElementNames.Configurations.Configuration.VMComponentDefns.VMComponentDefn.Attributes.COMPONENT_TYPE);
+//
+//        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0060);
+//
+//        ComponentTypeID id = new ComponentTypeID(componentType);
+//
+//        VMComponentDefn defn = editor.createVMComponentDefn(configID, null, id, name);
+//
+//        defn = (VMComponentDefn) setDateHistory(defn, element, editor);
+//
+//        // add the properties to this ComponentObject...
+//        Element propertiesElement = element.getChild(XMLElementNames.Properties.ELEMENT);
+//        if (propertiesElement != null) {
+//            // now we add the system properties to the configuration object
+//            return (VMComponentDefn)addProperties(propertiesElement, defn, editor);
+//        }
+//
+//        return defn;
+//       
+//        
+//    }
+    
+
+    /**
+    * This method is a helper method to create a PropertyDefinition object from
+    * an XML element that represents same.
+    *
+    * @param element the XML element that represents a PropertyDefinition object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public PropertyDefinition createPropertyDefinition(Element element) throws InvalidConfigurationElementException{
+
+        if (!element.getName().equals(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT)) {
+            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+
+        String nameString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME);
+        String displayNameString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME);
+        String shortDescriptionString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION);
+        String defaultValueString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE);
+        String multiplicityString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY);
+        String propertyTypeString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE);
+        String valueDelimiterString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER);
+        String isConstrainedToAllowedValuesString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES);
+        String isExpertString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT);
+        String isHiddenString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN);
+	    String isMaskedString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED);
+	    String isModifiableString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE);
+	    String isPreferredString = element.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED);
+
+        Multiplicity mult = null;
+        try {
+            mult = Multiplicity.getInstance(multiplicityString);
+        }catch(MultiplicityExpressionException e) {
+            throw new InvalidConfigurationElementException(e, "The PropertyDefinition object: " + nameString + " could not be created because the multiplicity definition: '" + multiplicityString + " is not a valid multiplicity definition.", element); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+
+        PropertyType type = PropertyType.getInstance(propertyTypeString);
+
+        boolean isConstrainedToAllowedValues = (Boolean.valueOf(isConstrainedToAllowedValuesString)).booleanValue();
+        boolean isExpert = (Boolean.valueOf(isExpertString)).booleanValue();
+        boolean isHidden = (Boolean.valueOf(isHiddenString)).booleanValue();
+        boolean isMasked = (Boolean.valueOf(isMaskedString)).booleanValue();
+        boolean isModifiable = (Boolean.valueOf(isModifiableString)).booleanValue();
+        boolean isPreferred = (Boolean.valueOf(isPreferredString)).booleanValue();
+
+        // we must retrieve all of the allowed values from the PropertyDefinition
+        // element
+        Collection allowedValuesElements = element.getChildren(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
+        ArrayList allowedValues = new ArrayList(allowedValuesElements.size());
+
+        Iterator iterator = allowedValuesElements.iterator();
+        while (iterator.hasNext()) {
+            Element allowedValueElement = (Element)iterator.next();
+            allowedValues.add(allowedValueElement.getText());
+        }
+
+        PropertyDefinitionImpl defn = new PropertyDefinitionImpl(nameString, displayNameString, type,
+                        mult,  shortDescriptionString, defaultValueString,
+                        allowedValues, valueDelimiterString,
+                        isHidden, isPreferred, isExpert, isModifiable);
+
+                defn.setMasked(isMasked);
+                defn.setConstrainedToAllowedValues(isConstrainedToAllowedValues);
+        return defn;
+
+    }
+
+
+    /**
+    * This method will create a ComponentObject configuration object from an XML element
+    * that represents a ComponentObject.
+    *
+    * @param element the JDOM element to convert to a configuration object
+    * @param editor the editor to use to create the configuration object
+    * @param name the name of the returned configuration object. Note this
+    * name will override the name in the JDOM element.  If the name parameter
+    * is null, the name of the object in the JDOM element will be used as
+    * the name of the object.
+    * @return the ComponentObject configuration object
+    * @throws InvalidConfigurationElementException if the element passed in
+    * or its XML structure do not conform to the XML structure specfied in
+    * the XMLElementNames class.
+    */
+    public ComponentObject addProperties(Element propertiesElement, ComponentObject object, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
+
+        if (!propertiesElement.getName().equals(XMLElementNames.Properties.ELEMENT)) {
+            throw new InvalidConfigurationElementException("A Properties object cannot be created from a JDOM Element type: " + propertiesElement.getName() + ".", propertiesElement); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        Properties props = getProperties(propertiesElement);
+
+        object = editor.modifyProperties(object, props, ConfigurationObjectEditor.ADD);
+        return object;
+    }
+
+
+
+    private Properties getProperties(Element propertiesElement) {
+		Properties props = new Properties();
+
+        List properties = propertiesElement.getChildren(XMLElementNames.Properties.Property.ELEMENT);
+        Iterator iterator = properties.iterator();
+        while (iterator.hasNext()) {
+            Element propertyElement = (Element)iterator.next();
+            String propertyName = propertyElement.getAttributeValue(XMLElementNames.Properties.Property.Attributes.NAME);
+            String propertyValue = propertyElement.getText();
+
+            props.setProperty(propertyName, propertyValue);
+
+        }
+        return props;
+    }
+
+    /**
+    * This is a helper method for ProductTypes and ComponentTypes.  this method
+    * will add a list of Component Type Definitions to a ComponentType using
+    * the passed in editor.  The Collection of XML elements passed in are
+    * translated into ComponentTypeDefn objects and then set on the passed in
+    * ComponentType.
+    *
+    * @param componentTypeDefnElements a collection of JDOM elements that
+    * each represent a ComponentTypeDefn object.
+    * @param type the ComponentType object to add the ComponentTypeDefns to
+    * @param editor the editor to use to both create the ComponentTypeDefns
+    * and to set them on the passed in ComponentType.
+    * @return the ComponentType reference that now has the CompoenentTypeDefns
+    * set on it.
+    * @throws InvalidConfigurationElementException if the ComponentTypeDefn
+    * JDOM elements do not adhere to the proper XML structure as defined by the
+    * XMLElementNames class.
+    */
+    private ComponentType addComponentTypeDefns(Collection componentTypeDefnElements, ComponentType type, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
+        ArrayList componentTypeDefns = new ArrayList(componentTypeDefnElements.size());
+
+        Iterator iterator = componentTypeDefnElements.iterator();
+        while (iterator.hasNext()) {
+            Element componentTypeDefnElement = (Element)iterator.next();
+            Element propertyDefinitionElement = componentTypeDefnElement.getChild(XMLElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
+            PropertyDefinition propDefn = createPropertyDefinition(propertyDefinitionElement);
+            componentTypeDefns.add(editor.createComponentTypeDefn(type, propDefn, false));
+        }
+        return editor.setComponentTypeDefinitions(type, componentTypeDefns);
+    }
+
+    public void orderComponentTypeElementList(List componentTypeElements) {
+        ComponentTypeElementComparator comparator = new ComponentTypeElementComparator();
+        Collections.sort(componentTypeElements, comparator);
+    }
+
+
+    class ComponentTypeElementComparator implements Comparator{
+
+        /**
+        * This compare to will determine whether the ComponentType element
+        * represented by 'this' has a superComponentType that is the
+        * passed in ComponentType element representation to be compared to. if so, the 'this' element
+        * is considered to be greater than the passed in element.  If it is
+        * determined that 'this' is the superCompoentType of the passed in
+        * object then 'greater than' will be returned.  If it is determined
+        * that the two ComponentTypeObjects are unrelated, then equals is
+        * returned...Note that this is inconsistent with the equals() method.
+        */
+        public int compare(Object thisObject, Object thatObject) {
+            if (thisObject instanceof Element) {
+                Element thisElement = (Element)thisObject;
+                if (thatObject instanceof Element) {
+                    Element thatElement = (Element)thatObject;
+                    String thatSuperID = getElementSuperID(thatElement);
+                    String thisSuperID = getElementSuperID(thisElement);
+                    String thatID = getElementID(thatElement);
+                    String thisID = getElementID(thisElement);
+
+                    if(thisSuperID!=null && thisSuperID.equals(thatID)) {
+                        return 1;
+                    }else if(thatSuperID!=null && thatSuperID.equals(thisID)) {
+                        return -1;
+                    }else {
+                        return 0;
+                    }
+                }
+            }
+            return 0;
+        }
+
+
+        private String getElementSuperID(Element componentTypeElement) {
+            return componentTypeElement.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
+        }
+
+        private String getElementID(Element componentTypeElement) {
+            return componentTypeElement.getAttributeValue(XMLElementNames.ComponentTypes.ComponentType.Attributes.NAME);
+        }
+    }
+
+    // helper class to check that an element is not null and length is greater than zero
+    // this should be used instead of Assertion when checking that
+    // component ID's exist
+    private void checkElementValue(String value, String name, String errorKey) throws InvalidConfigurationElementException {
+    	if (value == null || value.trim().length() > 0) {
+    		if (name != null) {
+                if(value == null){
+	                Assertion.isNotNull(value, CommonPlugin.Util.getString(errorKey, name));
+                }
+    		} else {
+                if(value == null){
+    			    Assertion.isNotNull(value, CommonPlugin.Util.getString(errorKey));
+                }
+    		}
+
+    	}
+
+    }
+
+
+
+//	private static final String NOT_ASSIGNED = "NotAssigned";
+
+}

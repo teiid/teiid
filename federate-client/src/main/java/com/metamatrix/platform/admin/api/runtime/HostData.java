@@ -1,0 +1,62 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.platform.admin.api.runtime;
+
+import java.util.Collection;
+
+/**
+ * This class contains information about a host that is running or deployed for this system
+ */
+public class HostData extends ComponentData {
+
+    // Collection of ProcessData objects
+    private Collection processes;
+
+
+    /**
+     * Construct an instance for the given hostName
+     *
+     * @param hostName Name of host
+     */
+    public HostData(String hostName, Collection processes, boolean deployed, boolean registered) {
+        super(hostName, deployed, registered);
+        this.processes = processes;
+        computeHashCode();
+    }
+
+    private void computeHashCode() {
+        hashCode = this.getName().toLowerCase().hashCode();
+    }
+
+    /**
+     * Return a list of ProcessData objects for this host
+     *
+     * @return List of ProcessData objects.
+     */
+    public Collection getProcesses() {
+        return processes;
+    }
+}
+

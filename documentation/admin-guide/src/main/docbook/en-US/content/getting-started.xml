@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="getting_started">
+  <title>Getting Started with MMAdmin</title>
+  <para>
+    To learn the basics of BeanShell (<ulink url="http://beanshell.org/">http://beanshell.org</ulink>) 
+    take a look at their documents and tutorials on their website A copy of the BeanShell document is also can
+    be found in the MMAdmin installation directory. Learn how basic scripts can be written and get familiar with
+    some commonly used commands.
+  </para>
+  <para>Note: BeanShell documentation provided is of version 1.3, which is taken as is from their website,
+    for latest changes refer to BeanShell website. The BeanShell version 2.0b4 is currently being used in
+    MMAdmin.</para>
+  <para>
+    Basic knowledge of the Java programming language is required in order to effectively design and develop
+    scripts using the MMAdmin. To learn Java language  find learning resources at
+    <ulink url="http://java.sun.com/">http://java.sun.com</ulink>.
+  </para>
+  <para>You can learn about the MetaMatrix administrative API either using “help()” command or find JavaDoc
+    for in the installation directory.</para>
+  <para>MMAdmin is a specialized version of BeanShell with lots of pre-built libraries and scripts
+    designed to be  used with the MetaMatrix system. MMAdmin works in two different modes: interactive or script
+    run mode.</para>
+  <para>In interactive mode, user can invoke the tool and connect to a live MetaMatrix system and issue any
+    ad-hoc commands to control the system or issue a SQL query against connected virtual database and view the
+    results. All the commands executed during interactive mode are automatically captured into a log file, more
+    on this later in the document.</para>
+  <para>In the script run mode, user can execute/play back previously developed scripts. This mode especially
+    useful to automate any testing or to perform any repeated configurations/migrations changes to a MetaMatrix
+    system</para>  
+  
+  <sect1>
+    <title>Essential rules to follow in using MMAdmin</title>
+    <para>To use MMAdmin successfully, there are some syntactical rules you should keep in mind.</para>
+    <orderedlist>
+      <listitem>
+        <para>All the commands end with semi-colon [;]. Commands without any input parameters end with open
+          and close parentheses '()' and semi-colon at the end. Example:</para>
+        <programlisting><![CDATA[
+          help();
+        ]]></programlisting>          
+      </listitem>
+      <listitem>
+        <para>All commands are case sensitive. So, enter exactly as command is written.</para>
+      </listitem>
+      <listitem>
+        <para>If a command requires input parameter(s), they should be declared inside "(" and ")" and if they
+          are string based parameters then they should wrapped with double quotes. A command can have more than
+          one parameter. Example:</para>
+        <programlisting><![CDATA[
+          cd("/home/johndoe");
+        ]]></programlisting>
+      </listitem>
+      <listitem>
+        <para>Any other Java program can be invoked from script, if the required Java class libraries are
+          already in class path. Import the required classes and instantiate the class to execute. Example:
+        </para>
+        <programlisting><![CDATA[
+            import java.sql.*;
+            clazz = new MyClass();
+            clazz.doSomething();          
+          ]]></programlisting>
+      </listitem>
+      <listitem>
+        <para>
+          Take a look at a variety of commands available in Bean Shell  to be used along with your scripts. Some
+          of the common ones you can find at
+          <ulink url="http://beanshell.org/manual/bshmanual.html#Useful_BeanShell_Commands">http://beanshell.org/manual/bshmanual.html#Useful_BeanShell_Commands
+          </ulink>
+        </para>
+      </listitem>
+      <listitem>
+        <para>You can write and publish your own scripts. See How to write your own scripts?</para>
+        <para />
+      </listitem>
+    </orderedlist>
+    <para>To execute the commands in interactive mode you enter them first and press enter to execute, then
+      enter next command, so on.</para>
+    <para>To exit the tool in the interactive mode, first disconnect if you are connected to the MetaMatrix
+      system by executing “disconnect();” then execute "exit();". In the script mode, when execution of the
+      script finishes the tool will exit automatically, however you still have to disconnect from MetaMatrix
+      system in the script.</para>
+    <para>Note: If SSL is turned on the MetaMatrix server, you would need to supply the correct certificates
+      for connection. Edit the command file used to execute the MMAdmin and make sure correct trust store is
+      defined in the path.</para>
+  </sect1>
+  <sect1>
+    <title>Basic commands to get started</title>
+    <para>The list below contains some common commands used in MMAdmin. The best way to learn scripting in the
+      MMAdmin is to read the scripts in "samples" directory in the MMAdmin kit's installation directory, and
+      experiment your own scripts using a developer instance of MetaMatrix System.</para>
+    <programlisting><![CDATA[   
+print("xxx");   // print something to console
+
+help();        // shows all the available admin commands; 
+
+connect();      // connect using connection.properties file
+
+connect(<URL>);   // connect to MetaMatrix using the supplied URL
+
+connectAsAdmin(<url>); // connect as admin; no need have the vdb name. SQL commands will not work under this connection
+
+execute(<SQL>); // run any SQL command. Note in interactive mode you can directly specify SQL on command line
+
+currentConnectionName();  // returns the current connection name
+
+useConnection(<connection name>); // switches to using the given connection settings
+
+disconnect();   // disconnects the current connection in the context
+
+exit();   // exit the shell        
+        ]]></programlisting>
+  </sect1>
+  <sect1>
+    <title>"help" command</title>
+    <para>This below command lists all the available administrative API commands in the MMAdmin. Please note
+      that none of the BeanShell commands or custom commands will be shown in this list. Documentation is only
+      source for reviewing those commands presently.</para>
+    <programlisting><![CDATA[ 
+      mmadmin $ help();
+    ]]></programlisting>
+    <para>To get a specific definition about a command and it's required input parameters , use the below form
+      of help. The example shown will show detailed JavaDoc description about "addVDB" method.</para>
+    <programlisting><![CDATA[ 
+mmadmin $ help("addVDB");
+/**
+ * Import a {@link VDB} file.
+ * <br>A VDB file with internal definitions. This is the default VDB export configuration
+ * begining with MetaMatrix version 4.3.</br>
+ *
+ * @param name VDB Name
+ * @param vdbFile byte array of the VDB Archive
+ * @param option Code of the AdminOptions to use when executing this method. There are
+ choices aboutwhat to do when a connector binding with the given identifier already exists in the system.
+ */
+VDB addVDB ( String name , String vdbFile , int option
+      ]]></programlisting>
+    <para />
+    <para>If not sure about exact command, and to narrow the list available commands, help can be used in the
+      following form, note the “*” at the end</para>
+    <programlisting><![CDATA[ 
+mmadmin $   help(“get*”);
+      ]]></programlisting>
+    <para>This will list all the commands available that begin with “get”, for example “getconnectorBindings,
+      getVDBs” etc.</para>
+    <para>For every administrative API call, there is corresponding command in MMAdmin. For a reference to
+      full administrative API, please look at “documents” sections in the installation directory.</para>
+  </sect1>
+  
+</chapter>

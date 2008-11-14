@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-tests-integration</artifactId>
+  <name>Integration Tests</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>Integration tests spanning server/embedded/connectors.</description>
+  
+  <dependencies>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-internal</artifactId>
+      <type>test-jar</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-metadata</artifactId>
+      <type>test-jar</type>
+    </dependency>    
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client</artifactId>
+      <type>test-jar</type>
+    </dependency>     
+            
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-sdk</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-sdk</artifactId>
+      <type>test-jar</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-metadata</artifactId>
+    </dependency>
+        
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client-jdbc</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <!-- internal dependencies that are only used by integration testing -->
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-server</artifactId>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+    </dependency>
+        
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-embedded</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>connector-loopback</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-metadata</artifactId>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>connector-jdbc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>connector-jdbc</artifactId>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+    </dependency>
+    
+  </dependencies>
+  
+</project>

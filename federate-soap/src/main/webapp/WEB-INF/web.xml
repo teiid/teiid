@@ -1,0 +1,191 @@
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN" "http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+<!--
+
+    JBoss, Home of Professional Open Source.
+    Copyright 2008, Red Hat Middleware LLC, and individual contributors
+    as indicated by the @author tags. See the copyright.txt file in the
+    distribution for a full listing of individual contributors.	
+    
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+    
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+    
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301 USA.
+
+-->
+<web-app>
+
+	<context-param>
+		<param-name>logfile</param-name>
+		<param-value>../../log/MetaMatrixWebServices.log</param-value>
+	</context-param>
+	
+	<!-- The optional BasicAuthInterceptor filter is for use with HTTP Basic authentication. It allows circumvention
+	     of preemptive authentication which may not always be desired. Comment/uncomment the filter
+	     and it's mapping accordingly to achieve the preferred behavior.  -->
+	<!--<filter>
+		<filter-name>BasicAuthInterceptor</filter-name>
+		<filter-class>
+			com.metamatrix.soap.servlet.filter.BasicAuthInterceptor
+		</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>BasicAuthInterceptor</filter-name>
+		<url-pattern>/services/*</url-pattern>
+	</filter-mapping> 
+	<filter-mapping>
+		<filter-name>BasicAuthInterceptor</filter-name>
+		<url-pattern>/DataService/*</url-pattern>
+	</filter-mapping> 
+	<filter-mapping>
+		<filter-name>BasicAuthInterceptor</filter-name>
+		<url-pattern>/DataServices/*</url-pattern>
+	</filter-mapping> -->
+	
+	<!-- This parameter is used for making the Data Services endpoint value backwards
+	compatible. This value changed in the 5.5 release. Uncomment to change the generated endpoint
+	in the WSDL for a MetaMatrix Data Service Virtual Database for pre-5.5.	Leave commented to use
+	the post 5.5 endpoint value.-->
+	<!-- <context-param>
+		<param-name>endpointOverride</param-name>
+		<param-value>/DataServices</param-value>
+	</context-param> -->
+	
+	<!-- 
+	*   mmServer and mmProtocol parameters are used to obtain the WSDL from Web Service VDBs. 
+	*   They should be set accordingly to your environment.
+	*
+	*   mmServer is the target Metamatrix host and port. For a clustered environment, comma delimit server/port combinations 
+	*   mmProtocol should be set to "mms" if the target MetaMatrix server or cluster has SSL enabled. 
+	-->
+	<context-param>
+		<param-name>mmServer</param-name>
+		<param-value>localhost:31000</param-value>
+	</context-param>
+	
+	<context-param>
+		<param-name>mmProtocol</param-name>
+		<param-value>mm</param-value>
+	</context-param>
+	
+	<servlet>
+		<servlet-name>AxisServlet</servlet-name>
+		<display-name>Apache-Axis Servlet</display-name>
+		<servlet-class>
+			org.apache.axis2.transport.http.AxisServlet
+		</servlet-class>
+		<load-on-startup>101</load-on-startup>
+	</servlet>
+	
+	 <servlet>
+        <servlet-name>AxisAdminServlet</servlet-name>
+        <display-name>Apache-Axis AxisAdmin Servlet (Web Admin)</display-name>
+        <servlet-class>
+            org.apache.axis2.transport.http.AxisAdminServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>AxisAdminServlet</servlet-name>
+        <url-pattern>/axis2-admin/*</url-pattern>
+    </servlet-mapping>
+		
+    <servlet>
+	    <servlet-name>MMGetVDBResource</servlet-name>
+	    <display-name>MetaMatrix VDB Resource Servlet</display-name>
+	    <servlet-class>com.metamatrix.soap.servlet.MMGetVDBResourceServlet</servlet-class>
+    </servlet>    	
+
+	<servlet>
+	    <servlet-name>MMWSDLURLGenerator</servlet-name>
+	    <display-name>MetaMatrix WSDL URL Generator Servlet</display-name>
+	    <servlet-class>com.metamatrix.soap.servlet.WSDLURLGenerator</servlet-class>
+   	</servlet>
+   	
+    <servlet-mapping>
+	    <servlet-name>MMGetVDBResource</servlet-name>
+	    <url-pattern>/servlet/ArtifactDocumentService/*</url-pattern>
+    </servlet-mapping>
+    
+	<servlet-mapping>
+	    <servlet-name>MMWSDLURLGenerator</servlet-name>
+	    <url-pattern>/servlet/WSDLURLGenerator</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+	    <servlet-name>MMDiscoverWSDLServlet</servlet-name>
+	    <display-name>MetaMatrix Discover WSDL URLs Servlet</display-name>
+	    <servlet-class>com.metamatrix.soap.servlet.MMDiscoverWSDLServlet</servlet-class>
+   </servlet>
+
+   <servlet-mapping>
+       <servlet-name>AxisServlet</servlet-name>
+       <url-pattern>/SqlQueryWebService</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+       <servlet-name>AxisServlet</servlet-name>
+       <url-pattern>/SqlQueryWebService/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+		<servlet-name>AxisServlet</servlet-name>
+		<url-pattern>/servlet/AxisServlet</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>AxisServlet</servlet-name>
+		<url-pattern>*.jws</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>AxisServlet</servlet-name>
+		<url-pattern>/services/*</url-pattern>
+	</servlet-mapping>	
+	
+	<servlet-mapping>
+	   <servlet-name>AxisServlet</servlet-name>
+	   <url-pattern>/DataService</url-pattern>
+	</servlet-mapping>
+
+    <servlet-mapping>
+       <servlet-name>AxisServlet</servlet-name>
+       <url-pattern>/DataService/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+    	<servlet-name>MMDiscoverWSDLServlet</servlet-name>
+    	<url-pattern>/servlet/DiscoverWSDLServlet</url-pattern>
+   </servlet-mapping>
+
+	<session-config>
+    		<session-timeout>30</session-timeout>
+  	</session-config> 
+
+       <!-- currently the W3C havent settled on a media type for WSDL;
+		  http://www.w3.org/TR/2003/WD-wsdl12-20030303/#ietf-draft
+		  for now we go with the basic 'it's XML' response -->
+		
+	<mime-mapping>
+		<extension>wsdl</extension>
+		<mime-type>text/xml</mime-type>
+	</mime-mapping>
+
+	<mime-mapping>
+		<extension>xsd</extension>
+		<mime-type>text/xml</mime-type>
+	</mime-mapping>	
+    
+    <welcome-file-list id="WelcomeFileList">
+    	<welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+  	
+</web-app>

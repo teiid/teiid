@@ -1,0 +1,104 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.jdbc;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+
+import java.sql.SQLException;
+import java.util.Properties;
+
+import junit.framework.TestCase;
+
+import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.dqp.client.ClientSideDQP;
+
+public class TestMMConnection extends TestCase {
+
+	protected static final String STD_DATABASE_NAME         = "QT_Ora9DS"; //$NON-NLS-1$
+    protected static final String STD_DATABASE_VERSION      = "1"; //$NON-NLS-1$
+    
+    static String serverUrl = "jdbc:metamatrix:QT_Ora9DS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
+
+    public TestMMConnection(String name) {
+        super(name);
+    }
+    
+    MMServerConnection getMMConnection() {
+    	ServerConnection mock = mock(ServerConnection.class);
+    	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
+    	Properties props = new Properties();
+    	props.setProperty(BaseDataSource.VDB_NAME, STD_DATABASE_NAME);
+    	props.setProperty(BaseDataSource.VDB_VERSION, STD_DATABASE_VERSION);
+    	props.setProperty(BaseDataSource.USER_NAME, "metamatrixadmin"); //$NON-NLS-1$
+    	return new MMServerConnection(mock, props, serverUrl);
+    }
+
+    public void testGetMetaData() throws Exception {
+        assertNotNull(getMMConnection().getMetaData());
+    }
+
+    public void testGetSchema() throws Exception {
+        assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_NAME, getMMConnection().getSchema()); //$NON-NLS-1$
+    }
+
+    public void testGetVDBVersion() throws Exception {
+        assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_VERSION, getMMConnection().getVDBVersion()); //$NON-NLS-1$
+    }
+
+    public void testNativeSql() throws Exception {
+        String sql = "SELECT * FROM BQT1.SmallA"; //$NON-NLS-1$
+        assertEquals("Actual schema is not equql to the expected one. ", sql, getMMConnection().nativeSQL(sql)); //$NON-NLS-1$
+    }
+
+    /** test getUserName() through DriverManager */
+    public void testGetUserName2() throws Exception {        
+        assertEquals("Actual userName is not equal to the expected one. ", "metamatrixadmin", getMMConnection().getUserName()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+      
+    /** test isReadOnly default value on Connection */
+    public void testIsReadOnly() throws Exception {
+        assertEquals(false, getMMConnection().isReadOnly());
+    }
+
+    /** test setReadOnly on Connection */
+    public void testSetReadOnly1() throws Exception {
+    	MMConnection conn = getMMConnection();
+        conn.setReadOnly(true);
+        assertEquals(true, conn.isReadOnly());
+    }
+
+    /** test setReadOnly on Connection during a transaction */
+    public void testSetReadOnly2() throws Exception {
+    	MMConnection conn = getMMConnection();
+        conn.setAutoCommit(false);
+        try {
+            conn.setReadOnly(true);
+            fail("Error Expected"); //$NON-NLS-1$
+        } catch (SQLException e) {
+            // error expected
+        }
+    }
+}

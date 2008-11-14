@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-metadata</artifactId>
+  <name>Metadata</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>Provides vdb metadata from index files.</description>
+  
+  <dependencies>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+    </dependency>    
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+      <type>test-jar</type>
+    </dependency>    
+        
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+      <type>test-jar</type>
+    </dependency>
+           
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-client</artifactId>
+    </dependency>
+    
+  </dependencies>
+  
+</project>

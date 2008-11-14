@@ -1,0 +1,75 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.dqp.internal.datamgr.language;
+
+import com.metamatrix.data.language.ICompareCriteria;
+import com.metamatrix.query.sql.lang.CompareCriteria;
+import com.metamatrix.query.sql.symbol.Constant;
+
+import junit.framework.TestCase;
+
+public class TestCompareCriteriaImpl extends TestCase {
+
+    /**
+     * Constructor for TestCompareCriteriaImpl.
+     * @param name
+     */
+    public TestCompareCriteriaImpl(String name) {
+        super(name);
+    }
+
+    public static CompareCriteria helpExample(int operator, int leftVal, int rightVal) {
+        Constant left = new Constant(new Integer(leftVal));
+        Constant right = new Constant(new Integer(rightVal));
+        return new CompareCriteria(left, operator, right);
+    }
+    public static CompareCriteriaImpl example(int operator, int leftVal, int rightVal) throws Exception {
+        return (CompareCriteriaImpl)TstLanguageBridgeFactory.factory.translate(helpExample(operator, leftVal, rightVal));
+    }
+
+    public void testGetLeftExpression() throws Exception {
+        CompareCriteriaImpl impl = example(CompareCriteria.GE, 200, 100);
+        assertNotNull(impl.getLeftExpression());
+        assertTrue(impl.getLeftExpression() instanceof LiteralImpl);
+        assertEquals(new Integer(200), ((LiteralImpl)impl.getLeftExpression()).getValue());
+    }
+
+    public void testGetRightExpression() throws Exception {
+        CompareCriteriaImpl impl = example(CompareCriteria.GE, 200, 100);
+        assertNotNull(impl.getRightExpression());
+        assertTrue(impl.getRightExpression() instanceof LiteralImpl);
+        assertEquals(new Integer(100), ((LiteralImpl)impl.getRightExpression()).getValue());
+    }
+
+    public void testGetOperator() throws Exception {
+        assertEquals(ICompareCriteria.EQ, example(CompareCriteria.EQ, 200, 100).getOperator());
+        assertEquals(ICompareCriteria.GE, example(CompareCriteria.GE, 200, 100).getOperator());
+        assertEquals(ICompareCriteria.GT, example(CompareCriteria.GT, 200, 100).getOperator());
+        assertEquals(ICompareCriteria.LE, example(CompareCriteria.LE, 200, 100).getOperator());
+        assertEquals(ICompareCriteria.LT, example(CompareCriteria.LT, 200, 100).getOperator());
+        assertEquals(ICompareCriteria.NE, example(CompareCriteria.NE, 200, 100).getOperator());
+    }
+
+}

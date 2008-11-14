@@ -1,0 +1,145 @@
+import java.io.*;
+import com.metamatrix.admin.api.core.*;
+import com.metamatrix.admin.api.objects.*;
+
+debug=false;
+
+getBshPrompt() { 
+    if (currentContext().internalPrompt == void || currentContext().internalPrompt == null) {
+        return "mmadmin $ ";
+    }
+    return currentContext().internalPrompt;
+}
+
+byte[] readBinaryFile(String fileName) {
+    
+    if(fileName == null) {
+        throw new IOException("fileName is null");
+    }
+    try {
+        //try to load file from the classpath
+        InputStream is = Object.class.getResourceAsStream("/"+fileName);
+         
+        byte[] result;
+        if (is == null) {
+            //load from "hardcoded" path        
+            is = new FileInputStream(new File(fileName));
+        }
+    
+        //convert to bytes
+        result = convertToByteArray(is);
+        is.close();    
+        return result;
+    }catch(e) {
+        e.printStackTrace(); 
+    }
+    return null;
+}
+
+char[] readTextFile(String fileName) {
+    if(fileName == null) {
+        throw new IOException("fileName is null");
+    }
+    
+    try {
+        //try to load file from the classpath
+        InputStream is = Object.class.getResourceAsStream("/"+fileName);
+        
+        char[] result;
+        if (is == null) {
+            //load from "hardcoded" path
+            is = new FileInputStream(new File(fileName));
+        }
+        
+        //   convert to bytes
+        result = convertToCharArray(is);
+        is.close();    
+        return result;
+    }catch(e) {
+        e.printStackTrace();
+    }
+}
+
+byte[] convertToByteArray(InputStream in) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream(10 * 1024);
+    int b = 0;
+    while ((b = in.read()) != -1) {
+        out.write(b);
+    }
+    return out.toByteArray();    
+}
+
+char[] convertToCharArray(InputStream in) throws IOException {
+    CharArrayWriter out = new CharArrayWriter(10 * 1024);
+    int b = 0;
+    while ((b = in.read()) != -1) {
+        out.write(b);
+    }
+    return out.toCharArray();    
+}
+
+cleanUpDirectory(String dirName, String[] filesToKeep){
+    dir = new File(dirName);
+    if (dir.exists()) {
+        files = dir.listFiles();    
+        for (File f:files) {
+            delete = true;
+            for (String keep:filesToKeep) {            
+                if (f.getName().equalsIgnoreCase(keep)) { 
+                    delete = false;
+                }
+                if (f.getName().endsWith(".deleted")) { 
+                    delete = false;
+                }                            
+            }
+            if (delete) f.delete();
+        }
+    }
+}
+
+void checkAdmin() {
+    context = currentContext();
+    if (context == void || context == null) {
+        throw new Exception("Not connected.  You must call a \"connect\" method");
+    } 
+    
+    if (context.internalAdmin == void || context.internalAdmin == null) {
+        throw new Exception("Not connected.  You must call a \"connect\" method");
+    }      
+}
+
+debug(Object msg){
+    if (debug) {
+        if (msg instanceof Collection) {
+            for (Object object:msg) {
+                print(object);
+            }
+        } else {
+            print(msg);
+        }
+    }
+}
+
+String extractVDBName(url) {
+    str = "jdbc:metamatrix:";
+    if (url.startsWith(str)) {
+        int at = url.indexOf("@");
+        if (at != -1) {
+            return url.substring(str.length(), at);
+        }
+    }
+    return "";
+}
+
+String extractHost(url) {
+    str = "jdbc:metamatrix:";
+    if (url.startsWith(str)) {
+        int at = url.indexOf("@")+1;
+        return url.substring(at, url.indexOf(";", at));
+    }
+    return "";
+}
+
+quit(){
+    exit();
+}

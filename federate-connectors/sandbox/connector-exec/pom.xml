@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <parent>
+    <artifactId>sandbox</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>connector-exec</artifactId>
+  <name>Exec Connector</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>This connector executes Admin API calls and System.exec calls through the connector using SQL representation</description>
+  <dependencies>
+	<dependency>
+	  <groupId>ant</groupId>
+	  <artifactId>ant</artifactId>
+	  <version>1.6.5</version>	
+	</dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-internal</artifactId>
+      <scope>compile</scope>
+    </dependency>        
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies> 
+</project>

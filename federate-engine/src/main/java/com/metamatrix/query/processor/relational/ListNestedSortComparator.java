@@ -1,0 +1,160 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.query.processor.relational;
+
+import java.util.*;
+
+/**
+ * This class can be used for comparing lists of elements, when the fields to
+ * be sorted on and the comparison mechanism are dynamically specified. <p>
+ *
+ * Typically, the lists are records in a collection that is to be sorted. <p>
+ *
+ * <h3>Example</h3>
+ * <pre>
+ *    Records...
+ *      { "a1", "b1", "c1" } 
+ *      { "a1", "b1", "c2" }
+ *      { "a1", "b2", "c1" }
+ *      { "a1", "b2", "c2" }
+ *      { "a2", "b1", "c1" } 
+ *      { "a2", "b1", "c2" } 
+ *      { "a2", "b2", "c1" } 
+ *      { "a2", "b2", "c2" }
+ *
+ *    Records sorted in ascending order on columns 0, 2...
+ *      { "a1", "b1", "c1" } 
+ *      { "a1", "b2", "c1" }
+ *      { "a1", "b2", "c2" }
+ *      { "a1", "b1", "c2" }
+ *      { "a2", "b1", "c1" } 
+ *      { "a2", "b2", "c1" } 
+ *      { "a2", "b1", "c2" } 
+ *      { "a2", "b2", "c2" } 
+ * </pre>
+ */
+public class ListNestedSortComparator implements java.util.Comparator, java.io.Serializable {
+
+    /**
+     * Specifies which fields to sort on.
+     */
+    int[] sortParameters;
+
+    /**
+     * Indicates whether comparision should be based on ascending or descending
+     * order.
+     */
+    boolean ascendingOrder = false;
+
+    /**
+     * List of booleans indicating the order in which each column should be sorted
+     */
+    List orderTypes = null;
+
+    /**
+     * Constructs an instance of this class given the indicies of the parameters
+     * to sort on, and whether the sort should be in ascending or descending
+     * order.
+     */
+    public ListNestedSortComparator( int[] sortParameters ) {
+        this( sortParameters, false );
+    }
+
+    /**
+     * Constructs an instance of this class given the indicies of the parameters
+     * to sort on, and whether the sort should be in ascending or descending
+     * order.
+     */
+    public ListNestedSortComparator( int[] sortParameters, boolean ascending ) {
+        this.sortParameters = sortParameters;
+        this.ascendingOrder = ascending;
+    }
+
+    /**
+     * Constructs an instance of this class given the indicies of the parameters
+     * to sort on, and orderList used to determine the order in which each column
+     * is sorted.
+     */
+    public ListNestedSortComparator( int[] sortParameters, List orderTypes ) {
+        this.sortParameters = sortParameters;
+        this.orderTypes = orderTypes;
+    }
+
+
+    /**
+     * Compares its two arguments for order.  Returns a negative integer,
+     * zero, or a positive integer as the first argument is less than,
+     * equal to, or greater than the second. <p>
+     *
+     * The <code>compare</code> method returns <p>
+     * <ul>
+     *      <li>-1 if object1 less than object 2 </li>
+     *      <li> 0 if object1 equal to object 2 </li>
+     *      <li>+1 if object1 greater than object 2 </li>
+     * </ul>
+     *
+     * @param o1 The first object being compared
+     * @param o2 The second object being compared
+     */
+    public int compare( Object o1, Object o2 ) {
+        // Cast input objects to Lists...
+        List list1 = (List)o1;
+        List list2 = (List)o2;
+
+        int compare = 0;
+        int k = 0;
+        while ( k < sortParameters.length && compare == 0 ) {
+            Object param1 = list1.get(sortParameters[k]);
+            Object param2 = list2.get(sortParameters[k]);
+            // if orderTypes is not set
+            if(orderTypes != null) {
+                // getting ordertype for each column
+                ascendingOrder = ((Boolean)orderTypes.get(k)).booleanValue();
+            }
+
+            if( param1 == null ) {
+				if(param2 == null ) {
+					// Both are null
+					compare = 0;
+				} else {
+					// param1 = null, so is less than a non-null
+					compare = -1;
+				}
+			} else if( param2 == null ) {
+				// param1 != null, param2 == null
+				compare = 1;
+			} else if ( param1 instanceof Comparable ) {
+                compare = ((Comparable)param1).compareTo(param2);
+            } else {
+                compare = param1.toString().compareTo(param2.toString());
+            }
+            k++;
+        }
+        return ascendingOrder ? compare : -compare;
+    }
+    
+} // END CLASS    
+
+

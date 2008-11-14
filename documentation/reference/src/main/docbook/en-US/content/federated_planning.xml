@@ -1,0 +1,1072 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="federated_planning">
+  <title>Federated Planning</title>
+  <para>Federate at its core is a federated relational query
+    engine. This query engine allows you to treat all of your data
+    sources as one virtual database and access them in a single SQL
+    query. This allows you to focus on building your application, not on
+    hand-coding joins, and other relational operations, between data
+    sources.</para>
+  <sect1>
+    <title>Overview</title>
+    <para>When the query engine receives an incoming SQL query it
+      performs the following operations:</para>
+    <orderedlist>
+      <listitem>
+        <para>Parsing - validate syntax and convert to internal
+          form</para>
+      </listitem>
+      <listitem>
+        <para>Resolving - link all identifiers to metadata and
+          functions to the function library</para>
+      </listitem>
+      <listitem>
+        <para>Validating - validate SQL semantics based on
+          metadata references and type signatures</para>
+      </listitem>
+      <listitem>
+        <para>Rewriting - rewrite SQL to simplify expressions
+          and criteria</para>
+      </listitem>
+      <listitem>
+        <para>
+          Logical plan optimization - the rewritten canonical SQL is
+          converted into a logical plan for in-depth optimization. The
+          Federate optimizer is predominantly rule-based. Based upon the
+          query structure and hints a certain rule set will be applied.
+          These rules may trigger in turn trigger the execution of more
+          rules. Within several rules, Federate also takes advantage of
+          costing information. The logical plan optimization steps can
+          be seen by using the
+          <link linkend="option_clause">OPTION DEBUG</link>
+          clause and are described in the
+          <link linkend="query_planner">query planner</link>
+          section.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Processing plan conversion - the logic plan is converted into
+          an executable form where the nodes are representative of basic
+          processing operations. The final processing plan is displayed
+          as the
+          <link linkend="query_plan">query plan</link>
+          .
+        </para>
+      </listitem>
+    </orderedlist>
+    <para>
+      The logical query plan is a tree of operations used to transform
+      data in source tables to the expected result set. In the tree,
+      data flows from the bottom (tables) to the top (output). The
+      primary logical operations are
+      <emphasis>select</emphasis>
+      (select or filter rows based on a criteria),
+      <emphasis>project</emphasis>
+      (project or compute column values),
+      <emphasis>join</emphasis>
+      ,
+      <emphasis>source</emphasis>
+      (retrieve data from a table),
+      <emphasis>sort</emphasis>
+      (ORDER BY),
+      <emphasis>duplicate removal</emphasis>
+      (SELECT DISTINCT),
+      <emphasis>group</emphasis>
+      (GROUP BY), and
+      <emphasis>union</emphasis>
+      (UNION).
+    </para>
+    <para>For example, consider the following query that retrieves
+      all engineering employees born since 1970.</para>
+    <example>
+      <title>Example query</title>
+      <programlisting>SELECT e.title, e.lastname FROM Employees AS e JOIN 
+Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND d.dept_name = 'Engineering'</programlisting>
+    </example>
+    <para>Logically, the data from the Employees and Departments
+      tables are retrieved, then joined, then filtered as specified, and
+      finally the output columns are projected. The canonical query plan
+      thus looks like this:</para>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/query_plan.png"/>
+      </imageobject>
+    </mediaobject>
+    <para>Data flows from the tables at the bottom upwards through the
+      join, through the select, and finally through the project to produce
+      the final results. The data passed between each node is logically a
+      result set with columns and rows.</para>
+    <para>
+      Of course, this is what happens
+      <emphasis>logically</emphasis>
+      , not how the plan is actually executed. Starting from this initial
+      plan, the query planner performs transformations on the query plan
+      tree to produce an equivalent plan that retrieves the same results
+      faster. Both a federated query planner and a relational database
+      planner deal with the same concepts and many of the same plan
+      transformations. In this example, the criteria on the Departments
+      and Employees tables will be pushed down the tree to filter the
+      results as early as possible.
+    </para>
+    <para>In both cases, the goal is to retrieve the query results in
+      the fastest possible time. However, the relational database planner
+      does this primarily by optimizing the access paths in pulling data
+      from storage.</para>
+    <para>In contrast, a federated query planner is less concerned about
+      storage access because it is typically pushing that burden to the
+      data source. The most important consideration for a federated query
+      planner is minimizing data transfer.</para>
+      
+  </sect1>
+  <sect1>
+    <title>Federated Optimizations</title>
+    <sect2>
+      <title>Pushdown</title>
+      <para>In federated database systems pushdown refers to
+        decomposing the user level query into source queries that
+        perform as much work as possible on their respective source
+        system. Pushdown analysis requires knowledge of source system
+        capabilities, which is provided to Federate though the Connector
+        API. Any work not performed at the source is then processed in
+        Federate's relational engine.</para>
+      <para>
+        Based upon capabilities, Federate will manipulate the query plan
+        to ensure that each source performs as much joining, filtering,
+        grouping, etc. as possible. In may cases, such as with join
+        ordering, planning is a combination of
+        <link linkend="standard_relational_techniques">standard relational techniques</link>
+        and, cost based and heuristics for pushdown optimization.
+      </para>
+      <para>
+        Criteria and join push down are typically the most important
+        aspects of the query to push down when performance is a concern.
+        See
+        <link linkend="query_plan">Query Plans</link>
+        on how to read a plan to ensure that source queries are as
+        efficient as possible.
+      </para>
+    </sect2>
+    <sect2 id="dependent_joins">
+      <title>Dependent Joins</title>
+      <para>A special optimization called a dependent join is used to
+        reduce the rows returned from one of the two relations involved
+        in a multi-source join. In a dependent join, queries are issued
+        to each source sequentially rather than in parallel, with the
+        results obtained from the first source used to restrict the
+        records returned from the second. Dependent joins can perform
+        some joins much faster by drastically reducing the amount of
+        data retrieved from the second source and the number of join
+        comparisons that must be performed.</para>
+      <para> The conditions when a dependent join is used are determined
+        by the query planner based on access patterns, hints, and
+        costing information.</para>
+      <para>
+        Federate supports the MAKEDEP and MAKENOTDEP hints. Theses are
+        can be placed in either the
+        <link linkend="option_clause">OPTION clause</link>
+        or directly in the
+        <link linkend="from_clause">FROM clause</link>
+        . As long as all access patterns can be met, the MAKEDEP and
+        MAKENOTDEP hints override any use of costing information.
+      </para>
+      <tip>
+        <para> The MAKEDEP hint should only be used if the proper query
+          plan is not chosen by default. You should ensure that your
+          costing information is representative of the actual source
+          cardinality. An inappropriate MAKEDEP hint can force an
+          inefficient join structure and may result in many source
+          queries.</para>
+      </tip>
+    </sect2>
+    <sect2>
+      <title>Copy Criteria</title>
+      <para> Copy criteria is an optimization that creates additional
+        predicates based upon combining join and where clause criteria.
+        For example, equi-join predicates (source1.table.column =
+        source2.table.column) are used to create new predicates by
+        substituting source1.table.column for source2.table.column and
+        vice versa. In a cross source scenario, this allows for where
+        criteria applied to a single side of the join to be applied to
+        both source queries</para>
+    </sect2>
+    <sect2>
+      <title>Projection Minimization</title>
+      <para> Federate ensures that each pushdown query only projects the
+        symbols required for processing the user query. This is
+        especially helpful when querying through large intermediate view
+        layers.</para>
+    </sect2>
+    <sect2>
+      <title>Partial Aggregate Pushdown</title>
+      <para> Partial aggregate pushdown allows for grouping operations
+        above multi-source joins to be decomposed so that some of the
+        grouping and aggregate functions may be pushed down to the
+        sources.</para>
+    </sect2>
+    <sect2 id="optional_join">
+      <title>Optional Join</title>
+      <para>The optional join hint indicates to the Federate
+        optimizer that a join clause should be omitted if none of its
+        columns are used in either user criteria or output columns in
+        the result. This hint is typically only used in view layers
+        containing multi-source joins.</para>
+      <para>
+        The optional join hint is applied as a comment on a join clause.
+        <example>
+          <title>Example Optional Join Hint</title>
+          <programlisting>select a.column1, b.column2 from a inner join /* optional */ b on a.key = b.key</programlisting>
+        </example>
+      </para>
+      <para> Suppose that the preceding example defined a view layer X.
+        If X is queried in such a way as to not need b.column2, then the
+        optional join hint will cause b to be omitted from the query
+        plan. The result would be the same as if X were defined as:
+      </para>
+      <programlisting>select a.column1 from a</programlisting>
+      <tip>
+        <para> When a join clause is omitted, the relevant join criteria
+          is not applied. Thus it is possible that the query results may
+          not have the same cardinality or even the same row values as
+          when the join is fully applied.</para>
+      </tip>
+    </sect2>
+    <sect2 id="standard_relational_techniques">
+      <title>Standard Relational Techniques</title>
+      <para>
+        Federate also incorporates many standard relational techniques
+        to ensure efficient query plans.
+        <itemizedlist>
+          <listitem>
+            <para>Rewrite analysis for function simplification
+              and evaluation.</para>
+          </listitem>
+          <listitem>
+            <para>Boolean optimizations for basic criteria
+              simplification.</para>
+          </listitem>
+          <listitem>
+            <para>Removal of unnecessary view layers.</para>
+          </listitem>
+          <listitem>
+            <para>Removal of unnecessary sort operations.</para>
+          </listitem>
+          <listitem>
+            <para>Advanced search techniques through the
+              left-linear space of join trees.</para>
+          </listitem>
+          <listitem>
+            <para>Parallelizing of source access during execution.</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Federated Failure Modes</title>
+    <sect2>
+      <title>Partial Results</title>
+      <para>Federate provides the capability to obtain "partial
+        results" in the event of data source unavailability. This is
+        especially useful when unioning information from multiple
+        sources, or when doing a left outer join, where you are
+        'appending' columns to a master record but still want the record
+        if the extra info is not available.</para>
+      <para> If one or more data sources are unavailable to return
+        results, then the result set obtained from the remaining
+        available sources will be returned. In the case of joins, an
+        unavailable data source essentially contributes zero tuples to
+        the result set.</para>
+      <sect3>
+        <title>Setting Partial Results Mode</title>
+        <para>
+          Partial results mode is off by default but can be turned on by
+          default for all queries in a Connection with either
+          setPartialResultsMode("true") on a DataSource or
+          partialResultsMode=true on a JDBC URL. In either case, partial
+          results mode may be overridden on a per-query basis by setting
+          the execution property on the Statement. To set this property,
+          cast to the Federate Statement JDBC API extension interface
+          <classname>com.metamatrix.jdbc.api.Statement
+          </classname>
+        </para>
+        <example>
+          <title>Example - Setting Partial Results Mode</title>
+          <programlisting>Statement statement = ...obtain statement from Connection... 
+
+com.metamatrix.jdbc.api.Statement mmStatement = 
+  (com.metamatrix.jdbc.api.Statement) statement;
+  
+mmStatement.setExecutionProperty( 
+  ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, "true");</programlisting>
+        </example>
+        <para>This property can be set before each execution (via an
+          execute method) on a Statement (or PreparedStatement or
+          CallableStatement).</para>
+      </sect3>
+      <sect3>
+        <title>Source Unavailability</title>
+        <para>A source is considered to be 'unavailable' if the
+          connector binding associated with the source issues an
+          exception in response to a query. The exception will be
+          propagated to the query processor, where it will become a
+          warning in the result set.</para>
+        <warning>
+          <para> Since Federate supports multi-source cursoring, it is
+            possible that the unavailability of a data source will not
+            be determined until after the first batch of results have
+            been returned to the client. This can happen in the case of
+            unions, but not joins. In this situation, there will be no
+            warnings in the result set when the client is processing the
+            first batch of results. The client will be responsible for
+            periodically checking the status of warnings in the results
+            object as results are being processed, to see if a new
+            warning has been added due to the detection of an
+            unavailable source. [Note that client applications have no
+            notion of ‘batches’, which are purely a server-side entity.
+            Client apps deal only with records.]</para>
+        </warning>
+        <para> For each source that is excluded from a query, a warning
+          will be generated describing the source and the failure. These
+          warnings can be obtained from the ResultSet.getWarnings()
+          method. This method returns a SQLWarning object but in the
+          case of "partial results" warnings, this will be an object of
+          type com.metamatrix.jdbc.api.PartialResultsWarning. This class
+          can be used to obtain a list of all the failed connectors by
+          name and to obtain the specific exception thrown by each
+          connector.</para>
+        <example>
+          <title>Example - Printing List of Failed Sources
+          </title>
+          <programlisting>statement.setExecutionProperty( PROP_PARTIAL_RESULTS_MODE, "true"); 
+ResultSet results = statement.executeQuery("SELECT Name FROM Accounts"); 
+SQLWarning warning = results.getWarnings(); 
+if(warning instanceof PartialResultsWarning) { 
+  PartialResultsWarning partialWarning = (PartialResultsWarning)warning; 
+  Collection failedConnectors = partialWarning.getFailedConnectors(); 
+  Iterator iter = failedConnectors.iterator(); 
+  while(iter.hasNext()) { 
+    String connectorName = (String) iter.next(); 
+    SQLException connectorException = partialWarning.getConnectorException(connectorName); 
+    System.out.println(connectorName + ": " + ConnectorException.getMessage();
+  }
+}</programlisting>
+        </example>
+      </sect3>
+    </sect2>
+  </sect1>
+  <sect1 id="query_plan">
+    <title>Query Plans</title>
+    <para>When integrating information using a federated query
+      planner, it is useful to be able to view the query plans that are
+      created, to better understand how information is being accessed
+      and processed, and to troubleshoot problems.</para>
+    <para>A query plan is a set of instructions created by a query
+      engine for executing a command submitted by a user or application.
+      The purpose of the query plan is to execute the user's query in as
+      efficient a way as possible.</para>
+    <sect2>
+      <title>Getting a Query Plan</title>
+      <para> You can get a query plan any time you execute a command.
+        The SQL options available are as follows:</para>
+      <itemizedlist>
+        <listitem>
+          <para>OPTION SHOWPLAN - Returns the plan in addition to
+            any results</para>
+        </listitem>
+        <listitem>
+          <para>OPTION PLANONLY - Returns the plan, does not
+            execute the command though</para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        With the above options, the query plan is available from the
+        Statement object by casting to the
+        <classname>com.metamatrix.jdbc.api.Statement
+        </classname>
+        interface.
+      </para>
+      <example>
+        <title>Retrieving a Query Plan</title>
+        <programlisting>ResultSet rs = statement.executeQuery("select ...");
+com.metamatrix.jdbc.api.Statement mmstatement = (com.metamatrix.jdbc.api.Statement)statement;
+PlanNode queryPlan = mmstatement.getPlanDescription();
+System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
+      </example>
+      <para>The query plan is made available automatically in several
+        of Federate's tools.</para>
+    </sect2>
+    <sect2>
+      <title>Analyzing a Query Plan</title>
+      <para>
+        Once a query plan has been obtained you will most commonly be
+        looking for:
+        <itemizedlist>
+          <listitem>
+            <para>Source pushdown -- what parts of the query that
+              got pushed to each source</para>
+          </listitem>
+          <listitem>
+            <para>Join ordering</para>
+          </listitem>
+          <listitem>
+            <para>Join algorithm used - merge or nested loop.</para>
+          </listitem>
+          <listitem>
+            <para>Presence of federated optimizations, such as
+              dependent joins.</para>
+          </listitem>
+          <listitem>
+            <para>Join criteria type mismatches.</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <para>All of these issues presented above will be present
+        subsections of the plan that are specific to relational queries.
+        If you are executing a procedure or generating an XML document,
+        the overall query plan will contain additional information
+        related the surrounding procedural execution.</para>
+      <para>A query plan consists of a set of nodes organized in a tree
+        structure. As with the above example, you will typically be
+        interested in analyzing the textual form of the plan.</para>
+      <para> In a procedural context the ordering of child nodes implies
+        the order of execution. In most other situation, child nodes may
+        be executed in any order even in parallel. Only in specific
+        optimizations, such as dependent join, will the children of a
+        join execute serially.</para>
+    </sect2>
+    <sect2>
+      <title>Relational Plans</title>
+      <para>Relational plans represent the actually processing
+        plan that is composed of nodes that are the basic building
+        blocks of logical relational operations. Physical relational
+        plans differ from logical relational plans in that they will
+        contain additional operations and execution specifics that were
+        chosen by the optimizer.</para>
+      <para>The nodes for a relational query plan are:</para>
+      <itemizedlist>
+        <listitem>
+          <para>Access - Access a source. A source query is sent
+            to the connector binding associated with the source. [For a
+            dependent join, this node is called Dependent Select.]
+          </para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Project - Defines the columns returned from the
+            node. This does not alter the number of records returned.
+            [When there is a subquery in the Select clause, this node is
+            called Dependent Project.]</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Project Into - Like a normal project, but outputs
+            rows into a target table.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Select - Select is a criteria evaluation filter
+            node (WHERE / HAVING). [When there is a subquery in the
+            criteria, this node is called Dependent Select.]</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Join - Defines the join type, join criteria, and
+            join strategy (merge or nested loop).</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para> Union - There are no properties for this node, it just
+            passes rows through from it's children</para>
+        </listitem>
+        <listitem>
+          <para>Sort - Defines the columns to sort on, the sort
+            direction for each column, and whether to remove duplicates
+            or not.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Dup Removal - Same properties as for Sort, but the
+            removeDups property is set to true</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Group - Groups sets of rows into groups and
+            evaluates aggregate functions.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para>Null - A node that produces no rows. Usually
+            replaces a Select node where the criteria is always false
+            (and whatever tree is underneath). There are no properties
+            for this node.</para>
+        </listitem>
+        <listitem>
+          <para>Plan Execution - Executes another sub plan.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para> Limit - Returns a specified number of rows, then stops
+            processing. Also processes an offset if present.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para> Dependent Feeder - This node accepts its input stream
+            and forwards to its parent unchanged but also feeds all
+            dependent sources that need the stream of data. Thus, this
+            node actually performs no work within the tree, just diverts
+            a copy of the tuple stream to listening nodes.</para>
+          <para />
+        </listitem>
+        <listitem>
+          <para> Dependent Wait - This node waits until a criteria
+            requiring dependent values below this node has the necessary
+            data to continue. At that point, it continues processing on
+            it's subplan and merely forwards data from the child to the
+            parent.</para>
+        </listitem>
+      </itemizedlist>
+      <sect3>
+        <title>Node Statistics</title>
+        <para>Every node has a set of statistics that are output.
+          These can be used to determine the amount of data flowing
+          through the node.</para>
+        <informaltable frame="all">
+          <tgroup cols="3">
+            <thead>
+              <row>
+                <entry>
+                  <para>Statistic</para>
+                </entry>
+                <entry>
+                  <para>Description</para>
+                </entry>
+                <entry>
+                  <para>Units</para>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <para>Node Output Rows</para>
+                </entry>
+                <entry>
+                  <para>Number of records output from the node
+                  </para>
+                </entry>
+                <entry>
+                  <para>count</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Node Process Time</para>
+                </entry>
+                <entry>
+                  <para>Time processing in this node only</para>
+                </entry>
+                <entry>
+                  <para>millisec</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Node Cumulative Process Time</para>
+                </entry>
+                <entry>
+                  <para>Elapsed time from beginning of processing
+                    to end</para>
+                </entry>
+                <entry>
+                  <para>millisec</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Node Cumulative Next Batch Process Time
+                  </para>
+                </entry>
+                <entry>
+                  <para>Time processing in this node + child nodes
+                  </para>
+                </entry>
+                <entry>
+                  <para>millisec</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Node Next Batch Calls</para>
+                </entry>
+                <entry>
+                  <para>Number of times a node was called for
+                    processing</para>
+                </entry>
+                <entry>
+                  <para>count</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Node Blocks</para>
+                </entry>
+                <entry>
+                  <para>Number of times a blocked exception was
+                    thrown by this node or a child</para>
+                </entry>
+                <entry>
+                  <para>count</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+        <para>In addition to node statistics, some nodes display cost
+          estimates computed at the node.</para>
+        <informaltable frame="all">
+          <tgroup cols="3">
+            <thead>
+              <row>
+                <entry>
+                  <para>Cost Estimates</para>
+                </entry>
+                <entry>
+                  <para>Description</para>
+                </entry>
+                <entry>
+                  <para>Units</para>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <para>Estimated Node Cardinality</para>
+                </entry>
+                <entry>
+                  <para>Estimated number of records that will
+                    be output from the node; -1 if unknown</para>
+                </entry>
+                <entry>
+                  <para>count</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+        <para />
+      </sect3>
+    </sect2>
+  </sect1>
+  <sect1 id="query_planner">
+    <title>Query Planner</title>
+    <para>For each sub-command in the user command an appropriate kind
+      of sub-planner is used (relational, XML, XQuery, procedure,
+      etc).</para>
+    <para>Each planner has three primary phases:</para>
+    <orderedlist>
+      <listitem>
+        <para>Generate canonical plan</para>
+      </listitem>
+      <listitem>
+        <para>Optimization</para>
+      </listitem>
+      <listitem>
+        <para>Plan to process converter - converts  plan data structure into a processing form</para>
+      </listitem>
+    </orderedlist>
+    <sect2>
+      <title>Relational Planner</title>
+          <para>The GenerateCanonical class generates the initial (or
+            “canonical” plan).  This plan is based on the typical logical order
+            that a SQL query gets executed.  A SQL select query has the following
+            possible clauses (all but SELECT are optional in MetaMatrix):  SELECT,
+            FROM, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT.  These clauses are
+            logically executed in the following order:</para>
+          <orderedlist>
+            <listitem>
+              <para>FROM (read and join all data from tables)</para>
+            </listitem>
+            <listitem>
+              <para>WHERE (filter rows)</para>
+            </listitem>
+            <listitem>
+              <para>GROUP BY (group rows into collapsed rows)</para>
+            </listitem>
+            <listitem>
+              <para>HAVING (filter grouped rows)</para>
+            </listitem>
+            <listitem>
+              <para>SELECT (evaluate expressions and return only requested columns)</para>
+            </listitem>
+            <listitem>
+              <para>INTO</para>
+            </listitem>
+            <listitem>
+              <para>ORDER BY (sort rows)</para>
+            </listitem>
+            <listitem>
+              <para>LIMIT (limit result set to a certain range of results)</para>
+            </listitem>
+          </orderedlist>
+          <para>These clause translate into the following types of planning
+            nodes:</para>
+          <itemizedlist>
+            <listitem>
+              <para>FROM: Source node for each from clause item, Join node (if &gt;1 table)</para>
+            </listitem>
+            <listitem>
+              <para>WHERE:  Select node</para>
+            </listitem>
+            <listitem>
+              <para>GROUP BY: Group node</para>
+            </listitem>
+            <listitem>
+              <para>GROUP BY: Group node</para>
+            </listitem>
+            <listitem>
+              <para>SELECT: Project node and DupRemoval node (for SELECT DISTINCT)</para>
+            </listitem>
+            <listitem>
+              <para>INTO: Project node with a SOURCE Node</para>
+            </listitem>
+            <listitem>
+              <para>INTO: Project node with a SOURCE Node</para>
+            </listitem>
+            <listitem>
+              <para>LIMIT: Limit node</para>
+            </listitem>
+            <listitem>
+              <para>UNION, EXCEPT, INTERSECT: SetOp Node</para>
+            </listitem>
+          </itemizedlist>
+          <para>There is also a Null Node that can be created as the result
+            of rewrite or planning optimizations. It represents a node that
+            produces no rows</para>
+          <para>Relational optimization is based upon rule
+            execution that evolves the initial plan into the execution plan.
+             There are a set of pre-defined rules that are dynamically
+            assembled into a rule stack for every query.  The rule stack is
+            assembled based on the contents of the user’s query and its
+            transformations.  For example, if there are no virtual layers, then
+            RuleMergeVirtual, which merges virtual layers together, is not
+            needed and will not be added to the stack.  This allows the rule
+            stack to reflect the complexity of the query.</para>
+          <para>Logically the plan node data structure represents a tree of nodes
+            where the source data comes up from the leaf nodes (typically Access
+            nodes in the final plan), flows up through the tree and produces the
+            user’s results out the top.  The nodes in the plan structure can have
+            bidirectional links, dynamic properties, and allow any number of
+            child nodes.  Processing <link linkend="query_plan">plan nodes</link> in contrast typical have fixed
+            properties, and only allow for binary operations - due to algorithmic limitations.</para>
+          <para>Below are some of the rules included in the planner:</para>
+          <itemizedlist>
+            <listitem>
+          <para>RuleRemoveSorts - removes sort nodes that do not have an effect on the result.  This most common when a
+            view has an non-limited ORDER BY.</para>
+            </listitem>
+            <listitem>
+          <para>RulePlaceAccess - insert an Access node above every physical
+            Source node.  The source node represents a table typically.  An access
+            node represents the point at which everything below the access node
+            gets pushed to the source.  Later rules focus on either pushing stuff
+            under the access or pulling the access node up the tree to move more
+            work down to the data sources.  This rule is also responsible for
+            placing access patterns.  </para>
+            </listitem>
+            <listitem>
+          <para>RulePushSelectCriteria - pushes select criteria down through
+            unions, joins, and views into the source below the
+            access node.  In most cases movement down the tree is good as this
+            will filter rows earlier in the plan.  We currently do not undo the
+            decisions made by PushSelectCriteria.  However in situations where
+            criteria cannot be evaluated by the source, this can lead to sub
+            optimal plans.</para>
+          <para>One of the most important optimization related to pushing
+            criteria, is how the criteria will be pushed trough join.  Consider
+            the following plan tree that represents a subtree of the plan for
+            the query "select ... from A inner join b on (A.x = B.x) where A.y =
+            3"</para>
+<programlisting>          SELECT (B.y = 3)
+           |
+          JOIN - Inner Join on (A.x = B.x
+         /     \    
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>Note: SELECT nodes represent criteria, and SRC stands for
+            SOURCE.</para>
+          <para>It is always valid for inner join and cross joins to push
+            (single source) criteria that are above the join, below the join.
+             This allows for criteria originating in the user query to eventually
+            be present in source queries below the joins.  This result can be
+            represented visually as:</para>
+
+<programlisting>          JOIN - Inner Join on (A.x = B.x)
+          /    \
+         /   SELECT (B.y = 3)
+        |        |
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>The same optimization is valid for criteria specified against
+            the outer side of an outer join.  For example:</para>
+
+<programlisting>          SELECT (B.y = 3) 
+           |
+          JOIN - Right Outer Join on (A.x = B.x)
+         /     \    
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>Becomes</para>
+
+<programlisting>          JOIN - Right Outer Join on (A.x = B.x)
+          /    \
+         /   SELECT (B.y = 3)
+        |        |
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>However criteria specified against the inner side of an
+            outer join needs special consideration.  The above scenario with a
+            left or full outer join is not the same.  For example:</para>
+
+<programlisting>          SELECT (B.y = 3)
+           |
+          JOIN - Left Outer Join on (A.x = B.x)
+         /     \    
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>Can become (available only after 5.0.2):</para>
+
+<programlisting>          JOIN - Inner Join on (A.x = B.x)
+          /    \
+         /   SELECT (B.y = 3)
+        |        |
+      SRC (A)   SRC (B)</programlisting>
+
+          <para>Since the criterion is not dependent upon the null values
+            that may be populated from the inner side of the join, the criterion
+            is eligible to be pushed below the join – but only if the join type
+            is also changed to an inner join.  </para>
+          <para>On the other hand, criteria that are dependent upon the
+            presence of null values CANNOT be moved.  For example:</para>
+
+<programlisting>          SELECT (B.y is null)
+           |
+          JOIN - Left Outer Join on (A.x = B.x)
+         /     \   
+      SRC (A)   SRC (B)</programlisting>
+
+        <para>This plan tree must have the criteria remain above the join,
+          since the outer join may be introducing null values itself.  This will
+          be true regardless of which version of MetaMatrix is used.</para>
+        </listitem>
+        <listitem>
+        <para>RulePushNonJoinCriteria – this rule will push criteria out of
+          an on clause if it is not necessary for the correctness of the join.
+        </para>
+        </listitem>
+        <listitem>
+        <para>RuleRaiseNull – this rule will raise null nodes to their
+          highest possible point.  Raising a null node removes the need to
+          consider any part of the old plan that was below the null node.
+        </para>
+        </listitem>
+        <listitem>
+        <para>RuleMergeVirtual - merges virtual layers together.  Virtual
+          layers are connected by nesting canonical plans under source leaf
+          nodes of the parent plan.  Each canonical plan is also sometimes
+          referred to as a “query frame”.  Merge virtual attempts to merge
+          child frames into the parent frame.   The merge involves renaming
+          any symbols in the lower frame that overlap with symbols in the
+          upper frame.  It also involves merging the join information
+          together.</para>
+        </listitem>
+        <listitem>
+        <para>RuleRemoveOptionalJoins – removes optional join nodes form
+          the plan tree as soon as possible so that planning will be more
+          optimal.</para>
+        </listitem>
+        <listitem>
+        <para>RulePlanJoins – this rule attempts to find an optimal
+          ordering of the joins performed in the plan, while ensuring that
+          access pattern dependencies are met.  This rule has three main
+          steps.  First it must determine an ordering of joins that satisfy
+          the access patterns present.  Second it will heuristically create
+          joins that can be pushed to the source (if a set of joins are pushed
+          to the source, we will not attempt to create an optimal ordering
+          within that set.  More than likely it will be sent to the source in
+          the non-ANSI multi-join syntax and will be optimized by the
+          database).  Third it will use costing information to determine the
+          best left-linear ordering of joins performed in MetaMatrix.  This
+          third step will do an exhaustive search for 6 or less join sources
+          and is heuristically driven by join selectivity for 7 or more
+          sources.</para>
+        </listitem>
+        <listitem>
+        <para>RuleCopyCriteria - this rule copies criteria over an equality
+          criteria that is present in the criteria of a join.  Since the
+          equality defines an equivalence, this is a valid way to create a new
+          criteria that may limit results on the other side of the join
+          (especially in the case of a multi-source join).  </para>
+        </listitem>
+        <listitem>
+        <para>RuleCleanCriteria - this rule cleans up criteria after all the other
+          rules.</para>
+        </listitem>
+            <listitem>
+        <para>RuleMergeCriteria - looks for adjacent criteria nodes and
+          merges them together.  It looks for adjacent identical conjuncts and
+          removes duplicates.  </para>
+        </listitem>
+            <listitem>
+        <para>RuleRaiseAccess - this rule attempts to raise the Access
+          nodes as far up the plan as possible.  This is mostly done by
+          looking at the source’s capabilities and determining whether the
+          operations can be achieved in the source or not.</para>
+        </listitem>
+            <listitem>
+        <para>RuleChooseDependent - this rule looks at each join node and
+          determines whether the join should be made dependent and in which
+          direction.  Cardinality, the number of distinct values, and primary
+          key information are used in several formulas to determine whether a
+          dependent join is likely to be worthwhile.  The dependent join
+          differs in performance ideally because a fewer number of values will
+          be returned from the dependent side.  Also, we must consider the
+          number of values passed from independent to dependent side.  If that
+          set is larger than the max number of values in an IN criteria on the
+          dependent side, then we must break the query into a set of queries
+          and combine their results.  Executing each query in the connector
+          has some overhead and that is taken into account.  Without costing
+          information a lot of common cases where the only criteria specified
+          is on a non-unique (but strongly limiting) field are missed.  A join
+          is eligible to be dependent if:</para>
+        <orderedlist>
+          <listitem>
+            <para>there is at least one equi-join criterion, i.e.
+              tablea.col = tableb.col</para>
+          </listitem>
+          <listitem>
+            <para>the join is not a full outer join and the dependent side of
+              the join is on the inner side of the join</para>
+          </listitem>
+        </orderedlist>
+
+        <para>The join will be made dependent if one of the following
+          conditions, listed in precedence order, holds:</para>
+
+        <orderedlist>
+          <listitem>
+            <para>There is an unsatisfied access pattern that can be
+              satisfied with the dependent join criteria</para>
+          </listitem>
+          <listitem>
+            <para>The potential dependent side of the join is marked with an
+              option makedep</para>
+          </listitem>
+          <listitem>
+            <para>(4.3.2) if costing was enabled, the estimated cost for the
+              dependent join (5.0+ possibly in each direction in the case of inner
+              joins) is computed and compared to not performing the dependent join. 
+              If the costs were all determined (which requires all relevant table
+              cardinality, column ndv, and possibly nnv values to be populated) the
+              lowest is chosen.</para>
+          </listitem>
+          <listitem>
+            <para>If key metadata information indicates that the potential dependent side is not “small” and the other side is “not small” or (5.0.1) the potential dependent side is the inner side of a left outer join. </para>
+          </listitem>
+        </orderedlist>
+        <para>Dependent join is the key optimization we use to
+          efficiently process multi-source joins.</para>
+        <para>Instead of reading all of source A and all of source B
+          and joining them on A.x = B.x, we read all of A then build a set of
+          A.x that are passed as a criteria when querying B.  In cases where A
+          is small and B is large, this can drastically reduce the data
+          retrieved from B, thus greatly speeding the overall query.</para>
+        </listitem>
+            <listitem>
+        <para>RuleChooseJoinStrategy – Determines the base join strategy.
+           Currently this is a decision as to whether to use a merge join rather
+          than the default strategy, which is a nested loop join.  Ideally the
+          choice of a hash join would also be evaluated here.  Also costing
+          should be used to determine the strategy cost.  </para>
+        </listitem>
+            <listitem>
+        <para>- RuleCollapseSource - this rule removes all nodes below an
+          Access node and collapses them into an equivalent query that is
+          placed in the Access node.</para>
+        </listitem>
+            <listitem>
+        <para>RuleAssignOutputElements - this rule walks top down through
+          every node and calculates the output columns for each node.  Columns
+          that are not needed are dropped at every node.  This is done by
+          keeping track of both the columns needed to feed the parent node and
+          also keeping track of columns that are “created” at a certain node.
+        </para>
+        </listitem>
+            <listitem>
+        <para>RuleValidateWhereAll - this rule validates a rarely used
+          model option.</para>
+        </listitem>
+            <listitem>
+        <para>RuleAccessPatternValidation – validates that all access
+          patterns have been satisfied.</para>
+        </listitem>
+        </itemizedlist>
+       </sect2>
+       <sect2>
+        <title>Procedure Planner</title>
+        <para>The procedure planner is fairly simple.  It converts the
+          statements in the procedure into instructions in a program that will
+          be run during processing.  This is mostly a 1-to-1 mapping and very little optimization is performed.</para>
+       </sect2>
+       <sect2>
+          <title>XML Planner</title>
+          <para>The XML planner is relatively close to the end result of
+            the Procedure Planner – a program with instructions.  Many of the
+            instructions are even similar (while loop, execute SQL, etc).
+             However, there is much more work involved in starting from the
+            XML mapping transformation (defined visually in the Modeler) and
+            the XML query than starting from the procedure.  Additional
+            instructions deal with producing the output result document
+            (adding elements and attributes).  </para>
+          <para>The XML planner does several types of planning (not
+            necessarily in this order):</para>
+          <para>- Document selection - determine which tags of the virtual
+            document should be excluded from the output document.  This is
+            done based on a combination of the model (which marks parts of the
+            document excluded) and the query (which may specify a subset of
+            columns to include in the SELECT clause).  </para>
+          <para>- Criteria evaluation - breaks apart the user’s criteria,
+            determine which result set the criteria should be applied to, and
+            add that criteria to that result set query.  The trickiest part of
+            this process is the difference between the result set that the tag
+            in the criteria is mapped to and the “context” result set which is
+            where the criteria is actually applied to.  These are often
+            different as by default the criteria is applied to the root result
+            set, not to the directly related one, then a join occurs to walk
+            back up the mappings.  </para>
+          <para>- Result set ordering - the query’s ORDER BY clause is broken
+            up and the ORDER BY is applied to each result set as necessary
+          </para>
+          <para>- Result set planning - ultimately, each result set is
+            planned using the relational planner and taking into account all
+            the impacts from the user’s query</para>
+          <para>- Program generation - a set of instructions to produce the
+            desired output document is produced, taking into account the final
+            result set queries and the excluded parts of the document.
+             Generally, this involves walking through the virtual document in
+            document order, executing queries as necessary and emitting
+            elements and attributes.</para>
+          <para>XML programs can also be recursive, which involves using
+            the same document fragment for both the initial fragment and a set
+            of repeated fragments (each a new query) until some termination
+            criteria or limit is met.</para>
+    </sect2>
+    <sect2>
+      <title>XQuery Planner</title>
+      <para>XQuery planning uses the embedded Saxon XQuery
+        engine to compile the query.  There is no direct optimization by Federate.</para>
+    </sect2>
+  </sect1>
+</chapter>

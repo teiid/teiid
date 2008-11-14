@@ -1,0 +1,1069 @@
+import com.metamatrix.admin.api.core.*;
+import com.metamatrix.admin.api.objects.*;
+import com.metamatrix.admin.api.embedded.*;
+import com.metamatrix.admin.api.exception.*;
+import com.metamatrix.admin.objects.*;
+
+import com.metamatrix.core.util.ObjectConverterUtil;
+
+
+currentContext().internalVerbose = true;
+
+// Config API Methods
+
+/**
+ * Import a {@link VDB} file. <br>
+ * A VDB file with internal definitions. This is the default VDB export configuration begining with MetaMatrix version 4.3.</br>
+ * 
+ * @param name
+ *            VDB Name
+ * @param vdbFile
+ *            File name of the VDB Archive
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link VDB} representing the current property values and runtime state.
+ * @since 4.3
+ */
+VDB addVDB(String name, String vdbFile) {
+    debug("Adding VDB " + name + " from " + vdbFile);
+    checkAdmin();    
+    return currentContext().internalAdmin.addVDB(name, readBinaryFile(vdbFile), new AdminOptions(AdminOptions.OnConflict.IGNORE));
+}
+
+/**
+ * Import a {@link VDB} file.
+ * <br>A VDB file with internal definitions. This is the default VDB export configuration
+ * begining with MetaMatrix version 4.3.</br>
+ *
+ * @param name
+ *            VDB Name
+ * @param vdbFile
+ *            byte array of the VDB Archive
+ * @param option Code of the AdminOptions to use when executing this method. There are choices about
+ * what to do when a connector binding with the given identifier already exists in the system.
+ * See {@link AdminOptions}.
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link VDB} representing the current property values and runtime state.
+ * @since 4.3
+ */
+VDB addVDB(String name, String vdbFile, int option) {
+    debug("Adding VDB " + name + " from " + vdbFile);
+    checkAdmin();    
+    return currentContext().internalAdmin.addVDB(name, readBinaryFile(vdbFile), new AdminOptions(option));
+}
+
+/**
+ * Export VDB to a file.
+ * 
+ * @param name
+ *            Name of the {@link VDB}
+ * @param vdbVersion
+ *            version of the VDB
+ * @param fileName
+ *            Name of the file to export
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void exportVDB(String name, String vdbVersion, String fileName){
+    debug("Exporting VDB " + name + " version " + vdbVersion + " to file " + fileName);
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportVDB(name, vdbVersion), fileName);
+}
+
+
+
+
+//********** Connector Binding Methods *************************
+
+
+
+
+
+/**
+ * Import a {@link ConnectorBinding} into the Configuration.
+ *
+ * @param name
+ *            is the Connector Binding name that will be added to Configuration
+ * @param xmlFile
+ *            Name of the XML file to import.
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link ConnectorBinding} representing the current property values and runtime state.
+ * @since 4.3
+ */
+ConnectorBinding addConnectorBinding(String name, String xmlFile){
+    debug("Adding Connector Binding " + name + " from " + xmlFile);
+    checkAdmin();    
+    return currentContext().internalAdmin.addConnectorBinding(name, readTextFile(xmlFile), 
+    	new AdminOptions(AdminOptions.OnConflict.IGNORE));
+}
+
+/**
+ * Import a {@link ConnectorBinding} into the Configuration.
+ *
+ * @param name
+ *            is the Connector Binding name that will be added to Configuration
+ * @param xmlFile
+ *            Name of the XML file to import.
+ * @param option Code of the AdminOptions to use when executing this method. There are choices about
+ * what to do when a connector binding with the given identifier already exists in the system.
+ * See the interface {@link AdminOptions.OnConflict} for details.
+ * <p>
+ * Another option is to ignore a binding connection password decrypt error, when adding a connector
+ * binding whose password was encrypted with a different keystore, so that the new password property
+ * can be set after the connector binding has been added.</p>
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link ConnectorBinding} representing the current property values and runtime state.
+ * @since 4.3
+ */
+ConnectorBinding addConnectorBinding(String name, String xmlFile, int option){
+    debug("Adding Connector Binding " + name + " from " + xmlFile);
+    checkAdmin();    
+    return currentContext().internalAdmin.addConnectorBinding(name, readTextFile(xmlFile), new AdminOptions(option));
+}
+
+/**
+ * Deploy a {@link ConnectorBinding} to Configuration
+ *
+ * @param connectorBindingIdentifier
+ *            Connector Binding Identifer is the Host Name.Process Name.Connector Binding Name
+ * @param connectorTypeIdentifier
+ *            Name of the Connector Type
+ * @param properties
+ *            Name & Value pair need to deploy the Connector Binding
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link ConnectorBinding} representing the current property values and runtime state.
+ * @since 4.3
+ */
+ConnectorBinding addConnectorBinding(String connectorBindingIdentifier, String connectorTypeIdentifier, Properties properties){
+    debug("Adding Connector Binding " + connectorBindingIdentifier);
+    checkAdmin();    
+    return currentContext().internalAdmin.addConnectorBinding(connectorBindingIdentifier, connectorTypeIdentifier, properties, 
+    	new AdminOptions(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR));
+}
+
+/**
+ * Deploy a {@link ConnectorBinding} to Configuration
+ *
+ * @param connectorBindingIdentifier
+ *            Connector Binding Identifer is the Host Name.Process Name.Connector Binding Name
+ * @param connectorTypeIdentifier
+ *            Name of the Connector Type
+ * @param properties
+ *            Name & Value pair need to deploy the Connector Binding
+ * @param option Code of the AdminOptions to use when executing this method. There are choices about
+ * what to do when a connector binding with the given identifier already exists in the system.
+ * See the interface {@link AdminOptions.OnConflict} for details.
+ * <p>
+ * Another option is to ignore a binding connection password decrypt error, when adding a connector
+ * binding whose password was encrypted with a different keystore, so that the new password property
+ * can be set after the connector binding has been added.</p>
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link ConnectorBinding} representing the current property values and runtime state.
+ * @since 4.3
+ */
+ConnectorBinding addConnectorBinding(String connectorBindingIdentifier, String connectorTypeIdentifier, Properties properties, int option){
+    debug("Adding Connector Binding " + connectorBindingIdentifier);
+    checkAdmin();    
+    return currentContext().internalAdmin.addConnectorBinding(connectorBindingIdentifier, connectorTypeIdentifier, properties, new AdminOptions(option));
+}
+
+
+
+/**
+ * Delete the {@link ConnectorBinding} from the Configuration
+ *
+ * @param connectorBindingIdentifier
+ * @throws AdminException
+ *             if there's a system error.
+  * @since 4.3
+ */
+void deleteConnectorBinding(String bindingName) throws AdminException {
+    debug("Deleting Connector Binding " + bindingName);
+    checkAdmin();    
+    currentContext().internalAdmin.deleteConnectorBinding(bindingName);
+}
+
+/**
+ * Export a {@link ConnectorBinding} to character Array in XML format
+ * 
+ * @param connectorBindingIdentifier
+ * @param fileName
+ *            name of the file to export to.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void exportConnectorBinding(String bindingName, String fileName){
+    debug("Exporting Connector Binding " + bindingName + " to file " + fileName);
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorBinding(bindingName), fileName);
+}
+
+/**
+ * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model
+ *
+ * @param connectorBindingName
+ *            Name of the ConnectorBinding
+ * @param vdbName
+ *            Name of the VDB
+ * @param vdbVersion
+ *            Version of the VDB
+ * @param modelName
+ *            Name of the Model to map Connector Binding
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ * @since 4.3
+ */
+void assignBindingToModel(String connectorBindingName, String vdbName, String vdbVersion, String modelName) {
+    debug("Assigning Connector Binding " + connectorBindingName + " to Model " + modelName + " in VDB " + vdbName + " version " + vdbVersion);
+    checkAdmin();
+    currentContext().internalAdmin.assignBindingToModel(connectorBindingName, vdbName, vdbVersion, modelName);
+}
+
+
+//** extension module methods ******************************************************
+
+
+/**
+ * Adds an {@link ExtensionModule} of type "Jar File" to the end of the list of modules.
+ * <br><i>All caches (of Class objects) are cleared.</i></br>
+ *
+ * @param jarfile
+ *            Name of the file to import.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void addExtensionModule(String jarfile) {
+    f = new File(jarfile);
+    debug("Adding extension module: "+f.getName());
+    checkAdmin();    
+    currentContext().internalAdmin.addExtensionModule("JAR File", f.getName(), readBinaryFile(jarfile), "JAR File");
+}
+
+/**
+ * Adds an {@link ExtensionModule} to the end of the list of modules.
+ * <br><i>All caches (of Class objects) are cleared.</i></br>
+ *
+ * @param type
+ *            one of the known types of extension file
+ * @param sourceName
+ *            name (e.g. filename) of extension module
+ * @param sourceFileName
+ *            Name of the file to import.
+ * @param description
+ *            (optional) description of the extension module - may be null
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void addExtensionModule(String type, String sourceName, String sourceFileName, String description) {
+    f = new File(sourceFileName);
+    debug("Adding extension module: "+f.getName());
+    checkAdmin();    
+    currentContext().internalAdmin.addExtensionModule(type, sourceName, readBinaryFile(sourceFileName), description);
+}
+
+
+
+/**
+ * Deletes an {@link ExtensionModule} from the list of modules.
+ * <br><i>All caches (of Class objects) are cleared.</i></br>
+ *
+ * @param sourceName
+ *            name of extension module
+ * @throws AdminException
+ *             if there's a system error.
+ */
+void deleteExtensionModule(String sourceName) {
+    debug("deleteing extension module: "+sourceName);
+    checkAdmin();    
+    currentContext().internalAdmin.deleteExtensionModule(sourceName);
+}
+ 
+/**
+ * Export an {@link ExtensionModule} to byte array
+ * 
+ * @param sourceName
+ *            Name of the extension module to export.
+ * @param fileName
+ *            Name of the file to export to.
+ * @throws AdminException
+ * @since 4.3
+ */
+void exportExtensionModule(String sourceName, String fileName) {
+    debug("exporting extension module: "+sourceName);
+    checkAdmin();    
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportExtensionModule(sourceName), fileName);
+}
+
+/**
+ * Add User Defined Function model to the system. If one is already deployed before this 
+ * will replace the previous, otherwise add this as the new UDF model. Once the UDF is added
+ * the new UDF model is loaded.  
+ * @param modelFile - UDF File
+ * @param classpath - classpath for the UDF
+ * @throws AdminException
+ */
+void addUDF(File udfFile, String classpath) throws AdminException{
+    debug("Adding UDF " + udfFile.getName() + " with classpath " + classpath);
+    checkAdmin();    
+    return currentContext().internalAdmin.addUDF(readBinaryFile(udfFile), classpath);
+    
+}
+
+/**
+ * Delete the User Defined Function model. Note that this will not delete any supporting
+ * extension jar files added, those need to be deleted separately.
+ * @throws AdminException  
+ */
+void deleteUDF() throws AdminException{
+    debug("deleting UDF Model");
+    checkAdmin();    
+    return currentContext().internalAdmin.deleteUDF();    
+}
+
+//** Connector Type Methods ************************************************************
+
+
+/**
+ * Add Connector Type, will import Connector Type from a file
+ *
+ * @param name
+ *            of the Connector Type to add
+ * @param cdkFile
+ *            Name of file to import.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void addConnectorType(String name, String cdkFile){
+    debug("Adding Connector Type " + name + " from " + cdkFile);
+    checkAdmin();    
+    currentContext().internalAdmin.addConnectorType(name, readTextFile(cdkFile));
+}
+
+/**
+ * Add Connector Type and all the required extension modules required by the this connector type into the system from the given
+ * file byte stream which is encoded inthe Connector Archive format.
+ * 
+ * @param archiveFile
+ *            Name of the file to import
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3.2
+ */
+void addConnectorArchive(String archiveFile){
+    debug("Adding Connector Archive from " + archiveFile);
+    checkAdmin();    
+    currentContext().internalAdmin.addConnectorArchive(readBinaryFile(archiveFile), new AdminOptions(AdminOptions.OnConflict.IGNORE));
+}
+
+/**
+ * Add Connector Type and all the required extension modules required by the this connector type into the system from the given
+ * file byte stream which is encoded inthe Connector Archive format.
+ * 
+ * @param typeName
+ *            name of the Connector Type to add
+ * @param archiveFile
+ *            Name of the file to import
+ * @param option
+ *            Code of the AdminOptions to use in case of conflict in the connector type.  See {@link AdminOptions}.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3.2
+ */
+void addConnectorArchive(String archiveFile, int option){
+    debug("Adding Connector Archive from " + archiveFile);
+    checkAdmin();    
+    currentContext().internalAdmin.addConnectorArchive(readBinaryFile(archiveFile), new AdminOptions(option));
+}
+
+/**
+ * Delete Connector Type from Next Configuration
+ *
+ * @param name String name of the Connector Type to delete
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void deleteConnectorType(String name){
+    debug("Deleting Connector Type " + name);
+    checkAdmin();    
+    currentContext().internalAdmin.deleteConnectorType(name);
+}
+
+/**
+ * Export Connector Type to character array
+ * 
+ * @param connectorTypeIdentifier
+ *            the unique identifier for for a {@link ConnectorType}
+ * @param fileName
+ *            Name of the file to export to.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void exportConnectorType(String connectorTypeIdentifier, String fileName) {
+    debug("Exporting Connector Type " + connectorTypeIdentifier + " to file " + fileName);
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorType(connectorTypeIdentifier), fileName);
+}
+
+/**
+ * Export Connector Archive, which is bundled connector type with its xml properties file and all the extension modules required
+ * by the this connector type
+ * 
+ * @param connectorTypeIdentifier
+ *            the unique identifier for for a {@link ConnectorType}
+ * @param fileName
+ *            Name of the file to export to.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3.2
+ */
+void exportConnectorArchive(String connectorTypeIdentifier, String fileName) {
+    debug("Exporting Connector Archive " + connectorTypeIdentifier + " to file " + fileName);
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorArchive(connectorTypeIdentifier), fileName);
+}
+
+//** property methods******************************************************************
+
+
+/**
+ * Set a Property for an AdminObject
+ * 
+ * @param identifier
+ *            The unique identifier for for an {@link AdminObject}.
+ * @param className
+ *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
+ *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
+ *            You may specify either the fully-qualified or unqualified classname. 
+ *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ * @param propertyName
+ *            String Property key
+ * @param propertyValue
+ *            String value to update
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void setProperty(String identifier, String className, String propertyName, String propertyValue) {
+    debug("Setting property for adminObject: "+identifier+" with property="+propertyName+" value="+propertyValue);
+    checkAdmin();    
+    currentContext().internalAdmin.setProperty(identifier, className, propertyName, propertyValue);    
+}
+
+/**
+ * Set several properties for an AdminObject. Any existing properties not specified will not be changed.
+ * 
+ * @param identifier
+ *            The unique identifier for for an {@link AdminObject}.
+ * @param className
+ *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
+ *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
+ *            You may specify either the fully-qualified or unqualified classname. 
+ *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ * @param properties
+ *            Properties to set.
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ * @since 4.3
+ */
+void updateProperties(String identifier, String className, Properties properties) {
+    debug("Updating properties for adminObject: "+identifier+" with properties: "+properties);
+    checkAdmin();    
+    currentContext().internalAdmin.updateProperties(identifier, className, properties);    
+}
+
+
+/**
+ * Set system-wide property.  This will be written to config_ns.xml
+ *
+ * @param propertyName
+ *            Name of the System Property
+ * @param propertyValue
+ *            Value of the System Property
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ * @since 4.3
+ */
+void setSystemProperty(String propertyName, String propertyValue) {
+    debug("Setting property for system = "+propertyName+" value="+propertyValue);
+    checkAdmin();    
+    currentContext().internalAdmin.setSystemProperty(propertyName, propertyValue);    
+}
+
+/**
+ * Set several system-wide properties.  These will be written to config_ns.xml
+ * Any existing properties not specified will not be changed.
+ *
+ * @param properties
+ *            Properties to set.
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ * @since 4.3
+ */
+void updateSystemProperties(Properties properties) {
+    debug("Setting properties for system: "+properties);
+    checkAdmin();    
+    currentContext().internalAdmin.updateSystemProperties(properties);    
+}
+
+
+
+/**
+ * Export Configuration to character Array in XML format
+ * 
+ * @param fileName
+ *            Name of the file to export to.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void exportConfiguration(String fileName) {
+    debug("Exporting System configuration to file " + fileName);
+    checkAdmin();
+    ObjectConverterUtil.write(currentContext().internalAdmin.exportConfiguration(), fileName);    
+}
+
+/**
+ * Get the {@link LogConfiguration}
+ *
+ * @return LogConfiguration object
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+LogConfiguration getLogConfiguration() {
+    debug("get log configuration");
+    checkAdmin();    
+    result = currentContext().internalAdmin.getLogConfiguration();
+    debug(result);
+    return result;       
+}
+
+/**
+ * Set the {@link LogConfiguration} in the MetaMatrix Server
+ *
+ * @param config
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void setLogConfiguration(LogConfiguration config) {
+    debug("Setting new log configuration");
+    checkAdmin();    
+    currentContext().internalAdmin.setLogConfiguration(config);        
+}
+
+
+
+
+// *********************************************************************************************
+//  Monitor Methods
+//
+// *********************************************************************************************
+
+/**
+ * Retrieve the single System object.
+ *
+ * @return The single {@link SystemObject} object, for interacting with system-wide configuration
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+SystemObject getSystem() {
+    checkAdmin();
+    result = currentContext().internalAdmin.getSystem();
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Connector Types that correspond to the specified identifer pattern.
+ *
+ * @param connectorTypeIdentifier the unique identifier for for a {@link ConnectorType}
+ * <ul>
+ *      <li> <code>"*"</code> - for all connector types in the system
+ *      <li> <code>"name*"</code> - for all the connector types that begin with given name
+ *      <li> <code>"name"</code> - for the single connector type identified by name
+ * </ul>
+ * @return Collection of {@link ConnectorType}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getConnectorTypes(String connectorTypeIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getConnectorTypes(connectorTypeIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the VDBs that correspond to the specifed identifer pattern.
+ *
+ * @param vdbIdentifier the unique identifier for for a {@link VDB} in the system
+ * <ul>
+ *      <li> <code>"*"</code> - for all VDBs in the system
+ *      <li> <code>"name"</code> or <code>"name*"</code> - for all the VDBs that begin with given name
+ *      <li><code>"name<{@link AdminObject#DELIMITER_CHAR}>version"</code> - for single VDB
+ * </ul>
+ * @return Collection of {@link VDB}s.  There could be multiple VDBs with the
+ * same name in the Collection but they will differ by VDB version.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getVDBs(String vdbIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getVDBs(vdbIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get all the Connector Bindings for the given VDB identifier pattern
+ * @param identifier - the unique identifier for a {@link VDB}
+ * <ul>
+ *      <li> <code>"*"</code> - for all Connector Bindings in the system
+ *      <li> <code>"name or name*"</code> - for all the bindings in the VDBs that begin with given name
+ *      <li><code>"name<{@link AdminObject#DELIMITER_CHAR}>version"</code> - for all the bindings in a given single VDB
+ * </ul>
+ * @return Collection of {@link ConnectorBinding}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getConnectorBindingsInVDB(String identifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getConnectorBindingsInVDB(identifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get all of the Connector Bindings in the system.
+ *
+ * @return Collection of {@link ConnectorBinding}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getConnectorBindings() {
+    checkAdmin();
+    result = getConnectorBindings("*");
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Connector Bindings that correspond to the specifed identifer pattern.
+ *
+ * @param connectorBindingIdentifier the unique identifier pattern of {@link ConnectorBinding}
+ * <ul>
+ *      <li> <code>"*"</code> - for all connector bindings in the system
+ *      <li> <code>"name*"</code> - for all connector bindings that begin with given name
+ *      <li><code>"name"</code> - for single connector binding by the given name
+ * </ul>
+ * @return Collection of {@link ConnectorBinding}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getConnectorBindings(String connectorBindingIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getConnectorBindings(connectorBindingIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Extension Modules that correspond to the specified identifer pattern
+ * @param extensionModuleIdentifier - the unique identifier for {@link ExtensionModule}
+ * <ul>
+ *      <li> <code>"*"</code> - for all extension modules in the system
+ *      <li> <code>"name*"</code> - for all the extension modules in that begin with given name
+ *      <li><code>"name"</code> - for a single extension module identified by given name
+ * </ul>
+ * @return Collection of {@link ExtensionModule}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getExtensionModules(String extensionModuleIdentifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getExtensionModules(extensionModuleIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Queue Worker Pools that correspond to the specified identifer pattern.
+ *
+ * @param identifier - an identfier for the queues {@link QueueWorkerPool}
+ * <ul>
+ *      <li> <code>"*"</code> - for all Queue workers in the system
+ *      <li> <code>"name*"</code> - for all the Queue workers in that begin with given name
+ *      <li><code>"name"</code> - for a single queue in the system
+ * </ul>
+ * for example, In DQP - "dqp" will return the Stats for DQP Worker Pool. Also any Connector Binding
+ * name will return the stats for that connector binding.
+ * @return Collection of {@link QueueWorkerPool}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getQueueWorkerPools(String identifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getQueueWorkerPools(identifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Caches that correspond to the specified identifer pattern
+ * @param identifier - an identifier for the cache in {@link Cache}
+ * <ul>
+ *      <li> <code>"*"</code> - for all different caches in the system
+ *      <li> <code>"name*"</code> - for all the caches that begin with given name
+ *      <li><code>"name"</code> - for a single cache in the system
+ * </ul>
+ * @return Collection of {@link Cache}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getCaches(String identifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getCaches(identifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Sessions that correspond to the specified identifer pattern
+ * @param identifier - an unique identifier for {@link Session}
+ * <ul>
+ *      <li> <code>"*"</code> - for all current sessions of the system
+ *      <li> <code>"number*"</code> - for all the sessions that begin with given number
+ *      <li><code>"number"</code> - for a single current session in the system
+ * </ul>
+ * @return Collection of {@link Session}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getSessions(String identifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getSessions(identifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Requests that correspond to the specified identifer pattern
+ * @param identifier - An Identifier for {@link Request}
+ * <ul>
+ *      <li> <code>"*"</code> - for all current in process requests of the system
+ *      <li> <code>"number* or number<{@link AdminObject#DELIMITER_CHAR}>*"</code> - for all the sessions
+ *      that begin with given number, or all the requests for perticular session etc.
+ *      <li><code>"number<{@link AdminObject#DELIMITER_CHAR}>number"</code> - for a single request in the system
+ * </ul>
+ * @return Collection of {@link Request}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getRequests(String identifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getRequests(identifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the Source Request that correspond to the specified identifer pattern
+ * @param identifier An Identifier for {@link Request}
+ * <ul>
+ *      <li> <code>"*"</code> - for all current in process requests of the system
+ *      <li> <code>"number* or number<{@link AdminObject#DELIMITER_CHAR}>* or number.number.*"</code> - for all the sessions
+ *      that begin with given number, or all the requests for perticular session etc.
+ *      <li><code>"number<{@link AdminObject#DELIMITER_CHAR}>number<{@link AdminObject#DELIMITER_CHAR}>number"</code> - for a single source request in the system
+ * </ul>
+ * @return Collection of {@link SourceRequest}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getSourceRequests(String identifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getSourceRequests(identifier);
+    debug(result);
+    return result;
+}
+
+
+/**
+ * Get all of the available Configuration Properties for the specified AdminObject, and details about them.
+ * @param identifier
+ *            The unique identifier for for an {@link AdminObject}.
+ * @param className
+ *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
+ *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
+ *            You may specify either the fully-qualified or unqualified classname. 
+ *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ * @return Collection of PropertyDefinition objects.
+ * @throws AdminException if there's a system error.     
+ * @since 4.3
+ */
+Collection getPropertyDefinitions(String identifier, String className) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getPropertyDefinitions(identifier, className);
+    debug(result);
+    return result;
+}
+
+
+
+
+//*********************************************************************************************
+// Runtime Methods
+//
+//*********************************************************************************************
+
+
+/**
+ * Start Connector Binding
+ *
+ * @param connectorBindingIdentifier  identifier for {@link com.metamatrix.admin.api.objects.ConnectorBinding}
+ * <ul>
+ *      <li> <code>"*"</code> - for all connector bindings in the system
+ *      <li> <code>"name*"</code> - for all connector bindings that begin with given name
+ *      <li><code>"name"</code> - for single connector binding by the given name
+ * </ul>
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void startConnectorBinding(String connectorBindingIdentifier) {
+    debug("Starting Connector Binding " + connectorBindingIdentifier);
+    checkAdmin();
+    currentContext().internalAdmin.startConnectorBinding(connectorBindingIdentifier);
+}
+
+/**
+ * Stop Connector Binding
+ *
+ * @param connectorBindingIdentifier  identifier for {@link com.metamatrix.admin.api.objects.ConnectorBinding}
+ * <ul>
+ *      <li> <code>"*"</code> - for all connector bindings in the system
+ *      <li> <code>"name*"</code> - for all connector bindings that begin with given name
+ *      <li><code>"name"</code> - for single connector binding by the given name
+ * </ul>
+ * @throws AdminException - if there's a system error.
+ * @since 4.3
+ */
+void stopConnectorBinding(String connectorBindingIdentifier) {
+    debug("Stoping Connector Binding " + connectorBindingIdentifier);
+    checkAdmin();
+    currentContext().internalAdmin.stopConnectorBinding(connectorBindingIdentifier, true);
+}
+
+/**
+ * Clear the cache or caches specified by the cacheIdentifier.
+ * @param cacheIdentifier  Cache name identifier {@link com.metamatrix.admin.api.objects.Cache}.
+ * No wild cards currently supported, must be explicit
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void clearCache(String cacheIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.clearCache(cacheIdentifier);
+}
+
+/**
+ * Terminate the Session
+ *
+ * @param identifier  Session Idenitfier {@link com.metamatrix.admin.api.objects.Session}.
+ * No wild cards currently supported, must be explicit
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void terminateSession(String identifier) {
+    debug("Terminating Session " + identifier);
+    checkAdmin();
+    currentContext().internalAdmin.terminateSession(identifier);
+}
+
+/**
+ * Cancel Request
+ *
+ * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+ * No wild cards currently supported, must be explicit
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void cancelRequest(String identifier) {
+    debug("Canceling Request " + identifier);
+    checkAdmin();
+    currentContext().internalAdmin.cancelRequest(identifier);
+}
+
+/**
+ * Cancel Source Request
+ *
+ * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+ * No wild cards currently supported, must be explicit
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void cancelSourceRequest(String identifier) {
+    debug("Canceling Source Request " + identifier);
+    checkAdmin();
+    currentContext().internalAdmin.cancelSourceRequest(identifier);
+}
+
+/**
+ * Change the status of a Deployed VDB
+ *
+ * @param name  Name of the Virtial Database
+ * @param version  Version of the Virtial Database
+ * @param status  Active, InActive, Delete.  See {@link VDB}
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void changeVDBStatus(String name, String version, int status) {
+    debug("Changing VDB " + name + " version " + version + " to Status " + status);
+    checkAdmin();
+    currentContext().internalAdmin.changeVDBStatus(name, version, status);
+}
+
+/**
+ * Change the status of a Deployed VDB to DELETED.
+ *
+ * @param name  Name of the Virtial Database
+ * @param version  Version of the Virtial Database
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void deleteVDB(String name, String version) {
+    checkAdmin();
+    currentContext().internalAdmin.changeVDBStatus(name, version, VDB.DELETED);
+}
+
+/**
+ * Delete a Deployed VDB and its Connector Bindings.
+ *
+ * @param name  Name of the Virtial Database
+ * @param version  Version of the Virtial Database
+ * @throws AdminException  if there's a system error.
+ * @since 4.3
+ */
+void deleteVDBAndConnectorBindings(String name, String version) {
+    checkAdmin();
+    
+    Collection connectorBindings = currentContext().internalAdmin.getConnectorBindingsInVDB(name + AdminObject.DELIMITER + version);
+    
+    currentContext().internalAdmin.changeVDBStatus(name, version, VDB.DELETED);
+    for ( Iterator itr = connectorBindings.iterator(); itr.hasNext();) {
+        String bindingName = ((ConnectorBinding)itr.next()).getName();
+        if (hasBinding(bindingName)) {
+            currentContext().internalAdmin.deleteConnectorBinding(bindingName);
+        } 
+    }
+}
+
+/**
+ * Checks to make sure the given VDB exists in the system
+ * @param vdbName - name of the VDB
+ * @return boolean - true if exists; false otherwise
+ */
+boolean hasVDB(String vdbName) {
+    checkAdmin();    
+    Collection vdbs = currentContext().internalAdmin.getVDBs(vdbName);
+    for (VDB vdb:vdbs) {
+        if (vdb.getName().equals(vdbName)) {
+            debug(true);
+            return true;
+        }
+    }
+    debug(false);    
+    return false;
+}
+
+/**
+ * Checks to make sure the given VDB with version exists in the system
+ * @param vdbName - name of the VDB
+ * @param version - version of the VDB
+ * @return boolean - true if exists; false otherwise
+ */
+boolean hasVDB(String vdbName, String version) {
+    checkAdmin();    
+    Collection vdbs = currentContext().internalAdmin.getVDBs(vdbName);
+    for (VDB vdb:vdbs) {
+        if (vdb.getName().equals(vdbName) && vdb.getVDBVersion().equals(version)) {
+            debug(true);
+            return true;
+        }
+    }
+    debug(false);
+    return false;
+}
+
+/**
+ * Checks to make sure the given binging exists.
+ * @param bindingName - Name of the Binding.
+ * @return boolean - true if exists; false otherwise
+ */
+boolean hasBinding(String bindingName) {
+    checkAdmin();
+    Collection bindings = currentContext().internalAdmin.getConnectorBindings(AdminObject.WILDCARD + AdminObject.DELIMITER + bindingName);
+    
+    for (ConnectorBinding binding:bindings) {
+        if (binding.getName().equals(bindingName)) {
+            debug(true);
+            return true;
+        }        
+    }            
+    debug(false);
+    return false;
+}
+
+/**
+ * Checks if given Connector Type exists in system
+ * @param typeName - Binding type name
+ * @return boolean - true if exists; false otherwise
+ */
+boolean hasConnectorType(String typeName) {
+    checkAdmin();
+    Collection types = currentContext().internalAdmin.getConnectorTypes(typeName);
+
+    for (ConnectorType type:types) {
+        if (type.getName().equals(typeName)) {
+            debug(true);
+            return true;
+        }
+    }
+    debug(false);
+    return false;
+}
+
+/**
+ * Checks if given Extension Module exists in system
+ * @param name - Extension Module name
+ * @return boolean - true if exists; false otherwise
+ */
+boolean hasExtensionModule(String name) {
+    checkAdmin();
+    Collection modules = null;
+    
+    try {
+        modules = currentContext().internalAdmin.getExtensionModules(name);
+        
+        for(ExtensionModule module:modules) {
+            if (module.getName().equals(name)) {
+                debug(true);
+                return true;
+            }
+        }
+    }catch(e) {}
+    debug(false);
+    return false;
+}
+

@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="procedures">
+  <title>Procedures</title>
+  <sect1 id="procedure_language">
+    <title>Procedure Language</title>
+    <para>
+      Federate supports a procedural language for defining
+      <link linkend="virtual_procedures">virtual procedures</link>
+      . These are similar to stored procedures in relational database
+      management systems. You can use this language to define the
+      transformation logic for decomposing INSERT, UPDATE, and DELETE
+      commands against virtual tables; these are known as
+      <link linkend="update_procedures">update procedures</link>
+      .
+    </para>
+    <sect2>
+      <title>Command Statement</title>
+      <para>
+        A command statement executes a
+        <link linkend="sql_commands">SQL command</link>
+        , such as SELECT, INSERT, UPDATE, DELETE, or EXECUTE, against
+        one or more other models (and their underlying data sources).
+      </para>
+      <example>
+        <title>Example Command Statements</title>
+        <programlisting>SELECT * FROM MyModel.MyTable WHERE ColA &gt; 100;
+INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
+        </example>
+    </sect2>
+    <sect2>
+      <title>Dynamic SQL Command</title>
+      <para>Dynamic SQL allows for the execution of an arbitrary SQL command in a virtual procedure. Dynamic SQL is useful in situations where the exact command form is not known prior to execution.
+      </para>
+      <para>
+        Usage:
+        <synopsis>EXECUTE STRING &lt;expression&gt; <optional>AS &lt;variable&gt; &lt;type&gt; [, &lt;variable&gt; &lt;type&gt;]* [INTO &lt;variable&gt;]</optional> 
+[USING &lt;variable&gt;=&lt;expression&gt; [,&lt;variable&gt;=&lt;expression&gt;]*] [UPDATE &lt;literal&gt;]        
+      </synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem>
+          <para>The "AS" clause is used to define the projected symbols names and types returned by the executed SQL string. The "AS" clause symbols will be matched positionally with the symbols returned by the executed SQL string. Non-convertible types or too few columns returned by the executed SQL string will result in an error.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The "INTO" clause will project the dynamic SQL into the specified temp table. At runtime with the "INTO" clause specified, the dynamic command will actually execute a statement that behaves like a SELECT INTO. If the dynamic SQL command creates a temporary table with the "INTO" clause, then the "AS" clause is required to define the table’s metadata.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The "USING" clause allows the dynamic SQL string to contain special element symbols that are bound at runtime to specified values. This allows for some independence of the SQL string from the surrounding procedure variable names and input names. In the dynamic command "USING" clause, each variable is specified by short name only. However in the dynamic SQL the "USING" variable must be fully qualified to "USING.". The "USING" clause is only for values that will be used in the dynamic SQL as legal expressions. It is not possible to use the "USING" clause to replace table names, keywords, etc. This makes using symbols equivalent in power to normal bind (?) expressions in prepared statements. The "USING" clause helps reduce the amount of string manipulation needed. If a reference is made to a USING symbol in the SQL string that is not bound to a value in the "USING" clause, an exception will occur.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The "UPDATE" clause is used to specify the need for a transaction. Accepted values are (0,1,*). 0 means this is a read-only command, 1 specifies that an update may be performed but will be tied to the success or failure of the dynamic SQL, * specifies that the command may performs 1 or more updates that are not bound to the success or failure of the command and that a transaction is required. 0 is the default value if the clause is not specified.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <example>
+        <title>Example Dynamic SQL</title>
+        <programlisting>... 
+/* Typically complex criteria would be formed based upon inputs to the procedure. 
+ In this simple example the criteria is references the using clause to isolate 
+ the SQL string from referencing a value from the procedure directly */ 
+DECLARE string criteria = 'Customer.Accounts.Last = USING.LastName'; 
+/* Now we create the desired SQL string */ 
+DECLARE string sql_string = 'SELECT ID, First || ‘‘ ‘‘ || Last AS Name, Birthdate FROM Customer.Accounts WHERE ' || criteria; 
+/* The execution of the SQL string will create the #temp table with the columns (ID, Name, Birthdate). 
+  Note that we also have the USING clause to bind a value to LastName, which is referenced in the criteria. */ 
+EXECUTE STRING sql_string; AS ID integer, Name string, Birthdate date INTO #temp USING LastName='some name'; 
+/* The temp table can now be used with the values from the Dynamic SQL */ 
+loop on (SELCT ID from #temp) as myCursor 
+...</programlisting>
+      </example>
+      <para>
+      Here is an example showing a more complex approach to building criteria for the dynamic SQL string. In short, the virtual procedure AccountAccess.GetAccounts has inputs ID, LastName, and bday. If a value is specified for ID it will be the only value used in the dynamic SQL criteria. Otherwise if a value is specified for LastName the procedure will detect if the value is a search string. If bday is specified in addition to LastName, it will be used to form compound criteria with LastName.
+      </para>
+      <example>
+        <title>Example Dynamic SQL with USING clause and dynamically built criteria string</title>
+        <programlisting>...
+DECLARE string crit = null; 
+IF (AccountAccess.GetAccounts.ID IS NOT NULL) 
+ crit = ‘(Customer.Accounts.ID = using.ID)’; 
+ELSE IF (AccountAccess.GetAccounts.LastName IS NOT NULL) 
+BEGIN 
+ IF (AccountAccess.GetAccounts.LastName == ‘%’) 
+   ERROR "Last name cannot be %"; 
+ ELSE IF (LOCATE(‘%’, AccountAccess.GetAccounts.LastName) &lt; 0) 
+   crit = ‘(Customer.Accounts.Last = using.LastName)’; 
+ ELSE 
+   crit = ‘(Customer.Accounts.Last LIKE using.LastName)’; 
+ IF (AccountAccess.GetAccounts.bday IS NOT NULL) 
+   crit = ‘(‘ || crit || ‘ and (Customer.Accounts.Birthdate = using.BirthDay))’; 
+END 
+ELSE 
+ ERROR "ID or LastName must be specified."; 
+EXECUTE STRING ‘SELECT ID, First || ‘‘ ‘‘ || Last AS Name, Birthdate FROM Customer.Accounts WHERE ’ || crit USING ID=AccountAccess.GetAccounts.ID, LastName=AccountAccess.GetAccounts.LastName, BirthDay=AccountAccess.GetAccounts.Bday;
+...</programlisting>
+      </example>
+      <itemizedlist>
+        <para>Known Limitations and Work-Arounds
+        </para>
+        <listitem>
+          <para>The use of dynamic SQL command results in an assignment statement requires the use of a temp table.
+          </para>
+          <example>
+            <title>Example Assignment
+            </title>
+            <programlisting>EXECUTE STRING &lt;expression&gt; AS x string INTO #temp; 
+DECLARE string VARIABLES.RESULT = SEELCT x FROM #temp;</programlisting>
+          </example>
+        </listitem>
+        <listitem>
+          <para>The construction of appropriate criteria will be cumbersome if parts of the criteria are not present. For example if "criteria" were already NULL, then the following example results in "criteria" remaining NULL.
+          </para>
+          <example>
+            <title>Example Dangerous NULL handling
+            </title>
+            <programlisting>...
+criteria = ‘(‘ || criteria || ‘ and (Customer.Accounts.Birthdate = using.BirthDay))’;</programlisting>
+          </example>
+          <para>The preferred approach is for the user to ensure the criteria is not NULL prior its usage. If this is not possible, a good approach is to specify a default as shown in the following example.
+          </para>
+          <example>
+            <title>Example NULL handling
+            </title>
+            <programlisting>...
+criteria = ‘(‘ || nvl(criteria, ‘(1 = 1)’) || ‘ and (Customer.Accounts.Birthdate = using.BirthDay))’;</programlisting>
+          </example>
+        </listitem>
+        <listitem>
+          <para>If the dynamic SQL is an UPDATE, DELETE, or INSERT command, and the user needs to specify the "AS" clause (which would be the case if the number of rows effected needs to be retrieved).  The user will still need to provide a name and type for the return column if the into clause is specified.
+          </para>
+          <example>
+            <title>Example with AS and INTO clauses</title>
+            <programlisting>/* This name does not need to match the expected update command symbol "count". */
+EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
+          </example>
+        </listitem>
+        <listitem>
+          <para>Unless used in other parts of the procedure, tables in the dynamic command will not be seen as sources in the Designer.
+          </para>
+        </listitem>
+        <listitem>
+          <para>When using the "AS" clause only the type information will be available to the Designer. ResultSet columns generated from the "AS" clause then will have a default set of properties for length, precision, etc.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>Declaration Statement</title>
+      <para>A declaration statement declares a variable and its type. After you declare a variable, you can use it in that block within the procedure and any sub-blocks. A variable is initialized to null by default, but can also be assigned the value of an expression as part of the declaration statement. 
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >DECLARE &lt;type&gt; [VARIABLES.]&lt;name&gt; [= &lt;expression&gt;];</synopsis>
+      </para>        
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>declare integer x;
+          </para>
+        </listitem>
+        <listitem>
+          <para>declare string VARIABLES.myvar = 'value';
+          </para>
+        </listitem>        
+      </itemizedlist>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>You cannot redeclare a variable with a duplicate name in a sub-block
+          </para>
+        </listitem>
+        <listitem>
+          <para>The VARIABLES group is always implied even if it is not specified.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>Assignment Statement</title>
+      <para>An assignment statement assigns a value to a variable by either evaluating an expression or executing a SELECT command that returns a column value from a single row.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >&lt;variable reference&gt; = &lt;expression&gt;;</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>myString = 'Thank you';
+          </para>
+        </listitem>
+        <listitem>
+          <para>VARIABLES.x = SELECT Column1 FROM MyModel.MyTable;
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2>
+      <title>If Statement</title>
+      <para>An IF statement evaluates a condition and executes either
+        one of two blocks depending on the result. You can nest IF
+        statements to create complex branching logic. A dependent ELSE
+        statement will execute its block of code only if the IF statement
+        evaluates to false.</para>
+      <example>
+        <title>Example If Statement</title>
+        <programlisting>IF ( var1 = 'North America') 
+BEGIN 
+  ...statement... 
+END ELSE 
+BEGIN 
+  ...statement... 
+END</programlisting>
+      </example>
+      <note>
+        <para>
+          NULL values should be considered in the criteria of an IF statement.  IS NULL criteria can be used to detect the presense of a NULL value.  
+        </para>
+      </note>
+    </sect2>
+    <sect2>
+      <title>Loop Statement</title>
+      <para>A LOOP statement is an iterative control construct that is used to cursor through a result set.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >LOOP ON &lt;select statement&gt; AS &lt;cursorname&gt; 
+BEGIN 
+  ...
+END</synopsis>
+      </para>
+    </sect2>
+    <sect2>
+      <title>While Statement</title>
+      <para>A WHILE statement is an iterative control construct that is used to execute a set of statements repeatedly whenever a specified condition is met.</para>
+      <para>
+        Usage:
+        <synopsis label="Usage" >WHILE &lt;criteria&gt; 
+BEGIN 
+  ...
+END</synopsis>
+      </para>
+    </sect2>
+    <sect2>
+      <title>Continue Statement</title>
+      <para>A CONTINUE statement is used inside a LOOP or WHILE construct to continue with the next loop by skipping over the rest of the statements in the loop. It must be used inside a LOOP or WHILE statement.</para>
+    </sect2>
+    <sect2>
+      <title>Break Statement</title>
+      <para>A BREAK statement is used inside a LOOP or WHILE construct to break from the loop. It must be used inside a LOOP or WHILE statement.</para>
+    </sect2>
+    <sect2>
+      <title>Error Statement</title>
+      <para>An ERROR statement declares that the procedure has entered an error state and should abort. This statement will also roll back the current transaction, if one exists. Any valid expression can be specified after the ERROR keyword.</para>
+      <example>
+        <title>Example Error Statement</title>
+        <programlisting>ERROR 'Invalid input value: ' || nvl(Acct.GetBalance.AcctID, 'null');</programlisting>
+      </example>
+    </sect2>
+  </sect1>
+  <sect1 id="virtual_procedures">
+    <title>Virtual Procedures</title>
+    <para>Virtual procedures are defined using the Federate
+      procedural language. A virtual procedure has zero or more input
+      parameters, and a result set return type. Virtual procedures
+      support the ability to execute queries and other SQL commands,
+      define temporary tables, add data to temporary tables, walk
+      through result sets, use loops, and use conditional logic.</para>
+    <sect2>
+      <title>Virtual Procedure Definition</title>
+      <para>
+        Usage:
+        <synopsis label="Usage" >CREATE VIRTUAL PROCEDURE 
+BEGIN 
+  ...
+END</synopsis>
+      </para>
+      <para>The CREATE VIRTUAL PROCEDURE line demarcates the beginning of
+        the procedure. The BEGIN and END keywords are used to denote block
+        boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
+      </para>
+      <para>The last command statement executed in the procedure will be
+        return as the result. The output of that statement must match the
+        expected result set and parameters of the procedure.</para>      
+    </sect2>
+    <sect2>
+      <title>Procedure Input Parameters</title>
+      <para>Virtual procedures can take zero or more input parameters. Each input has the following information that is used during runtime processing: </para>
+      <itemizedlist>
+        <listitem>
+          <para>Name - The name of the input parameter</para>
+        </listitem>
+        <listitem>
+          <para>Datatype - The design-time type of the input parameter</para>
+        </listitem>
+        <listitem>
+          <para>Default value - The default value if the input parameter is not specified</para>
+        </listitem>
+        <listitem>
+          <para>Nullable - NO_NULLS, NULLABLE, NULLABLE_UNKNOWN; parameter is optional if nullable, and is not required to be listed when using named parameter syntax</para>
+        </listitem>
+      </itemizedlist>
+      <para>You reference an input to a virtual procedure by using the fully-qualified name of the param (or less if unambiguous). For example, MyModel.MyProc.Param1.
+      </para>
+      <example>
+        <title>Example of Referencing an Input Parameter for 'GetBalance' Procedure</title>
+        <programlisting>
+CREATE VIRTUAL PROCEDURE 
+BEGIN 
+  SELECT Balance FROM MyModel.Accts WHERE MyModel.Accts.AccountID = MyModel.GetBalance.AcctID; 
+END</programlisting>
+      </example>
+    </sect2>
+    <sect2>
+      <title>Examle Virtual Procedures</title>
+      <para>This example is a LOOP that walks through a cursored table and uses CONTINUE and BREAK.</para>
+      <example>
+        <title>Virtual Procedure Using LOOP, CONTINUE, BREAK
+        </title>
+        <programlisting>
+CREATE VIRTUAL PROCEDURE
+BEGIN
+  DECLARE double total;
+  DECLARE integer transactions;
+  LOOP ON (SELECT amt, type FROM CashTxnTable) AS txncursor
+  BEGIN
+    IF(txncursor.type &lt;&gt; 'Sale')
+    BEGIN
+      CONTINUE;
+    END ELSE 
+    BEGIN
+      total = (total + txncursor.amt);
+      transactions = (transactions + 1);
+      IF(transactions = 100)
+      BEGIN
+        BREAK;
+      END
+    END
+  END
+  SELECT total, (total / transactions) AS avg_transaction;
+END
+        </programlisting>
+      </example>
+      <para>This example is uses conditional logic to determine which of two SELECT statements to execute.</para>
+      <example>
+        <title>Virtual Procedure with Conditional SELECT
+        </title>
+        <programlisting>
+CREATE VIRTUAL PROCEDURE 
+BEGIN 
+  DECLARE string VARIABLES.SORTDIRECTION; 
+  VARIABLES.SORTDIRECTION = PartsVirtual.OrderedQtyProc.SORTMODE; 
+  IF ( ucase(VARIABLES.SORTDIRECTION) = 'ASC' ) 
+  BEGIN 
+    SELECT * FROM PartsVirtual.SupplierInfo WHERE QUANTITY &gt; PartsVirtual.OrderedQtyProc.QTYIN ORDER BY PartsVirtual.SupplierInfo.PART_ID; 
+  END ELSE 
+  BEGIN 
+    SELECT * FROM PartsVirtual.SupplierInfo WHERE QUANTITY > PartsVirtual.OrderedQtyProc.QTYIN ORDER BY PartsVirtual.SupplierInfo.PART_ID DESC;
+  END
+END 
+        </programlisting>
+      </example>
+    </sect2>
+    <sect2>
+      <title>Executing Virtual Procedures</title>
+      <para>You execute procedures using the SQL <link linkend="execute_command">EXECUTE</link> command. If
+        the procedure has defined inputs, you specify those in a
+        sequential list, or using "name=value" syntax. You must use the
+        name of the input parameter, scoped by the full procedure name if
+        the parameter name is ambiguous in the context of other elements
+        or variables in the procedure.</para>
+      <para> A virtual procedure call will return a result set just like any
+        SELECT, so you can use this in many places you can use a SELECT.
+        However, within a virtual procedure itself you cannot always use an
+        EXEC directly. Instead, you use the following syntax:</para>
+      <programlisting>SELECT * FROM (EXEC ...) AS x</programlisting>
+      <itemizedlist>
+        <para>The following are some examples of how you can use the
+          results of a virtual procedure call within a virtual procedure
+          definition:</para>
+        <listitem>
+          <para>LOOP instruction - you can walk through the results and
+            do work on a row-by-row basis</para>
+        </listitem>
+        <listitem>
+          <para>Assignment instruction - you can run a command and
+            set the first column / first row value returned to a variable
+          </para>
+        </listitem>
+        <listitem>
+          <para><code>SELECT * INTO #temp FROM (EXEC ...) AS x</code> - you can
+            select the results from a virtual procedure into a temp table,
+            which you can then query against as if it were a physical table.
+          </para>
+        </listitem>
+      </itemizedlist>  
+    </sect2>
+  </sect1>  
+  <sect1 id="update_procedures">
+    <title>Update Procedures</title>
+    <para>
+      Virtual tables are abstractions above physical sources. They typically
+      union or join information from multiple tables, often from multiple
+      data sources or other views. Federate can perform update operations
+      against virtual tables. Update commands - INSERT, UPDATE, or DELETE -
+      against a virtual table require logic to define how the tables and
+      views integrated by the virtual table are affected by each type of
+      command. This transformation logic is invoked when an update command
+      is issued against a virtual table. Update procedures define the logic
+      for how a user's update command against a virtual table should be
+      decomposed into the individual commands to be executed against the
+      underlying physical sources. Similar to
+      <link linkend="virtual_procedures">virtual procedures</link>
+      , update procedures have the ability to execute queries or other
+      commands, define temporary tables, add data to temporary tables, walk
+      through result sets, use loops, and use conditional logic.
+    </para>
+    <sect2>
+      <title>Update Procedure Definition</title>
+      <para>
+        Usage:
+        <synopsis label="Usage" >CREATE PROCEDURE 
+BEGIN 
+  ...
+END</synopsis>
+      </para>
+      <para>The CREATE VIRTUAL PROCEDURE line demarcates the beginning of
+        the procedure. The BEGIN and END keywords are used to denote block
+        boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Special Variables</title>
+      <para>You can use a number of special variables when defining your update procedure.</para>
+      <sect3 id="input_variables">
+        <title>INPUT Variables</title>
+        <para>Every attribute in the virtual table whose UPDATE and INSERT transformations you are defining has an equivalent variable named INPUT.&lt;column_name&gt;</para>
+        <para>When an INSERT or an UPDATE command is executed against the virtual table, these variables are initialized to the values in the INSERT VALUES clause or the UPDATE SET clause respectively.</para>
+        <para>In an UPDATE procedure, the default value of these variables, if they are not set by the command, is null. In an INSERT procedure, the default value of these variables is the default value of the virtual table attributes, based on their defined types.  See <link linkend="changing_variables">CHANGING Variables</link> for distinguishing defaults from passed values.</para>
+      </sect3>
+      <sect3 id="changing_variables">
+        <title>CHANGING Variables</title>
+        <para>Similar to INPUT Variables, every attribute in the virtual table whose UPDATE and INSERT transformations you are defining has an equivalent variable named CHANGING.&lt;column_name&gt;</para>
+        <para>When an INSERT or an UPDATE command is executed against the virtual table, these variables are initialized to <literal>true</literal> or <literal>false</literal> depending on whether the INPUT variable was set by the command.</para>
+        <para>For example, for a virtual table with columns A, B, C:</para>
+        <informaltable>
+          <tgroup cols="2">
+            <thead>
+              <row>
+                <entry>If User Executes...</entry>
+                <entry>Then...</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry><code>INSERT INTO VT (A, B) VALUES (0, 1)</code></entry>
+                <entry>CHANGING.A = true, CHANGING.B = true, CHANGING.C = false</entry>
+              </row>
+              <row>
+                <entry><code>UPDATE VT SET C = 2</code></entry>
+                <entry>CHANGING.A = false, CHANGING.B = false, CHANGING.C = true</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect3>
+      <sect3 id="rowsupdated_variable">
+        <title>ROWS_UPDATED Variable</title>
+        <para> Federate returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
+          the virtual table. Your procedure must set the value that returns
+          when an application executes an update command against the virtual
+          table, which triggers invocation of the update procedure. For
+          example, if an UPDATE command is issued that affects 5 records, the
+          ROWS_UPDATED should be set appropriately so that the user will
+          receive '5' for the count of records affected.</para>
+      </sect3>
+    </sect2>  
+    <sect2>
+      <title>Update Procedure Command Criteria</title>
+      <para> You can use a number of special SQL clauses when defining
+        UPDATE or DELETE procedures. These make it easier to do variable
+        substitutions in WHERE clauses or to check on the change state of
+        variables without using a lot of conditional logic.</para>
+        <sect3>
+          <title>HAS CRITERIA</title>
+          <para>You can use the HAS CRITERIA clause to check whether the user’s command has a particular kind of criteria on a particular set of attributes. This clause evaluates to either true or false. You can use it anywhere you can use a criteria within a procedure.</para>
+          <para>
+            Usage:
+            <synopsis>HAS [criteria operator] CRITERIA [ON (element list)]</synopsis>
+          </para>
+          <itemizedlist>
+            <para>Syntax Rules</para>
+            <listitem>
+              <para>The criteria operator, can be one of =, &lt;, &gt;, &lt;=, &gt;=, &lt;&gt;, LIKE, IS NULL, or IN.
+              </para>
+            </listitem>
+            <listitem>
+              <para>If the ON clause is present, HAS CRITERIA will return true only if criteria was present on all of the specified elements.
+              </para>
+            </listitem>
+            <listitem>
+              <para>The elements in a HAS CRITERIA ON clause always refer to virtual elements.
+              </para>
+            </listitem>
+          </itemizedlist>
+          <para>Some samples of the HAS CRITERIA clause:</para>
+          <informaltable>
+            <tgroup cols="2">
+              <thead>
+                <row>
+                  <entry>SQL</entry>
+                  <entry>Result</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry><code>HAS CRITERIA</code></entry>
+                  <entry>Checks simply whether there was any criteria at all.</entry>
+                </row>
+                <row>
+                  <entry><code>HAS CRITERIA ON (element1, element2)</code></entry>
+                  <entry>Checks whether the criteria uses element1 and element2.</entry>
+                </row>
+                <row>
+                  <entry><code>HAS = CRITERIA ON (element1)</code></entry>
+                  <entry>Checks whether the criteria has a comparison criteria with = operator.</entry>
+                </row>
+                <row>
+                  <entry><code>HAS LIKE CRITERIA</code></entry>
+                  <entry>Checks whether the criteria has a match criteria using LIKE.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+          <para>The HAS CRITERIA predicate is most commonly used in
+            an IF clause, to determine if the user issued a particular form of
+            command and to respond appropriately.</para>
+        </sect3>
+        <sect3>
+          <title>TRANSLATE CRITERIA</title>
+          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the element mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.</para>
+          <para>
+            Usage:
+            <synopsis>TRANSLATE [criteria operator] CRITERIA [ON (element list)] [WITH (mapping list)]</synopsis>
+          </para>
+          <itemizedlist>
+            <para>Syntax Rules</para>
+            <listitem>
+              <para>The criteria operator, can be one of =, &lt;, &gt;, &lt;=, &gt;=, &lt;&gt;, LIKE, IS NULL, or IN.
+              </para>
+            </listitem>
+            <listitem>
+              <para>If the ON clause is present, TRANSLATE CRITERIA will only form criteria using the specified elements.
+              </para>
+            </listitem>
+            <listitem>
+              <para>The elements in a TRANSLATE CRITERIA ON clause always refer to virtual elements.
+              </para>
+            </listitem>
+          </itemizedlist>
+          <para>You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual element is defined by an expression.</para>
+          <para>Some samples of the HAS TRANSLATE clause:</para>
+          <informaltable>
+            <tgroup cols="2">
+              <colspec colwidth="1*"/>
+              <colspec colwidth="1*"/>
+              <thead>
+                <row>
+                  <entry>SQL</entry>
+                  <entry>Result</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry><code>TRANSLATE CRITERIA</code></entry>
+                  <entry>Translates any user criteria using the default mappings.</entry>
+                </row>
+                <row>
+                  <entry>TRANSLATE CRITERIA WITH (element1 = 'A', element2 = INPUT.element2 + 2)</entry>
+                  <entry>Translates any criteria with some additional mappings: element1 is always mapped to 'A' and element2 is mapped to the incoming element2 value + 2.</entry>
+                </row>
+                <row>
+                  <entry><code>TRANSLATE = CRITERIA ON (element1)</code></entry>
+                  <entry>Translates only criteria that have = comparison operator and involve element1.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+          <para>
+          The TRANSLATE CRITERIA, ON clause always refers to virtual elements.
+          The WITH clause always has items with form &lt;elem&gt; = &lt;expression&gt;, 
+          where the &lt;elem&gt; is a virtual element and the &lt;expression&gt; 
+          specifies what that virtual element should be
+          replaced with when TRANSLATE CRITERIA translates the virtual
+          criteria (from UPDATE or DELETE) into a physical criteria in
+          the command. By default, a mapping is created based on the
+          SELECT clause of the SELECT transformation (virtual column
+          gets mapped to expression in SELECT clause at same
+          position). 
+          </para>
+        </sect3>      
+    </sect2>
+    <sect2>
+      <title>Update Procedure Processing</title>
+      <orderedlist>
+        <listitem>
+          <para>The user application submits the SQL command through one of SOAP, JDBC, or ODBC.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The virtual table that this SQL command is executed against is detected.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The correct procedure is chosen depending upon whether the command is an INSERT, UPDATE, or DELETE.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The procedure is executed. The procedure itself can contain SQL commands of its own which can be of different types than the command submitted by the user application that invoked the procedure.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Commands, as described in the procedure, as issued to the individual physical data sources or other views.
+          </para>
+        </listitem>
+        <listitem>
+          <para>A value representing the number of rows changed is returned to the calling application.
+          </para>
+        </listitem>
+      </orderedlist>
+    </sect2>  
+  </sect1>
+</chapter>

@@ -1,0 +1,125 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.cache;
+
+import java.util.Collection;
+import java.util.Set;
+
+
+/**
+ * Federate abstraction over cache providers
+ */
+public interface Cache<K, V>  {
+	
+	public enum Type {  REGISTRY("Registry"), //$NON-NLS-1$ 
+						SESSION("Session"), //$NON-NLS-1$ 
+						SESSION_MONITOR("Session-Monitor"), //$NON-NLS-1$ 
+						AUTHORIZATION_POLICY("Authorization-Policy"), //$NON-NLS-1$ 
+						AUTHORIZATION_PRINCIPLE("Auhtorization-Principle"), //$NON-NLS-1$ 
+						RESULTSET("ResultSet"), //$NON-NLS-1$
+						VDBMETADATA("VdbMetadata"), //$NON-NLS-1$
+						VDBMODELS("VdbModels"); //$NON-NLS-1$
+		
+		private String location;
+		
+		Type(String location){
+			this.location = location;
+		}
+		
+		public String location() {
+			return this.location;
+		}
+	}
+	
+   /**
+    * Retrieves the value for the given Key 
+    *
+    * @param key key under which value is to be retrieved.
+    * @return returns data held under specified key in cache
+    */
+	V get(K key);
+	
+   /**
+    * Associates the specified value with the specified key this cache.
+    * If the cache previously contained a mapping for this key, the old value is replaced by the specified value.
+    *
+    * @param key   key with which the specified value is to be associated.
+    * @param value value to be associated with the specified key.
+    * @return previous value associated with specified key, or <code>null</code> if there was no mapping for key.
+    *    	A <code>null</code> return can also indicate that the key previously associated <code>null</code> with the specified key, 
+    *    	if the implementation supports null values.
+    */
+	V put(K key, V value);
+	
+   /**
+    * Removes the value for this key from a Cache.
+    * Returns the value to which the Key previously associated , or
+    * <code>null</code> if the Key contained no mapping.
+    *
+    * @param key key whose mapping is to be removed
+    * @return previous value associated with specified Node's key
+    */	
+	V remove(K key);
+	
+	/**
+	 * Size of the cache 
+	 * @return number of items in this cache
+	 */
+	int size();
+	
+	
+   /**
+    * Returns a {@link Set} containing the data in this Cache
+    *
+    * @return a {@link Set} containing the data in this Cache.  If there is no data, 
+    * an empty {@link Set} is returned.  The {@link Set} returned is always immutable.
+    */
+	Set<K> keySet();
+	
+	/**
+	 * Removes all the keys and their values from the Cache
+	 */
+	void clear();
+	   
+	/**
+	 * Listener to get the updates on this Cache
+	 * @param listener
+	 */
+	void addListener(CacheListener listener);
+	
+	/**
+	 * Remove Listener to stop the updates on this Cache
+	 * @param listener
+	 */
+	void removeListener(CacheListener listener);
+	
+	/**
+     * Returns a {@link Collection} containing the data in this Cache
+     *
+     * @return a {@link Collection} containing the data in this Cache.  If there is no data, 
+     * an empty {@link Collection} is returned.
+     */
+	Collection<V> values();
+}

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConfigurationDocument>
+    <Header>
+        <ApplicationCreatedBy>Connec</ApplicationCreatedBy>
+        <ApplicationVersionCreatedBy>4.0:1681</ApplicationVersionCreatedBy>
+        <UserCreatedBy>MetaMatrixAdmin</UserCreatedBy>
+        <DocumentTypeVersion>1.0</DocumentTypeVersion>
+        <MetaMatrixSystemVersion>3.0</MetaMatrixSystemVersion>
+        <Time>2004-01-30T15:22:05.296-06:00</Time>
+    </Header>
+    <ComponentTypes>
+        <ComponentType Name="Oracle 8 JDBC Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors">
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="Password" DisplayName="Password" ShortDescription="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="true" IsModifiable="true" IsPreferred="true" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.max_connections" DisplayName="Pool Maximum Connections" ShortDescription="Set the maximun number of connections for the connection pool" DefaultValue="5" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.jdbc.JDBCConnector" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.enable_shrinking" DisplayName="Pool Shrinking Enabled" ShortDescription="Set whether to enable the pool shrinking" DefaultValue="false" Multiplicity="0..1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="User" DisplayName="User Name" ShortDescription="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.max_connections_for_each_id" DisplayName="Pool Maximum Connections for Each ID" ShortDescription="Set the maximun number of connections for each connector ID for the connection pool" DefaultValue="5" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ExtensionConnectionFactoryClass" DisplayName="Extension Connection Factory Class" ShortDescription="" DefaultValue="com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="TrimStrings" DisplayName="Trim string flag" ShortDescription="" DefaultValue="false" Multiplicity="0..1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.cleaning_interval" DisplayName="Pool cleaning Interval" ShortDescription="Set the interval to cleaning the pool" DefaultValue="60" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="Driver" DisplayName="Driver Class" ShortDescription="" DefaultValue="com.metamatrix.jdbc.oracle.OracleDriver" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="TransactionIsolationLevel" DisplayName="Transaction Isolation Level" ShortDescription="Set the data source transaction isolation level" DefaultValue="" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ExtensionResultsTranslationClass" DisplayName="Extension Results Translation Class" ShortDescription="" DefaultValue="com.metamatrix.connector.jdbc.oracle.Oracle8ResultsTranslator" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ExtensionSQLTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="com.metamatrix.connector.jdbc.oracle.Oracle8SQLTranslator" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" DefaultValue="extensionjar:MJbase.jar;extensionjar:MJutil.jar;extensionjar:MJoracle.jar;extensionjar:jdbcconn.jar" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="MaxSQLLength" DisplayName="Max SQL String Length" ShortDescription="" DefaultValue="16384" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="ExtensionCapabilityClass" DisplayName="Extension Capability Class" ShortDescription="" DefaultValue="com.metamatrix.connector.jdbc.oracle.Oracle8Capabilities" Multiplicity="0..1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:mmx:oracle://&lt;host&gt;:&lt;port1521&gt;;SID=&lt;sid&gt;" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.wait_for_source_time" DisplayName="Pool Connection Waiting Time" ShortDescription="Set the time to wait if the connection is not available" DefaultValue="120000" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="SetCriteriaBatchSize" DisplayName="SetCriteria Batch Size" ShortDescription="Max number of values in a SetCriteria before batching into multiple queries.  A value &lt;= 0 indicates batching is OFF." DefaultValue="0" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ComponentTypeDefn Deprecated="false">
+                <PropertyDefinition Name="com.metamatrix.data.pool.live_and_unused_time" DisplayName="Pool Connection Idle Time" ShortDescription="Set the idle time of the connection before it should be closed if pool shrinking is enabled" DefaultValue="60" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            </ComponentTypeDefn>
+            <ChangeHistory>
+                <Property Name="LastChangedBy">ConfigurationStartup</Property>
+                <Property Name="CreatedBy">ConfigurationStartup</Property>
+            </ChangeHistory>
+        </ComponentType>
+    </ComponentTypes>
+    <ConnectorBindings>
+        <Connector Name="SOAPTest" ComponentType="Oracle 8 JDBC Connector" QueuedService="false">
+            <Properties>
+                <Property Name="property1">PropVal1</Property>
+                <Property Name="property2">PropVal2</Property>
+                <Property Name="property3">com.metamatrix.cdk.propertyVal</Property>
+            </Properties>
+            <ChangeHistory>
+                <Property Name="LastChangedBy">metamatrixadmin</Property>
+                <Property Name="LastChangedDate">2004-01-30T15:20:14.968-06:00</Property>
+                <Property Name="CreatedBy">metamatrixadmin</Property>
+                <Property Name="CreationDate">2004-01-30T15:20:14.968-06:00</Property>
+            </ChangeHistory>
+        </Connector>
+    </ConnectorBindings>
+</ConfigurationDocument>
+

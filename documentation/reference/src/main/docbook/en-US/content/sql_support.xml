@@ -1,0 +1,906 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="sql_support">
+  <title>SQL Support</title>
+  <para>
+    Federate supports SQL for issuing queries and for defining view
+    transformations; see also Procedure Language<!-- TODO:link -->
+    for how SQL is used in virtual procedures and update procedures.
+  </para>
+  <para>
+    Federate provides nearly all of the functionality of SQL-92 DML.
+    SQL-99 and later features are constantly being added based upon
+    community need. The following does not attempt to cover SQL
+    exhaustively, but rather highlights SQL's usage within Federate. See
+    the
+    <link linkend="grammar">grammar</link>
+    for the exact form of SQL accepted by Federate.
+  </para>
+  <sect1 id="identifiers">
+    <title>Identifiers</title>
+    <para> SQL commands contain references to tables and columns. These
+      references are in the form of identifiers, which uniquely identify
+      the tables and columns in the context of the command. All queries
+      are processed in the context of a virtual database, or VDB.
+      Because information can be federated across multiple sources,
+      tables and columns must be scoped in some manner to avoid
+      conflicts. This scoping is provided by models, which contain the
+      information for each data source or set of views.</para>
+    <itemizedlist>
+      <para>Fully-qualified table and column names are of
+        the following form, where the separate 'parts' of the identifier
+        are delimited by periods.</para>
+      <listitem>
+        <para>TABLE: &lt;model_name&gt;.&lt;table_spec&gt;</para>
+      </listitem>
+      <listitem>
+        <para>COLUMN: &lt;model_name&gt;.&lt;table_spec&gt;.&lt;column_name&gt;</para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para><emphasis>Syntax Rules:</emphasis></para>
+      <listitem>
+        <para>Identifiers can consist of alphanumeric characters,
+          or the underscore (_) character, and must begin with an alphabetic
+          character. Any Unicode character may be used in an identifier.
+        </para>
+      </listitem>
+      <listitem>
+        <para> Because different data sources organize tables in different
+          ways, some prepending catalog or schema or user information,
+          Federate allows the 'table_spec' to be a dot-delimited construct.
+        </para>
+      </listitem>
+      <listitem>
+        <para> Identifiers are not case-sensitive in Federate.</para>
+      </listitem>
+      <listitem>
+        <para>The separate parts of an identifier can be quoted, with double quotes. This is not required, but some tools do this automatically. Quotes establish another level of grouping, in addition to the dot delimiters. Quotes should not be used in such a way that the table specification, which may itself have multiple parts, is split between two quoted sections.</para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para> Some examples of valid fully-qualified table identifiers are:
+      </para>
+      <listitem>
+        <para>MyModel.MySchema.Portfolios
+        </para>
+      </listitem>
+      <listitem>
+        <para>"MyModel"."MySchema.Portfolios"
+        </para>      
+      </listitem>
+      <listitem>
+        <para>MyModel.Inventory</para>
+      </listitem>
+      <listitem>
+        <para>MyModel.MyCatalog.dbo.Authors
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Some examples of valid fully-qualified column identifiers
+        are:</para>
+      <listitem>
+        <para>MyModel.MySchema.Portfolios.portfolioID
+        </para>
+      </listitem>
+      <listitem>
+        <para>"MyModel"."MySchema.Portfolios"."portfolioID" 
+        </para>
+      </listitem>
+      <listitem>
+        <para>MyModel.Inventory.totalPallets
+        </para>
+      </listitem>
+      <listitem>
+        <para>MyModel.MyCatalog.dbo.Authors.lastName
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para> Fully-qualified identifiers can always be used in SQL commands.
+      Partially- or unqualified forms can also be used, as long as the
+      resulting names are unambiguous in the context of the command.
+      Different forms of qualification can be mixed in the same query.
+    </para>
+  </sect1>
+  <sect1>
+    <title>Expressions</title>
+    <para> Identifiers, literals, and functions can be combined into
+      expressions. Expressions can be used almost anywhere in a query --
+      SELECT, FROM (if specifying join criteria, WHERE, GROUP BY, HAVING.
+      However you currently cannot use expressions in an ORDER BY clause.</para>
+    <itemizedlist>
+      <para>Federate supports the following types of expressions:
+      </para>
+      <listitem>
+        <para><link linkend="columnidentifiers">Column identifiers</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="literals">Literals</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="scalar_functions">Scalar functions</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="aggregate_functions">Aggregate functions</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="case">Case and searched case</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="scalar_subqueries">Scalar subqueries</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="parameter_references">Parameter references</link></para>
+      </listitem>
+    </itemizedlist>
+    <sect2 id="columnidentifiers">
+      <title>Column Identifiers</title>
+      <para>
+        Column identifiers are used to specify the output columns in SELECT
+        statements, the columns and their values for INSERT and UPDATE
+        statements, and criteria used in WHERE and FROM clauses. They are
+        also used in GROUP BY, HAVING, and ORDER BY clauses. The syntax for
+        column identifiers was defined in the
+        <link linkend="identifiers">Identifiers</link>
+        section above.
+      </para>
+    </sect2>
+    <sect2 id="literals">
+      <title>Literals</title>
+      <para>
+      Literal values represent fixed values. These can any of the 'standard' <link linkend="datatypes">data types</link>. 
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem>
+          <para>Integer values will be assigned an integral data type big enough to hold the value (integer, long, or biginteger).</para>
+        </listitem>
+        <listitem>
+          <para>Floating point values will always be parsed as a double.</para>
+        </listitem>
+        <listitem>
+          <para>The keyword 'null' is used to represent an absent or unknown value and is inherently untyped. In many cases, a null literal value will be assigned an implied type based on context. For example, in the function '5 + null', the null value will be assigned the type 'integer' to match the type of the value '5'. A null literal used in the SELECT clause of a query with no implied context will be assigned to type 'string'.</para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Some examples of simple literal values are:</para>
+        <listitem>
+          <para><literal>‘abc’</literal></para>
+        </listitem>
+        <listitem>
+          <para><literal>‘isn’’t true’</literal> - use an extra single tick to escape a tick in a string with single ticks</para>
+        </listitem>
+        <listitem>
+          <para><literal>5</literal></para>
+        </listitem>
+        <listitem>
+          <para><literal>-37.75e01</literal> - scientific notation</para>
+        </listitem>
+        <listitem>
+          <para><literal>100.0</literal> - parsed as double</para>
+        </listitem>
+        <listitem>
+          <para><literal>true</literal></para>
+        </listitem>
+        <listitem>
+          <para><literal>false</literal></para>
+        </listitem>
+        <listitem>
+          <para><literal>'\u0027'</literal> - unicode character</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="aggregate_functions">
+      <title>Aggregate Functions</title>
+      <para>Aggregate functions take sets of values from a group produced by an explicit or implicit GROUP BY and return a single scalar value computed from the group.</para>
+      <itemizedlist>
+        <para>Federate supports the following aggregate functions:</para>
+        <listitem>
+          <para>COUNT(*) – count the number of values (including nulls and duplicates) in a group</para>
+        </listitem>
+        <listitem>
+          <para>COUNT(expression) – count the number of values (excluding nulls) in a group</para>
+        </listitem>
+        <listitem>
+          <para>SUM(expression) – sum of the values (excluding nulls) in a group</para>
+        </listitem>
+        <listitem>
+          <para>AVG(expression) – average of the values (excluding nulls) in a group</para>
+        </listitem>
+        <listitem>
+          <para>MIN(expression) – minimum value in a group (excluding null)</para>
+        </listitem>
+        <listitem>
+          <para>MAX(expression) – maximum value in a group (excluding null)</para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Some aggregate functions may contain a keyword 'DISTINCT' before the expression, indicating that duplicate expression values should be ignored. DISTINCT is not allowed in COUNT(*) and is not meaningful in MIN or MAX (result would be unchanged), so it can be used in COUNT, SUM, and AVG.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Aggregate functions may only be used in the HAVING or SELECT clauses and may not be nested within another aggregate function.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Aggregate functions may be nested inside other functions.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+      For more information on aggregates, see the sections on GROUP BY or HAVING.
+      </para>
+    </sect2>
+    <sect2 id="case">
+      <title>Case and searched case</title>
+      <para>
+      Federate supports two forms of the CASE expression which allows conditional logic in a scalar expression.
+      </para>
+      <itemizedlist>
+        <para>Supported forms:
+        </para>
+        <listitem>
+          <para>CASE &lt;expr&gt; ( WHEN &lt;expr&gt; THEN &lt;expr&gt;)+ [ELSE expr] END
+          </para>
+        </listitem>
+        <listitem>
+          <para>CASE ( WHEN &lt;criteria&gt; THEN &lt;expr&gt;)+ [ELSE expr] END
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        Each form allows for an output based on conditional logic. The first
+        form starts with an initial expression and evaluates WHEN expressions
+        until the values match, and outputs the THEN expression. If no WHEN is
+        matched, the ELSE expression is output. If no WHEN is matched and no
+        ELSE is specified, a null literal value is output. The second form
+        (the searched case expression) searches the WHEN clauses, which
+        specify an arbitrary criteria to evaluate. If any criteria evaluates
+        to true, the THEN expression is evaluated and output. If no WHEN is
+        true, the ELSE is evaluated or NULL is output if none exists.</para>
+    </sect2>
+    <sect2 id="scalar_subqueries">
+      <title>Scalar subqueries</title>
+      <para>
+        Subqueries can be used to produce a single scalar value in the SELECT,
+        WHERE, or HAVING clauses only. A scalar subquery must have a single
+        column in the SELECT clause and should return either 0 or 1 row. If no
+        rows are returned, null will be returned as the scalar subquery value.
+        For other types of subqueries, see the
+        <link linkend="subqueires">Subqueries</link>
+        section below.</para>
+    </sect2>
+    <sect2 id="parameter_references">
+      <title>Parameter references</title>
+      <para> Parameters are specified using a '?' symbol. Parameters may
+        only be used with PreparedStatement or CallableStatements in JDBC.
+        Each parameter is linked to a value specified by 1-based index in
+        the JDBC API.</para>
+    </sect2>
+  </sect1>
+  <sect1 id="criteria">
+    <title>Criteria</title>
+    <itemizedlist>
+      <para>Criteria are of two basic forms:
+      </para>
+      <listitem>
+        <para>Predicates that evaluate to true or false
+        </para>      
+      </listitem>
+      <listitem>
+        <para>Logical criteria that combine predicates (AND, OR, NOT)
+        </para>      
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Syntax Rules:
+      </para>
+      <listitem>
+        <para>expression (=|&lt;&gt;|!=|&lt;|>|&lt;=|>=) (expression|((ANY|ALL|SOME) subquery))
+        </para>
+      </listitem>
+      <listitem>
+        <para>expression [NOT] IS NULL
+        </para>
+      </listitem>
+      <listitem>
+        <para>expression [NOT] IN (expression[,expression]*)|subquery
+        </para>
+      </listitem>
+      <listitem>
+        <para>expression [NOT] LIKE expression [ESCAPE char]
+        </para>
+      </listitem>
+      <listitem>
+        <para>EXISTS(subquery)
+        </para>
+      </listitem>
+      <listitem>
+        <para>expression BETWEEN minExpression AND maxExpression
+        </para>
+      </listitem>
+      <listitem>
+        <para>criteria AND|OR criteria
+        </para>
+      </listitem>
+      <listitem>
+        <para>NOT criteria
+        </para>
+      </listitem>
+      <listitem>
+        <para>Criteria may be nested using parenthesis.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Some examples of valid criteria are:
+      </para>
+      <listitem>
+        <para>(balance &gt; 2500.0)
+        </para>
+      </listitem>
+      <listitem>
+        <para>100*(50 - x)/(25 - y) &gt; z
+        </para>
+      </listitem>
+      <listitem>
+        <para>concat(areaCode,concat('-',phone)) LIKE '314%1'
+        </para>
+      </listitem>
+    </itemizedlist>
+    <note>
+      <title>Comparing null Values</title>
+      <para>Null values represent an unknown value. Comparison with a null value will evaluate to 'unknown', which can never be true even if 'not' is used.</para>
+    </note>
+  </sect1>
+  <sect1 id="sql_commands">
+    <title>SQL Commands</title>
+    <para>There are 4 basic commands for manipulating data in SQL, corresponding to the CRUD create, read, update, and delete operations: INSERT, SELECT, UPDATE, and DELETE. In addition, procedures can be executed using the EXECUTE command.</para>
+    <sect2 id="select_command">
+      <title>SELECT Command</title>
+      <para>The SELECT command is used to retrieve records any number of relations.</para> 
+      <itemizedlist>
+        <para>A SELECT command has a number of clauses:</para>
+        <listitem>  
+          <para>
+            <link linkend="select_clause">SELECT ...</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="from_clause">[FROM ...]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="where_clause">[WHERE ...]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="groupby_clause">[GROUP BY ...]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="having_clause">[HAVING ...]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="orderby_clause">[ORDER BY ...]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="limit_clause">[LIMIT [offset,] limit]</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
+            <link linkend="option_clause">[OPTION ...]</link>
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        All of these clauses other than OPTION are defined by the SQL specification. The specification also specifies the order that these clauses will be logically processed. Below is the processing order where each stage passes a set of rows to the following stage. Note that this processing model is logical and does not represent the way any actual database engine performs the processing, although it is a useful model for understanding questions about SQL.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>FROM stage - gathers all rows from all tables involved in the query and logically joins them with a Cartesian product, producing a single large table with all columns from all tables. Joins and join criteria are then applied to filter rows that do not match the join structure.
+          </para>
+        </listitem>
+        <listitem>
+          <para>WHERE stage - applies a criteria to every output row from the FROM stage, further reducing the number of rows.
+          </para>
+        </listitem>
+        <listitem>
+          <para>GROUP BY stage - groups sets of rows with matching values in the group by columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>HAVING stage - applies criteria to each group of rows. Criteria can only be applied to columns that will have constant values within a group (those in the grouping columns or aggregate functions applied across the group).
+          </para>
+        </listitem>
+        <listitem>
+          <para>SELECT stage - specifies the column expressions that should be returned from the query. Expressions are evaluated, including aggregate functions based on the groups of rows, which will no longer exist after this point. The output columns are named using either column aliases or an implicit name determined by the engine. If SELECT DISTINCT is specified, duplicate removal will be performed on the rows being returned from the SELECT stage.
+          </para>
+        </listitem>
+        <listitem>
+          <para>ORDER BY stage - sorts the rows returned from the SELECT stage as desired. Supports sorting on multiple columns in specified order, ascending or descending. The output columns will be identical to those columns returned from the SELECT stage and will have the same name.
+          </para>
+        </listitem>
+        <listitem>
+          <para>LIMIT stage - returns only the specified rows (with skip and limit values).
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para> This model can be used to understand many questions about SQL.
+        For example, columns aliased in the SELECT clause can only be
+        referenced by alias in the ORDER BY clause. Without knowledge of the
+        processing model, this can be somewhat confusing. Seen in light of
+        the model, it is clear that the ORDER BY stage is the only stage
+        occurring after the SELECT stage, which is where the columns are
+        named. Because the WHERE clause is processed before the SELECT, the
+        columns have not yet been named and the aliases are not yet known.
+      </para>
+    </sect2>
+    <sect2 id="insert_command">
+      <title>INSERT Command</title>
+      <para>The INSERT command is used to add a record to a table.</para>
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>INSERT INTO table (column,...) VALUES (value,...)
+          </para>
+        </listitem>
+        <listitem>
+          <para>INSERT INTO table (column,...) query
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="update_command">
+      <title>UPDATE Command</title>
+      <para>The UPDATE command is used to modify records in a table. The operation may result in 1 or more records being updated, or in no records being updated if none match the criteria.</para>
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>UPDATE table SET (column=value,...) [WHERE criteria]
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="delete_command">
+      <title>DELETE Command</title>
+      <para>The DELETE command is used to remove records from a table. The operation may result in 1 or more records being deleted, or in no records being deleted if none match the criteria. </para>
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>DELETE FROM table [WHERE criteria]
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="exec_command">
+      <title>EXECUTE Command</title>
+      <para>The EXECUTE command is used to execute a procedure, such as a virtual procedure or a stored procedure. Procedures may have zero or more scalar input parameters. The return value from a procedure is a result set, the same as is returned from a SELECT. Note that EXEC can be used as a short form of this command. 
+      </para>
+      <itemizedlist>
+        <para>Example Syntax</para>
+        <listitem>
+          <para>EXECUTE proc()
+          </para>
+        </listitem>
+        <listitem>
+          <para>EXECUTE proc(param, ...)
+          </para>
+        </listitem>
+        <listitem>
+          <para>EXECUTE proc(name1=param1,name4=param4,name7=param7) - named parameter syntax
+          </para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <title>Named Parameters</title>
+        <para> The default order of parameter specification is the same
+          as how they are defined in the procedure definition. You can also
+          specify the parameters in any order by name. Parameters that are have
+          default values and/or are nullable in the metadata, can be omitted
+          from the named parameter call and will have the appropriate value
+          passed at runtime.</para>
+      </note>
+    </sect2>
+  </sect1>
+  <sect1 id="temp_tables">
+    <title>Temp Tables</title>
+    <para>Federate supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
+    </para>
+    <para>
+      Temp tables can be defined implicitly by referencing them in a
+      SELECT INTO or in an INSERT statement or explicitly with a CREATE TABLE
+      statement. Implicitly created temp tables must have a name that
+      starts with '#'.
+    </para>
+    <itemizedlist>
+      <para>Creation syntax:
+      </para>
+      <listitem>
+        <para>CREATE LOCAL TEMPORARY TABLE&lt;temporary table name&gt; (&lt;column name> &lt;data type>,...)
+        </para>
+      </listitem>
+      <listitem>
+        <para>SELECT &lt;element name>,...INTO &lt;temporary table name&gt; FROM &lt;table name&gt;
+        </para>
+      </listitem>
+      <listitem>
+        <para>INSERT INTO &lt;temporary table name> ((&lt;column name&gt;,...)VALUES (&lt;value&gt;,...)
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Drop syntax:
+      </para>
+      <listitem>
+        <para>DROP TABLE &lt;temporary table name&gt;
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Limitations:
+      </para>
+      <listitem> 
+        <para>With the CREATE TABLE syntax only basic table definition (column name and type information) is supported.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>The "ON COMMIT" clause is not supported in the CREATE TABLE statement.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>"drop behavior" option is not supported in the drop statement.
+        </para>
+      </listitem>
+      <listitem> 
+        <para>Only local temporary tables are supported. This implies that the scope of temp table will be either to the sesssion or the block of a virtual procedure that creates it.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Session level temp tables are not fail-over safe.
+        </para>    
+      </listitem>    
+      <listitem>
+        <para>temp tables are non-transactional.
+        </para>    
+      </listitem>    
+      <listitem>
+        <para>Temp tables do not support update or delete operations.
+        </para>    
+      </listitem>    
+    </itemizedlist>
+    <para>The following example is a series of statements that loads a temporary table with data from 2 sources, and with a manually inserted record, and then uses that temp table in a subsequent query.</para>
+    <programlisting>... 
+CREATE LOCAL TEMPORARY TABLE TEMP (a integer, b integer, c integer); 
+SELECT * INTO temp FROM Src1; SELECT * INTO temp FROM Src2; 
+INSERT INTO temp VALUES (1,2,3); 
+SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b; 
+...</programlisting>
+    <para>
+      See <link linkend="virtual_procedures">virtual procedures</link> for more on temp table usage.
+    </para>
+  </sect1>
+  <sect1>
+    <title>SQL Clauses</title>
+    <para>This section describes the clauses that are used in the various <link linkend="sql_commands">SQL commands</link> described in the previous section. Nearly all these features follow standard SQL syntax and functionality, so any SQL reference can be used for more information.</para>
+    <sect2 id="select_clause">
+      <title>SELECT Clause</title>
+      <para>
+      SQL queries start with the SELECT keyword and are often referred to as "SELECT statements". Federate supports most of the standard SQL query constructs.
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">SELECT [DISTINCT|ALL] ((expression [[AS] name])|(group identifier.STAR))*|STAR ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem><para>Aliased expressions are only used as the output column names and in the ORDER BY clause. They cannot be used in other clauses of the query.</para></listitem>
+        <listitem><para>DISTINCT may only be specified if the SELECT symbols are comparable.</para></listitem>
+      </itemizedlist> 
+    </sect2>
+    <sect2 id="from_clause">
+      <title>FROM Clause</title>
+      <para>
+      The FROM clause specifies the target table(s) for SELECT, UPDATE, and DELETE statements. 
+      </para>
+      <itemizedlist>
+        <para>Example Syntax:</para>
+        <listitem><para>FROM {table [AS alias]}</para></listitem>
+        <listitem><para>FROM table1 [INNER|LEFT OUTER|RIGHT OUTER|FULL OUTER] JOIN table1 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 CROSS JOIN table1</para></listitem>
+        <listitem><para>FROM (subquery) [AS alias]</para></listitem>
+        <listitem><para>FROM table1 JOIN table2 MAKEDEP ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 left outer join <link linkend="optional_join">/* optional */</link> table2 ON join-criteria</para></listitem>
+      </itemizedlist> 
+      <note>
+        <title>DEP Hints</title>
+        <para>
+          MAKEDEP and MAKENOTDEP are hints used to control
+          <link linkend="dependent_join">dependent join</link>
+          behavior. They should only be used in situations where the optimizer
+          does not chose the most optimal plan based upon query structure,
+          metadata, and costing information.
+        </para>
+      </note>
+    </sect2>
+    <sect2 id="where_clause">
+      <title>WHERE Clause</title>
+      <para>
+      The WHERE clause defines the criteria to limit the records affected by SELECT, UPDATE, and DELETE statements.  
+      </para>
+      <itemizedlist>
+        <para>The general form of the WHERE is:
+        </para>
+        <listitem>
+          <para>WHERE <link linkend="criteria">criteria</link>
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="groupby_clause">
+      <title>GROUP BY Clause</title>
+      <para>
+      The GROUP BY clause denotes that rows should be grouped according to the specified expression values. One row will be returned for each group, after optionally filtering those aggregate rows based on a HAVING clause.   
+      </para>
+      <itemizedlist>
+        <para>The general form of the GROUP BY is:
+        </para>
+        <listitem>
+          <para>GROUP BY expression (,expression)*
+          </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Column references in the group by clause must by to unaliased output columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Expressions used in the group by must appear in the select clause.
+          </para>
+        </listitem>
+        <listitem>
+          <para>Column references and expessions in the select clause that are not used in the group by clause must appear in aggregate functions. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>If an aggregate function is used in the SELECT clause and no
+            GROUP BY is specified, an implicit GROUP BY will be performed with
+            the entire result set as a single group. In this case, every column
+            in the SELECT must be an aggregate function as no other column value
+            will be fixed across the entire group. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>The group by columns must be of a comparable type.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="having_clause">
+      <title>HAVING Clause</title>
+      <para>
+      The HAVING clause operates exactly as a WHERE clause although it operates on the output of a GROUP BY. It supports the same syntax as the WHERE clause.
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Expressions used in the group by clause must either
+            contain an aggregate function: COUNT, AVG, SUM, MIN, MAX. or be one
+            of the grouping expressions.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="orderby_clause">
+      <title>ORDER BY Clause</title>
+      <para>
+      The ORDER BY clause specifies how the returned records from a SELECT should be sorted. The options are ASC (ascending) and DESC (descending).
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">ORDER BY column1 [ASC|DESC], ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Column references in the order by must appear in the select clause.</para>
+        </listitem>
+        <listitem>
+          <para>The order by columns must be of a comparable type.</para>
+        </listitem>
+        <listitem>
+          <para>If an order by is used in an inline view or view definition without a limit clause, it will be removed by the Federate optimizer.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="limit_clause">
+      <title>LIMIT Clause</title>
+      <para>
+      The LIMIT clause specifies a limit on the number of records returned from the SELECT command. An optional offset (the number of rows to skip) can be specified. 
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">LIMIT [offset,] limit</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Examples:
+        </para>
+        <listitem>
+          <para>LIMIT 100 - returns the first 100 records (rows 1-100)</para>
+        </listitem>
+        <listitem>
+          <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+    <sect2 id="into_clause">
+      <title>INTO Clause</title>
+      <para>
+      When the into clause is specified with a SELECT, the results of the query are inserted into the specified table. This is often used to insert records into a temporary table. The INTO clause immediately precedes the FROM clause.   
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">INTO table FROM ...</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The INTO clause is logically applied last in processing, after the ORDER BY and LIMIT clauses.</para>
+        </listitem>
+        <listitem>
+          <para>Federate's support for SELECT INTO is similar to
+            MS SQL Server. The target of the INTO clause is a table where
+            the result of the rest select command will be inserted. SELECT
+            INTO should not be used UNION query.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>    
+    <sect2 id="option_clause">
+      <title>OPTION Clause</title>
+      <para>
+      The OPTION keyword denotes options the user can pass in with the command. These options are Federate-specific and not covered by any SQL specification.  
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">OPTION option, (option)*</synopsis>
+      </para>
+      <itemizedlist>
+        <para>Supported options:
+        </para>
+        <listitem>
+          <para>SHOWPLAN - returns the query plan along with the results
+          </para>
+        </listitem><listitem>
+          <para>PLANONLY - returns the query plan, but does not execute the command
+          </para>
+        </listitem><listitem>
+          <para>MAKEDEP [table, (table)*] - specifies source tables that should be made dependent in the join
+          </para>
+        </listitem><listitem>
+          <para>MAKENOTDEP [table, (table)*] - prevents a dependent join from being used
+          </para>
+        </listitem><listitem>
+          <para>DEBUG - prints query planner debug information in the log and returns it through the JDBC API
+          </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <para>Examples:
+        </para>
+        <listitem>
+          <para>LIMIT 100 - returns the first 100 records (rows 1-100)</para>
+        </listitem>
+        <listitem>
+          <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+  </sect1>
+  <sect1 id="set_operations">
+    <title>Set Operations</title>
+    <para>Federate support the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
+    <para>
+      Usage:
+      <synopsis label="Usage">command (UNION|INTERSECT|EXCEPT) [ALL] command [ORDER BY...]</synopsis>
+    </para>
+    <itemizedlist>
+      <para>Syntax Rules:
+      </para>
+      <listitem>
+        <para>The output columns will be named by the output columns of the first set operation branch. 
+        </para>      
+      </listitem>
+      <listitem>
+        <para>Each SELECT must have the same number of output columns and compatible data types for each relative column. Data type conversion will be performed if data types are inconsistent and implicit conversions exist.
+        </para>
+      </listitem>
+      <listitem>
+        <para>If UNION, INTERSECT, or EXCEPT is specified without all, then the output columns must be comparable types.
+        </para>
+      </listitem>
+      <listitem>
+        <para>INTERSECT ALL, and EXCEPT ALL are currently not supported.</para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+  <sect1 id="subqueries">
+    <title>Subqueries</title>
+    <para>A subquery is a SQL query embedded within another SQL query. The query containing the subquery is the outer query.</para>
+    <itemizedlist>
+      <para>Supported subquery types:
+      </para>
+      <listitem>
+        <para>Scalar subquery - a subquery that returns only a single column with a single value.  Scalar subqueries are a type of expression and can be used where single valued expressions are expected.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Correlated subquery - a subquery that contains a column reference to from the outer query.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Uncorrelated subquery - a subquery that contains no references to the outer sub-query.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <para>Supported subquery locations:
+      </para>
+      <listitem>
+        <para><link linkend="from_subquery">Subqueries in the FROM clause</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="where_subquery">Subqueries in the WHERE/HAVING Clauses</link></para>
+      </listitem>
+      <listitem>
+        <para>Subqueries may be used in any expression or CASE CRITERIA in the SELECT clasue.</para>
+      </listitem>
+    </itemizedlist>
+    <sect2 id="from_subquery">
+      <title>Inline views</title>
+      <para> Subqueries in the FROM clause of the outer query (also known as
+        "inline views") can return any number of rows and columns. This type
+        of subquery must always be given an alias.</para>
+      <example>
+        <title>Example Subquery in FROM Clause (Inline View)</title>
+        <programlisting>SELECT a FROM (SELECT Y.b, Y.c FROM Y WHERE Y.d = ‘3’) AS X WHERE a = X.c AND b = X.b</programlisting>
+      </example>
+    </sect2>
+    <sect2 id="where_subquery">
+      <title>Subqueries in the WHERE and HAVING clauses</title>
+      <para>Subqueries supported in the criteria of the outer query include subqueries in an IN clause, subqueries using the ANY/SOME or ALL predicate quantifier, and subqueries using the EXISTS predicate. </para>
+      <example>
+        <title>Example Subquery in WHERE Using EXISTS</title>
+        <programlisting>SELECT a FROM X WHERE EXISTS (SELECT b, c FROM Y WHERE c=3)</programlisting>
+      </example>
+      <para>
+        The following usages of subqueries must each select only one column, but can return any number of rows.
+      </para>
+      <example>
+        <title>Example Subqueries in WHERE Clause</title>
+        <programlisting>SELECT a FROM X WHERE a IN (SELECT b FROM Y WHERE c=3) 
+SELECT a FROM X WHERE a &gt;= ANY (SELECT b FROM Y WHERE c=3) 
+SELECT a FROM X WHERE a &lt; SOME (SELECT b FROM Y WHERE c=4) 
+SELECT a FROM X WHERE a = ALL (SELECT b FROM Y WHERE c=2)</programlisting>
+      </example>
+    </sect2>
+  </sect1>
+</chapter>

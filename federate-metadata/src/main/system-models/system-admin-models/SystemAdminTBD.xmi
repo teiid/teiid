@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:071d2100-732b-1fad-8c1c-f99c857ec10b" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="MetaMatrix" ProducerVersion="5.0">
+    <modelImports xmi:uuid="mmuuid:85ed1180-fe44-1fad-b233-eb56264fee46" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="PHYSICAL" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <modelImports xmi:uuid="mmuuid:85ed1181-fe44-1fad-b233-eb56264fee46" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="PHYSICAL" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+  </mmcore:ModelAnnotation>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:08114500-732b-1fad-8c1c-f99c857ec10b">
+    <annotations xmi:uuid="mmuuid:d0af8685-d37a-1fc0-a407-a05a38b688bc" description=" The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}.  No wild cards currently supported, must be explicit." annotatedObject="mmuuid/d0af8682-d37a-1fc0-a407-a05a38b688bc"/>
+  </mmcore:AnnotationContainer>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:08114501-732b-1fad-8c1c-f99c857ec10b">
+    <diagram xmi:uuid="mmuuid:1b9e2700-732b-1fad-8c1c-f99c857ec10b" type="packageDiagramType" target="mmuuid/071d2100-732b-1fad-8c1c-f99c857ec10b">
+      <diagramEntity xmi:uuid="mmuuid:0a665bc0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a80-732e-1fad-8c1c-f99c857ec10b" xPosition="20" yPosition="20"/>
+      <diagramEntity xmi:uuid="mmuuid:0b4b3d80-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a8a-732e-1fad-8c1c-f99c857ec10b" xPosition="40" yPosition="30"/>
+      <diagramEntity xmi:uuid="mmuuid:0d244340-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a94-732e-1fad-8c1c-f99c857ec10b" xPosition="60" yPosition="40"/>
+      <diagramEntity xmi:uuid="mmuuid:0d244341-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a97-732e-1fad-8c1c-f99c857ec10b" xPosition="80" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:0e186740-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a9c-732e-1fad-8c1c-f99c857ec10b" xPosition="100" yPosition="60"/>
+      <diagramEntity xmi:uuid="mmuuid:0e186741-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51a9f-732e-1fad-8c1c-f99c857ec10b" xPosition="120" yPosition="70"/>
+      <diagramEntity xmi:uuid="mmuuid:0f0c8b40-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51aa2-732e-1fad-8c1c-f99c857ec10b" xPosition="140" yPosition="80"/>
+      <diagramEntity xmi:uuid="mmuuid:0ff16d00-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51aa6-732e-1fad-8c1c-f99c857ec10b" xPosition="160" yPosition="90"/>
+      <diagramEntity xmi:uuid="mmuuid:0ff16d01-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51aaa-732e-1fad-8c1c-f99c857ec10b" xPosition="180" yPosition="100"/>
+      <diagramEntity xmi:uuid="mmuuid:10e59100-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51aae-732e-1fad-8c1c-f99c857ec10b" xPosition="200" yPosition="110"/>
+      <diagramEntity xmi:uuid="mmuuid:10e59101-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51ab1-732e-1fad-8c1c-f99c857ec10b" xPosition="220" yPosition="120"/>
+      <diagramEntity xmi:uuid="mmuuid:11d9b500-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51ab4-732e-1fad-8c1c-f99c857ec10b" xPosition="240" yPosition="130"/>
+      <diagramEntity xmi:uuid="mmuuid:12be96c1-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dae51aba-732e-1fad-8c1c-f99c857ec10b" xPosition="280" yPosition="150"/>
+      <diagramEntity xmi:uuid="mmuuid:158bc080-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc40-732e-1fad-8c1c-f99c857ec10b" xPosition="300" yPosition="160"/>
+      <diagramEntity xmi:uuid="mmuuid:1764c640-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc4f-732e-1fad-8c1c-f99c857ec10b" xPosition="320" yPosition="170"/>
+      <diagramEntity xmi:uuid="mmuuid:194d0e40-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc5e-732e-1fad-8c1c-f99c857ec10b" xPosition="340" yPosition="180"/>
+      <diagramEntity xmi:uuid="mmuuid:1c0af5c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc6d-732e-1fad-8c1c-f99c857ec10b" xPosition="440" yPosition="230"/>
+      <diagramEntity xmi:uuid="mmuuid:1c0af5c1-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc71-732e-1fad-8c1c-f99c857ec10b" xPosition="460" yPosition="240"/>
+      <diagramEntity xmi:uuid="mmuuid:1cff19c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc73-732e-1fad-8c1c-f99c857ec10b" xPosition="480" yPosition="250"/>
+      <diagramEntity xmi:uuid="mmuuid:1ed81f80-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc7d-732e-1fad-8c1c-f99c857ec10b" xPosition="500" yPosition="260"/>
+      <diagramEntity xmi:uuid="mmuuid:1fcc4380-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc85-732e-1fad-8c1c-f99c857ec10b" xPosition="520" yPosition="270"/>
+      <diagramEntity xmi:uuid="mmuuid:1fcc4381-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc87-732e-1fad-8c1c-f99c857ec10b" xPosition="540" yPosition="280"/>
+      <diagramEntity xmi:uuid="mmuuid:20c06780-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc89-732e-1fad-8c1c-f99c857ec10b" xPosition="560" yPosition="290"/>
+      <diagramEntity xmi:uuid="mmuuid:20c06781-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc8b-732e-1fad-8c1c-f99c857ec10b" xPosition="580" yPosition="300"/>
+      <diagramEntity xmi:uuid="mmuuid:21a54940-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc8d-732e-1fad-8c1c-f99c857ec10b" xPosition="600" yPosition="310"/>
+      <diagramEntity xmi:uuid="mmuuid:21a54941-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc8f-732e-1fad-8c1c-f99c857ec10b" xPosition="20" yPosition="40"/>
+      <diagramEntity xmi:uuid="mmuuid:22996d40-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc91-732e-1fad-8c1c-f99c857ec10b" xPosition="40" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:237e4f00-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc93-732e-1fad-8c1c-f99c857ec10b" xPosition="60" yPosition="60"/>
+      <diagramEntity xmi:uuid="mmuuid:237e4f01-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc95-732e-1fad-8c1c-f99c857ec10b" xPosition="80" yPosition="70"/>
+      <diagramEntity xmi:uuid="mmuuid:24727300-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc97-732e-1fad-8c1c-f99c857ec10b" xPosition="100" yPosition="80"/>
+      <diagramEntity xmi:uuid="mmuuid:24727301-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc99-732e-1fad-8c1c-f99c857ec10b" xPosition="120" yPosition="90"/>
+      <diagramEntity xmi:uuid="mmuuid:25669700-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc9c-732e-1fad-8c1c-f99c857ec10b" xPosition="140" yPosition="100"/>
+      <diagramEntity xmi:uuid="mmuuid:264b78c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fc9f-732e-1fad-8c1c-f99c857ec10b" xPosition="160" yPosition="110"/>
+      <diagramEntity xmi:uuid="mmuuid:264b78c1-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fca2-732e-1fad-8c1c-f99c857ec10b" xPosition="180" yPosition="120"/>
+      <diagramEntity xmi:uuid="mmuuid:273f9cc0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fca5-732e-1fad-8c1c-f99c857ec10b" xPosition="200" yPosition="130"/>
+      <diagramEntity xmi:uuid="mmuuid:2833c0c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fca8-732e-1fad-8c1c-f99c857ec10b" xPosition="220" yPosition="140"/>
+      <diagramEntity xmi:uuid="mmuuid:2918a280-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcab-732e-1fad-8c1c-f99c857ec10b" xPosition="240" yPosition="150"/>
+      <diagramEntity xmi:uuid="mmuuid:2918a281-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcae-732e-1fad-8c1c-f99c857ec10b" xPosition="260" yPosition="160"/>
+      <diagramEntity xmi:uuid="mmuuid:2a0cc680-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcb2-732e-1fad-8c1c-f99c857ec10b" xPosition="280" yPosition="170"/>
+      <diagramEntity xmi:uuid="mmuuid:2af1a840-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcb5-732e-1fad-8c1c-f99c857ec10b" xPosition="300" yPosition="180"/>
+      <diagramEntity xmi:uuid="mmuuid:2cd9f041-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcc1-732e-1fad-8c1c-f99c857ec10b" xPosition="380" yPosition="220"/>
+      <diagramEntity xmi:uuid="mmuuid:2dbed200-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcc4-732e-1fad-8c1c-f99c857ec10b" xPosition="400" yPosition="230"/>
+      <diagramEntity xmi:uuid="mmuuid:2eb2f600-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcc7-732e-1fad-8c1c-f99c857ec10b" xPosition="420" yPosition="240"/>
+      <diagramEntity xmi:uuid="mmuuid:2fa71a00-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fccd-732e-1fad-8c1c-f99c857ec10b" xPosition="460" yPosition="260"/>
+      <diagramEntity xmi:uuid="mmuuid:31801fc0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcd5-732e-1fad-8c1c-f99c857ec10b" xPosition="500" yPosition="280"/>
+      <diagramEntity xmi:uuid="mmuuid:35322b41-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fce6-732e-1fad-8c1c-f99c857ec10b" xPosition="580" yPosition="320"/>
+      <diagramEntity xmi:uuid="mmuuid:36264f41-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcec-732e-1fad-8c1c-f99c857ec10b" xPosition="20" yPosition="60"/>
+      <diagramEntity xmi:uuid="mmuuid:371a7340-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fcef-732e-1fad-8c1c-f99c857ec10b" xPosition="40" yPosition="70"/>
+      <diagramEntity xmi:uuid="mmuuid:3acc7ec0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd01-732e-1fad-8c1c-f99c857ec10b" xPosition="140" yPosition="120"/>
+      <diagramEntity xmi:uuid="mmuuid:3acc7ec1-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd04-732e-1fad-8c1c-f99c857ec10b" xPosition="160" yPosition="130"/>
+      <diagramEntity xmi:uuid="mmuuid:3bc0a2c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd07-732e-1fad-8c1c-f99c857ec10b" xPosition="180" yPosition="140"/>
+      <diagramEntity xmi:uuid="mmuuid:3ca58480-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd0a-732e-1fad-8c1c-f99c857ec10b" xPosition="200" yPosition="150"/>
+      <diagramEntity xmi:uuid="mmuuid:3ca58481-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd0d-732e-1fad-8c1c-f99c857ec10b" xPosition="220" yPosition="160"/>
+      <diagramEntity xmi:uuid="mmuuid:3d99a880-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd0f-732e-1fad-8c1c-f99c857ec10b" xPosition="240" yPosition="170"/>
+      <diagramEntity xmi:uuid="mmuuid:3e8dcc80-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd13-732e-1fad-8c1c-f99c857ec10b" xPosition="260" yPosition="180"/>
+      <diagramEntity xmi:uuid="mmuuid:3e8dcc81-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd16-732e-1fad-8c1c-f99c857ec10b" xPosition="280" yPosition="190"/>
+      <diagramEntity xmi:uuid="mmuuid:3f72ae40-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd19-732e-1fad-8c1c-f99c857ec10b" xPosition="300" yPosition="200"/>
+      <diagramEntity xmi:uuid="mmuuid:4066d240-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd1b-732e-1fad-8c1c-f99c857ec10b" xPosition="320" yPosition="210"/>
+      <diagramEntity xmi:uuid="mmuuid:4066d241-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd1d-732e-1fad-8c1c-f99c857ec10b" xPosition="340" yPosition="220"/>
+      <diagramEntity xmi:uuid="mmuuid:414bb400-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd21-732e-1fad-8c1c-f99c857ec10b" xPosition="360" yPosition="230"/>
+      <diagramEntity xmi:uuid="mmuuid:423fd801-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd27-732e-1fad-8c1c-f99c857ec10b" xPosition="400" yPosition="250"/>
+      <diagramEntity xmi:uuid="mmuuid:4333fc00-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd2a-732e-1fad-8c1c-f99c857ec10b" xPosition="420" yPosition="260"/>
+      <diagramEntity xmi:uuid="mmuuid:4333fc01-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd2c-732e-1fad-8c1c-f99c857ec10b" xPosition="440" yPosition="270"/>
+      <diagramEntity xmi:uuid="mmuuid:4418ddc0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd2e-732e-1fad-8c1c-f99c857ec10b" xPosition="460" yPosition="280"/>
+      <diagramEntity xmi:uuid="mmuuid:450d01c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd30-732e-1fad-8c1c-f99c857ec10b" xPosition="480" yPosition="290"/>
+      <diagramEntity xmi:uuid="mmuuid:450d01c1-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd33-732e-1fad-8c1c-f99c857ec10b" xPosition="500" yPosition="300"/>
+      <diagramEntity xmi:uuid="mmuuid:460125c0-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd36-732e-1fad-8c1c-f99c857ec10b" xPosition="520" yPosition="310"/>
+      <diagramEntity xmi:uuid="mmuuid:46e60780-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd39-732e-1fad-8c1c-f99c857ec10b" xPosition="540" yPosition="320"/>
+      <diagramEntity xmi:uuid="mmuuid:46e60781-732f-1fad-8c1c-f99c857ec10b" modelObject="mmuuid/dbc9fd3a-732e-1fad-8c1c-f99c857ec10b" xPosition="560" yPosition="330"/>
+      <diagramEntity xmi:uuid="mmuuid:daf00981-d37a-1fc0-a407-a05a38b688bc" modelObject="mmuuid/d0af8682-d37a-1fc0-a407-a05a38b688bc" xPosition="180" yPosition="100"/>
+    </diagram>
+  </diagram:DiagramContainer>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a80-732e-1fad-8c1c-f99c857ec10b" name="addConnectorBinding" nameInSource="addConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dae51a88-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a89-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a81-732e-1fad-8c1c-f99c857ec10b" name="Message" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a87-732e-1fad-8c1c-f99c857ec10b" name="Code" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a85-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a83-732e-1fad-8c1c-f99c857ec10b" name="arg21" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a86-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a84-732e-1fad-8c1c-f99c857ec10b" name="Message1" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a82-732e-1fad-8c1c-f99c857ec10b" name="Code1" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a8a-732e-1fad-8c1c-f99c857ec10b" name="addConnectorBinding1" nameInSource="addConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dae51a91-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a90-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a92-732e-1fad-8c1c-f99c857ec10b" name="Message" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a8f-732e-1fad-8c1c-f99c857ec10b" name="Code" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a93-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a8d-732e-1fad-8c1c-f99c857ec10b" name="arg21" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a8c-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a8e-732e-1fad-8c1c-f99c857ec10b" name="Message1" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a8b-732e-1fad-8c1c-f99c857ec10b" name="Code1" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a94-732e-1fad-8c1c-f99c857ec10b" name="addConnectorType" nameInSource="addConnectorType">
+    <parameters xmi:uuid="mmuuid:dae51a96-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a95-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a97-732e-1fad-8c1c-f99c857ec10b" name="addExtensionModule" nameInSource="addExtensionModule">
+    <parameters xmi:uuid="mmuuid:dae51a9a-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a9b-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a98-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a99-732e-1fad-8c1c-f99c857ec10b" name="arg4" nameInSource="arg4" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a9c-732e-1fad-8c1c-f99c857ec10b" name="addGroup" nameInSource="addGroup">
+    <parameters xmi:uuid="mmuuid:dae51a9e-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51a9d-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51a9f-732e-1fad-8c1c-f99c857ec10b" name="addHost" nameInSource="addHost">
+    <parameters xmi:uuid="mmuuid:dae51aa1-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aa0-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51aa2-732e-1fad-8c1c-f99c857ec10b" name="addMemberToGroup" nameInSource="addMemberToGroup">
+    <parameters xmi:uuid="mmuuid:dae51aa4-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aa5-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aa3-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51aa6-732e-1fad-8c1c-f99c857ec10b" name="addPermissionToDataEntitlement" nameInSource="addPermissionToDataEntitlement">
+    <parameters xmi:uuid="mmuuid:dae51aa8-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aa9-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aa7-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51aaa-732e-1fad-8c1c-f99c857ec10b" name="addPermissionToMetaBaseEntitlement" nameInSource="addPermissionToMetaBaseEntitlement">
+    <parameters xmi:uuid="mmuuid:dae51aac-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aad-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aab-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51aae-732e-1fad-8c1c-f99c857ec10b" name="addPrincipalToDataEntitlement" nameInSource="addPrincipalToDataEntitlement">
+    <parameters xmi:uuid="mmuuid:dae51ab0-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51aaf-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51ab1-732e-1fad-8c1c-f99c857ec10b" name="addPrincipalToMetaBaseEntitlement" nameInSource="addPrincipalToMetaBaseEntitlement">
+    <parameters xmi:uuid="mmuuid:dae51ab3-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ab2-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51ab4-732e-1fad-8c1c-f99c857ec10b" name="addProcess" nameInSource="addProcess">
+    <parameters xmi:uuid="mmuuid:dae51ab6-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ab5-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dae51aba-732e-1fad-8c1c-f99c857ec10b" name="addVDB" nameInSource="addVDB">
+    <parameters xmi:uuid="mmuuid:dae51ac2-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51abf-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51abe-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac7-732e-1fad-8c1c-f99c857ec10b" name="Message" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac5-732e-1fad-8c1c-f99c857ec10b" name="Code" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac3-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac8-732e-1fad-8c1c-f99c857ec10b" name="arg21" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51abb-732e-1fad-8c1c-f99c857ec10b" name="arg31" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac0-732e-1fad-8c1c-f99c857ec10b" name="Message1" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac6-732e-1fad-8c1c-f99c857ec10b" name="Code1" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac4-732e-1fad-8c1c-f99c857ec10b" name="arg12" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51abc-732e-1fad-8c1c-f99c857ec10b" name="arg22" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51ac1-732e-1fad-8c1c-f99c857ec10b" name="Message2" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dae51abd-732e-1fad-8c1c-f99c857ec10b" name="Code2" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc40-732e-1fad-8c1c-f99c857ec10b" name="addVDB1" nameInSource="addVDB">
+    <parameters xmi:uuid="mmuuid:dbc9fc46-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc4d-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc4e-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc4a-732e-1fad-8c1c-f99c857ec10b" name="Message" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc4c-732e-1fad-8c1c-f99c857ec10b" name="Code" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc41-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc42-732e-1fad-8c1c-f99c857ec10b" name="arg21" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc44-732e-1fad-8c1c-f99c857ec10b" name="arg31" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc4b-732e-1fad-8c1c-f99c857ec10b" name="Message1" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc43-732e-1fad-8c1c-f99c857ec10b" name="Code1" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc48-732e-1fad-8c1c-f99c857ec10b" name="arg12" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc49-732e-1fad-8c1c-f99c857ec10b" name="arg22" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc47-732e-1fad-8c1c-f99c857ec10b" name="Message2" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc45-732e-1fad-8c1c-f99c857ec10b" name="Code2" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc4f-732e-1fad-8c1c-f99c857ec10b" name="addVDB2" nameInSource="addVDB">
+    <parameters xmi:uuid="mmuuid:dbc9fc53-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc57-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc59-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc55-732e-1fad-8c1c-f99c857ec10b" name="Message" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc5d-732e-1fad-8c1c-f99c857ec10b" name="Code" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc5b-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc5c-732e-1fad-8c1c-f99c857ec10b" name="arg21" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc54-732e-1fad-8c1c-f99c857ec10b" name="arg31" nameInSource="arg3" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc58-732e-1fad-8c1c-f99c857ec10b" name="Message1" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc51-732e-1fad-8c1c-f99c857ec10b" name="Code1" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc56-732e-1fad-8c1c-f99c857ec10b" name="arg12" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc5a-732e-1fad-8c1c-f99c857ec10b" name="arg22" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc52-732e-1fad-8c1c-f99c857ec10b" name="Message2" nameInSource="Message" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc50-732e-1fad-8c1c-f99c857ec10b" name="Code2" nameInSource="Code" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc5e-732e-1fad-8c1c-f99c857ec10b" name="assignBindingToModel" nameInSource="assignBindingToModel">
+    <parameters xmi:uuid="mmuuid:dbc9fc5f-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc62-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc61-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc60-732e-1fad-8c1c-f99c857ec10b" name="arg4" nameInSource="arg4" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc6d-732e-1fad-8c1c-f99c857ec10b" name="changeVDBStatus" nameInSource="changeVDBStatus">
+    <parameters xmi:uuid="mmuuid:dbc9fc6f-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc6e-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc70-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc71-732e-1fad-8c1c-f99c857ec10b" name="clearCache" nameInSource="clearCache">
+    <parameters xmi:uuid="mmuuid:dbc9fc72-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc73-732e-1fad-8c1c-f99c857ec10b" name="createDataEntitlement" nameInSource="createDataEntitlement">
+    <parameters xmi:uuid="mmuuid:dbc9fc77-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc76-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc7c-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc78-732e-1fad-8c1c-f99c857ec10b" name="arg4" nameInSource="arg4" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc7b-732e-1fad-8c1c-f99c857ec10b" name="Principals" nameInSource="Principals" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc79-732e-1fad-8c1c-f99c857ec10b" name="Name" nameInSource="Name" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc74-732e-1fad-8c1c-f99c857ec10b" name="Properties" nameInSource="Properties" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc7a-732e-1fad-8c1c-f99c857ec10b" name="Identifier" nameInSource="Identifier" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc75-732e-1fad-8c1c-f99c857ec10b" name="PropertyValue" nameInSource="PropertyValue" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc7d-732e-1fad-8c1c-f99c857ec10b" name="createMetabaseEntitlement" nameInSource="createMetabaseEntitlement">
+    <parameters xmi:uuid="mmuuid:dbc9fc81-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc82-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc7e-732e-1fad-8c1c-f99c857ec10b" name="Principals" nameInSource="Principals" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc80-732e-1fad-8c1c-f99c857ec10b" name="Name" nameInSource="Name" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc84-732e-1fad-8c1c-f99c857ec10b" name="Properties" nameInSource="Properties" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc83-732e-1fad-8c1c-f99c857ec10b" name="Identifier" nameInSource="Identifier" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc7f-732e-1fad-8c1c-f99c857ec10b" name="PropertyValue" nameInSource="PropertyValue" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc85-732e-1fad-8c1c-f99c857ec10b" name="deleteConnectorBinding" nameInSource="deleteConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dbc9fc86-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc87-732e-1fad-8c1c-f99c857ec10b" name="deleteConnectorType" nameInSource="deleteConnectorType">
+    <parameters xmi:uuid="mmuuid:dbc9fc88-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc89-732e-1fad-8c1c-f99c857ec10b" name="deleteExtensionModule" nameInSource="deleteExtensionModule">
+    <parameters xmi:uuid="mmuuid:dbc9fc8a-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc8b-732e-1fad-8c1c-f99c857ec10b" name="deleteHost" nameInSource="deleteHost">
+    <parameters xmi:uuid="mmuuid:dbc9fc8c-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc8d-732e-1fad-8c1c-f99c857ec10b" name="deleteProcess" nameInSource="deleteProcess">
+    <parameters xmi:uuid="mmuuid:dbc9fc8e-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc8f-732e-1fad-8c1c-f99c857ec10b" name="disableHost" nameInSource="disableHost">
+    <parameters xmi:uuid="mmuuid:dbc9fc90-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc91-732e-1fad-8c1c-f99c857ec10b" name="disableProcess" nameInSource="disableProcess">
+    <parameters xmi:uuid="mmuuid:dbc9fc92-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc93-732e-1fad-8c1c-f99c857ec10b" name="enableHost" nameInSource="enableHost">
+    <parameters xmi:uuid="mmuuid:dbc9fc94-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc95-732e-1fad-8c1c-f99c857ec10b" name="enableProcess" nameInSource="enableProcess">
+    <parameters xmi:uuid="mmuuid:dbc9fc96-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc97-732e-1fad-8c1c-f99c857ec10b" name="exportConfiguration" nameInSource="exportConfiguration">
+    <parameters xmi:uuid="mmuuid:dbc9fc98-732e-1fad-8c1c-f99c857ec10b" name="ReturnArray" nameInSource="ReturnArray" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc99-732e-1fad-8c1c-f99c857ec10b" name="exportConnectorBinding" nameInSource="exportConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dbc9fc9b-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc9a-732e-1fad-8c1c-f99c857ec10b" name="ReturnArray" nameInSource="ReturnArray" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc9c-732e-1fad-8c1c-f99c857ec10b" name="exportConnectorType" nameInSource="exportConnectorType">
+    <parameters xmi:uuid="mmuuid:dbc9fc9e-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fc9d-732e-1fad-8c1c-f99c857ec10b" name="ReturnArray" nameInSource="ReturnArray" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fc9f-732e-1fad-8c1c-f99c857ec10b" name="exportEntitlements" nameInSource="exportEntitlements">
+    <parameters xmi:uuid="mmuuid:dbc9fca1-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fca0-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fca2-732e-1fad-8c1c-f99c857ec10b" name="exportEntitlements1" nameInSource="exportEntitlements">
+    <parameters xmi:uuid="mmuuid:dbc9fca3-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fca4-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fca5-732e-1fad-8c1c-f99c857ec10b" name="exportExtensionModule" nameInSource="exportExtensionModule">
+    <parameters xmi:uuid="mmuuid:dbc9fca6-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fca7-732e-1fad-8c1c-f99c857ec10b" name="ReturnArray" nameInSource="ReturnArray" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fca8-732e-1fad-8c1c-f99c857ec10b" name="exportPrincipals" nameInSource="exportPrincipals">
+    <parameters xmi:uuid="mmuuid:dbc9fca9-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcaa-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcab-732e-1fad-8c1c-f99c857ec10b" name="exportPrincipals1" nameInSource="exportPrincipals">
+    <parameters xmi:uuid="mmuuid:dbc9fcad-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcac-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcae-732e-1fad-8c1c-f99c857ec10b" name="exportVDB" nameInSource="exportVDB">
+    <parameters xmi:uuid="mmuuid:dbc9fcb0-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcb1-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcaf-732e-1fad-8c1c-f99c857ec10b" name="ReturnArray" nameInSource="ReturnArray" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcb2-732e-1fad-8c1c-f99c857ec10b" name="getCaches" nameInSource="getCaches">
+    <parameters xmi:uuid="mmuuid:dbc9fcb3-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcb4-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcb5-732e-1fad-8c1c-f99c857ec10b" name="getChildrenOfGroup" nameInSource="getChildrenOfGroup">
+    <parameters xmi:uuid="mmuuid:dbc9fcb7-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcb6-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcc1-732e-1fad-8c1c-f99c857ec10b" name="getDQPs" nameInSource="getDQPs">
+    <parameters xmi:uuid="mmuuid:dbc9fcc2-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcc3-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcc4-732e-1fad-8c1c-f99c857ec10b" name="getDataEntitlementID" nameInSource="getDataEntitlementID">
+    <parameters xmi:uuid="mmuuid:dbc9fcc5-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcc6-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcc7-732e-1fad-8c1c-f99c857ec10b" name="getExtensionModules" nameInSource="getExtensionModules">
+    <parameters xmi:uuid="mmuuid:dbc9fcc9-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcc8-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fccd-732e-1fad-8c1c-f99c857ec10b" name="getGroupsRoles" nameInSource="getGroupsRoles">
+    <parameters xmi:uuid="mmuuid:dbc9fcce-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fccf-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcd5-732e-1fad-8c1c-f99c857ec10b" name="getLogConfiguration" nameInSource="getLogConfiguration">
+    <parameters xmi:uuid="mmuuid:dbc9fcdb-732e-1fad-8c1c-f99c857ec10b" name="LogLevel" nameInSource="LogLevel" direction="OUT" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcd6-732e-1fad-8c1c-f99c857ec10b" name="IncludedContexts" nameInSource="IncludedContexts" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcd9-732e-1fad-8c1c-f99c857ec10b" name="DiscardedContexts" nameInSource="DiscardedContexts" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcda-732e-1fad-8c1c-f99c857ec10b" name="Name" nameInSource="Name" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcdc-732e-1fad-8c1c-f99c857ec10b" name="Properties" nameInSource="Properties" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcd8-732e-1fad-8c1c-f99c857ec10b" name="Identifier" nameInSource="Identifier" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcd7-732e-1fad-8c1c-f99c857ec10b" name="PropertyValue" nameInSource="PropertyValue" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fce6-732e-1fad-8c1c-f99c857ec10b" name="getResources" nameInSource="getResources">
+    <parameters xmi:uuid="mmuuid:dbc9fce8-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fce7-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcec-732e-1fad-8c1c-f99c857ec10b" name="getSourceRequests" nameInSource="getSourceRequests">
+    <parameters xmi:uuid="mmuuid:dbc9fced-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcee-732e-1fad-8c1c-f99c857ec10b" name="ReturnCollection" nameInSource="ReturnCollection" direction="RETURN" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fcef-732e-1fad-8c1c-f99c857ec10b" name="getSystem" nameInSource="getSystem">
+    <parameters xmi:uuid="mmuuid:dbc9fcf0-732e-1fad-8c1c-f99c857ec10b" name="StartTime" nameInSource="StartTime" direction="OUT" nativeType="java.sql.Date" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#date"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcf3-732e-1fad-8c1c-f99c857ec10b" name="Name" nameInSource="Name" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcf4-732e-1fad-8c1c-f99c857ec10b" name="Properties" nameInSource="Properties" direction="OUT" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcf1-732e-1fad-8c1c-f99c857ec10b" name="Identifier" nameInSource="Identifier" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fcf2-732e-1fad-8c1c-f99c857ec10b" name="PropertyValue" nameInSource="PropertyValue" direction="OUT" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd01-732e-1fad-8c1c-f99c857ec10b" name="importEntitlements" nameInSource="importEntitlements">
+    <parameters xmi:uuid="mmuuid:dbc9fd03-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd02-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd04-732e-1fad-8c1c-f99c857ec10b" name="importEntitlements1" nameInSource="importEntitlements">
+    <parameters xmi:uuid="mmuuid:dbc9fd05-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd06-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd07-732e-1fad-8c1c-f99c857ec10b" name="importPrincipals" nameInSource="importPrincipals">
+    <parameters xmi:uuid="mmuuid:dbc9fd08-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd09-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd0a-732e-1fad-8c1c-f99c857ec10b" name="importPrincipals1" nameInSource="importPrincipals">
+    <parameters xmi:uuid="mmuuid:dbc9fd0b-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd0c-732e-1fad-8c1c-f99c857ec10b" name="arg11" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd0d-732e-1fad-8c1c-f99c857ec10b" name="removeGroup" nameInSource="removeGroup">
+    <parameters xmi:uuid="mmuuid:dbc9fd0e-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd0f-732e-1fad-8c1c-f99c857ec10b" name="removeMemberFromGroup" nameInSource="removeMemberFromGroup">
+    <parameters xmi:uuid="mmuuid:dbc9fd11-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd12-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="int" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd10-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd13-732e-1fad-8c1c-f99c857ec10b" name="removeRoleFromGroup" nameInSource="removeRoleFromGroup">
+    <parameters xmi:uuid="mmuuid:dbc9fd15-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd14-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd16-732e-1fad-8c1c-f99c857ec10b" name="removeRoleFromUser" nameInSource="removeRoleFromUser">
+    <parameters xmi:uuid="mmuuid:dbc9fd18-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd17-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd19-732e-1fad-8c1c-f99c857ec10b" name="removeUser" nameInSource="removeUser">
+    <parameters xmi:uuid="mmuuid:dbc9fd1a-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd1b-732e-1fad-8c1c-f99c857ec10b" name="setLogConfiguration" nameInSource="setLogConfiguration">
+    <parameters xmi:uuid="mmuuid:dbc9fd1c-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd1d-732e-1fad-8c1c-f99c857ec10b" name="setProperty" nameInSource="setProperty">
+    <parameters xmi:uuid="mmuuid:dbc9fd1f-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd1e-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd20-732e-1fad-8c1c-f99c857ec10b" name="arg3" nameInSource="arg3" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd21-732e-1fad-8c1c-f99c857ec10b" name="setSystemProperty" nameInSource="setSystemProperty">
+    <parameters xmi:uuid="mmuuid:dbc9fd23-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd22-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd27-732e-1fad-8c1c-f99c857ec10b" name="setUserProperties" nameInSource="setUserProperties">
+    <parameters xmi:uuid="mmuuid:dbc9fd29-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd28-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="java.lang.Object" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd2a-732e-1fad-8c1c-f99c857ec10b" name="startConnectorBinding" nameInSource="startConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dbc9fd2b-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd2c-732e-1fad-8c1c-f99c857ec10b" name="startHost" nameInSource="startHost">
+    <parameters xmi:uuid="mmuuid:dbc9fd2d-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd2e-732e-1fad-8c1c-f99c857ec10b" name="startProcess" nameInSource="startProcess">
+    <parameters xmi:uuid="mmuuid:dbc9fd2f-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd30-732e-1fad-8c1c-f99c857ec10b" name="stopConnectorBinding" nameInSource="stopConnectorBinding">
+    <parameters xmi:uuid="mmuuid:dbc9fd31-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd32-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="boolean" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd33-732e-1fad-8c1c-f99c857ec10b" name="stopHost" nameInSource="stopHost">
+    <parameters xmi:uuid="mmuuid:dbc9fd34-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd35-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="boolean" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd36-732e-1fad-8c1c-f99c857ec10b" name="stopProcess" nameInSource="stopProcess">
+    <parameters xmi:uuid="mmuuid:dbc9fd38-732e-1fad-8c1c-f99c857ec10b" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+    <parameters xmi:uuid="mmuuid:dbc9fd37-732e-1fad-8c1c-f99c857ec10b" name="arg2" nameInSource="arg2" nativeType="boolean" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </parameters>
+  </relational:Procedure>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd39-732e-1fad-8c1c-f99c857ec10b" name="stopSystem" nameInSource="stopSystem"/>
+  <relational:Procedure xmi:uuid="mmuuid:dbc9fd3a-732e-1fad-8c1c-f99c857ec10b" name="synchronizeSystem" nameInSource="synchronizeSystem"/>
+  <relational:Procedure xmi:uuid="mmuuid:d0af8682-d37a-1fc0-a407-a05a38b688bc" name="cancelSourceRequest" nameInSource="cancelSourceRequest">
+    <parameters xmi:uuid="mmuuid:d0af8683-d37a-1fc0-a407-a05a38b688bc" name="arg1" nameInSource="arg1" nativeType="java.lang.String" length="4" precision="4" nullable="NULLABLE">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </parameters>
+  </relational:Procedure>
+</xmi:XMI>

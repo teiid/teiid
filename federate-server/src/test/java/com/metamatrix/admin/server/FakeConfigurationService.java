@@ -1,0 +1,929 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.admin.server;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import com.metamatrix.admin.api.objects.Resource;
+import com.metamatrix.common.actions.ActionDefinition;
+import com.metamatrix.common.actions.CreateObject;
+import com.metamatrix.common.actions.ModificationException;
+import com.metamatrix.common.comm.ClientServiceRegistry;
+import com.metamatrix.common.config.api.ComponentDefn;
+import com.metamatrix.common.config.api.ComponentDefnID;
+import com.metamatrix.common.config.api.ComponentObject;
+import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeID;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
+import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponentID;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.HostType;
+import com.metamatrix.common.config.api.ProductServiceConfig;
+import com.metamatrix.common.config.api.ProductServiceConfigID;
+import com.metamatrix.common.config.api.ServiceComponentDefnID;
+import com.metamatrix.common.config.api.SharedResource;
+import com.metamatrix.common.config.api.SharedResourceID;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
+import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
+import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
+import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
+import com.metamatrix.common.config.model.BasicConnectorBindingType;
+import com.metamatrix.common.config.model.BasicHost;
+import com.metamatrix.common.config.model.BasicSharedResource;
+import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
+import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
+import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
+import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
+import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.exception.ServiceException;
+import com.metamatrix.platform.service.api.exception.ServiceStateException;
+import com.metamatrix.platform.vm.controller.VMControllerID;
+
+public class FakeConfigurationService implements ConfigurationServiceInterface {
+
+    private String CONFIG_FILE_PATH = null;
+    private ConfigurationModelContainerImpl config;
+
+    public FakeConfigurationService() {
+        super();
+        CONFIG_FILE_PATH = UnitTestUtil.getTestDataPath() + "/config/" + "config.xml"; //$NON-NLS-1$ //$NON-NLS-2$
+        File configFile = new File(CONFIG_FILE_PATH);
+        config = (ConfigurationModelContainerImpl)importConfigurationModel(configFile, Configuration.NEXT_STARTUP_ID);
+    }
+
+    /**
+     * Import a configuration file to work with.
+     *  
+     * @param fileToImport
+     * @param configID
+     * @return
+     * @since 5.0
+     */
+    private ConfigurationModelContainer importConfigurationModel(File fileToImport, ConfigurationID configID) {
+        Collection configObjects = null;
+        ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
+        ConfigurationModelContainerImpl configModel = null;
+        try {
+            XMLConfigurationImportExportUtility io = new XMLConfigurationImportExportUtility();
+            FileInputStream inputStream = new FileInputStream(fileToImport);
+            configObjects = io.importConfigurationObjects(inputStream, editor, configID.getFullName());
+            configModel = new ConfigurationModelContainerImpl();
+            configModel.setConfigurationObjects(configObjects);            
+        } catch(Exception ioe) {
+            configModel = null;
+        }
+        
+        return configModel;
+    }
+    
+    private ProductServiceConfig getPSCByName(Configuration config,
+            String pscName) throws InvalidArgumentException {
+		ProductServiceConfig result = null;
+		if (config != null) {
+			ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
+			result = config.getPSC(pscID);
+		}
+		return result;
+	}
+
+    public Host addHost(String hostName,
+                        String principalName,
+                        Properties properties) throws ConfigurationException,
+                                              ServiceException, RemoteException {
+        com.metamatrix.common.config.api.Host host = null;
+
+        ConfigurationObjectEditor editor = null;
+        try {
+            editor = createEditor();
+
+            ConfigurationModelContainer config = this.getConfigurationModel(Configuration.NEXT_STARTUP);
+
+            Properties defaultProps = config.getDefaultPropertyValues(Host.HOST_COMPONENT_TYPE_ID);
+            Properties allProps = PropertiesUtils.clone(defaultProps, false);
+            allProps.putAll(properties);
+
+            
+            host = editor.createHost(hostName);
+            host = (com.metamatrix.common.config.api.Host)editor
+                                                                .modifyProperties(host, allProps, ConfigurationObjectEditor.SET);
+
+        } catch (Exception theException) {
+            // rollback
+            if (editor != null) {
+                editor.getDestination().popActions();
+            }
+            //final Object[] params = new Object[] {this.getClass().getName(), theException.getMessage()};
+            final Object[] params = new Object[] {
+                hostName
+            };
+            final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_creating_New_Host", params); //$NON-NLS-1$
+
+            throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+        }
+        return host;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#createEditor()
+     */
+    public ConfigurationObjectEditor createEditor() throws ConfigurationException,
+                                                   ServiceException,
+                                                   RemoteException {
+        return new BasicConfigurationObjectEditor(true);
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getCurrentConfigurationID()
+     */
+    public ConfigurationID getCurrentConfigurationID() throws ConfigurationException,
+                                                      ServiceException,
+                                                      RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfigurationID()
+     */
+    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException,
+                                                          ServiceException,
+                                                          RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfigurationID()
+     */
+    public ConfigurationID getStartupConfigurationID() throws ConfigurationException,
+                                                      ServiceException,
+                                                      RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#baselineCurrentConfiguration(java.lang.String)
+     */
+    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException,
+                                                                  ServiceException,
+                                                                  RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getCurrentConfiguration()
+     */
+    public Configuration getCurrentConfiguration() throws ConfigurationException,
+                                                  ServiceException,
+                                                  RemoteException {
+        return new FakeConfiguration();
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfiguration()
+     */
+    public Configuration getNextStartupConfiguration() throws ConfigurationException,
+                                                      ServiceException,
+                                                      RemoteException {
+        return new FakeConfiguration();
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfiguration()
+     */
+    public Configuration getStartupConfiguration() throws ConfigurationException,
+                                                  ServiceException,
+                                                  RemoteException {
+        return new FakeConfiguration();
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfiguration(java.lang.String)
+     */
+    public Configuration getConfiguration(String configName) throws InvalidConfigurationException,
+                                                            ConfigurationException,
+                                                            ServiceException,
+                                                            RemoteException {
+        return new FakeConfiguration();
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfigurationModel(java.lang.String)
+     */
+    public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException,
+                                                                               ConfigurationException,
+                                                                               ServiceException,
+                                                                               RemoteException {
+        return this.config;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfigurationAndDependents(com.metamatrix.common.config.api.ConfigurationID)
+     */
+    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException,
+                                                                             ServiceException,
+                                                                             RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllGlobalConfigObjects()
+     */
+    public Collection getAllGlobalConfigObjects() throws ConfigurationException,
+                                                 ServiceException,
+                                                 RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentTypeDefinitions(java.util.Collection)
+     */
+    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException,
+                                                                   ServiceException,
+                                                                   RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
+                                                                                  ServiceException,
+                                                                                  RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
+                                                                                     ServiceException,
+                                                                                     RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getDependentComponentTypeDefinitions(java.util.Collection)
+     */
+    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException,
+                                                                            ServiceException,
+                                                                            RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getDependentComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
+                                                                                           ServiceException,
+                                                                                           RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getMonitoredComponentTypes(boolean)
+     */
+    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException,
+                                                                           ServiceException,
+                                                                           RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentType(com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException,
+                                                             ServiceException,
+                                                             RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypes(boolean)
+     */
+    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException,
+                                                                     ServiceException,
+                                                                     RemoteException {
+        List results = new ArrayList();
+        
+        ComponentTypeID typeID1 = new ComponentTypeID("connectorType1"); //$NON-NLS-1$
+        BasicConnectorBindingType type1 = new BasicConnectorBindingType(typeID1, typeID1, typeID1, true, false, true);
+        type1.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
+        results.add(type1);
+        
+        
+        ComponentTypeID typeID2 = new ComponentTypeID("connectorType2"); //$NON-NLS-1$
+        BasicConnectorBindingType type2 = new BasicConnectorBindingType(typeID2, typeID2, typeID2, true, false, true);
+        type2.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
+        
+        results.add(type2);  
+        
+        return results;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHost(com.metamatrix.common.config.api.HostID)
+     */
+    public Host getHost(HostID hostID) throws ConfigurationException,
+                                      ServiceException,
+                                      RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHosts()
+     */
+    public Collection getHosts() throws ConfigurationException,
+                                ServiceException,
+                                RemoteException {
+        List hosts = new ArrayList();
+        
+        HostID hostID1 = new HostID("1.1.1.1"); //$NON-NLS-1$
+        Host host1 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID1, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
+        hosts.add(host1);
+        
+        HostID hostID2 = new HostID("2.2.2.2"); //$NON-NLS-1$
+        Host host2 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID2, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
+        hosts.add(host2);
+        
+        
+        return hosts;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentDefn(com.metamatrix.common.config.api.ConfigurationID, com.metamatrix.common.config.api.ComponentDefnID)
+     */
+    public ComponentDefn getComponentDefn(ConfigurationID configurationID,
+                                          ComponentDefnID componentDefnID) throws ConfigurationException,
+                                                                          ServiceException,
+                                                                          RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentDefns(java.util.Collection, com.metamatrix.common.config.api.ConfigurationID)
+     */
+    public Collection getComponentDefns(Collection componentDefnIDs,
+                                        ConfigurationID configurationID) throws ConfigurationException,
+                                                                        ServiceException,
+                                                                        RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePools(com.metamatrix.common.config.api.ConfigurationID)
+     */
+    public Collection getResourcePools(ConfigurationID configurationID) throws ConfigurationException,
+                                                                       ServiceException,
+                                                                       RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePoolTypes(com.metamatrix.common.config.api.ConfigurationID)
+     */
+    public Collection getResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
+                                                                           ServiceException,
+                                                                           RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getPoolableResourcePoolTypes(com.metamatrix.common.config.api.ConfigurationID)
+     */
+    public Collection getPoolableResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
+                                                                                   ServiceException,
+                                                                                   RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePools(com.metamatrix.common.config.api.ConfigurationID, com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public Collection getResourcePools(ConfigurationID configurationID,
+                                       ComponentTypeID componentTypeID) throws ConfigurationException,
+                                                                       ServiceException,
+                                                                       RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResources()
+     */
+    public Collection getResources() throws ConfigurationException,
+                                    ServiceException,
+                                    RemoteException {
+        List results = new ArrayList();
+        
+        SharedResourceID resourceID1 = new SharedResourceID("resource1"); //$NON-NLS-1$
+        SharedResource resource1 = new BasicSharedResource(resourceID1, SharedResource.JDBC_COMPONENT_TYPE_ID);
+        ConfigurationObjectEditorHelper.addProperty(resource1, "prop1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
+        ConfigurationObjectEditorHelper.addProperty(resource1, Resource.RESOURCE_POOL, "pool"); //$NON-NLS-1$ 
+        
+        results.add(resource1);
+        
+        
+        SharedResourceID resourceID2 = new SharedResourceID("resource2"); //$NON-NLS-1$
+        SharedResource resource2 = new BasicSharedResource(resourceID2, SharedResource.JDBC_COMPONENT_TYPE_ID);
+        results.add(resource2);
+
+        
+        return results;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResources(com.metamatrix.common.config.api.ComponentTypeID)
+     */
+    public Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException,
+                                                                   ServiceException,
+                                                                   RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#saveResources(java.util.Collection, java.lang.String)
+     */
+    public void saveResources(Collection resourceDescriptors,
+                              String principalName) throws ConfigurationException,
+                                                   ServiceException,
+                                                   RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getProductReleaseInfos()
+     */
+    public Collection getProductReleaseInfos() throws ConfigurationException,
+                                              ServiceException,
+                                              RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#executeTransaction(com.metamatrix.common.actions.ActionDefinition, java.lang.String)
+     */
+    public Set executeTransaction(ActionDefinition action,
+                                  String principalName) throws ModificationException,
+                                                       ConfigurationLockException,
+                                                       ConfigurationException,
+                                                       ServiceException,
+                                                       RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#executeTransaction(java.util.List, java.lang.String)
+     */
+    public Set executeTransaction(List actions,
+                                  String principalName) throws ModificationException,
+                                                       ConfigurationLockException,
+                                                       ConfigurationException,
+                                                       ServiceException,
+                                                       RemoteException {
+        if (actions != null) {
+            for (Iterator it=actions.iterator(); it.hasNext();) {
+                Object o = it.next();
+                if (o instanceof CreateObject) {
+                  CreateObject co = (CreateObject) o;
+                  Object[] objs = co.getArguments();
+                  config.addObject(objs[0]);  
+                }
+            }
+        }
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#executeInsertTransaction(com.metamatrix.common.config.api.ConfigurationID, java.util.List, java.lang.String)
+     */
+    public Set executeInsertTransaction(ConfigurationID assignConfigurationID,
+                                        List actions,
+                                        String principalName) throws ModificationException,
+                                                             ConfigurationLockException,
+                                                             ConfigurationException,
+                                                             ServiceException,
+                                                             RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#undoActionsAsTransaction(int, java.lang.String)
+     */
+    public Set undoActionsAsTransaction(int numberOfActions,
+                                        String principalName) throws ConfigurationException,
+                                                             ServiceException,
+                                                             RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistory()
+     */
+    public List getHistory() throws ConfigurationException,
+                            ServiceException,
+                            RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#clearHistory()
+     */
+    public void clearHistory() throws ConfigurationException,
+                              ServiceException,
+                              RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistorySize()
+     */
+    public int getHistorySize() throws ConfigurationException,
+                               ServiceException,
+                               RemoteException {
+        return 0;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistoryLimit()
+     */
+    public int getHistoryLimit() throws ConfigurationException,
+                                ServiceException,
+                                RemoteException {
+        return 0;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#setHistoryLimit(int)
+     */
+    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException,
+                                                        ServiceException,
+                                                        RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getServerStartupTime()
+     */
+    public Date getServerStartupTime() throws ConfigurationException,
+                                      ServiceException,
+                                      RemoteException {
+        return new Date(1234);
+    }
+
+//    /** 
+//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addHost(java.lang.String, java.lang.String, java.util.Properties)
+//     */
+//    public Host addHost(String hostName,
+//                        String principalName,
+//                        Properties properties) throws ConfigurationException,
+//                                              ServiceException,
+//                                              RemoteException {
+//        return null;
+//    }
+//
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addProcess(java.lang.String, java.lang.String, java.lang.String, java.util.Properties)
+     */
+    public VMComponentDefn addProcess(String processName,
+                                      String hostName,
+                                      String principalName,
+                                      Properties properties) throws ConfigurationException,
+                                                            ServiceException,
+                                                            RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#setSystemPropertyValue(java.lang.String, java.lang.String, java.lang.String)
+     */
+    public void setSystemPropertyValue(String propertyName,
+                                       String propertyValue,
+                                       String principalName) throws ConfigurationException,
+                                                            ServiceException,
+                                                            RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#updateSystemPropertyValues(java.util.Properties, java.lang.String)
+     */
+    public void updateSystemPropertyValues(Properties properties,
+                                           String principalName) throws ConfigurationException,
+                                                                ServiceException,
+                                                                RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#createConnectorBinding(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.util.Properties)
+     */
+    public ConnectorBinding createConnectorBinding(String connectorBindingName,
+                                                   String connectorType,
+                                                   String pscName,
+                                                   String principalName,
+                                                   Properties properties) throws ConfigurationException,
+                                                                         ServiceException,
+                                                                         RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#modify(com.metamatrix.common.config.api.ComponentObject, java.util.Properties, java.lang.String)
+     */
+    public Object modify(ComponentObject theObject,
+                         Properties theProperties,
+                         String principalName) throws ConfigurationException,
+                                              ServiceException,
+                                              RemoteException,
+                                              ModificationException {
+        return null;
+    }
+
+//    /** 
+//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#importConnectorType(java.io.InputStream, java.lang.String, java.lang.String)
+//     */
+//    public ComponentType importConnectorType(InputStream inputStream,
+//                                             String name,
+//                                             String principalName) throws ConfigurationException,
+//                                                                  ServiceException,
+//                                                                  RemoteException {
+//        return null;
+//    }
+//
+//    /** 
+//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#importConnectorBinding(java.io.InputStream, java.lang.String, java.lang.String, java.lang.String)
+//     */
+//    public ConnectorBinding importConnectorBinding(InputStream inputStream,
+//                                                   String name,
+//                                                   String pscName,
+//                                                   String principalName) throws ConfigurationException,
+//                                                                        ServiceException,
+//                                                                        RemoteException {
+//        return null;
+//    }
+
+    public ConnectorBinding importConnectorBinding(InputStream inputStream,
+            String name,
+            String pscName,
+            String principalName) throws ConfigurationException,
+                                          ServiceException, RemoteException {
+		ConnectorBinding newBinding = null;
+		ConfigurationObjectEditor editor = createEditor();
+		
+		try {
+			XMLConfigurationImportExportUtility util = new XMLConfigurationImportExportUtility();
+			newBinding = util.importConnectorBinding(inputStream, editor, name);
+			
+			
+			//deploy to the specified PSC
+			Configuration config = getNextStartupConfiguration();
+			if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
+			ProductServiceConfig psc = this.getPSCByName(config, pscName);
+			ServiceComponentDefnID bindingID = (ServiceComponentDefnID) newBinding.getID();
+			editor.addServiceComponentDefn(psc, bindingID);
+			
+			editor.deployServiceDefn(config, newBinding, (ProductServiceConfigID)psc.getID());
+			}            
+		
+		} catch (Exception theException) {
+			// rollback
+			if (editor != null) {
+				editor.getDestination().popActions();
+			}
+			final Object[] params = new Object[] {
+					name, theException.getMessage()
+			};
+			final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_binding", params); //$NON-NLS-1$
+			throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+				
+		}
+		return newBinding;
+	}
+
+	public ComponentType importConnectorType(InputStream inputStream,
+	      String name,
+	      String principalName) throws ConfigurationException,
+	                                    ServiceException, RemoteException {
+		ComponentType newType = null;
+		ConfigurationObjectEditor editor = createEditor();
+		
+		try {
+			XMLConfigurationImportExportUtility util = new XMLConfigurationImportExportUtility();
+			newType = util.importComponentType(inputStream, editor, name);
+			
+		} catch (Exception theException) {
+			// rollback
+			if (editor != null) {
+				editor.getDestination().popActions();
+			}
+			final Object[] params = new Object[] {
+					name, theException.getMessage()
+			};
+			final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_type", params); //$NON-NLS-1$
+			throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+			
+		}
+		return newType;
+	}
+	
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#delete(com.metamatrix.common.config.api.ComponentObject, boolean, java.lang.String)
+     */
+    public void delete(ComponentObject theObject,
+                       boolean theDeleteDependenciesFlag,
+                       String principalName) throws ConfigurationException,
+                                            ModificationException,
+                                            ServiceException,
+                                            RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#delete(com.metamatrix.common.config.api.ComponentType, java.lang.String)
+     */
+    public void delete(ComponentType componentType,
+                       String principalName) throws ConfigurationException,
+                                            ServiceException,
+                                            ModificationException,
+                                            RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#deployPSC(com.metamatrix.common.config.api.Host, com.metamatrix.common.config.api.VMComponentDefn, java.lang.String, java.lang.String)
+     */
+    public Collection deployPSC(Host theHost,
+                                VMComponentDefn theProcess,
+                                String pscName,
+                                String principalName) throws ConfigurationException,
+                                                     ServiceException,
+                                                     ModificationException,
+                                                     RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.List)
+     */
+    public List checkPropertiesDecryptable(List defns) throws ConfigurationException,
+                                                      ServiceException,
+                                                      RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.Properties, java.lang.String)
+     */
+    public boolean checkPropertiesDecryptable(Properties props,
+                                              String componentTypeIdentifier) throws ConfigurationException,
+                                                                             ServiceException,
+                                                                             RemoteException {
+        return false;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#die()
+     */
+    public void die() throws ServiceException,
+                     RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#dieNow()
+     */
+    public void dieNow() throws ServiceException,
+                        RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#checkState()
+     */
+    public void checkState() throws ServiceStateException,
+                            RemoteException {
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getProperties()
+     */
+    public Properties getProperties() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getStartTime()
+     */
+    public Date getStartTime() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getHostname()
+     */
+    public String getHostname() throws ServiceException,
+                               RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
+     */
+    public VMControllerID getVMID() throws ServiceException,
+                                   RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#isAlive()
+     */
+    public boolean isAlive() throws RemoteException {
+        return false;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getServiceType()
+     */
+    public String getServiceType() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getCurrentState()
+     */
+    public int getCurrentState() throws RemoteException {
+        return 0;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getStateChangeTime()
+     */
+    public Date getStateChangeTime() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getID()
+     */
+    public ServiceID getID() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics()
+     */
+    public Collection getQueueStatistics() throws RemoteException {
+        return null;
+    }
+
+    /** 
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics(java.lang.String)
+     */
+    public WorkerPoolStats getQueueStatistics(String name) throws RemoteException {
+        return null;
+    }
+
+	public void init(ServiceID id, DeployedComponentID deployedComponentID,
+			Properties props, ClientServiceRegistry listenerRegistry)
+			throws ServiceException, RemoteException {
+	}
+
+	public void setInitException(Throwable t) {
+	}
+
+	public void updateState(int state) {
+	}
+
+}

@@ -1,0 +1,1829 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.jdbc;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import junit.framework.TestCase;
+
+import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.jdbc.util.ResultSetUtil;
+
+/**
+ */
+public class TestMMDatabaseMetaData extends TestCase {
+
+    private static final int TESTS = 56;
+    private static int tests = -1;
+    private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties"; //$NON-NLS-1$
+
+    static Connection conn = null;
+    static String primaryUrl = "jdbc:metamatrix:QT_Ora9DS@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$
+    // URL for local DQP
+    static String serverUrl = primaryUrl + ";logLevel=1;partialResultsMode=false"; //$NON-NLS-1$
+    
+    // URL for integration test
+    //static String serverUrl = "jdbc:metamatrix:DTMS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
+    MMDatabaseMetaData dbmd = null;
+    private Map expectedMap = new HashMap();
+
+    // constant 
+    private static final int NO_LIMIT = 0;
+    // constant value giving the names of numeric funtions supported
+        private final static String NUMERIC_FUNCTIONS = "ABS, ACOS, ASIN, ATAN, ATAN2, BITAND, BITNOT, BITOR, BITXOR, CEILING" //$NON-NLS-1$
+        +", COS, COT, DEGREES, EXP, FLOOR, FORMATBIGDECIMAL, FORMATBIGINTEGER" //$NON-NLS-1$
+        +", FORMATDOUBLE, FORMATFLOAT, FORMATINTEGER, FORMATLONG, LOG, LOG10" //$NON-NLS-1$
+        +", MOD, PARSEBIGDECIMAL, PARSEBIGINTEGER, PARSEDOUBLE, PARSEFLOAT" //$NON-NLS-1$
+    +", PARSEINTEGER, PARSELONG, PI, POWER, RADIANS, RAND, ROUND, SIGN, SIN, SQRT, TAN"; //$NON-NLS-1$
+    // constant value giving the key words used in metamatrix not in SQL-92
+    private final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG"; //$NON-NLS-1$
+    // constant value giving the names of string funtions supported
+        private final static String STRING_FUNCTIONS = "ASCII, CHR, CHAR, CONCAT, INITCAP, INSERT, LCASE, LEFT, LENGTH, LOCATE, LOWER, LPAD, LTRIM, " + //$NON-NLS-1$
+    "REPEAT, REPLACE, RIGHT, RPAD, RTRIM, SUBSTRING, TRANSLATE, UCASE, UPPER"; //$NON-NLS-1$
+    // constant value giving the names of system funtions supported    
+    private final static String SYSTEM_FUNCTIONS = "CAST, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NVL, LOOKUP"; //$NON-NLS-1$
+    // constant value giving the names of date/time funtions supported
+        private final static String DATE_FUNCTIONS = "CURDATE, CURTIME, NOW, DAYNAME, DAYOFMONTH, DAYOFWEEK, DAYOFYEAR, FORMATDATE, " + //$NON-NLS-1$
+        "FORMATTIME, FORMATTIMESTAMP, HOUR, MINUTE, MONTH, MONTHNAME, PARSEDATE, PARSETIME, " + //$NON-NLS-1$
+    "PARSETIMESTAMP, QUARTER, SECOND, TIMESTAMPADD, TIMESTAMPDIFF, WEEK, YEAR"; //$NON-NLS-1$
+
+    //==============================================================================
+    //  The following 2 constants are defined here to provide access to constants
+    //  defined in the JDBC 3.0 implementation that comes with the 1.4 JRE.
+    //  They are defined this way to allow this class to compile with the 1.3 JRE.
+    //==============================================================================
+    private static final int ResultSet_HOLD_CURSORS_OVER_COMMIT = 1; // ResultSet.HOLD_CURSORS_OVER_COMMIT == 1
+    private static final int ResultSet_CLOSE_CURSORS_AT_COMMIT = 2; // ResultSet.CLOSE_CURSORS_AT_COMMIT  == 2
+
+    public TestMMDatabaseMetaData(String name) {
+        super(name);
+    }
+
+    public void setUp() throws Exception {
+        oneTimeSetUp(TESTS);
+        dbmd = new MMDatabaseMetaData((BaseDriver)DriverManager.getDriver(serverUrl), (MMConnection) conn);
+    }
+
+    public void tearDown() {
+        oneTimeTearDown();
+    }    
+    
+    protected synchronized static void oneTimeSetUp(int numtests) {
+        UnitTestUtil.setDefaultProperties();
+        if (tests == -1) {
+            tests = numtests;
+            try {
+                if (conn == null) {
+                    Class.forName("com.metamatrix.jdbc.EmbeddedDriver"); //$NON-NLS-1$
+                    conn = DriverManager.getConnection(serverUrl);
+                }
+            } catch (ClassNotFoundException se) {
+                fail(" Unable to find driver class -- com.metamatrix.jdbc.MMDriver."); //$NON-NLS-1$
+            } catch (SQLException se) {
+                se.printStackTrace();
+                fail( "Unable to set up metamatrix connection through either DriverManager or DataSource."); //$NON-NLS-1$
+            }
+        }
+    }
+    
+    protected synchronized static void oneTimeTearDown() {
+        tests--;
+        if (tests == 0) {
+            closeMMConnection();
+        }
+    }
+    
+    private static void closeMMConnection() {
+        try{
+            if (conn != null) {
+                conn.close();
+            }
+
+        }catch(Exception ce){
+            fail("Unable to close MMConnection." + ce.getMessage()); //$NON-NLS-1$
+        }finally {
+            try {
+                conn.close();
+            } catch (Exception ex) {
+            }
+        }     
+    }
+
+    /** Test all the non-query methods */
+    public void testMethodsWithoutParams() throws Exception {
+        Class dbmdClass = dbmd.getClass();
+        // non-query Methods return String, boolean or int
+        Method[] methods = dbmdClass.getDeclaredMethods();
+
+        expectedMap = getExpected();
+        //System.out.println(" -- total method == " + methods.length + ", non-query == " + expectedMap.size());
+        for (int i = 0; i < methods.length; i++) {
+            if (expectedMap.containsKey(methods[i].getName())) {
+
+                Object actualValue = null;
+                Object expectedValue = null;
+                Object expectedReturn = expectedMap.get(methods[i].getName());
+                Object[] params = null;
+
+                if (expectedReturn instanceof List) {
+                    // has input parameters
+                    List returned = (List) expectedReturn;
+                    params = (Object[]) returned.get(1);
+                    //System.out.println(" params == " + params[0]);
+                    expectedValue = returned.get(0);
+                    actualValue = methods[i].invoke(dbmd, params);
+                } else {
+                    // without params
+                    expectedValue = expectedReturn;
+                    actualValue = methods[i].invoke(dbmd, new Object[0]);
+                }
+
+                assertEquals(" Expected doesn't match with actual for method - " + //$NON-NLS-1$
+                methods[i].getName(), expectedValue, actualValue);
+                //System.out.println("method [" + methods[i].getName() + " ] 's expectedValue == " + expectedValue + " actual == " + actualValue);
+            }
+        }
+    }
+
+    /** Test all the methods that throw exception */ 
+    public void testMethodsWithExceptions() throws Exception {
+        Class dbmdClass = dbmd.getClass();
+        Method[] methods = dbmdClass.getDeclaredMethods();
+        
+        expectedMap = new HashMap(); //none expected
+        //System.out.println(" -- total method == " + methods.length + ", non-query == " + expectedMap.size());
+        for (int i =0; i< methods.length; i++) {
+            if (expectedMap.containsKey(methods[i].getName())) {
+                try {
+                    methods[i].invoke(dbmd, new Object[0]);
+                    fail("Expected exception"); //$NON-NLS-1$
+                } catch(Exception e) {
+                }
+                  
+                //assertEquals(" Expected doesn't match with actual for method - " + 
+                  //  methods[i].getName(), "MMSQLException", actualValue.getClass().getName());
+                 
+            }
+        }           
+    }
+
+    /** test supportResultSetConcurrency() with params and test them with different input values */
+    public void testSupportResultSetConcurrency() throws Exception {
+        boolean returned = true;
+        String functionName = "supportResultSetConcurrency"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params =
+            new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY), new Integer(ResultSet.CONCUR_READ_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params =
+            new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE), new Integer(ResultSet.CONCUR_READ_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params =
+            new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE), new Integer(ResultSet.CONCUR_UPDATABLE)};
+        returned = false;
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY), new Integer(ResultSet.CONCUR_UPDATABLE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test supportResultSetHoldability() with params and test them with different input values */
+    public void testSupportResultSetHoldability() throws Exception {
+        boolean returned = false;
+        String functionName = "supportResultSetHoldability"; //$NON-NLS-1$
+
+        // should return false;
+        Object[] params = new Object[] { new Integer(ResultSet_HOLD_CURSORS_OVER_COMMIT)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return false;
+        params = new Object[] { new Integer(ResultSet_CLOSE_CURSORS_AT_COMMIT)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test supportResultSetType() with params and test them with different input values */
+    public void testSupportResultSetType()  throws Exception {
+        boolean returned = true;
+        String functionName = "supportResultSetType"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        returned = false;
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test supportsTransactionIsolationLevel() with params and test them with different input values */
+    public void testSupportsTransactionIsolationLevel()  throws Exception {
+        boolean returned = false;
+        String functionName = "supportsTransactionIsolationLevel"; //$NON-NLS-1$
+
+        // should return true;
+        //TODO: what is transaction isolation level?
+        Object[] params = new Object[] { new Integer(1)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test deletesAreDetected() with params and test them with different input values */
+    public void testDeletesAreDetected() throws Exception {
+        boolean returned = false;
+        String functionName = "deletesAreDetected"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test insertsAreDetected() with params and test them with different input values */
+    public void testInsertsAreDetected() throws Exception {
+        boolean returned = false;
+        String functionName = "insertsAreDetected"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test updatesAreDetected() with params and test them with different input values */
+    public void testUpdatesAreDetected() throws Exception {
+        boolean returned = false;
+        String functionName = "updatesAreDetected"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test ownUpdatesAreVisible() with params and test them with different input values */
+    public void testOwnUpdatesAreVisible() throws Exception {
+        boolean returned = false;
+        String functionName = "ownUpdatesAreVisible"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test ownInsertsAreVisible() with params and test them with different input values */
+    public void testOwnInsertsAreVisible() throws Exception {
+        boolean returned = false;
+        String functionName = "ownInsertsAreVisible"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test othersUpdatesAreVisible() with params and test them with different input values */
+    public void testOthersUpdatesAreVisible() throws Exception {
+        boolean returned = false;
+        String functionName = "othersUpdatesAreVisible"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test othersInsertsAreVisible() with params and test them with different input values */
+    public void testOthersInsertsAreVisible() throws Exception {
+        boolean returned = false;
+        String functionName = "othersInsertsAreVisible"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test othersInsertsAreVisible() with params and test them with different input values */
+    public void testOthersDeletesAreVisible() throws Exception {
+        boolean returned = false;
+        String functionName = "othersDeletesAreVisible"; //$NON-NLS-1$
+
+        // should return true;
+        Object[] params = new Object[] { new Integer(ResultSet.TYPE_FORWARD_ONLY)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // shoud return true;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_INSENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+
+        // should return false;
+        params = new Object[] { new Integer(ResultSet.TYPE_SCROLL_SENSITIVE)};
+        helpTestMethodsWithParams(functionName, returned, params);
+    }
+
+    /** test overloaded method supportsConvert() with params and test them with different input values */
+    public void testSupportsConvert1() throws Exception {
+        assertEquals("Expected doesn't match with actual for method - supportsConvert()", //$NON-NLS-1$
+        true, dbmd.supportsConvert());
+    }
+
+    /** test overloaded method supportsConvert() without params */
+    public void testSupportsConvert2() throws Exception {
+        // should succeed
+        helpTestSupportsConverts(Types.CHAR, Types.CHAR, true);
+        helpTestSupportsConverts(Types.CHAR, Types.VARCHAR, true);
+        helpTestSupportsConverts(Types.CHAR, Types.LONGVARCHAR, true);
+        helpTestSupportsConverts(Types.CHAR, Types.BIT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.SMALLINT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.TINYINT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.INTEGER, true);
+        helpTestSupportsConverts(Types.CHAR, Types.BIGINT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.FLOAT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.REAL, true);
+        helpTestSupportsConverts(Types.CHAR, Types.DOUBLE, true);
+        helpTestSupportsConverts(Types.CHAR, Types.NUMERIC, true);
+        helpTestSupportsConverts(Types.CHAR, Types.DECIMAL, true);
+        helpTestSupportsConverts(Types.CHAR, Types.DATE, true);
+        helpTestSupportsConverts(Types.CHAR, Types.TIME, true);
+        helpTestSupportsConverts(Types.CHAR, Types.TIMESTAMP, true);
+
+        // should fail
+        helpTestSupportsConverts(Types.DATE, Types.INTEGER, false);
+
+        // TODO: there are other combination tests
+        helpTestSupportsConverts(Types.CHAR, Types.BIGINT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.FLOAT, true);
+        helpTestSupportsConverts(Types.CHAR, Types.REAL, true);
+    }
+
+    ////////////////////Query Related Methods///////////////////////////
+
+    public static final short ALWAYS_NULL = 0;
+    public static final short NEVER_NULL = 1;
+    public static final short MAY_BE_NULL = 2;
+    
+    private static final boolean REPLACE_EXPECTED = false;
+    private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
+    private static final boolean PRINT_RESULTSETS_TO_CONSOLE = false;
+    
+    private static final int MAX_COL_WIDTH = 65;
+
+    private FileOutputStream actualOut = null;
+    private BufferedReader expectedIn = null;
+    private PrintStream stream = null;
+    private void initResultSetStreams(String testName) throws FileNotFoundException {
+        if (REPLACE_EXPECTED) {
+            File actual = new File(UnitTestUtil.getTestDataPath() + "/TestMMDatabaseMetaData/"+testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
+            actualOut = new FileOutputStream(actual);
+        } else {
+            if (WRITE_ACTUAL_RESULTS_TO_FILE) {
+                File actual = new File(UnitTestUtil.getTestDataPath() + "/TestMMDatabaseMetaData/"+testName+".actual"); //$NON-NLS-1$ //$NON-NLS-2$
+                actualOut = new FileOutputStream(actual);
+            }
+            File expected = new File(UnitTestUtil.getTestDataPath() + "/TestMMDatabaseMetaData/"+testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
+            expectedIn = new BufferedReader(new FileReader(expected));
+        }
+        PrintStream defaultStream = null;
+        if (PRINT_RESULTSETS_TO_CONSOLE) {
+            defaultStream = new PrintStream(System.out) {
+                // System.out should be protected from being closed.
+                public void close() {}
+            };
+        }
+        stream = ResultSetUtil.getPrintStream(actualOut, expectedIn, defaultStream);
+
+    }
+    
+    private void closeResultSetTestStreams() throws IOException {
+        stream.close();
+        if (actualOut != null) {
+            actualOut.close();
+        }
+        if (expectedIn != null) {
+            expectedIn.close();
+        }
+    }
+    
+    public void checkColumn(String expectedName, short nullable, Class type, String metadataName, Object value) {
+        if(nullable == ALWAYS_NULL) {
+            assertNull("Column " + expectedName + " should always be null but was: " + value, value);             //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        if(nullable == NEVER_NULL) {
+            assertNotNull("Column " + expectedName + " should never be null but was", value);             //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        if(value != null) {
+            assertTrue("Column " + expectedName + " is of wrong type", value.getClass().isAssignableFrom(type)); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        assertEquals("Got incorrect column name", expectedName, metadataName); //$NON-NLS-1$
+    }
+    
+    public void checkNullConstant(Object value) {        
+        assertNotNull("Got null nullability constant", value); //$NON-NLS-1$
+        assertTrue("Nullability constant is wrong type: " + value.getClass(), value.getClass().equals(Integer.class)); //$NON-NLS-1$
+        Integer intValue = (Integer) value;
+        assertTrue("Got invalid nullability constant: " + value, //$NON-NLS-1$
+            intValue.intValue() == DatabaseMetaData.columnNoNulls || 
+            intValue.intValue() == DatabaseMetaData.columnNullable || 
+            intValue.intValue() == DatabaseMetaData.columnNullableUnknown  
+        );
+    }
+
+    public void testUcaseMatchReturnsNoRows() throws Exception {
+        initResultSetStreams("testGetColumnsSingleMatchQuery"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            java.sql.Statement stmt = conn.createStatement();
+            
+            // Returns 24 rows:
+            //rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE ModelName = 'System' OPTION DEBUG");
+            
+            // Returns 0 rows (but should be identical and return 24 rows):
+            rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE UCASE(ModelName) = 'SYSTEM'");
+
+            int count = 0;
+            while(rs.next()) {
+                count++;
+                //System.out.println("table="+rs.getString(1));
+            }
+            assertEquals(25, count);
+            
+            //System.out.println(((com.metamatrix.jdbc.api.Statement)stmt).getDebugLog());
+
+        } finally {
+            if(rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetColumnsSingleMatch() throws Exception {
+        initResultSetStreams("testGetColumnsSingleMatch"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            //List expected = getExpectedColumns();
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getColumns(null, null, "System.VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if(rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetCatalogs() throws Exception {
+        initResultSetStreams("testGetCatalogs"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getCatalogs();
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetCrossReference() throws Exception {
+        initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try { 
+            DatabaseMetaData dbmd = conn.getMetaData();
+            stream.println("getCrossReference1"); //$NON-NLS-1$
+            rs = dbmd.getCrossReference(null, null, "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        // Check for empty
+        stream.println("getCrossReference2"); //$NON-NLS-1$
+        rs = dbmd.getCrossReference(null, "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        // Check for empty
+        stream.println("getCrossReference3"); //$NON-NLS-1$
+        rs = dbmd.getCrossReference("foo", "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();          
+        closeResultSetTestStreams();
+    }
+        
+    public void testGetImportedKeys() throws Exception {
+        initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try { 
+            DatabaseMetaData dbmd = conn.getMetaData();
+            stream.println("getImportedKeys1"); //$NON-NLS-1$
+            rs = dbmd.getImportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        stream.println("getImportedKeys2"); //$NON-NLS-1$
+        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close(); 
+
+        stream.println("getImportedKeys3"); //$NON-NLS-1$
+        rs = dbmd.getImportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();        
+        closeResultSetTestStreams();
+    }
+
+    public void testGetExportedKeys() throws Exception {
+        initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getExportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();
+        
+        rs = dbmd.getExportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+       
+    public void testGetIndexInfo() throws Exception {
+        initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            //ResultSet rs = dbmd.getIndexInfo(null, null, "BQT1.SmallA", true, true); //$NON-NLS-1$
+            rs = dbmd.getIndexInfo(null, null, "System.KeyElements", true, true); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();  
+        
+        rs = dbmd.getIndexInfo("foo", "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();   
+        closeResultSetTestStreams();
+    }
+        
+    public void testGetPrimaryKeys() throws Exception {
+        initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            //ResultSet rs = dbmd.getPrimaryKeys(null, null, "SYSTEM.VIRTUALDATABASES"); //$NON-NLS-1$
+            
+            // This is only a way to do unit test. Actually, the primary key of BQT.smallA
+            // should be tested here, the only tables should be queried are just system
+            // tables. 
+            rs = dbmd.getPrimaryKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        // Check for empty
+        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();  
+        
+        rs = dbmd.getPrimaryKeys("foo", "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetProcedureColumns() throws Exception {
+        initResultSetStreams("testGetProcedureColumns"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getProcedureColumns(null, null, null, null);
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getProcedureColumns(null, "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getProcedureColumns("foo", "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetProcedures() throws Exception {
+        initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getProcedures(null, null, null);
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetSchemas() throws Exception {
+        initResultSetStreams("testGetSchemas"); //$NON-NLS-1$
+        ResultSet rs = null;    
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getSchemas();
+
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                       Collections.EMPTY_LIST,
+                       ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if(rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+    public void testGetColumns() throws Exception {
+        initResultSetStreams("testGetColumns"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        stream.println("getColumns1"); //$NON-NLS-1$
+        ResultSet rs = dbmd.getColumns(null, null, null, null);
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();    
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetColumns2() throws Exception {
+        initResultSetStreams("testGetColumns2"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        
+      stream.println("getColumns2"); //$NON-NLS-1$
+      ResultSet rs = dbmd.getColumns(null, "QT_Ora%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();    
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetColumns3() throws Exception {
+        initResultSetStreams("testGetColumns3"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        
+      stream.println("getColumns3"); //$NON-NLS-1$
+      ResultSet rs = dbmd.getColumns(null, "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();    
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetColumns4() throws Exception {
+        initResultSetStreams("testGetColumns4"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        
+        stream.println("getColumns4"); //$NON-NLS-1$
+         ResultSet rs = dbmd.getColumns("foo", "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();    
+        closeResultSetTestStreams();
+    }    
+    
+
+    public void testGetColumnPrivileges() throws Exception {
+        initResultSetStreams("testGetColumnPrivileges"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        
+        rs = dbmd.getColumnPrivileges(null, "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getColumnPrivileges("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetColumnPrivilegesResultSetMetaData() throws Exception {
+        initResultSetStreams("testGetColumnPrivilegesResultSetMetaData"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                   Collections.EMPTY_LIST,
+                   ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetTablePrivileges() throws Exception {
+        initResultSetStreams("testGetTablePrivileges"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getTablePrivileges(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                   Collections.EMPTY_LIST,
+                   ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    
+
+    public void testGetTablePrivilegesResultSetMetaData() throws Exception {
+        initResultSetStreams("testGetTablePrivilegesResultSetMetaData"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getTablePrivileges(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                   Collections.EMPTY_LIST,
+                   ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+
+    public void testGetTables_specificTable() throws Exception {
+        initResultSetStreams("testGetTables_specificTable"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            //List expected = getExpectedColumns();
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getTables(null, null, "SYSTEM.VIRTUALDATABASES", null); //$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                       Collections.EMPTY_LIST,
+                       ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetTables_specificTableTypes() throws Exception {
+        initResultSetStreams("testGetTables_specificTableTypes"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            
+            String[] tables = new String[] { "Table" }; //$NON-NLS-1$
+            
+            rs = dbmd.getTables(null, null, null, tables); //$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                       Collections.EMPTY_LIST,
+                       ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetTables_specificTableMultipleTypes() throws Exception {
+        initResultSetStreams("testGetTables_specificTableMultipleTypes"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            
+            String[] tables = new String[] { "Table", "View" }; //$NON-NLS-1$ //$NON-NLS-2$
+            
+            rs = dbmd.getTables(null, null, null, tables); //$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                       Collections.EMPTY_LIST,
+                       ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+    
+    public void testGetTables() throws Exception{
+        initResultSetStreams("testGetTables"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getTables(null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();
+        
+        rs = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getTables("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetTables_allTables() throws Exception {
+        initResultSetStreams("testGetTables_allTables"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getTables(null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    public void testGetTableTypes() throws Exception {
+        initResultSetStreams("testGetTableTypes"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getTableTypes();
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+//    public void testDefect1659() throws Exception {
+//        ResultSet rs = null;
+//        try {
+//            Statement stmt = conn.createStatement();
+//            rs = stmt.executeQuery(
+//                "SELECT DISTINCT NAME, IS_BUILTIN AS IsStandard, IS_BUILTIN AS IsPhysical, NAME AS TypeName, JAVA_CLASS_NAME AS JavaClass, SCALE, LENGTH AS TypeLength, lookup('SystemPhysical.NULL_TYPE_ENUM', 'NAME', 'CODE', NULL_TYPE) AS NullType, IS_SIGNED AS IsSigned, IS_AUTO_INCREMENTED AS IsAutoIncremented, IS_CASE_SENSITIVE AS IsCaseSensitive, PRECISION, RADIX, lookup('SystemPhysical.SEARCH_TYPE_ENUM', 'NAME', 'CODE', SEARCH_TYPE) AS SearchType, UUID AS UID, RUNTIME_TYPE_NAME AS RuntimeType, BASETYPE_NAME AS BaseType, DESCRIPTION " + //$NON-NLS-1$
+//                "FROM SystemPhysical.DATATYPES AS DATATYPES LEFT OUTER JOIN SystemPhysical.ANNOTATIONS AS ann ON ANNOTATED_UUID = UUID "); //$NON-NLS-1$
+//
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while(rs.next()) {
+//                for(int i=1; i<=rsmd.getColumnCount(); i++) {
+//                    //System.out.print(rs.getObject(i) + " ");
+//                }
+//                //System.out.println();
+//            }
+//
+//        } finally {
+//            if (rs != null) {
+//                rs.close();
+//            }
+//        }
+//    }    
+
+    public void testGetTypeInfo_TotalNumber() throws Exception {
+        initResultSetStreams("testGetTypeInfo_TotalNumber"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getTypeInfo();
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+            closeResultSetTestStreams();
+        }
+    }
+
+    /** test with integer type */
+    public void testGetTypeInfo_specificType_Integer() throws Exception {
+        initResultSetStreams("testGetTypeInfo_specificType_Integer"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getTypeInfo();
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+            closeResultSetTestStreams();
+        }
+    }
+    
+    public void testGetUDTs() throws Exception{
+        initResultSetStreams("testGetUDTs"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();
+        
+        rs = dbmd.getUDTs(null, "%foo", "%blob%", null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();
+        
+        rs = dbmd.getUDTs("foo", "%foo", "%blob%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetUDTs_specificTypeName() throws Exception {
+        initResultSetStreams("testGetUDTs_specificTypeName"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+            assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                         Collections.EMPTY_LIST,
+                         ResultSetUtil.getUnequalLines(stream));
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+            closeResultSetTestStreams();
+        }
+    }
+        
+    public void testGetVersionColumns() throws Exception {
+        initResultSetStreams("testGetVersionColumns"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getVersionColumns(null, null, null);
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs = dbmd.getVersionColumns(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getVersionColumns("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+
+    public void testGetBestRowIdentifier() throws Exception {
+        initResultSetStreams("testGetBestRowIdentifier"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getBestRowIdentifier(null, null, "SYSTEM.VIRTUALDATABASES", //$NON-NLS-1$
+                DatabaseMetaData.bestRowTemporary, true);
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getBestRowIdentifier(null, "%foo", null, 1,true); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getBestRowIdentifier("foo", "%foo", null, 1,true); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetSuperTables() throws Exception {
+        initResultSetStreams("testSuperTables"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getSuperTables(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                   Collections.EMPTY_LIST,
+                   ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetSuperTypes() throws Exception {
+        initResultSetStreams("testGetSuperTypes"); //$NON-NLS-1$
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet rs = dbmd.getSuperTypes(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                   Collections.EMPTY_LIST,
+                   ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetColumnsWithEscape() throws Exception {
+        DatabaseMetaData dbmd = conn.getMetaData();
+        ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey");
+        columns.next();
+        assertEquals("QT_Ora9DS", columns.getString(2));//$NON-NLS-1$  
+        assertFalse(columns.next());
+    }
+        
+    public void testGetCrossReferenceWithEscape() throws Exception {
+        initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try { 
+            DatabaseMetaData dbmd = conn.getMetaData();
+            stream.println("getCrossReference1"); //$NON-NLS-1$
+            rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        // Check for empty
+        stream.println("getCrossReference2"); //$NON-NLS-1$
+        rs = dbmd.getCrossReference(null, "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        // Check for empty
+        stream.println("getCrossReference3"); //$NON-NLS-1$
+        rs = dbmd.getCrossReference("foo", "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();          
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetExportedKeysWithEscape() throws Exception {
+        initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();
+        
+        rs = dbmd.getExportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetImportedKeysWithEscape() throws Exception {
+        initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try { 
+            DatabaseMetaData dbmd = conn.getMetaData();
+            stream.println("getImportedKeys1"); //$NON-NLS-1$
+            rs = dbmd.getImportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        stream.println("getImportedKeys2"); //$NON-NLS-1$
+        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close(); 
+
+        stream.println("getImportedKeys3"); //$NON-NLS-1$
+        rs = dbmd.getImportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();        
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetIndexInfoWithEscape() throws Exception {
+        initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            //ResultSet rs = dbmd.getIndexInfo(null, null, "BQT1.SmallA", true, true); //$NON-NLS-1$
+            rs = dbmd.getIndexInfo(null, "QT\\_Ora9DS", "System.KeyElements", true, true); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();  
+        
+        rs = dbmd.getIndexInfo("foo", "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();   
+        closeResultSetTestStreams();
+    }
+        
+    public void testGetPrimaryKeysWithEscape() throws Exception {
+        initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            //ResultSet rs = dbmd.getPrimaryKeys(null, null, "SYSTEM.VIRTUALDATABASES"); //$NON-NLS-1$
+            
+            // This is only a way to do unit test. Actually, the primary key of BQT.smallA
+            // should be tested here, the only tables should be queried are just system
+            // tables. 
+            rs = dbmd.getPrimaryKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        // Check for empty
+        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();  
+        
+        rs = dbmd.getPrimaryKeys("foo", "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    
+    public void testGetProceduresWithEscape() throws Exception {
+        initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
+        ResultSet rs = null;
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            rs = dbmd.getProcedures(null, "QT\\_Ora9DS", null);
+            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        } finally { 
+            if(rs != null) {
+                rs.close();    
+            }
+        }
+        
+        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        rs.close();   
+        
+        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
+        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                     Collections.EMPTY_LIST,
+                     ResultSetUtil.getUnequalLines(stream));
+        rs.close();
+        closeResultSetTestStreams();
+    }
+    ///////////////////////////Helper Method//////////////////////////////
+
+    private void helpTestSupportsConverts(int from, int to, boolean result) throws Exception {
+        assertEquals("Expected doesn't match with actual for method - supportsConvert()", //$NON-NLS-1$
+        result, dbmd.supportsConvert(from, to));
+    }
+
+    private void helpTestMethodsWithParams(String methodName, boolean returned, Object[] params) throws Exception {
+        Class dbmdClass = dbmd.getClass();
+        Method[] methods = dbmdClass.getDeclaredMethods();
+
+        for (int i = 0; i < methods.length; i++) {
+            if (methods[i].getName().equalsIgnoreCase(methodName)) {
+                Object actual = methods[i].invoke(dbmd, params);
+                assertEquals("Expected doesn't match with actual for method - " + methodName, //$NON-NLS-1$
+                new Boolean(returned), actual);
+            }
+        }
+    }
+
+    //////////////////////Expected Result//////////////////
+
+    private Map getExpected() {
+        Map expected = new HashMap();
+        // return type -- boolean
+        expected.put("allProceduresAreCallable", new Boolean(true)); //$NON-NLS-1$
+        expected.put("allTablesAreSelectable", new Boolean(true)); //$NON-NLS-1$
+        expected.put("doesMaxRowSizeIncludeBlobs", new Boolean(false)); //$NON-NLS-1$
+        expected.put("isCatalogAtStart", new Boolean(false)); //$NON-NLS-1$
+        expected.put("isReadOnly", new Boolean(false)); //$NON-NLS-1$
+        expected.put("locatorsUpdateCopy", new Boolean(false)); //$NON-NLS-1$
+        expected.put("nullPlusNonNullIsNull", new Boolean(true)); //$NON-NLS-1$
+        expected.put("nullsAreSortedAtEnd", new Boolean(false)); //$NON-NLS-1$
+        expected.put("nullsAreSortedAtStart", new Boolean(false)); //$NON-NLS-1$
+        expected.put("nullsAreSortedHigh", new Boolean(false)); //$NON-NLS-1$
+        expected.put("nullsAreSortedLow", new Boolean(true)); //$NON-NLS-1$
+        expected.put("storesLowerCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("storesLowerCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("storesMixedCaseIdentifiers", new Boolean(true)); //$NON-NLS-1$
+        expected.put("storesMixedCaseQuotedIdentifiers", new Boolean(true)); //$NON-NLS-1$
+        expected.put("storesUpperCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("storesUpperCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsAlterTableWithAddColumn", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsAlterTableWithDropColumn", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsANSI92EntryLevelSQL", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsANSI92FullSQL", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsANSI92IntermediateSQL", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsBatchUpdates", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsCatalogsInDataManipulation", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsCatalogsInIndexDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsCatalogsInPrivilegeDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsCatalogsInProcedureCalls", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsCatalogsInTableDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsColumnAliasing", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsCorrelatedSubqueries", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsCoreSQLGrammar", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsDataDefinitionAndDataManipulationTransactions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsDataManipulationTransactionsOnly", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsDifferentTableCorrelationNames", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsExpressionsInOrderBy", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsExtendedSQLGrammar", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsFullOuterJoins", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsGetGeneratedKeys", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsGroupBy", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsGroupByBeyondSelect", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsGroupByUnrelated", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsIntegrityEnhancementFacility", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsLikeEscapeClause", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsLimitedOuterJoins", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsMinimumSQLGrammar", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsMixedCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsMixedCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsOpenCursorsAcrossCommit", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsMultipleResultSets", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsMultipleOpenResults", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsMultipleTransactions", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsNamedParameters", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsNonNullableColumns", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsOpenCursorsAcrossRollback", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsOpenStatementsAcrossCommit", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsOpenStatementsAcrossRollback", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsOrderByUnrelated", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsOuterJoins", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsPositionedDelete", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsPositionedUpdate", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsSavepoints", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsSchemasInDataManipulation", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSchemasInIndexDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsSchemasInPrivilegeDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsSchemasInProcedureCalls", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSchemasInTableDefinitions", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsSelectForUpdate", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsStatementPooling", new Boolean(false)); //$NON-NLS-1$
+        expected.put("supportsStoredProcedures", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInComparisons", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInExists", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInIns", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInQuantifieds", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsTableCorrelationNames", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsTransactions", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsUnion", new Boolean(true)); //$NON-NLS-1$
+        expected.put("supportsUnionAll", new Boolean(true)); //$NON-NLS-1$
+        expected.put("usesLocalFilePerTable", new Boolean(false)); //$NON-NLS-1$
+        expected.put("usesLocalFiles", new Boolean(false)); //$NON-NLS-1$
+        expected.put("usesLocalFilePerTable", new Boolean(false)); //$NON-NLS-1$
+
+        // return type -- int
+        expected.put("getDatabaseMinorVersion", new Integer(EmbeddedDriver.MINOR_VERSION)); //$NON-NLS-1$
+        expected.put("getDatabaseMajorVersion", new Integer(EmbeddedDriver.MAJOR_VERSION)); //$NON-NLS-1$
+        expected.put("getJDBCMajorVersion", new Integer(3)); //$NON-NLS-1$
+        expected.put("getJDBCMinorVersion", new Integer(0)); //$NON-NLS-1$
+        expected.put("getDefaultTransactionIsolation", new Integer(Connection.TRANSACTION_NONE)); //$NON-NLS-1$
+        expected.put("getDriverMajorVersion", new Integer(EmbeddedDriver.MAJOR_VERSION)); //$NON-NLS-1$
+        expected.put("getDriverMinorVersion", new Integer(EmbeddedDriver.MINOR_VERSION)); //$NON-NLS-1$
+        expected.put("getMaxBinaryLiteralLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxCatalogNameLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxCharLiteralLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxColumnNameLength", new Integer(255)); //$NON-NLS-1$
+        expected.put("getMaxColumnsInGroupBy", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxColumnsInIndex", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxColumnsInOrderBy", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxColumnsInSelect", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxColumnsInTable", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxConnections", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxCursorNameLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxIndexLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxProcedureNameLength", new Integer(255)); //$NON-NLS-1$
+        expected.put("getMaxRowSize", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxSchemaNameLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxStatementLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxStatements", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxTableNameLength", new Integer(255)); //$NON-NLS-1$
+        expected.put("getMaxTablesInSelect", new Integer(NO_LIMIT)); //$NON-NLS-1$
+        expected.put("getMaxUserNameLength", new Integer(255)); //$NON-NLS-1$
+        //TODO: change expected value;
+        expected.put("getSQLStateType", new Integer(2)); //$NON-NLS-1$
+
+        // return type -- String
+        expected.put("getCatalogSeparator", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getCatalogTerm", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDatabaseProductName", "MetaMatrix Query"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDatabaseProductVersion", "5.5"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDriverName", "MetaMatrix Query JDBC Driver"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDriverVersion", "5.5"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getExtraNameCharacters", ".@"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getIdentifierQuoteString", "\""); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getNumericFunctions", NUMERIC_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getProcedureTerm", "StoredProcedure"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getSchemaTerm", "VirtualDatabase"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getSearchStringEscape", "\\"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getSQLKeywords", KEY_WORDS); //$NON-NLS-1$
+        expected.put("getStringFunctions", STRING_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getSystemFunctions", SYSTEM_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getTimeDateFunctions", DATE_FUNCTIONS); //$NON-NLS-1$
+        //expected.put("getUrl", primaryUrl + serverUrl); //$NON-NLS-1$
+        expected.put("getUserName", null); //$NON-NLS-1$
+
+        // return type - Object
+        expected.put("getConnection", conn); //$NON-NLS-1$
+
+        return expected;
+    }
+    
+    /*******************************************************************
+     * <p> Please don't remove this part (all the code following this).*
+     *     Leave me alone !!! </p>                                     *
+     *******************************************************************/
+    
+    ////////////////Helper Test ////////////////////////
+    
+//    public void testGetPrimaryKeysHelper() {
+//        try {
+//            //PreparedStatement st = conn.prepareStatement(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME, k.Name AS COLUMN_NAME, -1 AS KEY_SEQ, KeyName AS PK_NAME, convert(Position, short) As Position  FROM System.KeyElements k CROSS JOIN System.VirtualDatabases v  WHERE KeyName LIKE 'PK_%' AND GroupFullName = ? ORDER BY TABLE_SCHEM, COLUMN_NAME, Position  "); //$NON-NLS-1$
+//            PreparedStatement st = conn.prepareStatement(" SELECT * FROM System.KeyElements "); //$NON-NLS-1$
+//            //st.setObject(1, "BQT1.SmallA"); //$NON-NLS-1$
+//            ResultSet rs = st.executeQuery();
+//            assertNotNull(rs);
+//            int j = 0;
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                j++;
+//                System.out.println(" ** rs("+ j+"):"); //$NON-NLS-1$ //$NON-NLS-2$
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        }
+//    }
+
+//    public void testGetPrimaryKeysHelper1() {
+//        try {
+//            DatabaseMetaData dbmd = conn.getMetaData();
+//            ResultSet rs = dbmd.getPrimaryKeys(null, null, "Xsd.XSDAttributeUseCategory"); //$NON-NLS-1$
+//            assertNotNull(rs);
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        }
+//    }
+        
+    /**
+     * The exception on server log are really unrelated for this:
+     * Exception are:
+     * ERROR <ConnectorID<1032|1168>|0> Error executing query "SELECT MBR_READ_ENTRIES.USER_NAME, MBR_READ_ENTRIES.ENTRY_ID_P1, MBR_READ_ENTRIES.ENTRY_ID_P2 FROM MBR_READ_ENTRIES".
+     * ERROR <com.metamatrix.dqp|0> Unable to open connector execution
+     * java.sql.SQLException: [MetaMatrix][Oracle JDBC Driver][Oracle]ORA-00942: table or view does not exist
+     */
+//    public void testGetImportedKeysHelper() {
+//        try {
+//            DatabaseMetaData dbmd = conn.getMetaData();
+//            ResultSet rs = dbmd.getImportedKeys(null, null, "DTMS.Dataaccess.Element");
+//            assertNotNull(rs);
+//            int j = 0;
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                j++;
+//                System.out.println(" ** rs("+ j+"):"); //$NON-NLS-1$ //$NON-NLS-2$
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        }
+//    }
+                
+//    public void testGetIndexInfoHelper() {
+//        try {
+//            Statement st = conn.createStatement();
+//            ResultSet rs = st.executeQuery(" SELECT * FROM System.ReferenceKeyElements ");
+//            assertNotNull(rs);
+//            
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        }
+//    } 
+
+    /** test for defect 11270 -- consecutive preparedstatement */
+//    public void testGetTablesHelper3() {
+//        String sql = " SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE ? ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME";
+//        try {
+//            PreparedStatement st = conn.prepareStatement(sql);
+//            st.setObject(1, "1"); //$NON-NLS-1$
+//            ResultSet rs = st.executeQuery();
+//            assertNotNull(rs);
+//
+//            int j = 0;
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                j++;
+//                System.out.println("** rs " + j + " : ");
+//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//            System.out.println(" \n=== table Table has totally " + j + " resultset.");
+//            st.close();
+//            
+//            st = conn.prepareStatement(sql);
+//            st.setObject(1, "2"); //$NON-NLS-1$
+//            rs = st.executeQuery();
+//            assertNotNull(rs);
+//            rsmd = rs.getMetaData();
+//            j = 0;
+//            while (rs.next()) {
+//                j++;
+//                System.out.println("** rs " + j + " : ");
+//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }            
+//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
+//            rs.close();
+//            st.close();
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        } finally {
+//            try {
+//                conn.close();
+//            } catch (Exception ex) {
+//                // ignore
+//            }
+//        }
+//    }
+    
+    /** test for defect 11270 -- consecutive statement */
+//    public void testGetTablesHelper2() {
+//        try {
+//            Statement st = conn.createStatement();
+//            ResultSet rs = st.executeQuery(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE '1' ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME");
+//            assertNotNull(rs);
+//
+//            int j = 0;
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while (rs.next()) {
+//                j++;
+//                System.out.println(" ** rs " + j + " : ");
+//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//            
+//            System.out.println(" \n=== table TABLE has totally " + j + " resultset.\n");
+//            
+//            st = conn.createStatement();
+//            rs = st.executeQuery(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE '2' ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME");
+//            assertNotNull(rs);
+//            rsmd = rs.getMetaData();
+//            j = 0;
+//            while (rs.next()) {
+//                j++;
+//                System.out.println(" ** rs " + j + " : ");
+//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }            
+//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
+//            
+//            rs.close();
+//            st.close();
+//        } catch (SQLException se) {
+//            se.printStackTrace();
+//        } finally {
+//            try {
+//                conn.close();
+//            } catch (Exception ex) {
+//                // ignore
+//            }
+//        }
+//    }
+        
+    /** test through DatabaseMetadata */
+//    public void testGetTablesHelper1() throws Exception {
+//        ResultSet rs = null;
+//        ResultSetMetaData rsmd = null;
+//        try {
+//            //List expected = getExpectedColumns();
+//            DatabaseMetaData dbmd = conn.getMetaData();
+//
+//            String[] types = helper(1);
+//            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
+//            rsmd = rs.getMetaData();
+//            int j = 0;
+//            while (rs.next()) {
+//                j++;
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//            System.out.println(" \n=== table TABLE has totally " + j + " resultset.");
+//            
+//            types = helper(2);
+//            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
+//            rsmd = rs.getMetaData();
+//            j = 0;
+//            while (rs.next()) {
+//                j++;
+//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
+//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
+//                }
+//            }
+//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
+////                   
+////            types = helper(3);
+////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
+////            rsmd = rs.getMetaData();
+////            
+////            types = helper(4);
+////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
+////            rsmd = rs.getMetaData();
+////
+////            types = helper(5);
+////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
+////            rsmd = rs.getMetaData();
+////            
+//        } finally {
+//            if (rs != null) {
+//                rs.close();
+//            }
+//        }
+//    }
+    
+//    private String[] helper(int i) {
+//        String[] returned = new String[1];
+//        
+//        String[] tableTypes = new String[6];
+//        tableTypes[0] = "SYSTEMTABLE"; //$NON-NLS-1$
+//        tableTypes[1] = "TABLE"; //$NON-NLS-1$
+//        tableTypes[2] = "VIEW"; //$NON-NLS-1$
+//        tableTypes[3] = "DOCUMENT"; //$NON-NLS-1$
+//        tableTypes[4] = "XMLSTAGINGTABLE"; //$NON-NLS-1$
+//        tableTypes[5] = "XMLMAPPINGCLASS"; //$NON-NLS-1$
+//        
+//        switch(i) {
+//            case 0: 
+//                returned[0] = tableTypes[0];
+//                break;
+//            case 1: 
+//                returned[0] = tableTypes[1];
+//                break;
+//            case 2: 
+//                returned[0] = tableTypes[2];
+//                break;
+//            case 3: 
+//                returned[0] = tableTypes[3];
+//                break;
+//            case 4: 
+//                returned[0] = tableTypes[4];
+//                break;
+//            case 5: 
+//                returned[0] = tableTypes[5];
+//                break;     
+//            default:
+//                returned[0] = tableTypes[0];
+//                break;                          
+//        }
+//        
+//        return returned;
+//    }
+
+}

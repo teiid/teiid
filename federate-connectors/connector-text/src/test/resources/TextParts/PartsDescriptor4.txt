@@ -1,0 +1,16 @@
+Parts.PARTS_SpaceNameInSource.location = src/test/resources/TextParts/TextParts4.csv
+Parts.PARTS_SpaceNameInSource.qualifier = "
+Parts.PARTS_SpaceNameInSource.delimiter = ,
+Parts.PARTS_SpaceNameInSource.skipHeaderLines = 1
+
+Parts.PARTS_AlphaNameInSource.location = src/test/resources/TextParts/TextParts_HeaderRow.csv
+Parts.PARTS_AlphaNameInSource.qualifier = "
+Parts.PARTS_AlphaNameInSource.delimiter = ,
+Parts.PARTS_AlphaNameInSource.skipHeaderLines = 5
+Parts.PARTS_AlphaNameInSource.headerLine = 3
+
+Parts.PARTS_NoNameInSource.location = src/test/resources/TextParts/TextParts_HeaderRow.csv
+Parts.PARTS_NoNameInSource.qualifier = "
+Parts.PARTS_NoNameInSource.delimiter = ,
+Parts.PARTS_NoNameInSource.skipHeaderLines = 5
+Parts.PARTS_NoNameInSource.headerLine = 6

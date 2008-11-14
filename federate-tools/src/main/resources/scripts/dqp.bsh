@@ -1,0 +1,90 @@
+/**
+ * This is connection helper to a MetaMatrix DQP using JDBC
+ */
+source(getResource("/scripts/jdbc.bsh"));
+source(getResource("/scripts/dqpadmin.bsh"));
+
+import java.sql.*;
+import java.io.*;
+import java.util.Properties;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+
+/**
+ * Connect to DQP
+ * @param vdbName - Name of the VDB to connect
+ * @param propFile - Properties file
+ */
+Connection connect(String vdbName, String propFile) throws SQLException {
+    connectDQP(vdbName, propFile);
+}
+
+/**
+ * Connect to a DQP.
+ * @param url - complete dqp url 
+ */
+Connection connect(String url) throws SQLException {
+    com.metamatrix.jdbc.api.Connection mmConn = connectDriver("com.metamatrix.jdbc.EmbeddedDriver", url);
+    currentContext().internalAdmin = mmConn.getAdminAPI();    
+    currentContext().internalPrompt = "DQP:" + extractVDBName(url) + "$ ";
+    
+    return mmConn;
+}
+
+
+private Connection connectDQP(String vdbName, String vdbVersion, String configFile) throws SQLException {
+    if(vdbName == null) {
+        throw new SQLException("VDB name is null");
+    }
+    if(configFile == null) {
+        throw new SQLException("DQP config file is null");
+    }
+    
+    String url = "jdbc:metamatrix:" + vdbName + "@" + configFile;    
+    if(vdbVersion != null) {
+        url += ";version=" + vdbVersion;
+    }
+        
+    c = connect(url);
+    currentContext().internalPrompt = "DQP:"+vdbName+"$ ";
+    return c;
+}
+
+private Connection connectDQP(String vdbName, String configFile) throws SQLException {
+    return connectDQP(vdbName, null, configFile);
+}
+
+/**
+ * Disconnect the connection from the server
+ */
+void disconnect() {
+    closeConnection();
+}
+
+
+//help methods
+
+/**
+ * List all of the methods currently available.
+ */
+void help() {
+    java.util.List urls = new ArrayList();
+    urls.add(getResource("/scripts/adminapi.bsh"));
+    urls.add(getResource("/scripts/dqpadmin.bsh"));
+    urls.add(getResource("/scripts/dqp.bsh"));
+    help(urls);
+}
+
+
+/**
+ * List the javadoc for method(s) with the specified name.
+ * 
+ * @param methodName
+ *            Name of the method for which to specify javadoc.
+ */
+void help(String methodName) {
+    java.util.List urls = new ArrayList();
+    urls.add(getResource("/scripts/adminapi.bsh"));
+    urls.add(getResource("/scripts/dqpadmin.bsh"));
+    urls.add(getResource("/scripts/dqp.bsh"));
+    help(urls, methodName);
+}

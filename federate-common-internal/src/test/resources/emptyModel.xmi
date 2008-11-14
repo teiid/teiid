@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ASCII"?>
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:7fd3f8c0-0ff4-1ecc-bb21-bf6f5277bd68" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:67eeb1c0-0ff7-1ecc-bb21-bf6f5277bd68">
+    <diagram xmi:uuid="mmuuid:65218800-0ff7-1ecc-bb21-bf6f5277bd68" type="packageDiagramType" target="mmuuid/7fd3f8c0-0ff4-1ecc-bb21-bf6f5277bd68"/>
+  </diagram:DiagramContainer>
+</xmi:XMI>

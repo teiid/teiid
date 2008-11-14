@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="download">
+  <title>Download</title>
+  <para>
+    Before you begin, download binaries for
+    <ulink url="http://jboss.org/federate/download">Federate Embedded</ulink>. 
+    Note that there are three different artifacts are available for download.</para>
+  <orderedlist>
+    <listitem><para>Federate Source - contains all the source code for all modules</para></listitem>
+    <listitem><para>Federate Binary - contains all the binary code for all modules</para></listitem>
+    <listitem><para>Federate Embedded Kit - contains only required modules and their required 3rd party dependencies</para></listitem>
+  </orderedlist>
+  <para> Download Federate Embedded Kit and expand this tar/zip file in a known accessible location. </para>
+    
+  <para>In the expanded directory, you will find "federate-${version}-embedded.jar" which is the required binary jar file for
+    Federate Embedded and all the files under the "lib" directory are supporting 3rd party binaries
+    required to execute Federate Embedded. Later sections will go in detail about installing these artifacts.</para>
+  <para>In the expanded directory, you will find "federate-${version}-embedded.jar", which is the main binary jar file for
+    Federate Embedded, and the "lib" directory containing supporting 3rd party binaries
+    required to execute Federate Embedded.</para>
+  <note>
+    <para>
+      Access to the physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Federate relies
+      upon user supplying their own JDBC drivers in the deployment. Open source JDBC drivers for MySQL, Postgres, and Derby were 
+      already included in the "lib" folder as the LGPL license permits them. However, Federate code
+      base has been tested extensively with <ulink url="http://www.datadirect.com">DataDirect</ulink> JDBC Drivers and 
+      for your convenience DataDirect drivers are available through this site to be used with your 
+      Federate Embedded application. Note that you would have agree for separate licensing terms set forth by DataDirect 
+      before you use them. For more information and directions to download check out
+      <ulink url="http://jboss.org/federate/datadirect">DataDirect driver download</ulink>
+    </para>
+  </note>
+</chapter>

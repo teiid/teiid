@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ASCII"?>
+<!--  Copyright (c) 2000-2005 MetaMatrix, Inc.  All rights reserved. -->
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:mmfunction="http://www.metamatrix.com/metamodels/MetaMatrixFunction">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:476bf340-56da-1ebb-a41d-ec14fd2bd1f4" primaryMetamodelUri="http://www.metamatrix.com/metamodels/MetaMatrixFunction"/>
+  <Diagram:DiagramContainer xmi:uuid="mmuuid:0a2f9c80-0014-1f04-862e-867a59458599">
+    <diagram xmi:uuid="mmuuid:094abac0-0014-1f04-862e-867a59458599" type="packageDiagramType" target="mmuuid/476bf340-56da-1ebb-a41d-ec14fd2bd1f4">
+      <diagramEntity xmi:uuid="mmuuid:8b0e9c40-0017-1f04-862e-867a59458599" name="GetSystemProperty" modelObject="mmuuid/1007f880-0016-1f04-862e-867a59458599" xPosition="39" yPosition="5" height="86" width="150"/>
+      <diagramEntity xmi:uuid="mmuuid:2a88da80-002a-1f04-862e-867a59458599" name="GetSystemProperty" modelObject="mmuuid/a912c380-0029-1f04-862e-867a59458599" xPosition="34" yPosition="108" height="71" width="150"/>
+    </diagram>
+  </Diagram:DiagramContainer>
+  <mmfunction:ScalarFunction xmi:uuid="mmuuid:1007f880-0016-1f04-862e-867a59458599" name="GetSystemProperty" category="MyFunctions" invocationClass="com.metamatrix.dqp.embedded.udf.MyFunctions" invocationMethod="getProperty" deterministic="true">
+    <inputParameters xmi:uuid="mmuuid:e48dac00-0082-1f04-862e-867a59458599" name="prop" type="string"/>
+    <returnParameter xmi:uuid="mmuuid:98d39a00-0036-1f04-862e-867a59458599" type="string"/>
+  </mmfunction:ScalarFunction>
+  <mmfunction:ScalarFunction xmi:uuid="mmuuid:a912c380-0029-1f04-862e-867a59458599" name="getpushdown" category="MyFunctions" pushDown="NOT_ALLOWED" invocationClass="com.metamatrix.dqp.embedded.udf.MyFunctions" invocationMethod="getPropertyNoArgs" deterministic="true">
+    <returnParameter xmi:uuid="mmuuid:675e4cc1-003d-1f04-862e-867a59458599" type="string"/>
+  </mmfunction:ScalarFunction>
+  <mmfunction:ScalarFunction xmi:uuid="mmuuid:a912c380-0029-1f04-862e-867a59458599" name="getxyz" category="MyFunctions" invocationClass="com.metamatrix.dqp.embedded.udf.MyFunctions" invocationMethod="getPropertyNoArgs" deterministic="false">
+    <returnParameter xmi:uuid="mmuuid:675e4cc1-003d-1f04-862e-867a59458599" type="string" description="return description"/>
+  </mmfunction:ScalarFunction>
+  
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:7f2b50c0-00fe-1f04-862e-867a59458599">
+    <annotations xmi:uuid="mmuuid:7e372cc0-00fe-1f04-862e-867a59458599" description="No arg getter" annotatedObject="mmuuid/1007f880-0016-1f04-862e-867a59458599"/>
+    <annotations xmi:uuid="mmuuid:43050ec0-06d4-1f04-862e-867a59458599" description="" annotatedObject="mmuuid/a912c380-0029-1f04-862e-867a59458599"/>
+    <annotations xmi:uuid="mmuuid:892e2640-06d7-1f04-862e-867a59458599" description="Property name" annotatedObject="mmuuid/e48dac00-0082-1f04-862e-867a59458599"/>
+    <annotations xmi:uuid="mmuuid:f2af3440-06d9-1f04-862e-867a59458599" description="System property" annotatedObject="mmuuid/98d39a00-0036-1f04-862e-867a59458599"/>
+  </mmcore:AnnotationContainer>
+</xmi:XMI>

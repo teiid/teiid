@@ -1,0 +1,4 @@
+-- Oracle script. Swap view1 cache tables.
+ALTER TABLE materializationTableNameInSrc RENAME TO materializationTableNameInSrc_TEMP;
+ALTER TABLE materializationStageTableNameInSrc RENAME TO materializationTableNameInSrc;
+ALTER TABLE materializationTableNameInSrc_TEMP RENAME TO materializationStageTableNameInSrc;

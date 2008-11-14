@@ -1,0 +1,76 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.dqp.service;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
+
+/**
+ */
+public class FakeMetadataService extends FakeAbstractService implements MetadataService {
+
+    /**
+     * Map of vdbname.vdbversion -> QueryMetadataInterface 
+     */
+    private Map vdbMap = new HashMap();
+    
+    /**
+     * 
+     */
+    public FakeMetadataService() {
+        super();
+        
+        // Load some default VDBs
+        addVdb(null, null, FakeMetadataFactory.exampleBQT());
+        addVdb("bqt", "1", FakeMetadataFactory.exampleBQT()); //$NON-NLS-1$ //$NON-NLS-2$
+        addVdb("example1", "1", FakeMetadataFactory.example1()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    private String getKey(String vdbName, String vdbVersion) {
+        if(vdbName == null) {
+            vdbName = ""; //$NON-NLS-1$
+        } 
+        if(vdbVersion == null) {
+            vdbVersion = ""; //$NON-NLS-1$
+        }
+        String vdbID = vdbName + "." + vdbVersion; //$NON-NLS-1$
+        return vdbID.toLowerCase();        
+    }
+
+    public synchronized void addVdb(String vdbName, String vdbVersion, QueryMetadataInterface metadata) {
+        this.vdbMap.put(getKey(vdbName, vdbVersion), metadata);
+    }
+
+    /* 
+     * @see com.metamatrix.dqp.service.MetadataService#lookupMetadata(java.lang.String, java.lang.String)
+     */
+    public synchronized QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) {
+        return (QueryMetadataInterface) vdbMap.get(getKey(vdbName, vdbVersion));
+    }
+
+}

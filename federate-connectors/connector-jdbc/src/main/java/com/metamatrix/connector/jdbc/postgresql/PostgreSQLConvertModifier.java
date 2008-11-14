@@ -1,0 +1,205 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.connector.jdbc.postgresql;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+
+import com.metamatrix.connector.jdbc.extension.FunctionModifier;
+import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
+import com.metamatrix.data.language.IExpression;
+import com.metamatrix.data.language.IFunction;
+import com.metamatrix.data.language.ILanguageFactory;
+import com.metamatrix.data.language.ILiteral;
+
+/**
+ */
+class PostgreSQLConvertModifier extends BasicFunctionModifier implements FunctionModifier {     
+    private static DropFunctionModifier DROP_MODIFIER = new DropFunctionModifier();
+    private ILanguageFactory langFactory;
+    
+    PostgreSQLConvertModifier(ILanguageFactory langFactory) {
+        this.langFactory = langFactory;
+    }
+
+    public List translate(IFunction function) {
+        return null;
+    }    
+    
+    public IExpression modify(IFunction function) {
+        IExpression[] args = function.getParameters();
+
+        if (args[0] != null && args[0] instanceof ILiteral && ((ILiteral)args[0]).getValue() == null ) {
+            if (args[1] != null && args[1] instanceof ILiteral) {
+                // This is a convert(null, ...) or cast(null as ...)
+                return DROP_MODIFIER.modify(function);
+            }
+        } 
+        
+        if (args[1] != null && args[1] instanceof ILiteral) {
+            String target = ((String)((ILiteral)args[1]).getValue()).toLowerCase();
+            if (target.equals("string")) {  //$NON-NLS-1$ 
+                return convertToString(function);
+            } else if (target.equals("short")) {  //$NON-NLS-1$ 
+                return createCastFunction(args[0], "smallint", Short.class); //$NON-NLS-1$
+            } else if (target.equals("integer")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "integer", Integer.class); //$NON-NLS-1$
+            } else if (target.equals("long")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "bigint", Long.class); //$NON-NLS-1$
+            } else if (target.equals("biginteger")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "numeric", BigInteger.class); //$NON-NLS-1$
+            } else if (target.equals("float")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "real", Float.class); //$NON-NLS-1$
+            } else if (target.equals("double")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "float8", Double.class); //$NON-NLS-1$
+            } else if (target.equals("bigdecimal")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "decimal", BigDecimal.class); //$NON-NLS-1$
+            } else if (target.equals("date")) { //$NON-NLS-1$ 
+                return convertToDate(function);
+            } else if (target.equals("time")) { //$NON-NLS-1$ 
+                return convertToTime(function);
+            } else if (target.equals("timestamp")) { //$NON-NLS-1$ 
+                return convertToTimestamp(function);
+            } else if (target.equals("char")) { //$NON-NLS-1$ 
+                return createCastFunction(args[0], "varchar", String.class); //$NON-NLS-1$
+            } else if (target.equals("boolean")) {  //$NON-NLS-1$ 
+                return createCastFunction(args[0], "boolean", Boolean.class); //$NON-NLS-1$
+            } else if (target.equals("byte")) {  //$NON-NLS-1$ 
+                return createCastFunction(args[0], "smallint", Byte.class); //$NON-NLS-1$
+            }
+        }
+        return DROP_MODIFIER.modify(function); 
+    }
+    
+    private IExpression convertToDate(IFunction function) {
+        IExpression[] args = function.getParameters();
+        int srcCode = getSrcCode(function);
+
+        switch(srcCode) {
+            case STRING:
+                return createConversionFunction("to_date", args[0], "YYYY-MM-DD", java.sql.Date.class); //$NON-NLS-1$//$NON-NLS-2$
+            case TIMESTAMP:
+                return createCastFunction(args[0], "date", java.sql.Date.class); //$NON-NLS-1$
+            default:
+                return DROP_MODIFIER.modify(function);
+        }
+    }
+
+    private IExpression convertToTime(IFunction function) {
+        IExpression[] args = function.getParameters();
+        
+        int srcCode = getSrcCode(function);
+        switch(srcCode) {
+            case STRING:
+                //convert(STRING, time) --> to_timestamp('1970-01-01 ' || timevalue, 'YYYY-MM-DD HH24:MI:SS')
+                IExpression prependedPart0 = langFactory.createFunction("||",  //$NON-NLS-1$
+                                                                          new IExpression[] {langFactory.createLiteral("1970-01-01 ", String.class), args[0]},  //$NON-NLS-1$
+                                                                          String.class);    
+                    
+                return createConversionFunction("to_timestamp", prependedPart0, "YYYY-MM-DD HH24:MI:SS", java.sql.Time.class); //$NON-NLS-1$ //$NON-NLS-2$
+            case TIMESTAMP:
+                return createCastFunction(args[0], "time", java.sql.Time.class); //$NON-NLS-1$
+            default:
+                return DROP_MODIFIER.modify(function);
+        }
+    }    
+    
+    /**
+     * This works only for Oracle 9i.
+     * @param src
+     * @return IFunction
+     */
+    private IExpression convertToTimestamp(IFunction function) {
+        IExpression[] args = function.getParameters();
+        int srcCode = getSrcCode(function);
+        switch(srcCode) {
+            case STRING:
+                // convert(STRING, timestamp) --> to_date(timestampvalue, 'YYYY-MM-DD HH24:MI:SS'))) from smalla 
+                return createConversionFunction("to_timestamp", args[0], "YYYY-MM-DD HH24:MI:SS.UF", java.sql.Timestamp.class); //$NON-NLS-1$ //$NON-NLS-2$
+            case TIME:
+            case DATE:
+                // convert(DATE, timestamp) --> to_date(to_char(DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
+                IFunction inner = createStringFunction(args[0], "YYYY-MM-DD HH24:MI:SS");  //$NON-NLS-1$
+                        
+                return createConversionFunction("to_timestamp", inner, "YYYY-MM-DD HH24:MI:SS", java.sql.Timestamp.class); //$NON-NLS-1$ //$NON-NLS-2$
+            default:
+                return DROP_MODIFIER.modify(function);
+        }
+    }
+    
+    private IExpression convertToString(IFunction function) {
+        IExpression[] args = function.getParameters();
+
+        int srcCode = getSrcCode(function);
+        switch(srcCode) { 
+            case BOOLEAN:
+                // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
+                List when = Arrays.asList(new IExpression[] {langFactory.createLiteral(Boolean.TRUE, Boolean.class)});
+                List then = Arrays.asList(new IExpression[] {langFactory.createLiteral("1", String.class)}); //$NON-NLS-1$
+                IExpression elseExpr = langFactory.createLiteral("0", String.class); //$NON-NLS-1$
+                return langFactory.createCaseExpression(function.getParameters()[0], when, then, elseExpr, String.class);
+            case BYTE:
+            case SHORT:
+            case INTEGER:
+            case LONG:
+            case BIGINTEGER:
+            case FLOAT:
+            case DOUBLE:
+            case BIGDECIMAL:
+                // convert(src, string) --> cast (src AS varchar)
+                return createCastFunction(args[0], "varchar", String.class); //$NON-NLS-1$
+            // convert(input, string) --> to_char(input, format)
+            case DATE:
+                return createStringFunction(args[0], "YYYY-MM-DD"); //$NON-NLS-1$
+            case TIME:
+                return createStringFunction(args[0], "HH24:MI:SS"); //$NON-NLS-1$
+            case TIMESTAMP:
+                return createStringFunction(args[0], "YYYY-MM-DD HH24:MI:SS.US"); //$NON-NLS-1$
+            default:
+                return DROP_MODIFIER.modify(function);
+        }
+    }
+
+    private IFunction createStringFunction(IExpression args0, String format) {
+        return createConversionFunction("to_char", args0, format, String.class); //$NON-NLS-1$           
+    }
+    
+    private IFunction createCastFunction(IExpression value, String typeName, Class targetClass) {
+        return createConversionFunction("cast", value, typeName, targetClass); //$NON-NLS-1$
+    }
+
+    private IFunction createConversionFunction(String functionName, IExpression value, String target, Class targetClass) {
+        return langFactory.createFunction(functionName, new IExpression[] {value, langFactory.createLiteral(target, String.class)}, targetClass);
+    }
+    
+    private int getSrcCode(IFunction function) {
+        IExpression[] args = function.getParameters();
+        Class srcType = args[0].getType();
+        return ((Integer) typeMap.get(srcType)).intValue();
+    }
+}

@@ -1,0 +1,60 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.query.function;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+
+/**
+ * A FunctionMetadataSource represents a source of function metadata for
+ * the function library.  A FunctionMetadataSource needs to know how to 
+ * return a collection of all the function signatures it knows about.
+ */
+public interface FunctionMetadataSource {
+
+    /**
+     * This method requests that the source return all 
+     * {@link com.metamatrix.query.function.FunctionMethod}s
+     * the source knows about.  This can occur in several situations - 
+     * on initial registration with the FunctionLibraryManager, on a 
+     * general reload, etc.  This may be called multiple times and should
+     * always return the newest information available.
+     * @return Collection of FunctionMethod objects
+     */
+    Collection getFunctionMethods();
+    
+    /**
+     * This method determines where the invocation classes specified in the 
+     * function metadata are actually retrieved from.  
+     * @param className Name of class
+     * @return Class reference  
+     * @throws ClassNotFoundException If class could not be found
+     */
+    Class getInvocationClass(String className) throws ClassNotFoundException;    
+    
+    
+    void loadFunctions(InputStream source) throws IOException;
+}

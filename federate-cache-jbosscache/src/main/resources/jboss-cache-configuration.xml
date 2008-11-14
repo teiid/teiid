@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+	<mbean code="org.jboss.cache.pojo.jmx.PojoCacheJmxWrapper" name="jboss.cache:service=FederateCache">
+      <depends>jboss:service=Naming</depends>
+      <depends>jboss:service=TransactionManager</depends>
+      <attribute name="TransactionManagerLookupClass">org.jboss.cache.transaction.GenericTransactionManagerLookup</attribute>
+      <attribute name="IsolationLevel">READ_COMMITTED</attribute>
+	  <attribute name="LockParentForChildInsertRemove">true</attribute>
+	  
+      <attribute name="CacheMode">LOCAL</attribute>
+      <attribute name="ClusterName">Federate-Cluster</attribute>
+	  <attribute name="UseLazyDeserialization">true</attribute>
+
+     <!--
+     	The max amount of time (in milliseconds) we wait until the
+     	initial state (ie. the contents of the cache) are retrieved from
+     	existing members in a clustered environment
+     -->
+     <attribute name="StateRetrievalTimeout">20000</attribute>
+  	 
+  	 <!--
+     	Number of milliseconds to wait until all responses for a
+     	synchronous call have been received.
+     -->
+     <attribute name="SyncReplTimeout">20000</attribute>
+  	
+  	 <!-- Max number of milliseconds to wait for a lock acquisition -->
+     <attribute name="LockAcquisitionTimeout">15000</attribute>
+     
+     <!-- Shutdown hook behavior. Valid choices are: DEFAULT, REGISTER and DONT_REGISTER.  this element is omitted, DEFAULT is used. -->
+     <attribute name="ShutdownHookBehavior">DEFAULT</attribute>
+
+
+      <attribute name="CacheLoaderConfig" replace="false">
+         <config>
+            <cacheloader>
+            	<class>org.jboss.cache.loader.FileCacheLoader</class>
+            	<!--
+               <class>org.jboss.cache.loader.bdbje.BdbjeCacheLoader</class>
+               -->
+               <properties>
+                  location=./target/scratch/federate
+               </properties>
+               
+               <passivation>true</passivation>
+               <shared>false</shared>
+               <purgeOnStartup>true</purgeOnStartup>
+            </cacheloader>
+         </config>
+      </attribute>
+   </mbean>
+</server>   

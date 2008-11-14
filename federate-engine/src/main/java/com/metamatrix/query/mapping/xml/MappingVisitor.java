@@ -1,0 +1,109 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.query.mapping.xml;
+
+import java.util.Iterator;
+import java.util.List;
+
+
+/** 
+ * A Visitor framework for navigating the Mapping Nodes
+ */
+public class MappingVisitor {
+    private boolean abort = false;
+
+    protected void setAbort(boolean abort) {
+        this.abort = abort;
+    }
+    
+    protected boolean shouldAbort() {
+        return abort;
+    }    
+    
+    public void visit(MappingNode node) {}
+    
+    public void visit(MappingDocument doc) {
+        visit((MappingNode)doc);
+    }
+    public void visit(MappingElement element) {
+        visit((MappingBaseNode)element);
+    }
+    public void visit(MappingAttribute attribute) {
+        visit((MappingNode)attribute);
+    }
+    public void visit(MappingBaseNode baseNode) {
+        visit((MappingNode)baseNode);
+    }
+    public void visit(MappingChoiceNode choice) {
+        visit((MappingBaseNode)choice);
+    }
+    public void visit(MappingSequenceNode sequence) {
+        visit((MappingBaseNode)sequence);
+    }
+    public void visit(MappingAllNode all) {
+        visit((MappingBaseNode)all);
+    }
+    public void visit(MappingCommentNode comment) {
+        visit((MappingNode)comment);
+    }
+    public void visit(MappingCriteriaNode node) {
+        visit((MappingBaseNode)node);
+    }
+    public void visit(MappingRecursiveElement element) {
+        visit((MappingElement)element);
+    }
+    public void visit(MappingSourceNode element) {
+        visit((MappingBaseNode)element);
+    }
+    /** 
+     * @param element
+     */
+    protected void walkChildNodes(MappingNode element) {
+
+        List children = element.getNodeChildren();
+        for(Iterator i=children.iterator(); i.hasNext();) {
+            
+            if (shouldAbort()) {
+                break;
+            }
+            
+            MappingNode node = (MappingNode)i.next();            
+            node.acceptVisitor(this);
+        }
+    }    
+    
+    /** 
+     * @param element
+     */
+    protected void walkAttributes(MappingElement element) {
+        List attributes = element.getAttributes();
+        for(Iterator i=attributes.iterator(); i.hasNext();) {
+            if (shouldAbort()) {
+                break;
+            }            
+            visit((MappingAttribute)i.next());
+        }
+    }     
+}

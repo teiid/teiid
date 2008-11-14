@@ -1,0 +1,52 @@
+<appendix id="jdbc_commands">
+  <title>JDBC Commands</title>
+  <para>The following are the list of commands available in the JDBC module, these will aid in executing SQL
+    commands in the MMAdmin shell. These commands can be used in your program once after the initial connection is
+    made</para>
+  <programlisting><![CDATA[
+/**
+ * Executes a SQL Command
+ */
+execute(String command);
+
+/**
+ * Executes a SQL Command using the prepared statement. Note that command can contain ?
+ * for input parameter place holders and the object array can contain the corresponding values. If 
+ * command starts with “exec” then it will treat the command as the stored procedure call.
+ */
+execute(String command, Object[] parms);
+
+/**
+ * Executes a supplied commands in the string array using Batch mode
+ * @param commands - array of commands
+ */
+execute(String[] commands);
+
+/** 
+ * Prints the previously executed ResultSet contents to system out; usally in the interactive more the 
+ * resultset is automatically read, so this applies only in the script mode. 
+ */
+printResults();
+
+/** 
+ * Prints the previously executed ResultSet contents to a file.usally in the interactive more the 
+ * resultset is automatically read, so this applies only in the script mode. 
+ * @param File
+ */
+printResults(File file);
+
+/** 
+ * Prints the previously executed ResultSet to system out, in the form required by the assert call. Usally in 
+ * the interactive more the resultset is automatically read, so this applies only in the script mode.
+ * @param comparemode - true - print in the format that can be used in the regression tests
+ *                    - false - print to console  
+ */
+printResults(boolean true);
+
+/**
+ * Walks the ResultSet, but does not print any results. Good for performance testing. Usally in 
+ * the interactive more the resultset is automatically read, so this applies only in the script mode.
+ */
+walkResults()  
+  ]]></programlisting>      
+</appendix>

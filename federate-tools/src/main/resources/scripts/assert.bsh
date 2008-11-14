@@ -1,0 +1,189 @@
+import junit.framework.*;
+import com.metamatrix.script.junit.*;
+// This file has all the assetion routines that JUnit Assert class provides
+
+void assertEquals(boolean expected, boolean actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+
+void assertEquals(byte expected, byte actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(char expected, char actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(
+	double expected,
+	double actual,
+	double delta) {
+	Assert.assertEquals(expected, actual, delta);
+}
+
+void assertEquals(
+	float expected,
+	float actual,
+	float delta) {
+	Assert.assertEquals(expected, actual, delta);
+}
+
+void assertEquals(int expected, int actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(Object expected, Object actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(
+	String message,
+	boolean expected,
+	boolean actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	byte expected,
+	byte actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	char expected,
+	char actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	double expected,
+	double actual,
+	double delta) {
+	Assert.assertEquals(message, expected, actual, delta);
+}
+
+void assertEquals(
+	String message,
+	float expected,
+	float actual,
+	float delta) {
+	Assert.assertEquals(message, expected, actual, delta);
+}
+
+void assertEquals(String message, int expected, int actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	Object expected,
+	Object actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(String expected, String actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(
+	String message,
+	String expected,
+	String actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	long expected,
+	long actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(
+	String message,
+	short expected,
+	short actual) {
+	Assert.assertEquals(message, expected, actual);
+}
+
+void assertEquals(long expected, long actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertEquals(short expected, short actual) {
+	Assert.assertEquals(expected, actual);
+}
+
+void assertFalse(boolean condition) {
+	Assert.assertFalse(condition);
+}
+
+void assertFalse(String message, boolean condition) {
+	Assert.assertFalse(message, condition);
+}
+
+void assertNotNull(Object object) {
+	Assert.assertNotNull(object);
+}
+
+void assertNotNull(String message, Object object) {
+	Assert.assertNotNull(message, object);
+}
+
+void assertNotSame(Object expected, Object actual) {
+	Assert.assertNotSame(expected, actual);
+}
+
+void assertNotSame(
+	String message,
+	Object expected,
+	Object actual) {
+	Assert.assertNotSame(message, expected, actual);
+}
+
+void assertNull(Object object) {
+	Assert.assertNull(object);
+}
+
+void assertNull(String message, Object object) {
+	Assert.assertNull(message, object);
+}
+
+void assertSame(Object expected, Object actual) {
+	Assert.assertSame(expected, actual);
+}
+
+void assertSame(
+	String message,
+	Object expected,
+	Object actual) {
+	Assert.assertSame(message, expected, actual);
+}
+
+void assertTrue(boolean condition) {
+	Assert.assertTrue(condition);
+}
+
+void assertTrue(String message, boolean condition) {
+	Assert.assertTrue(message, condition);
+}
+
+void fail() {
+	Assert.fail();
+}
+
+void fail(String message) {
+	Assert.fail(message);
+}
+
+void runTests(String scriptName) {    
+    BshTestSuite suite = new BshTestSuite(scriptName);
+    suite.addTest(scriptName); //$NON-NLS-1$
+            
+    junit.textui.TestRunner runner = new junit.textui.TestRunner(new PrintStream(this.interpreter.out));
+    runner.run(suite);
+}

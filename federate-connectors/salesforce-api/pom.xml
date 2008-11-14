@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate-connectors</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>salesforce-api</artifactId>
+  <name>Salesforce API</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>The java API for the Salesforce.com partner web service API</description>
+    <dependencies>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>wss4j</groupId>
+      <artifactId>wss4j</artifactId>
+      <version>1.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis-jaxrpc</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis-saaj</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis-wsdl4j</artifactId>
+      <version>1.5.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis-schema</artifactId>
+      <version>1.3</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>

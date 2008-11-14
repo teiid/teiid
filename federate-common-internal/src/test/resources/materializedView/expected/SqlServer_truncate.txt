@@ -1,0 +1,2 @@
+-- SqlServer script. Truncate view1 cache table.
+TRUNCATE TABLE materializationStageTableNameInSrc;

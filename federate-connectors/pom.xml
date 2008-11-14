@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>federate</artifactId>
+    <groupId>org.federate</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.federate</groupId>
+  <artifactId>federate-connectors</artifactId>
+  <packaging>pom</packaging>
+  <name>Connectors</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>This project is aggregator for all the supported
+    connectors which are used by Federate project</description>
+  <dependencies>	
+  
+    <!-- Internal dependencies -->
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-common-internal</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-api</artifactId>
+      <type>test-jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-common-internal</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-sdk</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-client-jdbc</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-engine</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-metadata</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-connector-sdk</artifactId>
+      <type>test-jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-client-jdbc</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-engine</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.federate</groupId>
+          <artifactId>federate-metadata</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-core</artifactId>
+      <type>test-jar</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-common-internal</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-engine</artifactId>
+      <type>test-jar</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-metadata</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.federate</groupId>
+      <artifactId>federate-metadata</artifactId>
+      <type>test-jar</type>
+      <scope>runtime</scope>
+    </dependency>
+    
+    <!-- External dependencies -->
+  </dependencies>
+  
+  <modules>
+    <module>connector-jdbc</module>
+    <module>connector-loopback</module>
+    <module>connector-text</module>
+    <module>connector-xml</module>
+    <module>sandbox</module>
+    <module>connector-salesforce</module>
+    <module>salesforce-api</module>
+    <module>connector-ldap</module>
+  </modules>
+</project>

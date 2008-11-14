@@ -1,0 +1,67 @@
+<Mydata>
+	<company id="Widgets Inc.">
+		<department id="engineering">
+			<conference>
+				<employee>alan</employee>
+				<employee>mark</employee>
+				<address> 111 main street</address>
+				<city>washington dc</city>
+				<state>   </state>
+				<zipcode>21121</zipcode>
+				<employee>michael</employee>
+				<phone>111-222-3333</phone>
+				<phone>222-333-4444</phone>
+				<attachment>a.doc</attachment>
+				<attachment>b.doc</attachment>
+			</conference>
+			<conference>
+				<employee>todd</employee>
+				<employee>george</employee>
+				<employee>bill</employee>
+				<address> 111 main street</address>
+				<city>washington dc</city>
+				<state>   </state>
+				<zipcode>21121</zipcode>
+				<employee>michael</employee>
+				<phone>111-222-3335</phone>
+				<phone>222-333-4448</phone>
+				<attachment>a.xls</attachment>
+				<attachment>b.rtf</attachment>
+				<attachment>r.jpg</attachment>
+				<attachment>big.rtf</attachment>
+			</conference>
+		</department>
+		<department id="QA">
+			<conference>
+				<employee>jill</employee>
+				<employee>mary</employee>
+				<address> 111 main street</address>
+				<city>washington dc</city>
+				<state>   </state>
+				<zipcode>21121</zipcode>
+				<employee>george</employee>
+				<phone>111-222-3333</phone>
+				<phone>222-333-4445</phone>
+				<attachment>a.doc</attachment>
+				<attachment>b.doc</attachment>
+			</conference>
+			<conference>
+				<employee>larry</employee>
+				<employee>kelly</employee>
+				<employee>howard</employee>
+				<address> 111 main street</address>
+				<city>washington dc</city>
+				<state>   </state>
+				<zipcode>21121</zipcode>
+				<employee>nancy</employee>
+				<employee>moe</employee>
+				<phone>111-222-3335</phone>
+				<phone>222-333-4448</phone>
+				<attachment>a.xls</attachment>
+				<attachment>b.rtf</attachment>
+				<attachment>party.jpg</attachment>
+				<attachment>big.rtf</attachment>
+			</conference>
+		</department>
+	</company>
+</Mydata>

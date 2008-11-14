@@ -1,0 +1,49 @@
+source(getResource("/scripts/adminapi.bsh"));
+
+import java.sql.*;
+import java.io.*;
+import java.util.Properties;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+
+
+//*********************************************************************************************
+//Runtime Methods
+//
+//*********************************************************************************************
+
+/**
+ * Stop the DQP.  If millisToWait is >0, then close to incoming queries, wait the time period
+ * for work to stop, then stop the DQP.  Otherwise, stop immediately, aborting all running queries.
+ * @param millisToWait Milliseconds to wait (if >0) or <=0 for no wait before stopping
+ * @throws AdminException
+ * @since 4.3
+ */
+void stopDQP(int millisToWait) {
+    debug("Stopping DQP in " + vdbFile + " milli seconds.");
+    checkAdmin();
+    currentContext().internalAdmin.stop(millisToWait);
+}
+
+/**
+ * Restart DQP
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void restartDQP() {
+    debug("Restarting DQP.");
+    checkAdmin();
+    currentContext().internalAdmin.restart();
+}
+
+/**
+ * Set the log listener to install into the DQP.  This log listener will receive all log messages
+ * written by the DPQ at it's current log level and log contexts.
+ *
+ * @param listener The listener component
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void setDQPLogListener(EmbeddedLogger listener) {
+    checkAdmin();
+    currentContext().internalAdmin.setLogListener(listener);
+}
