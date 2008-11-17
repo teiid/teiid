@@ -7,10 +7,10 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.federate</groupId>
-  <artifactId>federate-reference</artifactId>
+  <artifactId>federate-admin-guide</artifactId>
   <packaging>jdocbook</packaging>
-  <name>Federate Reference</name>
-  <description>The Federate reference manual</description>
+  <name>Federate Admin Guide</name>
+  <description>The Federate Admin manual</description>
   <build>
     <plugins>
       <plugin>
