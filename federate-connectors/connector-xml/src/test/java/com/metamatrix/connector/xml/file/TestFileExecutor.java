@@ -24,6 +24,7 @@ import com.metamatrix.connector.xml.base.XMLConnector;
 import com.metamatrix.connector.xml.base.XMLConnectorStateImpl;
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.base.XMLExecutionImpl;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorCapabilities;
@@ -116,8 +117,7 @@ public class TestFileExecutor extends TestCase {
     	state.setLogger(new SysLogger());
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	state.setFileName(null);
-    	String devnull = "./devnull";
-    	File nullDir = new File(devnull);
+    	File nullDir = UnitTestUtil.getTestScratchFile("devnull");
     	if(!nullDir.exists()) {
     		assertTrue("could not create directory nulldir", nullDir.mkdir());
     	}
@@ -145,15 +145,14 @@ public class TestFileExecutor extends TestCase {
     	state.setLogger(new SysLogger());
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	state.setFileName(null);
-    	String devnull = "devnull";
-    	File nullDir = new File(devnull);
+    	File nullDir = UnitTestUtil.getTestScratchFile("devnull");
     	if(!nullDir.exists()) {
     		assertTrue("could not create directory nulldir", nullDir.mkdir());
     	}
     	assertTrue("nulldir is not a directory", nullDir.isDirectory());
     	assertTrue("nulldir is not empty", nullDir.list().length == 0);
-    	state.setDirectoryPath(".");
-    	state.setFileName(devnull);
+    	state.setDirectoryPath(nullDir.getAbsolutePath());
+    	state.setFileName(nullDir.getName());
     	XMLConnectionImpl conn = ProxyObjectFactory.getDefaultXMLConnection();
     	RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(ProxyObjectFactory.getStateCollegeVDBLocation());
     	MockXMLExecution exec = new MockXMLExecution(conn, meta);

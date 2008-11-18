@@ -4,7 +4,6 @@
 
 package com.metamatrix.connector.xml.base;
 
-import java.io.File;
 import java.util.Properties;
 
 import junit.framework.TestCase;
