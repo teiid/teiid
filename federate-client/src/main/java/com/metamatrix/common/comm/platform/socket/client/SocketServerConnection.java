@@ -82,9 +82,9 @@ public class SocketServerConnection implements ServerConnection {
         }
         
         try {
-        	this.connProps.put(ProductInfoConstants.CLIENT_IP_ADDRESS, NetUtils.getHostname());
+        	this.connProps.put(ProductInfoConstants.CLIENT_HOSTNAME, NetUtils.getHostname());
         } catch (UnknownHostException err1) {
-        	this.connProps.put(ProductInfoConstants.CLIENT_IP_ADDRESS, "UnknownClientHost"); //$NON-NLS-1$
+        	this.connProps.put(ProductInfoConstants.CLIENT_HOSTNAME, "UnknownClientHost"); //$NON-NLS-1$
         }
        
         if (!this.connProps.containsKey(MMURL_Properties.JDBC.APP_NAME)) {
@@ -111,6 +111,10 @@ public class SocketServerConnection implements ServerConnection {
             connProps.setProperty("vdbName", vdbName); //$NON-NLS-1$
             connProps.setProperty("vdbVersion", logonResult.getProductInfo(ProductInfoConstants.VDB_VERSION)); //$NON-NLS-1$
         }
+        
+        // Update user name in connection properties to account for fully qualified user names
+        String userName = logonResult.getUserName();
+        if ( userName != null ) connProps.setProperty( MMURL_Properties.JDBC.USER_NAME, userName );
         
         this.pingTimer = pingTimer;
         if (this.pingTimer != null && logonResult.getPingInterval() > 0) {
