@@ -100,9 +100,9 @@ public class WSDLServletUtil {
 
 	public static final String TARGET_PORT_KEY = "TargetPort"; //$NON-NLS-1$
 
-	public static final String SERVLET_PATH = "metamatrix-soap/servlet/ArtifactDocumentService"; //$NON-NLS-1$
+	public static final String SERVLET_PATH = "/servlet/ArtifactDocumentService"; //$NON-NLS-1$
 
-	public static final String SQLQUERYWEBSERVICE_WSDL_PATH = "metamatrix-soap/services/SqlQueryWebService?wsdl"; //$NON-NLS-1$
+	public static final String SQLQUERYWEBSERVICE_WSDL_PATH = "/services/SqlQueryWebService?wsdl"; //$NON-NLS-1$
 
 	public static final String GENERATED_WSDL_NAME = "MetaMatrixDataServices"; //$NON-NLS-1$
 
@@ -142,6 +142,7 @@ public class WSDLServletUtil {
 	 * @param scheme the server scheme
 	 * @param host the server host name
 	 * @param port the server port
+	 * @param appContext the context of this application to use in the WSDL url
 	 * @param serverURLs the list of server url info, first url is full url including protocol. Subsequent items are just the
 	 *        host:port strings.
 	 * @param vdbName the vdb name
@@ -150,6 +151,7 @@ public class WSDLServletUtil {
 	public static String formatURL( String scheme,
 	                                String host,
 	                                String port,
+	                                String appContext,
 	                                List serverURLs,
 	                                String vdbName,
 	                                String vdbVersion ) {
@@ -173,7 +175,7 @@ public class WSDLServletUtil {
 				result.append(COLON).append(port);
 			}
 
-			result.append(SLASH).append(SERVLET_PATH).append(SLASH).append(GENERATED_WSDL_FILENAME);
+			result.append(appContext).append(SERVLET_PATH).append(SLASH).append(GENERATED_WSDL_FILENAME);
 			result.append(QUESTION_MARK).append(SERVER_URL_KEY).append(EQUALS);
 			// Append comma-delimited server urls
 			Iterator iter = serverURLs.iterator();
@@ -201,15 +203,18 @@ public class WSDLServletUtil {
 	 * Returns the formatted wsdl url for the SqlQueryWebService
 	 * 
 	 * @param server - server name
+	 * @param appContext the context of this application to use in the WSDL url
 	 * @param secure - secure ssl (true) or non-secure (false)
 	 * @return wsdlUrl - String
 	 * @since 4.3
 	 */
 	public static String getSqlQueryWebServiceUrl( final String server,
+												   String appContext,
 	                                               final boolean secure ) {
 
+		appContext=appContext.replace("/",""); //$NON-NLS-1$ //$NON-NLS-2$
 		return MessageFormat.format(SQLQUERYWEBSERVICE_URL_FORMAT, new Object[] {secure ? HTTPS : HTTP, server,
-		    secure ? getHttpsPort() : getHttpPort(), SQLQUERYWEBSERVICE_WSDL_PATH});
+		    secure ? getHttpsPort() : getHttpPort(), appContext+SQLQUERYWEBSERVICE_WSDL_PATH});
 	}
 
 	public static final String getHttpsPort() {
