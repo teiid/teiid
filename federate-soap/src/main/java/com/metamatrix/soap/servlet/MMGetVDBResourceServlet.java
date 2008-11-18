@@ -69,7 +69,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
 
     
     protected static final String procString = "{?=call System.getUpdatedCharacterVDBResource(?,?,?)}"; //$NON-NLS-1$
-    protected static final String DATASERVICE = "/metamatrix-soap/services/service"; //$NON-NLS-1$
+    protected static final String DATASERVICE = "/services/service"; //$NON-NLS-1$
     protected static final String[] TOKEN_ARRAY = {CoreConstants.URL_ROOT_FOR_VDB,
                                                  CoreConstants.URL_SUFFIX_FOR_VDB,
                                                  CoreConstants.URL_FOR_DATA_WEBSERVICE,
@@ -169,7 +169,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
         
         String urlPrefix = buildUrlPrefix(req);
                 	
-        String servletPath = urlPrefix+"/"+WSDLServletUtil.SERVLET_PATH; //$NON-NLS-1$ 
+        String servletPath = urlPrefix+WSDLServletUtil.SERVLET_PATH; //$NON-NLS-1$ 
                 
         String result = escapeAttributeEntities(suffix);
         
@@ -239,7 +239,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
         }else{
         	urlPrefix.append(WSDLServletUtil.HTTP).append("://").append(req.getServerName()).append(":").append(WSDLServletUtil.getHttpPort()); //$NON-NLS-1$ //$NON-NLS-2$        	
         }
-        
+		urlPrefix.append(req.getContextPath());
         return urlPrefix.toString();        
 	}
              
@@ -445,7 +445,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
 	 * 
 	 * @param isSecure - boolean
 	 * @return vdbVersion
-	 * @since 5.6
+	 * @since 5.5.3
 	 */
 	public static String getScheme(boolean isSecure) {
 		

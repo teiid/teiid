@@ -62,7 +62,7 @@
 
     <!--Following params will set the proper context paths for invocations. All the endpoints will have a commons context-->
     <!--root which can configured using the following contextRoot parameter-->
-    <parameter name="contextRoot">metamatrix-soap</parameter>
+    <!--<parameter name="contextRoot">metamatrix-soap</parameter>-->
 
     <!--Our HTTP endpoints can handle both REST and SOAP. Following parameters can be used to distinguiush those endpoints-->
     <!--In case of a servlet, if you change this you have to manually change the settings of your servlet container to map this -->

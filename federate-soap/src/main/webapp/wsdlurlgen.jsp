@@ -44,7 +44,7 @@
   		   </table>
   		</p>
   		<p>&nbsp;</p>
-  		<form name="form" method="post" target="wsdlUrl" ACTION="../metamatrix-soap/servlet/WSDLURLGenerator">
+  		<form name="form" method="post" target="wsdlUrl" ACTION="<%= request.getContextpath() %>/servlet/WSDLURLGenerator">
     		<p><b>MetaMatrix Server Information</b> (use commas to delimit multiple host:port combinations)</p>
     		<table width="66%" border="0" cellspacing="0" cellpadding="0" bgcolor="#edf0f6">
       			<tr>

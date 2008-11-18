@@ -88,6 +88,7 @@ public class MMDiscoverWSDLServlet extends MMGetWSDLServlet {
 			List wsdlUrls = WebServiceUtil.getWSDLUrls(req.getScheme(),
 			                                           req.getServerName(),
 			                                           Integer.toString(req.getServerPort()),
+			                                           req.getContextPath(),
 			                                           WebServiceUtil.WSDLUSER,
 			                                           WebServiceUtil.WSDLPASSWORD,
 			                                           serverInfo);

@@ -38,7 +38,7 @@ public class WSDLUrl implements Serializable{
 	private String port;
 	private String vdbName;
 	private String version;
-	private static final String APP_NAME = "metamatrix-soap"; //$NON-NLS-1$
+	private String appName; //$NON-NLS-1$
 	private static final String WSDL = "wsdl"; //$NON-NLS-1$
 	private static final String DELIM = "/"; //$NON-NLS-1$
 	private static final String DOUBLE_DELIM = "//"; //$NON-NLS-1$
@@ -47,17 +47,20 @@ public class WSDLUrl implements Serializable{
 	/**
 	 * @param host
 	 * @param port
+	 * @param appName
 	 * @param protocol
 	 * @param name
 	 * @param version
 	 */
 	public WSDLUrl( String host,
 	                String port,
+	                String appName,
 	                String protocol,
 	                String name,
 	                String version ) {
 		this.host = host;
 		this.port = port;
+		this.appName = appName;
 		this.scheme = protocol;
 		this.vdbName = name;
 		this.version = version;
@@ -139,7 +142,7 @@ public class WSDLUrl implements Serializable{
 	public String toString() {
 		StringBuffer url = new StringBuffer();
 		url.append(scheme).append(COLON).append(DOUBLE_DELIM).append(host);
-		url.append(COLON).append(port).append(DELIM).append(APP_NAME);
+		url.append(COLON).append(port).append(DELIM).append(appName);
 		url.append(DELIM).append(WSDL).append(DELIM).append(vdbName);
 
 		if (version != null && !StringUtil.Constants.EMPTY_STRING.equals(version)) {

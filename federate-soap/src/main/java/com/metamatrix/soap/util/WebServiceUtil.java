@@ -174,6 +174,7 @@ public class WebServiceUtil {
 	 * @param webScheme
 	 * @param webHost
 	 * @param webPort
+	 * @param appName
 	 * @param userName
 	 * @param password
 	 * @param serverList
@@ -186,6 +187,7 @@ public class WebServiceUtil {
 	public static List getWSDLUrls( final String webScheme,
 	                                final String webHost,
 	                                final String webPort,
+	                                final String appName,
 	                                final String userName,
 	                                final String password,
 	                                final MMServerInfo serverList ) throws LogonException, AdminException {
@@ -200,7 +202,7 @@ public class WebServiceUtil {
 		while (iterVdbs.hasNext()) {
 			VDB vdb = (VDB)iterVdbs.next();
 			if (vdb.getState() == VDB.ACTIVE && vdb.hasWSDL()) {
-				wsdlUrlList.add(new WSDLUrl(webHost, webPort, webScheme, vdb.getName(), vdb.getVDBVersion()));
+				wsdlUrlList.add(new WSDLUrl(webHost, webPort, appName, webScheme, vdb.getName(), vdb.getVDBVersion()));
 			}
 		}
 

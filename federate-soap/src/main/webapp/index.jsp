@@ -86,7 +86,7 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td><a href="../metamatrix-soap/servlet/DiscoverWSDLServlet" target="wsdlUrls" title="Discover MetaMatrix Web Services">Discover MetaMatrix Web Services</a><td>	
+		      <td><a href="<%= request.getContextpath() %>/servlet/DiscoverWSDLServlet" target="wsdlUrls" title="Discover MetaMatrix Web Services">Discover MetaMatrix Web Services</a><td>	
 		      <td>&nbsp;<td>	
 	      </tr>
    	      <tr>
@@ -112,7 +112,7 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), false) %>" title="SQL Query Web Service WSDL (Non-secure)">SQL Query Web Service WSDL (Non-secure)</a><td>	
+		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), <%= request.getContextpath() %>, false) %>" title="SQL Query Web Service WSDL (Non-secure)">SQL Query Web Service WSDL (Non-secure)</a><td>	
    		      <td>&nbsp;<td>
 	      </tr>	      
 	      <tr>
@@ -120,7 +120,7 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), true) %>" title="SQL Query Web Service WSDL (Secure SSL)">SQL Query Web Service WSDL (Secure SSL)</a><td>	
+		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), <%= request.getContextpath() %>, true) %>" title="SQL Query Web Service WSDL (Secure SSL)">SQL Query Web Service WSDL (Secure SSL)</a><td>	
    		      <td>&nbsp;<td>
 	      </tr>	      
 	      <tr>
