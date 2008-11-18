@@ -94,6 +94,7 @@ public class WSDLURLGenerator extends HttpServlet {
         String targetHost = req.getParameter(WSDLServletUtil.TARGET_HOST_KEY);
         String targetPort = req.getParameter(WSDLServletUtil.TARGET_PORT_KEY);
         String scheme = req.getScheme();
+        String appContext = req.getContextPath();
 
         // Validate parameters
         List hostAndPortList = Collections.EMPTY_LIST;
@@ -167,6 +168,7 @@ public class WSDLURLGenerator extends HttpServlet {
         String servletPath = WSDLServletUtil.formatURL(scheme,
         											   targetHost,
 									                   targetPort,
+									                   appContext,
 									                   serverURLs, 
 									                   vdbName,
 									                   vdbVersion);        
