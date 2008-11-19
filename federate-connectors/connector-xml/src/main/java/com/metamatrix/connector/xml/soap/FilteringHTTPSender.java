@@ -29,7 +29,7 @@ public class FilteringHTTPSender extends CommonsHTTPSender {
 			result = new LoggingInputStreamFilter(result, logger);
 		}
 		
-		Class pluggableFilter = Class.forName(state.getPluggableInputStreamFilterClass());
+		Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(state.getPluggableInputStreamFilterClass());
 		Constructor ctor = pluggableFilter.getConstructor(
 			new Class[] { java.io.InputStream.class, com.metamatrix.data.api.ConnectorLogger.class});
 		result = (InputStream) ctor.newInstance(new Object[] {result, logger});

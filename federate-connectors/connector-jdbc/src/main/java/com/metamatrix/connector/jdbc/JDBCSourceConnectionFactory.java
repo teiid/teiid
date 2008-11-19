@@ -75,7 +75,8 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_driver_class_name_1")); //$NON-NLS-1$
         }
         try {
-            return (Driver) Class.forName(driverClassName).newInstance();
+        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(driverClassName);
+            return (Driver) clazz.newInstance();
         } catch(Exception e) {
             throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Unable_to_load_the_JDBC_driver_class_6", driverClassName)); //$NON-NLS-1$
         }

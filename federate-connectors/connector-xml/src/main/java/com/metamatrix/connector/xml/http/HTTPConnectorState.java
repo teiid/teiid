@@ -158,7 +158,8 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
         setHostnameVerifierClassName(props.getProperty(HOSTNAME_VERIFIER));
         if(getHostnameVerifierClassName() != null) {
         	try {
-				HostnameVerifier verifier = (HostnameVerifier) Class.forName(getHostnameVerifierClassName()).newInstance();
+        		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(getHostnameVerifierClassName());
+				HostnameVerifier verifier = (HostnameVerifier) clazz.newInstance();
 				HttpsURLConnection.setDefaultHostnameVerifier(verifier);
 			} catch (Exception e) {
 				throw new ConnectorException(e, "Unable to load HostnameVerifier");

@@ -120,7 +120,8 @@ public class SOAPConnectorStateImpl implements SOAPConnectorState {
         setHostnameVerifierClassName(props.getProperty(HTTPConnectorState.HOSTNAME_VERIFIER));
         if(getHostnameVerifierClassName() != null) {
         	try {
-				HostnameVerifier verifier = (HostnameVerifier) Class.forName(getHostnameVerifierClassName()).newInstance();
+        		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(getHostnameVerifierClassName());
+				HostnameVerifier verifier = (HostnameVerifier) clazz.newInstance();
 				HttpsURLConnection.setDefaultHostnameVerifier(verifier);
 			} catch (Exception e) {
 				throw new ConnectorException(e, "Unable to load HostnameVerifier");

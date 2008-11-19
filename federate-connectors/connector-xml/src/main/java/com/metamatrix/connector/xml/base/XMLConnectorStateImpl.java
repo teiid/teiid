@@ -26,6 +26,7 @@
 package com.metamatrix.connector.xml.base;
 
 import java.util.Properties;
+
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnectorState;
@@ -217,8 +218,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             String connectorCapabilitiesClass) throws ConnectorException {
         ConnectorCapabilities caps = null;
         try {
-            caps = (ConnectorCapabilities) Class.forName(
-                    connectorCapabilitiesClass).newInstance();
+        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(connectorCapabilitiesClass);
+            caps = (ConnectorCapabilities) clazz.newInstance();
         } catch (Exception e) {
             logger.logError(e.getMessage(), e);
             throw new ConnectorException(e);
@@ -494,8 +495,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             throws ConnectorException {
         IQueryPreprocessor pre = null;
         try {
-            pre = (IQueryPreprocessor) Class.forName(queryPreprocessorClass)
-                    .newInstance();
+        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(queryPreprocessorClass);
+            pre = (IQueryPreprocessor) clazz.newInstance();
         } catch (Exception e) {
             logger.logError(e.getMessage(), e);
             throw new ConnectorException(e);
@@ -511,8 +512,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             throws ConnectorException {
         SAXFilterProvider filter = null;
         try {
-            filter = (SAXFilterProvider) Class.forName(SAXFilterClass)
-                    .newInstance();
+        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(SAXFilterClass);
+            filter = (SAXFilterProvider) clazz.newInstance();
         } catch (Exception e) {
             logger.logError(e.getMessage(), e);
             throw new ConnectorException(e);

@@ -86,7 +86,8 @@ public abstract class SecureConnectorStateImpl extends XMLConnectorStateImpl imp
     public TrustedPayloadHandler getTrustDeserializerInstance() throws ConnectorException {
     	Object secObj;
 		try {
-			secObj = Class.forName(getSecurityDeserializerClass()).newInstance();
+			Class clazz = Thread.currentThread().getContextClassLoader().loadClass(getSecurityDeserializerClass());
+			secObj = clazz.newInstance();
 		} catch (Exception e) {
 			String message = Messages.getString("SecureConnectorStateImpl.error.loading.trust.deserializer");
 			throw new ConnectorException(e, message);

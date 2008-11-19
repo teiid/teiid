@@ -74,7 +74,7 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
         
-        capabilities = createCapabilities(environment, this.getClass().getClassLoader()); 
+        capabilities = createCapabilities(environment, Thread.currentThread().getContextClassLoader()); 
     }
 
 	static ConnectorCapabilities createCapabilities(ConnectorEnvironment environment, ClassLoader loader)
@@ -127,7 +127,7 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
 
             try {
                 //create source connection factory
-                Class scfClass = this.getClass().getClassLoader().loadClass(scfClassName);
+                Class scfClass = Thread.currentThread().getContextClassLoader().loadClass(scfClassName);
                 this.factory = (JDBCSourceConnectionFactory) scfClass.newInstance();
                 factory.initialize(environment);
                 

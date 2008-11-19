@@ -58,7 +58,7 @@ public class XMLConnectionFacory {
         throws ConnectorException {
         String connectionTypeClass = env.getProperties().getProperty("ConnectionType"); //$NON-NLS-1$
         try {
-            Class clazz = Class.forName(connectionTypeClass);
+            Class clazz = Thread.currentThread().getContextClassLoader().loadClass(connectionTypeClass);
             Constructor c = clazz.getConstructor(new Class[] {ConnectorEnvironment.class});                       
             XMLSourceConnection conn = (XMLSourceConnection)c.newInstance(new Object[] {this.env});
             return conn;

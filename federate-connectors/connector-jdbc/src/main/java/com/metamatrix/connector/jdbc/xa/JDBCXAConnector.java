@@ -107,7 +107,7 @@ public class JDBCXAConnector extends JDBCConnector implements XAConnector{
             
             try {
                 //create xa source connection factory
-                Class scfClass = this.getClass().getClassLoader().loadClass(scfClassName);
+                Class scfClass = Thread.currentThread().getContextClassLoader().loadClass(scfClassName);
                 SourceConnectionFactory factory = (SourceConnectionFactory) scfClass.newInstance();           
 
                 appEnvProps.setProperty(XAJDBCPropertyNames.IS_XA, Boolean.TRUE.toString());

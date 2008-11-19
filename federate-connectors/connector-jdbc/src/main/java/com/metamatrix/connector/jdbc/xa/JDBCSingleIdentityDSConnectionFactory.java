@@ -107,7 +107,8 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
         // create data source
         final DataSource baseDs;
         try {
-            baseDs = (DataSource) Class.forName(dataSourceClassName).newInstance();
+        	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(dataSourceClassName);
+            baseDs = (DataSource) clazz.newInstance();
         } catch(Exception e) {
             throw new ConnectorException(e,JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Unable_to_load_the_JDBC_driver_class_6", dataSourceClassName)); //$NON-NLS-1$
         }

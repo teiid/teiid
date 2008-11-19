@@ -60,7 +60,8 @@ public class SalesforceConnection implements com.metamatrix.data.api.Connection 
 			String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities");
 			if(capabilitiesClass != null) {
 	        	try {
-	        		salesforceCapabilites = (SalesforceCapabilities) Class.forName(capabilitiesClass).newInstance();
+	        		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(capabilitiesClass);
+	        		salesforceCapabilites = (SalesforceCapabilities) clazz.newInstance();
 				} catch (Exception e) {
 					throw new ConnectorException(e, "Unable to load Capabilities Class");
 				}

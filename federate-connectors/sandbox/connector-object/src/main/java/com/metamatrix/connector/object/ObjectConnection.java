@@ -71,7 +71,7 @@ public class ObjectConnection implements Connection, SourceConnection{
         this.logger = environment.getLogger();
         
         try {
-            ClassLoader loader = this.getClass().getClassLoader();
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
             
             this.capabilities = ObjectConnectorUtil.createCapabilities(environment, loader);
             

@@ -71,7 +71,7 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
         this.connectionStrategy = connectionStrategy;
         this.connectionListener = connectionListener;
         try {
-            ClassLoader loader = this.getClass().getClassLoader();
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
             Properties connectorProps = environment.getProperties();
             //create SQLTranslator

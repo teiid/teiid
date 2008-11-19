@@ -55,7 +55,8 @@ public class LoopbackConnection implements Connection {
     void loadCapabilities(String capabilityClass, ConnectorLogger logger) {
         if(capabilityClass != null && capabilityClass.length() > 0) {
             try {
-                capabilities = (ConnectorCapabilities) Class.forName(capabilityClass).newInstance();
+            	Class clazz = Thread.currentThread().getContextClassLoader().loadClass(capabilityClass);
+                capabilities = (ConnectorCapabilities) clazz.newInstance();
                 logger.logInfo("Loaded " + capabilityClass + " for LoopbackConnector"); //$NON-NLS-1$ //$NON-NLS-2$
             } catch(ClassNotFoundException cnfe) {
                 logger.logError("Capabilities class not found: " + capabilityClass, cnfe); //$NON-NLS-1$

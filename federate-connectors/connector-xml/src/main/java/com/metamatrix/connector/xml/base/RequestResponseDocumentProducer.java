@@ -155,7 +155,7 @@ public abstract class RequestResponseDocumentProducer implements DocumentProduce
 				
 				InputStream filter = null;
 				try {
-					Class pluggableFilter = Class.forName(getState().getPluggableInputStreamFilterClass());
+					Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(getState().getPluggableInputStreamFilterClass());
 					Constructor ctor = pluggableFilter.getConstructor(
 							new Class[] { java.io.InputStream.class, com.metamatrix.data.api.ConnectorLogger.class});
 					filter = (InputStream) ctor.newInstance(new Object[] {response, logger});

@@ -81,7 +81,8 @@ public abstract class LoggingConnector implements StatefulConnector {
 		String stateClassName = env.getProperties().getProperty(XMLConnectorState.STATE_CLASS_PROP);
 		XMLConnectorState state = null;
 		try {
-			state = (XMLConnectorState) Class.forName(stateClassName).newInstance();
+			Class clazz = Thread.currentThread().getContextClassLoader().loadClass(stateClassName);
+			state = (XMLConnectorState) clazz.newInstance();
 			state.setLogger(this.getLogger());
 			state.setState(env);
 		} catch (Exception e) {

@@ -21,19 +21,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
 package com.metamatrix.common.protocol;
 
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 
 import com.metamatrix.common.protocol.classpath.ClasspathURLConnection;
+import com.metamatrix.common.protocol.jar.JarURLConnection;
 import com.metamatrix.common.protocol.mmfile.MMFileURLConnection;
 import com.metamatrix.common.protocol.mmrofile.MMROFileURLConnection;
 
 
 /** 
- * A factory class for registering the "classpath:" and "mmfile:" protocol based URL.
+ * A facory class for registering the "classpath:" and "mmfile:" protocol based URL.
  * since we can not register in app servers currently this only used for testing.
  * @since 4.4
  */
@@ -50,6 +50,9 @@ public class MetaMatrixURLStreamHandlerFactory implements URLStreamHandlerFactor
         else if (protocol.equals(MMROFileURLConnection.PROTOCOL)) {
             return new com.metamatrix.common.protocol.mmrofile.Handler();
         }        
+        else if (protocol.equals(JarURLConnection.PROTOCOL)) {
+            return new com.metamatrix.common.protocol.jar.Handler();
+        }           
         else {
             String handlerName = DEFAULT_HANDLER_PKG+"."+protocol+".Handler"; //$NON-NLS-1$ //$NON-NLS-2$
             try {

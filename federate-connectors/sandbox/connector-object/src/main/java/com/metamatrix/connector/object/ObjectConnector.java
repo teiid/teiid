@@ -70,7 +70,7 @@ public class ObjectConnector implements Connector {
 //        }
         
         try {
-            ClassLoader loader = this.getClass().getClassLoader();
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
             factory = ObjectConnectorUtil.createFactory(this.env, loader);
 //            String scfClassName = env.getProperties().getProperty(ObjectPropertyNames.EXT_CONNECTION_FACTORY_CLASS);  //$NON-NLS-1$
