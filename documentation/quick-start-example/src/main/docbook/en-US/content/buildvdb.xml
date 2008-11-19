@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="designer">
+  <title>Using Designer to build a VDB</title>
+  <sect1>
+    <title>Download Designer</title>
+    <para>
+      Federate Tools project provides a Eclipse based designer tool for this purpose of building a VDB. You can
+      download Designer
+      <ulink url="/projects/federate/Tools.html">here</ulink>
+      Also, follow instructions for the tool as to how to install on your machine. Once done installing, start the
+      Designer.
+    </para>
+  </sect1>
+  <sect1 id="step-3">
+    <title>Building a VDB</title>
+    <para>Once you start the Designer, there are various steps you will need to do to create a VDB. The below is a
+      list of steps that need to be accomplished using the Designer tool. See the video at the end of the list,
+      that will takes you though the all the steps involved.</para>
+    <orderedlist>
+      <listitem>
+        <para>Switch to Designer Prespective, by opening the "Window->Open Prespective.."</para>
+      </listitem>
+      <listitem>
+        <para>Create new "Model Project", using "File->New->ModelProject</para>
+      </listitem>
+      <listitem>
+        <para>Import the Derby database's "account" schema into a source model.</para>
+      </listitem>
+      <listitem>
+        <para>Manually create the source model for the "Text File". Create a
+          Table called "Price" with "stock" and "price" as column names</para>
+      </listitem>
+      <listitem>
+        <para>Create a view model called "AccountView"</para>
+      </listitem>
+      <listitem>
+        <para>In the "AccountView" model, create a virtual table (called as Base Table in the menu), and build
+          the transformation query combining the "Accounts" tables with "Price" table</para>
+      </listitem>
+      <listitem>
+        <para>In the "AccountView" model, create a virtual procedure called "buyStock", to learn about procedure language.</para>
+      </listitem>
+      
+      <listitem>
+        <para>Create a VDB based on the models created</para>
+      </listitem>
+      <listitem>
+        <para>Test the created VDB with some ad-hoc queries inside Designer.</para>
+      </listitem>
+      <listitem>
+        <para>Export or copy the VDB for use in your application.</para>
+      </listitem>
+    </orderedlist>
+    
+    <para>insert video here </para>    
+    
+  </sect1>
+</chapter>

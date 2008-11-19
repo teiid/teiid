@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="learn">
+  <title>Learning about Virtual Database (VDB)</title>
+  <sect1>
+    <title>What is VDB?</title>
+    <para> VDB is an artifact that defines logical schema model that combines two or more physical data sources to
+      provide easy data integration between them. This is accomplished by use of virtual tables, virtual views and
+      virtual procedures with their corresponding transformation queries defined in SQL based upon the physical
+      data sources. The physical sources can be any other JDBC sources or CSV or Excel files or even a Web Service.
+    </para>
+    <para>When you write your JDBC application it can be written to virtual (logical) schema defined in this
+      VDB, however during the execution of a query based on this virtual schema, it will be interpreted by Federate
+      engine and makes the appropriate calls to the actual physical sources in an efficient way and gathers results
+      and combines/translates them as requested and returns the top level results to user.</para>
+  </sect1>
+  <sect1>
+    <title>Concepts Explained</title>
+    <para>
+      Federate Embedded is a container for deploying your VDB. Before you can access your data in federated manner,
+      we need to build a VDB first. We need to make use of
+      <ulink url="/project/federate/Tools.html">Federate Designer</ulink>
+      tool to accomplish this. This below picture shows the relation between all the tools involved.
+    </para>
+    <figure id="lifecycle">
+      <title>Lifecycle of Events</title>
+      <graphic align="center" scale="100" fileref="../images/steps.png" />
+    </figure>
+    <para>The Federate Designer tool lets you define physical data sources you are trying integrate together,
+      then it reads all the required metadata (schema) from these sources. Once the metadata is read, then the
+      designer provides the user with required tools to build logical data model on top of the read
+      metadata. Once the virtual schema is built, then user can package it into a VDB. So, a VDB can be further
+      defined as a collection of logical (virtual) data models.</para>
+  </sect1>
+</chapter>
