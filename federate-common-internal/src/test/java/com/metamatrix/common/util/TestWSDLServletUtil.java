@@ -35,8 +35,8 @@ public class TestWSDLServletUtil extends TestCase {
 	
 	public static String HTTP = "http";   //$NON-NLS-1$
 	public static String HTTPS = "https"; //$NON-NLS-1$
-	public static String DEFAULT_APP_CONTEXT = "metamatrix-soap"; //$NON-NLS-1$
-	public static String OTHER_APP_CONTEXT = "metamatrix-soapiness"; //$NON-NLS-1$
+	public static String DEFAULT_APP_CONTEXT = "/metamatrix-soap"; //$NON-NLS-1$
+	public static String OTHER_APP_CONTEXT = "/metamatrix-soapiness"; //$NON-NLS-1$
 
     public TestWSDLServletUtil(String name) {
         super(name);
