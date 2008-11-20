@@ -33,11 +33,7 @@
       upon user supplying their own JDBC drivers in the deployment. Federate code base has been tested extensively
       with
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
-      JDBC Drivers. For your convenience DataDirect drivers are available through Federate site to be used
-      exclusively with your Federate Embedded application free of charge. Note that you would have agree for
-      separate licensing terms set forth by DataDirect before you use them. For more information and directions to
-      download check out
-      <ulink url="http://jboss.org/federate/datadirect">DataDirect driver download</ulink>
+      JDBC Drivers. If you already have access to these drivers, please use those drivers.
     </para>
     <para>JDBC drivers for MySQL, Postgres,and Derby were already included in the "lib" folder as the LGPL
       license permits them to be included with the Federate Embedded kit.</para>
