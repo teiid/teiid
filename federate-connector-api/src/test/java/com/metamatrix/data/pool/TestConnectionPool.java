@@ -366,7 +366,7 @@ public class TestConnectionPool extends TestCase{
             }
         }
         
-        assertEquals(0, EXCEPTIONS.size());
+        assertEquals(EXCEPTIONS.toString(), 0, EXCEPTIONS.size());
         
         SecurityContext context1 = createContext("Jack"); //$NON-NLS-1$
         SecurityContext context2 = createContext("Tom"); //$NON-NLS-1$
