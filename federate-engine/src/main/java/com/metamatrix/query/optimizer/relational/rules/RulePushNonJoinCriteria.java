@@ -84,7 +84,7 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                 Criteria crit = (Criteria)crits.next();
                                 
                 //special case handling for true/false criteria
-                if (crit.equals(QueryRewriter.FALSE_CRITERIA)) {
+                if (crit.equals(QueryRewriter.FALSE_CRITERIA) || crit.equals(QueryRewriter.UNKNOWN_CRITERIA)) {
                     if (joinType == JoinType.JOIN_INNER) {
                         FrameUtil.replaceWithNullNode(node);
                     } else {
