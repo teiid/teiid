@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>PortfolioModel</name>
+	<comment>MetaMatrix Enterprise Designer, version 5.5</comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.metamatrix.modeler.core.modelBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.metamatrix.modeler.core.modelNature</nature>
+	</natures>
+</projectDescription>

@@ -1,4 +1,4 @@
-MarketData.Price.location = /federate-embedded/examples/portfolio/marketdata-price.txt
+MarketData.Price.location = marketdata-price.txt
 MarketData.Price.delimiter = ,
 MarketData.Price.headerLine = 1
 MarketData.Price.skipHeaderLines = 1

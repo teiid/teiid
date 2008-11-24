@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:jdbc="http://www.metamatrix.com/metamodels/JDBC" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:077908c0-da11-1105-b511-c9cb83fb3e5e" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="MetaMatrix" ProducerVersion="5.5">
+    <modelImports xmi:uuid="mmuuid:1bcc4800-da11-1105-b511-c9cb83fb3e5e" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <modelImports xmi:uuid="mmuuid:1bfa0ec0-da11-1105-b511-c9cb83fb3e5e" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+  </mmcore:ModelAnnotation>
+  <relational:BaseTable xmi:uuid="mmuuid:08c8ba40-da11-1105-b511-c9cb83fb3e5e" name="ACCOUNT" nameInSource="&quot;ACCOUNT&quot;">
+    <columns xmi:uuid="mmuuid:0afd4d80-da11-1105-b511-c9cb83fb3e5e" name="ID" nameInSource="&quot;ACCOUNT_ID&quot;" nativeType="INTEGER" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0b2b1440-da11-1105-b511-c9cb83fb3e5e" name="SSN" nameInSource="&quot;SSN&quot;" nativeType="CHAR" length="10" fixedLength="true">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0b2b1441-da11-1105-b511-c9cb83fb3e5e" name="STATUS" nameInSource="&quot;STATUS&quot;" nativeType="CHAR" length="10" fixedLength="true">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0b2b1442-da11-1105-b511-c9cb83fb3e5e" name="TYPE" nameInSource="&quot;TYPE&quot;" nativeType="CHAR" length="10" fixedLength="true">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0b2b1443-da11-1105-b511-c9cb83fb3e5e" name="DATEOPENED" nameInSource="&quot;DATEOPENED&quot;" nativeType="TIMESTAMP" fixedLength="true" precision="26" scale="6" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0b2b1444-da11-1105-b511-c9cb83fb3e5e" name="DATECLOSED" nameInSource="&quot;DATECLOSED&quot;" nativeType="TIMESTAMP" fixedLength="true" precision="26" scale="6" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+    </columns>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:0cf4d7c0-da11-1105-b511-c9cb83fb3e5e" name="CUSTOMER" nameInSource="&quot;CUSTOMER&quot;">
+    <columns xmi:uuid="mmuuid:0d7e2c00-da11-1105-b511-c9cb83fb3e5e" name="SSN" nameInSource="&quot;SSN&quot;" nativeType="CHAR" length="10" fixedLength="true">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c01-da11-1105-b511-c9cb83fb3e5e" name="FIRSTNAME" nameInSource="&quot;FIRSTNAME&quot;" nativeType="VARCHAR" length="64">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c02-da11-1105-b511-c9cb83fb3e5e" name="LASTNAME" nameInSource="&quot;LASTNAME&quot;" nativeType="VARCHAR" length="64">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c03-da11-1105-b511-c9cb83fb3e5e" name="ST_ADDRESS" nameInSource="&quot;ST_ADDRESS&quot;" nativeType="VARCHAR" length="256">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c04-da11-1105-b511-c9cb83fb3e5e" name="APT_NUMBER" nameInSource="&quot;APT_NUMBER&quot;" nativeType="VARCHAR" length="32">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c05-da11-1105-b511-c9cb83fb3e5e" name="CITY" nameInSource="&quot;CITY&quot;" nativeType="VARCHAR" length="64">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c06-da11-1105-b511-c9cb83fb3e5e" name="STATE" nameInSource="&quot;STATE&quot;" nativeType="VARCHAR" length="32">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c07-da11-1105-b511-c9cb83fb3e5e" name="ZIPCODE" nameInSource="&quot;ZIPCODE&quot;" nativeType="VARCHAR" length="10">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0d7e2c08-da11-1105-b511-c9cb83fb3e5e" name="PHONE" nameInSource="&quot;PHONE&quot;" nativeType="VARCHAR" length="15">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:0e078040-da11-1105-b511-c9cb83fb3e5e" name="HOLDINGS" nameInSource="&quot;HOLDINGS&quot;">
+    <columns xmi:uuid="mmuuid:0e90d480-da11-1105-b511-c9cb83fb3e5e" name="TRANSACTION_ID" nameInSource="&quot;TRANSACTION_ID&quot;" nativeType="INTEGER" fixedLength="true" precision="10" nullable="NO_NULLS" defaultValue="AUTOINCREMENT: start 2000 increment 1" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0e90d481-da11-1105-b511-c9cb83fb3e5e" name="ACCOUNT_ID" nameInSource="&quot;ACCOUNT_ID&quot;" nativeType="INTEGER" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0e90d482-da11-1105-b511-c9cb83fb3e5e" name="PRODUCT_ID" nameInSource="&quot;PRODUCT_ID&quot;" nativeType="INTEGER" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0e90d483-da11-1105-b511-c9cb83fb3e5e" name="PURCHASE_DATE" nameInSource="&quot;PURCHASE_DATE&quot;" nativeType="TIMESTAMP" fixedLength="true" precision="26" scale="6" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:0e90d484-da11-1105-b511-c9cb83fb3e5e" name="SHARES_COUNT" nameInSource="&quot;SHARES_COUNT&quot;" nativeType="INTEGER" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:104b55c0-da11-1105-b511-c9cb83fb3e5e" name="PRODUCT" nameInSource="&quot;PRODUCT&quot;">
+    <columns xmi:uuid="mmuuid:10a6e340-da11-1105-b511-c9cb83fb3e5e" name="ID" nameInSource="&quot;ID&quot;" nativeType="INTEGER" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:10a6e341-da11-1105-b511-c9cb83fb3e5e" name="SYMBOL" nameInSource="&quot;SYMBOL&quot;" nativeType="VARCHAR" length="16">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:10a6e342-da11-1105-b511-c9cb83fb3e5e" name="COMPANY_NAME" nameInSource="&quot;COMPANY_NAME&quot;" nativeType="VARCHAR" length="256">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+  </relational:BaseTable>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:07d49640-da11-1105-b511-c9cb83fb3e5e"/>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:07f31ac0-da11-1105-b511-c9cb83fb3e5e">
+    <diagram xmi:uuid="mmuuid:67acb840-da11-1105-b511-c9cb83fb3e5e" type="packageDiagramType" target="mmuuid/077908c0-da11-1105-b511-c9cb83fb3e5e">
+      <diagramEntity xmi:uuid="mmuuid:6fa965c0-da11-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/08c8ba40-da11-1105-b511-c9cb83fb3e5e" xPosition="476" yPosition="10"/>
+      <diagramEntity xmi:uuid="mmuuid:71ddf900-da11-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/0cf4d7c0-da11-1105-b511-c9cb83fb3e5e" xPosition="243" yPosition="146"/>
+      <diagramEntity xmi:uuid="mmuuid:71ed3b40-da11-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/0e078040-da11-1105-b511-c9cb83fb3e5e" xPosition="10" yPosition="10"/>
+      <diagramEntity xmi:uuid="mmuuid:71ed3b41-da11-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/104b55c0-da11-1105-b511-c9cb83fb3e5e" xPosition="243" yPosition="10"/>
+    </diagram>
+  </diagram:DiagramContainer>
+  <jdbc:JdbcSource xmi:uuid="mmuuid:68330e00-da0b-1105-b511-c9cb83fb3e5e" name="Accounts" driverName="Apache Derby Network" driverClass="org.apache.derby.jdbc.ClientDriver" url="jdbc:derby://localhost:1527/federate/accounts">
+    <importSettings xmi:uuid="mmuuid:6c8cf240-da0b-1105-b511-c9cb83fb3e5e" createSchemasInModel="false">
+      <includedSchemaPaths>/APP</includedSchemaPaths>
+      <includedTableTypes>SYNONYM</includedTableTypes>
+      <includedTableTypes>SYSTEM TABLE</includedTableTypes>
+      <includedTableTypes>TABLE</includedTableTypes>
+      <includedTableTypes>VIEW</includedTableTypes>
+    </importSettings>
+  </jdbc:JdbcSource>
+</xmi:XMI>
