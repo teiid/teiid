@@ -206,7 +206,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getConfigFile()
      */
     public URL getConfigFile() {
-        String configFile = userPreferences.getProperty(DQPEmbeddedProperties.DQP_CONFIGFILE);
+        String configFile = userPreferences.getProperty(DQPEmbeddedProperties.DQP_CONFIGFILE, "configuration.xml"); //$NON-NLS-1$
         if (valid(configFile)) {
             return getFullyQualifiedPath(configFile);
         }
