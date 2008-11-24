@@ -27,11 +27,14 @@
         	<include>org.federate:federate-engine</include>
         	<include>org.federate:federate-metadata</include>
         	<include>org.federate:federate-txn-jbossts</include>
+
         	<include>org.federate:connector-jdbc</include>
             <include>org.federate:connector-xml</include>
-            <include>org.federate:connector-xmlsource</include>
             <include>org.federate:connector-loopback</include>
-            <include>org.federate:connector-text</include>          
+            <include>org.federate:connector-text</include>
+            <include>org.federate:connector-ldap</include>
+            <include>org.federate:connector-salesforce</include>
+            <include>org.federate:salesforce-api</include>                      
         </includes>
         
         <binaries>

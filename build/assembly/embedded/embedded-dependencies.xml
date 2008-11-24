@@ -30,9 +30,11 @@
         	
             <include>org.federate:connector-jdbc</include>
             <include>org.federate:connector-xml</include>
-            <include>org.federate:connector-xmlsource</include>
             <include>org.federate:connector-loopback</include>
             <include>org.federate:connector-text</include>
+            <include>org.federate:connector-ldap</include>
+            <include>org.federate:connector-salesforce</include>
+            <include>org.federate:salesforce-api</include>
         </includes>
         
         <binaries>        
@@ -47,7 +49,6 @@
               <useDefaultExcludes>true</useDefaultExcludes>
               <excludes>
                 <exclude>federate*</exclude>
-                <exclude>connector*</exclude>
               </excludes>              
             </dependencySet>
           </dependencySets>
