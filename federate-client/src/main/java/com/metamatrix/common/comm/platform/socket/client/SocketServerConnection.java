@@ -83,20 +83,6 @@ public class SocketServerConnection implements ServerConnection {
             throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
         } 
 
-        // Update VDB name/version in connection properties
-        String vdbName = logonResult.getProductInfo(ProductInfoConstants.VIRTUAL_DB);
-        if (vdbName != null) {
-            // Some things use one name some another... hard to tell who wants what.
-            connProps.setProperty(MMURL_Properties.JDBC.VDB_NAME, vdbName);
-            connProps.setProperty(MMURL_Properties.JDBC.VDB_VERSION, logonResult.getProductInfo(ProductInfoConstants.VDB_VERSION));
-            connProps.setProperty("vdbName", vdbName); //$NON-NLS-1$
-            connProps.setProperty("vdbVersion", logonResult.getProductInfo(ProductInfoConstants.VDB_VERSION)); //$NON-NLS-1$
-        }
-        
-        // Update user name in connection properties to account for fully qualified user names
-        String userName = logonResult.getUserName();
-        if ( userName != null ) connProps.setProperty( MMURL_Properties.JDBC.USER_NAME, userName );
-        
         this.pingTimer = pingTimer;
         if (this.pingTimer != null && logonResult.getPingInterval() > 0) {
         	schedulePing();
