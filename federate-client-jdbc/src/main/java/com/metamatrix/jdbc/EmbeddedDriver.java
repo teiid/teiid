@@ -189,7 +189,8 @@ public final class EmbeddedDriver extends BaseDriver {
             // jdbc:metamatrix:<vdbName>@classpath:<vdbName>/mm.properties;...
             String connectionURL = jdbcURL.getConnectionURL();
             if (connectionURL == null) {
-                connectionURL = getDefaultConnectionURL(jdbcURL.getVDBName());
+                connectionURL = getDefaultConnectionURL();
+                info.setProperty("vdb.definition", jdbcURL.getVDBName()+".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             
             // Set the dqp.properties file properties
@@ -230,8 +231,8 @@ public final class EmbeddedDriver extends BaseDriver {
      * @param jdbcURL
      * @return default connection URL
      */
-    String getDefaultConnectionURL(String vdbName) {        
-        return "classpath:"+vdbName+"/mm.properties"; //$NON-NLS-1$ //$NON-NLS-2$
+    String getDefaultConnectionURL() {        
+        return "classpath:/mm.properties"; //$NON-NLS-1$
     }
     
     /** 
