@@ -133,24 +133,25 @@ public class TestEmbeddedDriver extends TestCase {
         Properties p = new Properties();
         driver.parseURL("jdbc:metamatrix:BQT", p);
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:BQT/mm.properties"));        
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));        
     }
     
     public void testParseURL55() throws SQLException{
         Properties p = new Properties();
         driver.parseURL("jdbc:metamatrix:BQT;", p);
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:BQT/mm.properties"));        
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));        
     }    
        
     public void testParseURL6() throws SQLException{
         Properties p = new Properties();
         driver.parseURL("jdbc:metamatrix:BQT;partialResultsMode=true;version=1", p);
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:BQT/mm.properties"));
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true"));
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1"));
-        assertEquals(5, p.size());                
+        assertTrue(p.getProperty("vdb.definition").equals("BQT.vdb"));
+        assertEquals(6, p.size());                
         
     }
     
