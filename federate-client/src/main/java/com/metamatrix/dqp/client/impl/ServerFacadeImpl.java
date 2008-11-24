@@ -39,7 +39,6 @@ import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -82,7 +81,7 @@ public class ServerFacadeImpl implements ServerFacade {
     public PortableContext createSession(ConnectionInfo connectionInfo) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ServerConnectionInfo connInfo = validateConnectionInfo(connectionInfo);
         try {
-            ServerConnection conn = connectionFactory.createConnection(new MMURL(connInfo.getServerUrl()), connInfo.getConnectionProperties());
+            ServerConnection conn = connectionFactory.createConnection(connInfo.getConnectionProperties());
 
             ServerSessionContext context = new ServerSessionContext(connInfo, conn.getContext().getPortableString());
             connections.put(context, new ConnectionHolder(conn));
@@ -341,7 +340,7 @@ public class ServerFacadeImpl implements ServerFacade {
         }
         synchronized (holder) {
 			if (holder.getServiceRegistry() == null) {
-				holder.setServiceRegistry(connectionFactory.createConnection(new MMURL(context.getConnectionContext()), context.getConnectionProperties()));
+				holder.setServiceRegistry(connectionFactory.createConnection(context.getConnectionProperties()));
 			}
 		}
         return holder;

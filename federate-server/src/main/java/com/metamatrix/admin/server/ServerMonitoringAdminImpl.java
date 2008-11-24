@@ -61,6 +61,7 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
@@ -1029,16 +1030,8 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                     session.setProductName(info.getProductName()); 
                     session.setLastPingTime(info.getLastPingTime());
                     session.setSessionState(info.getState());
-
-                    
-                    if (info.getProductInfo(ProductInfoConstants.CLIENT_IP_ADDRESS) != null) {
-                       session.setIPAddress(info.getProductInfo(ProductInfoConstants.CLIENT_IP_ADDRESS)) ;
-                    }
-                    
-                    if (info.getProductInfo(ProductInfoConstants.CLIENT_HOSTNAME) != null) {
-                        session.setHostName(info.getProductInfo(ProductInfoConstants.CLIENT_HOSTNAME)) ;
-                     }                    
-                    
+                    session.setIPAddress(info.getClientIp());
+                    session.setHostName(info.getClientHostname());
                     results.add(session);
                 }
             }

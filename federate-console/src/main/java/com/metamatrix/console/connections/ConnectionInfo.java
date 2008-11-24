@@ -49,7 +49,6 @@ import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 public class ConnectionInfo {
@@ -143,17 +142,6 @@ public class ConnectionInfo {
         // until the connection can tell us which one it actually used
         connectedHost = (String) hosts.get(0);
         connectedPort = (String) ports.get(0);
-        
-        
-        //TODO-- see if mmurl.getHosts() and mmurl.getPorts() return the correct strings
-        //for host and port.
-        //But in the meantime...
-//        int delimLoc = url.indexOf("//"); //$NON-NLS-1$
-//        int colonLoc = url.indexOf(":", delimLoc); //$NON-NLS-1$
-//        host = url.substring(delimLoc + 2, colonLoc);
-//        host = host.trim();
-//        port = url.substring(colonLoc + 1);
-//        port = port.trim();
     }
 	
 	public void setUser(String user) {
@@ -320,7 +308,8 @@ public class ConnectionInfo {
         properties.setProperty(MMURL_Properties.JDBC.PASSWORD, new String(password));
         properties.setProperty(MMURL_Properties.JDBC.APP_NAME, applicationName);
         properties.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
-        connection = SocketServerConnectionFactory.getInstance().createConnection(mmurl, properties);
+        properties.setProperty(MMURL_Properties.SERVER.SERVER_URL, mmurl.getAppServerURL());
+        connection = SocketServerConnectionFactory.getInstance().createConnection(properties);
         ModelManager.clearServices(this);
 
         String postLoginName = connection.getLogonResult().getUserName();

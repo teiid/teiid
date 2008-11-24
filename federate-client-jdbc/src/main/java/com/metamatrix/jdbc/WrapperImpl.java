@@ -31,26 +31,10 @@ import com.metamatrix.core.util.ArgCheck;
 
 public class WrapperImpl implements Wrapper {
 	
-	private Object proxy;
-	private Object wrappedObject;
-	
-	public WrapperImpl() {
-		this.proxy = this;
-		this.wrappedObject = null;
-	}
-	
-	public WrapperImpl(Object wrappedObject) {
-		this.wrappedObject = wrappedObject;
-	}
-
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		ArgCheck.isNotNull(iface);
 		
-		if (wrappedObject != null && iface.isAssignableFrom(wrappedObject.getClass())) {
-			return true;
-		}
-		
-		return iface.isAssignableFrom(proxy.getClass());
+		return iface.isInstance(this);
 	}
 
 	public <T> T unwrap(Class<T> iface) throws SQLException {
@@ -58,21 +42,7 @@ public class WrapperImpl implements Wrapper {
 			throw new SQLException(JDBCPlugin.Util.getString("WrapperImpl.wrong_class", iface)); //$NON-NLS-1$
 		}
 		
-		if (wrappedObject == null || !iface.isAssignableFrom(wrappedObject.getClass())) {
-			return (T)proxy;
-		}
-		
-		if (wrappedObject instanceof Wrapper) {
-			Wrapper wrapper = (Wrapper)wrappedObject;
-			if (wrapper.isWrapperFor(iface)) {
-				return wrapper.unwrap(iface);
-			}
-		}
-		return (T)wrappedObject;
-	}
-
-	public void setProxy(Object proxy) {
-		this.proxy = proxy;
+		return iface.cast(this);
 	}
 
 }

@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -62,7 +61,7 @@ public class MultiTransportFactory {
      * @throws LogonException 
      * @see com.metamatrix.common.comm.api.ServerConnectionFactory#establishConnection(java.lang.String, java.util.Properties)
      */
-    public ServerConnection establishConnection(String transport, MMURL url, Properties connProps) throws ConnectionException, CommunicationException, LogonException {
+    public ServerConnection establishConnection(String transport, Properties connProps) throws ConnectionException, CommunicationException, LogonException {
         ServerConnectionFactory handler = null;
         synchronized(handlers) {
             // Look for existing handler
@@ -83,7 +82,11 @@ public class MultiTransportFactory {
         //specific to JDBC
         connProps.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME);
         
-        return handler.createConnection(url, connProps);
+        if (!connProps.containsKey(MMURL_Properties.JDBC.APP_NAME)) {
+        	connProps.setProperty(MMURL_Properties.JDBC.APP_NAME, "JDBC API"); //$NON-NLS-1$
+        }
+        
+        return handler.createConnection(connProps);
     }
     
     private ServerConnectionFactory createHandler(String transport) {
@@ -96,7 +99,7 @@ public class MultiTransportFactory {
         } else if(transport.equals(SOCKET_TRANSPORT)) {
             return SocketServerConnectionFactory.getInstance();            
         } else {
-            throw new AssertionError();
+            throw new AssertionError("unknown transport"); //$NON-NLS-1$
         }
     }
 

@@ -34,6 +34,9 @@ import junit.framework.TestCase;
 
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.platform.security.api.LogonResult;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.util.ProductInfoConstants;
 
 public class TestMMConnection extends TestCase {
 
@@ -46,13 +49,17 @@ public class TestMMConnection extends TestCase {
         super(name);
     }
     
-    MMServerConnection getMMConnection() {
+    MMServerConnection getMMConnection() throws SQLException {
     	ServerConnection mock = mock(ServerConnection.class);
     	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
     	Properties props = new Properties();
     	props.setProperty(BaseDataSource.VDB_NAME, STD_DATABASE_NAME);
     	props.setProperty(BaseDataSource.VDB_VERSION, STD_DATABASE_VERSION);
     	props.setProperty(BaseDataSource.USER_NAME, "metamatrixadmin"); //$NON-NLS-1$
+    	Properties productInfo = new Properties();
+    	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
+    	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, 1));
     	return new MMServerConnection(mock, props, serverUrl);
     }
 
@@ -62,10 +69,6 @@ public class TestMMConnection extends TestCase {
 
     public void testGetSchema() throws Exception {
         assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_NAME, getMMConnection().getSchema()); //$NON-NLS-1$
-    }
-
-    public void testGetVDBVersion() throws Exception {
-        assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_VERSION, getMMConnection().getVDBVersion()); //$NON-NLS-1$
     }
 
     public void testNativeSql() throws Exception {

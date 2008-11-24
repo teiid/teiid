@@ -29,13 +29,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
+import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.EmbeddedDriver;
 import com.metamatrix.jdbc.MMDriver;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
-
-import junit.framework.TestCase;
 
 
 /** 
@@ -61,7 +62,7 @@ public class TestMMJDBCURL extends TestCase {
         expectedProperties.setProperty("logLevel", "1");
         expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi");
         expectedProperties.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, "true");
-        expectedProperties.setProperty(ExecutionProperties.AUTO_FAILOVER, "false");
+        expectedProperties.setProperty(CONNECTION.AUTO_FAILOVER, "false");
         MMJDBCURL url = new MMJDBCURL(URL); //$NON-NLS-1$
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
         assertEquals("mm://localhost:12345", url.getConnectionURL()); //$NON-NLS-1$
@@ -310,6 +311,45 @@ public class TestMMJDBCURL extends TestCase {
 			assertTrue(e.getMessage().startsWith("No suitable driver")); //$NON-NLS-1$
 		}
 
+    }
+    
+    public void testGetServerURL_NoProperties() {        
+        String result = new MMJDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
+    }
+
+    public void testGetServerURL_Properties() {        
+        String result = new MMJDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
+    }
+    
+    /**
+     * Test getServerURL with a valid URL and password that contains at least 
+     * one ASCII character in the range of 32 to 126 excluding the ; and = sign.
+     *
+     * @since 5.0.2
+     */
+    public void testGetServerURL_PasswordProperties() throws Exception {        
+        String result = null;
+        String srcURL = "jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password="; //$NON-NLS-1$
+        String password = null;
+        String tgtURL = "mm://slwxp172:44401"; //$NON-NLS-1$
+        
+
+        for ( char ch = 32; ch <= 126; ch++ ) {
+            //exclude URL reserved characters
+        	if ( ch != ';' && ch != '=' && ch != '%') {
+        		password = ch+"mm"; //$NON-NLS-1$
+        		result = new MMJDBCURL(srcURL+URLEncoder.encode(password, "UTF-8")).getConnectionURL(); //$NON-NLS-1$ 
+        		assertEquals("Failed to obtain correct ServerURL when using password "+password,tgtURL, result);         //$NON-NLS-1$
+        	}
+        }
+        	
+    }
+    
+    public void testGetServerURL_2Servers() {       
+        String result = new MMJDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401,slabc123:12345;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        assertEquals("mm://slwxp172:44401,slabc123:12345", result);         //$NON-NLS-1$
     }
 
 }

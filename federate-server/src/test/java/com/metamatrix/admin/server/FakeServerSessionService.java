@@ -103,7 +103,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
         productInfo1.put(ProductInfoConstants.VIRTUAL_DB, "vdb1"); //$NON-NLS-1$
         productInfo1.put(ProductInfoConstants.VDB_VERSION, "1");//$NON-NLS-1$
         MetaMatrixSessionInfo info1 = new MetaMatrixSessionInfo(id1, "user1", 1, 1, "app1", 1, "cluster1",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                                                productInfo1, "product1"); //$NON-NLS-1$
+                                                                productInfo1, "product1", null, null); //$NON-NLS-1$
         sessions.add(info1);
 
         
@@ -112,7 +112,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
         productInfo2.put(ProductInfoConstants.VIRTUAL_DB, "vdb2"); //$NON-NLS-1$
         productInfo2.put(ProductInfoConstants.VDB_VERSION, "2"); //$NON-NLS-1$
         MetaMatrixSessionInfo info2 = new MetaMatrixSessionInfo(id2, "user2", 2, 2, "app2", 2, "cluster2",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        		productInfo2, "product2"); //$NON-NLS-1$
+        		productInfo2, "product2", null, null); //$NON-NLS-1$
         sessions.add(info2);
         
         return sessions;

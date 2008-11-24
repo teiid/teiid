@@ -32,7 +32,6 @@ import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -157,17 +156,21 @@ public class ServerAdminFactory {
                                          final char[] password,
                                          final String serverURL,
                                          final String applicationName) throws AdminException {
-    	final MMURL mmUrl = new MMURL(serverURL);
-    	
     	final Properties p = new Properties();
     	p.setProperty(MMURL_Properties.JDBC.APP_NAME, applicationName);
     	p.setProperty(MMURL_Properties.JDBC.USER_NAME, userName);
     	p.setProperty(MMURL_Properties.JDBC.PASSWORD, new String(password));
-    	p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
+    	p.setProperty(MMURL_Properties.SERVER.SERVER_URL, serverURL);
+    	return createAdmin(p);
+    }
+
+	public ServerAdmin createAdmin(final Properties p)
+			throws AdminComponentException, AdminException {
+		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
     	
     	ServerConnection registry;
 		try {
-			registry = SocketServerConnectionFactory.getInstance().createConnection(mmUrl, p);
+			registry = SocketServerConnectionFactory.getInstance().createConnection(p);
 		} catch (CommunicationException e) {
 			throw new AdminComponentException(e.getMessage());
 		} catch (ConnectionException e) {

@@ -35,6 +35,7 @@ import com.metamatrix.api.exception.ComponentNotFoundException;
 
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
@@ -72,11 +73,11 @@ public class TestCommSockets extends TestCase {
 						"testIO", 1, 120000), null); //$NON-NLS-1$
 
 		try {
+			Properties p = new Properties();
+			p.setProperty(MMURL_Properties.SERVER.SERVER_URL, new MMURL(addr.getHostName(),
+					listener.getPort() - 1, false).getAppServerURL()); //wrong port
 			SocketServerConnectionFactory.getInstance()
-					.createConnection(
-							new MMURL(addr.getHostName(),
-									listener.getPort() - 1, false), //wrong port
-							new Properties());
+					.createConnection(p);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 
@@ -137,10 +138,12 @@ public class TestCommSockets extends TestCase {
 		assertEquals(0, stats.objectsWritten);
 		assertEquals(0, stats.sockets);
 
+		Properties p = new Properties();
+		p.setProperty(MMURL_Properties.SERVER.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
+				secure).getAppServerURL()); 
+		
 		return (SocketServerConnection) SocketServerConnectionFactory
-				.getInstance().createConnection(
-						new MMURL(addr.getHostName(), listener.getPort(),
-								secure), new Properties());
+				.getInstance().createConnection(p);
 	}
 
 	public void testSSLConnectWithNonSSLServer() throws Exception {

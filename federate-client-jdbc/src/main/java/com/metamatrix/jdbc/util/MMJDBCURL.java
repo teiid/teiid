@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
@@ -272,7 +273,7 @@ public class MMJDBCURL {
     }
     
     public String getTransparentFailover() {
-        return properties.getProperty(ExecutionProperties.AUTO_FAILOVER);
+        return properties.getProperty(CONNECTION.AUTO_FAILOVER);
     }
     
     public String getDisableLocalTransactions() {

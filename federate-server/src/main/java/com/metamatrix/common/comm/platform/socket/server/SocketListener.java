@@ -93,10 +93,7 @@ public class SocketListener implements ChannelListenerFactory {
         this.server = server;
         this.workerPool = workerPool;
         if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
-            LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server); //$NON-NLS-1$
-        }
-    	if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
-    		LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "binding to port:" + hostInfo.getPortNumber()); //$NON-NLS-1$
+            LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + hostInfo.getPortNumber()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(0,

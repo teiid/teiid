@@ -40,7 +40,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
@@ -84,7 +85,7 @@ public final class MMDriver extends BaseDriver {
     
     static MultiTransportFactory CONNECTION_FACTORY = new MultiTransportFactory();
 
-    private static MMDriver singleton = new MMDriver();
+    private static MMDriver INSTANCE = new MMDriver();
         
     // Static initializer
     static {
@@ -99,7 +100,7 @@ public final class MMDriver extends BaseDriver {
         }
         
         try {
-            DriverManager.registerDriver(singleton);
+            DriverManager.registerDriver(INSTANCE);
         } catch(SQLException e) {
             // Logging
             String logMsg = JDBCPlugin.Util.getString("MMDriver.Err_registering", e.getMessage()); //$NON-NLS-1$
@@ -108,7 +109,7 @@ public final class MMDriver extends BaseDriver {
     }
 
     public static MMDriver getInstance() {
-        return singleton;
+        return INSTANCE;
     }
     
     /**
@@ -142,9 +143,9 @@ public final class MMDriver extends BaseDriver {
 
         try {
             // parse the URL to add it's properties to properties object
-            MMURL mmurl = parseURL(url, info);
+            parseURL(url, info);
 
-            myConnection = createMMConnection(mmurl, info);
+            myConnection = createMMConnection(url, info);
         } catch (MetaMatrixCoreException e) {
             DriverManager.println(e.getMessage());
             throw MMSQLException.create(e, e.getMessage());
@@ -158,14 +159,14 @@ public final class MMDriver extends BaseDriver {
         return myConnection;
     }
 
-    MMServerConnection createMMConnection(MMURL url, Properties info)
+    MMServerConnection createMMConnection(String url, Properties info)
         throws ConnectionException, CommunicationException, LogonException {
 
         String transport = setupTransport(info);
-        ServerConnection serverConn = CONNECTION_FACTORY.establishConnection(transport, url, info);
+        ServerConnection serverConn = CONNECTION_FACTORY.establishConnection(transport, info);
 
         // construct a MMConnection object.
-        MMServerConnection connection = MMServerConnection.newInstance(serverConn, info, url.getAppServerURL());
+        MMServerConnection connection = MMServerConnection.newInstance(serverConn, info, url);
         return connection;
     }
 
@@ -184,19 +185,15 @@ public final class MMDriver extends BaseDriver {
      * @param The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
      */
-    MMURL parseURL(String url, Properties info) throws SQLException {
+    static void parseURL(String url, Properties info) throws SQLException {
         if(url == null) {
             String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
             throw new MMSQLException(msg);
         }
-        MMURL mmURL = null;
         try {
             MMJDBCURL jdbcURL = new MMJDBCURL(url);
-            mmURL = new MMURL(jdbcURL.getConnectionURL());
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
-            info.setProperty(MMDataSource.SERVER_URL, mmURL.getAppServerURL());
-            info.setProperty(MMDataSource.HOST, mmURL.getHosts());
-            info.setProperty(MMDataSource.PORT, mmURL.getPorts());
+            info.setProperty(MMURL_Properties.SERVER.SERVER_URL, jdbcURL.getConnectionURL());
             Properties optionalParams = jdbcURL.getProperties();
             MMJDBCURL.normalizeProperties(info);
             Enumeration keys = optionalParams.keys();
@@ -253,8 +250,6 @@ public final class MMDriver extends BaseDriver {
         }  
         
         createCredentialToken(info); 
-        
-        return mmURL;
     }
 
     /** 
@@ -264,7 +259,7 @@ public final class MMDriver extends BaseDriver {
      * @throws MMSQLException
      * @since 4.3
      */
-    void createCredentialToken(Properties info) throws MMSQLException {
+    static void createCredentialToken(Properties info) throws MMSQLException {
         // Handle creation of SessionToken from credentials property
         if(info.containsKey(ConnectionProperties.PROP_CREDENTIALS)) {
             // Check if both credentials AND session token are used - if so, this is an error
@@ -285,7 +280,7 @@ public final class MMDriver extends BaseDriver {
         }
     }
 
-	private HashMap buildCredentialMap(Properties info, String credentials) {
+	static private HashMap buildCredentialMap(Properties info, String credentials) {
 		HashMap credentialMap = new HashMap();
 		boolean defaultToLogon = false;
 		if(credentials.startsWith(ConnectionProperties.DEFAULT_TO_LOGON)) {
@@ -370,12 +365,8 @@ public final class MMDriver extends BaseDriver {
             driverProps.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, null));
         }
         
-        if (info.getProperty(ExecutionProperties.SOCKETS_PER_VM) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.SOCKETS_PER_VM, null));
-        }
-        
-        if (info.getProperty(ExecutionProperties.AUTO_FAILOVER) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.AUTO_FAILOVER, null));
+        if (info.getProperty(CONNECTION.AUTO_FAILOVER) == null) {
+            driverProps.add(new DriverPropertyInfo(CONNECTION.AUTO_FAILOVER, null));
         }
         
         if (info.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS) == null) {

@@ -32,7 +32,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,7 +54,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.SocketConstants;
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
@@ -68,28 +66,11 @@ public class SocketServerConnection implements ServerConnection {
     private SocketServerInstance serverConnection;
     private LogonResult logonResult;
     private ILogon logon;
-    private Properties connProps;
     private Timer pingTimer;
     
 	public SocketServerConnection(SocketServerInstance serverConnection, Properties connProps, Timer pingTimer) throws CommunicationException, ConnectionException {
 		this.serverConnection = serverConnection;
-		this.connProps = connProps;
 		this.logon = this.getService(ILogon.class);
-        try {
-        	this.connProps.put(ProductInfoConstants.CLIENT_IP_ADDRESS, NetUtils.getHostAddress());
-        } catch (UnknownHostException err1) {
-        	this.connProps.put(ProductInfoConstants.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
-        }
-        
-        try {
-        	this.connProps.put(ProductInfoConstants.CLIENT_HOSTNAME, NetUtils.getHostname());
-        } catch (UnknownHostException err1) {
-        	this.connProps.put(ProductInfoConstants.CLIENT_HOSTNAME, "UnknownClientHost"); //$NON-NLS-1$
-        }
-       
-        if (!this.connProps.containsKey(MMURL_Properties.JDBC.APP_NAME)) {
-        	this.connProps.setProperty(MMURL_Properties.JDBC.APP_NAME, "JDBC API"); //$NON-NLS-1$
-        }
 
         // Log on to server
         try {

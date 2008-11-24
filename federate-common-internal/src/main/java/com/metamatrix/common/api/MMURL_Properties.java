@@ -131,12 +131,16 @@ public interface MMURL_Properties {
     
     public interface CONNECTION {
     	public static final String PRODUCT_NAME = "productName"; //$NON-NLS-1$
+		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
+		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+		/**
+		 * If true, will automatically select a new server instance after a communication exception.
+		 * @since 5.6
+		 */
+		public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
     }
     
     public interface SERVER {
-        public static final String HOST = "host"; //$NON-NLS-1$
-        // constant for port part of serverURL
-        public static final String PORT = "port"; //$NON-NLS-1$
         public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
         
         /**

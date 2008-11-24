@@ -29,8 +29,6 @@ import com.metamatrix.dqp.application.ClientConnectionProperties;
 public interface ProductInfoConstants {
 
 	public static final String VIRTUAL_DB = ClientConnectionProperties.VDB_NAME;
-	public static final String VDB_VERSION = ClientConnectionProperties.VDB_VERSION; 
-    public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
-    public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+	public static final String VDB_VERSION = ClientConnectionProperties.VDB_VERSION;
 
 }

@@ -33,7 +33,7 @@ import java.io.Serializable;
 public final class MetaMatrixSessionID implements
                                       Serializable,
                                       Cloneable,
-                                      Comparable {
+                                      Comparable<MetaMatrixSessionID> {
 
     public final static long serialVersionUID = -7872739911360962975L;
     
@@ -71,9 +71,8 @@ public final class MetaMatrixSessionID implements
      * @throws ClassCastException
      *             if the specified object's type prevents it from being compared to this instance.
      */
-    public int compareTo(Object obj) {
-        MetaMatrixSessionID that = (MetaMatrixSessionID)obj; // May throw ClassCastException
-        return (int) (this.id - that.id); //May throw NullPointerException
+    public int compareTo(MetaMatrixSessionID obj) {
+        return (int) (this.id - obj.id); //May throw NullPointerException
     }
     /**
      * Returns true if the specified object is semantically equal to this instance. Note: this method is consistent with
@@ -91,7 +90,7 @@ public final class MetaMatrixSessionID implements
 
         // Check if object can be compared to this one
         // (this includes checking for null ) ...
-        if ( this.getClass().isInstance(obj) ) {
+        if (obj instanceof MetaMatrixSessionID) {
             MetaMatrixSessionID that = (MetaMatrixSessionID)obj;
         	return this.id == that.id;
         }

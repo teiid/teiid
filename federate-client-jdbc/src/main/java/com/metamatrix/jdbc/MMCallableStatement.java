@@ -68,7 +68,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
     /**
      * Factory Constructor (be sure to cast it to  MMCallableStatement)
      */
-    static MMPreparedStatement newInstance(MMConnection connection, String procedureCall, int resultSetType, int resultSetConcurrency) throws SQLException {
+    static MMCallableStatement newInstance(MMConnection connection, String procedureCall, int resultSetType, int resultSetConcurrency) throws SQLException {
         return new MMCallableStatement(connection, procedureCall, resultSetType, resultSetConcurrency);        
     }
     

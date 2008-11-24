@@ -215,8 +215,7 @@ public class LocalTransportHandler implements ServerConnectionFactory {
         dqpManager = manager;
     }
 
-	public ServerConnection createConnection(MMURL url,
-			final Properties connectionProperties) throws CommunicationException,
+	public ServerConnection createConnection(final Properties connectionProperties) throws CommunicationException,
 			ConnectionException {
 		initManager(connectionProperties);
         

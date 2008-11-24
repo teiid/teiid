@@ -46,6 +46,7 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
@@ -225,6 +226,8 @@ public class SessionServiceImpl extends AbstractService implements
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
+        Properties productInfo = new Properties();
+        
         //
         // Authenticate user...
         // if not authenticated, this method throws exception
@@ -252,8 +255,8 @@ public class SessionServiceImpl extends AbstractService implements
                 throw new SessionServiceException(e,PlatformPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database_{0}_of_version_{1}", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
             }
             // Reset product info with validated constants
-            properties.put(ProductInfoConstants.VIRTUAL_DB, vdbID.getName());
-            properties.put(ProductInfoConstants.VDB_VERSION, vdbID.getVersion());
+            productInfo.put(ProductInfoConstants.VIRTUAL_DB, vdbID.getName());
+            productInfo.put(ProductInfoConstants.VDB_VERSION, vdbID.getVersion());
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
@@ -273,8 +276,10 @@ public class SessionServiceImpl extends AbstractService implements
         										applicationName,
         										MetaMatrixSessionState.ACTIVE,
                                                 clusterName,
-        										properties,
-        										productName);
+                                                productInfo,
+        										productName, 
+        										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_IP_ADDRESS), 
+        										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_HOSTNAME));
         this.sessionCache.put(newSession.getSessionID(), newSession);
         return newSession;
 	}

@@ -31,7 +31,6 @@ import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
-import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /** 
  * @since 4.3
@@ -41,7 +40,7 @@ public class MMServerConnection extends MMConnection {
     // constant value giving product name
     private final static String SERVER_NAME = "MetaMatrix Enterprise"; //$NON-NLS-1$
     
-    ServerAdmin serverAdmin;
+    private ServerAdmin serverAdmin;
     
     /**
      * Factory Constructor 
@@ -62,7 +61,7 @@ public class MMServerConnection extends MMConnection {
      * @since 4.3
      */
     public MMServerConnection(ServerConnection serverConn, Properties info, String url) {
-        super(serverConn, info, url);        
+        super(serverConn, info, url);
     }
 
     /** 
@@ -72,10 +71,8 @@ public class MMServerConnection extends MMConnection {
     public synchronized Admin getAdminAPI() throws SQLException {
         try {
             if (serverAdmin == null) {
-                String serverUrl = getServerURL(getUrl());                
-                
                 ServerAdminFactory factory = ServerAdminFactory.getInstance();
-                serverAdmin = factory.createAdmin(getUserName(), getPassword().toCharArray(), serverUrl);
+                serverAdmin = factory.createAdmin(this.propInfo);
             }
         } catch(Exception e) {
         	throw MMSQLException.create(e);
@@ -94,21 +91,6 @@ public class MMServerConnection extends MMConnection {
         }
     }
     
-    /**
-     * MM JDBC requires a valid VDB be in the connection URL
-     * but server URL, which is used to get a serve Admin
-     * connection, fails with a full JDBC URL.
-     *
-     * @param jdbcURLString The URL for the JDBC connection.
-     * @return the URL suitable for connecting to the server
-     * Admin connection.
-     * @since 4.3
-     */
-    protected static String getServerURL(String jdbcURLString) {
-        MMJDBCURL jdbcURL = new MMJDBCURL(jdbcURLString);
-        return jdbcURL.getConnectionURL();
-    }
-
     /** 
      * @see com.metamatrix.jdbc.MMConnection#getDatabaseName()
      */

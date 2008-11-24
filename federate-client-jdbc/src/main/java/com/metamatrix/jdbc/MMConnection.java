@@ -63,6 +63,7 @@ import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
+import com.metamatrix.platform.util.ProductInfoConstants;
 
 /**
  * <p>The Connection object represents driver's connection to the MetaMatrix embedded server.
@@ -98,7 +99,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
     private boolean autoCommitFlag = true;
 
     // collection of all open statements on this connection
-    private Collection statements = new ArrayList();
+    private Collection<MMStatement> statements = new ArrayList<MMStatement>();
     // cached DatabaseMetadata
     private com.metamatrix.jdbc.api.DatabaseMetaData dbmm = null;
 
@@ -447,7 +448,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         validateResultSetConcurrency(resultSetConcurrency);
 
         // add the statement object to the map
-        Statement newStatement = MMStatement.newInstance(this, resultSetType, resultSetConcurrency);
+        MMStatement newStatement = MMStatement.newInstance(this, resultSetType, resultSetConcurrency);
         statements.add(newStatement);
 
         return newStatement;
@@ -524,26 +525,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         checkConnection();
         //get the virtual database name to which we are connected.
 
-        return (String)propInfo.get(BaseDataSource.VDB_NAME);
-    }
-
-    /**
-     * Get vdb version associated with this connection.
-     * @return String stands for vdb version
-     * @throws SQLException
-     */
-    String getVDBVersion() throws SQLException {
-        checkConnection();
-
-        // get the vdb version from the properties or url
-        if (propInfo.get(BaseDataSource.VDB_VERSION) != null) {
-            return (String) propInfo.get(BaseDataSource.VDB_VERSION);
-        }
-        // TODO: If no value was specified on logon, then
-        // the default value is the *newest* (aka greatest)
-        // version available, which may or may not be version 1.
-        // Need to obtain this from the server.
-        return null;
+        return this.serverConn.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
     }
 
     /**
@@ -554,20 +536,9 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
     String getUserName() throws SQLException {
         checkConnection();
 
-        return (String) propInfo.get(BaseDataSource.USER_NAME);
+        return this.serverConn.getLogonResult().getUserName();
     }
     
-    /**
-     * Get's the password of the user who got this connection.
-     * @return Sring object giving the password
-     * @throws SQLException if the connection is closed
-     */
-    String getPassword() throws SQLException {
-        checkConnection();
-
-        return (String) propInfo.get(BaseDataSource.PASSWORD);
-    }
-
     public DatabaseMetaData getMetaData() throws SQLException {
         //Check to see the connection is open
         checkConnection();
@@ -699,7 +670,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         validateSQL(sql);
         
         // add the statement object to the map
-        CallableStatement newStatement = (CallableStatement)MMCallableStatement.newInstance(this, sql, resultSetType, resultSetConcurrency);
+        MMCallableStatement newStatement = MMCallableStatement.newInstance(this, sql, resultSetType, resultSetConcurrency);
         statements.add(newStatement);
         return newStatement;
     }
@@ -748,7 +719,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         validateSQL(sql);
         
         // add the statement object to the map
-        PreparedStatement newStatement = MMPreparedStatement.newInstance(this, sql, resultSetType, resultSetConcurrency);
+        MMPreparedStatement newStatement = MMPreparedStatement.newInstance(this, sql, resultSetType, resultSetConcurrency);
         statements.add(newStatement);
         return newStatement;
     }

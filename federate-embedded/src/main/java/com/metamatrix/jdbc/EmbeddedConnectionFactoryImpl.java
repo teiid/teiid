@@ -59,13 +59,13 @@ import com.metamatrix.jdbc.transport.LocalTransportHandler;
 public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory {
     private static final int ACTIVE = 3;
     private boolean initialized = false;
-    LocalTransportHandler handler = null;    
+    private LocalTransportHandler handler = null;    
     private boolean shutdownInProgress = false;
     
     // List of Connection Listeners for the DQP
-    ArrayList connectionListeners = new ArrayList(); 
+    private ArrayList connectionListeners = new ArrayList(); 
         
-    EmbeddedConnectionListener listener = new EmbeddedConnectionListener();    
+    private EmbeddedConnectionListener listener = new EmbeddedConnectionListener();    
 
     /**
      * Factory Constructor 
@@ -91,7 +91,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             // check for the valid connection properties
             checkConnectionProperties (props);
 
-            ServerConnection serverConn = this.handler.createConnection(null, props);
+            ServerConnection serverConn = this.handler.createConnection(props);
                         
             // Should occur every time in classloader using existing attributes
             return EmbeddedConnection.newInstance(this.handler.getManager(), serverConn, props, listener);            

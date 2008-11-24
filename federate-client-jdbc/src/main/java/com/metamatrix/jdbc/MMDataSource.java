@@ -120,13 +120,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
     
     private String autoFailover;
     
-    // constant indicating server's URL
-    static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
-    // constant for host part of serverURL
-    static final String HOST = MMURL_Properties.SERVER.HOST;
-    // constant for port part of serverURL
-    static final String PORT = MMURL_Properties.SERVER.PORT;
-    
     private Logger logger;
 
     /**
@@ -142,7 +135,7 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
     protected Properties buildProperties(final String userName, final String password) {               
         Properties props = super.buildProperties(userName, password);
         
-        props.setProperty(MMDataSource.SERVER_URL,this.buildServerURL());
+        props.setProperty(MMURL_Properties.SERVER.SERVER_URL,this.buildServerURL());
         
         if ( this.alternateServers != null ) {
         	String hostList = this.serverName;
@@ -162,11 +155,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         			}
         		}
         	}
-            props.setProperty(MMDataSource.HOST, hostList );
-            props.setProperty(MMDataSource.PORT, portList );
-        } else {
-        	props.setProperty(MMDataSource.HOST, this.serverName);
-            props.setProperty(MMDataSource.PORT, String.valueOf(this.portNumber));
         }
 
         if (this.getSocketsPerVM() != null) {
@@ -174,7 +162,7 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         }
         
         if (this.getAutoFailover() != null) {
-            props.setProperty(ExecutionProperties.AUTO_FAILOVER, this.getAutoFailover());
+            props.setProperty(CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
         }
         
         if (this.getCredentials() != null) {

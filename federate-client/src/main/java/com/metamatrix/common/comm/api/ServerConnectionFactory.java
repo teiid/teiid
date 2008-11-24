@@ -26,7 +26,6 @@ package com.metamatrix.common.comm.api;
 
 import java.util.Properties;
 
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 
@@ -34,7 +33,6 @@ public interface ServerConnectionFactory {
 	
     /**
      * Establish a connection to the server.  
-     * @param url the server
      * @param connProps The properties used by the transport to find a connection.  These 
      * properties are typically specific to the transport.
      * @return A connection, never null
@@ -42,6 +40,6 @@ public interface ServerConnectionFactory {
      * @throws CommunicationException If an error occurs in connecting, typically due to 
      * problems with the connection properties (bad user name, bad password, bad host name, etc)
      */
-	ServerConnection createConnection(MMURL url, Properties connectionProperties) throws CommunicationException, ConnectionException;
+	ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
 
 }
