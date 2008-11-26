@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.client.ExceptionUtil;
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
