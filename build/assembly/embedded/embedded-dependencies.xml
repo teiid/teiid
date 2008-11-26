@@ -26,15 +26,7 @@
             <include>org.federate:federate-embedded</include>
         	<include>org.federate:federate-engine</include>
         	<include>org.federate:federate-metadata</include>
-        	<include>org.federate:federate-txn-jbossts</include>
-        	
-            <include>org.federate:connector-jdbc</include>
-            <include>org.federate:connector-xml</include>
-            <include>org.federate:connector-loopback</include>
-            <include>org.federate:connector-text</include>
-            <include>org.federate:connector-ldap</include>
-            <include>org.federate:connector-salesforce</include>
-            <include>org.federate:salesforce-api</include>
+        	<include>org.federate:federate-txn-jbossts</include>        	
         </includes>
         
         <binaries>        
@@ -49,6 +41,13 @@
               <useDefaultExcludes>true</useDefaultExcludes>
               <excludes>
                 <exclude>federate*</exclude>
+                
+                <!-- these should have been excluded by module dependency structure, but until we fix those this will help-->
+                <exclude>antlr*</exclude>
+                <exclude>bsh*</exclude>
+                <exclude>jgroups*</exclude>
+                <exclude>netty*</exclude>
+                <exclude>stringtemplate*</exclude>
               </excludes>              
             </dependencySet>
           </dependencySets>

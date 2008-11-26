@@ -124,6 +124,7 @@
                     <descriptor>build/assembly/bin.xml</descriptor>
                     <descriptor>build/assembly/embedded/embedded-jar.xml</descriptor>
                     <descriptor>build/assembly/embedded/embedded-dependencies.xml</descriptor>
+                    <descriptor>build/assembly/embedded/embedded-connector-dependencies.xml</descriptor>
 		            <descriptor>build/assembly/embedded/embedded-dist.xml</descriptor>
 		        </descriptors>
 		        <outputDirectory>target/distribution</outputDirectory>

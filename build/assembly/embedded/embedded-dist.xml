@@ -37,6 +37,14 @@
       </includes>
       <outputDirectory>lib</outputDirectory>      
     </fileSet>    
+    
+    <fileSet>
+      <directory>target/distribution/federate-${version}-connector-dependencies.dir</directory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+      <outputDirectory>extensions</outputDirectory>      
+    </fileSet>      
 
     <fileSet>
         <directory>build/kit-embedded</directory>
