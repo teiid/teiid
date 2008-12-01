@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -52,7 +53,7 @@ import com.metamatrix.common.config.model.NullConfiguration;
  * Each class that implements this interface must supply a no-arg constructor.
  * </p>
  */
-public class SystemCurrentConfigurationReader implements CurrentConfigurationReader{
+public class SystemCurrentConfigurationReader implements CurrentConfigurationReader, CurrentConfigurationInitializer{
 
     /**
      * Default, no-arg constructor
@@ -224,8 +225,7 @@ public class SystemCurrentConfigurationReader implements CurrentConfigurationRea
      * @throws UnsupportedOperationException if this method is not implemented
      */
     public CurrentConfigurationInitializer getInitializer() throws ConfigurationException{
-        throw new UnsupportedOperationException("Method getInitializer is not implemented in SystemCurrentConfigurationReader"); //$NON-NLS-1$
-    	
+    	return this;
     }
 
     public Map getResourceProperties() throws ConfigurationException {
@@ -235,6 +235,33 @@ public class SystemCurrentConfigurationReader implements CurrentConfigurationRea
     public SharedResource getResource(String resourceName ) throws ConfigurationException {
 		return null;    	
     }
+
+	@Override
+	public void beginSystemInitialization(boolean forceInitialization)
+			throws StartupStateException, ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void finishSystemInitialization() throws StartupStateException,
+			ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void indicateSystemShutdown() throws ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void performSystemInitialization(boolean forceInitialization)
+			throws StartupStateException, ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
     
 }
 

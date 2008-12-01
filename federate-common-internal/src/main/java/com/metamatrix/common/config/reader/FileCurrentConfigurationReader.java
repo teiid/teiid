@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.*;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -50,7 +51,7 @@ import com.metamatrix.common.util.ErrorMessageKeys;
  * Each class that implements this interface must supply a no-arg constructor.
  * </p>
  */
-public class FileCurrentConfigurationReader implements CurrentConfigurationReader{
+public class FileCurrentConfigurationReader implements CurrentConfigurationReader, CurrentConfigurationInitializer{
 
     private InputStream inputStream;
     private String filename;
@@ -353,7 +354,7 @@ public class FileCurrentConfigurationReader implements CurrentConfigurationReade
      * @throws UnsupportedOperationException if this method is not implemented
      */
     public CurrentConfigurationInitializer getInitializer() throws ConfigurationException{
-        throw new UnsupportedOperationException("Method getInitializer is not implemented in FileCurrentConfigurationReader"); //$NON-NLS-1$
+    	return this;
     }
 
     public Map getResourceProperties() throws ConfigurationException {
@@ -364,9 +365,34 @@ public class FileCurrentConfigurationReader implements CurrentConfigurationReade
     public SharedResource getResource(String resourceName ) throws ConfigurationException {
 		return null;
 
-//        throw new UnsupportedOperationException("Method getResource is not implemented in FileCurrentConfigurationReader");
-
     }
+
+	@Override
+	public void beginSystemInitialization(boolean forceInitialization)
+			throws StartupStateException, ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void finishSystemInitialization() throws StartupStateException,
+			ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void indicateSystemShutdown() throws ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void performSystemInitialization(boolean forceInitialization)
+			throws StartupStateException, ConfigurationException {
+		// TODO Auto-generated method stub
+		
+	}
 
 
 }
