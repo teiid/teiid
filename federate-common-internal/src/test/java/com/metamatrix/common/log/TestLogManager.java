@@ -68,10 +68,11 @@ public class TestLogManager extends TestCase {
 	}
     
 	private static void setUpOnce() throws Exception {
-		CurrentConfiguration.reset();
-		LogManager.stop();
 		System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
 		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
+		CurrentConfiguration.reset();
+		LogManager.stop();
+		
 	}
     
     // =========================================================================
