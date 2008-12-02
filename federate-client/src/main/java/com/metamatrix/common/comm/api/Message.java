@@ -29,7 +29,6 @@ import java.io.Serializable;
 public class Message implements Serializable {
     public static final long serialVersionUID = 1063704220782714098L;
     private Serializable contents;
-    public transient boolean secure;
     
     public String toString() {
         return "MessageHolder: contents=" + contents; //$NON-NLS-1$

@@ -318,14 +318,13 @@ public class SessionPanel
         	MetaMatrixSessionID[] consoleSessionIDs) {
         boolean canTerminate = true;
         int modelIndex = sessionTable.convertRowIndexToModel(theRow);
-        Long rowSessionIDLong =
-            (Long)tableModel.getValueAt(modelIndex, SessionTableModel.SESSION_ID_COLUMN_NUM);
-        long rowSessionID = rowSessionIDLong.longValue();
+        String rowSessionID =
+            (String)tableModel.getValueAt(modelIndex, SessionTableModel.SESSION_ID_COLUMN_NUM);
         boolean isAConsoleSession = false;
         int i = 0;
         while ((i < consoleSessionIDs.length) && (!isAConsoleSession)) {
-        	long curConsoleSessionID = consoleSessionIDs[i].getValue();
-        	if (rowSessionID == curConsoleSessionID) {
+        	String curConsoleSessionID = consoleSessionIDs[i].toString();
+        	if (rowSessionID.equals(curConsoleSessionID)) {
 //        		String msgHdr = ConsolePlugin.Util.getString(
 //        				"SessionPanel.cannotTerminateMsgHdr");  //$NON-NLS-1$
 //        		String msg = ConsolePlugin.Util.getString("SessionPanel.cannotTerminate_1")  //$NON-NLS-1$
@@ -386,7 +385,7 @@ public class SessionPanel
 		    u = (MetaMatrixSessionInfo)iterator.next();
 		
 		    //match these up with column names
-		    data[i][SessionTableModel.SESSION_ID_COLUMN_NUM] = new Long(u.getSessionID().getValue());
+		    data[i][SessionTableModel.SESSION_ID_COLUMN_NUM] = u.getSessionID().toString();
 		    data[i][SessionTableModel.USER_NAME_COLUMN_NUM] = u.getUserName();
 		    data[i][SessionTableModel.APPLICATION_COLUMN_NUM] = u.getApplicationName();
 		    data[i][SessionTableModel.LOGGED_IN_COLUMN_NUM] = new Date(u.getTimeCreated());
@@ -503,7 +502,7 @@ public class SessionPanel
             int tableRow = sessionTable.getSelectedRow();
             int modelRow = sessionTable.convertRowIndexToModel(tableRow);
             MetaMatrixSessionInfo sessToKill = (MetaMatrixSessionInfo) allSessions.get(modelRow);
-            String session = ""+sessToKill.getSessionID().getValue(); //$NON-NLS-1$
+            String session = sessToKill.toString(); //$NON-NLS-1$
             confirmed = DialogUtility.yesNoDialog(null,
                     ConsolePlugin.Util.getString("SessionPanel.Terminate_Session__23") + session + "?", //$NON-NLS-1$ //$NON-NLS-2$
                     ConsolePlugin.Util.getString("SessionPanel.Confirm_Termination_25")); //$NON-NLS-1$
@@ -597,8 +596,8 @@ public class SessionPanel
             MetaMatrixSessionID id = sessInfo.getSessionID();
             int rowCount = sessionTable.getRowCount();
             for (int i = 0; i < rowCount ; i++){
-                Long rowId = (Long)sessionTable.getValueAt(i,SessionTableModel.SESSION_ID_COLUMN_NUM);
-                if (id.getValue() == rowId.longValue()){
+                String rowId = (String)sessionTable.getValueAt(i,SessionTableModel.SESSION_ID_COLUMN_NUM);
+                if (id.toString().equals(rowId)){
                     sessionTable.addRowSelectionInterval(i,i);
 
                 }

@@ -33,9 +33,9 @@ import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL_Properties;
-import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -47,13 +47,13 @@ import com.metamatrix.core.util.MixinProxy;
  */
 public class ServerAdminFactory {
 	
-    private static final int BOUNCE_WAIT = 1000;
+    private static final int BOUNCE_WAIT = 4000;
     
     private final class ClientAdminState {
 		private ServerAdmin remoteProxy;
-		private ServerConnection registry;
+		private SocketServerConnection registry;
 
-		public ClientAdminState(ServerAdmin serverAdmin, ServerConnection registry) {
+		public ClientAdminState(ServerAdmin serverAdmin, SocketServerConnection registry) {
 			this.remoteProxy = serverAdmin;
 			this.registry = registry;
 		}
@@ -66,8 +66,28 @@ public class ServerAdminFactory {
 			remoteProxy.bounceSystem(waitUntilDone);
 			
 	        if (waitUntilDone) {
-	            while (true) {
+	        	boolean down = false;
+	        	for (int i = 0; i < 3; i++) {
+	        		try {
+	        			remoteProxy.getSystem();
+	        		} catch (Exception e) {
+	        			down = true;
+	        			break; //the system is down
+	        		} finally {
+	                    //reestablish a connection and retry
+	                    try {
+							Thread.sleep(BOUNCE_WAIT);
+						} catch (InterruptedException e) {
+							throw new MetaMatrixRuntimeException(e);
+						}                                        
+	                }
+	        	}
+	        	if (!down) {
+	        		return;
+	        	}
+	        	for (int i = 0; i < 3; i++) {
 	                try {
+	                	registry.authenticate();
 	                	//check that we can connect to the server
 	                    remoteProxy.getSystem();
 	                    break; // must be back up
@@ -168,7 +188,7 @@ public class ServerAdminFactory {
 			throws AdminComponentException, AdminException {
 		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
     	
-    	ServerConnection registry;
+		SocketServerConnection registry;
 		try {
 			registry = SocketServerConnectionFactory.getInstance().createConnection(p);
 		} catch (CommunicationException e) {

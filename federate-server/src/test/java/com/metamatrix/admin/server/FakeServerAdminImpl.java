@@ -25,7 +25,6 @@
 package com.metamatrix.admin.server;
 
 import java.util.Collection;
-import java.util.Properties;
 
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.core.util.SimpleMock;
@@ -63,7 +62,7 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
     public FakeServerAdminImpl(ClusteredRegistryState registry) {
     	super(registry);
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
-    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "none", "fakeadminuser", new Properties()));
+    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "fakeadminuser"));
     }
     
     public void close() {        

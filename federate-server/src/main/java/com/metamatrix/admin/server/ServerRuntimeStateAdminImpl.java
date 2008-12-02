@@ -457,17 +457,14 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
-        long sessionIDStringLong = -1;
+        MetaMatrixSessionID sessionID = null;
         try {
-            sessionIDStringLong = Long.parseLong(identifier);
+        	sessionID = new MetaMatrixSessionID(identifier);
         } catch (Exception e) {
             throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Session_Identifier", new Object[] {identifier});  //$NON-NLS-1$
         } 
-
         
-        try {
-            MetaMatrixSessionID sessionID = new MetaMatrixSessionID(sessionIDStringLong);
-            
+        try {            
             getSessionServiceProxy().terminateSession(sessionID, null);
         } catch (Exception e) {
             logAndConvertSystemException(e);

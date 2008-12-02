@@ -73,7 +73,7 @@ public class TestAtomicRequestMessage extends TestCase {
 
         assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
         assertEquals(new RequestID(5000L), copy.getRequestID());
-        assertEquals("2", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
+        assertEquals("00000000-0000-0002-0000-000000000002", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
         //AtomicRequestMessage-specific stuff
         assertEquals("connectorBindingID", copy.getConnectorBindingID()); //$NON-NLS-1$
         assertEquals(new ConnectorID("10000"), copy.getConnectorID()); //$NON-NLS-1$

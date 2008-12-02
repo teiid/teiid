@@ -49,7 +49,7 @@ public class TestMMConnection extends TestCase {
         super(name);
     }
     
-    MMServerConnection getMMConnection() throws SQLException {
+    public static MMServerConnection getMMConnection() throws SQLException {
     	ServerConnection mock = mock(ServerConnection.class);
     	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
     	Properties props = new Properties();

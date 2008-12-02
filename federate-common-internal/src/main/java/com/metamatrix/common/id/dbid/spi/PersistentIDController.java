@@ -28,16 +28,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.connection.TransactionMgr;
-import com.metamatrix.common.id.dbid.*;
+import com.metamatrix.common.id.dbid.DBIDController;
+import com.metamatrix.common.id.dbid.DBIDGenerator;
+import com.metamatrix.common.id.dbid.DBIDGeneratorException;
+import com.metamatrix.common.id.dbid.ReservedIDBlock;
 import com.metamatrix.common.id.dbid.spi.jdbc.DBIDResourceTransaction;
+import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.log.I18nLogManager;
-import com.metamatrix.common.CommonPlugin;
 
 public class PersistentIDController implements DBIDController {
 
@@ -51,10 +54,7 @@ public class PersistentIDController implements DBIDController {
     // Contexts
     public final static String VM_ID = DBIDGenerator.VM_ID;
     public final static String SERVICE_ID = DBIDGenerator.SERVICE_ID;
-    public static final String SESSION_ID = DBIDGenerator.SESSION_ID;
     public static final String RESOURCE_POOL_MGR_ID = DBIDGenerator.RESOURCE_POOL_MGR_ID;
-    public static final String TUPLE_SOURCE_ID = DBIDGenerator.TUPLE_SOURCE_ID;
-    
     
     private final static long VM_ID_BLOCK_SIZE = 1;
     private final static long SERVICE_ID_BLOCK_SIZE = 10;
@@ -87,10 +87,7 @@ public class PersistentIDController implements DBIDController {
             // Initialize block size for known contexts.
             blockSizeMap.put(VM_ID, new Long(VM_ID_BLOCK_SIZE));
             blockSizeMap.put(SERVICE_ID, new Long(SERVICE_ID_BLOCK_SIZE));
-            blockSizeMap.put(SESSION_ID, new Long(SESSION_ID_BLOCK_SIZE));
             blockSizeMap.put(RESOURCE_POOL_MGR_ID, new Long(RESOURCE_POOL_MGR_ID_SIZE));
-            blockSizeMap.put(TUPLE_SOURCE_ID, new Long(TUPLE_SOURCE_ID_SIZE));
-
     }
 
 

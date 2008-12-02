@@ -41,7 +41,6 @@ import javax.net.ssl.SSLEngine;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
-import com.metamatrix.common.comm.api.ServerInstanceContext;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
@@ -58,11 +57,8 @@ import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
+import com.metamatrix.dqp.client.PortableContext;
 
-/**
- * TODO: the design of this class is not good its functionality should be merged
- * above (SocketServerConnection) and below (
- */
 public class SocketServerInstanceImpl implements ChannelListener, SocketServerInstance {
 	
     static String RELEASE_NUMBER;
@@ -203,31 +199,12 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         return socketChannel.isOpen();
     }
 
-    private void encryptMessage(Message message) throws CommunicationException {
-        if (message.secure) {
-            try {
-            	message.setContents(cryptor.sealObject(message.getContents()));
-            } catch (CryptoException err) {
-                throw new CommunicationException(err);
-            }
-        }
-    }
-    
-    private void decryptMessage(Message message) throws CommunicationException {
-        try {
-        	message.setContents(cryptor.unsealObject(message.getContents()));
-        } catch (CryptoException err) {
-            throw new CommunicationException(err);
-        }
-    }
-
     public void send(Message message, MessageListener listener, Serializable messageKey)
         throws CommunicationException {
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
 	    }
 	    try {
-	        encryptMessage(message);
 	        Future<?> writeFuture = socketChannel.write(new MessagePacket(messageKey, message));
 	        writeFuture.get(); //client writes are blocking to ensure proper failure handling
 	    } catch (Throwable e) {
@@ -264,8 +241,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         messageHolder.setContents(e);
 
         Set<Map.Entry<Serializable, MessageListener>> entries = this.asynchronousListeners.entrySet();
-        for (Iterator iterator = entries.iterator(); iterator.hasNext();) {
-			Map.Entry<String, MessageListener> entry = (Map.Entry<String, MessageListener>) iterator.next();
+        for (Iterator<Map.Entry<Serializable, MessageListener>> iterator = entries.iterator(); iterator.hasNext();) {
+			Map.Entry<Serializable, MessageListener> entry = iterator.next();
 			iterator.remove();
 			deliverAsynchronousResponse(entry.getKey(), messageHolder, entry.getValue());
 		}
@@ -276,20 +253,15 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
             log.logDetail("SocketServerInstance.read", "read:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        try {
-	        if (packet instanceof MessagePacket) {
-	        	MessagePacket messagePacket = (MessagePacket)packet;
-	            decryptMessage(messagePacket.message);
-                processAsynchronousPacket(messagePacket);
-	        } else if (packet instanceof Handshake) {
-	        	receivedHahdshake((Handshake)packet);
-	        } else {
-	            if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
-	                log.logDetail("SocketServerInstance.read", "packet ignored:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
-	            }
-	        }
-        } catch (CommunicationException e) {
-        	this.exceptionOccurred(e);
+        if (packet instanceof MessagePacket) {
+        	MessagePacket messagePacket = (MessagePacket)packet;
+            processAsynchronousPacket(messagePacket);
+        } else if (packet instanceof Handshake) {
+        	receivedHahdshake((Handshake)packet);
+        } else {
+            if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
+                log.logDetail("SocketServerInstance.read", "packet ignored:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
+            }
         }
     }
 
@@ -299,10 +271,6 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
             log.logDetail("SocketServerInstance.read", "read asynch message:" + message); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        /* Defect 20272 - Removing the listener must happen before the response is delivered,
-         * otherwise there the potential for a race condition in which a new request is registered
-         * with the same message key and this thread removes the new listener instead.
-         */
         MessageListener listener = asynchronousListeners.remove(messageKey);
         if (listener != null) {
             deliverAsynchronousResponse(messageKey, message, listener);
@@ -318,7 +286,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	socketChannel.close();
     }
 
-    public ServerInstanceContext getContext() {
+    public PortableContext getContext() {
         return new SocketServerInstanceContext(hostInfo.getHostName(), hostInfo
 				.getPortNumber(), this.ssl);
     }

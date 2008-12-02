@@ -68,8 +68,6 @@ public class RequestMessage implements Serializable {
     //whether query plan is allowed or not
     private boolean queryPlanAllowed = true;
     
-    private boolean synchRequest = false;
-    
     private boolean showPlan = false;
     
     private int rowLimit;
@@ -334,14 +332,6 @@ public class RequestMessage implements Serializable {
         return queryPlanAllowed;
     }
     
-    public void setSynchronousRequest(boolean isSynchronousRequest) {
-        this.synchRequest = isSynchronousRequest;
-    }
-    
-    public boolean isSynchronousRequest() {
-        return this.synchRequest;
-    }
-
     /** 
      * @return Returns the showPlan.
      * @since 4.3

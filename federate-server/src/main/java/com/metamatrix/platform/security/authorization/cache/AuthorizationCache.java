@@ -36,6 +36,7 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationPolicyID;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
 /**
@@ -54,11 +55,11 @@ public class AuthorizationCache {
         
         private static final long serialVersionUID = 3712007533668645365L;
         private MetaMatrixPrincipalName principal;
-        private Long sessionId;
+        private MetaMatrixSessionID sessionId;
         
         CacheKey(){}
         
-        CacheKey(MetaMatrixPrincipalName principal, Long sessionId) {
+        CacheKey(MetaMatrixPrincipalName principal, MetaMatrixSessionID sessionId) {
             this.principal = principal;
             this.sessionId = sessionId;
         }
@@ -271,7 +272,7 @@ public class AuthorizationCache {
     }
 
     private CacheKey createCacheKey(final MetaMatrixPrincipalName user, SessionToken session) {
-        return new CacheKey(user, session!=null?new Long(session.getSessionIDValue()):null);
+        return new CacheKey(user, session!=null?session.getSessionID():null);
     }
 
 

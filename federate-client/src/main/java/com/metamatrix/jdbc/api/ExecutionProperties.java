@@ -120,5 +120,7 @@ public interface ExecutionProperties {
      * Passed as an option to PROP_SQL_OPTIONS
      */
     public static final String SQL_OPTION_SHOWPLAN = "SHOWPLAN"; //$NON-NLS-1$
+    
+    public static final String PLAN_NOT_ALLOWED = "planNotAllowed"; //$NON-NLS-1$
 }
     

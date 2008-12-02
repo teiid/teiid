@@ -170,9 +170,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
         this.requestID = requestID;
-        if (!requestMsg.isSynchronousRequest()) {
-            this.resultsCursor.requestResults(1, requestMsg.getFetchSize(), false);
-        }
+        this.resultsCursor.requestResults(1, requestMsg.getFetchSize(), false);
         this.bufferMgr = dqpCore.getBufferManager();
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
         this.rsCache = dqpCore.getRsCache();
@@ -208,9 +206,6 @@ public class RequestWorkItem extends AbstractWorkItem {
             if (this.state == ProcessingState.NEW) {
                 state = ProcessingState.PROCESSING;
         		processNew();
-        		if (requestMsg.isSynchronousRequest()) {
-                    resultsReceiver.receiveResults(new ResultsMessage(requestMsg, new List[0], new String[0], new String[0]));
-                }
                 if (isCanceled) {
                 	this.processingException = new MetaMatrixProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
                     state = ProcessingState.CLOSE;
@@ -639,12 +634,8 @@ public class RequestWorkItem extends AbstractWorkItem {
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {
-    	/*
-    	 * TODO: isSynchronous request is really a misnomer.  it refers only to the initial response
-    	 * from there out it's really asynch...
-    	 */
     	this.resultsReceiver = receiver;
-    	this.resultsCursor.requestResults(batchFirst, batchLast, this.requestMsg.isSynchronousRequest());
+    	this.resultsCursor.requestResults(batchFirst, batchLast, false);
     	this.moreWork(); 
     }
     

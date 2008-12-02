@@ -176,7 +176,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         
         if(logFile != null && logLevel > BaseDataSource.LOG_NONE){
             logWriter = new FileLogWriter(new File(logFile));
-            logger = new JDBCLogger(logLevel, logWriter, getConnectionId());            
+            logger = new JDBCLogger(logLevel, logWriter, serverConn.getLogonResult().getSessionID().toString());            
         }
         else {
             logger = new DriverManagerLogger(logLevel, DriverManager.getLogWriter());
@@ -261,12 +261,10 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
     /**
      * Connection identifier of this connection 
      * @return identifier
+     * @throws SQLException 
      */
-    String getConnectionId() {
-        if (this.serverConn != null) {
-        	return this.serverConn.getLogonResult().getSessionID().toString();
-        }
-        return "0"; //$NON-NLS-1$
+    public String getConnectionId() {
+    	return this.serverConn.getLogonResult().getSessionID().toString();
     }
     
     long currentRequestId() {
@@ -346,22 +344,23 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
      *             server statement object could not be closed.
      */
     void closeStatements() throws SQLException {
-        try {
-            // Closing the statement will cause the
-            // MMConnection.closeStatement() method to be called,
-            // which will modify this.statements.  So, we do this iteration
-            // in a separate safe copy of the list
-            List statementsSafe = new ArrayList(this.statements);
-            Iterator statementIter = statementsSafe.iterator();
-            while (statementIter.hasNext ()) {
-                Statement statement = (Statement) statementIter.next();
-                statement.close();
+        // Closing the statement will cause the
+        // MMConnection.closeStatement() method to be called,
+        // which will modify this.statements.  So, we do this iteration
+        // in a separate safe copy of the list
+        List statementsSafe = new ArrayList(this.statements);
+        Iterator statementIter = statementsSafe.iterator();
+        SQLException ex = null;
+        while (statementIter.hasNext ()) {
+            Statement statement = (Statement) statementIter.next();
+            try {
+            	statement.close();
+            } catch (SQLException e) {
+            	ex = e;
             }
-        } catch (SQLException e) {
-            String msg = JDBCPlugin.Util.getString("MMConnection.Err_closing_stmts"); //$NON-NLS-1$
-            throw MMSQLException.create(e, msg);
-        } finally {
-            statements = null;
+        }
+        if (ex != null) {
+            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMConnection.Err_closing_stmts")); //$NON-NLS-1$
         }
     }
 
@@ -942,7 +941,30 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
 		}
 	}
 	
-	public abstract BaseDriver getBaseDriver();
+	public void recycleConnection() {
+        try {
+        	//close all open statements
+        	this.closeStatements();
+        } catch (SQLException e) {
+            this.getLogger().log(MessageLevel.WARNING, e, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error")); //$NON-NLS-1$
+        }
+        try {
+            //rollback if still in a transaction
+            if (!this.getAutoCommit()) {
+                this.getLogger().log(MessageLevel.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back")); //$NON-NLS-1$
+                
+                if (this.getTransactionXid() == null) {
+                    this.rollback(false);
+                } else {
+                	this.rollbackTransaction(getTransactionXid());
+                }
+            }
+        } catch (SQLException e) {
+            this.getLogger().log(MessageLevel.WARNING, e, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error")); //$NON-NLS-1$
+        }
+	}
+	
+	abstract BaseDriver getBaseDriver();
     
 	public void setClientInfo(Properties properties)
 		throws SQLClientInfoException {

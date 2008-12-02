@@ -31,6 +31,7 @@ import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 
 /** 
  * @since 4.3
@@ -101,5 +102,15 @@ public class MMServerConnection extends MMConnection {
 	@Override
 	public BaseDriver getBaseDriver() {
 		return new MMDriver();
+	}
+	
+	@Override
+	public void recycleConnection() {
+		super.recycleConnection();
+		//perform load balancing
+		if (this.serverConn instanceof SocketServerConnection) {
+			SocketServerConnection conn = (SocketServerConnection)this.serverConn;
+			conn.selectNewServerInstance();
+		}
 	}
 }

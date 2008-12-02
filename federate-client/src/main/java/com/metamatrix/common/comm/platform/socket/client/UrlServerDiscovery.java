@@ -1,3 +1,10 @@
+package com.metamatrix.common.comm.platform.socket.client;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.metamatrix.common.api.HostInfo;
+import com.metamatrix.common.api.MMURL;
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright (C) 2008 Red Hat, Inc.
@@ -22,19 +29,25 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.api;
-
-
 /**
- * Context information that identifies a ServerInstance to connect to.
- * @since 4.3
+ * Simple URL discovery strategy
  */
-public interface ServerInstanceContext {
-    
-    /** 
-     * Get a string that can be passed around to represent this context. 
-     * @return Portable string value representing the context
-     * @since 4.3
-     */
-    String getPortableString();
+public class UrlServerDiscovery implements ServerDiscovery {
+
+	private MMURL url;
+	
+	public UrlServerDiscovery(MMURL url) {
+		this.url = url;
+	}
+
+	@Override
+	public List<HostInfo> getKnownHosts() {
+		return new ArrayList(url.getHostInfo());
+	}
+
+	@Override
+	public void markInstanceAsBad(HostInfo info) {
+		
+	}
+	
 }

@@ -132,7 +132,7 @@ public class TransactionTableModel extends DefaultTableModel {
             //numeric string.
             data[row][TRANSACTION_ID_COL] = new Long(st.getTransactionID().getID());
             transMap.put(data[row][TRANSACTION_ID_COL], st.getTransactionID());
-            data[row][SESSION_ID_COL] = new Long(st.getSessionToken().getSessionIDValue());
+            data[row][SESSION_ID_COL] = st.getSessionToken().getSessionIDValue();
             data[row][STATUS_COL] = st.getStatusString();
 
             //Form new Date objects for begin and end time, rather than using

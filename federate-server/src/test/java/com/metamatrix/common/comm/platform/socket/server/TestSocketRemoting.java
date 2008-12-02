@@ -24,6 +24,7 @@
 
 package com.metamatrix.common.comm.platform.socket.server;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -36,23 +37,29 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.LogonException;
+import com.metamatrix.common.api.HostInfo;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
-import com.metamatrix.common.comm.api.ServerInstanceContext;
 import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceFactory;
+import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.PortableContext;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.client.impl.SerializablePortableContext;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 public class TestSocketRemoting extends TestCase {
@@ -88,7 +95,7 @@ public class TestSocketRemoting extends TestCase {
 			this.clientServiceRegistry = clientServiceRegistry;
 		}
 
-		public ServerInstanceContext getContext() {
+		public PortableContext getContext() {
 			return new SerializablePortableContext("fake"); //$NON-NLS-1$
 		}
 
@@ -127,7 +134,7 @@ public class TestSocketRemoting extends TestCase {
 	public void testUnckedException() throws Exception {
 		FakeServerInstance serverInstance = new FakeServerInstance(null);
 		try {
-			new SocketServerConnection(serverInstance, new Properties(), null);
+			createFakeConnection(serverInstance);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 			assertEquals("Unable to find a component used in logging on to MetaMatrix", e.getMessage()); //$NON-NLS-1$
@@ -156,10 +163,17 @@ public class TestSocketRemoting extends TestCase {
 						MetaMatrixComponentException {
 					return null;
 				}
+
+				@Override
+				public void assertIdentity(MetaMatrixSessionID sessionId)
+						throws InvalidSessionException,
+						MetaMatrixComponentException {
+					
+				}
 			});
 		csr.registerClientService(FakeService.class, new FakeServiceImpl());
-		FakeServerInstance serverInstance = new FakeServerInstance(csr);
-		SocketServerConnection connection = new SocketServerConnection(serverInstance, new Properties(), null);
+		final FakeServerInstance serverInstance = new FakeServerInstance(csr);
+		SocketServerConnection connection = createFakeConnection(serverInstance);
 		ILogon logon = connection.getService(ILogon.class);
 		Future<?> result = logon.ping();
 		assertNull(result.get(0, TimeUnit.MILLISECONDS));
@@ -187,6 +201,21 @@ public class TestSocketRemoting extends TestCase {
 			e.printStackTrace();
 			assertEquals("Component not found: com.metamatrix.dqp.client.ClientSideDQP", e.getMessage()); //$NON-NLS-1$
 		}
+	}
+
+	private SocketServerConnection createFakeConnection(
+			final FakeServerInstance serverInstance)
+			throws CommunicationException, ConnectionException {
+		SocketServerConnection connection = new SocketServerConnection(new SocketServerInstanceFactory() {
+		
+			@Override
+			public SocketServerInstance createServerInstance(HostInfo info,
+					boolean ssl) throws CommunicationException, IOException {
+				return serverInstance;
+			}
+			
+		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
+		return connection;
 	}
 	
 }

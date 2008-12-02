@@ -1011,8 +1011,8 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             for (Iterator iter = sessions.iterator(); iter.hasNext();) {
                 MetaMatrixSessionInfo info = (MetaMatrixSessionInfo)iter.next();
 
-                long sessionID = info.getSessionID().getValue();
-                String[] identifierParts = new String[] {Long.toString(sessionID)};
+                String sessionID = info.getSessionID().toString();
+                String[] identifierParts = new String[] {sessionID};
                 if (identifierMatches(identifier, identifierParts)) {
                     MMSession session = new MMSession(identifierParts);
 
@@ -1024,7 +1024,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                     session.setCreatedBy(info.getUserName());
                     session.setApplicationName(info.getApplicationName()); 
                     session.setCreated(new Date(info.getTimeCreated())); 
-                    session.setLastUpdated(new Date(info.getTimeStateChanged())); 
+                    session.setLastUpdated(new Date(info.getTimeCreated())); 
                     session.setVDBName(vdbName); 
                     session.setVDBVersion(vdbVersionString); 
                     session.setProductName(info.getProductName()); 

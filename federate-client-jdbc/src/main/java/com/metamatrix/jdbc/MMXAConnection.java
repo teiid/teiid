@@ -40,7 +40,6 @@ import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
 
 /**
  * Implementation of XAConnection.
@@ -66,20 +65,7 @@ public class MMXAConnection implements XAConnection{
                              Method method,
                              Object[] args) throws Throwable {
             if ("close".equals(method.getName())) {  //$NON-NLS-1$
-                try {
-                    if (!proxiedConnection.getAutoCommit()) {
-                        this.proxiedConnection.getLogger().log(MessageLevel.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back")); //$NON-NLS-1$
-                        
-                        // this is for local transactions.
-                        if (proxiedConnection.getTransactionXid() == null) {
-                            proxiedConnection.closeStatements();
-                            proxiedConnection.rollback(false);
-                        }                        
-                    }
-                } catch (SQLException e) {
-                    this.proxiedConnection.getLogger().log(MessageLevel.WARNING, e, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error")); //$NON-NLS-1$
-                    handleException(e);
-                } 
+                this.proxiedConnection.recycleConnection();
                 MMXAConnection.this.notifyListener(null);
                 return null;
             }
@@ -87,6 +73,7 @@ public class MMXAConnection implements XAConnection{
             try {
 				return method.invoke(this.proxiedConnection, args);
 			} catch (InvocationTargetException e) {
+				//TODO: notify listeners about critical errors
 				throw e.getTargetException();
 			}
         }
@@ -120,26 +107,17 @@ public class MMXAConnection implements XAConnection{
             throw new SQLException(JDBCPlugin.Util.getString("MMXAConnection.connection_is_closed")); //$NON-NLS-1$
         }
         
-        if(connection == null || connection.isClosed()){
+        if(connection == null){
             try{
                 connection = cs.createConnection();
             }catch(SQLException e){                
-                handleException(e);                
+                notifyListener(e);
+                throw e;
             }       
         }
         
         return connection;
 	}
-
-    private void handleException(SQLException e) throws SQLException {
-        notifyListener(e);
-        if(connection != null){
-            try{
-                connection.close();
-            }catch(SQLException se){}
-        }
-        throw e;
-    }
 	
     public Logger getLogger() {
         if (connection == null) {

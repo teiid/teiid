@@ -108,21 +108,6 @@ public class TestDQPCore extends TestCase {
     public void testRequest1() throws Exception {
     	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$
     }
-    
-    /**
-     * the execute method is not really Synchronous, but a result can be expected in a short amount of time
-     * after initial planning has completed successfully
-     * @throws Exception
-     */
-    public void testSynchronousRequest() throws Exception {
-        DQPCore core = exampleDQPCore();
-        RequestMessage reqMsg = exampleRequestMessage("SELECT IntKey FROM BQT1.SmallA"); //$NON-NLS-1$
-        reqMsg.setSynchronousRequest(true);
-        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
-        assertEquals(0, results.getResults().length);
-        assertTrue(results.getFinalRow() < 0);
-    }
 
     public void testUser1() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE user() = 'logon'"; //$NON-NLS-1$

@@ -80,13 +80,13 @@ public class FakeQueryService implements QueryServiceInterface {
         List results = new ArrayList();
         
         RequestInfo info1 = new RequestInfo(new RequestID("1", 1L), "sql1", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token1 = new SessionToken(new MetaMatrixSessionID(1), "cluster1", "user1", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token1 = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ //$NON-NLS-2$
         info1.setSessionToken(token1);
         results.add(info1);
         
         
         RequestInfo info2 = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token2 = new SessionToken(new MetaMatrixSessionID(2), "cluster2", "user2", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token2 = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ //$NON-NLS-2$
         info2.setSessionToken(token2);
         results.add(info2);
 
@@ -94,7 +94,7 @@ public class FakeQueryService implements QueryServiceInterface {
         
         //SourceRequests
         RequestInfo info1A = new RequestInfo(new RequestID("1", 1), "sql1", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token1A = new SessionToken(new MetaMatrixSessionID(1), "cluster1", "user1", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token1A = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ //$NON-NLS-2$
         info1A.setSessionToken(token1A);
         info1A.setConnectorBindingUUID("connectorBinding1");
         info1A.setNodeID(1);
@@ -102,7 +102,7 @@ public class FakeQueryService implements QueryServiceInterface {
         
 
         RequestInfo info2A = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token2A = new SessionToken(new MetaMatrixSessionID(2), "cluster2", "user2", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token2A = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ //$NON-NLS-2$
         info2A.setSessionToken(token2A);
         info2A.setConnectorBindingUUID("connectorBinding2");
         info2A.setNodeID(2);

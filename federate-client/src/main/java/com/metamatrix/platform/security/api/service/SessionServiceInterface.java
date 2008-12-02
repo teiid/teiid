@@ -25,6 +25,7 @@
 package com.metamatrix.platform.security.api.service;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -37,7 +38,6 @@ import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
@@ -146,7 +146,7 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @throws SessionServiceException
      * @throws RemoteException if there is a communication exception
      */
-    SessionToken validateSession(MetaMatrixSessionID sessionID)
+    MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID)
     throws InvalidSessionException, SessionServiceException, ServiceException;
     
     /**

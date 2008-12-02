@@ -33,11 +33,6 @@ public class DBIDGenerator {
 
     public final static String VM_ID = "VM"; //$NON-NLS-1$
     public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
-    public final static String REQUEST_ID = "Request"; //$NON-NLS-1$
-    public static final String CONNECTOR_PROCESSOR_ID = "Connector_Processor"; //$NON-NLS-1$
-    public static final String SESSION_ID = "Session"; //$NON-NLS-1$
-    public static final String TRANSACTION_ID = "Transaction"; //$NON-NLS-1$
-    public static final String TUPLE_SOURCE_ID = "TupleSource"; //$NON-NLS-1$
     public static final String RESOURCE_POOL_MGR_ID = "ResourcePoolMgr"; //$NON-NLS-1$
 
     private static DBIDGenerator generator;

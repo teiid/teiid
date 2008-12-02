@@ -55,7 +55,6 @@ import com.metamatrix.platform.security.api.service.AuthorizationServiceProperty
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.util.ServerAuditContexts;
 
@@ -112,7 +111,7 @@ public class PlatformAuthorizationService implements AuthorizationService {
     public Collection getInaccessibleResources(String connectionID, int action, Collection resources, int context)
         throws MetaMatrixComponentException {
         SessionToken token = DQPWorkContext.getWorkContext().getSessionToken();
-        AuthorizationRealm realm = getRealm(token);
+        AuthorizationRealm realm = getRealm(DQPWorkContext.getWorkContext());
         AuthorizationActions actions = getActions(action);
         Collection permissions = createPermissions(realm, resources, actions);
         String auditContext = getAuditContext(context);
@@ -147,7 +146,7 @@ public class PlatformAuthorizationService implements AuthorizationService {
         if (ADMIN_ROLE.equalsIgnoreCase(roleType)) {
             realm = RolePermissionFactory.getRealm();
         } else if (DATA_ROLE.equalsIgnoreCase(roleType)){
-            realm = getRealm(token);
+            realm = getRealm(DQPWorkContext.getWorkContext());
         } else {
             return false;
         }
@@ -181,11 +180,11 @@ public class PlatformAuthorizationService implements AuthorizationService {
      * @param token Used to find info about this session
      * @return Realm to use (based on vdb name and version)
      */
-    private AuthorizationRealm getRealm(SessionToken token) {
+    private AuthorizationRealm getRealm(DQPWorkContext context) {
         return
             new AuthorizationRealm(
-                token.getProductInfo(ProductInfoConstants.VIRTUAL_DB),
-                token.getProductInfo(ProductInfoConstants.VDB_VERSION));
+                context.getVdbName(),
+                context.getVdbVersion());
     }
 
     private AuthorizationActions getActions(int actionCode) {

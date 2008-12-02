@@ -310,7 +310,7 @@ public final class QueryPanel
             SessionToken sessionToken = request.getSessionToken();
             String sessionIDStr = StringUtil.Constants.EMPTY_STRING;
             if (sessionToken != null) {
-                sessionIDStr = String.valueOf(sessionToken.getSessionIDValue());
+                sessionIDStr = sessionToken.getSessionIDValue();
             }
             txfSessionId.setText(sessionIDStr);
             Date date = request.getProcessingTimestamp();

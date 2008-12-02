@@ -49,8 +49,6 @@ import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.id.dbid.DBIDGenerator;
-import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -68,10 +66,8 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.MetaMatrixSessionState;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.security.api.service.SessionServicePropertyNames;
 import com.metamatrix.platform.security.api.service.SessionTerminationHandler;
 import com.metamatrix.platform.security.membership.service.AuthenticationToken;
 import com.metamatrix.platform.security.util.LogSecurityConstants;
@@ -88,13 +84,17 @@ import com.metamatrix.platform.util.ProductInfoConstants;
  */
 public class SessionServiceImpl extends AbstractService implements
                                                        SessionServiceInterface {
-
-    private static final String MAX_ACTIVE_Sessions = "metamatrix.session.max.connections"; //$NON-NLS-1$
+	
+    /**
+     * Comma delimeted string containing a list of SessionTerminationHandlers to be called when a session
+     * is terminated.
+     */
+    private static final String SESSION_TERMINATION_HANDLERS = "security.session.terminationHandlers"; //$NON-NLS-1$
+    private static final String MAX_ACTIVE_SESSIONS = "metamatrix.session.max.connections"; //$NON-NLS-1$
     private static final String SESSION_TIME_LIMIT = "metamatrix.session.time.limit"; //$NON-NLS-1$
-
     public static final String SESSION_MONITOR_ACTIVITY_INTERVAL = "metamatrix.session.sessionMonitor.ActivityInterval"; //$NON-NLS-1$
 
-    private long clientPingInterval = SessionServicePropertyNames.CLIENT_MONITOR_DEFAULT_PING_INTERVAL_VAL;
+    private static long CLIENT_PING_INTERVAL = 600000;
 
     private MembershipServiceInterface membershipService;
     private Cache<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache;
@@ -118,7 +118,7 @@ public class SessionServiceImpl extends AbstractService implements
         this.membershipService = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
         
         // Instantiate SessionTerminationHandlers
-        String handlerString = env.getProperty(SessionServicePropertyNames.SESSION_TERMINATION_HANDLERS);
+        String handlerString = env.getProperty(SESSION_TERMINATION_HANDLERS);
         if (handlerString != null && handlerString.trim().length() > 0) {
             List handlers = StringUtil.split(handlerString, ","); //$NON-NLS-1$
             initTerminationHandlers(handlers);
@@ -129,8 +129,8 @@ public class SessionServiceImpl extends AbstractService implements
 
         Configuration config = CurrentConfiguration.getConfiguration();
         Properties nextProperties = config.getProperties();
-        this.sessionMaxLimit = PropertiesUtils.getIntProperty(nextProperties, MAX_ACTIVE_Sessions, 0);
-        this.sessionTimeLimit = PropertiesUtils.getIntProperty(nextProperties, SESSION_TIME_LIMIT, 0) * SessionServicePropertyNames.MILLIS_PER_MIN;
+        this.sessionMaxLimit = PropertiesUtils.getIntProperty(nextProperties, MAX_ACTIVE_SESSIONS, 0);
+        this.sessionTimeLimit = PropertiesUtils.getIntProperty(nextProperties, SESSION_TIME_LIMIT, 0) * 60000;
         this.clusterName = CurrentConfiguration.getSystemName();
         this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
@@ -138,14 +138,14 @@ public class SessionServiceImpl extends AbstractService implements
         	public void run() {
         		monitorSessions();
         	}
-        }, this.sessionTimeLimit > 0 ? this.sessionTimeLimit : clientPingInterval * 4, this.clientPingInterval);
+        }, this.sessionTimeLimit > 0 ? this.sessionTimeLimit : CLIENT_PING_INTERVAL * 4, CLIENT_PING_INTERVAL);
     }
 
     private void monitorSessions() {
 		long currentTime = System.currentTimeMillis();
 		for (MetaMatrixSessionInfo info : sessionCache.values()) {
 			try {
-    			if (currentTime - info.getLastPingTime() > clientPingInterval * 4) {
+    			if (currentTime - info.getLastPingTime() > CLIENT_PING_INTERVAL * 4) {
     				LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			} else if (sessionTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionTimeLimit) {
@@ -265,13 +265,13 @@ public class SessionServiceImpl extends AbstractService implements
         
         long creationTime = System.currentTimeMillis();
 
+        
         // Get a new ID for this new session record
-        long uid = getUniqueSessionID();
+        MetaMatrixSessionID id = new MetaMatrixSessionID();
 
         // Return a new session info object
-        MetaMatrixSessionInfo newSession = new MetaMatrixSessionInfo(new MetaMatrixSessionID(uid),
+        MetaMatrixSessionInfo newSession = new MetaMatrixSessionInfo(id,
         										authenticatedUserName,
-        										creationTime,
         										creationTime,
         										applicationName,
         										MetaMatrixSessionState.ACTIVE,
@@ -280,7 +280,14 @@ public class SessionServiceImpl extends AbstractService implements
         										productName, 
         										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_IP_ADDRESS), 
         										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_HOSTNAME));
-        this.sessionCache.put(newSession.getSessionID(), newSession);
+        if (this.sessionCache.put(newSession.getSessionID(), newSession) != null) {
+        	try {
+				this.closeSession(newSession.getSessionID());
+			} catch (InvalidSessionException e) {
+				LogManager.logDetail(LogSecurityConstants.CTX_SESSION, e, "Error closing invalidated session"); //$NON-NLS-1$
+			}
+        	throw new AssertionError("duplicate session id"); //$NON-NLS-1$
+        }
         return newSession;
 	}
 	
@@ -329,19 +336,6 @@ public class SessionServiceImpl extends AbstractService implements
 		return authenticatedToken;
 	}
 	
-	/**
-	 * TODO: session id should be non-guessable
-	 * @return
-	 * @throws SessionServiceException
-	 */
-    protected long getUniqueSessionID() throws SessionServiceException {
-        try {
-            return DBIDGenerator.getID(DBIDGenerator.SESSION_ID);
-        } catch (DBIDGeneratorException e) {
-            throw new SessionServiceException(ErrorMessageKeys.SEC_SESSION_0107, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0107));
-        }
-    }
-
 	@Override
 	public int getActiveConnectionsCountForProduct(String product)
 			throws SessionServiceException, ServiceException {
@@ -371,7 +365,7 @@ public class SessionServiceImpl extends AbstractService implements
 
 	@Override
 	public long getPingInterval() {
-		return this.clientPingInterval;
+		return CLIENT_PING_INTERVAL;
 	}
 
 	@Override
@@ -412,6 +406,7 @@ public class SessionServiceImpl extends AbstractService implements
 			throws ServiceStateException, InvalidSessionException {
 		MetaMatrixSessionInfo info = getSessionInfo(sessionID);
 		info.setLastPingTime(System.currentTimeMillis());
+		this.sessionCache.put(sessionID, info);
 	}
 
 	@Override
@@ -430,11 +425,11 @@ public class SessionServiceImpl extends AbstractService implements
 	}
 
 	@Override
-	public SessionToken validateSession(MetaMatrixSessionID sessionID)
+	public MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID)
 			throws InvalidSessionException, SessionServiceException,
 			ServiceException {
 		MetaMatrixSessionInfo info = getSessionInfo(sessionID);
-		return info.getSessionToken();
+		return info;
 	}
 
 	private MetaMatrixSessionInfo getSessionInfo(MetaMatrixSessionID sessionID)

@@ -24,26 +24,20 @@
 
 package com.metamatrix.dqp.client.impl;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.dqp.client.ConnectionInfo;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 
 
 /** 
  * @since 4.2
  */
-public class ServerConnectionInfo implements ConnectionInfo {
-    
-    private static final String HEADER = "ServerConnectionInfo:"; //$NON-NLS-1$
+public class ServerConnectionInfo {
     
     private String url;
     private String user;
@@ -53,36 +47,6 @@ public class ServerConnectionInfo implements ConnectionInfo {
     private String vdbVersion;
     private Map optionalProperties;
     
-    public ServerConnectionInfo() {
-        
-    }
-    
-    ServerConnectionInfo(String portableString) throws MetaMatrixProcessingException {
-        String[] parts = PortableStringUtil.getParts(portableString, PortableStringUtil.PROP_SEPARATOR);
-        if (parts == null || parts.length < 4 || parts.length > 7 || !parts[0].startsWith(HEADER)) {
-            throw new MetaMatrixProcessingException(AdminPlugin.Util.getString("ServerConnectionInfo.invalid_context", portableString)); //$NON-NLS-1$
-        }
-        parts[0] = parts[0].substring(HEADER.length());
-        this.url = PortableStringUtil.unescapeString(PortableStringUtil.getParts(parts[0], PortableStringUtil.EQUALS)[1]);
-        this.user = PortableStringUtil.unescapeString(PortableStringUtil.getParts(parts[1], PortableStringUtil.EQUALS)[1]);
-        this.password = PortableStringUtil.unescapeString(PortableStringUtil.getParts(parts[2], PortableStringUtil.EQUALS)[1]);
-        this.vdbName = PortableStringUtil.unescapeString(PortableStringUtil.getParts(parts[3], PortableStringUtil.EQUALS)[1]);
-        for (int i = 4; i < parts.length; i++) {
-            String[] propValPair = PortableStringUtil.getParts(parts[i], PortableStringUtil.EQUALS);
-            try {
-                if (propValPair[0].equals(ConnectionProperties.VDB_VERSION)) {
-                    this.vdbVersion = PortableStringUtil.unescapeString(propValPair[1]);
-                } else if (propValPair[0].equals(ConnectionProperties.TRUSTED_PAYLOAD_PROP)) {
-                    this.trustedPayload = (Serializable)PortableStringUtil.decode(propValPair[1]);
-                } else if (propValPair[0].equals("optionalProperties")) { //$NON-NLS-1$
-                    this.optionalProperties = (Map)PortableStringUtil.decode(propValPair[1]);
-                }
-            } catch (Exception e) {
-                throw new MetaMatrixProcessingException(e, AdminPlugin.Util.getString("ServerConnectionInfo.invalid_encoding", propValPair[1])); //$NON-NLS-1$
-            }
-        }
-    }
-
     String getServerUrl() {
         return url;
     }
@@ -171,7 +135,7 @@ public class ServerConnectionInfo implements ConnectionInfo {
         optionalProperties.put(propName, propValue);
     }
     
-    Properties getConnectionProperties() {
+    public Properties getConnectionProperties() {
         Properties props = new Properties();
         props.setProperty(ConnectionProperties.SERVER_URL, url);
         props.setProperty(ConnectionProperties.USER_PROP, user);
@@ -183,8 +147,6 @@ public class ServerConnectionInfo implements ConnectionInfo {
             props.setProperty(ConnectionProperties.VDB_VERSION_DQP, vdbVersion);
         }
 
-        setHostAndPort(props, url);
-        
         if (trustedPayload != null) {
             props.put(ConnectionProperties.TRUSTED_PAYLOAD_PROP, trustedPayload);
         }
@@ -219,41 +181,4 @@ public class ServerConnectionInfo implements ConnectionInfo {
                 EquivalenceUtil.areEqual(this.optionalProperties, info.optionalProperties);
     }
     
-    String getPortableString() {
-        StringBuffer buf = new StringBuffer(HEADER)
-        .append(ConnectionProperties.SERVER_URL).append(PortableStringUtil.EQUALS).append(PortableStringUtil.escapeString(url)).append(PortableStringUtil.PROP_SEPARATOR)
-        .append(ConnectionProperties.USER_PROP).append(PortableStringUtil.EQUALS).append(PortableStringUtil.escapeString(user)).append(PortableStringUtil.PROP_SEPARATOR)
-        .append(ConnectionProperties.PWD_PROP).append(PortableStringUtil.EQUALS).append(PortableStringUtil.escapeString(password)).append(PortableStringUtil.PROP_SEPARATOR)
-        .append(ConnectionProperties.VDB_NAME).append(PortableStringUtil.EQUALS).append(PortableStringUtil.escapeString(vdbName));
-        if (vdbVersion != null && vdbVersion.length() != 0) {
-            buf.append(PortableStringUtil.PROP_SEPARATOR).append(ConnectionProperties.VDB_VERSION).append(PortableStringUtil.EQUALS).append(PortableStringUtil.escapeString(vdbVersion));
-        }
-        if (trustedPayload != null) {
-            try {
-                String encodedString = PortableStringUtil.encode(trustedPayload);
-                buf.append(PortableStringUtil.PROP_SEPARATOR).append(ConnectionProperties.TRUSTED_PAYLOAD_PROP).append(PortableStringUtil.EQUALS).append(encodedString);
-            } catch (IOException e) {
-                // TODO warn
-            }
-        }
-        if (optionalProperties != null && !optionalProperties.isEmpty()) {
-            try {
-                String encodedString = PortableStringUtil.encode(optionalProperties);
-                buf.append(PortableStringUtil.PROP_SEPARATOR).append("optionalProperties").append(PortableStringUtil.EQUALS).append(encodedString); //$NON-NLS-1$
-            } catch (IOException e) {
-                // TODO warn
-            }
-        }
-        return buf.toString();
-    }
-    
-    private void setHostAndPort(Properties props, String url) {
-        String[] parts = PortableStringUtil.getParts(url, ':');
-        if (parts == null || parts.length != 3 || !parts[1].startsWith("//")) { //$NON-NLS-1$
-            throw new IllegalArgumentException(AdminPlugin.Util.getString("ServerConnectionInfo.invalid_url")); //$NON-NLS-1$
-        }
-        parts[1] = parts[1].substring(2);
-        props.setProperty(ConnectionProperties.HOST, parts[1]);
-        props.setProperty(ConnectionProperties.PORT, parts[2]);
-    }
 }

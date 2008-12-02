@@ -27,7 +27,6 @@ package com.metamatrix.platform.security.api;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -63,9 +62,9 @@ public class TestAuthorizationCache extends TestCase {
         AuthorizationCache cache = new AuthorizationCache(new FakeCache(), new FakeCache(),null);
         List policyIDs = new LinkedList();
         policyIDs.add(new Integer(1));
-        SessionToken token =  new SessionToken(new MetaMatrixSessionID(1), "none", "dummy", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token =  new SessionToken(new MetaMatrixSessionID(1), "dummy"); //$NON-NLS-1$ //$NON-NLS-2$
         cache.cachePolicyIDsForPrincipal(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), token, policyIDs); //$NON-NLS-1$
-        Collection result = cache.findPolicyIDs(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), new SessionToken(new MetaMatrixSessionID(2), "none", "dummy", new Properties())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Collection result = cache.findPolicyIDs(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), new SessionToken(new MetaMatrixSessionID(2), "dummy")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         //different session, result should be empty
         assertTrue(result.isEmpty());
         result = cache.findPolicyIDs(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), token); //$NON-NLS-1$

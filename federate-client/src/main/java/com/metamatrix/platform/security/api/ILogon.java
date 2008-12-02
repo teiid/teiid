@@ -55,5 +55,7 @@ public interface ILogon {
     * @throws ComponentNotFoundException If couldn't find needed service component
     */
    ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException;
+   
+   void assertIdentity(MetaMatrixSessionID sessionId) throws InvalidSessionException, MetaMatrixComponentException;
 
 }

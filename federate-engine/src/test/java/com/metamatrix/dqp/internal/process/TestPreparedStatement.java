@@ -57,7 +57,7 @@ import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestPreparedStatement extends TestCase{
 	
-	private static final String SESSION_ID = "6";
+	private static final long SESSION_ID = 6;
 	
 	private static boolean DEBUG = false;
 	
@@ -107,7 +107,7 @@ public class TestPreparedStatement extends TestCase{
         TestProcessor.helpProcess(plan, dataManager, expected);
         
         //get the plan again with a new connection
-        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, "7", callableStatement, false)); //$NON-NLS-1$
+        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, 7, callableStatement, false));
 
         assertEquals("new connection should not have used the same plan", 1, prepPlan.hitCount); //$NON-NLS-1$
 	}
@@ -173,7 +173,7 @@ public class TestPreparedStatement extends TestCase{
     }
 	
 	private ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
-			PreparedPlanCache prepPlanCache, String conn)
+			PreparedPlanCache prepPlanCache, long conn)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
@@ -183,7 +183,7 @@ public class TestPreparedStatement extends TestCase{
 	}
 
 	static ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
-			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, String conn, boolean callableStatement, boolean limitResults)
+			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, long conn, boolean callableStatement, boolean limitResults)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {

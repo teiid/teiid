@@ -25,6 +25,7 @@
 package com.metamatrix.platform.security.api;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * This immutable class represents an identifier for a unique MetaMatrix session within a given MetaMatrix System. This object
@@ -32,27 +33,34 @@ import java.io.Serializable;
  */
 public final class MetaMatrixSessionID implements
                                       Serializable,
-                                      Cloneable,
                                       Comparable<MetaMatrixSessionID> {
 
     public final static long serialVersionUID = -7872739911360962975L;
     
     public static final String DEFAULT_USER = "unknown"; //$NON-NLS-1$
 
-    private long id; //TODO: replace with UUID or other non-guessable identifier when failover support is added
-
+    private UUID id;
+    
+    /**
+     * Used to create a deterministic id, mostly called by tests
+     */
     public MetaMatrixSessionID(long id) {
-    	this.id = id;
-    }
-
-    public MetaMatrixSessionID(String s) {
-    	this.id = Long.parseLong(s);
-    }
-        
-    public long getValue() {
-        return this.id;
+    	this.id = new UUID(id, id);
     }
     
+    public MetaMatrixSessionID() {
+    	this.id = UUID.randomUUID();
+    }
+    
+    /**
+     * Converts the given string into a session id.
+     * @throws IllegalArgumentException if id is not valid
+     * @param id
+     */
+    public MetaMatrixSessionID(String id) {
+    	this.id = UUID.fromString(id);
+    }
+
     /**
      * Compares this object to another. If the specified object is an instance of the MetaMatrixSessionID class, then this method
      * compares the contents; otherwise, it throws a ClassCastException (as instances are comparable only to instances of the same
@@ -72,7 +80,7 @@ public final class MetaMatrixSessionID implements
      *             if the specified object's type prevents it from being compared to this instance.
      */
     public int compareTo(MetaMatrixSessionID obj) {
-        return (int) (this.id - obj.id); //May throw NullPointerException
+        return this.id.compareTo(obj.id);
     }
     /**
      * Returns true if the specified object is semantically equal to this instance. Note: this method is consistent with
@@ -92,7 +100,7 @@ public final class MetaMatrixSessionID implements
         // (this includes checking for null ) ...
         if (obj instanceof MetaMatrixSessionID) {
             MetaMatrixSessionID that = (MetaMatrixSessionID)obj;
-        	return this.id == that.id;
+        	return this.id.equals(that.id);
         }
 
         // Otherwise not comparable ...
@@ -105,7 +113,7 @@ public final class MetaMatrixSessionID implements
      * @return a hash code value for this object.
      */
     public final int hashCode() {
-        return (int) this.id;
+        return id.hashCode();
     }
 
     /**
@@ -114,21 +122,8 @@ public final class MetaMatrixSessionID implements
      * @return the string representation of this instance.
      */
     public final String toString() {
-        return Long.toString( this.id );
+        return id.toString();
     }
 
-    /**
-     * Return a cloned instance of this object.
-     * 
-     * @return the object that is the clone of this instance.
-     */
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch ( CloneNotSupportedException e ) {
-        }
-        return null;
-    }
-    
 }
 

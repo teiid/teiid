@@ -413,9 +413,9 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeServerSessionService.terminatedSessions.isEmpty());
         
-        admin.terminateSession("1");  //$NON-NLS-1$
+        admin.terminateSession("00000000-0000-0001-0000-000000000001");  //$NON-NLS-1$
         
-        assertTrue(FakeServerSessionService.terminatedSessions.contains("1")); //$NON-NLS-1$
+        assertTrue(FakeServerSessionService.terminatedSessions.contains("00000000-0000-0001-0000-000000000001")); //$NON-NLS-1$
         
         
         

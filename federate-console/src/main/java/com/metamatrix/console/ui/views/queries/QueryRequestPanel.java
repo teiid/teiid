@@ -274,7 +274,7 @@ public class QueryRequestPanel extends BasePanel {
 			SessionToken st = q.getSessionToken();
 			if (st != null) {
 				rowData[QueryTableModel.USER_COL] = st.getUsername();
-				rowData[QueryTableModel.SESSION_ID_COL] = new Long(st.getSessionIDValue());
+				rowData[QueryTableModel.SESSION_ID_COL] = st.getSessionIDValue();
 			}
             rowData[QueryTableModel.CONNECTOR_BINDING_COL] =
                     getConnectorBindingForUUID(q.getConnectorBindingUUID());

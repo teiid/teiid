@@ -22,34 +22,16 @@
  * 02110-1301 USA.
  */
 
-/**
- * 
- */
-package com.metamatrix.dqp.client.impl;
+package com.metamatrix.common.comm.platform.socket.client;
 
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.dqp.client.ClientSideDQP;
+import java.util.List;
 
-final class ConnectionHolder {
-    private ServerConnection connection;
-    private ClientSideDQP dqp;
-    
-    ConnectionHolder(ServerConnection connection) {
-    	if (connection != null) {
-    		this.setServiceRegistry(connection);
-    	}
-    }
-    
-    ServerConnection getServiceRegistry() {
-        return connection;
-    }
+import com.metamatrix.common.api.HostInfo;
 
-	void setServiceRegistry(ServerConnection connection) {
-		this.connection = connection;
-		this.dqp = connection.getService(ClientSideDQP.class);
-	}
+public interface ServerDiscovery {
+	
+	List<HostInfo> getKnownHosts();
+	
+	void markInstanceAsBad(HostInfo info);
 
-	public ClientSideDQP getDqp() {
-		return dqp;
-	}
 }

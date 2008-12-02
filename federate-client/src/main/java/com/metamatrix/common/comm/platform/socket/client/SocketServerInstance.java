@@ -28,8 +28,9 @@ import java.io.Serializable;
 
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
-import com.metamatrix.common.comm.api.ServerInstanceContext;
 import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.util.crypto.Cryptor;
+import com.metamatrix.dqp.client.PortableContext;
 
 public interface SocketServerInstance {
 
@@ -38,8 +39,10 @@ public interface SocketServerInstance {
 
 	void shutdown();
 
-	ServerInstanceContext getContext();
+	PortableContext getContext();
 
 	boolean isOpen();
+	
+	Cryptor getCryptor();
 
 }

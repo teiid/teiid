@@ -2,12 +2,11 @@ package com.metamatrix.platform.security.session.service;
 
 import java.util.Properties;
 
-import org.mockito.Mockito;
-
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.cache.FakeCache;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
@@ -17,12 +16,7 @@ import com.metamatrix.platform.security.membership.service.SuccessfulAuthenticat
 public class TestSessionServiceImpl extends TestCase {
 	
 	public void testValidateSession() throws Exception {
-		SessionServiceImpl ssi = new SessionServiceImpl() {
-			@Override
-			protected long getUniqueSessionID() throws SessionServiceException {
-				return 1; //skip using the dbid generator
-			}
-		};
+		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setClusterName("test"); //$NON-NLS-1$
 		ssi.setSessionCache(new FakeCache<MetaMatrixSessionID, MetaMatrixSessionInfo>());
 		MembershipServiceInterface msi = Mockito.mock(MembershipServiceInterface.class);
@@ -37,8 +31,8 @@ public class TestSessionServiceImpl extends TestCase {
 			
 		}
 		
-		ssi.createSession("steve", null, null, "foo", "test", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		
+		MetaMatrixSessionInfo info = ssi.createSession("steve", null, null, "foo", "test", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		id1 = info.getSessionID();
 		ssi.validateSession(id1);
 		
 		assertEquals(1, ssi.getActiveSessionsCount());

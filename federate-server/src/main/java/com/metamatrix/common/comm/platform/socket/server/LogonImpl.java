@@ -78,15 +78,7 @@ public class LogonImpl implements ILogon {
 					credential, (Serializable) payload, applicationName,
 					productName, connProps);
 			// logon
-			MetaMatrixSessionID sessionID = sessionInfo.getSessionID();
-			DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-			workContext.setSessionToken(sessionInfo.getSessionToken());
-			workContext.setAppName(applicationName);
-			workContext.setSessionId(sessionInfo.getSessionID());
-			workContext.setTrustedPayload(sessionInfo.getSessionToken().getTrustedToken());
-			workContext.setUserName(sessionInfo.getUserName());
-			workContext.setVdbName(sessionInfo.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
-			workContext.setVdbVersion(sessionInfo.getProductInfo(ProductInfoConstants.VDB_VERSION));
+			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
 			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {
 					"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), service.getPingInterval());
@@ -97,6 +89,19 @@ public class LogonImpl implements ILogon {
 		} catch (SessionServiceException e) {
 			throw new LogonException(e, e.getMessage());
 		}
+	}
+
+	private MetaMatrixSessionID updateDQPContext(MetaMatrixSessionInfo sessionInfo) {
+		MetaMatrixSessionID sessionID = sessionInfo.getSessionID();
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		workContext.setSessionToken(sessionInfo.getSessionToken());
+		workContext.setAppName(sessionInfo.getApplicationName());
+		workContext.setSessionId(sessionInfo.getSessionID());
+		workContext.setTrustedPayload(sessionInfo.getSessionToken().getTrustedToken());
+		workContext.setUserName(sessionInfo.getUserName());
+		workContext.setVdbName(sessionInfo.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
+		workContext.setVdbVersion(sessionInfo.getProductInfo(ProductInfoConstants.VDB_VERSION));
+		return sessionID;
 	}
 	
 	public ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException {
@@ -118,6 +123,20 @@ public class LogonImpl implements ILogon {
 			throw new MetaMatrixComponentException(e);
 		}
 		return null;
+	}
+
+	@Override
+	public void assertIdentity(MetaMatrixSessionID sessionId)
+			throws InvalidSessionException, MetaMatrixComponentException {
+		MetaMatrixSessionInfo sessionInfo;
+		try {
+			sessionInfo = this.service.validateSession(sessionId);
+		} catch (SessionServiceException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (ServiceException e) {
+			throw new MetaMatrixComponentException(e);
+		}
+		this.updateDQPContext(sessionInfo);
 	}
 
 }

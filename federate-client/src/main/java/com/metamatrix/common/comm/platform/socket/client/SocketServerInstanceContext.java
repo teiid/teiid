@@ -26,13 +26,13 @@ package com.metamatrix.common.comm.platform.socket.client;
 
 import java.util.StringTokenizer;
 
-import com.metamatrix.common.comm.api.ServerInstanceContext;
+import com.metamatrix.dqp.client.PortableContext;
 
 /**
  * Context information that identifies a ServerInstance to connect to.
  * @since 4.3
  */
-public class SocketServerInstanceContext implements ServerInstanceContext {
+public class SocketServerInstanceContext implements PortableContext {
     
     private String host;
     private int port;

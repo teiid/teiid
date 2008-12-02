@@ -47,6 +47,8 @@ import com.metamatrix.server.serverapi.RequestInfo;
  */
 public class TestDQPCoreRequestHandling extends TestCase {
 
+	private static final String SESSION_STRING = new MetaMatrixSessionID(2).toString();
+	
     public TestDQPCoreRequestHandling(String name) {
         super(name);
     }
@@ -76,11 +78,10 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken2() {
     	DQPCore rm = new DQPCore();
     	Set reqs = new HashSet();
-        String sessionId = "2"; //$NON-NLS-1$
-        RequestID id = addRequest(rm, sessionId, 1);
+        RequestID id = addRequest(rm, SESSION_STRING, 1);
         reqs.add(id);
 
-        Collection<RequestInfo> actualReqs = rm.getRequestsByClient(sessionId);
+        Collection<RequestInfo> actualReqs = rm.getRequestsByClient(SESSION_STRING);
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -97,12 +98,12 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken3() {
         DQPCore rm = new DQPCore();
         Set reqs = new HashSet();
-        String sessionId = "2"; //$NON-NLS-1$
-        reqs.add(addRequest(rm, sessionId, 0));
-        reqs.add(addRequest(rm, sessionId, 1));
-        reqs.add(addRequest(rm, sessionId, 2));
+         
+        reqs.add(addRequest(rm, SESSION_STRING, 0));
+        reqs.add(addRequest(rm, SESSION_STRING, 1));
+        reqs.add(addRequest(rm, SESSION_STRING, 2));
                 
-        Collection actualReqs = rm.getRequestsByClient(sessionId);
+        Collection actualReqs = rm.getRequestsByClient(SESSION_STRING);
         compareReqInfos(reqs, actualReqs);
     }
     
@@ -117,21 +118,15 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testAddRequest() {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID("2", 1);
+        RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, new TupleSourceID("ts-1"), null, null, null);  //$NON-NLS-1$
         assertTrue(workItem.resultsCursor.resultsRequested);
-        
-        RequestMessage r1 = new RequestMessage("foo"); //$NON-NLS-1$
-        r1.setSynchronousRequest(true);
-        RequestID requestID1 = new RequestID("2", 2);
-        workItem = addRequest(rm, r1, requestID1, null, null, new TupleSourceID("ts-2"), null, null, null);  //$NON-NLS-1$
-        assertFalse(workItem.resultsCursor.resultsRequested);
     }
     
     public void testWarnings1() {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID("2", 1);
+        RequestID requestID = new RequestID(SESSION_STRING, 1);
 
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, new TupleSourceID("ts-1"), null, null, null);  //$NON-NLS-1$
                 
@@ -164,7 +159,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetConnectorInfo() {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID("2", 1);
+        RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, null, null, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
 
@@ -178,7 +173,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testRemoveConnectorInfo() {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID("2", 1);
+        RequestID requestID = new RequestID(SESSION_STRING, 1);
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, null, null, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
 

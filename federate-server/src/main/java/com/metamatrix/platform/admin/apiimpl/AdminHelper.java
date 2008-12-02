@@ -140,7 +140,7 @@ public class AdminHelper implements IAdminHelper {
 		}
         SessionToken token = null;
         try {
-            token = sessionAdmin.validateSession(sessionID);
+            token = sessionAdmin.validateSession(sessionID).getSessionToken();
         } catch (InvalidSessionException e) {
             throw e;
         } catch (SessionServiceException e) {

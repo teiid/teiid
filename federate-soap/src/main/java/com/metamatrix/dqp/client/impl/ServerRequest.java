@@ -27,18 +27,23 @@ package com.metamatrix.dqp.client.impl;
 import java.io.Serializable;
 import java.sql.ResultSet;
 
-import com.metamatrix.dqp.client.RequestInfo;
-
 
 /** 
  * @since 4.2
  */
-public class ServerRequest implements RequestInfo {
+public class ServerRequest {
     
-    //private static final String HEADER = "ServerRequest:";
+	public static final int REQUEST_TYPE_STATEMENT = 0;
+    public static final int REQUEST_TYPE_PREPARED_STATEMENT = 1;
+    public static final int REQUEST_TYPE_CALLABLE_STATEMENT = 2;
+    
+    public static final int AUTOWRAP_OFF = 0;
+    public static final int AUTOWRAP_ON = 1;
+    public static final int AUTOWRAP_OPTIMISTIC = 2;
+    public static final int AUTOWRAP_PESSIMISTIC = 3;
     
     private String sql;
-    private int requestType = RequestInfo.REQUEST_TYPE_STATEMENT;
+    private int requestType = REQUEST_TYPE_STATEMENT;
     private Object[] bindParameters;
     private int cursorType = ResultSet.TYPE_FORWARD_ONLY;
     private int fetchSize;
@@ -46,11 +51,11 @@ public class ServerRequest implements RequestInfo {
     private boolean xmlValidationMode;
     private String xmlFormat;
     private String xmlStyleSheet;
-    private int transactionAutoWrapMode = RequestInfo.AUTOWRAP_OFF;
+    private int transactionAutoWrapMode = AUTOWRAP_OFF;
     private boolean useResultSetCache;
     private Serializable commandPayload;
     
-    String getSql() {
+    public String getSql() {
         return sql;
     }
     /** 
@@ -61,7 +66,7 @@ public class ServerRequest implements RequestInfo {
         this.sql = sql;
     }
     
-    int getRequestType() {
+    public int getRequestType() {
         return requestType;
     }
 
@@ -73,7 +78,7 @@ public class ServerRequest implements RequestInfo {
         this.requestType = type;
     }
 
-    Object[] getBindParameters() {
+    public Object[] getBindParameters() {
         return bindParameters;
     }
     /** 
@@ -84,7 +89,7 @@ public class ServerRequest implements RequestInfo {
         this.bindParameters = params;
     }
 
-    int getCursorType() {
+    public int getCursorType() {
         return cursorType;
     }
     /** 
@@ -95,7 +100,7 @@ public class ServerRequest implements RequestInfo {
         this.cursorType = type;
     }
 
-    int getFetchSize() {
+    public int getFetchSize() {
         return fetchSize;
     }
     /** 
@@ -106,7 +111,7 @@ public class ServerRequest implements RequestInfo {
         this.fetchSize = size;
     }
     
-    boolean getPartialResults() {
+    public boolean getPartialResults() {
         return partialResults;
     }
 
@@ -118,7 +123,7 @@ public class ServerRequest implements RequestInfo {
         this.partialResults = flag;
     }
     
-    boolean getXMLValidationMode() {
+    public boolean getXMLValidationMode() {
         return xmlValidationMode;
     }
 
@@ -130,7 +135,7 @@ public class ServerRequest implements RequestInfo {
         this.xmlValidationMode = flag;
     }
     
-    String getXMLFormat() {
+    public String getXMLFormat() {
         return xmlFormat;
     }
 
@@ -142,7 +147,7 @@ public class ServerRequest implements RequestInfo {
         this.xmlFormat = format;
     }
     
-    String getXMLStyleSheet() {
+    public String getXMLStyleSheet() {
         return xmlStyleSheet;
     }
 
@@ -154,7 +159,7 @@ public class ServerRequest implements RequestInfo {
         this.xmlStyleSheet = styleSheet;
     }
 
-    int getTransactionAutoWrapMode() {
+    public int getTransactionAutoWrapMode() {
         return transactionAutoWrapMode;
     }
     /** 
@@ -165,7 +170,7 @@ public class ServerRequest implements RequestInfo {
         this.transactionAutoWrapMode = autoWrapMode;
     }
     
-    boolean getUseResultSetCache() {
+    public boolean getUseResultSetCache() {
         return useResultSetCache;
     }
 

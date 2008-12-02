@@ -32,6 +32,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 
+import javax.crypto.SealedObject;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
@@ -40,6 +42,8 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.client.ServiceInvocationStruct;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.crypto.CryptoException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ResultsFuture;
@@ -63,12 +67,16 @@ public class ServerWorkItem implements Runnable {
 		this.server = server;
 	}
 
+    /**
+     * main entry point for remote method calls.  encryption/decryption is handled here so that it won't be done by the io thread
+     */
     public void run() {
     	DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
     	if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) {
             LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "forwarding message to listener:" + message); //$NON-NLS-1$
         }
 		Message result = null;
+		final boolean encrypt = message.getContents() instanceof SealedObject;
         try {
         	/* Defect 15211
     		 * If a CNFE occurred while deserializing the packet, the packet message should be a
@@ -116,7 +124,7 @@ public class ServerWorkItem implements Runnable {
 								asynchResult.setContents(e.getCause());
 								logException(e.getCause());
 							}
-							socketClientInstance.send(asynchResult, messageKey);
+							sendResult(asynchResult, encrypt);
 						}
 						
 					});
@@ -133,10 +141,22 @@ public class ServerWorkItem implements Runnable {
             result = holder;
         } 
         if (result != null) {
-            this.socketClientInstance.send(result, messageKey);
+            sendResult(result, encrypt);
         }
     }   
     
+    void sendResult(Message result, boolean encrypt) {
+		if (encrypt) {
+			try {
+				result.setContents(socketClientInstance.getCryptor().sealObject(result.getContents()));
+			} catch (CryptoException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
+		}
+		socketClientInstance.send(result, messageKey);
+    }
+
+        
     private void logException(Throwable e) {
         //Case 5558: Differentiate between system level errors and
         //processing errors.  Only log system level errors as errors, 

@@ -140,9 +140,9 @@ public interface Session extends
      * Get the unique MetaMatrix session
      * within a given MetaMatrix System
      * 
-     * @return long of the Session ID
+     * @return String of the Session ID
      */
-    public long getSessionID();
+    public String getSessionID();
 
     /**
      * Get the State of the Session 

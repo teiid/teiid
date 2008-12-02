@@ -26,7 +26,6 @@ package com.metamatrix.common.comm.platform.server;
 
 import java.lang.reflect.Proxy;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 import junit.framework.TestCase;
@@ -59,7 +58,7 @@ public class TestAdminAuthInterceptor extends TestCase {
     
     @Override
     protected void setUp() throws Exception {
-    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "NONE", "gojo", new Properties())); //$NON-NLS-1$ //$NON-NLS-2$
+    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "gojo")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Override

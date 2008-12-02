@@ -45,7 +45,6 @@ import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
@@ -102,7 +101,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
         Properties productInfo1 = new Properties();
         productInfo1.put(ProductInfoConstants.VIRTUAL_DB, "vdb1"); //$NON-NLS-1$
         productInfo1.put(ProductInfoConstants.VDB_VERSION, "1");//$NON-NLS-1$
-        MetaMatrixSessionInfo info1 = new MetaMatrixSessionInfo(id1, "user1", 1, 1, "app1", 1, "cluster1",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        MetaMatrixSessionInfo info1 = new MetaMatrixSessionInfo(id1, "user1", 1, "app1", 1, "cluster1",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                                                 productInfo1, "product1", null, null); //$NON-NLS-1$
         sessions.add(info1);
 
@@ -111,7 +110,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
         Properties productInfo2 = new Properties();
         productInfo2.put(ProductInfoConstants.VIRTUAL_DB, "vdb2"); //$NON-NLS-1$
         productInfo2.put(ProductInfoConstants.VDB_VERSION, "2"); //$NON-NLS-1$
-        MetaMatrixSessionInfo info2 = new MetaMatrixSessionInfo(id2, "user2", 2, 2, "app2", 2, "cluster2",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        MetaMatrixSessionInfo info2 = new MetaMatrixSessionInfo(id2, "user2", 2, "app2", 2, "cluster2",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         		productInfo2, "product2", null, null); //$NON-NLS-1$
         sessions.add(info2);
         
@@ -261,7 +260,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     /** 
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#validateSession(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      */
-    public SessionToken validateSession(MetaMatrixSessionID sessionID) throws InvalidSessionException,
+    public MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID) throws InvalidSessionException,
                                                                       SessionServiceException,
                                                                       ServiceException {
         return null;

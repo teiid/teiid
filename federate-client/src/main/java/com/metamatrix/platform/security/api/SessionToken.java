@@ -25,10 +25,6 @@
 package com.metamatrix.platform.security.api;
 
 import java.io.Serializable;
-import java.util.Properties;
-
-import com.metamatrix.common.comm.CommonCommPlugin;
-
 
 /**
  * This class is an immutable identifier for a unique session that also
@@ -37,16 +33,13 @@ import com.metamatrix.common.comm.CommonCommPlugin;
  * 
  * Server-side object should not be returned to the client
  */
-public class SessionToken implements Serializable, Comparable, Cloneable {
+public class SessionToken implements Serializable, Comparable<SessionToken>, Cloneable {
     public final static long serialVersionUID = -2853708320435636107L;
 
-    public final static String DEFAULT_CLUSTER_NAME = "NONE"; //$NON-NLS-1$
     /** The session ID */
     private MetaMatrixSessionID sessionID;
-    private Serializable trustedToken = null;
+    private Serializable trustedToken;
     private String userName;
-    private String clusterName = DEFAULT_CLUSTER_NAME;
-    private final Properties productInfo;
     
     /**
      * Fake SessionToken representing a trusted user
@@ -54,48 +47,21 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
     public SessionToken() {
     	this.sessionID = new MetaMatrixSessionID(-1);
     	this.userName = "trusted"; //$NON-NLS-1$
-    	this.productInfo = new Properties();
     }
 
     /**
     * The primary constructor that specifies the id, userName, and product info
     * for the session represented by this token.
     * @param id (long) the unique identifier for the session
+     * @param userName (String) the userName for this session
      * @param pinginterval (long) indicates how often the client (in mls) will ping the server to stay alive 
      * @param resourceAlgorithm 
-     * @param clusterName  
-     * @param userName (String) the userName for this session
-     * @param productInfo (String[]) the product information for this session
      * @throws IllegalArgumentException
      */
-     public SessionToken(MetaMatrixSessionID id, String clusterName, String userName, Properties productInfo){
+     public SessionToken(MetaMatrixSessionID id, String userName){
          this.sessionID = id;
          this.userName = userName;
-         this.clusterName = clusterName;
-         this.productInfo = productInfo;
      }    
-
-    /**
-     * Copy ctor called from TrustedSessionToken during creation while filling in
-     * super().  The original token will have been validated prior to this method.
-     * @param token The complete SessionToken to copy
-     * @param trustedToken the token that was obtained by the client and that
-     * was originally given to the client by the trusted authentication mechanism
-     */
-    SessionToken(SessionToken token, Serializable trustedToken, Properties productInfo) {
-        this.sessionID = token.sessionID;
-        this.trustedToken = trustedToken;
-        this.productInfo = productInfo;
-    }
-
-    /**
-    *
-    * @param index (int) the index of the productInfo to retrieve
-    * @throws IllegalArgumentException
-    */
-    public String getProductInfo(String key){
-        return this.productInfo.getProperty(key);
-    }
 
     /**
      * Returns unique session identifier
@@ -109,8 +75,8 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
      * Returns unique session identifier
      * @return the session ID value
      */
-    public long getSessionIDValue() {
-        return this.sessionID.getValue();
+    public String getSessionIDValue() {
+        return this.sessionID.toString();
     }
 
     /**
@@ -121,10 +87,6 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
         return this.userName;
     }
     
-    public String getClusterName() {
-        return this.clusterName;
-    }
-
 	/**
      * Compares this SessionToken to another Object. If the Object is a SessionToken,
      * this function compares the ID and the user account ID.  Otherwise, it throws a
@@ -138,21 +100,13 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
 	 * @throws ClassCastException if the specified object's type prevents it
      *      from being compared to this UserID.
 	 */
-	public int compareTo(Object o) {
-        SessionToken that = (SessionToken)o; // May throw ClassCastException
-        if ( that == null ) {
-            throw new IllegalArgumentException(CommonCommPlugin.Util.getString("SessionToken.session_compare_null")); //$NON-NLS-1$
-        }
+	public int compareTo(SessionToken that) {
         if ( that == this ) {
             return 0;
         }
 
         // Check if everything else is equal ...
         int result = this.sessionID.compareTo(that.sessionID);
-        if ( result != 0 ) {
-            return result;
-        }
-        //result = this.getUsername().compareTo(that.getUsername());
         return result;
     }
 
@@ -171,7 +125,7 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
 
         // Check if object can be compared to this one
         // (this includes checking for null ) ...
-        if ( this.getClass().isInstance(obj) ) {
+        if ( obj instanceof SessionToken ) {
             SessionToken that = (SessionToken)obj;
         	return ( this.sessionID.equals(that.sessionID)  );
         }
@@ -194,7 +148,7 @@ public class SessionToken implements Serializable, Comparable, Cloneable {
      * Returns a string representing the current state of the object.
      */
     public String toString() {
-        return "SessionToken[" + getUsername() + "," + getSessionIDValue() + "," + this.getClusterName() + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "SessionToken[" + getUsername() + "," + getSessionIDValue() + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     /**

@@ -50,7 +50,7 @@ public class TestLogonImpl extends TestCase {
 		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, productName);
 
 		MetaMatrixSessionInfo resultInfo = new MetaMatrixSessionInfo(
-				new MetaMatrixSessionID(1), userName, 0, 0, applicationName, 0,
+				new MetaMatrixSessionID(1), userName, 0, applicationName, 0,
 				"bar", new Properties(), "product", null, null); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Mockito.stub(ssi.createSession(userName, null, null, applicationName,

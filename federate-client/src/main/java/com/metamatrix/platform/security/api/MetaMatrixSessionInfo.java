@@ -50,14 +50,13 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
      * Master constructor, allows a MetaMatrixSessionInfo to be created with
      * any state and any timestamps.
      */
-    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, long timeStateChanged, String applicationName, int state, String clusterName, Properties productInfo, String product, String clientIp, String clientHostname){
+    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, String applicationName, int state, String clusterName, Properties productInfo, String product, String clientIp, String clientHostname){
         this.timeCreated = timeCreated;
         this.lastPingTime = timeCreated;
-        this.timeStateChanged = timeStateChanged;
         this.applicationName = applicationName;
         this.state = state;
         this.product = product;
-        this.sessionToken = new SessionToken(sessionID, clusterName, userName, productInfo);
+        this.sessionToken = new SessionToken(sessionID, userName);
         this.productInfo = productInfo;
         this.clientIp = clientIp;
         this.clientHostname = clientHostname;
@@ -77,10 +76,6 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
 
     public long getTimeCreated() {
         return this.timeCreated;
-    }
-
-    public long getTimeStateChanged() {
-        return this.timeStateChanged;
     }
 
     /**

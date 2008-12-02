@@ -25,7 +25,6 @@
 package com.metamatrix.common.comm.platform;
 
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -90,7 +89,7 @@ public class FakeAdminHelper implements
      * @since 4.3
      */
     public SessionToken validateSession(MetaMatrixSessionID sessionID) throws InvalidSessionException, ComponentNotFoundException {
-        return new SessionToken(sessionID, "fake_cluster", "fake", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        return new SessionToken(sessionID, "fake"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

@@ -543,7 +543,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         assertEquals(2, results.size());
 
         MMSession session = (MMSession) results.iterator().next();
-        assertEquals("1", session.getIdentifier()); //$NON-NLS-1$
+        assertEquals("00000000-0000-0001-0000-000000000001", session.getIdentifier()); //$NON-NLS-1$
         assertEquals("vdb1", session.getVDBName()); //$NON-NLS-1$
         assertEquals("1", session.getVDBVersion()); //$NON-NLS-1$
         assertEquals("app1", session.getApplicationName()); //$NON-NLS-1$
@@ -551,7 +551,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
                
         
         
-        results = admin.getSessions("1");  //$NON-NLS-1$
+        results = admin.getSessions("00000000-0000-0001-0000-000000000001");  //$NON-NLS-1$
         assertEquals(1, results.size());
     }
     

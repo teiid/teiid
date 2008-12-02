@@ -24,7 +24,6 @@
 
 package com.metamatrix.dqp.client.impl;
 
-import com.metamatrix.common.comm.api.ServerInstanceContext;
 import com.metamatrix.dqp.client.PortableContext;
 
 /**
@@ -34,7 +33,7 @@ import com.metamatrix.dqp.client.PortableContext;
  * @since 4.3
  */
 public class SerializablePortableContext implements
-                                        PortableContext, ServerInstanceContext {
+                                        PortableContext {
 
     /**
      * This represents the portable context value in String form.

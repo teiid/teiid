@@ -37,7 +37,7 @@ import com.metamatrix.core.util.DateUtil;
 public class MMSession extends MMAdminObject implements Session {
 	private String userName = ""; //$NON-NLS-1$;
 	private String applicationName = ""; //$NON-NLS-1$
-	private long sessionID;
+	private String sessionID;
 	private String vdbName = ""; //$NON-NLS-1$
 	private String vdbVersion = ""; //$NON-NLS-1$
 	private String productName = ""; //$NON-NLS-1$
@@ -54,7 +54,7 @@ public class MMSession extends MMAdminObject implements Session {
      */
 	public MMSession(String[] identifierParts) {
         super(identifierParts);
-        this.sessionID = Long.parseLong(getIdentifier());
+        this.sessionID = getIdentifier();
 	}
 
    
@@ -189,9 +189,9 @@ public class MMSession extends MMAdminObject implements Session {
 	 * Get the unique MetaMatrix session
      * within a given MetaMatrix System
 	 * 
-	 * @return long of the Session ID
+	 * @return Strings of the Session ID
 	 */
-	public long getSessionID() {
+	public String getSessionID() {
 		return sessionID;
 	}
 

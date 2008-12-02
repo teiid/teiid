@@ -176,7 +176,7 @@ public class TestRequest extends TestCase {
         workContext.setVdbVersion(VDB_VERSION); 
         workContext.setSessionId(new MetaMatrixSessionID(5));
         Request request = helpProcessMessage(environment, message, null, workContext);
-        assertEquals("5", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID));
+        assertEquals("00000000-0000-0005-0000-000000000005", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID));
     }
 
     private Request helpProcessMessage(FakeApplicationEnvironment environment,

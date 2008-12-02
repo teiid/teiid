@@ -910,6 +910,8 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Get result set cache mode
         String rsCache = getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         res.setUseResultSetCache(Boolean.valueOf(rsCache).booleanValue());
+        
+        res.setQueryPlanAllowed(!Boolean.valueOf(getExecutionProperty(ExecutionProperties.PLAN_NOT_ALLOWED)).booleanValue());
     }
 
     /**

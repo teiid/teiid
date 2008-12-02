@@ -137,26 +137,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         
         props.setProperty(MMURL_Properties.SERVER.SERVER_URL,this.buildServerURL());
         
-        if ( this.alternateServers != null ) {
-        	String hostList = this.serverName;
-        	String portList = "" + this.portNumber; //$NON-NLS-1$
-        	
-        	String[] as = this.alternateServers.split( MMURL.COMMA_DELIMITER);
-        	
-        	for ( int i = 0; i < as.length; i++ ) {
-        		String[] server = as[i].split( MMURL.COLON_DELIMITER );
-
-        		if ( server.length > 0 ) {
-        			hostList += MMURL.COMMA_DELIMITER + server[0];
-        			if ( server.length > 1 ) {
-        				portList += MMURL.COMMA_DELIMITER + server[1];
-        			} else {
-        				portList += MMURL.COMMA_DELIMITER + this.portNumber;
-        			}
-        		}
-        	}
-        }
-
         if (this.getSocketsPerVM() != null) {
             props.setProperty(ExecutionProperties.SOCKETS_PER_VM, this.getSocketsPerVM());
         }
@@ -168,7 +148,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         if (this.getCredentials() != null) {
             props.setProperty(ConnectionProperties.PROP_CREDENTIALS, this.getCredentials());
         }
-                
 
         return props;
     }
@@ -266,7 +245,7 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
             validateProperties(userName,password);
             final Properties props = buildProperties(userName, password);
             final MMDriver driver = new MMDriver();
-            return driver.createMMConnection(null, props);
+            return driver.createMMConnection(buildURL(), props);
         } catch (MetaMatrixCoreException e) {
             getLogger().log(MessageLevel.CRITICAL, e, e.getMessage());
             throw MMSQLException.create(e, e.getMessage());

@@ -86,7 +86,7 @@ public class ResultsFuture<T> implements Future<T> {
 		return convertResult();
 	}
 	
-	private T convertResult() throws ExecutionException {
+	protected T convertResult() throws ExecutionException {
 		if (exception != null) {
 			throw new ExecutionException(exception);
 		}
