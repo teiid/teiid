@@ -41,7 +41,7 @@ public class PropertyFileCurrentConfigBootstrap implements CurrentConfigBootstra
     public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
     
     //noconfig is used so that in cases where the noconfig=true (which means no configuration exist in the datasource)
-    // the obtaining of properties can still be done
+    // the obtaining of properties can still be tried without causing an exception to be thrown
     private boolean noconfig = true;
     
     public PropertyFileCurrentConfigBootstrap() {
@@ -73,22 +73,29 @@ public class PropertyFileCurrentConfigBootstrap implements CurrentConfigBootstra
         } else {
             bootstrapProps = new Properties();
         }
-
-        InputStream bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
-        if (bootstrapPropStream != null) {
-            bootstrapProps.load(bootstrapPropStream);
-        } else {
-        	// dont throw the exception when noconfig=true and there was no bootstrap found
+        InputStream bootstrapPropStream = null;
+        try {
+        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
+        	if (bootstrapPropStream != null) {
+        		bootstrapProps.load(bootstrapPropStream);
+        	}
+        } catch (Exception e) {
+        	
+        	// only throw the exception when noconfig=true is not set and there was no bootstrap found
         	if (!noconfig) {
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
         	}
-        }
+        	
+        } finally {
 
-        try {
-            bootstrapPropStream.close();
-        } catch ( Exception e ) {
+	        try {
+	            bootstrapPropStream.close();
+	        } catch ( Exception e ) {
+	        }
         }
-
+        if (bootstrapProps == null) {
+        	bootstrapProps = new Properties();
+        }
         return new UnmodifiableProperties(bootstrapProps);
 
     }
