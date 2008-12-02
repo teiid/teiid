@@ -61,7 +61,6 @@ public class MMJDBCURL {
         ExecutionProperties.PROP_FETCH_SIZE,
         ExecutionProperties.PROP_XML_FORMAT,
         ExecutionProperties.PROP_XML_VALIDATION,
-        ExecutionProperties.SOCKETS_PER_VM,
         ExecutionProperties.AUTO_FAILOVER,
         ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
         ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD,
@@ -266,10 +265,6 @@ public class MMJDBCURL {
     
     public String getXMLValidation() {
         return properties.getProperty(ExecutionProperties.PROP_XML_VALIDATION);
-    }
-    
-    public String getSocketsPerVM() {
-        return properties.getProperty(ExecutionProperties.SOCKETS_PER_VM);
     }
     
     public String getTransparentFailover() {

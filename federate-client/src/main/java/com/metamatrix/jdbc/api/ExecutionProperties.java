@@ -83,13 +83,6 @@ public interface ExecutionProperties {
      */
     public static final String PROP_FETCH_SIZE = "fetchSize";   //$NON-NLS-1$ 
     
-    
-    /**
-     * Number of sockets used by this client VM to communicate with each server VM. 
-     * @since 4.3
-     */
-    public static final String SOCKETS_PER_VM = "socketsPerVM";  //$NON-NLS-1$ 
-    
     /**
      * If true, will automatically select a new server instance after a communication exception.
      * @since 5.6

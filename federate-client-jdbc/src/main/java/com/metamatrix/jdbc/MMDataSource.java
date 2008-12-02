@@ -37,7 +37,6 @@ import com.metamatrix.core.log.Logger;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.log.NullLogger;
 import com.metamatrix.jdbc.api.ConnectionProperties;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -89,13 +88,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
      */
     private String serverName;
      
-   /**
-     * Number of sockets used by this client VM to communicate with each server VM.
-     * Null if not set. 
-     * @since 4.3
-     */
-    private String socketsPerVM; 
-    
     /**
      * Specify a set of data source credentials to pass to the connectors as defined in 
      * {@link com.metamatrix.jdbc.api.ConnectionProperties#PROP_CREDENTIALS}.  This
@@ -136,10 +128,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         Properties props = super.buildProperties(userName, password);
         
         props.setProperty(MMURL_Properties.SERVER.SERVER_URL,this.buildServerURL());
-        
-        if (this.getSocketsPerVM() != null) {
-            props.setProperty(ExecutionProperties.SOCKETS_PER_VM, this.getSocketsPerVM());
-        }
         
         if (this.getAutoFailover() != null) {
             props.setProperty(CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
@@ -202,15 +190,10 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
             throw createConnectionError(reason);
         }
 
-        reason = reasonWhyInvalidSocketsPerVM(this.socketsPerVM);
-        if (reason != null) {
-            throw createConnectionError(reason);
-        }
-        
         reason = reasonWhyInvalidAlternateServers(this.alternateServers);
-        if ( reason != null)
+        if ( reason != null) {
         	throw createConnectionError(reason);
-
+        }
     }
     
     private MMSQLException createConnectionError(String reason) {
@@ -279,16 +262,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
         return serverName;
     }
     
-
-    /**
-     * Returns the number of sockets used by this client VM to communicate with each server VM. 
-     * Null if not set.
-     * @since 4.3
-     */
-    public String getSocketsPerVM() {
-        return socketsPerVM;
-    }
-    
     /**
      * Returns the credentials string defining credentials to use with connectors for per-user logon.
      * @since 4.3.2
@@ -336,14 +309,6 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
      */
     public void setServerName(final String serverName) {
         this.serverName = serverName;
-    }
-    
-    /**
-     * Sets number of sockets used by this client VM to communicate with each server VM. 
-     * @since 4.3
-     */
-    public void setSocketsPerVM(final String socketsPerVM) {
-        this.socketsPerVM = socketsPerVM;        
     }
     
     /**
