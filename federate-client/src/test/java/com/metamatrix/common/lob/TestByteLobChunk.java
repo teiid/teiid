@@ -24,13 +24,11 @@
 
 package com.metamatrix.common.lob;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
+
+import com.metamatrix.core.util.UnitTestUtil;
 
 
 public class TestByteLobChunk extends TestCase {
@@ -49,14 +47,7 @@ public class TestByteLobChunk extends TestCase {
     	String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
         LobChunk chunk = new LobChunk(testString.getBytes(), true);        
         
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(chunk);
-        oos.flush();
-        
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        
-        LobChunk result = (LobChunk)ois.readObject();
+        LobChunk result = UnitTestUtil.helpSerialize(chunk);
         assertTrue(Arrays.equals(chunk.getBytes(), result.getBytes()));
         assertTrue(result.isLast());
     }

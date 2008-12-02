@@ -120,7 +120,7 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
     
     private String autoFailover;
     
-    private Logger logger;
+    private transient Logger logger;
 
     /**
      * Constructor for MMDataSource.

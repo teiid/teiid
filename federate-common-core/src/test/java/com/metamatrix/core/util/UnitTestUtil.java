@@ -24,7 +24,13 @@
 
 package com.metamatrix.core.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
@@ -388,6 +394,17 @@ public class UnitTestUtil {
             scratchDirectory.mkdir();
         }
 	    return filePath;
+	}
+	
+	public static final <T extends Serializable> T helpSerialize(T object) throws IOException, ClassNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(object);
+        oos.flush();
+        
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+        
+        return (T)ois.readObject();
 	}
 
 }

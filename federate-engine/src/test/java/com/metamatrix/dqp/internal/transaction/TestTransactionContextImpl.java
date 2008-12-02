@@ -24,12 +24,6 @@
 
 package com.metamatrix.dqp.internal.transaction;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
@@ -41,13 +35,14 @@ import javax.transaction.xa.XAResource;
 import junit.framework.TestCase;
 
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestTransactionContextImpl extends TestCase {
     
     public void testSerialization() throws Exception {
         TransactionContextImpl context = new TransactionContextImpl();
         
-        helpTestSerialization(context);
+        UnitTestUtil.helpSerialize(context);
         
         context.setTransaction(new Transaction() {
 
@@ -91,29 +86,11 @@ public class TestTransactionContextImpl extends TestCase {
         }, "foo"); //$NON-NLS-1$
         
         try {
-            helpTestSerialization(context);
+            UnitTestUtil.helpSerialize(context);
             fail("expected exception"); //$NON-NLS-1$
         } catch (MetaMatrixRuntimeException e) {
             
         }
-    }
-
-    /** 
-     * @param context
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    private <T> T helpTestSerialization(T object) throws IOException,
-                                                                      ClassNotFoundException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        
-        oos.writeObject(object);
-        oos.flush();
-        
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        
-        return (T)ois.readObject();
     }
 
 }
