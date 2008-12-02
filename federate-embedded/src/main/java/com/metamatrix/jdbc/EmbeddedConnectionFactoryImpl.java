@@ -43,7 +43,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.application.ClientConnectionListener;
-import com.metamatrix.dqp.application.ClientConnectionProperties;
 import com.metamatrix.dqp.config.DQPConfigSource;
 import com.metamatrix.dqp.embedded.DQPListener;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -181,8 +180,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      */
     private void checkConnectionProperties(Properties props) throws SQLException {
         String vdbName = props.getProperty(BaseDataSource.VDB_NAME);
-        props.setProperty(ClientConnectionProperties.VDB_NAME, vdbName);
-        String vdbVersion = props.getProperty(BaseDataSource.VERSION, ClientConnectionProperties.USE_LATEST_VDB_VERSION);
+        String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION, EmbeddedDataSource.USE_LATEST_VDB_VERSION);
                         
         try {
             DQPConfigSource configuration = handler.getManager().getDQPConfig();
@@ -190,13 +188,11 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             List<VDBArchive> vdbs = service.getAvailableVDBs();
 
             // We are looking for the latest version find that now 
-            if (vdbVersion.equals(ClientConnectionProperties.USE_LATEST_VDB_VERSION)) {
+            if (vdbVersion.equals(EmbeddedDataSource.USE_LATEST_VDB_VERSION)) {
                 vdbVersion = findLatestVersion(vdbName, vdbs);
             }
 
-            props.setProperty(BaseDataSource.VERSION, vdbVersion);
             props.setProperty(BaseDataSource.VDB_VERSION, vdbVersion);
-            props.setProperty(ClientConnectionProperties.VDB_VERSION, vdbVersion);
             
             // This below call will load the VDB from configuration into VDB service 
             // if not already done so.
@@ -230,7 +226,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         if(latestVersion != 0) {
             return String.valueOf(latestVersion);
         }
-        throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, ClientConnectionProperties.USE_LATEST_VDB_VERSION})); //$NON-NLS-1$        
+        throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, EmbeddedDataSource.USE_LATEST_VDB_VERSION})); //$NON-NLS-1$        
     }    
     
     /**

@@ -39,7 +39,6 @@ import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.dqp.application.ClientConnectionProperties;
 
 /**
  * Factory for obtaining a server connection using the appropriate transport,
@@ -47,8 +46,6 @@ import com.metamatrix.dqp.application.ClientConnectionProperties;
  */
 public class MultiTransportFactory {
    
-    private static final String VIRTUAL_DATABASE_NAME = "VirtualDatabaseName"; //$NON-NLS-1$
-	private static final String VIRTUAL_DATABASE_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
 	public static final String LOCAL_TRANSPORT = "Local"; //$NON-NLS-1$
     public static final String SOCKET_TRANSPORT = "Socket"; //$NON-NLS-1$
 
@@ -70,13 +67,6 @@ public class MultiTransportFactory {
                 handler = createHandler(transport);  
                 handlers.put(transport, handler);     
             }
-        }
-
-        //TODO: why are we using these legacy names?
-        connProps.put(ClientConnectionProperties.VDB_NAME, connProps.getProperty(VIRTUAL_DATABASE_NAME)); 
-        String vdbVersion = connProps.getProperty(VIRTUAL_DATABASE_VERSION); 
-        if(vdbVersion != null){
-        	connProps.put(ClientConnectionProperties.VDB_VERSION, vdbVersion);
         }
         
         //specific to JDBC

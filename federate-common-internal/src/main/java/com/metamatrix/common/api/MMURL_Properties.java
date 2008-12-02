@@ -117,16 +117,7 @@ public interface MMURL_Properties {
         // logging level that would traces method calls
         public static final int LOG_TRACE = 3;
         
-
-
-        //constant indicating Virtual database name for the DQP
-        public static final String VDB_NAME_DQP = "vdbName"; //$NON-NLS-1$
-        //constant indicating Virtual database version for the DQP
-        public static final String VDB_VERSION_DQP = "vdbVersion"; //$NON-NLS-1$
-
         public static final String CLIENT_TOKEN_PROP = "clientToken"; //$NON-NLS-1$ 
-        public static final String CONNECTION_ID = "connectionID"; //$NON-NLS-1$
-
     }
     
     public interface CONNECTION {

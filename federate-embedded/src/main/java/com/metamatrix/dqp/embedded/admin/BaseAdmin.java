@@ -68,7 +68,6 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.dqp.application.ClientConnectionProperties;
 import com.metamatrix.dqp.config.DQPConfigSource;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
@@ -76,6 +75,7 @@ import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 
@@ -311,8 +311,8 @@ abstract class BaseAdmin {
     
     private Session convertConnection(ServerConnection src) {
         MMSession session = new MMSession(new String[] {src.getLogonResult().getSessionID().toString()});
-        session.setVDBName(src.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_NAME));
-        session.setVDBVersion(src.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_VERSION));        
+        session.setVDBName(src.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB));
+        session.setVDBVersion(src.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION));        
         return session;
     }
     

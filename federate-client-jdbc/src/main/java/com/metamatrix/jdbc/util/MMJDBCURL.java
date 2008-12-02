@@ -224,6 +224,9 @@ public class MMJDBCURL {
     }
     
     public String getVDBVersion() {
+        if (properties.contains(BaseDataSource.VDB_VERSION)) {
+        	return properties.getProperty(BaseDataSource.VDB_VERSION);
+        }
         return properties.getProperty(BaseDataSource.VERSION);
     }
     

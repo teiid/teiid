@@ -207,12 +207,10 @@ public final class EmbeddedDriver extends BaseDriver {
                     info.setProperty(propName, optionalParams.getProperty(propName));
                 }
             }
-            if(optionalParams.containsKey(BaseDataSource.VERSION)) {
-                // add the property only if it is new because they could have
-                // already been specified either through url or otherwise.
-                if(! info.containsKey(BaseDataSource.VDB_VERSION)) {
-                    info.setProperty(BaseDataSource.VDB_VERSION, optionalParams.getProperty(BaseDataSource.VERSION));
-                }
+            // add the property only if it is new because they could have
+            // already been specified either through url or otherwise.
+            if(! info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
+                info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
             }
             
             // Add the DQP URL as the configuration URL

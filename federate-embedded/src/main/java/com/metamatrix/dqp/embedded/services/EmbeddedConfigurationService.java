@@ -61,7 +61,6 @@ import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.application.ClientConnectionListener;
-import com.metamatrix.dqp.application.ClientConnectionProperties;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
@@ -76,6 +75,7 @@ import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
@@ -1302,8 +1302,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 // Add to parent's collection
                 clientConnections.add(connection);
                 
-                String vdbName = connection.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_NAME);
-                String vdbVersion = connection.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_VERSION);
+                String vdbName = connection.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
+                String vdbVersion = connection.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION);
                 String key = vdbId(vdbName, vdbVersion);
                 
                 DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionAdded", new Object[] {vdbName, vdbVersion, connection.getLogonResult().getSessionID()}); //$NON-NLS-1$
@@ -1324,8 +1324,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 // remove from the collection
                 clientConnections.remove(connection);
                 
-                String vdbName = connection.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_NAME);
-                String vdbVersion = connection.getLogonResult().getProductInfo(ClientConnectionProperties.VDB_VERSION);
+                String vdbName = connection.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
+                String vdbVersion = connection.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION);
                 String key = vdbId(vdbName, vdbVersion);
                 
                 DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionRemoved", new Object[] {vdbName, vdbVersion, connection.getLogonResult().getSessionID()}); //$NON-NLS-1$
