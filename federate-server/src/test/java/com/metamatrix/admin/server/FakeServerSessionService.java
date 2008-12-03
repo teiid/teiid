@@ -25,7 +25,6 @@
 package com.metamatrix.admin.server;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -47,8 +46,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
@@ -64,8 +61,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     public MetaMatrixSessionInfo createSession(String userName,
     		Credentials credentials, Serializable trustedToken,
     		String applicationName, String productName, Properties properties)
-    		throws MetaMatrixAuthenticationException, SessionServiceException,
-    		ServiceException {
+    		throws MetaMatrixAuthenticationException, SessionServiceException {
     	return null;
     }
 
@@ -73,8 +69,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#closeSession(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      */
     public void closeSession(MetaMatrixSessionID sessionID) throws InvalidSessionException,
-                                                           SessionServiceException,
-                                                           ServiceException {
+                                                           SessionServiceException {
     }
 
     /** 
@@ -83,8 +78,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,
                                     MetaMatrixSessionID adminSessionID) throws InvalidSessionException,
                                                                        AuthorizationException,
-                                                                       SessionServiceException,
-                                                                       ServiceException {
+                                                                       SessionServiceException {
         terminatedSessions.add(terminatedSessionID.toString());
         
         return false;
@@ -93,8 +87,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     /** 
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#getActiveSessions()
      */
-    public Collection getActiveSessions() throws SessionServiceException,
-                                         ServiceException {
+    public Collection getActiveSessions() throws SessionServiceException {
         List sessions = new ArrayList();
         
         MetaMatrixSessionID id1 = new MetaMatrixSessionID(1); 
@@ -120,16 +113,14 @@ public class FakeServerSessionService implements SessionServiceInterface {
     /** 
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#getActiveSessionsCount()
      */
-    public int getActiveSessionsCount() throws SessionServiceException,
-                                       ServiceException {
+    public int getActiveSessionsCount() throws SessionServiceException {
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#getActiveConnectionsCountForProduct(java.lang.String)
      */
-    public int getActiveConnectionsCountForProduct(String product) throws SessionServiceException,
-                                                                  ServiceException {
+    public int getActiveConnectionsCountForProduct(String product) throws SessionServiceException{
         return 0;
     }
 
@@ -137,8 +128,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#getPrincipal(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      */
     public MetaMatrixPrincipal getPrincipal(MetaMatrixSessionID sessionID) throws InvalidSessionException,
-                                                                          SessionServiceException,
-                                                                          ServiceException {
+                                                                          SessionServiceException {
         return null;
     }
 
@@ -146,114 +136,108 @@ public class FakeServerSessionService implements SessionServiceInterface {
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#getSessionsLoggedInToVDB(java.lang.String, java.lang.String)
      */
     public Collection getSessionsLoggedInToVDB(String VDBName,
-                                               String VDBVersion) throws SessionServiceException,
-                                                                 ServiceStateException {
+                                               String VDBVersion) throws SessionServiceException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#pingServer(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      */
-    public void pingServer(MetaMatrixSessionID sessionID) throws ServiceStateException {
+    public void pingServer(MetaMatrixSessionID sessionID) {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#die()
      */
-    public void die() throws ServiceException,
-                     RemoteException {
+    public void die() {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#dieNow()
      */
-    public void dieNow() throws ServiceException,
-                        RemoteException {
+    public void dieNow()  {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#checkState()
      */
-    public void checkState() throws ServiceStateException,
-                            RemoteException {
+    public void checkState(){
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getProperties()
      */
-    public Properties getProperties() throws RemoteException {
+    public Properties getProperties(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStartTime()
      */
-    public Date getStartTime() throws RemoteException {
+    public Date getStartTime(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getHostname()
      */
-    public String getHostname() throws ServiceException,
-                               RemoteException {
+    public String getHostname() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID() throws ServiceException,
-                                   RemoteException {
+    public VMControllerID getVMID() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#isAlive()
      */
-    public boolean isAlive() throws RemoteException {
+    public boolean isAlive(){
         return false;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getServiceType()
      */
-    public String getServiceType() throws RemoteException {
+    public String getServiceType(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getCurrentState()
      */
-    public int getCurrentState() throws RemoteException {
+    public int getCurrentState(){
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStateChangeTime()
      */
-    public Date getStateChangeTime() throws RemoteException {
+    public Date getStateChangeTime() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getID()
      */
-    public ServiceID getID() throws RemoteException {
+    public ServiceID getID(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics()
      */
-    public Collection getQueueStatistics() throws RemoteException {
+    public Collection getQueueStatistics() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics(java.lang.String)
      */
-    public WorkerPoolStats getQueueStatistics(String name) throws RemoteException {
+    public WorkerPoolStats getQueueStatistics(String name) {
         return null;
     }
 
@@ -261,8 +245,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
      * @see com.metamatrix.platform.security.api.service.SessionServiceInterface#validateSession(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      */
     public MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID) throws InvalidSessionException,
-                                                                      SessionServiceException,
-                                                                      ServiceException {
+                                                                      SessionServiceException {
         return null;
     }
 
@@ -271,8 +254,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
 	}
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,
-			Properties props, ClientServiceRegistry listenerRegistry)
-			throws ServiceException, RemoteException {
+			Properties props, ClientServiceRegistry listenerRegistry){
 	}
 
 	public void setInitException(Throwable t) {

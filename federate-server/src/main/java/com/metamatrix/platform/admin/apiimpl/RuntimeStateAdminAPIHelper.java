@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -200,12 +199,8 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
     public VMStatistics getVMStatistics(VMControllerID vmID) throws MetaMatrixComponentException {
-        try {
- 			VMRegistryBinding vm = registry.getVM(vmID.getHostName(), vmID.toString());
- 			return vm.getVMController().getVMStatistics();
- 		} catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0088, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0088, vmID));
- 		}
+		VMRegistryBinding vm = registry.getVM(vmID.getHostName(), vmID.toString());
+		return vm.getVMController().getVMStatistics();
     }   
     
 
@@ -225,13 +220,9 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
     public Collection getServiceQueueStatistics(ServiceRegistryBinding binding) throws MetaMatrixComponentException {
-        try {
-			ServiceInterface service = binding.getService();
-			if (service != null) {
-			    return service.getQueueStatistics();
-			}
-		} catch (RemoteException e) {
-			throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0087, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0087, binding.getServiceID()));
+		ServiceInterface service = binding.getService();
+		if (service != null) {
+		    return service.getQueueStatistics();
 		}
         return Collections.EMPTY_LIST;
     }      
@@ -501,32 +492,25 @@ public class RuntimeStateAdminAPIHelper {
         Set stats = new HashSet();
         Collection result = new ArrayList();
 
-        try {
-            Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-            while (poolIter.hasNext()) {
-                ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-                ResourcePoolMgr mgr = binding.getResourcePoolMgr();
+        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
+        while (poolIter.hasNext()) {
+            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
+            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
 
-                // find the first resource descriptor for this id,
-                // all descriptors across all the vms are not being
-                // maintained independently
+            // find the first resource descriptor for this id,
+            // all descriptors across all the vms are not being
+            // maintained independently
 
-                Collection rds = mgr.getAllResourceDescriptors();
-                for (Iterator it = rds.iterator(); it.hasNext();) {
-                    ResourceDescriptor descriptor = (ResourceDescriptor)it.next();
-                    if (!stats.contains(descriptor.getID())) {
-                        stats.add(descriptor.getID());
-                        result.add(descriptor);
-                    }
+            Collection rds = mgr.getAllResourceDescriptors();
+            for (Iterator it = rds.iterator(); it.hasNext();) {
+                ResourceDescriptor descriptor = (ResourceDescriptor)it.next();
+                if (!stats.contains(descriptor.getID())) {
+                    stats.add(descriptor.getID());
+                    result.add(descriptor);
                 }
-
             }
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0090);
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0090, msg);
 
         }
-
         return result;
 
     }
@@ -538,29 +522,24 @@ public class RuntimeStateAdminAPIHelper {
     public Collection getResourcePoolStatistics() throws MetaMatrixComponentException, ResourcePoolException {
 
         Collection result = new ArrayList();
-        try {
 
-            Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-            while (poolIter.hasNext()) {
-                ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-                ResourcePoolMgr mgr = binding.getResourcePoolMgr();
+        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
+        while (poolIter.hasNext()) {
+            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
+            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
 
-                Iterator iter = mgr.getResourcePoolStatistics().iterator();
-                while (iter.hasNext()) {
-                    ResourcePoolStatistics stats = (ResourcePoolStatistics)iter.next();
-                    Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
-                    String processName = getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-                    ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
-                                                                            binding.getID().getHostName(),
-                                                                            processName, resStats);
+            Iterator iter = mgr.getResourcePoolStatistics().iterator();
+            while (iter.hasNext()) {
+                ResourcePoolStatistics stats = (ResourcePoolStatistics)iter.next();
+                Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
+                String processName = getVMControllerInterface(binding.getID().getVMControllerID()).getName();
+                ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
+                                                                        binding.getID().getHostName(),
+                                                                        processName, resStats);
 
-                    result.add(poolStats);
-                }
+                result.add(poolStats);
             }
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0093, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0093));
         }
-
         return result;
     }
 
@@ -585,9 +564,6 @@ public class RuntimeStateAdminAPIHelper {
         VMControllerInterface vmController = getVMControllerInterface(vmID);
         try {
             vmController.startDeployedService(serviceID);
-        } catch (RemoteException re) {
-            throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0066,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0066, serviceID, vmID));
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se);
         }
@@ -611,8 +587,6 @@ public class RuntimeStateAdminAPIHelper {
         VMControllerInterface vmController = vmBinding.getVMController();
         try {
             vmController.startService(serviceID);
-        } catch (RemoteException re) {
-            throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0066,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0066, serviceID, vmID));
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se, MetaMatrixExceptionUtil.getLinkedMessages(se));
         }
@@ -649,23 +623,14 @@ public class RuntimeStateAdminAPIHelper {
         } catch (ModificationException e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID());
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, msg);
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID());
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, msg);
         }
 
         // Then, if the operational (current) config is effected, set logging config for
         // LogManager in each VM.
         StringBuffer msgs = null;
         ConfigurationID currentConfigID = (ConfigurationID)config.getID();
-        ConfigurationID operationalConfigID;
-        try {
-            operationalConfigID = configAdmin.getCurrentConfigurationID();
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID());
-            I18nLogManager.logError(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0084, e);
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, msg);
-        }
+        ConfigurationID operationalConfigID = configAdmin.getCurrentConfigurationID();
+
         if (currentConfigID.equals(operationalConfigID)) {
             I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0028);
 
@@ -676,26 +641,10 @@ public class RuntimeStateAdminAPIHelper {
             while (vmItr.hasNext()) {
                 VMRegistryBinding vmBinding = (VMRegistryBinding)vmItr.next();
                 VMControllerInterface vm = vmBinding.getVMController();
-                try {
                     vm.setCurrentLogConfiguration(logConfig);
-                } catch (RemoteException e) {
-                    if (msgs == null) {
-                        msgs = new StringBuffer();
-                    }
-                    msgs.append(vmBinding.getHostName() + "_" + vmBinding.getVMName() + " "); //$NON-NLS-1$ //$NON-NLS-2$
-                    I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN,
-                                              ErrorMessageKeys.ADMIN_0085,
-                                              e,
-                                              new Object[] {
-                                                  vmBinding.getVMName()
-                                              });
-                }
             }
             if (msgs != null && msgs.length() > 0) {
-                throw new MetaMatrixComponentException(
-                                                       ErrorMessageKeys.ADMIN_0086,
-                                                       PlatformPlugin.Util
-                                                                          .getString(ErrorMessageKeys.ADMIN_0086, msgs.toString()));
+                throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0086,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0086, msgs.toString()));
             }
         }
     }
@@ -723,8 +672,6 @@ public class RuntimeStateAdminAPIHelper {
             } else {
                 vmController.stopService(serviceID);
             }
-        } catch (RemoteException re) {
-            throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0055,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0055, serviceID, vmID));
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se);
         }
@@ -854,9 +801,7 @@ public class RuntimeStateAdminAPIHelper {
                    vm.stopVM();
                }
                MetaMatrixController.killProcess(host, vmName); // will not get killed if error stopping
-           } catch (RemoteException re) {
-               exceptions.add(new ServiceException(ErrorMessageKeys.ADMIN_0057,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0057, vmName)));
-           } catch (Exception se) {
+           }  catch (Exception se) {
                exceptions.add(se);
            }
        }
@@ -893,8 +838,6 @@ public class RuntimeStateAdminAPIHelper {
 				vmController.stopVM();
 			}
 			MetaMatrixController.killProcess(host, vmName);
-		} catch (RemoteException re) {
-			throw new MetaMatrixComponentException(re,ErrorMessageKeys.ADMIN_0057, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0057, vmID));
 		} catch (Exception se) {
 			throw new MetaMatrixComponentException(se);
 		}
@@ -911,13 +854,9 @@ public class RuntimeStateAdminAPIHelper {
      * @since 4.3
      */
    public byte[] exportLogs(VMControllerID processID) throws MetaMatrixComponentException {
-       try {
        	VMRegistryBinding vmBinding = this.registry.getVM(processID.getHostName(), processID.toString());
-           VMControllerInterface vmController = vmBinding.getVMController();
-           return vmController.exportLogs();
-       } catch (RemoteException re) {
-           throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0115,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0115, processID));
-       } 
+       VMControllerInterface vmController = vmBinding.getVMController();
+       return vmController.exportLogs();
    }
 
 }

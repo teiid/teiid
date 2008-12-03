@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -102,20 +101,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * 
      * @return ConfigurationObjectEditor
      */
-    public synchronized ConfigurationObjectEditor createEditor() throws ConfigurationException,
-                                                                                                   InvalidSessionException,
-                                                                                                   AuthorizationException,
-                                                                                                   MetaMatrixComponentException {
+    public synchronized ConfigurationObjectEditor createEditor() 
+    	throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            return configAdmin.createEditor();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.createEditor();
     }
 
     /**
@@ -138,15 +129,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                       AuthorizationException,
                                                                                                       MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            return configAdmin.getCurrentConfigurationID();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getCurrentConfigurationID();
     }
 
     /**
@@ -170,14 +155,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                           AuthorizationException,
                                                                                                           MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getNextStartupConfigurationID();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getNextStartupConfigurationID();
     }
 
     /**
@@ -200,14 +180,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                       AuthorizationException,
                                                                                                       MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getStartupConfigurationID();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getStartupConfigurationID();
     }
 
     /**
@@ -225,14 +200,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                   AuthorizationException,
                                                                                                   MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getCurrentConfiguration();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getCurrentConfiguration();
     }
 
     /**
@@ -250,14 +220,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                       AuthorizationException,
                                                                                                       MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getNextStartupConfiguration();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getNextStartupConfiguration();
     }
 
     /**
@@ -275,14 +240,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                   AuthorizationException,
                                                                                                   MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getStartupConfiguration();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getStartupConfiguration();
     }
 
     /**
@@ -302,14 +262,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                          AuthorizationException,
                                                                          MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getConfiguration(configName);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getConfiguration(configName);
     }
 
     public synchronized ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException,
@@ -318,11 +273,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                             MetaMatrixComponentException {
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getConfigurationModel(configName);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getConfigurationModel(configName);
     }
 
     /**
@@ -386,11 +337,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getConfigurationAndDependents(configID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getConfigurationAndDependents(configID);
     }
 
     /**
@@ -428,14 +375,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                  AuthorizationException,
                                                                                                  MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getAllGlobalConfigObjects();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getAllGlobalConfigObjects();
     }
 
     /**
@@ -452,11 +394,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.baselineCurrentConfiguration()"); //$NON-NLS-1$
-        try {
-            configAdmin.baselineCurrentConfiguration(token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        configAdmin.baselineCurrentConfiguration(token.getUsername());
     }
 
     /**
@@ -473,14 +411,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                 AuthorizationException,
                                                                                 MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getComponentTypeDefinitions(componentIDs);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getComponentTypeDefinitions(componentIDs);
     }
 
     /**
@@ -500,11 +433,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getComponentTypeDefinitions(componentTypeID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getComponentTypeDefinitions(componentTypeID);
     }
 
     /**
@@ -521,14 +450,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                   AuthorizationException,
                                                                                                   MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getAllComponentTypeDefinitions(componentTypeID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getAllComponentTypeDefinitions(componentTypeID);
     }
 
     /**
@@ -548,14 +472,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                         AuthorizationException,
                                                                                         MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getMonitoredComponentTypes(includeDeprecated);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getMonitoredComponentTypes(includeDeprecated);
     }
 
     /**
@@ -572,14 +491,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                           AuthorizationException,
                                                                           MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getComponentType(id);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getComponentType(id);
     }
 
     /**
@@ -601,11 +515,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getAllComponentTypes(includeDeprecated);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getAllComponentTypes(includeDeprecated);
     }
 
     
@@ -650,14 +560,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                    AuthorizationException,
                                                    MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getHost(hostID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getHost(hostID);
     }
 
     /**
@@ -673,14 +578,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                 AuthorizationException,
                                                                                 MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getHosts();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getHosts();
     }
 
     /**
@@ -704,14 +604,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                      AuthorizationException,
                                                                                      MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getComponentDefns(componentDefnIDs, configurationID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getComponentDefns(componentDefnIDs, configurationID);
     }
 
     public synchronized ComponentDefn getComponentDefn(ConfigurationID configurationID,
@@ -721,14 +616,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                        MetaMatrixComponentException {
 
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getComponentDefn(configurationID, componentDefnID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getComponentDefn(configurationID, componentDefnID);
     }
 
     /**
@@ -748,16 +638,10 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                         InvalidSessionException,
                                                                                         AuthorizationException,
                                                                                         MetaMatrixComponentException {
-
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getResourcePoolTypes(configurationID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getResourcePoolTypes(configurationID);
     }
 
     /**
@@ -778,16 +662,10 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                                 InvalidSessionException,
                                                                                                 AuthorizationException,
                                                                                                 MetaMatrixComponentException {
-
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getPoolableResourcePoolTypes(configurationID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getPoolableResourcePoolTypes(configurationID);
     }
 
     /**
@@ -809,14 +687,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                     MetaMatrixComponentException {
 
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getResourcePools(configurationID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getResourcePools(configurationID);
     }
 
     /**
@@ -841,15 +714,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                     MetaMatrixComponentException {
 
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            return configAdmin.getResourcePools(configurationID, componentTypeID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getResourcePools(configurationID, componentTypeID);
     }
 
     /**
@@ -870,14 +737,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                     MetaMatrixComponentException {
 
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getResources();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getResources();
     }
 
     /**
@@ -898,14 +760,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                                                 AuthorizationException,
                                                                                 MetaMatrixComponentException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return configAdmin.getResources(componentTypeID);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getResources(componentTypeID);
     }
 
     /**
@@ -928,11 +785,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            configAdmin.saveResources(resourceDescriptors, token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        configAdmin.saveResources(resourceDescriptors, token.getUsername());
     }
     
 
@@ -968,11 +821,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeTransaction(" + action + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            return configAdmin.executeTransaction(action, token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.executeTransaction(action, token.getUsername());
     }
 
     /**
@@ -1001,11 +850,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeTransaction(" + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            return configAdmin.executeTransaction(actions, token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.executeTransaction(actions, token.getUsername());
     }
 
     /**
@@ -1038,11 +883,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeInsertTransaction(" + assignConfigurationID + ", " + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        try {
-            return configAdmin.executeInsertTransaction(assignConfigurationID, actions, token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.executeInsertTransaction(assignConfigurationID, actions, token.getUsername());
     }
 
     /**
@@ -1066,11 +907,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.undoActionsAsTransaction(" + numberOfActions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            return configAdmin.undoActionsAsTransaction(numberOfActions, token.getUsername());
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.undoActionsAsTransaction(numberOfActions, token.getUsername());
     }
 
     /**
@@ -1081,19 +918,13 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Metadata Service.
      */
-    public synchronized List getHistory() throws ConfigurationException,
-                                                                            InvalidSessionException,
-                                                                            AuthorizationException,
-                                                                            MetaMatrixComponentException {
+    public synchronized List getHistory() 	
+    	throws ConfigurationException,InvalidSessionException, AuthorizationException, MetaMatrixComponentException {
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistory()"); //$NON-NLS-1$
-        try {
-            return configAdmin.getHistory();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getHistory();
     }
 
     /**
@@ -1110,11 +941,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.clearHistory()"); //$NON-NLS-1$
-        try {
-            configAdmin.clearHistory();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        configAdmin.clearHistory();
     }
 
     /**
@@ -1132,11 +959,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistorySize()"); //$NON-NLS-1$
-        try {
-            return configAdmin.getHistorySize();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getHistorySize();
     }
 
     /**
@@ -1155,11 +978,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistoryLimit()"); //$NON-NLS-1$
-        try {
-            return configAdmin.getHistoryLimit();
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.getHistoryLimit();
     }
 
     /**
@@ -1178,11 +997,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.setHistoryLimit(" +maximumHistoryCount + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            configAdmin.setHistoryLimit(maximumHistoryCount);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        configAdmin.setHistoryLimit(maximumHistoryCount);
     }
 
     /**
@@ -1205,8 +1020,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
                                                       Properties properties) throws ResourcePoolException,
                                                                             InvalidSessionException,
                                                                             AuthorizationException,
-                                                                            MetaMatrixComponentException,
-                                                                            RemoteException {
+                                                                            MetaMatrixComponentException {
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
@@ -1236,11 +1050,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.addHost(" + hostName + ", " + properties + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        try {
-            return configAdmin.addHost(hostName, token.getUsername(), properties);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.addHost(hostName, token.getUsername(), properties);
     }
     
     
@@ -1258,11 +1068,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.checkPropertiesDecryptable(" + defns + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try {
-            return configAdmin.checkPropertiesDecryptable(defns);
-        }  catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        return configAdmin.checkPropertiesDecryptable(defns);
     }
     
     
@@ -1283,9 +1089,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         } catch (ConfigurationException e) {
             LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API, e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
             throw new ComponentCommunicationException(e, e.getMessage()); 
-        } catch (RemoteException e) {
-            LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API, e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
-            throw new ComponentCommunicationException(e, e.getMessage());
         }
         return result;
     }

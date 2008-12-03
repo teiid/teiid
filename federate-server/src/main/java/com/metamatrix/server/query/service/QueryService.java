@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,7 +56,6 @@ import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
@@ -165,13 +163,13 @@ public class QueryService extends AbstractService implements ClientServiceRegist
      * @see com.metamatrix.server.query.service.QueryServiceInterface#clearCache(com.metamatrix.platform.security.api.SessionToken)
      */
     public void clearCache(SessionToken sessionToken)
-        throws ComponentNotFoundException, ServiceStateException, RemoteException {
+        throws ComponentNotFoundException{
     }
 
     /*
      * @see com.metamatrix.server.query.service.QueryServiceInterface#getAllQueries()
      */
-    public Collection getAllQueries() throws ServiceStateException, RemoteException {
+    public Collection getAllQueries() {
     	return dqp.getRequests();
     }
 
@@ -179,14 +177,14 @@ public class QueryService extends AbstractService implements ClientServiceRegist
      * @see com.metamatrix.server.query.service.QueryServiceInterface#cancelQueries(com.metamatrix.platform.security.api.SessionToken, boolean, boolean)
      */
     public void cancelQueries(SessionToken sessionToken, boolean shouldRollback)
-        throws ServiceStateException, InvalidRequestIDException, MetaMatrixComponentException, RemoteException {
+        throws InvalidRequestIDException, MetaMatrixComponentException{
         this.dqp.terminateConnection(sessionToken.getSessionID().toString());
     }
 
     /*
      * @see com.metamatrix.server.query.service.QueryServiceInterface#getQueriesForSession(com.metamatrix.platform.security.api.SessionToken)
      */
-    public Collection getQueriesForSession(SessionToken userToken) throws ServiceStateException, RemoteException {
+    public Collection getQueriesForSession(SessionToken userToken) {
         return this.dqp.getRequestsByClient(userToken.getSessionID().toString());
     }
 
@@ -194,7 +192,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
      * @see com.metamatrix.server.query.service.QueryServiceInterface#cancelQuery(com.metamatrix.dqp.message.RequestID, boolean, boolean)
      */
     public void cancelQuery(RequestID requestID, boolean shouldRollback)
-        throws InvalidRequestIDException, MetaMatrixComponentException, ServiceStateException, RemoteException {
+        throws InvalidRequestIDException, MetaMatrixComponentException {
     	try {
 			this.dqp.cancelRequest(requestID);
 		} catch (MetaMatrixProcessingException e) {
@@ -206,7 +204,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
      * @see com.metamatrix.server.query.service.QueryServiceInterface#cancelQuery(com.metamatrix.dqp.message.RequestID, int)
      */
     public void cancelQuery(RequestID requestID, int nodeID)
-        throws InvalidRequestIDException, MetaMatrixComponentException, ServiceStateException, RemoteException {
+        throws InvalidRequestIDException, MetaMatrixComponentException {
 		this.dqp.cancelAtomicRequest(requestID, nodeID);
     }    
     
@@ -243,7 +241,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
     /* (non-Javadoc)
      * @see com.metamatrix.platform.service.api.CacheAdmin#getCaches()
      */
-    public Map getCaches() throws MetaMatrixComponentException, RemoteException {
+    public Map getCaches() throws MetaMatrixComponentException {
     	Map names = new HashMap();
         names.put(CODE_TABLE_CACHE_NAME, CacheAdmin.CODE_TABLE_CACHE);
         names.put(PLAN_CACHE_NAME, CacheAdmin.PREPARED_PLAN_CACHE);
@@ -254,7 +252,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
     /* (non-Javadoc)
      * @see com.metamatrix.platform.service.api.CacheAdmin#clearCache(java.lang.String, java.util.Properties)
      */
-    public void clearCache(String name, Properties props) throws MetaMatrixComponentException, RemoteException {
+    public void clearCache(String name, Properties props) throws MetaMatrixComponentException {
     	if(name.equals(CODE_TABLE_CACHE_NAME)) {
         	this.dqp.clearCodeTableCache();
         } else if(name.equals(PLAN_CACHE_NAME)) {

@@ -24,20 +24,18 @@
 
 package com.metamatrix.platform.service.controller;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 
 public interface FakeServiceInterface extends ServiceInterface {
     
-    public void test1() throws RemoteException, ServiceException;
+    public void test1();
 
-    public Collection test2() throws RemoteException, ServiceException;
+    public Collection test2();
     
-    public boolean test3() throws RemoteException, ServiceException;
+    public boolean test3();
     
-    public Collection test4() throws RemoteException, ServiceException;
+    public Collection test4();
     
 }

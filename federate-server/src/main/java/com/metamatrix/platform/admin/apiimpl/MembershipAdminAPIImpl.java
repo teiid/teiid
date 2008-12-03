@@ -25,7 +25,6 @@
 package com.metamatrix.platform.admin.apiimpl;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,15 +71,10 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
                                                       MetaMatrixComponentException,
                                                       MetaMatrixSecurityException {
     	// Validate caller's session
-    	// SessionToken token =
     	AdminAPIHelper.validateSession(getSessionID());
 
     	// Any administrator may call this read-only method - no need to validate role
-    	try {
-    	    return membAdmin.getDomainNames();
-    	}catch(RemoteException e) {
-    	    throw new MetaMatrixComponentException(e);
-    	}
+	    return membAdmin.getDomainNames();
     }
 
     public synchronized Set getGroupsForDomain(String domainName) throws AuthorizationException,
@@ -88,14 +82,9 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
     														MetaMatrixComponentException,
     														MetaMatrixSecurityException {
     	// Validate caller's session
-    	// SessionToken token =
     	AdminAPIHelper.validateSession(getSessionID());
     	// Any administrator may call this read-only method - no need to validate role
-    	try {
-    	    return membAdmin.getGroupsForDomain(domainName);
-        }catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }    	    
+	    return membAdmin.getGroupsForDomain(domainName);
     }
     
     /**
@@ -109,11 +98,7 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
      *
      */
     public Serializable authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName) throws MetaMatrixComponentException, MembershipServiceException {
-        try {
-            return membAdmin.authenticateUser(username, credential, trustePayload, applicationName);
-        }catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }        
+        return membAdmin.authenticateUser(username, credential, trustePayload, applicationName);
     }
 
     public synchronized MetaMatrixPrincipal getUserPrincipal(String principalName) throws AuthorizationException,
@@ -121,14 +106,9 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
                                                                                   MetaMatrixComponentException,
                                                                                   MetaMatrixSecurityException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-        	return membAdmin.getPrincipal(new MetaMatrixPrincipalName(principalName, MetaMatrixPrincipal.TYPE_USER));
-        }catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }        
+    	return membAdmin.getPrincipal(new MetaMatrixPrincipalName(principalName, MetaMatrixPrincipal.TYPE_USER));
     }
 
     public synchronized MultipleRequestConfirmation getUserPrincipals(Collection userNames) throws AuthorizationException,
@@ -136,7 +116,6 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
                                                                                            MetaMatrixComponentException,
                                                                                            MetaMatrixSecurityException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
@@ -154,8 +133,6 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
             } catch (InvalidUserException e) {
                 result.addFailure(userName, e);
             } catch (MetaMatrixSecurityException e) {
-                result.addFailure(userName, e);
-            } catch(RemoteException e) {
                 result.addFailure(userName, e);
             }
         }
@@ -201,8 +178,6 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
                 result.addFailure(groupName, e);
             } catch (MetaMatrixSecurityException e) {
                 result.addFailure(groupName, e);
-            } catch(RemoteException e) {
-                result.addFailure(groupName, e);
             }
         }
         result.setResult(principals);
@@ -214,14 +189,8 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
                                                                MetaMatrixComponentException,
                                                                MetaMatrixSecurityException {
         // Validate caller's session
-        // SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
         return membAdmin.getGroupNames();
-        }catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
     }
-
 }

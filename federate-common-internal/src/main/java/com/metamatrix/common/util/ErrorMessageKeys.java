@@ -213,7 +213,6 @@ public interface ErrorMessageKeys {
 		public static final String POOLING_ERR_0001 = "ERR.003.002.0001"; //$NON-NLS-1$
 		public static final String POOLING_ERR_0002 = "ERR.003.002.0002"; //$NON-NLS-1$
 		public static final String POOLING_ERR_0003 = "ERR.003.002.0003"; //$NON-NLS-1$
-		public static final String POOLING_ERR_0004 = "ERR.003.002.0004"; //$NON-NLS-1$
 		public static final String POOLING_ERR_0005 = "ERR.003.002.0005"; //$NON-NLS-1$
 		public static final String POOLING_ERR_0006 = "ERR.003.002.0006"; //$NON-NLS-1$
 		public static final String POOLING_ERR_0007 = "ERR.003.002.0007"; //$NON-NLS-1$

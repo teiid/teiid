@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.api;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -305,7 +304,6 @@ public interface AuthorizationAdminAPI extends SubSystemAdminAPI {
      * @param caller The session token of the MetaMatrix principle involking an administrative method.
      * @return true if caller's session token is valid and he is a MetaMatrix administrator.
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
      */
     boolean isCallerInRole( SessionToken caller, String roleName )
     throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException;

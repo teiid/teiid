@@ -130,8 +130,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * {@link com.metamatrix.platform.security.api.service.MembershipServiceInterface#DOMAIN_ORDER DOMAIN_ORDER}
      * that has an ordered value in the form of "A, X, ..., D"
      */
-    protected void initService(Properties env)
-    throws ServiceException {
+    protected void initService(Properties env) {
 
         adminUsername = env.getProperty(ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME); 
         
@@ -206,9 +205,8 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @param env All properties that the domain needs to be established <i>especially>/i> the domain
      * factory class name.
      * @return The newly instantiated domain.
-     * @throws ServiceException
      */
-    private MembershipDomain createDomain(String domainName, Properties properties) throws ServiceException {
+    private MembershipDomain createDomain(String domainName, Properties properties) {
 
         MembershipDomain domain = null;
         String className = properties.getProperty(AuthenticationProviderType.Attributes.AUTHDOMAIN_CLASS); 
@@ -286,11 +284,9 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @param applicationName
      * @return
      * @throws MetaMatrixSecurityException
-     * @throws ServiceException
      * @throws MembershipServiceException 
      */
-    public Serializable authenticateUser(String username, Credentials credential, Serializable trustedPayload, String applicationName)
-    throws ServiceException {
+    public Serializable authenticateUser(String username, Credentials credential, Serializable trustedPayload, String applicationName) {
         
         LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
         
@@ -418,7 +414,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         return -1;
     }
     
-    private Collection getDomainsForUser(String username) throws ServiceException {
+    private Collection getDomainsForUser(String username) {
     	// If username is null, return all domains
         if (username == null) {
             return domains;
@@ -464,12 +460,10 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @param type
      * @return
      * @throws MetaMatrixSecurityException
-     * @throws ServiceException
      * @throws InvalidPrincipalException 
      */
     public MetaMatrixPrincipal getPrincipal(MetaMatrixPrincipalName principal)
-    		throws MembershipServiceException, InvalidPrincipalException,
-    		ServiceException {
+    		throws MembershipServiceException, InvalidPrincipalException {
         LogManager.logTrace( LogSecurityConstants.CTX_MEMBERSHIP, new Object[] { "getPrincipal", principal }); //$NON-NLS-1$
 
     	String name = principal.getName();
@@ -540,7 +534,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @return a set of Strings
      */
     public Set getGroupsForUser(String userName)
-    throws MembershipServiceException, InvalidPrincipalException, ServiceException {
+    throws MembershipServiceException, InvalidPrincipalException {
         LogManager.logTrace( LogSecurityConstants.CTX_MEMBERSHIP, new Object[] { "getGroupsForUser", userName}); //$NON-NLS-1$
         
         MetaMatrixPrincipal principal = getPrincipal(new MetaMatrixPrincipalName(userName, MetaMatrixPrincipal.TYPE_USER)); 
@@ -631,11 +625,11 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         }
     }
 
-    public boolean isSuperUser(String username) throws ServiceException {
+    public boolean isSuperUser(String username) {
         return adminUsername.equalsIgnoreCase(username);
     }
     
-    public boolean isWsdlUser(String username) throws ServiceException {
+    public boolean isWsdlUser(String username) {
         return DEFAULT_WSDL_USERNAME.equalsIgnoreCase(username);
     }
     

@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.api;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -642,7 +641,6 @@ public interface ConfigurationAdminAPI extends SubSystemAdminAPI {
      * @throws AuthorizationException if caller is not authorized to perform this method.
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     * @throws RemoteException
      */
     public abstract Collection getProducts() throws AuthorizationException,
         InvalidSessionException,

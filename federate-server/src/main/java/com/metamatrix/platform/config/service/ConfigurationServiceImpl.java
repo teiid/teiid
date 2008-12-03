@@ -25,7 +25,6 @@
 package com.metamatrix.platform.config.service;
 
 import java.io.InputStream;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -117,7 +116,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     private static BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
 
 
-    public ConfigurationServiceImpl() throws RemoteException {
+    public ConfigurationServiceImpl() {
         super();
     }
 
@@ -198,7 +197,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-    public ConfigurationObjectEditor createEditor() throws ConfigurationException, ServiceException {
+    public ConfigurationObjectEditor createEditor() throws ConfigurationException {
         return new BasicConfigurationObjectEditor(true);
     }
 
@@ -208,7 +207,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return ID of operational configuration
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public ConfigurationID getCurrentConfigurationID() throws ConfigurationException, ServiceException {
+    public ConfigurationID getCurrentConfigurationID() throws ConfigurationException {
         return this.getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
     }
 
@@ -218,7 +217,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return ID of next startup configuration
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException, ServiceException {
+    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException {
         return this.getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
     }
 
@@ -228,7 +227,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @param principalName the name of the principal that is requesting the
      * baselining
      */
-    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException, ServiceException {
+    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException {
         throw new UnsupportedOperationException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0039));
 
     }
@@ -239,7 +238,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return ID of startup configuration
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public ConfigurationID getStartupConfigurationID() throws ConfigurationException, ServiceException {
+    public ConfigurationID getStartupConfigurationID() throws ConfigurationException {
         return this.getDesignatedConfigurationID(SystemConfigurationNames.STARTUP);
     }
 
@@ -249,7 +248,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return Configuration that is currently in use
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public Configuration getCurrentConfiguration() throws ConfigurationException, ServiceException {
+    public Configuration getCurrentConfiguration() throws ConfigurationException {
         return this.getDesignatedConfiguration(SystemConfigurationNames.NEXT_STARTUP);
     }
 
@@ -259,7 +258,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return Configuration that the system will next start up with.
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public Configuration getNextStartupConfiguration() throws ConfigurationException, ServiceException{
+    public Configuration getNextStartupConfiguration() throws ConfigurationException{
         return this.getDesignatedConfiguration(SystemConfigurationNames.NEXT_STARTUP);
     }
 
@@ -269,11 +268,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return Configuration that the system booted up with.
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public Configuration getStartupConfiguration() throws ConfigurationException, ServiceException{
+    public Configuration getStartupConfiguration() throws ConfigurationException{
         return this.getDesignatedConfiguration(SystemConfigurationNames.STARTUP);
     }
 
-    private Configuration getDesignatedConfiguration(String designation) throws ConfigurationException, ServiceException {
+    private Configuration getDesignatedConfiguration(String designation) throws ConfigurationException {
         // Look in the cache ...
         Configuration config = null;
 
@@ -307,7 +306,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return config;
     }
 
-    private ConfigurationID getDesignatedConfigurationID(String designation) throws ConfigurationException, ServiceException {
+    private ConfigurationID getDesignatedConfigurationID(String designation) throws ConfigurationException {
         ConfigurationID configID = null;
         ConfigurationTransaction transaction = null;
         try {
@@ -338,7 +337,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return configID;
     }
 
-    public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException, ServiceException {
+    public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException {
         // Look in the cache ...
         ConfigurationModelContainer config = null;
 
@@ -370,7 +369,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 	}
 
-    public Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException, ServiceException  {
+    public Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException  {
         if ( configName == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "configName")); //$NON-NLS-1$
         }
@@ -453,10 +452,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @param configID ID Of a Configuration
      * @return Collection of BaseObject instances
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException if a general service problem occurred
-     * @throws RemoteException if there is a communication error
      */
-    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException, ServiceException {
+    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException {
         if ( configID == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "configID")); //$NON-NLS-1$
         }
@@ -516,7 +513,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     * @throws MetaMatrixComponentException if a general remote system problem occurred
     */
     public Collection getAllGlobalConfigObjects()
-    throws ConfigurationException, ServiceException{
+    throws ConfigurationException{
         Collection allObjects = new ArrayList();
         ConfigurationTransaction transaction = null;
         try {
@@ -542,7 +539,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 
     }
-    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException, ServiceException {
+    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException {
         if ( id == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "id")); //$NON-NLS-1$
         }
@@ -577,7 +574,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
     }
 
-    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException, ServiceException {
+    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         Collection result = new LinkedList();
         try {
@@ -610,7 +607,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
     }
 
-    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException, ServiceException {
+    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         Collection result = null;
         try {
@@ -642,7 +639,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return result;
     }
 
-    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException, ServiceException {
+    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         Collection result=null;
         try {
@@ -680,7 +677,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException, ServiceException {
+    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException {
         Map map = new HashMap();
         Collection defns;
         BaseID id = null ;
@@ -704,7 +701,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return map;
     }
 
-    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException, ServiceException {
+    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         Map map = new HashMap(componentIDs.size());
         BaseID id = null;
@@ -751,7 +748,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
     }
 
-    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException, ServiceException {
+    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         try {
             transaction = getReadTransaction();
@@ -875,7 +872,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
     }
 
-    public Collection getAllComponentTypeDefinitions(ComponentTypeID typeID)  throws ConfigurationException, ServiceException {
+    public Collection getAllComponentTypeDefinitions(ComponentTypeID typeID)  throws ConfigurationException {
         Collection defns = getComponentTypeDefinitions(typeID);
         Collection inheritedDefns = getDependentComponentTypeDefinitions(typeID);
 
@@ -919,7 +916,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-    public Host getHost(HostID hostID) throws ConfigurationException, ServiceException {
+    public Host getHost(HostID hostID) throws ConfigurationException {
         if ( hostID == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "hostID")); //$NON-NLS-1$
         }
@@ -936,7 +933,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-    public Collection getHosts() throws ConfigurationException, ServiceException {
+    public Collection getHosts() throws ConfigurationException {
         Collection hosts = null;
         ConfigurationTransaction transaction = null;
         try {
@@ -967,7 +964,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 
      public Collection getComponentDefns(Collection componentDefnIDs, ConfigurationID configurationID)
-                        throws ConfigurationException, ServiceException, RemoteException {
+                        throws ConfigurationException {
 
 
         if (componentDefnIDs == null || componentDefnIDs.size() == 0) {
@@ -1018,7 +1015,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public ComponentDefn getComponentDefn(ConfigurationID configurationID, ComponentDefnID componentDefnID)
-    throws ConfigurationException, ServiceException, RemoteException {
+    throws ConfigurationException{
         ConfigurationTransaction transaction = null;
         ComponentDefn defn = null;
         try {
@@ -1051,12 +1048,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * for all resource pool types of a specified configuration.
      * @param configurationID is the configuration from which the component types are to
      * be derived
-     * @throws ServiceException if there is a problem with the service infrastructure
-     * @throws RemoteException if there is a communication error
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
    public Collection getResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException, ServiceException {
+    throws ConfigurationException {
 
         if (configurationID == null || configurationID.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1116,7 +1111,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
     public Collection getPoolableResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException, ServiceException {
+    throws ConfigurationException {
 
         if (configurationID == null || configurationID.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1159,7 +1154,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 
      public Collection getResourcePools(ConfigurationID configurationID)
-                        throws ConfigurationException, ServiceException {
+                        throws ConfigurationException {
 
 
         if (configurationID == null || configurationID.size() == 0) {
@@ -1196,12 +1191,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @param configurationID is the configuration from which the component defns are to
      * be derived
      * @param componentTypeID indicates the type of pools in the configuration to return
-     * @throws ServiceException if there is a problem with the service infrastructure
-     * @throws RemoteException if there is a communication error
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Collection getResourcePools(ConfigurationID configurationID, ComponentTypeID componentTypeID)
-    throws ConfigurationException, ServiceException {
+    throws ConfigurationException {
 
         if (configurationID == null || configurationID.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1258,7 +1251,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
     public Collection getResources()
-    throws ConfigurationException, ServiceException{
+    throws ConfigurationException{
         ConfigurationTransaction transaction = null;
         try {
                 transaction = getReadTransaction();
@@ -1291,7 +1284,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
     public Collection getResources(ComponentTypeID componentTypeID)
-    throws ConfigurationException, ServiceException{
+    throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         try {
                 transaction = getReadTransaction();
@@ -1324,7 +1317,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
     public void saveResources(Collection resourceDescriptors, String principalName)
-    throws ConfigurationException, ServiceException{
+    throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         try {
 
@@ -1388,9 +1381,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * the name of the product, as well as release info.
      * @return Collection of ReleaseInfo objects of licensed products.
      * @throws ConfigurationException if an business error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException if there is a problem with the service infrastructure
      */
-    public Collection getProductReleaseInfos() throws ConfigurationException, ServiceException{
+    public Collection getProductReleaseInfos() throws ConfigurationException {
         return ProductReleaseInfoUtil.getProductReleaseInfos();
     }
 
@@ -1412,9 +1404,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * or if the result specification is invalid
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public Set executeTransaction(ActionDefinition action, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException {
+    public Set executeTransaction(ActionDefinition action, String principalName) 
+    	throws ModificationException, ConfigurationLockException, ConfigurationException{
         if ( action == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "action")); //$NON-NLS-1$
         }
@@ -1436,9 +1428,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * or if the result specification is invalid
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-     public Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException {
+     public Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException {
         if ( actions == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "actions")); //$NON-NLS-1$
         }
@@ -1526,9 +1517,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * or if the result specification is invalid
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Metadata Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException {
+    public Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) 
+    	throws ModificationException, ConfigurationLockException, ConfigurationException {
         if ( actions == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "actions")); //$NON-NLS-1$
         }
@@ -1573,9 +1564,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws IllegalArgumentException if the number is negative.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException, ServiceException {
+    public Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException {
         if ( numberOfActions < 0 ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0068, numberOfActions ));
         }
@@ -1616,9 +1606,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return the ordered list of actions in the history.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public List getHistory() throws ConfigurationException, ServiceException {
+    public List getHistory() throws ConfigurationException {
         return this.actionHistory.getHistory();
     }
 
@@ -1627,9 +1616,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * Clear the history of all actions without undoing any of them.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public void clearHistory() throws ConfigurationException, ServiceException {
+    public void clearHistory() throws ConfigurationException {
         this.actionHistory.clearHistory();
     }
 
@@ -1639,9 +1627,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return the number of actions in the history.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public int getHistorySize() throws ConfigurationException, ServiceException {
+    public int getHistorySize() throws ConfigurationException {
         return this.actionHistory.getHistorySize();
     }
 
@@ -1654,9 +1641,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * smaller than the limit, no actions are removed.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public int getHistoryLimit() throws ConfigurationException, ServiceException {
+    public int getHistoryLimit() throws ConfigurationException {
         return this.actionHistory.getHistoryLimit();
     }
 
@@ -1669,9 +1655,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * smaller than the limit, no actions are removed.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws RemoteException if a communication error occurred.
      */
-    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException, ServiceException {
+    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException {
         this.actionHistory.setHistoryLimit(maximumHistoryCount);
     }
 
@@ -1682,9 +1667,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return Date Time server was started.
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
-     * @throws ServiceException if a general service problem occurred
      */
-    public Date getServerStartupTime() throws ConfigurationException, ServiceException {
+    public Date getServerStartupTime() throws ConfigurationException {
         ConfigurationTransaction transaction = null;
         Date timestamp = null;
         try {
@@ -1812,9 +1796,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public Host addHost(String hostName,
                         String principalName,
-                        Properties properties) throws ConfigurationException,
-                                              ServiceException,
-                                              RemoteException {
+                        Properties properties) throws ConfigurationException {
         com.metamatrix.common.config.api.Host host = null;
 
         ConfigurationObjectEditor editor = null;
@@ -1859,9 +1841,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     public VMComponentDefn addProcess(String processName,
                                       String hostName,
                                       String principalName,
-                                      Properties properties) throws ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                      Properties properties) throws ConfigurationException {
 
         VMComponentDefn processDefn = null;
 
@@ -1926,9 +1906,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public void setSystemPropertyValue(String propertyName,
                                        String propertyValue,
-                                       String principalName) throws ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                       String principalName) throws ConfigurationException{
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
@@ -1960,9 +1938,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @since 4.3
      */
     public void updateSystemPropertyValues(Properties properties,
-                                        String principalName) throws ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                        String principalName) throws ConfigurationException {
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
@@ -1997,9 +1973,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                                                    String connectorType,
                                                    String pscName,
                                                    String principalName,
-                                                   Properties properties) throws ConfigurationException,
-                                                                         ServiceException,
-                                                                         RemoteException {
+                                                   Properties properties) throws ConfigurationException {
 
         ConnectorBinding binding = null;
         ConfigurationObjectEditor editor = null;
@@ -2090,8 +2064,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
-                         String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException,
-                         RemoteException {
+                         String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException{
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
@@ -2109,9 +2082,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     
     public ComponentType importConnectorType(InputStream inputStream,
                                              String name,
-                                             String principalName) throws ConfigurationException,
-                                                                  ServiceException,
-                                                                  RemoteException {
+                                             String principalName) throws ConfigurationException {
         ComponentType newType = null;
         ConfigurationObjectEditor editor = createEditor();
 
@@ -2146,9 +2117,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     public ConnectorBinding importConnectorBinding(InputStream inputStream,
                                                    String name,
                                                    String pscName,
-                                                   String principalName) throws ConfigurationException,
-                                                                        ServiceException,
-                                                                        RemoteException {
+                                                   String principalName) throws ConfigurationException{
         ConnectorBinding newBinding = null;
         ConfigurationObjectEditor editor = createEditor();
 
@@ -2193,9 +2162,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     public void delete(ComponentObject theObject,
                        boolean theDeleteDependenciesFlag,
                        String principalName) throws ConfigurationException,
-                                                         ServiceException,
-                                                         ModificationException,
-                                                         RemoteException {
+                                                         ModificationException {
         ConfigurationObjectEditor editor = null;
 
         try {
@@ -2236,9 +2203,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public void delete(ComponentType componentType,
                        String principalName) throws ConfigurationException,
-                                            ServiceException,
-                                            ModificationException,
-                                            RemoteException {
+                                            ModificationException {
         
         ConfigurationObjectEditor editor = null;
         try {
@@ -2267,9 +2232,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * one of the deployed ServiceComponentDefns 
      * 
      * @throws ConfigurationException
-     * @throws ServiceException
      * @throws ModificationException
-     * @throws RemoteException
      * @since 4.3
      */
     
@@ -2277,9 +2240,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                                 VMComponentDefn theProcess,
                                 String pscName,
                                 String principalName) throws ConfigurationException,
-                                                     ServiceException,
-                                                     ModificationException,
-                                                     RemoteException {
+                                                     ModificationException {
 
         Collection deployComponentList = null;
 
@@ -2311,12 +2272,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return List<Boolean> in the same order as the paramater <code>defns</code>.
      * For each, true if the properties could be decrypted for that defn.
      * @throws ConfigurationException
-     * @throws ServiceException
      * @since 4.3
      */
-    public List checkPropertiesDecryptable(List defns) throws ConfigurationException,
-                                                                 ServiceException,
-                                                                 RemoteException {
+    public List checkPropertiesDecryptable(List defns) throws ConfigurationException{
         
         List results = new ArrayList(defns.size());
         
@@ -2338,9 +2296,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @since 4.3
      */
     public boolean checkPropertiesDecryptable(Properties props,
-                                              String componentTypeIdentifier) throws ConfigurationException,
-                                                                             ServiceException,
-                                                                             RemoteException {
+                                              String componentTypeIdentifier) throws ConfigurationException {
         Collection componentTypes = getAllComponentTypes(false);
 
         ComponentType actualType = null; 

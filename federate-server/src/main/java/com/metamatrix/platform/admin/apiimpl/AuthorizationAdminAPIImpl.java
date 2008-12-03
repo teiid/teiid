@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -105,11 +104,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getRealmNames(token);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getRealmNames(token);
     }
 
     public synchronized Map getRoleDescriptions()
@@ -117,11 +112,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getRoleDescriptions(token);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getRoleDescriptions(token);
     }
 
     public synchronized Collection getPrincipalsForRole(String roleName)
@@ -129,11 +120,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getPrincipalsForRole(token, roleName);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getPrincipalsForRole(token, roleName);
     }
 
     /**
@@ -142,7 +129,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @param principal <code>MetaMatrixPrincipalName</code> for which roles are sought
      * @return The <code>Collection</code> of role names the principal is assigned.
      * @throws InvalidSessionException if the administrative session is invalid
-     * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
+     * @throws AuthorizationException if administrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
     public synchronized Collection getRoleNamesForPrincipal(MetaMatrixPrincipalName principal)
@@ -150,12 +137,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        
-        try {
-            return authAdmin.getRoleNamesForPrincipal(token, principal);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getRoleNamesForPrincipal(token, principal);
     }
 
     /**
@@ -173,24 +155,12 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.addPrincipalsToRole(" + principals + ", " + roleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        AuthorizationPolicy role;
-
-        try {
-            role = authAdmin.getPolicy(token,
-                new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        AuthorizationPolicy role = authAdmin.getPolicy(token, new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
 
         AuthorizationObjectEditor editor = new AuthorizationObjectEditor();
         role = editor.addAllPrincipals(role, principals);
         ModificationActionQueue queue = editor.getDestination();
-        try {
-            authAdmin.executeTransaction(token, queue.popActions());
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-        // return role;
+        authAdmin.executeTransaction(token, queue.popActions());
     }
 
     /**
@@ -212,22 +182,11 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         Iterator roleItr = roleNames.iterator();
         while (roleItr.hasNext()) {
             String roleName = (String) roleItr.next();
-            AuthorizationPolicy role;
-            try {
-            role = authAdmin.getPolicy(token,
-                    new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
-            } catch (RemoteException e) {
-                throw new MetaMatrixComponentException(e);
-            }
+            AuthorizationPolicy role = authAdmin.getPolicy(token,new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
             role = editor.addPrincipal(role, principal);
         }
         ModificationActionQueue queue = editor.getDestination();
-        try {
-            authAdmin.executeTransaction(token, queue.popActions());
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-        // return role;
+        authAdmin.executeTransaction(token, queue.popActions());
     }
 
     /**
@@ -245,24 +204,13 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.removePrincipalsFromRole(" + principals + ", " + roleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        AuthorizationPolicy role;
-        try {
-        role = authAdmin.getPolicy(token,
-                    new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        AuthorizationPolicy role = authAdmin.getPolicy(token, new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
 
         AuthorizationObjectEditor editor = new AuthorizationObjectEditor();
         role = editor.removePrincipals(role, principals);
         ModificationActionQueue queue = editor.getDestination();
 
-        try {
         authAdmin.executeTransaction(token, queue.popActions());
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-        // return role;
     }
 
     /**
@@ -283,12 +231,8 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AuthorizationObjectEditor aoe = new AuthorizationObjectEditor(true);
         aoe.remove(policyID);
         ModificationActionQueue queue = aoe.getDestination();
-        
-        try {
+
         authAdmin.executeTransaction(token, queue.popActions());
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
     }
 
     /**
@@ -300,12 +244,8 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        Collection allPolicyIDs;
-        try {
-        allPolicyIDs = authAdmin.findAllPolicyIDs(token);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        Collection allPolicyIDs = authAdmin.findAllPolicyIDs(token);
+
         Collection filteredPolicyIDs = new HashSet();
         // Filter the policies for all VDBs we don't want to see in the Console
         // Also, filter roles and MetaBase policyIDs
@@ -326,11 +266,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
         return authAdmin.findPolicyIDs(token, principals);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
     }
 
     public synchronized Collection getPolicies(Collection policyIDs)
@@ -338,11 +274,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
         return authAdmin.getPolicies(token, policyIDs);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
     }
 
     public synchronized Boolean containsPolicy(AuthorizationPolicyID policyID)
@@ -350,11 +282,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
         return new Boolean(authAdmin.containsPolicy(token, policyID));
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
     }
 
     public synchronized AuthorizationPolicy getPolicy(AuthorizationPolicyID policyID)
@@ -362,11 +290,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getPolicy(token, policyID);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getPolicy(token, policyID);
     }
 
     public synchronized Set executeTransaction(List actions)
@@ -375,11 +299,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.executeTransaction(" + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        try{
-            return authAdmin.executeTransaction(token, actions);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return authAdmin.executeTransaction(token, actions);
     }
 
     public synchronized Boolean removePrincipalFromAllPolicies(MetaMatrixPrincipalName principal)
@@ -388,12 +308,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.removePrincipalFromAllPolicies(" + principal +")"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        try {
-            return new Boolean(authAdmin.removePrincipalFromAllPolicies(token, principal));
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return new Boolean(authAdmin.removePrincipalFromAllPolicies(token, principal));
     }
 
     /**
@@ -415,12 +330,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            return authAdmin.getPolicyIDsWithPermissionsInRealm(token, realm);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getPolicyIDsWithPermissionsInRealm(token, realm);
     }
 
     /**
@@ -444,11 +354,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getPolicyIDsInRealm(token, realm);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return authAdmin.getPolicyIDsInRealm(token, realm);
     }
 
     /**
@@ -472,12 +378,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            return authAdmin.getPolicyIDsInPartialRealm(token, realm);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return authAdmin.getPolicyIDsInPartialRealm(token, realm);
     }
 
     /**
@@ -497,11 +398,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getPolicIDsForResourceInRealm(token, realm, resourceName);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return authAdmin.getPolicIDsForResourceInRealm(token, realm, resourceName);
     }
 
     /**
@@ -513,14 +410,9 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     public synchronized boolean isCallerInRole(SessionToken caller, String roleName)
             throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-//        SessionToken token =
         AdminAPIHelper.validateSession(caller.getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.isCallerInRole(caller, roleName);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }            
+        return authAdmin.isCallerInRole(caller, roleName);
     }
     
     /**
@@ -531,11 +423,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      */
     public boolean isSuperUser(String username) throws ServiceException, MembershipServiceException, MetaMatrixComponentException {
         final MembershipServiceInterface membershipService = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
-        try {
-            return membershipService.isSuperUser(username);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }        
+        return membershipService.isSuperUser(username);
     }
 
     /**
@@ -569,11 +457,7 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
 //        SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
-            return authAdmin.getGroupEntitlements(realm, fullyQualifiedGroupName);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }
+        return authAdmin.getGroupEntitlements(realm, fullyQualifiedGroupName);
     }
 
     /**
@@ -604,15 +488,9 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     public synchronized List getElementEntitlements(AuthorizationRealm realm, String elementNamePattern)
             throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-//        SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-        try {
         return authAdmin.getElementEntitlements(realm, elementNamePattern);
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
-        }        
     }
-
 }
 

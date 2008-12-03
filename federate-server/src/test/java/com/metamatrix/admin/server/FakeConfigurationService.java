@@ -27,7 +27,6 @@ package com.metamatrix.admin.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -79,8 +78,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public class FakeConfigurationService implements ConfigurationServiceInterface {
@@ -132,8 +129,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 
     public Host addHost(String hostName,
                         String principalName,
-                        Properties properties) throws ConfigurationException,
-                                              ServiceException, RemoteException {
+                        Properties properties) throws ConfigurationException{
         com.metamatrix.common.config.api.Host host = null;
 
         ConfigurationObjectEditor editor = null;
@@ -162,7 +158,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
             };
             final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_creating_New_Host", params); //$NON-NLS-1$
 
-            throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+            throw new ConfigurationException(theException, msg); 
         }
         return host;
     }
@@ -170,71 +166,55 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#createEditor()
      */
-    public ConfigurationObjectEditor createEditor() throws ConfigurationException,
-                                                   ServiceException,
-                                                   RemoteException {
+    public ConfigurationObjectEditor createEditor() throws ConfigurationException{
         return new BasicConfigurationObjectEditor(true);
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getCurrentConfigurationID()
      */
-    public ConfigurationID getCurrentConfigurationID() throws ConfigurationException,
-                                                      ServiceException,
-                                                      RemoteException {
+    public ConfigurationID getCurrentConfigurationID() throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfigurationID()
      */
-    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException,
-                                                          ServiceException,
-                                                          RemoteException {
+    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfigurationID()
      */
-    public ConfigurationID getStartupConfigurationID() throws ConfigurationException,
-                                                      ServiceException,
-                                                      RemoteException {
+    public ConfigurationID getStartupConfigurationID() throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#baselineCurrentConfiguration(java.lang.String)
      */
-    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException,
-                                                                  ServiceException,
-                                                                  RemoteException {
+    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException{
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getCurrentConfiguration()
      */
-    public Configuration getCurrentConfiguration() throws ConfigurationException,
-                                                  ServiceException,
-                                                  RemoteException {
+    public Configuration getCurrentConfiguration() throws ConfigurationException {
         return new FakeConfiguration();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfiguration()
      */
-    public Configuration getNextStartupConfiguration() throws ConfigurationException,
-                                                      ServiceException,
-                                                      RemoteException {
+    public Configuration getNextStartupConfiguration() throws ConfigurationException{
         return new FakeConfiguration();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfiguration()
      */
-    public Configuration getStartupConfiguration() throws ConfigurationException,
-                                                  ServiceException,
-                                                  RemoteException {
+    public Configuration getStartupConfiguration() throws ConfigurationException{
         return new FakeConfiguration();
     }
 
@@ -242,9 +222,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfiguration(java.lang.String)
      */
     public Configuration getConfiguration(String configName) throws InvalidConfigurationException,
-                                                            ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                                            ConfigurationException{
         return new FakeConfiguration();
     }
 
@@ -252,99 +230,77 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfigurationModel(java.lang.String)
      */
     public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException,
-                                                                               ConfigurationException,
-                                                                               ServiceException,
-                                                                               RemoteException {
+                                                                               ConfigurationException{
         return this.config;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfigurationAndDependents(com.metamatrix.common.config.api.ConfigurationID)
      */
-    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException,
-                                                                             ServiceException,
-                                                                             RemoteException {
+    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllGlobalConfigObjects()
      */
-    public Collection getAllGlobalConfigObjects() throws ConfigurationException,
-                                                 ServiceException,
-                                                 RemoteException {
+    public Collection getAllGlobalConfigObjects() throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentTypeDefinitions(java.util.Collection)
      */
-    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException,
-                                                                   ServiceException,
-                                                                   RemoteException {
+    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
      */
-    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                                  ServiceException,
-                                                                                  RemoteException {
+    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
      */
-    public Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                                     ServiceException,
-                                                                                     RemoteException {
+    public Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getDependentComponentTypeDefinitions(java.util.Collection)
      */
-    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException,
-                                                                            ServiceException,
-                                                                            RemoteException {
+    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getDependentComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
      */
-    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                                           ServiceException,
-                                                                                           RemoteException {
+    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getMonitoredComponentTypes(boolean)
      */
-    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException,
-                                                                           ServiceException,
-                                                                           RemoteException {
+    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentType(com.metamatrix.common.config.api.ComponentTypeID)
      */
-    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException,
-                                                             ServiceException,
-                                                             RemoteException {
+    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypes(boolean)
      */
-    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException,
-                                                                     ServiceException,
-                                                                     RemoteException {
+    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException{
         List results = new ArrayList();
         
         ComponentTypeID typeID1 = new ComponentTypeID("connectorType1"); //$NON-NLS-1$
@@ -365,18 +321,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHost(com.metamatrix.common.config.api.HostID)
      */
-    public Host getHost(HostID hostID) throws ConfigurationException,
-                                      ServiceException,
-                                      RemoteException {
+    public Host getHost(HostID hostID) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHosts()
      */
-    public Collection getHosts() throws ConfigurationException,
-                                ServiceException,
-                                RemoteException {
+    public Collection getHosts() throws ConfigurationException {
         List hosts = new ArrayList();
         
         HostID hostID1 = new HostID("1.1.1.1"); //$NON-NLS-1$
@@ -395,9 +347,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentDefn(com.metamatrix.common.config.api.ConfigurationID, com.metamatrix.common.config.api.ComponentDefnID)
      */
     public ComponentDefn getComponentDefn(ConfigurationID configurationID,
-                                          ComponentDefnID componentDefnID) throws ConfigurationException,
-                                                                          ServiceException,
-                                                                          RemoteException {
+                                          ComponentDefnID componentDefnID) throws ConfigurationException {
         return null;
     }
 
@@ -405,36 +355,28 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentDefns(java.util.Collection, com.metamatrix.common.config.api.ConfigurationID)
      */
     public Collection getComponentDefns(Collection componentDefnIDs,
-                                        ConfigurationID configurationID) throws ConfigurationException,
-                                                                        ServiceException,
-                                                                        RemoteException {
+                                        ConfigurationID configurationID) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePools(com.metamatrix.common.config.api.ConfigurationID)
      */
-    public Collection getResourcePools(ConfigurationID configurationID) throws ConfigurationException,
-                                                                       ServiceException,
-                                                                       RemoteException {
+    public Collection getResourcePools(ConfigurationID configurationID) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePoolTypes(com.metamatrix.common.config.api.ConfigurationID)
      */
-    public Collection getResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
-                                                                           ServiceException,
-                                                                           RemoteException {
+    public Collection getResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getPoolableResourcePoolTypes(com.metamatrix.common.config.api.ConfigurationID)
      */
-    public Collection getPoolableResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
-                                                                                   ServiceException,
-                                                                                   RemoteException {
+    public Collection getPoolableResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException {
         return null;
     }
 
@@ -442,18 +384,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResourcePools(com.metamatrix.common.config.api.ConfigurationID, com.metamatrix.common.config.api.ComponentTypeID)
      */
     public Collection getResourcePools(ConfigurationID configurationID,
-                                       ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                       ServiceException,
-                                                                       RemoteException {
+                                       ComponentTypeID componentTypeID) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResources()
      */
-    public Collection getResources() throws ConfigurationException,
-                                    ServiceException,
-                                    RemoteException {
+    public Collection getResources() throws ConfigurationException {
         List results = new ArrayList();
         
         SharedResourceID resourceID1 = new SharedResourceID("resource1"); //$NON-NLS-1$
@@ -475,9 +413,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResources(com.metamatrix.common.config.api.ComponentTypeID)
      */
-    public Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                   ServiceException,
-                                                                   RemoteException {
+    public Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException {
         return null;
     }
 
@@ -485,17 +421,13 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#saveResources(java.util.Collection, java.lang.String)
      */
     public void saveResources(Collection resourceDescriptors,
-                              String principalName) throws ConfigurationException,
-                                                   ServiceException,
-                                                   RemoteException {
+                              String principalName) throws ConfigurationException {
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getProductReleaseInfos()
      */
-    public Collection getProductReleaseInfos() throws ConfigurationException,
-                                              ServiceException,
-                                              RemoteException {
+    public Collection getProductReleaseInfos() throws ConfigurationException {
         return null;
     }
 
@@ -505,9 +437,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Set executeTransaction(ActionDefinition action,
                                   String principalName) throws ModificationException,
                                                        ConfigurationLockException,
-                                                       ConfigurationException,
-                                                       ServiceException,
-                                                       RemoteException {
+                                                       ConfigurationException {
         return null;
     }
 
@@ -517,9 +447,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Set executeTransaction(List actions,
                                   String principalName) throws ModificationException,
                                                        ConfigurationLockException,
-                                                       ConfigurationException,
-                                                       ServiceException,
-                                                       RemoteException {
+                                                       ConfigurationException {
         if (actions != null) {
             for (Iterator it=actions.iterator(); it.hasNext();) {
                 Object o = it.next();
@@ -540,9 +468,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                         List actions,
                                         String principalName) throws ModificationException,
                                                              ConfigurationLockException,
-                                                             ConfigurationException,
-                                                             ServiceException,
-                                                             RemoteException {
+                                                             ConfigurationException {
         return null;
     }
 
@@ -550,84 +476,58 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#undoActionsAsTransaction(int, java.lang.String)
      */
     public Set undoActionsAsTransaction(int numberOfActions,
-                                        String principalName) throws ConfigurationException,
-                                                             ServiceException,
-                                                             RemoteException {
+                                        String principalName) throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistory()
      */
-    public List getHistory() throws ConfigurationException,
-                            ServiceException,
-                            RemoteException {
+    public List getHistory() throws ConfigurationException {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#clearHistory()
      */
-    public void clearHistory() throws ConfigurationException,
-                              ServiceException,
-                              RemoteException {
+    public void clearHistory() throws ConfigurationException {
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistorySize()
      */
-    public int getHistorySize() throws ConfigurationException,
-                               ServiceException,
-                               RemoteException {
+    public int getHistorySize() throws ConfigurationException {
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHistoryLimit()
      */
-    public int getHistoryLimit() throws ConfigurationException,
-                                ServiceException,
-                                RemoteException {
+    public int getHistoryLimit() throws ConfigurationException {
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#setHistoryLimit(int)
      */
-    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException,
-                                                        ServiceException,
-                                                        RemoteException {
+    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException {
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getServerStartupTime()
      */
-    public Date getServerStartupTime() throws ConfigurationException,
-                                      ServiceException,
-                                      RemoteException {
+    public Date getServerStartupTime() throws ConfigurationException {
         return new Date(1234);
     }
 
-//    /** 
-//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addHost(java.lang.String, java.lang.String, java.util.Properties)
-//     */
-//    public Host addHost(String hostName,
-//                        String principalName,
-//                        Properties properties) throws ConfigurationException,
-//                                              ServiceException,
-//                                              RemoteException {
-//        return null;
-//    }
-//
+
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addProcess(java.lang.String, java.lang.String, java.lang.String, java.util.Properties)
      */
     public VMComponentDefn addProcess(String processName,
                                       String hostName,
                                       String principalName,
-                                      Properties properties) throws ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                      Properties properties) throws ConfigurationException {
         return null;
     }
 
@@ -636,18 +536,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public void setSystemPropertyValue(String propertyName,
                                        String propertyValue,
-                                       String principalName) throws ConfigurationException,
-                                                            ServiceException,
-                                                            RemoteException {
+                                       String principalName) throws ConfigurationException {
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#updateSystemPropertyValues(java.util.Properties, java.lang.String)
      */
     public void updateSystemPropertyValues(Properties properties,
-                                           String principalName) throws ConfigurationException,
-                                                                ServiceException,
-                                                                RemoteException {
+                                           String principalName) throws ConfigurationException {
     }
 
     /** 
@@ -657,9 +553,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                                    String connectorType,
                                                    String pscName,
                                                    String principalName,
-                                                   Properties properties) throws ConfigurationException,
-                                                                         ServiceException,
-                                                                         RemoteException {
+                                                   Properties properties) throws ConfigurationException {
         return null;
     }
 
@@ -669,40 +563,15 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
                          String principalName) throws ConfigurationException,
-                                              ServiceException,
-                                              RemoteException,
                                               ModificationException {
         return null;
     }
 
-//    /** 
-//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#importConnectorType(java.io.InputStream, java.lang.String, java.lang.String)
-//     */
-//    public ComponentType importConnectorType(InputStream inputStream,
-//                                             String name,
-//                                             String principalName) throws ConfigurationException,
-//                                                                  ServiceException,
-//                                                                  RemoteException {
-//        return null;
-//    }
-//
-//    /** 
-//     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#importConnectorBinding(java.io.InputStream, java.lang.String, java.lang.String, java.lang.String)
-//     */
-//    public ConnectorBinding importConnectorBinding(InputStream inputStream,
-//                                                   String name,
-//                                                   String pscName,
-//                                                   String principalName) throws ConfigurationException,
-//                                                                        ServiceException,
-//                                                                        RemoteException {
-//        return null;
-//    }
 
     public ConnectorBinding importConnectorBinding(InputStream inputStream,
             String name,
             String pscName,
-            String principalName) throws ConfigurationException,
-                                          ServiceException, RemoteException {
+            String principalName) throws ConfigurationException {
 		ConnectorBinding newBinding = null;
 		ConfigurationObjectEditor editor = createEditor();
 		
@@ -730,7 +599,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 					name, theException.getMessage()
 			};
 			final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_binding", params); //$NON-NLS-1$
-			throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+			throw new ConfigurationException(theException, msg); 
 				
 		}
 		return newBinding;
@@ -738,8 +607,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 
 	public ComponentType importConnectorType(InputStream inputStream,
 	      String name,
-	      String principalName) throws ConfigurationException,
-	                                    ServiceException, RemoteException {
+	      String principalName) throws ConfigurationException {
 		ComponentType newType = null;
 		ConfigurationObjectEditor editor = createEditor();
 		
@@ -756,7 +624,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 					name, theException.getMessage()
 			};
 			final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_type", params); //$NON-NLS-1$
-			throw new ConfigurationException(theException, msg); //$NON-NLS-1$
+			throw new ConfigurationException(theException, msg); 
 			
 		}
 		return newType;
@@ -768,9 +636,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public void delete(ComponentObject theObject,
                        boolean theDeleteDependenciesFlag,
                        String principalName) throws ConfigurationException,
-                                            ModificationException,
-                                            ServiceException,
-                                            RemoteException {
+                                            ModificationException {
     }
 
     /** 
@@ -778,9 +644,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public void delete(ComponentType componentType,
                        String principalName) throws ConfigurationException,
-                                            ServiceException,
-                                            ModificationException,
-                                            RemoteException {
+                                            ModificationException{
     }
 
     /** 
@@ -790,18 +654,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                 VMComponentDefn theProcess,
                                 String pscName,
                                 String principalName) throws ConfigurationException,
-                                                     ServiceException,
-                                                     ModificationException,
-                                                     RemoteException {
+                                                     ModificationException{
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.List)
      */
-    public List checkPropertiesDecryptable(List defns) throws ConfigurationException,
-                                                      ServiceException,
-                                                      RemoteException {
+    public List checkPropertiesDecryptable(List defns) throws ConfigurationException {
         return null;
     }
 
@@ -809,115 +669,107 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.Properties, java.lang.String)
      */
     public boolean checkPropertiesDecryptable(Properties props,
-                                              String componentTypeIdentifier) throws ConfigurationException,
-                                                                             ServiceException,
-                                                                             RemoteException {
+                                              String componentTypeIdentifier) throws ConfigurationException {
         return false;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#die()
      */
-    public void die() throws ServiceException,
-                     RemoteException {
+    public void die()  {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#dieNow()
      */
-    public void dieNow() throws ServiceException,
-                        RemoteException {
+    public void dieNow()  {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#checkState()
      */
-    public void checkState() throws ServiceStateException,
-                            RemoteException {
+    public void checkState() {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getProperties()
      */
-    public Properties getProperties() throws RemoteException {
+    public Properties getProperties()  {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStartTime()
      */
-    public Date getStartTime() throws RemoteException {
+    public Date getStartTime() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getHostname()
      */
-    public String getHostname() throws ServiceException,
-                               RemoteException {
+    public String getHostname()  {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID() throws ServiceException,
-                                   RemoteException {
+    public VMControllerID getVMID()  {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#isAlive()
      */
-    public boolean isAlive() throws RemoteException {
+    public boolean isAlive(){
         return false;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getServiceType()
      */
-    public String getServiceType() throws RemoteException {
+    public String getServiceType(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getCurrentState()
      */
-    public int getCurrentState() throws RemoteException {
+    public int getCurrentState(){
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStateChangeTime()
      */
-    public Date getStateChangeTime() throws RemoteException {
+    public Date getStateChangeTime() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getID()
      */
-    public ServiceID getID() throws RemoteException {
+    public ServiceID getID() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics()
      */
-    public Collection getQueueStatistics() throws RemoteException {
+    public Collection getQueueStatistics()  {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics(java.lang.String)
      */
-    public WorkerPoolStats getQueueStatistics(String name) throws RemoteException {
+    public WorkerPoolStats getQueueStatistics(String name) {
         return null;
     }
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,
-			Properties props, ClientServiceRegistry listenerRegistry)
-			throws ServiceException, RemoteException {
+			Properties props, ClientServiceRegistry listenerRegistry) {
 	}
 
 	public void setInitException(Throwable t) {

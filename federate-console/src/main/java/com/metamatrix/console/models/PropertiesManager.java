@@ -24,7 +24,6 @@
 
 package com.metamatrix.console.models;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -60,12 +59,7 @@ public class PropertiesManager extends Manager {
      * PropertyModel used to get and set the two GDD related properties
      *in this case: gdd name and gdd version
      */
-//    private MetaMatrixSessionID mmsidSessionID      = null;
-//    private Configuration cfgCurrConfig             = null;
     private ConfigurationObjectEditor coeConfigEditor = null;
-//    private boolean isConfigStale                   = true;
-//    private ConfigurationAdminAPI configAPI;
-//    private PropertyDefinitionImpl definitionNSU;
 
 	public PropertiesManager(ConnectionInfo connection) {
 		super(connection);
@@ -74,10 +68,6 @@ public class PropertiesManager extends Manager {
     public void init() {
         super.init();
         this.setIsStale(false);
-        
-//       this.addManagerListener(ModelManager.getConfigurationManager(getConnection()));
-//        ModelManager.getPropertiesManager(getConnection()).addManagerListener(this);
-        
     }
 
     public Map getProperties()
@@ -219,7 +209,7 @@ public class PropertiesManager extends Manager {
     private void applyUpdates() throws AuthorizationException,
             InvalidSessionException, ComponentNotFoundException,
             ConfigurationException, ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
         ModificationActionQueue maq = getObjectEditor().getDestination();
         List lstActions = maq.popActions();
 //        cfgCurrConfig = getConfigurationLocked();
@@ -231,7 +221,7 @@ public class PropertiesManager extends Manager {
             throws AuthorizationException, InvalidSessionException,
             ComponentNotFoundException, ConfigurationException,
             ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
         Configuration suConfig = ModelManager.getConfigurationManager(getConnection()).getConfig(Configuration.STARTUP_ID);
         
 //        Configuration suConfig = configAPI.getStartupConfiguration();
@@ -289,7 +279,7 @@ public class PropertiesManager extends Manager {
     private Configuration getConfiguration() throws AuthorizationException,
             InvalidSessionException, ComponentNotFoundException,
             ConfigurationException, ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
         // default config is NOT locked:
         return getConfigurationNotLocked();
     }
@@ -299,57 +289,25 @@ public class PropertiesManager extends Manager {
             throws AuthorizationException, InvalidSessionException,
             ComponentNotFoundException, ConfigurationException,
             ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
         return getConfiguration( false );
     }
-
-//    private Configuration getConfigurationLocked() throws AuthorizationException,
-//            InvalidSessionException,
-//            ComponentNotFoundException, ConfigurationException,
-//            ModificationException,
-//            RemoteException, MetaMatrixComponentException {
-//        return getConfiguration( true );
-//    }
 
     private Configuration getConfiguration( boolean bGetLocked )
             throws AuthorizationException, InvalidSessionException,
             ComponentNotFoundException, ConfigurationException,
             ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
 
-        // If null, or if stale flag set, or if we need it with a lock,
-        //  get a fresh copy; otherwise return what we had previously:
-        // todo: is this correct?  what if we need an unlocked one and
-        //       we return a preexisting one that was locked?
-//        if ((cfgCurrConfig == null) ||
-//            (isConfigStale) ||
-//            (bGetLocked)) {
-//            cfgCurrConfig =
-                
             return  ModelManager.getConfigurationManager(getConnection()).getConfig(Configuration.NEXT_STARTUP_ID);
-//                    ModelManager.getConfigurationAPI(getConnection()).getCurrentConfiguration();
-//        }
-//        return cfgCurrConfig;
+
     }
-
-
-//    private MetaMatrixSessionID getSessionID() throws AuthorizationException,
-//            InvalidSessionException,
-//            ComponentNotFoundException, ConfigurationException,
-//            ModificationException, RemoteException {
-//        // Currently, we assume that we only need to get this once
-//        //  per session...TODO: verify that.
-//        if ( mmsidSessionID == null ) {
-//            mmsidSessionID = getConnection().getConnection().getSessionID();
-//        }
-//        return mmsidSessionID;
-//    }
 
     private ConfigurationObjectEditor getObjectEditor()
             throws AuthorizationException, InvalidSessionException,
             ComponentNotFoundException, ConfigurationException,
             ModificationException,
-            RemoteException, MetaMatrixComponentException {
+            MetaMatrixComponentException {
         if ( coeConfigEditor == null ) {
             coeConfigEditor =getConfigAPI().createEditor(); 
 //                ModelManager.getConfigurationAPI(getConnection()).createEditor();

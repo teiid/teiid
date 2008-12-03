@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.api;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -605,8 +604,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
-     * @throws RemoteException
-     *             if a RMI-related communication error occurs.
      */
     Collection getResourceDescriptors() throws ResourcePoolException,
                                        AuthorizationException,
@@ -628,8 +625,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
-     * @throws RemoteException
-     *             if a RMI-related communication error occurs.
      */
     PropertiedObject getPoolProps(ResourceDescriptorID descriptorID) throws ResourcePoolException,
                                                                     AuthorizationException,

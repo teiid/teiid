@@ -25,7 +25,6 @@
 package com.metamatrix.common.pooling.impl;
 
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -121,439 +120,439 @@ public class ResourcePoolMgrImpl implements ResourcePoolMgr {
   private static final String CONTEXT = LogCommonConstants.CTX_POOLING;
 
 
-public ResourcePoolMgrImpl() {
-    // Exported from registry
-}
-/**
- * Call to get a resource from the pool defined by descriptor.
- * @param descriptor that describes the resource to obtain
- * @param userName of the one requesting the resource
- * @return Resource that is defined by the descriptor
- * @exception ResourcePoolException is thrown if an error ocurrs.
- *    Check for type {@link ResourceWaitTimeOutException}
- */
-public Resource getResource(ResourceDescriptor descriptor, String userName) throws ResourcePoolException, RemoteException  {
-	  return getInstance().r1$(descriptor, userName);
-
-}
-
-
-/**
- * Call to get id's for all the current resource pools.
- * @return Collection of type ResourcePoolIDs for all the resource pools.
- * @exception ResourcePoolException is thrown if an error ocurrs.
- *    Check for type {@link ResourceWaitTimeOutException}
- */
-public Collection getAllResourceDescriptorIDs() throws ResourcePoolException, RemoteException   {
-	  return getInstance().rd2$();
-
-}
-
-
-public Collection getAllResourceDescriptors() throws ResourcePoolException, RemoteException   {
-	  return getInstance().rd1$();
-
-}
-
-public ResourceDescriptor getResourceDescriptor(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException {
-      return getInstance().rd3$(descriptorID);
-}
-
-
-
-public void updateResourcePool(final ResourceDescriptorID descriptorID, Properties props) throws ResourcePoolException, RemoteException {
-
-      LogManager.logTrace(CONTEXT, "Updating ResourcePool " + descriptorID.getName()); //$NON-NLS-1$
-
-      ResourcePool rp = getResourcePool(descriptorID);
-
-      if (rp != null) {
-
-        rp.update(props);
-        LogManager.logDetail(CONTEXT, "Update of ResourcePool " + descriptorID.getName() + " completed."); //$NON-NLS-1$ //$NON-NLS-2$
-
-      } else {
-        LogManager.logTrace(CONTEXT, "Unable to update resource pool, no resource pool found for " + descriptorID.getName() ); //$NON-NLS-1$
-
-      }
-
-
-}
-
-
-public Collection getResourcePoolStatistics() throws ResourcePoolException, RemoteException {
-    return getInstance().rps1$();
-}
-
-
-public ResourcePoolStatistics getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException   {
-    return getInstance().rps2$(descriptorID);
-}
-
-public Collection getResourcesStatisticsForPool(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException   {
-    return getInstance().rsp1$(descriptorID);
-}
-
-public void shutDown(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException {
-    LogManager.logTrace(CONTEXT, "Shutting down ResourcePool " + descriptorID.getName()); //$NON-NLS-1$
-
-
-    getInstance().sd2$(descriptorID);
-
-    LogManager.logDetail(CONTEXT, "Shut down ResourcePool " + descriptorID.getName() + " completed"); //$NON-NLS-1$ //$NON-NLS-2$
-
-}
-
-public void shutDown() throws ResourcePoolException, RemoteException  {
-    LogManager.logTrace(CONTEXT, "Shutting down all ResourcePools"); //$NON-NLS-1$
-
-    getInstance().sd1$();
-
-    LogManager.logDetail(CONTEXT, "Shut down all ResourcePools completed"); //$NON-NLS-1$
-
-}
-
-/**
-* Do Not call this method to update the resource pool
-* This method was made available for testing
-*/
-public ResourcePool getResourcePool(ResourceDescriptorID descriptorID) throws ResourcePoolException {
-      return getInstance().rp2$(descriptorID);
-
-}
-
-
-/**
-* Do Not call this method to update the resource pool
-* This method was made available for testing
-*/
-public ResourcePool getResourcePool(ResourceDescriptor descriptor) throws ResourcePoolException {
-
-     return getInstance().rp1$(descriptor);
-
-}
-
-/**
-* Do Not call this method to update the resource pool
-* This method was made available for testing
-*/
-public Collection getResourcePools() throws ResourcePoolException {
-      return getInstance().rp4$();
-}
-
-
-protected synchronized ResourcePoolMgrImpl getInstance() throws ResourcePoolException {
-        if (instance == null) {
-
-             ResourcePoolMgrImpl rpm = new ResourcePoolMgrImpl();
-             rpm.init();
-             instance = rpm;
-
-        } else {
-            if ( instance.isBeingShutDown() ) {
-               throw new ResourcePoolException(ErrorMessageKeys.POOLING_ERR_0036, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0036));
-
-            }
-        }
-
-
-
-        return instance;
-    }
-
-protected void init() throws ResourcePoolException {
-    resourcePools = Collections.synchronizedMap(new HashMap());
-
-    idToDescriptorMap = Collections.synchronizedMap(new HashMap());
-
-    shutdownRequested = false;
-
-}
-
-
-private boolean isBeingShutDown() {
-    return shutdownRequested;
-}
-
-protected void setIsBeingShutDown(boolean shutDown) {
-    this.shutdownRequested = shutDown;
-}
-
-
-private final Resource r1$(final ResourceDescriptor descriptor, String userName) throws ResourcePoolException  {
-    ResourcePool rp = null;
-    LogManager.logTrace(CONTEXT, "Getting resource " + descriptor.getName() + " from pool for user " + userName); //$NON-NLS-1$ //$NON-NLS-2$
-
-    if (resourcePools.isEmpty()) {
-          LogManager.logTrace(CONTEXT, "Pool Is Empty"); //$NON-NLS-1$
-    }
-
-    // Acquire write lock
-        lock.writeLock().lock();
-
-
-        if (resourcePools.containsKey(descriptor.getID())) {
-            LogManager.logTrace(CONTEXT, "Found Resource " + descriptor.getName() + " in pool."); //$NON-NLS-1$ //$NON-NLS-2$
-
-            Object obj = resourcePools.get(descriptor.getID());
-            rp = (ResourcePool) obj;
-
-            lock.writeLock().unlock();
-
-
-        } else {
-
-
-    	    ResourceDescriptor cloneDescriptor = null;
-        	try {
-
-
-	        // clone the descriptor to ensure the requestor cannot change the
-    	    // values later
-        	    cloneDescriptor = (ResourceDescriptor) descriptor.clone();
-	        } catch (Throwable t) {
-                lock.writeLock().unlock();
-                throw new ResourcePoolException(t, ErrorMessageKeys.POOLING_ERR_0037, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0037));
-            }
-
-            String poolClassName = cloneDescriptor.getProperty(ResourcePoolPropertyNames.RESOURCE_POOL_CLASS_NAME);
-
-            try {
-
-				rp = (ResourcePool) PoolingUtil.create(poolClassName, null);
-/*
-                Class poolFactoryClass = Class.forName(poolClassName);
-     	        rp = (ResourcePool) poolFactoryClass.newInstance();
-*/
-                // initialize the pool
-   	            rp.init(cloneDescriptor);
-       	        resourcePools.put(cloneDescriptor.getID(), rp);
-
-                idToDescriptorMap.put(cloneDescriptor.getID(), cloneDescriptor);
-
-                LogManager.logDetail(CONTEXT, "New ResourcePool " + poolClassName + " created.\n" + //$NON-NLS-1$ //$NON-NLS-2$
-                         PropertiesUtils.prettyPrint(cloneDescriptor.getProperties()));
-
-	        } catch(ClassCastException e) {
-            	throw new ResourcePoolException(e, ErrorMessageKeys.POOLING_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0038,
-            				new Object[] {poolClassName,ResourcePool.class.getName()} ));
-
-  	        } finally {
-
-                lock.writeLock().unlock();
-
-            }
-        }
-
-    return rp.checkOut(userName);
-}
-
-
-
-// return a resource pool
-protected ResourcePool rp1$(ResourceDescriptor descriptor) {
-
-
-    ResourcePool rp = null;
-    if (resourcePools.containsKey(descriptor.getID())) {
-        Object obj = resourcePools.get(descriptor.getID());
-        rp = (ResourcePool) obj;
-    }
-
-    return rp;
-
-}
-
-// return a resource pool
-protected ResourcePool rp2$(ResourceDescriptorID descriptorID) {
-        lock.readLock().lock();
-
-    ResourcePool rp = null;
-
-    if (resourcePools.containsKey(descriptorID)) {
-        rp = (ResourcePool) resourcePools.get(descriptorID);
-    }
-
-    // Release read lock
-    lock.readLock().unlock();
-
-    return rp;
-
-}
-
-// return all resource descriptor ids
-protected Collection rd2$() throws ResourcePoolException {
-
-        lock.readLock().lock();
-
-    Collection ids = new ArrayList(idToDescriptorMap.size());
-
-    ids.addAll(idToDescriptorMap.keySet());
-
-    lock.readLock().unlock();
-
-
-    return ids;
-
-}
-
-// return all resource descriptors
-protected Collection rd1$() throws ResourcePoolException {
-
-        lock.readLock().lock();
-
-    Collection ids = new ArrayList(idToDescriptorMap.size());
-
-    ids.addAll(idToDescriptorMap.values());
-
-    lock.readLock().unlock();
-
-    return ids;
-
-}
-
-// return a specific resource descriptor
-protected ResourceDescriptor rd3$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
-
-        lock.readLock().lock();
-
-    ResourceDescriptor rd = null;
-
-
-    if (idToDescriptorMap.containsKey(descriptorID)) {
-         rd = (ResourceDescriptor) idToDescriptorMap.get(descriptorID);
-    }
-
-
-    lock.readLock().unlock();
-
-
-    return rd;
-
-}
-
-// return all the resource pools
-protected Collection rp4$() {
-        lock.readLock().lock();
-
-    Collection pools = resourcePools.values();
-
-        // Release read lock
-    lock.readLock().unlock();
-
-    return pools;
-}
-
-// return all the resource pool statistics
-protected Collection rps1$() throws ResourcePoolException {
-
-    // Acquire write lock
-        lock.readLock().lock();
-
-    Collection stats = new ArrayList(resourcePools.size());
-
-    Iterator it = resourcePools.keySet().iterator();
-    while (it.hasNext()) {
-        ResourceDescriptorID rdID = (ResourceDescriptorID) it.next();
-        ResourcePool rp = (ResourcePool) resourcePools.get(rdID);
-        stats.add( rp.getResourcePoolStatistics() );
-
-    }
-
-
-    lock.readLock().unlock();
-
-    return stats;
-
-}
-
-// return the specific resource pool statistics for the descriptor ID
-protected ResourcePoolStatistics rps2$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
-
-    ResourcePoolStatistics rps = null;
-        lock.readLock().lock();
-
-    ResourcePool rp = null;
-
-    if (resourcePools.containsKey(descriptorID)) {
-        rp = (ResourcePool) resourcePools.get(descriptorID);
-        rps = rp.getResourcePoolStatistics();
-    }
-
-
-   lock.readLock().unlock();
-
-
-    return rps;
-
-}
-
-// return the specific resource pool statistics for the descriptor ID
-protected Collection rsp1$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
-
-    Collection rsp = null;
-        lock.readLock().lock();
-
-    ResourcePool rp = null;
-
-    if (resourcePools.containsKey(descriptorID)) {
-        rp = (ResourcePool) resourcePools.get(descriptorID);
-        rsp = rp.getPoolResourceStatistics();
-    }
-
-
-   lock.readLock().unlock();
-
-
-    return rsp;
-
-}
-
-// shutdown all the pools
-protected void sd1$() throws ResourcePoolException {
-    shutdownRequested = true;
-    // Acquire write lock
-        lock.writeLock().lock();
-
-
-    Iterator it = resourcePools.keySet().iterator();
-    while (it.hasNext()) {
-        ResourceDescriptorID rdID = (ResourceDescriptorID) it.next();
-        ResourcePool rp = (ResourcePool) resourcePools.get(rdID);
-        rp.shutDown();
-    }
-
-    resourcePools.clear();
-    idToDescriptorMap.clear();
-
-    shutdownRequested = false;
-
-
-    lock.writeLock().unlock();
-
-}
-
-// shutdow a specific pool
-protected void sd2$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
-
-
-            // Acquire write lock
-            lock.writeLock().lock();
-
-        ResourcePool rp = null;
-
-        if (resourcePools.containsKey(descriptorID)) {
-            rp = (ResourcePool) resourcePools.get(descriptorID);
-
-            rp.shutDown();
-            resourcePools.remove(descriptorID);
-            idToDescriptorMap.remove(descriptorID);
-        }
-
-
-        lock.writeLock().unlock();
-
-
-}
+	public ResourcePoolMgrImpl() {
+	    // Exported from registry
+	}
+	/**
+	 * Call to get a resource from the pool defined by descriptor.
+	 * @param descriptor that describes the resource to obtain
+	 * @param userName of the one requesting the resource
+	 * @return Resource that is defined by the descriptor
+	 * @exception ResourcePoolException is thrown if an error ocurrs.
+	 *    Check for type {@link ResourceWaitTimeOutException}
+	 */
+	public Resource getResource(ResourceDescriptor descriptor, String userName) throws ResourcePoolException {
+		  return getInstance().r1$(descriptor, userName);
+	
+	}
+	
+	
+	/**
+	 * Call to get id's for all the current resource pools.
+	 * @return Collection of type ResourcePoolIDs for all the resource pools.
+	 * @exception ResourcePoolException is thrown if an error ocurrs.
+	 *    Check for type {@link ResourceWaitTimeOutException}
+	 */
+	public Collection getAllResourceDescriptorIDs() throws ResourcePoolException {
+		  return getInstance().rd2$();
+	
+	}
+	
+	
+	public Collection getAllResourceDescriptors() throws ResourcePoolException {
+		  return getInstance().rd1$();
+	
+	}
+	
+	public ResourceDescriptor getResourceDescriptor(ResourceDescriptorID descriptorID) throws ResourcePoolException{
+	      return getInstance().rd3$(descriptorID);
+	}
+	
+	
+	
+	public void updateResourcePool(final ResourceDescriptorID descriptorID, Properties props) throws ResourcePoolException {
+	
+	      LogManager.logTrace(CONTEXT, "Updating ResourcePool " + descriptorID.getName()); //$NON-NLS-1$
+	
+	      ResourcePool rp = getResourcePool(descriptorID);
+	
+	      if (rp != null) {
+	
+	        rp.update(props);
+	        LogManager.logDetail(CONTEXT, "Update of ResourcePool " + descriptorID.getName() + " completed."); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	      } else {
+	        LogManager.logTrace(CONTEXT, "Unable to update resource pool, no resource pool found for " + descriptorID.getName() ); //$NON-NLS-1$
+	
+	      }
+	
+	
+	}
+	
+	
+	public Collection getResourcePoolStatistics() throws ResourcePoolException {
+	    return getInstance().rps1$();
+	}
+	
+	
+	public ResourcePoolStatistics getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	    return getInstance().rps2$(descriptorID);
+	}
+	
+	public Collection getResourcesStatisticsForPool(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	    return getInstance().rsp1$(descriptorID);
+	}
+	
+	public void shutDown(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	    LogManager.logTrace(CONTEXT, "Shutting down ResourcePool " + descriptorID.getName()); //$NON-NLS-1$
+	
+	
+	    getInstance().sd2$(descriptorID);
+	
+	    LogManager.logDetail(CONTEXT, "Shut down ResourcePool " + descriptorID.getName() + " completed"); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	}
+	
+	public void shutDown() throws ResourcePoolException {
+	    LogManager.logTrace(CONTEXT, "Shutting down all ResourcePools"); //$NON-NLS-1$
+	
+	    getInstance().sd1$();
+	
+	    LogManager.logDetail(CONTEXT, "Shut down all ResourcePools completed"); //$NON-NLS-1$
+	
+	}
+	
+	/**
+	* Do Not call this method to update the resource pool
+	* This method was made available for testing
+	*/
+	public ResourcePool getResourcePool(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	      return getInstance().rp2$(descriptorID);
+	
+	}
+	
+	
+	/**
+	* Do Not call this method to update the resource pool
+	* This method was made available for testing
+	*/
+	public ResourcePool getResourcePool(ResourceDescriptor descriptor) throws ResourcePoolException {
+	
+	     return getInstance().rp1$(descriptor);
+	
+	}
+	
+	/**
+	* Do Not call this method to update the resource pool
+	* This method was made available for testing
+	*/
+	public Collection getResourcePools() throws ResourcePoolException {
+	      return getInstance().rp4$();
+	}
+	
+	
+	protected synchronized ResourcePoolMgrImpl getInstance() throws ResourcePoolException {
+	        if (instance == null) {
+	
+	             ResourcePoolMgrImpl rpm = new ResourcePoolMgrImpl();
+	             rpm.init();
+	             instance = rpm;
+	
+	        } else {
+	            if ( instance.isBeingShutDown() ) {
+	               throw new ResourcePoolException(ErrorMessageKeys.POOLING_ERR_0036, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0036));
+	
+	            }
+	        }
+	
+	
+	
+	        return instance;
+	    }
+	
+	protected void init() throws ResourcePoolException {
+	    resourcePools = Collections.synchronizedMap(new HashMap());
+	
+	    idToDescriptorMap = Collections.synchronizedMap(new HashMap());
+	
+	    shutdownRequested = false;
+	
+	}
+	
+	
+	private boolean isBeingShutDown() {
+	    return shutdownRequested;
+	}
+	
+	protected void setIsBeingShutDown(boolean shutDown) {
+	    this.shutdownRequested = shutDown;
+	}
+	
+	
+	private final Resource r1$(final ResourceDescriptor descriptor, String userName) throws ResourcePoolException  {
+	    ResourcePool rp = null;
+	    LogManager.logTrace(CONTEXT, "Getting resource " + descriptor.getName() + " from pool for user " + userName); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	    if (resourcePools.isEmpty()) {
+	          LogManager.logTrace(CONTEXT, "Pool Is Empty"); //$NON-NLS-1$
+	    }
+	
+	    // Acquire write lock
+	        lock.writeLock().lock();
+	
+	
+	        if (resourcePools.containsKey(descriptor.getID())) {
+	            LogManager.logTrace(CONTEXT, "Found Resource " + descriptor.getName() + " in pool."); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	            Object obj = resourcePools.get(descriptor.getID());
+	            rp = (ResourcePool) obj;
+	
+	            lock.writeLock().unlock();
+	
+	
+	        } else {
+	
+	
+	    	    ResourceDescriptor cloneDescriptor = null;
+	        	try {
+	
+	
+		        // clone the descriptor to ensure the requestor cannot change the
+	    	    // values later
+	        	    cloneDescriptor = (ResourceDescriptor) descriptor.clone();
+		        } catch (Throwable t) {
+	                lock.writeLock().unlock();
+	                throw new ResourcePoolException(t, ErrorMessageKeys.POOLING_ERR_0037, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0037));
+	            }
+	
+	            String poolClassName = cloneDescriptor.getProperty(ResourcePoolPropertyNames.RESOURCE_POOL_CLASS_NAME);
+	
+	            try {
+	
+					rp = (ResourcePool) PoolingUtil.create(poolClassName, null);
+	/*
+	                Class poolFactoryClass = Class.forName(poolClassName);
+	     	        rp = (ResourcePool) poolFactoryClass.newInstance();
+	*/
+	                // initialize the pool
+	   	            rp.init(cloneDescriptor);
+	       	        resourcePools.put(cloneDescriptor.getID(), rp);
+	
+	                idToDescriptorMap.put(cloneDescriptor.getID(), cloneDescriptor);
+	
+	                LogManager.logDetail(CONTEXT, "New ResourcePool " + poolClassName + " created.\n" + //$NON-NLS-1$ //$NON-NLS-2$
+	                         PropertiesUtils.prettyPrint(cloneDescriptor.getProperties()));
+	
+		        } catch(ClassCastException e) {
+	            	throw new ResourcePoolException(e, ErrorMessageKeys.POOLING_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0038,
+	            				new Object[] {poolClassName,ResourcePool.class.getName()} ));
+	
+	  	        } finally {
+	
+	                lock.writeLock().unlock();
+	
+	            }
+	        }
+	
+	    return rp.checkOut(userName);
+	}
+	
+	
+	
+	// return a resource pool
+	protected ResourcePool rp1$(ResourceDescriptor descriptor) {
+	
+	
+	    ResourcePool rp = null;
+	    if (resourcePools.containsKey(descriptor.getID())) {
+	        Object obj = resourcePools.get(descriptor.getID());
+	        rp = (ResourcePool) obj;
+	    }
+	
+	    return rp;
+	
+	}
+	
+	// return a resource pool
+	protected ResourcePool rp2$(ResourceDescriptorID descriptorID) {
+	        lock.readLock().lock();
+	
+	    ResourcePool rp = null;
+	
+	    if (resourcePools.containsKey(descriptorID)) {
+	        rp = (ResourcePool) resourcePools.get(descriptorID);
+	    }
+	
+	    // Release read lock
+	    lock.readLock().unlock();
+	
+	    return rp;
+	
+	}
+	
+	// return all resource descriptor ids
+	protected Collection rd2$() throws ResourcePoolException {
+	
+	        lock.readLock().lock();
+	
+	    Collection ids = new ArrayList(idToDescriptorMap.size());
+	
+	    ids.addAll(idToDescriptorMap.keySet());
+	
+	    lock.readLock().unlock();
+	
+	
+	    return ids;
+	
+	}
+	
+	// return all resource descriptors
+	protected Collection rd1$() throws ResourcePoolException {
+	
+	        lock.readLock().lock();
+	
+	    Collection ids = new ArrayList(idToDescriptorMap.size());
+	
+	    ids.addAll(idToDescriptorMap.values());
+	
+	    lock.readLock().unlock();
+	
+	    return ids;
+	
+	}
+	
+	// return a specific resource descriptor
+	protected ResourceDescriptor rd3$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	
+	        lock.readLock().lock();
+	
+	    ResourceDescriptor rd = null;
+	
+	
+	    if (idToDescriptorMap.containsKey(descriptorID)) {
+	         rd = (ResourceDescriptor) idToDescriptorMap.get(descriptorID);
+	    }
+	
+	
+	    lock.readLock().unlock();
+	
+	
+	    return rd;
+	
+	}
+	
+	// return all the resource pools
+	protected Collection rp4$() {
+	        lock.readLock().lock();
+	
+	    Collection pools = resourcePools.values();
+	
+	        // Release read lock
+	    lock.readLock().unlock();
+	
+	    return pools;
+	}
+	
+	// return all the resource pool statistics
+	protected Collection rps1$() throws ResourcePoolException {
+	
+	    // Acquire write lock
+	        lock.readLock().lock();
+	
+	    Collection stats = new ArrayList(resourcePools.size());
+	
+	    Iterator it = resourcePools.keySet().iterator();
+	    while (it.hasNext()) {
+	        ResourceDescriptorID rdID = (ResourceDescriptorID) it.next();
+	        ResourcePool rp = (ResourcePool) resourcePools.get(rdID);
+	        stats.add( rp.getResourcePoolStatistics() );
+	
+	    }
+	
+	
+	    lock.readLock().unlock();
+	
+	    return stats;
+	
+	}
+	
+	// return the specific resource pool statistics for the descriptor ID
+	protected ResourcePoolStatistics rps2$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	
+	    ResourcePoolStatistics rps = null;
+	        lock.readLock().lock();
+	
+	    ResourcePool rp = null;
+	
+	    if (resourcePools.containsKey(descriptorID)) {
+	        rp = (ResourcePool) resourcePools.get(descriptorID);
+	        rps = rp.getResourcePoolStatistics();
+	    }
+	
+	
+	   lock.readLock().unlock();
+	
+	
+	    return rps;
+	
+	}
+	
+	// return the specific resource pool statistics for the descriptor ID
+	protected Collection rsp1$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	
+	    Collection rsp = null;
+	        lock.readLock().lock();
+	
+	    ResourcePool rp = null;
+	
+	    if (resourcePools.containsKey(descriptorID)) {
+	        rp = (ResourcePool) resourcePools.get(descriptorID);
+	        rsp = rp.getPoolResourceStatistics();
+	    }
+	
+	
+	   lock.readLock().unlock();
+	
+	
+	    return rsp;
+	
+	}
+	
+	// shutdown all the pools
+	protected void sd1$() throws ResourcePoolException {
+	    shutdownRequested = true;
+	    // Acquire write lock
+	        lock.writeLock().lock();
+	
+	
+	    Iterator it = resourcePools.keySet().iterator();
+	    while (it.hasNext()) {
+	        ResourceDescriptorID rdID = (ResourceDescriptorID) it.next();
+	        ResourcePool rp = (ResourcePool) resourcePools.get(rdID);
+	        rp.shutDown();
+	    }
+	
+	    resourcePools.clear();
+	    idToDescriptorMap.clear();
+	
+	    shutdownRequested = false;
+	
+	
+	    lock.writeLock().unlock();
+	
+	}
+	
+	// shutdow a specific pool
+	protected void sd2$(ResourceDescriptorID descriptorID) throws ResourcePoolException {
+	
+	
+	            // Acquire write lock
+	            lock.writeLock().lock();
+	
+	        ResourcePool rp = null;
+	
+	        if (resourcePools.containsKey(descriptorID)) {
+	            rp = (ResourcePool) resourcePools.get(descriptorID);
+	
+	            rp.shutDown();
+	            resourcePools.remove(descriptorID);
+	            idToDescriptorMap.remove(descriptorID);
+	        }
+	
+	
+	        lock.writeLock().unlock();
+	
+	
+	}
 
 }

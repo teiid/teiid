@@ -25,7 +25,6 @@
 package com.metamatrix.common.comm.platform.socket;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.Properties;
 
 import javax.xml.registry.RegistryException;
@@ -46,7 +45,6 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.VMController;
@@ -84,7 +82,7 @@ public class SocketVMController extends VMController {
         super(host, vmName, vmId, registry, serverEvents, bus);
     }
 
-	public void startVM() throws ServiceException, RemoteException {
+	public void startVM() {
 		super.startVM();
 		
 		waitForServices();
@@ -95,7 +93,7 @@ public class SocketVMController extends VMController {
     
     // extend the VMController method to close the socket at the start of the stop process
     // so that the port can be made available sooner on bounces.
-    protected void doStopVM(boolean now, boolean shutdown) throws ServiceException {
+    protected void doStopVM(boolean now, boolean shutdown) {
         if (workerPool != null) {
             try {
                 workerPool.shutdown();                

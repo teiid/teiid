@@ -26,7 +26,6 @@ package com.metamatrix.query.processor;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -272,12 +271,11 @@ public class TestProcessor extends TestCase {
      * @param bufferMgr
      * @param tsID
      * @throws MetaMatrixComponentException
-     * @throws RemoteException
      * @throws MetaMatrixProcessingException 
      * @since 4.3
      */
     static void examineResults(List[] expectedResults,BufferManager bufferMgr,TupleSourceID tsID) 
-        throws MetaMatrixComponentException,SQLException,RemoteException, MetaMatrixProcessingException {
+        throws MetaMatrixComponentException,SQLException, MetaMatrixProcessingException {
         
         // Create QueryResults from TupleSource
         TupleSource ts = bufferMgr.getTupleSource(tsID);

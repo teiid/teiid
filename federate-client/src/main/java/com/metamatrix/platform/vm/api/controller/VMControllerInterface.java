@@ -24,8 +24,6 @@
 
 package com.metamatrix.platform.vm.api.controller;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Date;
 
 import com.metamatrix.admin.api.exception.AdminException;
@@ -33,18 +31,15 @@ import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.platform.vm.controller.VMStatistics;
 
-public interface VMControllerInterface extends Remote {
+public interface VMControllerInterface {
     
 	/**
 	 * Starts the VM by invoking all the deployed services
-	 * @throws ServiceException
-	 * @throws RemoteException
 	 */
-	public void startVM() throws ServiceException, RemoteException;
+	public void startVM();
 	
 	/**
 	 *  Start the service identified by the ServiceComponentID
@@ -52,128 +47,128 @@ public interface VMControllerInterface extends Remote {
 	 *  Any exceptions will then be thrown to the caller.
 	 *  If synch is false then start service asynchronously.
 	 */
-	public void startDeployedService(ServiceComponentDefnID id) throws ServiceException, RemoteException;
+	public void startDeployedService(ServiceComponentDefnID id);
 
 	/**
 	 * Start a previously stopped service
 	 */
-	void startService(ServiceID serviceID) throws ServiceException, RemoteException;
+	void startService(ServiceID serviceID);
 
 	/**
 	 * Kill all services (waiting for work to complete) and then kill the vm.
 	 */
-	void stopVM() throws ServiceException, RemoteException;
+	void stopVM();
 
 	/**
 	 * Kill all services now, do not wait for work to complete, do not collect $200
 	 */
-	void stopVMNow() throws ServiceException, RemoteException;
+	void stopVMNow();
 
 	/**
 	 * Kill service once work is complete
 	 */
-	void stopService(ServiceID id) throws ServiceException, RemoteException;
+	void stopService(ServiceID id);
 
 	/**
 	 * Kill service now!!!
 	 */
-	void stopServiceNow(ServiceID id) throws ServiceException, RemoteException;
+	void stopServiceNow(ServiceID id);
 
     /**
      * Kill all services once work is complete
      */
-    void stopAllServices() throws MultipleException, ServiceException, RemoteException;
+    void stopAllServices() throws MultipleException;
 
     /**
      * Kill all services now
      */
-    void stopAllServicesNow() throws MultipleException, ServiceException, RemoteException;
+    void stopAllServicesNow() throws MultipleException;
     
     /**
      * Check the state of a service
      */
-    void checkService(ServiceID serviceID) throws ServiceException, RemoteException;
+    void checkService(ServiceID serviceID);
 
 	
     /**
      * Return current log configuration.
      */
-    LogConfiguration getCurrentLogConfiguration() throws RemoteException;
+    LogConfiguration getCurrentLogConfiguration();
 
     /**
      * Set the current log configuration.
      */
-    void setCurrentLogConfiguration(LogConfiguration logConfiguration) throws RemoteException;
+    void setCurrentLogConfiguration(LogConfiguration logConfiguration);
 
 	/**
 	 * Get the time the VM was initialized.
 	 */
-    Date getStartTime() throws RemoteException;
+    Date getStartTime();
 
 	/**
 	 * Get the name of the host this VM is running on.
 	 */
-    String getHostname() throws RemoteException;
+    String getHostname();
 
 	/**
 	 * Get the ID for this controller.
 	 */
-    VMControllerID getID() throws RemoteException;
+    VMControllerID getID() ;
 
 	/**
 	 * Get the name for this controller.
 	 */
-    String getName() throws RemoteException;
+    String getName();
 
 	/**
 	 * Method called from registries to determine if VMController is alive.
 	 */
-	void ping() throws RemoteException;
+	void ping();
 
     /**
      * Shut down all services waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    void shutdown() throws ServiceException, RemoteException;
+    void shutdown();
 
     /**
      * Shut down all services without waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    void shutdownNow() throws ServiceException, RemoteException;
+    void shutdownNow();
 
     /**
      * Shut down service waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    void shutdownService(ServiceID serviceID) throws ServiceException, RemoteException;
+    void shutdownService(ServiceID serviceID) ;
 
     /**
      * Shut down all services without waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    void shutdownServiceNow(ServiceID serviceID) throws ServiceException, RemoteException;
+    void shutdownServiceNow(ServiceID serviceID);
 
     /**
      * Returns true if system is being shutdown.
      */
-    boolean isShuttingDown() throws RemoteException;
+    boolean isShuttingDown();
 
     /**
      * Return information about VM.
      * totalMemory, freeMemory, threadCount
      */
-    VMStatistics getVMStatistics() throws RemoteException;
+    VMStatistics getVMStatistics();
 
     /**
      * dumps stack trace to log file.
      */
-    void dumpThreads() throws RemoteException;
+    void dumpThreads();
 
     /**
      * Run GC on vm.
      */
-    void runGC() throws RemoteException;
+    void runGC() ;
 
     
     /**
@@ -183,6 +178,6 @@ public interface VMControllerInterface extends Remote {
      * @throws AdminException
      * @since 4.3
      */
-    byte[] exportLogs() throws ServiceException, RemoteException;
+    byte[] exportLogs();
 }
 

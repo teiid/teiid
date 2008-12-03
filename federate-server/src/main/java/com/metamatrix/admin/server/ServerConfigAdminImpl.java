@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -196,8 +195,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 logAndConvertSystemException(configException);
             } catch (ServiceException err) {
                 logAndConvertSystemException(err);
-            } catch (RemoteException err) {
-                logAndConvertSystemException(err);
             }
         
             Collection newBindings = 
@@ -269,8 +266,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 logAndConvertSystemException(configException);
             } catch (ServiceException err) {
                 logAndConvertSystemException(err);
-            } catch (RemoteException err) {
-                logAndConvertSystemException(err);
             }
         
             //return the new binding
@@ -314,10 +309,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(configException);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
-        }
-
+        } 
     }
 
     /** 
@@ -840,19 +832,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @throws ModificationException
      * @since 4.3
      */
-    private Host updateHost(Host hostObject,
-                            boolean enable) throws ConfigurationException,
-                                           ServiceException,
-                                           ModificationException {
+    private Host updateHost(Host hostObject, boolean enable) 
+    	throws ConfigurationException, ModificationException {
+    	
         Properties theProperties = hostObject.getProperties();
         theProperties.setProperty(HostType.HOST_ENABLED, Boolean.toString(enable)); 
-        Host updatedHost;
-        try {
-            updatedHost = (Host)getConfigurationServiceProxy().modify(hostObject, theProperties, getUserName());
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
-        return updatedHost;
+        return (Host)getConfigurationServiceProxy().modify(hostObject, theProperties, getUserName());
     }
 
     /**
@@ -868,9 +853,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
-        }
+        } 
+        
         try {
             for (Iterator iter = defns.iterator(); iter.hasNext();) {
                 VMComponentDefn defn = (VMComponentDefn)iter.next();
@@ -901,19 +885,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @return
      * @since 4.3
      */
-    private VMComponentDefn updateProcess(VMComponentDefn defn,
-                                          boolean enabled) throws ConfigurationException,
-                                                          ServiceException,
-                                                          ModificationException {
+    private VMComponentDefn updateProcess(VMComponentDefn defn, boolean enabled) 
+    	throws ConfigurationException, ModificationException {
+    	
         Properties processProperties = defn.getProperties();
         processProperties.setProperty(VMComponentDefnType.ENABLED_FLAG, Boolean.toString(enabled));
-        VMComponentDefn updatedProcess = null;
-        try {
-            updatedProcess = (VMComponentDefn)getConfigurationServiceProxy().modify(defn, processProperties, getUserName());
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
-        return updatedProcess;
+        return (VMComponentDefn)getConfigurationServiceProxy().modify(defn, processProperties, getUserName());
     }
 
     /**
@@ -1171,18 +1148,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         return results;
     }
 
-    private List getComponentTypes(String connectorTypeIdentifier) 
-        throws ConfigurationException, ServiceException {
+    private List getComponentTypes(String connectorTypeIdentifier) throws ConfigurationException {
         
         List selectedTypes = new ArrayList();
         
         // get types from ConfigurationService
-        Collection types;
-        try {
-            types = getConfigurationServiceProxy().getAllComponentTypes(false);
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        Collection types = getConfigurationServiceProxy().getAllComponentTypes(false);
 
         for (Iterator iter = types.iterator(); iter.hasNext();) {
             ComponentType componentType = (ComponentType)iter.next();
@@ -1330,8 +1301,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
         }
         
         MMLogConfiguration result = new MMLogConfiguration();
@@ -1361,8 +1330,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         } catch (ConfigurationException err) {
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
-            logAndConvertSystemException(err);
-        } catch (RemoteException err) {
             logAndConvertSystemException(err);
         }
         
@@ -1545,12 +1512,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     private ConnectorBinding getConnectorBindingByName(String name) throws ConfigurationException, ServiceException {
-        Configuration nextStartupConfig;
-        try {
-            nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        Configuration nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
         ConnectorBinding cb = nextStartupConfig.getConnectorBinding(name);
         return cb;
     }
@@ -1558,12 +1520,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     protected List getConnectorBindingsByName(String[] bindingNames) throws ConfigurationException, ServiceException {
     	List bindingList = new ArrayList(bindingNames.length);
     	
-        Configuration nextStartupConfig;
-        try {
-            nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        Configuration nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
         for(int i=0; i<bindingNames.length; i++) {
         	ConnectorBinding cb = nextStartupConfig.getConnectorBinding(bindingNames[i]);
         	bindingList.add(cb);
@@ -1799,8 +1756,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
         }
         
         if ( nextStartupConfig == null ) {
@@ -1874,8 +1829,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
         }
         
         ComponentType result = null;
@@ -1921,9 +1874,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
-        }
+        } 
         if (theHost == null) {
             throwProcessingException("ServerConfigAdminImpl.Host_not_found_in_Configuration", new Object[] {hostName}); //$NON-NLS-1$
         }
@@ -1938,12 +1889,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                                            ServiceException,
                                                            MetaMatrixProcessingException, AdminException {
         VMComponentDefn result = null;
-        Collection defns;
-        try {
-            defns = getConfigurationServiceProxy().getCurrentConfiguration().getVMComponentDefns();
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        Collection defns = getConfigurationServiceProxy().getCurrentConfiguration().getVMComponentDefns();
 
         // convert config data to MMProcess objects, merge with runtime data
         for (Iterator iter = defns.iterator(); iter.hasNext();) {
@@ -1998,15 +1944,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                                                                    AuthorizationException,
                                                                                    ConfigurationException,
                                                                                    MetaMatrixComponentException {
-        ServiceComponentDefn service;
-        try {
-            service = (ServiceComponentDefn)getConfigurationServiceProxy()
-                                                                                               .getComponentDefn(Configuration.NEXT_STARTUP_ID,
-                                                                                                                 serviceID);
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
-        return service;
+    	
+        return (ServiceComponentDefn)getConfigurationServiceProxy().getComponentDefn(Configuration.NEXT_STARTUP_ID,serviceID);
     }
 
     /** 
@@ -2045,8 +1984,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
         }
         
         boolean decryptable = ((Boolean) decryptables.get(0)).booleanValue();
@@ -2074,9 +2011,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             logAndConvertSystemException(err);
         } catch (ServiceException err) {
             logAndConvertSystemException(err);
-        } catch (RemoteException err) {
-            logAndConvertSystemException(err);
         }
+        
         List nonDecryptableBindings = new ArrayList();
         
         Iterator iter1 = bindings.iterator();
@@ -2104,7 +2040,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * determined by examining the AdminOptions the user passed in.
      * 
      * @param existingBindings Collection of ConnectorBinding that already exist in the
-     * system.  Thier names are used to determine collision with new binding names.
+     * system.  Their names are used to determine collision with new binding names.
      * @param newBindingNames
      * @param options One of the {@link AdminOptions.OnConflict} options.
      * @return The collection of total bindings to add or update.
@@ -2113,7 +2049,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      */
     protected Collection getBindingNamesToUpdate(Collection existingBindings, Collection newBindingNames, AdminOptions options) throws AdminException {
         if ( options == null ) {
-            // Default is to NOT update any existing connector bindinds.
+            // Default is to NOT update any existing connector bindingds.
             options = new AdminOptions(AdminOptions.OnConflict.IGNORE);
         }
         Collection addBindings = new ArrayList(newBindingNames.size());
@@ -2214,7 +2150,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         }
         
         // add the function definitions as extension modules
-        addExtensionModule(ExtensionModule.FUNCTION_DEFINITION_TYPE, FUNCTION_DEFINITIONS_MODEL, modelFileContents, "User Defined Functions File"); //$NON-NLS-1$ //$NON-NLS-2$
+        addExtensionModule(ExtensionModule.FUNCTION_DEFINITION_TYPE, FUNCTION_DEFINITIONS_MODEL, modelFileContents, "User Defined Functions File"); //$NON-NLS-1$ 
         setSystemProperty("metamatrix.server.UDFClasspath", classpath); //$NON-NLS-1$
     }
 

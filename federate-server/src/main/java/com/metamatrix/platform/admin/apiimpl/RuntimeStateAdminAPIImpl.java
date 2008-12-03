@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -401,9 +400,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         VMControllerInterface vmController = helper.getVMControllerInterface(processID);
         try {
             vmController.stopAllServices();
-        } catch (RemoteException re) {
-            throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0063,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0063, processID));
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se);
         } catch (MultipleException se) {
@@ -439,9 +435,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         VMControllerInterface vmController = helper.getVMControllerInterface(processID);
         try {
             vmController.stopAllServicesNow();
-        } catch (RemoteException re) {
-            throw new MetaMatrixComponentException(re, ErrorMessageKeys.ADMIN_0063,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0063, processID));
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se);
         } catch (MultipleException me) {
@@ -575,8 +568,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
-     * @throws RemoteException
-     *             if there is a communication exception.
      */
     public synchronized void startHost(String host) throws AuthorizationException,
                                                    InvalidSessionException,
@@ -606,8 +597,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
-     * @throws RemoteException
-     *             if there is a communication exception.
      */
     public synchronized void startProcess(String host,
                                           String process) throws AuthorizationException,
@@ -721,11 +710,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
                         default:
                     }
-                } catch (RemoteException re) {
-                    exceptions.add(new ServiceException(ErrorMessageKeys.ADMIN_0071,
-                                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0071,
-                                                                                      serviceData.getComponentDefnID(),
-                                                                                      processData.getName())));
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -733,11 +717,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
             } else {
                 try {
                     vm.startDeployedService((ServiceComponentDefnID)serviceData.getComponentDefnID());
-                } catch (RemoteException re) {
-                    exceptions.add(new ServiceException(ErrorMessageKeys.ADMIN_0072,
-                                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0072,
-                                                                                      serviceData.getComponentDefnID(),
-                                                                                      processData.getName())));
                 } catch (ServiceException se) {
                     exceptions.add(se);
                 }
@@ -845,11 +824,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                         vm.stopService(serviceID);
                     }
                 }
-            } catch (RemoteException re) {
-                exceptions.add(new ServiceException(ErrorMessageKeys.ADMIN_0075,
-                                                    PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0075,
-                                                                                  serviceData.getComponentDefnID(),
-                                                                                  processData.getName())));
             } catch (ServiceException se) {
                 exceptions.add(se);
             }
@@ -905,10 +879,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized Date getServerStartTime() throws AuthorizationException,
-                                                                                    InvalidSessionException,
-                                                                                    MetaMatrixComponentException {
-
+    public synchronized Date getServerStartTime() throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         try {
             return configAdmin.getServerStartupTime();
         } catch (Exception e) {
@@ -991,15 +962,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         // Set logging config for given VM
         // VMControllerNotBoundException gets propagated (ancester is MetaMatrixComponentException)
         VMControllerInterface vm = helper.getVMControllerInterface(vmID);
-        try {
-            vm.setCurrentLogConfiguration(logConfig);
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0085, vmID.getID());
-            I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0085, e, new Object[] {
-                new Long(vmID.getID())
-            });
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0085, msg);
-        }
+        vm.setCurrentLogConfiguration(logConfig);
     }
 
     /**
@@ -1052,20 +1015,11 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                              "Getting queue statistics for " + queueName + " for service: " + serviceID); //$NON-NLS-1$ //$NON-NLS-2$
 
         // Validate caller's session
-        //        SessionToken token =
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        try {
-            ServiceInterface service = helper.getServiceBinding(serviceID).getService();
-            return service.getQueueStatistics(queueName);
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0087, serviceID);
-            I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0087, e, new Object[] {
-                serviceID
-            });
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0087, msg);
-        }
+        ServiceInterface service = helper.getServiceBinding(serviceID).getService();
+        return service.getQueueStatistics(queueName);
     }
 
     /**
@@ -1113,21 +1067,11 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN,
-                             "Running GarbageCollector on " + vmID + " user = " + token.getUsername()); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "Running GarbageCollector on " + vmID + " user = " + token.getUsername()); //$NON-NLS-1$ //$NON-NLS-2$
 
         // Any administrator may call this read-only method - no need to validate role
-
-        try {
-            VMControllerInterface vm = helper.getVMControllerInterface(vmID);
-            vm.runGC();
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0089, vmID);
-            I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0089, e, new Object[] {
-                vmID
-            });
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0089, msg);
-        }
+        VMControllerInterface vm = helper.getVMControllerInterface(vmID);
+        vm.runGC();
     }
 
     /**
@@ -1140,8 +1084,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
-     * @throws RemoteException
-     *             if a RMI-related communication error occurs.
      */
     public synchronized Collection getResourceDescriptors() throws ResourcePoolException,
                                                                                               AuthorizationException,
@@ -1153,8 +1095,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         // Validate caller's session
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
-
-        
         return helper.getResourceDescriptors();
     }
 
@@ -1193,17 +1133,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         while (poolIter.hasNext()) {
             ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
             ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-            try {
-                mgr.updateResourcePool(resourcePoolID, properties);
-            } catch (RemoteException e) {
-                String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0091, resourcePoolID);
-                I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0091, e, new Object[] {
-                    resourcePoolID
-                });
-                throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0091, msg);
-            }
-
+            mgr.updateResourcePool(resourcePoolID, properties);
         }
 
     }
@@ -1228,34 +1158,25 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        try {
 
-            Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-            while (poolIter.hasNext()) {
-                // find
+        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
+        while (poolIter.hasNext()) {
+            // find
 
-                ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-                ResourcePoolMgr mgr = binding.getResourcePoolMgr();
+            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
+            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
 
-                // find the first resource descriptor for this id,
-                // all descriptors across all the vms are not being
-                // maintained independently
-                ResourceDescriptor descriptor = mgr.getResourceDescriptor(descriptorID);
-                // dPRops is unmodifiable, instead of removing just copy
-                // the properties that are needed
-                if (descriptor != null) {
-                    return (PropertiedObject)descriptor;
-
-                }
+            // find the first resource descriptor for this id,
+            // all descriptors across all the vms are not being
+            // maintained independently
+            ResourceDescriptor descriptor = mgr.getResourceDescriptor(descriptorID);
+            // dPRops is unmodifiable, instead of removing just copy
+            // the properties that are needed
+            if (descriptor != null) {
+                return (PropertiedObject)descriptor;
 
             }
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0092);
-            I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0092, e);
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0092, msg);
-
         }
-
         return null;
     }
 
@@ -1298,27 +1219,19 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         Collection result = new ArrayList();
 
-        try {
+        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
+        while (poolIter.hasNext()) {
+            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
+            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
 
-            Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-            while (poolIter.hasNext()) {
-                ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-                ResourcePoolMgr mgr = binding.getResourcePoolMgr();
+            ResourcePoolStatistics stats = mgr.getResourcePoolStatistics(descriptorID);
+            Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
+            String processName = this.helper.getVMControllerInterface(binding.getID().getVMControllerID()).getName();
+            ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
+                                                                    binding.getID().getHostName(),
+                                                                    processName, resStats);
 
-                ResourcePoolStatistics stats = mgr.getResourcePoolStatistics(descriptorID);
-                Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
-                String processName = this.helper.getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-                ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
-                                                                        binding.getID().getHostName(),
-                                                                        processName, resStats);
-
-                result.add(poolStats);
-            }
-        } catch (RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0093);
-            I18nLogManager.logWarning(LogPlatformConstants.CTX_RUNTIME_ADMIN, ErrorMessageKeys.ADMIN_0093, e);
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0093, msg);
-
+            result.add(poolStats);
         }
         return result;
     }
@@ -1443,24 +1356,20 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
     public String getVMName(long id, String hostName) 
         throws AuthorizationException,InvalidSessionException, MetaMatrixComponentException {
         
-        try {
-            AdminAPIHelper.validateSession(getSessionID());
-            VMControllerID vmID = new VMControllerIDImpl(id, hostName);
-            String result = null;
-            Iterator vmIter = getVMControllerBindings().iterator();
-            while (vmIter.hasNext()) {
-                VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
-                VMControllerID vmIDtemp = vmBinding.getVMController().getID();
-                if (vmIDtemp.equals(vmID)) {
-                    result = vmBinding.getVMName();
-                    break;
-                }
-
+        AdminAPIHelper.validateSession(getSessionID());
+        VMControllerID vmID = new VMControllerIDImpl(id, hostName);
+        String result = null;
+        Iterator vmIter = getVMControllerBindings().iterator();
+        while (vmIter.hasNext()) {
+            VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
+            VMControllerID vmIDtemp = vmBinding.getVMController().getID();
+            if (vmIDtemp.equals(vmID)) {
+                result = vmBinding.getVMName();
+                break;
             }
-            return result;
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
+
         }
+        return result;
     }
 
     /** 

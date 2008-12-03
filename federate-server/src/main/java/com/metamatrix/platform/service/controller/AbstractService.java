@@ -110,9 +110,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @param deployedComponentID Unique identifier of this deployed component.
      * @param props the properties which define the service configuration
      * @param controller ServiceBusInterface which supplies resources such as event processing
-     * @throws ServiceException if service fails to initialize
      */
-    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) throws ServiceException {
+    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) {
 
         if (props == null) {
             throw new ServiceException(ServiceMessages.SERVICE_0001, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0001));
@@ -235,9 +234,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * unregisterForEvents(), closeService(), waitForServiceToClear() and
      * killService to gracefully shut down the service.
      *
-     * @throws ServiceException if an error occured shutting down service.
      */
-    public final void die() throws ServiceException {
+    public final void die() {
         try {
             logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0006, this.id));
             markAsClosed();
@@ -255,10 +253,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * This method will shutdown the service immediately.
      * Subclassers of AbstractService class should implemenent
      * unregisterForEvents() and killService().
-     *
-     * @throws ServiceException if an error occured shutting down service.
      */
-    public final void dieNow() throws ServiceException {
+    public final void dieNow(){
 
         try {
 
@@ -299,7 +295,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      *
      * @return VMControllerID
      */
-    public VMControllerID getVMID() throws ServiceException {
+    public VMControllerID getVMID() {
         return id.getVMControllerID();
     }
 
@@ -308,7 +304,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      *
      * @return String Host name
      */
-    public final String getHostname() throws ServiceException {
+    public final String getHostname() {
         return VMNaming.getLogicalHostName();
     }
 

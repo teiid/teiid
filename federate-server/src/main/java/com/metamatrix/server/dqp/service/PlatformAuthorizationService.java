@@ -24,7 +24,6 @@
 
 package com.metamatrix.server.dqp.service;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -122,8 +121,6 @@ public class PlatformAuthorizationService implements AuthorizationService {
             throw new MetaMatrixComponentException(e, ServerPlugin.Util.getString("PlatformAuthorizationService.Invalid_session")); //$NON-NLS-1$
         } catch (AuthorizationMgmtException e) {
             throw new MetaMatrixComponentException(e);
-        } catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
         }
 
         // Convert inaccessable resources from auth permissions to string resource names
@@ -161,8 +158,6 @@ public class PlatformAuthorizationService implements AuthorizationService {
             throw new MetaMatrixComponentException(err);
         } catch (ServiceException err) {
             throw new MetaMatrixComponentException(err);
-        } catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
         }
     }
 

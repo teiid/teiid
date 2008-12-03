@@ -24,7 +24,6 @@
 
 package com.metamatrix.admin.server;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -484,13 +483,9 @@ public class AbstractAdminImpl {
         return results;
     }
     
-    protected String getConnectorBindingNameFromUUID(String uuid) throws ConfigurationException, ServiceException {
+    protected String getConnectorBindingNameFromUUID(String uuid) throws ConfigurationException {
         Configuration config;
-        try {
-            config = getConfigurationServiceProxy().getCurrentConfiguration();
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        config = getConfigurationServiceProxy().getCurrentConfiguration();
         ConnectorBinding cb = config.getConnectorBindingByRoutingID(uuid);
         if (cb != null) {
             return cb.getName();
@@ -499,7 +494,7 @@ public class AbstractAdminImpl {
         return null;
     }
     
-    protected List getConnectorBindingNamesFromUUIDs(List uuids, ConfigurationModelContainer configModel) throws ServiceException {
+    protected List getConnectorBindingNamesFromUUIDs(List uuids, ConfigurationModelContainer configModel) {
         List results = new ArrayList(uuids.size());
         for (Iterator iter = uuids.iterator(); iter.hasNext();) {
             String uuid = (String) iter.next();
@@ -520,13 +515,9 @@ public class AbstractAdminImpl {
         return getConnectorBindingNamesFromUUIDs(uuids, cmc);
     }
     
-    protected Map getConnectorBindingNamesMapFromUUIDs(Collection uuids) throws ConfigurationException, ServiceException {
+    protected Map getConnectorBindingNamesMapFromUUIDs(Collection uuids) throws ConfigurationException {
         Configuration config;
-        try {
-            config = getConfigurationServiceProxy().getCurrentConfiguration();
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+        config = getConfigurationServiceProxy().getCurrentConfiguration();
 
         Map uuidMap = new HashMap(uuids.size());
         for (Iterator iter = uuids.iterator(); iter.hasNext();) {
@@ -685,12 +676,8 @@ public class AbstractAdminImpl {
     }
     
     
-    protected ConfigurationModelContainer getConfigurationModel() throws ConfigurationException, ServiceException {
-        try {
-            return getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
-        } catch (RemoteException err) {
-            throw new ServiceException(err);
-        }
+    protected ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
+        return getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
     }
 
     String importDataRoles(String vdbName, String vdbVersion, char[] xmlContents, AdminOptions options) 

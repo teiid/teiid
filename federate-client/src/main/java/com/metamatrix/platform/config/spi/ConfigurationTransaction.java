@@ -341,8 +341,6 @@ public interface ConfigurationTransaction extends TransactionInterface {
      * @param configID ID Of a Configuration
      * @return Collection of BaseObject instances
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException if a general service problem occurred
-     * @throws RemoteException if there is a communication error
      */
     
     Collection getAllObjectsForConfigurationModel(ConfigurationID configID) throws ConfigurationException;

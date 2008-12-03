@@ -24,7 +24,6 @@
 
 package com.metamatrix.server.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -77,11 +76,7 @@ public class QueryAdminAPIImpl extends SubSystemAdminAPIImpl implements QueryAdm
         // Any administrator may call this read-only method - no need to validate role
 
         List requests = new ArrayList();
-        try {
-            requests.addAll(queryAdmin.getAllQueries());
-        } catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        requests.addAll(queryAdmin.getAllQueries());
         return requests;
     }
 
@@ -104,11 +99,7 @@ public class QueryAdminAPIImpl extends SubSystemAdminAPIImpl implements QueryAdm
         // Any administrator may call this read-only method - no need to validate role
 
         List requests = new ArrayList();
-        try {
-            requests.addAll(queryAdmin.getQueriesForSession(userToken));
-        } catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        requests.addAll(queryAdmin.getQueriesForSession(userToken));
         return requests;
     }
 
@@ -128,12 +119,7 @@ public class QueryAdminAPIImpl extends SubSystemAdminAPIImpl implements QueryAdm
         SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "QueryAdminAPIImpl.cancelRequest(" + requestID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
-		try {
-            queryAdmin.cancelQuery(requestID, true);
-        } catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        queryAdmin.cancelQuery(requestID, true);
     }
     
     /**
@@ -154,37 +140,9 @@ public class QueryAdminAPIImpl extends SubSystemAdminAPIImpl implements QueryAdm
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "QueryAdminAPIImpl.cancelRequest(" + requestID + ", " + nodeID + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        try {
-            queryAdmin.cancelQuery(requestID, nodeID);
-        } catch (RemoteException err) {
-            throw new MetaMatrixComponentException(err);
-        }
+        queryAdmin.cancelQuery(requestID, nodeID);
     }
     
-    
-    
-
-    /**
-     * Cancel multiple queries for the user session.
-     *
-	 * @param callerSessionID ID of the caller's current session.
-     * @param userSessionID the primary identifier for the user account.
-     * @param requestIDs the collection of identifiers of the queries to be cancelled.
-     * @throws InvalidRequestIDException if the <code>Request</code> specified by the ID does not exist.
-     * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     */
-    //public void cancelRequests(MetaMatrixSessionID userSessionID, Collection requestIDs)
-        //throws InvalidRequestIDException, MetaMatrixComponentException {
-
-        // Validate caller's session
-        //SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        //AdminAPIHelper.checkForRequiredRole(callerToken, UserRoles.RoleName.ADMIN_METAMATRIX);
-        // Validate user's session
-        //SessionToken userToken = AdminHelper.validateSession(userSessionID);
-
-        //queryAdmin.getQueries(userToken, requestIDs);
-    //}
 
     /**
      * Cancel all queries for the user session.
@@ -207,8 +165,6 @@ public class QueryAdminAPIImpl extends SubSystemAdminAPIImpl implements QueryAdm
             queryAdmin.cancelQueries(userToken, true);
         } catch (InvalidRequestIDException e) {
             throw new MetaMatrixComponentException(e, e.getMessage());
-        } catch (RemoteException e) {
-            throw new MetaMatrixComponentException(e);
         } 
     }
 

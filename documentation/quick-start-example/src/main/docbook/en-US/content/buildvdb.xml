@@ -14,9 +14,9 @@
   </sect1>
   <sect1 id="step-3">
     <title>Building a VDB</title>
-    <para>Once you start the Designer, there are various steps you will need to do to create a VDB. The below is a
-      list of steps that need to be accomplished using the Designer tool. See the video at the end of the list,
-      that will takes you though the all the steps involved.</para>
+    <para>Once you start the Designer, there are various steps you will need to do to create a VDB. The below
+      is a list of steps that need to be accomplished using the Designer tool. See the video at the end of the
+      list, that will takes you though the all the steps involved.</para>
     <orderedlist>
       <listitem>
         <para>Switch to Designer Prespective, by opening the "Window->Open Prespective.."</para>
@@ -28,8 +28,8 @@
         <para>Import the Derby database's "account" schema into a source model.</para>
       </listitem>
       <listitem>
-        <para>Manually create the source model for the "Text File". Create a
-          Table called "Price" with "stock" and "price" as column names</para>
+        <para>Manually create the source model for the "Text File". Create a Table called "Price" with
+          "stock" and "price" as column names</para>
       </listitem>
       <listitem>
         <para>Create a view model called "AccountView"</para>
@@ -39,9 +39,9 @@
           the transformation query combining the "Accounts" tables with "Price" table</para>
       </listitem>
       <listitem>
-        <para>In the "AccountView" model, create a virtual procedure called "buyStock", to learn about procedure language.</para>
+        <para>In the "AccountView" model, create a virtual procedure called "buyStock", to learn about procedure
+          language.</para>
       </listitem>
-      
       <listitem>
         <para>Create a VDB based on the models created</para>
       </listitem>
@@ -52,8 +52,11 @@
         <para>Export or copy the VDB for use in your application.</para>
       </listitem>
     </orderedlist>
-    
-    <para>insert video here </para>    
-    
+    <InlineMediaObject>
+      <videoobject>
+        <videodata align="center" format="SWF" scalefit="1" width="802" fileref="../images/EmbeddedDesignerExampleVideo.swf" />
+      </videoobject>
+      <caption>See how VDB is created using the Designer</caption>      
+    </InlineMediaObject>
   </sect1>
 </chapter>

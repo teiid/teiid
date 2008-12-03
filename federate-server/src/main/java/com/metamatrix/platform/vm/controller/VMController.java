@@ -26,7 +26,6 @@ package com.metamatrix.platform.vm.controller;
 
 import java.io.File;
 import java.lang.reflect.Proxy;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -355,7 +354,7 @@ public abstract class VMController implements VMControllerInterface {
         return id;
     }
 
-	public void startVM() throws ServiceException, RemoteException {
+	public void startVM() {
     			
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0013));
         VMComponentDefnID vmComponentDefnID = (VMComponentDefnID)this.vmComponentDefn.getID();
@@ -427,7 +426,7 @@ public abstract class VMController implements VMControllerInterface {
     }
 
 
-    public void startService(ServiceID serviceID) throws ServiceException {
+    public void startService(ServiceID serviceID) {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0018, serviceID));
 
         ServiceRegistryBinding binding = null;
@@ -455,12 +454,12 @@ public abstract class VMController implements VMControllerInterface {
         }
     }
 
-    public void startDeployedService(ServiceComponentDefnID id) throws ServiceException {
+    public void startDeployedService(ServiceComponentDefnID id) {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0023, id));
         startDeployedService(id, null);
     }
 
-	private void startDeployedService(ServiceComponentDefnID defnID, ServiceID serviceID) throws ServiceException {
+	private void startDeployedService(ServiceComponentDefnID defnID, ServiceID serviceID) {
         try {
             ConfigurationModelContainer configuration = getConfigurationModel();
             VMComponentDefnID vmComponentDefnID = (VMComponentDefnID)this.vmComponentDefn.getID();
@@ -478,7 +477,7 @@ public abstract class VMController implements VMControllerInterface {
 	 *  Any exceptions will then be thrown to the caller.
 	 *  If synch is false then start service asynchronously.
 	 */
-	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) throws ServiceException {
+	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) {
 
         try {
             Properties defaultProps = null;
@@ -547,13 +546,13 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill all services (waiting for work to complete) and then kill the vm.
 	 */
-	public void stopVM() throws ServiceException {
+	public void stopVM() {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0029));
         doStopVM(false, false);
     }
 
 
-	protected void doStopVM(boolean now, boolean shutdown) throws ServiceException {
+	protected void doStopVM(boolean now, boolean shutdown) {
 
 	    stop(now, shutdown);
         
@@ -605,7 +604,7 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill all services now, do not wait for work to complete, do not collect $200
 	 */
-	public void stopVMNow() throws ServiceException {
+	public void stopVMNow() {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0034));
         doStopVM(true, false);
     }
@@ -613,7 +612,7 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill service once work is complete
 	 */
-	public void stopService(ServiceID id) throws ServiceException {
+	public void stopService(ServiceID id) {
         try {
 			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0035, id));
 			validateServiceID(id);
@@ -627,7 +626,7 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill service now!!!
 	 */
-	public void stopServiceNow(ServiceID id) throws ServiceException {
+	public void stopServiceNow(ServiceID id) {
         try {
 			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0036, id));
 			validateServiceID(id);
@@ -641,7 +640,7 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill services now!!!
 	 */
-	public void stopAllServicesNow() throws ServiceException, MultipleException {
+	public void stopAllServicesNow() throws MultipleException {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0037));
         stopServices(true, false);
     }
@@ -649,7 +648,7 @@ public abstract class VMController implements VMControllerInterface {
 	/**
 	 * Kill services
 	 */
-	public void stopAllServices() throws ServiceException, MultipleException {
+	public void stopAllServices() throws MultipleException {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0038));
         stopServices(false, false);
     }
@@ -659,7 +658,7 @@ public abstract class VMController implements VMControllerInterface {
      * Shut down all services waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    public void shutdown() throws ServiceException, RemoteException {
+    public void shutdown(){
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0040));
         doStopVM(false, true);
     }
@@ -668,12 +667,12 @@ public abstract class VMController implements VMControllerInterface {
      * Shut down all services without waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    public void shutdownNow() throws ServiceException, RemoteException {
+    public void shutdownNow() {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0041));
         doStopVM(true, true);
     }
 
-    public void shutdownService(ServiceID serviceID) throws ServiceException, RemoteException {
+    public void shutdownService(ServiceID serviceID) {
     	shutdownService(serviceID, false);
     }    
 
@@ -681,7 +680,7 @@ public abstract class VMController implements VMControllerInterface {
      * Shut down service without waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    public void shutdownServiceNow(ServiceID serviceID) throws ServiceException, RemoteException {
+    public void shutdownServiceNow(ServiceID serviceID) {
     	shutdownService(serviceID, true);    	
     }
     
@@ -689,7 +688,7 @@ public abstract class VMController implements VMControllerInterface {
      * Shut down service waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    private void shutdownService(ServiceID serviceID, boolean now) throws ServiceException, RemoteException {
+    private void shutdownService(ServiceID serviceID, boolean now) {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0042, serviceID));
 
         ServiceRegistryBinding serviceBinding = null;
@@ -834,7 +833,7 @@ public abstract class VMController implements VMControllerInterface {
     /**
      * Private helper method that verifies service belongs to this vm
      */
-    private void validateServiceID(ServiceID serviceID) throws ServiceException {
+    private void validateServiceID(ServiceID serviceID) {
         if (!serviceID.getVMControllerID().equals(getID())) {
             throw new ServiceException(PlatformPlugin.Util.getString(LogMessageKeys.VM_0047, serviceID, this.id));
         }
@@ -844,7 +843,7 @@ public abstract class VMController implements VMControllerInterface {
      * @see com.metamatrix.platform.vm.api.controller.VMControllerInterface#exportLogs()
      * @since 4.3
      */
-    public byte[] exportLogs() throws ServiceException, RemoteException {
+    public byte[] exportLogs() {
         File tmpFile = null;
         try {
             tmpFile = File.createTempFile("logs", ".zip");  //$NON-NLS-1$ //$NON-NLS-2$
@@ -887,7 +886,7 @@ public abstract class VMController implements VMControllerInterface {
      * @param serviceProps Properties required to start service.
      * @param synch Flag to indicate if service should be started synchronously are asynchronously.
      */
-    private void startService(final ClientServiceRegistry clientServiceRegistry, final String serviceClassName, final ServiceID serviceID, final DeployedComponent deployedComponent, final ProductServiceConfigID pscID, final Properties serviceProps, boolean synch) throws ServiceException {
+    private void startService(final ClientServiceRegistry clientServiceRegistry, final String serviceClassName, final ServiceID serviceID, final DeployedComponent deployedComponent, final ProductServiceConfigID pscID, final Properties serviceProps, boolean synch) {
 
         if (!synch) {
             //add work to the pool
@@ -960,7 +959,7 @@ public abstract class VMController implements VMControllerInterface {
      * @param now If true do not wait for work to complete in services.
      * @throws ServiceException if an error occurs stopping 1 or more services.
      */
-    private void stopServices(boolean now, boolean shutdown) throws ServiceException, MultipleException {
+    private void stopServices(boolean now, boolean shutdown) throws MultipleException {
 
         MultipleException multipleException = new MultipleException();
 
@@ -991,7 +990,7 @@ public abstract class VMController implements VMControllerInterface {
      * @param now If true, stop service without waiting for work to complete
      * @throws ServiceException if an error occurs while stopping service or if attempting shutdown the last essential service.
      */
-    private synchronized void stopService(ServiceRegistryBinding binding, boolean now, boolean shutdown) throws ServiceException {
+    private synchronized void stopService(ServiceRegistryBinding binding, boolean now, boolean shutdown) {
         ServiceInterface service = null;
         int currentState;
 
@@ -1011,23 +1010,18 @@ public abstract class VMController implements VMControllerInterface {
             throw new ServiceException(e, ErrorMessageKeys.SERVICE_0018, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0018, binding.getServiceID()));
         }
 
-        try {
-            // Do not kill a service that was not intialized. May throw meaningless exception
-            if (currentState != ServiceInterface.STATE_INIT_FAILED &&
-                currentState != ServiceInterface.STATE_CLOSED) {
-                if (!now) {
-                    service.die(); // throws ServiceException
-                } else {
-                    service.dieNow(); // do not wait for work to complete.
-                }
+        // Do not kill a service that was not intialized. May throw meaningless exception
+        if (currentState != ServiceInterface.STATE_INIT_FAILED &&
+            currentState != ServiceInterface.STATE_CLOSED) {
+            if (!now) {
+                service.die(); // throws ServiceException
+            } else {
+                service.dieNow(); // do not wait for work to complete.
             }
-            
-            // Leave binding in registry but remove service instance.
-            events.serviceRemoved(binding.getServiceID());
-
-        } catch (RemoteException re) {
-            logException(re, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0015, binding.getServiceID())); // this should never happen since we only talk to local services.
         }
+        
+        // Leave binding in registry but remove service instance.
+        events.serviceRemoved(binding.getServiceID());
     }
     
     
@@ -1036,7 +1030,7 @@ public abstract class VMController implements VMControllerInterface {
      * Catches any ServiceExceptions, so that the caller doesn't have to deal with them.
      * @param serviceID Identifies service to be stopped
      */
-    public void checkService(ServiceID serviceID) throws ServiceException {
+    public void checkService(ServiceID serviceID) {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0054, serviceID));
         validateServiceID(serviceID);
     	
@@ -1065,8 +1059,6 @@ public abstract class VMController implements VMControllerInterface {
                 currentState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
                 service.checkState(); // throws ServiceException
             }
-        } catch (RemoteException e) {
-            logException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0068, serviceID)); // this should never happen since we only talk to local services.
         } catch (ServiceException e) {
             logException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0068, serviceID)); 
         } 
@@ -1109,7 +1101,7 @@ public abstract class VMController implements VMControllerInterface {
      *
      * @return ServiceID
      */
-    private ServiceID createServiceID() throws ServiceException {
+    private ServiceID createServiceID() {
         try {
             return new ServiceID(DBIDGenerator.getID(DBIDGenerator.SERVICE_ID), id);
         } catch (DBIDGeneratorException e) {
@@ -1145,12 +1137,12 @@ public abstract class VMController implements VMControllerInterface {
     }
 
 
-	public String getHostname() throws RemoteException {
+	public String getHostname() {
 		return this.host.getFullName();
 	}
 
 
-	public String getName() throws RemoteException {
+	public String getName() {
 		return vmName;
 	}
 	

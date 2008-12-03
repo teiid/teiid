@@ -29,7 +29,6 @@
 package com.metamatrix.server.connector.service;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
@@ -42,7 +41,6 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.service.SecureService;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 /**
@@ -53,10 +51,10 @@ public interface ConnectorServiceInterface extends ServiceInterface, SecureServi
     static final String SERVICE_NAME = "ConnectorService"; //$NON-NLS-1$
 
     /**
-     * Get the <code>ConnectorID</code> of the conector we're servicing.
+     * Get the <code>ConnectorID</code> of the connector we're servicing.
      * @return The <code>ConnectorID</code>.
      */
-    ConnectorID getConnectorID() throws ServiceException, RemoteException;
+    ConnectorID getConnectorID();
     
     public SourceCapabilities getCapabilities(RequestID requestId, Serializable executionPayload, DQPWorkContext message) throws ConnectorException;
     

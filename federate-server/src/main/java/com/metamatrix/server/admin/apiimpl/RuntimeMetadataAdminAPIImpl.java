@@ -375,7 +375,6 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws VirtualDatabaseException if an error occurs during retrieval process.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     public synchronized VirtualDatabase getLatestVirtualDatabase(String vdbName)
     throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
@@ -688,7 +687,6 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     public synchronized byte[] getVDB(VirtualDatabaseID vdbID) 
     	throws AuthorizationException, InvalidSessionException,VirtualDatabaseException,MetaMatrixComponentException {

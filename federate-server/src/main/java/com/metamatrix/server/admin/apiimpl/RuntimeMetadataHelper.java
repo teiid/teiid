@@ -26,7 +26,6 @@ package com.metamatrix.server.admin.apiimpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -422,8 +421,6 @@ public class RuntimeMetadataHelper {
         } catch (AuthorizationMgmtException e) {
             String msg = RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.admin_0055);
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.admin_0055,msg);
-        } catch(RemoteException e) {
-            throw new MetaMatrixComponentException(e);
         }
         return permissionNode;
     }

@@ -25,7 +25,6 @@
 package com.metamatrix.query.processor;
 
 import java.math.BigDecimal;
-import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -419,8 +418,7 @@ public class TestVirtualDepJoin extends TestCase {
                                           MetaMatrixComponentException,
                                           MetaMatrixException,
                                           TupleSourceNotFoundException,
-                                          SQLException,
-                                          RemoteException {
+                                          SQLException {
         // Create query  
         String sql = "SELECT * from Master.Transactions where last = 'Davis' order by CustomerID, TransactionID"; //$NON-NLS-1$ 
          

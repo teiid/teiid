@@ -24,7 +24,6 @@
 
 package com.metamatrix.admin.server;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -43,8 +42,6 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
 
@@ -64,8 +61,7 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
     
     
     
-    public Map getCaches() throws MetaMatrixComponentException,
-                          RemoteException {
+    public Map getCaches() throws MetaMatrixComponentException {
         
         Map map = new HashMap();
         map.put("cache1", Cache.PREPARED_PLAN_CACHE); //$NON-NLS-1$
@@ -76,43 +72,36 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
         return map;
     }
 
-    public void clearCache(String name,
-                           Properties props) throws MetaMatrixComponentException,
-                                            RemoteException {
-        
+    public void clearCache(String name, Properties props) throws MetaMatrixComponentException {
         clearedCaches.add(name);
     }
 
-    public void checkState() throws ServiceStateException,
-                            RemoteException {
+    public void checkState() {
     }
 
-    public void die() throws ServiceException,
-                     RemoteException {
+    public void die() {
     }
 
-    public void dieNow() throws ServiceException,
-                        RemoteException {
+    public void dieNow(){
     }
 
-    public int getCurrentState() throws RemoteException {
+    public int getCurrentState() {
         return this.state;
     }
 
-    public String getHostname() throws ServiceException,
-                               RemoteException {
+    public String getHostname(){
         return null;
     }
 
-    public ServiceID getID() throws RemoteException {
+    public ServiceID getID(){
         return null;
     }
 
-    public Properties getProperties() throws RemoteException {
+    public Properties getProperties(){
         return null;
     }
 
-    public Collection getQueueStatistics() throws RemoteException {
+    public Collection getQueueStatistics(){
         List results = new ArrayList();
         WorkerPoolStats stats = new WorkerPoolStats();
         stats.name = "pool"; //$NON-NLS-1$
@@ -123,35 +112,33 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
         return results;
     }
     
-    public WorkerPoolStats getQueueStatistics(String name) throws RemoteException {
+    public WorkerPoolStats getQueueStatistics(String name) {
         return null;
     }
 
-    public String getServiceType() throws RemoteException {
+    public String getServiceType()  {
         return null;
     }
 
-    public Date getStartTime() throws RemoteException {
+    public Date getStartTime() {
         return null;
     }
 
-    public Date getStateChangeTime() throws RemoteException {
+    public Date getStateChangeTime(){
         return null;
     }
 
-    public VMControllerID getVMID() throws ServiceException,
-                                   RemoteException {
+    public VMControllerID getVMID(){
         return null;
     }
 
     public void init(ServiceID id,
                      DeployedComponentID deployedComponentID,
                      Properties props,
-                     ClientServiceRegistry listenerRegistry) throws ServiceException,
-                                                             RemoteException {
+                     ClientServiceRegistry listenerRegistry) {
     }
 
-    public boolean isAlive() throws RemoteException {
+    public boolean isAlive() {
         return false;
     }
 

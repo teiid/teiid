@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.security.authorization.service;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +43,6 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.cache.CacheConfiguration;
@@ -129,8 +127,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     /**
      * Perform initialization and commence processing. This method is called only once.
      */
-    protected void initService(Properties env)
-            throws ServiceException {
+    protected void initService(Properties env) {
 
         try {
             membershipServiceProxy = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
@@ -239,7 +236,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * for this operation
      */
     public boolean checkAccess(SessionToken sessionToken, String contextName, AuthorizationPermission request)
-            throws InvalidSessionException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationMgmtException {
         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"checkAccess(", sessionToken, ", ", contextName, ", ", request, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         // Audit - request
         AuditManager.record(contextName, "checkAccess-request", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
@@ -272,7 +269,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      *                                  for this operation
      */
     public boolean checkAccess(SessionToken sessionToken, String contextName, AuthorizationPermission request, boolean fetchDependants)
-            throws InvalidSessionException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationMgmtException {
         Collection requests = new ArrayList();
         if ( fetchDependants ) {
             requests = getDependantRequests(request);
@@ -294,7 +291,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * for this operation
      */
     public Collection getInaccessibleResources(SessionToken sessionToken, String contextName, Collection requests)
-            throws InvalidSessionException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationMgmtException {
         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         // Audit - request
         AuditManager.record(contextName, "getInaccessibleResources-request", sessionToken.getUsername(), requests); //$NON-NLS-1$
@@ -360,10 +357,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * given realm - May be empty but never null.
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation.
-     * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     public List getGroupEntitlements(AuthorizationRealm realm, Collection groupNames)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException{
         List entitlements = new ArrayList();
         for (Iterator groupItr = groupNames.iterator(); groupItr.hasNext();) {
             String groupName = (String) groupItr.next();
@@ -398,7 +394,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     public List getGroupEntitlements(AuthorizationRealm realm, String fullyQualifiedGroupName)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
                 new Object[]{"getGroupEntitlements(", realm, fullyQualifiedGroupName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
@@ -487,7 +483,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     public List getElementEntitlements(AuthorizationRealm realm, Collection elementNames)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException {
         List entitlements = new ArrayList();
         for (Iterator eleItr = elementNames.iterator(); eleItr.hasNext();) {
             String elementName = (String) eleItr.next();
@@ -523,7 +519,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     public List getElementEntitlements(AuthorizationRealm realm, String elementNamePattern)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
                 new Object[]{"getElementEntitlements(", realm, elementNamePattern, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
@@ -698,7 +694,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public Collection getRealmNames(SessionToken caller)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getRealmNames(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         return getRealmNames();
     }
@@ -713,7 +709,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public boolean containsPolicy(SessionToken caller, AuthorizationPolicyID policyID)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
                 new Object[]{"containsPolicy(", caller, ", ", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         boolean success = false;
@@ -777,7 +773,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public Collection findAllPolicyIDs(SessionToken caller)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"findAllPolicyIDs(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
         Exception exception = null;
@@ -847,7 +843,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public Collection findPolicyIDs(SessionToken caller, Collection principals)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
                 new Object[]{"findPolicyIDs(", caller, ", ", principals, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Set allPolicyIDs = new HashSet();
@@ -885,7 +881,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public Collection getPolicies(SessionToken caller, Collection policyIDs)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
                 new Object[]{"getPolicies(", caller, ", ", policyIDs, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         return this.getPolicies(policyIDs);
@@ -903,7 +899,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if there were errors with the SPI.
      */
     public AuthorizationPolicy getPolicy(SessionToken caller, AuthorizationPolicyID policyID)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getPolicy(", caller, ", ", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         boolean success = false;
         Exception exception = null;
@@ -984,7 +980,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
      */
     public Map getRoleDescriptions(SessionToken caller)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1049,7 +1045,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationException if admninistrator does not have the authority to see the requested information
      */
     public Collection getPrincipalsForRole(SessionToken caller, String roleName)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1114,10 +1110,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws InvalidSessionException if the administrative session is invalid
      * @throws AuthorizationMgmtException if there is a problem internally with the MembershipService
      * @throws AuthorizationException if admninistrator does not have the authority to see the requested information
-     * @throws ServiceException if a component required by this method could not be found within the server
      */
     public Collection getRoleNamesForPrincipal(SessionToken caller, MetaMatrixPrincipalName principal)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException {
         try {
             if (isEntitled(principal.getName())) {
                 Map roles = getRoleDescriptions(privlegedToken);
@@ -1148,7 +1143,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         return results;
     }
 
-    protected boolean isEntitled(String principal) throws ServiceException {
+    protected boolean isEntitled(String principal) {
         try {
             if (membershipServiceProxy.isSuperUser(principal) || !membershipServiceProxy.isSecurityEnabled()) {
                 LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
@@ -1159,10 +1154,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         }  catch (MembershipServiceException e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075);
             throw new ServiceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0075, msg);
-        } catch(RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075);
-            throw new ServiceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0075, msg);            
-        }
+        } 
     }
 
     /**
@@ -1178,7 +1170,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
      */
     public boolean removePrincipalFromAllPolicies(SessionToken caller, MetaMatrixPrincipalName principal)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         String exceptionMsg = null;
 
@@ -1250,10 +1242,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * in the given realm - possibly empty but never null.
      * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
      */
     public Collection getPolicyIDsWithPermissionsInRealm(SessionToken caller, AuthorizationRealm realm)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1321,10 +1312,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * in the given realm - possibly empty but never null.
      * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
      */
     public Collection getPolicyIDsInRealm(SessionToken caller, AuthorizationRealm realm)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1392,10 +1382,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * in the given realm - possibly empty but never null.
      * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
      */
     public Collection getPoliciesInRealm(SessionToken caller, AuthorizationRealm realm)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         Collection policyIDs = this.getPolicyIDsInRealm(caller, realm);
         return this.getPolicies(policyIDs);
     }
@@ -1415,10 +1404,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * in the given partial realm - possibly empty but never null.
      * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
      */
     public Collection getPolicyIDsInPartialRealm(SessionToken caller, AuthorizationRealm realm)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1484,10 +1472,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * on the given resource - possibly empty but never null.
      * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
      */
     public Collection getPolicIDsForResourceInRealm(SessionToken caller, AuthorizationRealm realm, String resourceName)
-            throws AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws AuthorizationException, AuthorizationMgmtException {
         return getPolicIDsForResourceInRealm(realm, resourceName);
     }
 
@@ -1609,7 +1596,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @return The set of all permissions that belong to the given policy.
      */
     private Set getPermissionsForPolicy(AuthorizationPolicyID policyID)
-            throws AuthorizationMgmtException, ServiceException {
+            throws AuthorizationMgmtException {
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -1678,7 +1665,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws IllegalArgumentException if the action is null.
      */
     public Set executeTransaction(SessionToken administrator, List actions)
-            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException {
+            throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
         LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"executeTransaction(", administrator, actions, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         if (administrator == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0064));
@@ -2231,9 +2218,6 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         } catch (MetaMatrixSecurityException e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035);
             throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0035, msg);
-        } catch(RemoteException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075);
-            throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0075, msg);            
         }
         return allPrincipals;
     }
@@ -2524,8 +2508,6 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 newPolicy = aoe.clonePolicyPrincipals(sourcePolicy, newPolicy, membershipServiceProxy.getGroupNames(), rpt);
             } catch (MembershipServiceException err) {
                 throw new AuthorizationException(err);
-            } catch(RemoteException e) {
-                throw new AuthorizationException(e);
             }
             newPolicy = aoe.clonePolicyPermissions(sourcePolicy, newPolicy, targetRealm, targetNodes, rpt);
             newPermissions += newPolicy.getPermissionCount();

@@ -31,7 +31,6 @@ package com.metamatrix.common.pooling.api;
  * resource pool.
  */
 
-import java.rmi.RemoteException;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
@@ -104,38 +103,18 @@ public final class ResourceHelper {
         } catch (Exception e) {
             throw new ResourcePoolException(e, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0003, poolName));
         }
-
-
         return descriptor;
-
     }
 
 
 
    static ResourceDescriptor createDescriptor(ConfigurationID configID, ComponentTypeID resourceTypeID, String poolName, Properties properties) throws ResourcePoolException {
-
-        // create the descriptor used to get the resource
-            ResourceDescriptor descriptor = editor.createResourceDescriptor(configID,
-            								resourceTypeID,
-                                             poolName);
-
-            descriptor = (ResourceDescriptor) editor.modifyProperties(descriptor, properties, ConfigurationObjectEditor.ADD);
-
-            return descriptor;
-
+	    ResourceDescriptor descriptor = editor.createResourceDescriptor(configID,resourceTypeID,poolName);
+	    descriptor = (ResourceDescriptor) editor.modifyProperties(descriptor, properties, ConfigurationObjectEditor.ADD);
+	    return descriptor;
     }
 
     public static Resource getResourceFromPool(ResourceDescriptor descriptor, String userName) throws ResourcePoolException {
-
-        try {
-
-            return mgr.getResource(descriptor, userName);
-
-        } catch (RemoteException e) {
-            throw new ResourcePoolException(e, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0004, descriptor.getName()));
-        }
-
+	    return mgr.getResource(descriptor, userName);
     }
-
-
 }

@@ -63,20 +63,6 @@ public interface TransactionAdminAPI extends SubSystemAdminAPI {
         throws AuthorizationException, InvalidSessionException, XATransactionException, MetaMatrixComponentException ;
 
     /**
-     * Terminate a collection of transactions.
-     * If status == STATUS_ACTIVE or STATUS_MARKED_ROLLBACK, rollback transaction.
-     * Else, set status to STATUS_ROLLEDBACK.
-     *
-     * @param transactionIDs a collection of transaction IDs indentifying those transactions to rollback.
-	 * @throws AuthorizationException if caller is not authorized to perform this method.
-	 * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws com.metamatrix.common.xa.InvalidTransactionIDException if the Transaction does not exist.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    //void terminateTransactions(List transactionIDs)
-        //throws AuthorizationException, InvalidSessionException, InvalidTransactionIDException, MetaMatrixComponentException;
-
-    /**
      * Terminate all transactions for the user session.
      * If status == STATUS_ACTIVE or STATUS_MARKED_ROLLBACK, rollback transaction.
      * Else, set status to STATUS_ROLLEDBACK.

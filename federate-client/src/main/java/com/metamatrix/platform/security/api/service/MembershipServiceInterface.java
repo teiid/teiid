@@ -25,12 +25,10 @@
 package com.metamatrix.platform.security.api.service;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Set;
 
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
-import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.common.config.ResourceNames;
@@ -38,7 +36,6 @@ import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 
 /**
  * This interface represents the API to the MemberShip Service,
@@ -103,11 +100,9 @@ public interface MembershipServiceInterface extends ServiceInterface, SecureServ
      * the application the user with the specified username and application
      * @throws MetaMatrixSecurityException if there is an error within this
      * service or during communicating with the underlying service provider
-     * @throws RemoteException if there is an error during communication with
-     * this service
      */
     Serializable authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName)
-    throws MembershipServiceException, ServiceException, RemoteException;
+    throws MembershipServiceException;
 
     /**
      * Obtain the principal object that is representative of the user with the specified username.
@@ -115,7 +110,7 @@ public interface MembershipServiceInterface extends ServiceInterface, SecureServ
      * all names should be domain qualified.
      */
     MetaMatrixPrincipal getPrincipal(MetaMatrixPrincipalName principal)
-    throws MembershipServiceException, InvalidPrincipalException, ServiceException, RemoteException;
+    throws MembershipServiceException, InvalidPrincipalException;
     
     /**
      * Obtain the collection of groups to which this user belongs
@@ -123,18 +118,18 @@ public interface MembershipServiceInterface extends ServiceInterface, SecureServ
      * The username should be fully qualified
      */
     Set getGroupsForUser(String username)
-    throws MembershipServiceException, InvalidPrincipalException, ServiceException, RemoteException;
+    throws MembershipServiceException, InvalidPrincipalException;
     
     /**
      * Obtain the collection of group names. 
      */
-    Set getGroupNames() throws MembershipServiceException, ServiceException, RemoteException;
+    Set getGroupNames() throws MembershipServiceException;
 
-    List getDomainNames() throws MembershipServiceException, ServiceException, RemoteException;
+    List getDomainNames() throws MembershipServiceException;
 
-    Set getGroupsForDomain(String domainName) throws MembershipServiceException, ServiceException, RemoteException;
+    Set getGroupsForDomain(String domainName) throws MembershipServiceException;
     
-    boolean isSuperUser(String username) throws MembershipServiceException, ServiceException, RemoteException;
+    boolean isSuperUser(String username) throws MembershipServiceException;
     
-    boolean isSecurityEnabled() throws MembershipServiceException, ServiceException, RemoteException;  
+    boolean isSecurityEnabled() throws MembershipServiceException;  
 }

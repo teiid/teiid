@@ -107,7 +107,6 @@ public interface QueryAdminAPI extends SubSystemAdminAPI {
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws InvalidRequestIDException if the <code>Request</code> specified by the ID does not exist.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     void cancelRequest(RequestID requestID, int nodeID)
     throws AuthorizationException, InvalidSessionException, InvalidRequestIDException, MetaMatrixComponentException;

@@ -255,18 +255,14 @@ public class ServiceRegistryBinding implements Serializable {
         ArrayList queue = null;
         
         if (si != null) {            
-            try {
-                Collection stats = si.getQueueStatistics();
-                if (stats != null) {
-                    queue = new ArrayList();
-                    for (Iterator i = stats.iterator(); i.hasNext();) {
-                        WorkerPoolStats qs = (WorkerPoolStats) i.next();
-                        queue.add(qs.name);
-                    }                    
-                }
-            } catch (java.rmi.RemoteException e) {
-                // this should never happen, service is local
-            }
+	        Collection stats = si.getQueueStatistics();
+	        if (stats != null) {
+	            queue = new ArrayList();
+	            for (Iterator i = stats.iterator(); i.hasNext();) {
+	                WorkerPoolStats qs = (WorkerPoolStats) i.next();
+	                queue.add(qs.name);
+	            }                    
+	        }
         }
         return queue;
     }

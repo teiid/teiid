@@ -83,33 +83,29 @@ public class ErrorMessageKeys {
 	public static final String ADMIN_0052 = "ERR.014.001.0052"; //$NON-NLS-1$
 	public static final String ADMIN_0053 = "ERR.014.001.0053"; //$NON-NLS-1$
 	public static final String ADMIN_0054 = "ERR.014.001.0054"; //$NON-NLS-1$
-	public static final String ADMIN_0055 = "ERR.014.001.0055"; //$NON-NLS-1$
+	
 	public static final String ADMIN_0056 = "ERR.014.001.0056"; //$NON-NLS-1$
-	public static final String ADMIN_0057 = "ERR.014.001.0057"; //$NON-NLS-1$
+	
 	public static final String ADMIN_0058 = "ERR.014.001.0058"; //$NON-NLS-1$
-	public static final String ADMIN_0063 = "ERR.014.001.0063"; //$NON-NLS-1$
-	public static final String ADMIN_0066 = "ERR.014.001.0066"; //$NON-NLS-1$
+	
+	
     public static final String ADMIN_0067 = "ERR.014.001.0067"; //$NON-NLS-1$
 	public static final String ADMIN_0068 = "ERR.014.001.0068"; //$NON-NLS-1$
 	public static final String ADMIN_0069 = "ERR.014.001.0069"; //$NON-NLS-1$
 	public static final String ADMIN_0070 = "ERR.014.001.0070"; //$NON-NLS-1$
-	public static final String ADMIN_0071 = "ERR.014.001.0071"; //$NON-NLS-1$
-	public static final String ADMIN_0072 = "ERR.014.001.0072"; //$NON-NLS-1$
 	public static final String ADMIN_0073 = "ERR.014.001.0073"; //$NON-NLS-1$
 	public static final String ADMIN_0074 = "ERR.014.001.0074"; //$NON-NLS-1$
-	public static final String ADMIN_0075 = "ERR.014.001.0075"; //$NON-NLS-1$
+
 	public static final String ADMIN_0076 = "ERR.014.001.0076"; //$NON-NLS-1$
 	public static final String ADMIN_0083 = "ERR.014.001.0083"; //$NON-NLS-1$
 	public static final String ADMIN_0084 = "ERR.014.001.0084"; //$NON-NLS-1$
-	public static final String ADMIN_0085 = "ERR.014.001.0085"; //$NON-NLS-1$
+	
 	public static final String ADMIN_0086 = "ERR.014.001.0086"; //$NON-NLS-1$
-	public static final String ADMIN_0087 = "ERR.014.001.0087"; //$NON-NLS-1$
-	public static final String ADMIN_0088 = "ERR.014.001.0088"; //$NON-NLS-1$
-	public static final String ADMIN_0089 = "ERR.014.001.0089"; //$NON-NLS-1$
-	public static final String ADMIN_0090 = "ERR.014.001.0090"; //$NON-NLS-1$
-	public static final String ADMIN_0091 = "ERR.014.001.0091"; //$NON-NLS-1$
-	public static final String ADMIN_0092 = "ERR.014.001.0092"; //$NON-NLS-1$
-	public static final String ADMIN_0093 = "ERR.014.001.0093"; //$NON-NLS-1$
+	
+	
+	
+	
+	
 	public static final String ADMIN_0094 = "ERR.014.001.0094"; //$NON-NLS-1$
 	public static final String ADMIN_0095 = "ERR.014.001.0095"; //$NON-NLS-1$
 	public static final String ADMIN_0096 = "ERR.014.001.0096"; //$NON-NLS-1$
@@ -130,7 +126,7 @@ public class ErrorMessageKeys {
 	public static final String ADMIN_0112 = "ERR.014.001.0112"; //$NON-NLS-1$
 	public static final String ADMIN_0113 = "ERR.014.001.0113"; //$NON-NLS-1$
 	public static final String ADMIN_0114 = "ERR.014.001.0114"; //$NON-NLS-1$
-    public static final String ADMIN_0115 = "ERR.014.001.0115"; //$NON-NLS-1$
+    
 
 	/** config package (002) */
 	public static final String CONFIG_0001 = "ERR.014.002.0001"; //$NON-NLS-1$

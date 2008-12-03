@@ -24,7 +24,6 @@
 
 package com.metamatrix.server.query.service;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -34,7 +33,6 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 
 public interface QueryServiceInterface extends ServiceInterface, CacheAdmin {
     public static final String SERVICE_NAME = "QueryService"; //$NON-NLS-1$
@@ -43,30 +41,26 @@ public interface QueryServiceInterface extends ServiceInterface, CacheAdmin {
     // Methods to clear cache associated with the prepared statements
     //=========================================================================
     public void clearCache(SessionToken sessionToken)
-        throws ComponentNotFoundException, ServiceStateException, RemoteException;
+        throws ComponentNotFoundException;
 
     //=========================================================================
     // Methods to get queries and query status
     //=========================================================================
     
-    public Collection getAllQueries()
-        throws ServiceStateException, RemoteException;
+    public Collection getAllQueries();
 
-    public Collection getQueriesForSession(SessionToken userToken)
-        throws ServiceStateException, RemoteException;
+    public Collection getQueriesForSession(SessionToken userToken);
 
     //=========================================================================
     // Methods to cancel running queries and cursors associated with them
     //=========================================================================
     public void cancelQueries(SessionToken sessionToken, boolean shouldRollback)
-        throws InvalidRequestIDException, MetaMatrixComponentException, ServiceStateException, RemoteException;
+        throws InvalidRequestIDException, MetaMatrixComponentException;
         
     public void cancelQuery(RequestID requestID, boolean shouldRollback)
-        throws InvalidRequestIDException, MetaMatrixComponentException,
-               ServiceStateException, RemoteException;
+        throws InvalidRequestIDException, MetaMatrixComponentException;
     
     public void cancelQuery(RequestID requestID, int nodeID)
-    throws InvalidRequestIDException, MetaMatrixComponentException,
-           ServiceStateException, RemoteException;    
+    throws InvalidRequestIDException, MetaMatrixComponentException;    
 
 }

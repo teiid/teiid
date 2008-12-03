@@ -91,7 +91,6 @@ import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceNotInitializedException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
@@ -164,7 +163,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     /**
      * Initialize ConnectorService
      */
-    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) throws ServiceException {
+    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) {
         
         super.init(id, deployedComponentID, props, listenerRegistry);
         

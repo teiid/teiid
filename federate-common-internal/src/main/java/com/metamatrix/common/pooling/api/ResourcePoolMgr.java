@@ -24,8 +24,6 @@
 
 package com.metamatrix.common.pooling.api;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -73,134 +71,90 @@ import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
  *
  *
  */
-public interface ResourcePoolMgr extends Remote {
+public interface ResourcePoolMgr {
 
-    /**
-     *@link dependency
-     * @clientRole returns
-     */
-
-/*#Resource lnkResource;*/
-    /**
-     *@link dependency
-     * @label used to identify pool
-     */
-
-/*#ResourceDescriptor lnkResourceDescriptor;*/
-    /**
-     *@link dependency
-     * @clientRole returns
-     */
-
-/*#ResourcePoolStatistics lnkResourcePoolStatistics;*/
-
-/**
- * Call to get a resource from the pool defined by descriptor.
- * @param descriptor that describes the resource to obtain
- * @param userName of the one requesting the resource
- * @return Resource that is defined by the descriptor
- * @exception ResourcePoolException is thrown if an error ocurrs.
- *    Check for type {@link ResourceWaitTimeOutException}
- */
-Resource getResource(ResourceDescriptor descriptor, String userName) throws ResourcePoolException, RemoteException ;
-
-
-/**
- * Call to get id's for all the current resource pools.
- * @return Collection of type ResourceDescriptorID for all the resource pools.
- * @exception ResourcePoolException is thrown if an error ocurrs.
- *    Check for type {@link ResourceWaitTimeOutException}
- * {@see com.metamatrix.common.config.api.ResourceDescriptorID}
- */
-Collection getAllResourceDescriptorIDs() throws ResourcePoolException, RemoteException;
-
-/**
- * Call to get all the resource descriptors for the current pools.
- * @return Collection of type ResourceDescriptor for all the resource pools.
- * @exception ResourcePoolException is thrown if an error ocurrs.
- * {@see com.metamatrix.common.config.api.ResourceDescriptor} * 
- */
-Collection getAllResourceDescriptors() throws ResourcePoolException, RemoteException ;
-
-
-/**
- * Call to get the resource descriptor for the specified id
- * @param descriptorID is the id that identifies the resource descriptor
- * @return ResourceDescriptor identified by the id
- * @exception ResourcePoolException is thrown if an error ocurrs.
- */
-ResourceDescriptor getResourceDescriptor(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException ;
-
-
-/**
- * Call to update the pool management parameters based on the resource descriptor.
- * This could include changing the size of the pool.
- * @param resourceDescriptorID identifies the pool to update
- * @param properties are the changes to be applied
- * @exception ResourcePoolException is thrown if an error ocurrs. * 
- */
-void updateResourcePool(final ResourceDescriptorID resourceDescriptorID, final Properties properties) throws ResourcePoolException, RemoteException;
-
-/**
- * Returns all the {@link ResourcePoolStatistics ResourcePoolStatistics} currently
- * active.  An empty collection will be returned if no resource pools are active.
- * @return Collection of type ResourcePoolStatistics
- * @exception ResourcePoolException is thrown if an error ocurrs. *
- */
-Collection getResourcePoolStatistics() throws ResourcePoolException, RemoteException ;
-
-/**
- * Returns all the {@link ResourceStatistics ResourceStatistics} for the pool.
- * An empty collection will be returned if no resources exist in the pool.
- * @return Collection of type ResourceStatistics
- * @exception ResourcePoolException is thrown if an error ocurrs. *
- */
-Collection getResourcesStatisticsForPool(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException;
-
-/**
- * Returns the statistics for a specific resource descriptor id.  If
- * the {@link ResourcePool ResourcePool} does not exist for the
- * <code>descriptorID</code>, then a null will be returned.
- * @return ResourcePoolStatistics for a specific resource pool; null if
- *	    resource pool does not exit.
- * @exception ResourcePoolException is thrown if an error ocurrs. * 
- */
-ResourcePoolStatistics getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException ;
-
-/**
- * Call to shutdown all resources in the specific pool identified by the descriptor ID.
- * @param descriptorID for the pool to be shutdown
- * @exception ResourcePoolException is thrown if an error ocurrs. * 
- */
-void shutDown(ResourceDescriptorID descriptorID) throws ResourcePoolException, RemoteException;
-
-/**
- * Call to shutdown all resource pools and all the resources within those pools.
- */
-void shutDown() throws ResourcePoolException, RemoteException ;
-
-
+	/**
+	 * Call to get a resource from the pool defined by descriptor.
+	 * @param descriptor that describes the resource to obtain
+	 * @param userName of the one requesting the resource
+	 * @return Resource that is defined by the descriptor
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 *    Check for type {@link ResourceWaitTimeOutException}
+	 */
+	Resource getResource(ResourceDescriptor descriptor, String userName) throws ResourcePoolException ;
+	
+	
+	/**
+	 * Call to get id's for all the current resource pools.
+	 * @return Collection of type ResourceDescriptorID for all the resource pools.
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 *    Check for type {@link ResourceWaitTimeOutException}
+	 * {@see com.metamatrix.common.config.api.ResourceDescriptorID}
+	 */
+	Collection getAllResourceDescriptorIDs() throws ResourcePoolException;
+	
+	/**
+	 * Call to get all the resource descriptors for the current pools.
+	 * @return Collection of type ResourceDescriptor for all the resource pools.
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 * {@see com.metamatrix.common.config.api.ResourceDescriptor} 
+	 */
+	Collection getAllResourceDescriptors() throws ResourcePoolException;
+	
+	
+	/**
+	 * Call to get the resource descriptor for the specified id
+	 * @param descriptorID is the id that identifies the resource descriptor
+	 * @return ResourceDescriptor identified by the id
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 */
+	ResourceDescriptor getResourceDescriptor(ResourceDescriptorID descriptorID) throws ResourcePoolException;
+	
+	
+	/**
+	 * Call to update the pool management parameters based on the resource descriptor.
+	 * This could include changing the size of the pool.
+	 * @param resourceDescriptorID identifies the pool to update
+	 * @param properties are the changes to be applied
+	 * @exception ResourcePoolException is thrown if an error occurs.  
+	 */
+	void updateResourcePool(final ResourceDescriptorID resourceDescriptorID, final Properties properties) throws ResourcePoolException;
+	
+	/**
+	 * Returns all the {@link ResourcePoolStatistics ResourcePoolStatistics} currently
+	 * active.  An empty collection will be returned if no resource pools are active.
+	 * @return Collection of type ResourcePoolStatistics
+	 * @exception ResourcePoolException is thrown if an error occurs. 
+	 */
+	Collection getResourcePoolStatistics() throws ResourcePoolException;
+	
+	/**
+	 * Returns all the {@link ResourceStatistics ResourceStatistics} for the pool.
+	 * An empty collection will be returned if no resources exist in the pool.
+	 * @return Collection of type ResourceStatistics
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 */
+	Collection getResourcesStatisticsForPool(ResourceDescriptorID descriptorID) throws ResourcePoolException;
+	
+	/**
+	 * Returns the statistics for a specific resource descriptor id.  If
+	 * the {@link ResourcePool ResourcePool} does not exist for the
+	 * <code>descriptorID</code>, then a null will be returned.
+	 * @return ResourcePoolStatistics for a specific resource pool; null if
+	 *	    resource pool does not exit.
+	 * @exception ResourcePoolException is thrown if an error occurs. 
+	 */
+	ResourcePoolStatistics getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException;
+	
+	/**
+	 * Call to shutdown all resources in the specific pool identified by the descriptor ID.
+	 * @param descriptorID for the pool to be shutdown
+	 * @exception ResourcePoolException is thrown if an error occurs.
+	 */
+	void shutDown(ResourceDescriptorID descriptorID) throws ResourcePoolException;
+	
+	/**
+	 * Call to shutdown all resource pools and all the resources within those pools.
+	 */
+	void shutDown() throws ResourcePoolException;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

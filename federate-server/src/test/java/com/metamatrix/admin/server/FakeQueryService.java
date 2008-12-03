@@ -24,7 +24,6 @@
 
 package com.metamatrix.admin.server;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -45,8 +44,6 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 import com.metamatrix.server.serverapi.RequestInfo;
@@ -67,16 +64,13 @@ public class FakeQueryService implements QueryServiceInterface {
     /** 
      * @see com.metamatrix.server.query.service.BaseQueryServiceInterface#clearCache(com.metamatrix.platform.security.api.SessionToken)
      */
-    public void clearCache(SessionToken sessionToken) throws ComponentNotFoundException,
-                                                     ServiceStateException,
-                                                     RemoteException {
+    public void clearCache(SessionToken sessionToken) throws ComponentNotFoundException{
     }
 
     /** 
      * @see com.metamatrix.server.query.service.BaseQueryServiceInterface#getAllQueries()
      */
-    public Collection getAllQueries() throws ServiceStateException,
-                                     RemoteException {
+    public Collection getAllQueries() {
         List results = new ArrayList();
         
         RequestInfo info1 = new RequestInfo(new RequestID("1", 1L), "sql1", new Date(), new Date()); //$NON-NLS-1$
@@ -117,8 +111,7 @@ public class FakeQueryService implements QueryServiceInterface {
     /** 
      * @see com.metamatrix.server.query.service.BaseQueryServiceInterface#getQueriesForSession(com.metamatrix.platform.security.api.SessionToken)
      */
-    public Collection getQueriesForSession(SessionToken userToken) throws ServiceStateException,
-                                                                  RemoteException {
+    public Collection getQueriesForSession(SessionToken userToken) {
         return null;
     }
 
@@ -127,9 +120,7 @@ public class FakeQueryService implements QueryServiceInterface {
      */
     public void cancelQueries(SessionToken sessionToken,
                               boolean shouldRollback) throws InvalidRequestIDException,
-                                                     MetaMatrixComponentException,
-                                                     ServiceStateException,
-                                                     RemoteException {
+                                                     MetaMatrixComponentException{
     }
 
     /** 
@@ -137,9 +128,7 @@ public class FakeQueryService implements QueryServiceInterface {
      */
     public void cancelQuery(RequestID requestID,
                             boolean shouldRollback) throws InvalidRequestIDException,
-                                                   MetaMatrixComponentException,
-                                                   ServiceStateException,
-                                                   RemoteException {
+                                                   MetaMatrixComponentException {
         cancelledQueries.add(buildIdentifierFromRequestId(requestID, null));
     }
 
@@ -148,102 +137,95 @@ public class FakeQueryService implements QueryServiceInterface {
      */
     public void cancelQuery(RequestID requestID,
                             int nodeID) throws InvalidRequestIDException,
-                                       MetaMatrixComponentException,
-                                       ServiceStateException,
-                                       RemoteException {
+                                       MetaMatrixComponentException{
         cancelledQueries.add(buildIdentifierFromRequestId(requestID, "" +nodeID)); //$NON-NLS-1$
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#die()
      */
-    public void die() throws ServiceException,
-                     RemoteException {
+    public void die() {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#dieNow()
      */
-    public void dieNow() throws ServiceException,
-                        RemoteException {
+    public void dieNow() {
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#checkState()
      */
-    public void checkState() throws ServiceStateException,
-                            RemoteException {
+    public void checkState(){
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getProperties()
      */
-    public Properties getProperties() throws RemoteException {
+    public Properties getProperties() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStartTime()
      */
-    public Date getStartTime() throws RemoteException {
+    public Date getStartTime() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getHostname()
      */
-    public String getHostname() throws ServiceException,
-                               RemoteException {
+    public String getHostname() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID() throws ServiceException,
-                                   RemoteException {
+    public VMControllerID getVMID(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#isAlive()
      */
-    public boolean isAlive() throws RemoteException {
+    public boolean isAlive() {
         return false;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getServiceType()
      */
-    public String getServiceType() throws RemoteException {
+    public String getServiceType() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getCurrentState()
      */
-    public int getCurrentState() throws RemoteException {
+    public int getCurrentState(){
         return 0;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getStateChangeTime()
      */
-    public Date getStateChangeTime() throws RemoteException {
+    public Date getStateChangeTime(){
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getID()
      */
-    public ServiceID getID() throws RemoteException {
+    public ServiceID getID() {
         return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics()
      */
-    public Collection getQueueStatistics() throws RemoteException {
+    public Collection getQueueStatistics() {
         List results = new ArrayList();
         WorkerPoolStats stats = new WorkerPoolStats();
         stats.name = "pool"; //$NON-NLS-1$
@@ -257,15 +239,14 @@ public class FakeQueryService implements QueryServiceInterface {
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getQueueStatistics(java.lang.String)
      */
-    public WorkerPoolStats getQueueStatistics(String name) throws RemoteException {
+    public WorkerPoolStats getQueueStatistics(String name) {
     	return null;
     }
 
     /** 
      * @see com.metamatrix.platform.service.api.CacheAdmin#getCaches()
      */
-    public Map getCaches() throws MetaMatrixComponentException,
-                          RemoteException {
+    public Map getCaches() throws MetaMatrixComponentException{
         return null;
     }
 
@@ -273,8 +254,7 @@ public class FakeQueryService implements QueryServiceInterface {
      * @see com.metamatrix.platform.service.api.CacheAdmin#clearCache(java.lang.String, java.util.Properties)
      */
     public void clearCache(String name,
-                           Properties props) throws MetaMatrixComponentException,
-                                            RemoteException {
+                           Properties props) throws MetaMatrixComponentException{
     }
     
     /**
@@ -301,8 +281,7 @@ public class FakeQueryService implements QueryServiceInterface {
     }
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,
-			Properties props, ClientServiceRegistry listenerRegistry)
-			throws ServiceException, RemoteException {
+			Properties props, ClientServiceRegistry listenerRegistry){
 	}
 
 	public void setInitException(Throwable t) {

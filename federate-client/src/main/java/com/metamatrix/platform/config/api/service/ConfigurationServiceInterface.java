@@ -25,8 +25,6 @@
 package com.metamatrix.platform.config.api.service;
 
 import java.io.InputStream;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -57,10 +55,9 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.platform.security.api.service.SecureService;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 
 
-public interface ConfigurationServiceInterface extends Remote, ServiceInterface, SecureService {
+public interface ConfigurationServiceInterface extends ServiceInterface, SecureService {
 
     public static String NAME ="ConfigurationService"; //$NON-NLS-1$
 
@@ -72,26 +69,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return ConfigurationObjectEditor
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    ConfigurationObjectEditor createEditor() throws ConfigurationException, ServiceException, RemoteException;
+    ConfigurationObjectEditor createEditor() throws ConfigurationException;
 
-    /**
-     * Returns a <code>List</code>, of type <code>ConfigurationInfo</code>, representing all the current configurations that
-     * are known to the <code>ConfigurationService</code>. A null value should never be returned.
-     * 
-     * @return List of <code>ConfigurationInfo</code>s
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
-     */
-    // List getConfigurationInfos() throws ConfigurationException, RemoteException;
 
     /**
      * Returns the <code>ConfigurationID</code> for the operational configuration.
@@ -99,12 +79,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return ConfigurationID for current configuration
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    ConfigurationID getCurrentConfigurationID() throws ConfigurationException, ServiceException, RemoteException;
+    ConfigurationID getCurrentConfigurationID() throws ConfigurationException;
 
     /**
      * Returns the ID of the next startup <code>Configuration</code>, which should reflect the desired runtime state of the
@@ -113,12 +89,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return ID of next startup configuration
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    ConfigurationID getNextStartupConfigurationID() throws ConfigurationException, ServiceException, RemoteException;
+    ConfigurationID getNextStartupConfigurationID() throws ConfigurationException;
 
     /**
      * Returns the ID of the startup <code>Configuration</code>, which should reflect the desired runtime state of the system.
@@ -126,12 +98,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return ID of startup configuration
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    ConfigurationID getStartupConfigurationID() throws ConfigurationException, ServiceException, RemoteException;
+    ConfigurationID getStartupConfigurationID() throws ConfigurationException;
 
     /**
      * Baselines the realtime portion of the current (operational) configuration into the next-startup configuration.
@@ -139,7 +107,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param principalName
      *            the name of the principal that is requesting the baselining
      */
-    void baselineCurrentConfiguration(String principalName) throws ConfigurationException, ServiceException, RemoteException;
+    void baselineCurrentConfiguration(String principalName) throws ConfigurationException;
 
     /**
      * Returns the current deployed <code>Configuration</code>. Note, this configuration may not match the actual configuration
@@ -150,12 +118,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Configuration that is currently in use
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Configuration getCurrentConfiguration() throws ConfigurationException, ServiceException, RemoteException;
+    Configuration getCurrentConfiguration() throws ConfigurationException;
 
     /**
      * Returns the next startup <code>Configuration</code>, the Configuration that the system will next boot up with (once it
@@ -164,12 +128,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Configuration that the system will next start up with.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Configuration getNextStartupConfiguration() throws ConfigurationException, ServiceException, RemoteException;
+    Configuration getNextStartupConfiguration() throws ConfigurationException;
 
     /**
      * Returns the startup <code>Configuration</code>, the Configuration that the system booted up with.
@@ -177,12 +137,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Configuration that the system booted up with.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Configuration getStartupConfiguration() throws ConfigurationException, ServiceException, RemoteException;
+    Configuration getStartupConfiguration() throws ConfigurationException;
 
     /**
      * Returns the named <code>Configuration</code>.
@@ -194,12 +150,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if the specified name does not exist
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException, ServiceException, RemoteException;
+    Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException;
 
     /**
      * Returns the <code>ConfigurationModelContainer</code> that contains everything (i.e., ComponentTypes, Shared Resources and
@@ -209,7 +161,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *            if the name of the configuration model to obtain
      * @return ConfigurationModelContainer
      */
-    ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException, ServiceException, RemoteException;
+    ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException;
 
     /**
      * <p>
@@ -255,12 +207,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of BaseObject instances
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException;
 
     /**
      * <p>
@@ -293,7 +241,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if a general remote system problem occurred
      */
     public Collection getAllGlobalConfigObjects()
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
 
     /**
      * Returns a Map of component type definitions for each <code>ComponentTypeID</code> that is contained in the passed
@@ -304,13 +252,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Map of a Map of component type difinitions keyed by <code>ComponentTypeID</code>
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see getDependentComponentTypeDefintions(Collection)
      */
-    Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException, ServiceException, RemoteException;
+    Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException;
 
     /**
      * Returns the component type definitions for the specified <code>ComponentTypeID</code>. This does not return the
@@ -321,13 +265,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of ComponentTypeDefns
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
-    Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
 
 
     /**
@@ -339,13 +279,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of ComponentTypeDefns
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
-    Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
 
     /**
      * Returns a Map of all component type definitions for each <code>ComponentTypeID</code> that is contained in the passed
@@ -357,14 +293,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Map of component type difinitions keyed by <code>ComponentTypeID</code>
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see getComponentTypeDefinitions(Collection)
      * @see getDependentComponentTypeDefinitions(ComponentType)
      */
-    Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException, ServiceException, RemoteException;
+    Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException;
 
     /**
      * Returns the component type definitions for the specified <code>ComponentTypeID</code>. This only returns the dependent
@@ -375,13 +307,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of ComponentTypeDefns
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see getComponentTypeDefinitions(ComponentTypeID)
      */
-    Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
 
 
     /**
@@ -394,13 +322,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of type <code>ComponentType</code>
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see #ComponentType
      */
-    Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException;
 
     /**
      * Returns a <code>ComponentType</code> for the specified <code>ComponentTypeID</code>
@@ -410,12 +334,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return ComponentType based on the id
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException, ServiceException, RemoteException;
+    ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException;
 
     /**
      * Returns a <code>List</code> of type <code>ComponentType</code> that represents all the ComponentTypes defined.
@@ -426,65 +346,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of type <code>ComponentType</code>
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      * @see #ComponentType
      */
-    Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException, ServiceException, RemoteException;
+    Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException;
 
-    /**
-     * Call to save a configuration under a new name. </br>
-     * 
-     * @param name
-     *            is the current name of the configuration
-     * @param newName
-     *            is the new name the current configuration will be save under
-     * @throws InvalidConfigurationException
-     *             if the specified name does not exist
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
-     */
-    // void saveConfigurationAs(String name, String newName) throws InvalidConfigurationException, ConfigurationException,
-    // RemoteException;
-
-    /**
-     * Call to lock a specific configuration.
-     * 
-     * @param configurationID
-     *            for the <code>Configuration</code> to lock.
-     * @return boolean indicating if the lock was obtained
-     * @throws MetadataLockException
-     *             if the appropriate locks required to perform this operation are not held by this editor.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
-     */
-    // void lockConfiguration(ConfigurationID configurationID) throws ConfigurationLockException, ConfigurationException,
-    // RemoteException;
-
-    /**
-     * Call to unlock a specific configuration.
-     * 
-     * @param configurationID
-     *            for the <code>Configuration</code> to unlock.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
-     */
-    // void unlockConfiguration(ConfigurationID configurationID) throws ConfigurationLockException, ConfigurationException,
-    // RemoteException;
 
     /**
      * Returns a <code>Host</code> for the specified <code>HostID</code>. </br>
@@ -492,26 +357,18 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Host
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Host getHost(HostID hostID) throws ConfigurationException, ServiceException, RemoteException;
+    Host getHost(HostID hostID) throws ConfigurationException;
 
     /**
-     * Returns a <code>Collection</code> of currently defined hosts. This method does not cache, it reretrieves the data
-     * everytime. </br>
+     * Returns a <code>Collection</code> of currently defined hosts. This method does not cache, it re-retrieves the data
+     * every time. </br>
      * 
      * @return Collection of type Host
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Collection getHosts() throws ConfigurationException, ServiceException, RemoteException;
+    Collection getHosts() throws ConfigurationException;
 
 
     /**
@@ -526,7 +383,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if an error occurred within or during communication with the Configuration Service.
      */
     ComponentDefn getComponentDefn(ConfigurationID configurationID, ComponentDefnID componentDefnID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
     
     /**
      * Returns a collection of <code>ComponentDefn</code>s for the specified collection of <code>ComponentDefnID</code>s and
@@ -544,7 +401,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Collection getComponentDefns(Collection componentDefnIDs, ConfigurationID configurationID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
     
 
     /**
@@ -553,15 +410,11 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @param configurationID
      *            is the configuration from which the component defns are to be derived
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Collection getResourcePools(ConfigurationID configurationID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
     
     
   /**
@@ -570,15 +423,11 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @param configurationID
      *            is the configuration from which the component types are to be derived
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */    
    Collection getResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
  
  
     /**
@@ -596,7 +445,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if an error occurred in communicating with a component.
      */
     Collection getPoolableResourcePoolTypes(ConfigurationID configurationID)
-   throws ConfigurationException, ServiceException, RemoteException;
+   throws ConfigurationException;
         
 
    /**
@@ -609,30 +458,21 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *            is the configuration from which the component defns are to be derived
      * @param componentTypeID
      *            indicates the type of pools in the configuration to return
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Collection getResourcePools(ConfigurationID configurationID, ComponentTypeID componentTypeID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    throws ConfigurationException;
     
     /**
      * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all internal
      * resources defined to the system. The internal resources are not managed with the other configuration related information.
      * They are not dictated based on which configuration they will operate (i.e., next startup or operational);
      * 
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    Collection getResources()
-    throws ConfigurationException, ServiceException, RemoteException;
+    Collection getResources() throws ConfigurationException;
 
     /**
      * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} that are of the
@@ -640,15 +480,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @param componentTypeID
      *            that identifies the type of resources to be returned
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    Collection getResources(ComponentTypeID componentTypeID)
-    throws ConfigurationException, ServiceException, RemoteException;
+    Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException;
 
 
    /**
@@ -657,15 +492,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @param resourceDescriptors
      *            for the resources to be changed *
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    void saveResources(Collection resourceDescriptors, String principalName)
-    throws ConfigurationException, ServiceException, RemoteException;
+    void saveResources(Collection resourceDescriptors, String principalName) throws ConfigurationException;
 
     
 
@@ -676,12 +506,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Collection of ReleaseInfo objects of licensed products.
      * @throws ConfigurationException
      *             if an business error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if there is a problem with the service infrastructure
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Collection getProductReleaseInfos() throws ConfigurationException, ServiceException, RemoteException;
+    Collection getProductReleaseInfos() throws ConfigurationException;
 
     // --------------------------------------------------------------
     // A C T I O N M E T H O D S
@@ -702,12 +528,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if the action is null or if the result specification is invalid
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Set executeTransaction(ActionDefinition action, String principalName ) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException, RemoteException;
+    Set executeTransaction(ActionDefinition action, String principalName ) 
+    	throws ModificationException, ConfigurationLockException, ConfigurationException;
 
     /**
      * Execute a list of actions, and optionally return the set of objects or object IDs that were affected/modified by the
@@ -724,43 +547,16 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if the action is null or if the result specification is invalid
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException, RemoteException;
+    Set executeTransaction(List actions, String principalName) 
+    	throws ModificationException, ConfigurationLockException, ConfigurationException;
 
-    /**
-     * Execute a list of actions, and optionally return the set of objects or object IDs that were affected/modified by the
-     * action.
-     * 
-     * @param doAdjust
-     *            flag to turn on/off the ConnectorBinding adjustments that are made at the SPI level.
-     * @param actions
-     *            the ordered list of actions that are to be performed on data within the repository.
-     * @param principalName
-     *            of the person executing the transaction
-     * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException
-     *             if the target of any of the actions is invalid, or if the target object is not a supported class of targets.
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
-     */
- // Set executeTransaction(boolean doAdjust, List actions, String principalName) throws ModificationException,
-    // ConfigurationLockException, ConfigurationException, ServiceException, RemoteException;
 
     /**
      * Execute a list of insert actions and for actions on objects of type ComponentDefn or DeployedComponent object, it will have
      * its configuration id resassigned, and optionally return the set of objects or object IDs that were affected/modified by the
      * action. Only insert actions can be performed here because changing a configuration id on a modify action has larger
-     * consiquences.
+     * consequences.
      * 
      * @param assignConfigurationID
      *            the configuration for which any action for a component object will have its configurationID set to this.
@@ -776,12 +572,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if the action is null or if the result specification is invalid
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException, ServiceException, RemoteException;
+    Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) 
+    	throws ModificationException, ConfigurationLockException, ConfigurationException;
 
     /**
      * Undo the specified number of previously-committed transactions.
@@ -795,12 +588,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *             if the number is negative.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException, ServiceException, RemoteException;
+    Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException;
 
     /**
      * Get the history of actions executed in transactions by this editor. The actions at the front of the list will be those most
@@ -809,24 +598,16 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return the ordered list of actions in the history.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    List getHistory() throws ConfigurationException, ServiceException, RemoteException;
+    List getHistory() throws ConfigurationException;
 
     /**
      * Clear the history of all actions without undoing any of them.
      * 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    void clearHistory() throws ConfigurationException, ServiceException, RemoteException;
+    void clearHistory() throws ConfigurationException;
 
     /**
      * Get the number of actions that are currently in the history.
@@ -834,12 +615,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return the number of actions in the history.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    int getHistorySize() throws ConfigurationException, ServiceException, RemoteException;
+    int getHistorySize() throws ConfigurationException;
 
     /**
      * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
@@ -848,12 +625,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    int getHistoryLimit() throws ConfigurationException, ServiceException, RemoteException;
+    int getHistoryLimit() throws ConfigurationException;
 
     /**
      * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
@@ -862,12 +635,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException, ServiceException, RemoteException;
+    void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException;
 
 
     /**
@@ -876,12 +645,8 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @return Date Time server was started.
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
-     * @throws ServiceException
-     *             if a general service problem occurred
-     * @throws RemoteException
-     *             if there is a communication error
      */
-    Date getServerStartupTime() throws ConfigurationException, ServiceException, RemoteException;
+    Date getServerStartupTime() throws ConfigurationException;
     
     /**
      * Add Host to Configuration Add a new Host to the System (MetaMatrix Cluster)
@@ -892,11 +657,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param properties
      * @return Host
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
-    Host addHost(String hostName, String principalName, Properties properties) throws ConfigurationException, ServiceException, RemoteException;
+    Host addHost(String hostName, String principalName, Properties properties) throws ConfigurationException;
     
     /**
      * Add Process for the specified Host to Configuration Add a new Virtuial Machine to the System (MetaMatrix Cluster)
@@ -911,11 +674,9 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *            name, value need to setup a Host
      * @return VMComponentDefn
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
-    VMComponentDefn addProcess(String processName, String hostName, String principalName, Properties properties) throws ConfigurationException, ServiceException, RemoteException;
+    VMComponentDefn addProcess(String processName, String hostName, String principalName, Properties properties) throws ConfigurationException;
     
     /**
      * Set System Property Value in Configuration
@@ -927,13 +688,11 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param principalName
      *            User Name of user who is making the change
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
     void setSystemPropertyValue(String propertyName,
                                        String propertyValue,
-                                       String principalName) throws ConfigurationException,ServiceException, RemoteException;
+                                       String principalName) throws ConfigurationException;
     
     
     /**
@@ -945,12 +704,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param principalName
      *            User Name of user who is making the change
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
     void updateSystemPropertyValues(Properties properties,
-                                       String principalName) throws ConfigurationException,ServiceException, RemoteException;
+                                       String principalName) throws ConfigurationException;
     
     /**
      * Deploy a new Connector Binding into Configuration
@@ -965,15 +722,13 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param properties
      * @return ConnectorBinding object
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
     ConnectorBinding createConnectorBinding(String connectorBindingName,
                                                    String connectorType,
                                                    String pscName,
                                                    String principalName,
-                                                   Properties properties) throws ConfigurationException, ServiceException, RemoteException;
+                                                   Properties properties) throws ConfigurationException;
     
     /**
      * Modify a Component in Configuration
@@ -988,7 +743,7 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      */
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
-                         String principalName) throws ConfigurationException, ServiceException, RemoteException, ModificationException;
+                         String principalName) throws ConfigurationException, ModificationException;
     
     
     /**
@@ -1001,13 +756,11 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *            User Name of user who is making the change
      * @return ComponentType
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
     public ComponentType importConnectorType(InputStream inputStream,
                                              String name,
-                                             String principalName) throws ConfigurationException, ServiceException, RemoteException;
+                                             String principalName) throws ConfigurationException;
     
     /**
      * Import a connector Binding from InputStream, and deploy it to a PSC.
@@ -1019,15 +772,12 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param principalName
      * @return ConnectorBinding
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
     public ConnectorBinding importConnectorBinding(InputStream inputStream,
                                                    String name,
                                                    String pscName,
-                                                   String principalName) throws ConfigurationException,
-                                                                        ServiceException, RemoteException;
+                                                   String principalName) throws ConfigurationException;
         
     /**
      * Deletes a component object.
@@ -1040,14 +790,10 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      *            User Name of user who is making the change
      * @throws ConfigurationException
      * @throws ModificationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
-    public void delete(ComponentObject theObject,
-                        boolean theDeleteDependenciesFlag,
-                        String principalName) throws ConfigurationException, ModificationException,
-                        ServiceException, RemoteException; 
+    public void delete(ComponentObject theObject, boolean theDeleteDependenciesFlag,String principalName) 
+    	throws ConfigurationException, ModificationException; 
     
     /**
      * Delete a Component Type
@@ -1055,14 +801,11 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * @param componentType Component Type Object being deleted
      * @param principalName User Name who is making the change
      * @throws ConfigurationException
-     * @throws ServiceException
      * @throws ModificationException
-     * @throws RemoteException
      * @since 4.3
      */
-    public void delete(ComponentType componentType,
-                       String principalName) throws ConfigurationException,
-                       ServiceException, ModificationException, RemoteException ;
+    public void delete(ComponentType componentType, String principalName) 
+    	throws ConfigurationException,ModificationException;
     
     
     /**
@@ -1078,49 +821,37 @@ public interface ConfigurationServiceInterface extends Remote, ServiceInterface,
      * one of the deployed ServiceComponentDefns 
      * 
      * @throws ConfigurationException
-     * @throws ServiceException
      * @throws ModificationException
-     * @throws RemoteException
      * @since 4.3
      */
     
     public Collection deployPSC(Host theHost,
                                 VMComponentDefn theProcess,
                                 String pscName,
-                                String principalName) throws ConfigurationException,
-                                                     ServiceException,
-                                                     ModificationException,
-                                                     RemoteException;
+                                String principalName) throws ConfigurationException,ModificationException;
 
     
     
     /**
      * Check whether the encrypted properties for the specified ComponentDefns can be decrypted.
      * @param defns List<ComponentDefn>
-     * @return List<Boolean> in the same order as the paramater <code>defns</code>.
+     * @return List<Boolean> in the same order as the parameter <code>defns</code>.
      * For each, true if the properties could be decrypted for that defn.
      * @throws ConfigurationException
-     * @throws ServiceException
-     * @throws RemoteException
      * @since 4.3
      */
-    public List checkPropertiesDecryptable(List defns) throws ConfigurationException,
-                                                                   ServiceException,
-                                                                   RemoteException;
+    public List checkPropertiesDecryptable(List defns) throws ConfigurationException;
 
     /**
-     * Check whether the given properties pertainting to the given component (name and type)
+     * Check whether the given properties pertaining to the given component (name and type)
      * contain at least one value that the server cannot decrypt with its current keystore. 
      * @param props component properties possibly containing encrypted values. 
      * @param componentTypeIdentifier The type identifier of the component to which the properties belong.
-     * @return <code>true</code> iff all of the encrypted properties, if any, can be decrypted. 
+     * @return <code>true</code> if all of the encrypted properties, if any, can be decrypted. 
      * @throws ConfigurationException
-     * @throws ServiceException
      * @since 4.3
      */
     boolean checkPropertiesDecryptable(Properties props,
-                                       String componentTypeIdentifier) throws ConfigurationException,
-                                       ServiceException,
-                                       RemoteException;
+                                       String componentTypeIdentifier) throws ConfigurationException;
     
 }

@@ -24,7 +24,6 @@
 
 package com.metamatrix.console.security;
 
-import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +86,7 @@ public class UserCapabilities {
      * Create the one instance of this class.
      */
     public static UserCapabilities createInstance() 
-        	throws RemoteException, AuthorizationException,
+        	throws AuthorizationException,
         	ComponentNotFoundException, MetaMatrixSecurityException,
         	MetaMatrixComponentException, ExternalException {
 		theInstance = new UserCapabilities();
@@ -105,7 +104,6 @@ public class UserCapabilities {
      */
     public void init(ConnectionInfo conn)
         throws IllegalArgumentException,
-               RemoteException,
                ComponentNotFoundException,
                AuthorizationException,
                InvalidSessionException,

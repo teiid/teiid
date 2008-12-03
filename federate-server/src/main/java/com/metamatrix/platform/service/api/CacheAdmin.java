@@ -25,7 +25,6 @@
 package com.metamatrix.platform.service.api;
 
 import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -47,7 +46,7 @@ public interface CacheAdmin extends Remote {
      * the type, as defined by constants in this interface.
      * @throws MetaMatrixComponentException If an error occurs
      */
-    Map getCaches() throws MetaMatrixComponentException, RemoteException;
+    Map getCaches() throws MetaMatrixComponentException;
     
     /**
      * Clear the named cached using properties to set options if necessary
@@ -55,7 +54,7 @@ public interface CacheAdmin extends Remote {
      * @param props Optional additional properties which may vary by cache type
      * @throws MetaMatrixComponentException If an error occurs
      */
-    void clearCache(String name, Properties props) throws MetaMatrixComponentException, RemoteException;
+    void clearCache(String name, Properties props) throws MetaMatrixComponentException;
     
     
 }

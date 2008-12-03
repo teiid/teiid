@@ -24,7 +24,6 @@
 
 package com.metamatrix.server.admin.apiimpl;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -66,7 +65,6 @@ public class TransactionAdminAPIImpl extends SubSystemAdminAPIImpl implements Tr
 	 * @throws AuthorizationException if caller is not authorized to perform this method.
 	 * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     public synchronized Collection getAllTransactions()
         throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
@@ -90,7 +88,6 @@ public class TransactionAdminAPIImpl extends SubSystemAdminAPIImpl implements Tr
 	 * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws com.metamatrix.common.xa.InvalidTransactionIDException if the Transaction does not exist.
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     public synchronized void terminateTransaction(TransactionID transactionID)
         throws AuthorizationException, InvalidSessionException, XATransactionException, MetaMatrixComponentException {
@@ -104,28 +101,7 @@ public class TransactionAdminAPIImpl extends SubSystemAdminAPIImpl implements Tr
 //        transAdmin.terminateTransaction(transactionID);
     }
 
-    /**
-     * Terminate a collection of transactions.
-     * If status == STATUS_ACTIVE or STATUS_MARKED_ROLLBACK, rollback transaction.
-     * Else, set status to STATUS_ROLLEDBACK.
-     *
-     * @param transactionIDs a collection of transaction IDs indentifying those transactions to rollback.
-	 * @throws AuthorizationException if caller is not authorized to perform this method.
-	 * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws com.metamatrix.common.xa.InvalidTransactionIDException if the Transaction does not exist.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
-     */
-    //public void terminateTransactions(List transactionIDs)
-        //throws AuthorizationException, InvalidSessionException, InvalidTransactionIDException, MetaMatrixComponentException, RemoteException {
 
-        // Validate caller's session
-        //SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        // AdminAPIHelper.checkForRequiredRole(callerToken, UserRoles.RoleName.ADMIN_METAMATRIX);
-
-        //transAdmin.terminateTransactions(transactionIDs);
-    //}
 
     /**
      * Terminate all transactions for the user session.
@@ -136,7 +112,6 @@ public class TransactionAdminAPIImpl extends SubSystemAdminAPIImpl implements Tr
 	 * @throws AuthorizationException if caller is not authorized to perform this method.
 	 * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     * @throws RemoteException if there is a communication exception.
      */
     public synchronized void terminateAllTransactions(MetaMatrixSessionID userSessionID)
         throws AuthorizationException, InvalidSessionException, MultipleException, MetaMatrixComponentException {

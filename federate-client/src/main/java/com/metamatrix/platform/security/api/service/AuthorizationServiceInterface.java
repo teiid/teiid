@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.security.api.service;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +49,9 @@ import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 
 /**
- * This interface represents the API to the Autorization Service
+ * This interface represents the API to the Authorization Service
  * and it defines the functionality that is accessible to clients.
  */
 public interface AuthorizationServiceInterface extends ServiceInterface {
@@ -73,10 +70,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the session token for this cache is not valid
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation
-     * @throws RemoteException if there was a communication failure during this method
      */
     boolean checkAccess( SessionToken sessionToken, String contextName, AuthorizationPermission request )
-    throws InvalidSessionException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationMgmtException;
 
     /**
      * Return whether the specified account has authorization to access the specified resource
@@ -86,18 +82,17 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param sessionToken the session token of the principal whose access is being checked
      * @param contextName the name of the context for the caller (@see AuditContext)
      * @param request the permission that details the resource and the desired form of access
-     * @param fetchDependants If <code>true</code>, search authorization store for all dependant
-     * permisssions of the given request. Access is checked for <i>all</i> resources - the given
-     * request and all dependants.
+     * @param fetchDependants If <code>true</code>, search authorization store for all dependent
+     * Permissions of the given request. Access is checked for <i>all</i> resources - the given
+     * request and all dependents.
      * @return true if the specified principal is granted access to the requested resources,
      * or false otherwise
      * @throws InvalidSessionException if the session token for this cache is not valid
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation
-     * @throws RemoteException if there was a communication failure during this method
      */
     boolean checkAccess( SessionToken sessionToken, String contextName, AuthorizationPermission request, boolean fetchDependants )
-    throws InvalidSessionException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationMgmtException;
 
     /**
      * Of those resources specified, return the subset for which the specified account does <i>not</i> have authorization
@@ -109,10 +104,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the session token for this cache is not valid
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation
-     * @throws RemoteException if there was a communication failure during this method
      */
     Collection getInaccessibleResources( SessionToken sessionToken, String contextName, Collection requests )
-    throws InvalidSessionException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>List</code> of entitlements to the given element pattern in the given realm.
@@ -142,7 +136,7 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     List getGroupEntitlements(AuthorizationRealm realm, Collection groupNames)
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 
     /**
      * Returns a <code>List</code> of entitlements to the given element pattern in the given realm.
@@ -168,10 +162,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * given realm - May be empty but never null.
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation.
-     * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     List getGroupEntitlements(AuthorizationRealm realm, String fullyQualifiedGroupName)
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 
     /**
      * Returns a <code>List</code> of entitlements to the given element pattern in the given realm.
@@ -197,10 +190,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * given realm - May be empty but never null.
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation.
-     * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     List getElementEntitlements(AuthorizationRealm realm, Collection elementNames)
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 
     /**
      * Returns a <code>List</code> of entitlements to the given element pattern in the given realm.
@@ -226,10 +218,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * given realm - May be empty but never null.
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation.
-     * @throws ServiceStateException if the Authorization service is not taking requests.
      */
     List getElementEntitlements(AuthorizationRealm realm, String elementName)
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Admin methods
@@ -241,11 +232,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      */
     Collection getRealmNames(SessionToken caller)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Return whether there is an existing policy with the specified ID.
@@ -255,12 +244,10 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      * @see AuthorizationDomain.containsPolicy
      */
     boolean containsPolicy(SessionToken caller, AuthorizationPolicyID id )
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Locate the IDs of all of the policies that are accessible by the caller.
@@ -269,12 +256,10 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      * @see AuthorizationDomain.findAllPolicyIDs
      */
     Collection findAllPolicyIDs(SessionToken caller)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Locate the IDs of all of the policies that apply to the specified principal and that are accessible by the caller.
@@ -285,12 +270,10 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      * @see AuthorizationModel.findAllPolicyIDs
      */
     Collection findPolicyIDs(SessionToken caller, Collection principals )
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Locate the policies that have the specified IDs.  Any ID that is invalid is simply
@@ -302,12 +285,10 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      * @see AuthorizationDomain.getPolicies
      */
     Collection getPolicies(SessionToken caller, Collection policyIDs)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Locate the policy that has the specified ID.  Any ID that is invalid is simply
@@ -319,12 +300,10 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      * @see AuthorizationDomain.getPolicy
      */
     AuthorizationPolicy getPolicy(SessionToken caller, AuthorizationPolicyID policyID)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Execute as a single transaction with the specified actions, and return
@@ -337,20 +316,18 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws AuthorizationException if the caller is unable to perform this operation.
      * @throws AuthorizationMgmtException if there were errors with the SPI.  Causes rollback.
      * @throws IllegalArgumentException if the action is null.
-     * @throws RemoteException if a communication error occurred.
      */
     Set executeTransaction(SessionToken caller, List actions)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Verify that caller is in the specified logical role.
      * @param caller The session token of the MetaMatrix principle involking an administrative method.
      * @return true if caller's session token is valid and he is a MetaMatrix administrator.
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
      */
     boolean isCallerInRole( SessionToken caller, String roleName )
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 
     /**
      * Obtain the names of all of the roles and their descriptions known to the system.
@@ -359,11 +336,9 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException if the <code>SessionToken</code> is not valid or is expired
      * @throws AuthorizationException if the caller is unable to perform this operation
      * @throws AuthorizationMgmtException if this service has trouble connecting to services it uses.
-     * @throws RemoteException if this service is unable to locate resources required
-     * for this operation
      */
     Map getRoleDescriptions(SessionToken caller)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a collection <code>MetaMatrixPrincipalName</code> objects containing the name
@@ -374,12 +349,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * are sought
      * @throws InvalidSessionException if the administrative session is invalid
      * @throws MetaMatrixSecurityException if there is a problem internally with the MembershipService
-     * @throws AuthorizationException if admninistrator does not have the authority to see the requested information
+     * @throws AuthorizationException if administrator does not have the authority to see the requested information
      * @throws ComponentNotFoundException if a component required by this method could not be found within the server
-     * @throws RemoteException if there is a communication error
      */
     Collection getPrincipalsForRole(SessionToken caller, String roleName)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a Collection of String names of MetaMatrix roles to which the
@@ -389,12 +363,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @return The <code>Collection</code> of role names the principal is assigned.
      * @throws InvalidSessionException if the administrative session is invalid
      * @throws MetaMatrixSecurityException if there is a problem internally with the MembershipService
-     * @throws AuthorizationException if admninistrator does not have the authority to see the requested information
+     * @throws AuthorizationException if administrator does not have the authority to see the requested information
      * @throws ComponentNotFoundException if a component required by this method could not be found within the server
-     * @throws RemoteException if there is a communication error
      */
     Collection getRoleNamesForPrincipal(SessionToken caller, MetaMatrixPrincipalName principal)
-    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Remove given Principal from <emph>ALL</emph> <code>AuthorizationPolicies</code> to
@@ -403,13 +376,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param principal <code>MetaMatrixPrincipalName</code> which should be deleted.
      * @return true if at least one policy in which the principal had authorization
      * was found and deleted, false otherwise.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     boolean removePrincipalFromAllPolicies(SessionToken caller, MetaMatrixPrincipalName principal)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicyID</code>s
@@ -422,13 +393,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param realm The realm in which to search for <code>AuthorizationPermission</code>s.
      * @return The collection of <code>AuthorizationPolicyID</code>s that have permissions
      * in the given realm - possibly empty but never null.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     Collection getPolicyIDsWithPermissionsInRealm(SessionToken caller, AuthorizationRealm realm)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicyID</code>s
@@ -443,13 +412,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param realm The realm in which to search for <code>AuthorizationPermission</code>s.
      * @return The collection of <code>AuthorizationPolicyID</code>s that have permissions
      * in the given realm - possibly empty but never null.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     Collection getPolicyIDsInRealm(SessionToken caller, AuthorizationRealm realm)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicy</code>s
@@ -462,13 +429,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param realm The realm in which to search for <code>AuthorizationPermission</code>s.
      * @return The collection of <code>AuthorizationPolicy</code>s that have permissions
      * in the given realm - possibly empty but never null.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     Collection getPoliciesInRealm(SessionToken caller, AuthorizationRealm realm)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicyID</code>s
@@ -483,13 +448,11 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * the given realm.
      * @return The collection of <code>AuthorizationPolicyID</code>s that have permissions
      * in the given partial realm - possibly empty but never null.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     public Collection getPolicyIDsInPartialRealm(SessionToken caller, AuthorizationRealm realm)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
     /**
      * Returns a <code>Collection</code> of <code>AuthorizationPolicyID</code>s
@@ -500,15 +463,14 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * @param resourceName The resource for which to search for <code>AuthorizationPermission</code>s.
      * @return The collection of <code>AuthorizationPolicyID</code>s that have permissions
      * on the given resource - possibly empty but never null.
-     * @throws AuthorizationException if admninistrator does not have the authority to preform the action.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
-     * @throws ServiceException if an error occurs in the Authorization service.
-     * @throws RemoteException if there is a communication error
      */
     Collection getPolicIDsForResourceInRealm(SessionToken caller, AuthorizationRealm realm, String resourceName)
-    throws AuthorizationException, AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationException, AuthorizationMgmtException;
 
-    public boolean hasPolicy(SessionToken caller, AuthorizationRealm realm, String policyName) throws AuthorizationMgmtException, InvalidUserException, MembershipServiceException, ServiceException, RemoteException;
+    public boolean hasPolicy(SessionToken caller, AuthorizationRealm realm, String policyName) 
+    	throws AuthorizationMgmtException, InvalidUserException, MembershipServiceException;
   
     
     public void migratePolicies(SessionToken token,
@@ -517,7 +479,7 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
                                 Collection sourcePolicies, AdminOptions options) throws MetaMatrixComponentException,
                                                           InvalidSessionException,
                                                           AuthorizationException,
-                                                          AuthorizationMgmtException, ServiceException, RemoteException;  
+                                                          AuthorizationMgmtException;  
 
     /**
      * Takes a tree of <code>PermissionDataNodeImpl</code>s that have their <code>Resource</code>s
@@ -537,7 +499,7 @@ public interface AuthorizationServiceInterface extends ServiceInterface {
      * a corresponding <code>PermissionDataNodeImpl</code> could not be found.
      */
     PermissionDataNode fillPermissionNodeTree(PermissionDataNode root, AuthorizationPolicyID policyID)
-    throws AuthorizationMgmtException, ServiceException, RemoteException;
+    throws AuthorizationMgmtException;
 }
 
 

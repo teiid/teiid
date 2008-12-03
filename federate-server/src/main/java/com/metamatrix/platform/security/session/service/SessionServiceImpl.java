@@ -25,7 +25,6 @@
 package com.metamatrix.platform.security.session.service;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -158,7 +157,7 @@ public class SessionServiceImpl extends AbstractService implements
 		}
 	}
 
-    private void initTerminationHandlers(List handlers) throws ServiceException {
+    private void initTerminationHandlers(List handlers) {
 
         Iterator iter = handlers.iterator();
         while (iter.hasNext()) {
@@ -198,8 +197,7 @@ public class SessionServiceImpl extends AbstractService implements
 
 	@Override
 	public void closeSession(MetaMatrixSessionID sessionID)
-			throws InvalidSessionException, SessionServiceException,
-			ServiceException {
+			throws InvalidSessionException, SessionServiceException{
 		LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		MetaMatrixSessionInfo info = this.sessionCache.remove(sessionID);
 		if (info == null) {
@@ -221,8 +219,7 @@ public class SessionServiceImpl extends AbstractService implements
 	public MetaMatrixSessionInfo createSession(String userName,
 			Credentials credentials, Serializable trustedToken,
 			String applicationName, String productName, Properties properties)
-			throws MetaMatrixAuthenticationException, SessionServiceException,
-			ServiceException {
+			throws MetaMatrixAuthenticationException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
@@ -305,12 +302,7 @@ public class SessionServiceImpl extends AbstractService implements
 					.getString("SessionServiceImpl.Unable_to_communicate_with_the_membership_service"); //$NON-NLS-1$
 			SessionServiceException se = new SessionServiceException(e, msg);
 			throw se;
-		} catch (RemoteException e) {
-			String msg = PlatformPlugin.Util
-					.getString("SessionServiceImpl.Unable_to_communicate_with_the_membership_service"); //$NON-NLS-1$
-			SessionServiceException se = new SessionServiceException(e, msg);
-			throw se;
-		} catch (MetaMatrixSecurityException e) {
+		}catch (MetaMatrixSecurityException e) {
 			String msg = PlatformPlugin.Util
 					.getString(
 							"SessionServiceImpl.Membership_service_could_not_authenticate_user", new Object[] { userName }); //$NON-NLS-1$
@@ -338,7 +330,7 @@ public class SessionServiceImpl extends AbstractService implements
 	
 	@Override
 	public int getActiveConnectionsCountForProduct(String product)
-			throws SessionServiceException, ServiceException {
+			throws SessionServiceException {
 		if (product == null) {
 			return 0;
 		}
@@ -352,14 +344,12 @@ public class SessionServiceImpl extends AbstractService implements
 	}
 
 	@Override
-	public Collection<MetaMatrixSessionInfo> getActiveSessions() throws SessionServiceException,
-			ServiceException {
+	public Collection<MetaMatrixSessionInfo> getActiveSessions() throws SessionServiceException {
 		return new ArrayList<MetaMatrixSessionInfo>(this.sessionCache.values());
 	}
 
 	@Override
-	public int getActiveSessionsCount() throws SessionServiceException,
-			ServiceException {
+	public int getActiveSessionsCount() throws SessionServiceException{
 		return this.sessionCache.size();
 	}
 
@@ -370,16 +360,13 @@ public class SessionServiceImpl extends AbstractService implements
 
 	@Override
 	public MetaMatrixPrincipal getPrincipal(MetaMatrixSessionID sessionID)
-			throws InvalidSessionException, SessionServiceException,
-			ServiceException {
+			throws InvalidSessionException, SessionServiceException {
         
         MetaMatrixSessionInfo sessionInfo = this.getSessionInfo(sessionID);
 
         try {
             return membershipService.getPrincipal(new MetaMatrixPrincipalName(sessionInfo.getUserName(), MetaMatrixPrincipal.TYPE_USER));
         } catch (ServiceException e) {
-            throw new SessionServiceException(e, ErrorMessageKeys.SEC_SESSION_0004,PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0004));
-        } catch (RemoteException e) {
             throw new SessionServiceException(e, ErrorMessageKeys.SEC_SESSION_0004,PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0004));
         } catch (MetaMatrixSecurityException e) {
             throw new SessionServiceException(e, LogMessageKeys.SEC_SESSION_0043,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0043,sessionInfo.getUserName()));
@@ -412,7 +399,7 @@ public class SessionServiceImpl extends AbstractService implements
 	@Override
 	public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,
 			MetaMatrixSessionID adminSessionID) throws 
-			AuthorizationException, SessionServiceException, ServiceException {
+			AuthorizationException, SessionServiceException {
 		Object[] params = {adminSessionID, terminatedSessionID};
 		LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
@@ -426,8 +413,7 @@ public class SessionServiceImpl extends AbstractService implements
 
 	@Override
 	public MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID)
-			throws InvalidSessionException, SessionServiceException,
-			ServiceException {
+			throws InvalidSessionException, SessionServiceException {
 		MetaMatrixSessionInfo info = getSessionInfo(sessionID);
 		return info;
 	}

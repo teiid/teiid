@@ -39,8 +39,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 
 /**
  * <p>
@@ -72,7 +70,7 @@ public interface SessionServiceInterface extends ServiceInterface {
                                                String applicationName,
                                                String productName,
                                                Properties properties)
-            throws MetaMatrixAuthenticationException, SessionServiceException, ServiceException;
+            throws MetaMatrixAuthenticationException, SessionServiceException;
 
     /**
      * Closes the specified session.
@@ -82,10 +80,9 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException If sessionID identifies an invalid
      * session
      * @throws SessionServiceException
-     * @throws RemoteException if there is a communication exception
      */
     void closeSession(MetaMatrixSessionID sessionID)
-    throws InvalidSessionException, SessionServiceException, ServiceException;
+    throws InvalidSessionException, SessionServiceException;
 
     /**
      * Terminates the specified session.  This is an administrative action.
@@ -98,33 +95,29 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @throws AuthorizationException if the caller denoted by <code>adminSessionID</code>
      * does not have authority to terminate the <code>terminatedSessionID</code> session
      * @throws SessionServiceException
-     * @throws RemoteException if there is a communication exception
      */
     boolean terminateSession(MetaMatrixSessionID terminatedSessionID, MetaMatrixSessionID adminSessionID)
-    throws InvalidSessionException, AuthorizationException, SessionServiceException, ServiceException;
+    throws InvalidSessionException, AuthorizationException, SessionServiceException;
 
     /**
      * Get the collection of active user sessions on the system.
      * @return The collection of MetaMatrixSessionInfo objects of active users on
      * the system - possibly empty, never null.
      */
-    Collection getActiveSessions()
-    throws SessionServiceException, ServiceException;
+    Collection getActiveSessions() throws SessionServiceException;
 
     /**
      * Get the number of active user sessions on the system.
      * @return int
      */
-    int getActiveSessionsCount()
-    throws SessionServiceException, ServiceException;
+    int getActiveSessionsCount() throws SessionServiceException;
 
     /**
      * Get the number of active connections for the product.
      * @param product String name of product
      * @return int
      */
-    int getActiveConnectionsCountForProduct(String product)
-    throws SessionServiceException, ServiceException;
+    int getActiveConnectionsCountForProduct(String product) throws SessionServiceException;
 
     /**
      * Returns a MetaMatrixPrincipal object describing the owner (user) of the
@@ -134,7 +127,7 @@ public interface SessionServiceInterface extends ServiceInterface {
      * indicated session.
      */
     MetaMatrixPrincipal getPrincipal(MetaMatrixSessionID sessionID)
-    throws InvalidSessionException, SessionServiceException, ServiceException;
+    throws InvalidSessionException, SessionServiceException;
 
     /**
      * This method is intended to verify that the session is valid, and, if
@@ -144,10 +137,9 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @throws InvalidSessionException If sessionID identifies an invalid
      * session
      * @throws SessionServiceException
-     * @throws RemoteException if there is a communication exception
      */
     MetaMatrixSessionInfo validateSession(MetaMatrixSessionID sessionID)
-    throws InvalidSessionException, SessionServiceException, ServiceException;
+    throws InvalidSessionException, SessionServiceException;
     
     /**
      * Get all <code>MetaMatrixSessionID</code>s that are in the ACTIVE state
@@ -155,18 +147,16 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @param VDBName The name of the VDB.
      * @param VDBVersion The version of the VDB.
      * @throws SessionServiceException when transaction with database fails or unexpected exception happens
-     * @throws ServiceStateException if Session service is in improper state.
      */
     Collection getSessionsLoggedInToVDB(String VDBName, String VDBVersion)
-    throws SessionServiceException, ServiceStateException;
+    throws SessionServiceException;
 
     /**
      * Periodically called by the client to indicate the client is still alive.
      *
      * @param sessionID - identifies the client
-     * @throws ServiceStateException if the service is in a NOT READY state.
      */
-    public void pingServer(MetaMatrixSessionID sessionID) throws ServiceStateException, InvalidSessionException;
+    public void pingServer(MetaMatrixSessionID sessionID) throws InvalidSessionException;
     
     public long getPingInterval();
 }

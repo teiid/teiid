@@ -24,8 +24,6 @@
 
 package com.metamatrix.platform.service.api;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
@@ -33,11 +31,9 @@ import java.util.Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
-public interface ServiceInterface extends Remote {
+public interface ServiceInterface {
 
     public static final int STATE_NOT_INITIALIZED = 0;
     public static final int STATE_OPEN = 1;
@@ -57,7 +53,7 @@ public interface ServiceInterface extends Remote {
      * @param deployedComponentID Unique identifier of this deployed component.
      * @return The unique name of this service instance.
      */
-    void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) throws ServiceException, RemoteException;
+    void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry);
 
 
     /*
@@ -65,74 +61,72 @@ public interface ServiceInterface extends Remote {
      * service must notify any lifecycle listeners of its death using the
      * unique service instance name returned by init().
      */
-    void die() throws ServiceException, RemoteException;
+    void die();
 
     /*
      * Instruct the service to stop processing immediately and die. The
      * service must notify any lifecycle listeners of its death using the
      * unique service instance name returned by init().
      */
-    void dieNow() throws ServiceException, RemoteException;
+    void dieNow();
 
     
     /* Checks the state of the service.  Based on its underlying implementation,
      * the state may change if a problem is detected (for example if an underlying datasource is down). 
-     * @since 4.3
-     * @throws ServiceException if the resulting state is an error state.
      */
-    void checkState() throws ServiceStateException, RemoteException;
+    void checkState();
     
 
     /**
      * Retreive the properties object used to initialize the service.
      */
-    Properties getProperties() throws RemoteException;
+    Properties getProperties();
 
     /**
      * Get the time that the service was initialized.
      */
-    Date getStartTime() throws RemoteException;
+    Date getStartTime();
 
     /*
      * Determine which host the service instance is running on.
      * @return Host the service is running on
      */
-    String getHostname() throws ServiceException, RemoteException;
+    String getHostname();
 
     /**
      * Get the id of the VM that the service is running in.
      */
-    VMControllerID getVMID() throws ServiceException, RemoteException;
+    VMControllerID getVMID();
 
     /**
      * Determine if the service is alive and well.
      */
-    boolean isAlive() throws RemoteException;
+    boolean isAlive();
 
     /**
      * Get service type
      */
-    String getServiceType() throws RemoteException;
+    String getServiceType();
 
-    int getCurrentState() throws RemoteException;
+    int getCurrentState();
 
-    Date getStateChangeTime() throws RemoteException;
+    Date getStateChangeTime();
 
-    ServiceID getID() throws RemoteException;
+    ServiceID getID();
 
     /**
      * Returns a list of QueueStats objects that represent the queues in
      * this service.
      * If there are no queues, null is returned.
      */
-    Collection getQueueStatistics() throws RemoteException;
+    Collection getQueueStatistics();
 
     /**
      * Returns a QueueStats object that represent the queue in
      * this service.
      * If there is no queue with the given name, null is returned.
      */
-    WorkerPoolStats getQueueStatistics(String name) throws RemoteException;
+    WorkerPoolStats getQueueStatistics(String name);
     
     /**
      * There are reflective based calls on this

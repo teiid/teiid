@@ -26,7 +26,7 @@ package com.metamatrix.api.exception;
 
 /**
  * Exception which occurs if there is a communication failure between 
- * components - like RemoteException, a socket failure, or JMS message failure.
+ * components - like socket failure, or JMS message failure.
  */
 public class ComponentCommunicationException extends MetaMatrixComponentException {
 

@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.registry;
 
-import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +34,7 @@ import com.google.inject.name.Named;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.ServerEvents;
@@ -95,7 +95,7 @@ public class VMMonitor implements ServerEvents {
 	                    VMControllerInterface vm = binding.getVMController();
 	                    vm.ping();
 	                    binding.setAlive(true);
-	                } catch (RemoteException e) {
+	                } catch (ServiceException e) {
 	                	// mark as not alive, then no services will be pinged from this vm
 	                	binding.setAlive(false);
 	                }
@@ -113,8 +113,6 @@ public class VMMonitor implements ServerEvents {
             		try {
     					binding.getService().checkState();
     				} catch (ServiceStateException e) {
-    					// OK to throw up, service will capture the error to logs.
-    				} catch(RemoteException e) {
     					// OK to throw up, service will capture the error to logs.
     				}
                 }
