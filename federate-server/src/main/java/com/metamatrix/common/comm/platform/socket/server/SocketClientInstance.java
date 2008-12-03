@@ -31,7 +31,6 @@ import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
-import com.metamatrix.common.comm.platform.socket.MessagePacket;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
@@ -74,7 +73,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     	if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) {
             LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, " message: " + message + " for request ID:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
         }
-    	objectSocket.write(new MessagePacket(messageKey, message));
+    	message.setMessageKey(messageKey);
+    	objectSocket.write(message);
     }
     
     /** 
@@ -126,18 +126,18 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 	}
 
 	public void receivedMessage(Object msg) throws CommunicationException {
-        if (msg instanceof MessagePacket) {
-            processMessagePacket((MessagePacket)msg);
+        if (msg instanceof Message) {
+            processMessagePacket((Message)msg);
         } else if (msg instanceof Handshake) {
         	receivedHahdshake((Handshake)msg);
         } 
 	}
 
-	private void processMessagePacket(MessagePacket packet) {
+	private void processMessagePacket(Message packet) {
 		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
-			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "processing message:" + packet.message); //$NON-NLS-1$
+			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "processing message:" + packet); //$NON-NLS-1$
         }
-		workerPool.execute(new ServerWorkItem(this, packet.messageKey, packet.message, this.server));
+		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server));
 	}
 
 	public void shutdown() throws CommunicationException {

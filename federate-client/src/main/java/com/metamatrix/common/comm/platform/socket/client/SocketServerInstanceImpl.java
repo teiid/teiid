@@ -45,7 +45,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
-import com.metamatrix.common.comm.platform.socket.MessagePacket;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
@@ -203,8 +202,9 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
 	    }
+	    message.setMessageKey(messageKey);
 	    try {
-	        Future<?> writeFuture = socketChannel.write(new MessagePacket(messageKey, message));
+	        Future<?> writeFuture = socketChannel.write(message);
 	        writeFuture.get(); //client writes are blocking to ensure proper failure handling
 	    } catch (Throwable e) {
 	        asynchronousListeners.remove(messageKey);
@@ -252,8 +252,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
             log.logDetail("SocketServerInstance.read", "read:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        if (packet instanceof MessagePacket) {
-        	MessagePacket messagePacket = (MessagePacket)packet;
+        if (packet instanceof Message) {
+        	Message messagePacket = (Message)packet;
             processAsynchronousPacket(messagePacket);
         } else if (packet instanceof Handshake) {
         	receivedHahdshake((Handshake)packet);
@@ -264,9 +264,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         }
     }
 
-    private void processAsynchronousPacket(MessagePacket packet) {
-        Serializable messageKey = packet.messageKey;
-        Message message = packet.message;
+    private void processAsynchronousPacket(Message message) {
+        Serializable messageKey = message.getMessageKey();
         if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
             log.logDetail("SocketServerInstance.read", "read asynch message:" + message); //$NON-NLS-1$ //$NON-NLS-2$
         }

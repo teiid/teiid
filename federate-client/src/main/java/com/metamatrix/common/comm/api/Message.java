@@ -24,15 +24,22 @@
 
 package com.metamatrix.common.comm.api;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 
-public class Message implements Serializable {
-    public static final long serialVersionUID = 1063704220782714098L;
-    private Serializable contents;
-    
-    public String toString() {
-        return "MessageHolder: contents=" + contents; //$NON-NLS-1$
-    }
+import com.metamatrix.common.comm.exception.CommunicationException;
+
+public class Message implements Externalizable {
+	public static final long serialVersionUID = 1063704220782714098L;
+	private Serializable contents;
+	private Serializable messageKey;
+
+	public String toString() {
+		return "MessageHolder: contents=" + contents; //$NON-NLS-1$
+	}
 
 	public void setContents(Serializable contents) {
 		this.contents = contents;
@@ -41,5 +48,28 @@ public class Message implements Serializable {
 	public Serializable getContents() {
 		return contents;
 	}
-        
+
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		try {
+			this.contents = (Serializable) in.readObject();
+		} catch (Throwable t) {
+			this.contents = new CommunicationException(t);
+		}
+		this.messageKey = (Serializable) in.readObject();
+	}
+
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(this.contents);
+		out.writeObject(messageKey);
+	}
+
+	public Serializable getMessageKey() {
+		return messageKey;
+	}
+
+	public void setMessageKey(Serializable messageKey) {
+		this.messageKey = messageKey;
+	}
+
 }
