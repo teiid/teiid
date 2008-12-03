@@ -53,9 +53,7 @@ import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.client.PortableContext;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.client.impl.SerializablePortableContext;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -95,8 +93,8 @@ public class TestSocketRemoting extends TestCase {
 			this.clientServiceRegistry = clientServiceRegistry;
 		}
 
-		public PortableContext getContext() {
-			return new SerializablePortableContext("fake"); //$NON-NLS-1$
+		public HostInfo getHostInfo() {
+			return new HostInfo("fake", 1); //$NON-NLS-1$
 		}
 
 		public boolean isOpen() {

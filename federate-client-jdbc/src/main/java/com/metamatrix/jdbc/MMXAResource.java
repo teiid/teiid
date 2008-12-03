@@ -30,6 +30,7 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.Logger;
@@ -127,8 +128,8 @@ public class MMXAResource implements XAResource{
         }
         MMXAResource other = (MMXAResource)arg0;
 		try {
-			return this.getMMConnection().getServerConnection().getContext().equals(other.getMMConnection().getServerConnection().getContext());
-		} catch (SQLException e) {
+			return this.getMMConnection().isSameProcess(other.getMMConnection());
+		} catch (CommunicationException e) {
 			throw handleError(e, JDBCPlugin.Util.getString("MMXAResource.FailedISSameRM")); //$NON-NLS-1$
 		}
     }

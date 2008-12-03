@@ -30,8 +30,10 @@ import java.util.Properties;
 import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
 
 /** 
  * @since 4.3
@@ -112,5 +114,17 @@ public class MMServerConnection extends MMConnection {
 			SocketServerConnection conn = (SocketServerConnection)this.serverConn;
 			conn.selectNewServerInstance();
 		}
+	}
+
+	@Override
+	boolean isSameProcess(MMConnection conn) throws CommunicationException {
+		if (conn instanceof MMServerConnection
+				&& this.serverConn instanceof SocketServerConnection
+				&& conn.serverConn instanceof SocketServerConnection) {
+			SocketServerInstance thisInstance = ((SocketServerConnection)this.serverConn).selectServerInstance();
+			SocketServerInstance thatInstance = ((SocketServerConnection)conn.serverConn).selectServerInstance();
+			return thisInstance.getHostInfo().equals(thatInstance.getHostInfo());
+		}
+		return false;
 	}
 }

@@ -44,8 +44,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.application.ClientConnectionListener;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.client.PortableContext;
-import com.metamatrix.dqp.client.impl.SerializablePortableContext;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.DQPListener;
@@ -78,10 +76,6 @@ public class LocalTransportHandler implements ServerConnectionFactory {
 			if (configurationConnectionListener != null) {
 				configurationConnectionListener.connectionAdded(this);
 			}
-		}
-
-		public PortableContext getContext() {
-			return new SerializablePortableContext("local"); //$NON-NLS-1$
 		}
 
 		public <T> T getService(Class<T> iface) {

@@ -55,6 +55,7 @@ import java.util.Properties;
 import javax.transaction.xa.Xid;
 
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.FileLogWriter;
@@ -965,6 +966,8 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
 	}
 	
 	abstract BaseDriver getBaseDriver();
+	
+	abstract boolean isSameProcess(MMConnection conn) throws CommunicationException;
     
 	public void setClientInfo(Properties properties)
 		throws SQLClientInfoException {

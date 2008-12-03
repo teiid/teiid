@@ -61,7 +61,6 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.SocketConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.client.PortableContext;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -297,14 +296,6 @@ public class SocketServerConnection implements ServerConnection {
 			instance.shutdown();
 		}
 		existingConnections.clear();
-	}
-
-	public PortableContext getContext() {
-		try {
-			return selectServerInstance().getContext();
-		} catch (CommunicationException e) {
-			throw new IllegalStateException(e);
-		}
 	}
 
 	public boolean isOpen() {

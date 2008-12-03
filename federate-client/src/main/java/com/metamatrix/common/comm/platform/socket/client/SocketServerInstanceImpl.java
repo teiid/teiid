@@ -57,7 +57,6 @@ import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
-import com.metamatrix.dqp.client.PortableContext;
 
 public class SocketServerInstanceImpl implements ChannelListener, SocketServerInstance {
 	
@@ -286,11 +285,6 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	socketChannel.close();
     }
 
-    public PortableContext getContext() {
-        return new SocketServerInstanceContext(hostInfo.getHostName(), hostInfo
-				.getPortNumber(), this.ssl);
-    }
-    
     /** 
      * @return Returns the cryptor.
      */

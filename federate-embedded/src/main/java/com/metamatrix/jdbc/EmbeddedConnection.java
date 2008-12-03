@@ -158,4 +158,9 @@ public class EmbeddedConnection extends MMConnection {
 	public BaseDriver getBaseDriver() {
 		return new EmbeddedDriver();
 	}
+
+	@Override
+	boolean isSameProcess(MMConnection conn) {
+		return (conn instanceof EmbeddedConnection);
+	}
 }

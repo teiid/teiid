@@ -24,7 +24,6 @@
 
 package com.metamatrix.common.comm.api;
 
-import com.metamatrix.dqp.client.PortableContext;
 import com.metamatrix.platform.security.api.LogonResult;
 
 public interface ServerConnection {
@@ -32,8 +31,6 @@ public interface ServerConnection {
 	<T> T getService(Class<T> iface);
 	
 	void shutdown();
-	
-	PortableContext getContext();
 	
 	boolean isOpen();
 	
