@@ -1049,8 +1049,12 @@ public abstract class TransformationMetadata extends BasicQueryMetadata {
      */
     public String getVirtualDatabaseName() throws MetaMatrixComponentException, QueryMetadataException {
 		// Query the index files            
-        final VdbRecord vdbRecord = (VdbRecord) this.getRecordByType(null, IndexConstants.RECORD_TYPE.VDB_ARCHIVE);
-        return vdbRecord.getName();
+        try {
+			final VdbRecord vdbRecord = (VdbRecord) this.getRecordByType(null, IndexConstants.RECORD_TYPE.VDB_ARCHIVE);
+			return vdbRecord.getName();
+		} catch (QueryMetadataException e) {
+			return null;
+		}
     }
 
     /* (non-Javadoc)
