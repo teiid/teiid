@@ -15,8 +15,8 @@
     <module>admin-guide</module>
     <module>reference</module>
     <module>connector-developer-guide</module>
-    <module>embedded-guide</module>
     <module>server-extensions-guide</module>
+    <module>quick-start-example</module>
   </modules>
   <repositories>
     <repository>
@@ -45,4 +45,19 @@
       <url>http://snapshots.jboss.org/maven2</url>
     </pluginRepository>
   </pluginRepositories>
+  <build>
+    <plugins>
+      <plugin>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <version>2.2-beta-2</version>        
+      <configuration>
+            <descriptors>
+              <descriptor>assembly/docs.xml</descriptor>
+            </descriptors>
+            <outputDirectory>target/distribution</outputDirectory>
+            <workDirectory>target/assembly/work</workDirectory>
+      </configuration>
+      </plugin>
+    </plugins>
+  </build>  
 </project>
