@@ -131,8 +131,26 @@
 		        <workDirectory>target/assembly/work</workDirectory>
 		  </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.5</version>
+      </plugin>      
     </plugins>
   </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <aggregate>true</aggregate>
+          <maxmemory>512m</maxmemory>      
+          <excludePackageNames>*.internal:com.arjuna.*:*.connector.object:*.connector.sysadmin:*.connector.yahoo:*.connector.exec</excludePackageNames>
+        </configuration>              
+      </plugin>
+    </plugins>
+  </reporting>  
   <repositories>
     <repository>
       <id>jboss</id>
