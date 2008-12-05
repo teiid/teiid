@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.dqp.client.ResultsFuture;
 
 /**
- * Generic logon interface accessible either via EJB or via the communication framework.
+ * Generic logon interface.
  */
 public interface ILogon {
     LogonResult logon(Properties connectionProperties)
@@ -40,7 +40,6 @@ public interface ILogon {
    
    /**
     * Ping the server to see if the client-server connection is alive.
-    * @param sessionID identifing session
     * @throws InvalidSessionException if the sessionID is invalid
     * @throws ComponentNotFoundException if can't find the Session service.
     */
@@ -50,7 +49,6 @@ public interface ILogon {
    
    /**
     * Log off the specified session.
-    * @param sessionID the identifier for the session
     * @throws InvalidSessionException If session has expired or doesn't exist
     * @throws ComponentNotFoundException If couldn't find needed service component
     */
