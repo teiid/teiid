@@ -25,11 +25,12 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class ObjectToAnyTransform extends AnyToStringTransform {
+public class ObjectToAnyTransform extends AbstractTransform {
 
     private Class targetClass;
     
