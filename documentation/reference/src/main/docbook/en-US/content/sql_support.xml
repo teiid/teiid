@@ -817,7 +817,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
   </sect1>
   <sect1 id="set_operations">
     <title>Set Operations</title>
-    <para>Federate support the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
+    <para>Federate supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
     <para>
       Usage:
       <synopsis label="Usage">command (UNION|INTERSECT|EXCEPT) [ALL] command [ORDER BY...]</synopsis>
