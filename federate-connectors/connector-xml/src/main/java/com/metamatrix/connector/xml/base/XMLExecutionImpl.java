@@ -155,6 +155,7 @@ public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
             		exeContext.getPartIdentifier());
         }
         catch (RuntimeException e) {
+        	m_logger.logTrace("Exception while closing ExecutiontImpl: " + e.getMessage());
             throw new ConnectorException(e);
         }
     }

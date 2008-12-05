@@ -82,19 +82,18 @@ public class RequestRecord  implements Record {
 							+ " and Invocation Number "
 							+ sourceRequestID);
 			partRecord = new RequestPartRecord(this, partID, executionID, sourceRequestID,
-					cacheKey);
+					cacheKey, logger);
 			requestParts.put(partID, partRecord);
 		} else {
 			logger
 					.logTrace("Adding new Source Request ID to existing RequestPartRecord: Invocation Number "
 							+ sourceRequestID);
-			partRecord.addExecutionRecord(executionID, sourceRequestID, cacheKey);
+			partRecord.addExecutionRecord(executionID, sourceRequestID, cacheKey, logger);
 		}
 
 	}
 
 	public void deleteRequestPart(String partID, String executionID, ConnectorLogger logger) {
-		logger.logTrace("deleteCacheItems " + requestParts.toString());
 		RequestPartRecord partRecord = (RequestPartRecord) requestParts
 				.get(partID);
 		if (null != partRecord) {

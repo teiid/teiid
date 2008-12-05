@@ -35,17 +35,16 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * 
@@ -150,7 +149,7 @@ public class DocumentCache implements IDocumentCache {
 	 * @see com.metamatrix.connector.xml.cache.IDocumentCache#addToCache(java.lang.String, java.lang.Object, int, java.lang.String, java.lang.String)
 	 */
     public synchronized void addToCache(String cacheKey, Object obj, int size, 
-    		String id) {
+    		String id) throws ConnectorException {
 
         CachedObject newItem;
         // test for conditions where object cannot be cached
@@ -230,7 +229,6 @@ public class DocumentCache implements IDocumentCache {
 	           m_log.logTrace("Moving cache item " + cacheKey + " to the delete list");
 	            removeLink(cacheObject);
 	    		m_cacheImpl.remove(cacheKey);
-	    		cacheObject.setListed(false);
 	    		synchronized(deleteList) {
 	    			deleteList.add(cacheObject);
 	    		}
@@ -316,33 +314,13 @@ public class DocumentCache implements IDocumentCache {
         }
         m_log.logTrace(message);
         
-        // Don't move it to most recent, this coould possible cause a cache object
-        // to remain in the cache indefinitely
-/*        if (m_mostRecentUsed != foundLink) {
-            // move it to most recent
-            if (foundLink == m_leastRecentUsed
-                    && foundLink.getPrevious() != null) {
-                m_leastRecentUsed = foundLink.getPrevious();
-                m_leastRecentUsed.setNext(null);
-            }
-
-            // remove from linked list
-            removeLink(foundLink);
-
-            // reenter list at head
-            m_mostRecentUsed.setPrevious(foundLink);
-            foundLink.setPrevious(null);
-            foundLink.setNext(m_mostRecentUsed);
-            m_mostRecentUsed = foundLink;
-        }
-*/        
         Object o = null;
         if (foundLink.getPayload() instanceof FileCacheItem) {
             o = deserializeFileCacheItem((FileCacheItem) foundLink.getPayload());
             if (foundLink.getEventSink() != null) {
                 foundLink.getEventSink().onRestoreFromFile(o);
             }
-            updateFileCacheSize(-foundLink.getSize());
+            //updateFileCacheSize(-foundLink.getSize());
             if (o == null) {
                 // the file cache is bad - pretend its not there
             	m_cacheImpl.remove(foundLink.getItemId());
@@ -350,7 +328,6 @@ public class DocumentCache implements IDocumentCache {
         } else {
             o = foundLink.getPayload();
         }
-        foundLink.addReference(id);
         return o;
     }
 
@@ -363,7 +340,7 @@ public class DocumentCache implements IDocumentCache {
         cachedObjectRemover.interrupt();
     }
 
-    private void addItemToFileCache(CachedObject item) {
+    private void addItemToFileCache(CachedObject item) throws ConnectorException {
         if (m_maxFileCacheSize > UNLIMITED_CACHE_THRESHOLD
                 && item.getSize() > m_maxFileCacheSize) {
             m_log
@@ -387,16 +364,12 @@ public class DocumentCache implements IDocumentCache {
                 remove(item);
                 return;
             }
-            // make room
+             
             while (m_maxFileCacheSize > UNLIMITED_CACHE_THRESHOLD
                     && m_currentFileCacheSize + item.getSize() >= m_maxFileCacheSize) {
                 CachedObject obj = m_cleaner.m_head.getCurrent();
-                // TODO: This may be a threading problem.
-                m_cleaner.m_head = m_cleaner.m_head.getNext();
-                m_log.logTrace("Removing file cache item " + obj.getItemId()
-                        + " to make room for " + item.getItemId());
-                m_log.logTrace("Consider increasing the memory cache size");
-                remove(obj);
+                m_log.logTrace("Failed to cache to file.  Increase the file cache size");
+                throw new ConnectorException("Failed to cache to file.  Increase the file cache size");
             }
 
             // add it
@@ -431,25 +404,11 @@ public class DocumentCache implements IDocumentCache {
         m_memoryCacheCount--;
     }
 
-    private void addItemToMemoryCache(CachedObject newItem) {
+    private void addItemToMemoryCache(CachedObject newItem) throws ConnectorException {
         final int writeTimeBuffer = 5000;
         // ensure there is room in memory cache
         while (m_maxMemoryCacheSize > UNLIMITED_CACHE_THRESHOLD
                 && (m_currentMemoryCacheSize + newItem.getSize()) > m_maxMemoryCacheSize) {
-            // if it expires soon, dump it now - it would expire by the time its
-            // written
-            if (m_leastRecentUsed != null && m_performanceCache
-                    && m_leastRecentUsed.getExpires() <= (writeTimeBuffer + System
-                            .currentTimeMillis())) {
-
-                // remove from lookup
-                m_cacheImpl.remove(m_leastRecentUsed.getItemId());
-                // reduce current size
-                updateMemoryCacheSize(-m_leastRecentUsed.getSize());
-                // reset least recent to next and free object for gc
-                m_leastRecentUsed = m_leastRecentUsed.getNext();
-
-            } else {
                 // find something that can be moved
                 CachedObject removeCandidate = m_leastRecentUsed;
                 while (removeCandidate != null
@@ -464,16 +423,10 @@ public class DocumentCache implements IDocumentCache {
                     decrementMemoryCacheCount();
                 }
             }
-        }
-
-        // things look good so add the item
-
-        // pick up the current most recent
         newItem.setNext(m_mostRecentUsed);
         newItem.setPrevious(null);
 
         incrementMemoryCacheCount();
-        // increase the current cache size
         updateMemoryCacheSize(newItem.getSize());
 
     }
@@ -596,10 +549,8 @@ public class DocumentCache implements IDocumentCache {
         m_log.logTrace("least recent used item: "
                 + ((m_leastRecentUsed == null) ? "null"
                         : m_leastRecentUsed.m_itemID));
-
+        
     }
-
-    /* for testing purposes */
 
     private class CachedObjectQueueItem {
 
@@ -694,8 +645,6 @@ public class DocumentCache implements IDocumentCache {
                             
                             if(removal.isLocked())
                             {
-                               removeLink(removal);
-                               removal.setListed(false);
                                deleteList.add(removal);
                             }
                                
@@ -758,9 +707,7 @@ public class DocumentCache implements IDocumentCache {
 		            Iterator iter = deleteList.iterator();
 		            while(iter.hasNext()) {
 		               CachedObject cachedObject = (CachedObject) iter.next();
-		               m_log.logTrace("CachedObjectRemover removing " + cachedObject.m_itemID );
 		               if(cachedObject.isLocked()) {
-		            	   m_log.logTrace("CachedObjectRemover moving " + cachedObject.m_itemID + "to the locked objects list" );
 		                  lockedObjects.add(cachedObject);
 		               } else {
 		                  remove(cachedObject);
@@ -820,11 +767,6 @@ public class DocumentCache implements IDocumentCache {
          */
         private Set references = new HashSet();
         
-        /**
-         * Indicates if the CachedObject is listed in the cache lookup Map.
-         */
-        private boolean listed = true;
-        
         private CachedObject() {
         	
         }
@@ -835,7 +777,6 @@ public class DocumentCache implements IDocumentCache {
 			
 		public void removeReference(String id) {
 			references.remove(id);
-			//If there are no more request references, then we can unlock this for a delete.
 			if(references.isEmpty()) {
 				setLocked(false);
 				m_log.logTrace("unlocking cache item " + this.m_itemID);
@@ -843,16 +784,23 @@ public class DocumentCache implements IDocumentCache {
 		}
         
         public void addReference(String id) {
+			if(null != id ) {
 			references.add(id);
         		setLocked(true);
         	}
+		}
         
 		public boolean isLocked() {
+			synchronized (this) {
 			return locked;
+		  }
 		}
         
         public void setLocked(boolean lock) {
+        	synchronized (this) {
+        		if (!this.locked && lock) m_log.logTrace("locking cache item " + this.m_itemID);
         	this.locked = lock;
+          }
         }
 
 		private CachedObject(String id, Object payload) {
@@ -928,14 +876,6 @@ public class DocumentCache implements IDocumentCache {
             return new String("id: " + getItemId() + " size: " + getSize() //$NON-NLS-1$ //$NON-NLS-2$
                     + " expires: " + getExpires()); //$NON-NLS-1$
         }
-
-		public boolean isListed() {
-			return listed;
-		}
-
-		public void setListed(boolean listed) {
-			this.listed = listed;
-		}
     }
 
     private class FileCacheItem {

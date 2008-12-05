@@ -50,7 +50,7 @@ public class ExecutionRecord implements Record {
 	}
 
 	public void addCacheRecord(String sourceRequestID, String cacheKey) {
-		CachedObjectRecord record = (CachedObjectRecord)cacheRecords.get(executionID);
+		CachedObjectRecord record = (CachedObjectRecord)cacheRecords.get(sourceRequestID);
 		if(null == record) {
 			record = new CachedObjectRecord(this, sourceRequestID, cacheKey);
 			cacheRecords.put(sourceRequestID, record);
@@ -64,9 +64,8 @@ public class ExecutionRecord implements Record {
 		for(Iterator iter = records.iterator(); iter.hasNext(); ) {
 			CachedObjectRecord record = (CachedObjectRecord) iter.next();
 			String cacheKey = record.getCacheKey();
-			String id = getID();
-            ((IDocumentCache)parent.getCache()).release(cacheKey , id);
-            logger.logTrace("Releasing cache item with key " + cacheKey + " and id " + id);
+			((IDocumentCache)parent.getCache()).release(cacheKey , record.getID());
+            logger.logTrace("Releasing cache item with key " + cacheKey + " and id " + record.getID());
 		}
 		cacheRecords.clear();
 	}

@@ -43,18 +43,21 @@ public class RequestPartRecord implements Record {
 		
 	Map executionRecords;
 
-	public RequestPartRecord(Record parent, String partID, String executionID, String sourceRequestID, String cacheKey) {
+	public RequestPartRecord(Record parent, String partID, String executionID, String sourceRequestID, String cacheKey, ConnectorLogger logger) {
 		executionRecords = new HashMap();
 		this.partID = partID;
         this.parent = parent;
-		addExecutionRecord(executionID, sourceRequestID, cacheKey);
+		addExecutionRecord(executionID, sourceRequestID, cacheKey, logger);
 	}
 
-	public void addExecutionRecord(String executionID, String sourceRequestID, String cacheKey) {
+	public void addExecutionRecord(String executionID, String sourceRequestID, String cacheKey, ConnectorLogger logger) {
 		ExecutionRecord execution = (ExecutionRecord) executionRecords.get(executionID);
 		if(null == execution) {
+			logger.logTrace("Creating new ExecutionRecord for executionID " + executionID);
 			execution = new ExecutionRecord(this, executionID, sourceRequestID, cacheKey);
+			executionRecords.put(executionID, execution);
 		} else {
+			logger.logTrace("Adding CacheRecord for executionID " + executionID);
 			execution.addCacheRecord(sourceRequestID, cacheKey);
 		}
 
@@ -71,7 +74,10 @@ public class RequestPartRecord implements Record {
 	public void deleteExecutionRecords(String executionID, ConnectorLogger logger) {
 		ExecutionRecord execution = (ExecutionRecord) executionRecords.get(executionID);
 		if(null != execution) {
+			logger.logTrace("Deleting cache items for ExecutionRecord " + executionID);
 			execution.deleteCacheItems(logger);
+		} else {
+			
 		}
 	}
 }

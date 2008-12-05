@@ -25,10 +25,12 @@
 
 package com.metamatrix.connector.xml.cache;
 
+import com.metamatrix.data.exception.ConnectorException;
+
 public interface IDocumentCache {
 
 	public abstract void addToCache(String cacheKey, Object obj, int size,
-			String id);
+			String id) throws ConnectorException;
 
 	/**
 	 * Called by the CachedObjectRecord contained in the connector to remove 
