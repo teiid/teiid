@@ -54,6 +54,8 @@ import java.util.Properties;
 
 import javax.transaction.xa.Xid;
 
+import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.xa.MMXid;
@@ -62,7 +64,6 @@ import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.core.log.Logger;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.platform.util.ProductInfoConstants;
 
@@ -226,7 +227,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
                 String key = (String)enumeration.nextElement();
                 Object anObj = info.get(key);
                 // Log each property except for password and token.
-                if (!"password".equalsIgnoreCase(key) && !ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD.equalsIgnoreCase(key)) { //$NON-NLS-1$
+                if (!MMURL_Properties.JDBC.CREDENTIALS.equalsIgnoreCase(key) && !MMURL_Properties.JDBC.PASSWORD.equalsIgnoreCase(key) && !MMURL_Properties.JDBC.CLIENT_TOKEN_PROP.equalsIgnoreCase(key)) { //$NON-NLS-1$
                     logger.log(MessageLevel.INFO, key+"="+anObj); //$NON-NLS-1$
                 }
             }
