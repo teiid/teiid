@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
@@ -61,10 +61,11 @@ public class MMJDBCURL {
         ExecutionProperties.PROP_FETCH_SIZE,
         ExecutionProperties.PROP_XML_FORMAT,
         ExecutionProperties.PROP_XML_VALIDATION,
-        ExecutionProperties.AUTO_FAILOVER,
         ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
         ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD,
-        ConnectionProperties.PROP_CREDENTIALS
+        ConnectionProperties.PROP_CREDENTIALS,
+        MMURL.CONNECTION.AUTO_FAILOVER,
+        MMURL.CONNECTION.DISCOVERY_STRATEGY
     };
     
     private String vdbName;
@@ -123,7 +124,7 @@ public class MMJDBCURL {
             }
             else {
                 parseJDBCProtocol(jdbcURL.substring(0, fsc));
-                parseConnectionProperties(jdbcURL.substring(fsc+1));
+                parseConnectionProperties(jdbcURL.substring(fsc+1), this.properties);
             }
         }
         else {
@@ -155,22 +156,22 @@ public class MMJDBCURL {
         if (connectionParts.length > 1) {
             // The rest should be connection params
             for (int i = 1; i < connectionParts.length; i++) {
-                parseConnectionProperty(connectionParts[i]);
+                parseConnectionProperty(connectionParts[i], this.properties);
             }
         }
     }
     
-    private void parseConnectionProperties(String connectionInfo) {
+    public static void parseConnectionProperties(String connectionInfo, Properties p) {
         String[] connectionParts = connectionInfo.split(";"); //$NON-NLS-1$
         if (connectionParts.length != 0) {
             // The rest should be connection params
             for (int i = 0; i < connectionParts.length; i++) {
-                parseConnectionProperty(connectionParts[i]);
+                parseConnectionProperty(connectionParts[i], p);
             }
         }
     }
     
-    private void parseConnectionProperty(String connectionProperty) {
+    static void parseConnectionProperty(String connectionProperty, Properties p) {
         if (connectionProperty.length() == 0) {
             // Be tolerant of double-semicolons and dangling semicolons
             return;
@@ -187,7 +188,7 @@ public class MMJDBCURL {
         if(value.indexOf('=') >= 0) {
             throw new IllegalArgumentException();
         }        
-        addNormalizedProperty(key, getValidValue(value), this.properties);
+        addNormalizedProperty(key, getValidValue(value), p);
     }
     
     public String getJDBCURL() {
@@ -271,7 +272,7 @@ public class MMJDBCURL {
     }
     
     public String getTransparentFailover() {
-        return properties.getProperty(CONNECTION.AUTO_FAILOVER);
+        return properties.getProperty(MMURL.CONNECTION.AUTO_FAILOVER);
     }
     
     public String getDisableLocalTransactions() {

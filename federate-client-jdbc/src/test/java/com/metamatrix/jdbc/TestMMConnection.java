@@ -59,7 +59,7 @@ public class TestMMConnection extends TestCase {
     	Properties productInfo = new Properties();
     	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
     	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
-    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, 1));
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, 1, "fake")); //$NON-NLS-1$
     	return new MMServerConnection(mock, props, serverUrl);
     }
 

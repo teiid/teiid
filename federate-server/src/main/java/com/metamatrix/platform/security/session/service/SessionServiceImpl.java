@@ -45,7 +45,7 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.log.LogManager;
@@ -275,8 +275,8 @@ public class SessionServiceImpl extends AbstractService implements
                                                 clusterName,
                                                 productInfo,
         										productName, 
-        										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_IP_ADDRESS), 
-        										properties.getProperty(MMURL_Properties.CONNECTION.CLIENT_HOSTNAME));
+        										properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS), 
+        										properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
         if (this.sessionCache.put(newSession.getSessionID(), newSession) != null) {
         	try {
 				this.closeSession(newSession.getSessionID());

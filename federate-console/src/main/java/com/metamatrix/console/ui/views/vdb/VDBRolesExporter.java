@@ -232,20 +232,13 @@ public class VDBRolesExporter {
      * 
      */
     private void exportVdbRoles(String vdbName, String vdbVersion, String fullFileName) throws LogonException, AdminException, CommunicationException {
-        ServerAdmin admin = null;
-        try {
-            admin = this.connection.getServerAdmin();
-            char[] chars = admin.exportDataRoles(vdbName,vdbVersion);
-            if (chars == null) {
-            	// If nothing was exported
-            }
-            FileUtil util = new FileUtil(fullFileName);
-            util.write(new String(chars));
-        } finally {
-            if (admin != null) {
-                admin.close();
-            }
+        ServerAdmin admin = this.connection.getServerAdmin();
+        char[] chars = admin.exportDataRoles(vdbName,vdbVersion);
+        if (chars == null) {
+        	// If nothing was exported
         }
+        FileUtil util = new FileUtil(fullFileName);
+        util.write(new String(chars));
     }
 
 }// end VDBRolesExporter

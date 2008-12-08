@@ -184,13 +184,7 @@ public class MaterializationWizard extends WizardInterfaceImpl {
             LogManager.logError(LogContexts.VIRTUAL_DATABASE, ex, msg);
             ExceptionUtility.showMessage(msg, ex.getMessage(), ex);
             return false;
-        } finally {
-            try {
-                admin.close();
-            } catch (Exception e) {
-            }
-        }
-        
+        } 
         
         Object materializationFileCreationResult = null;
         SingleMaterializationFileDisplayInfo[] files = new SingleMaterializationFileDisplayInfo[NUM_MATERIALIZATION_FILES];

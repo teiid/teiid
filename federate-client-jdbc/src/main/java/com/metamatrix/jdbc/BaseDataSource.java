@@ -37,10 +37,10 @@ import javax.sql.PooledConnection;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
+import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
  * The MetaMatrix JDBC DataSource implementation class of {@link javax.sql.DataSource} and
@@ -60,14 +60,6 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  * <table cellspacing="0" cellpadding="0" border="1" width="100%">
  *   <tr><td><b>Property Name</b></td><td><b>Type</b></td><td><b>Description</b></td></tr>
  *   <tr><td>applicationName  </td><td><code>String</code></td><td>The <i>optional</i> name of the application using the DataSource.</td></tr>
- *   <tr><td>applicationServer</td><td><code>String</code></td><td>The <i>optional</i> type of application server in which the MetaMatrix Server
- *                                                                 is running; possible values are <code>weblogic</code>,
- *                                                                 <code>jboss</code>, <code>websphere</code>, <code>iiop</code>
- *                                                                 <code>sap_oem</code>.  The value is used to determine the
- *                                                                 {@link javax.naming.spi.InitialContextFactory} implementation class;
- *                                                                 if not supplied, then the first implementation of the
- *                                                                 {@link javax.naming.spi.InitialContextFactory} found on the classpath
- *                                                                 is used.</td></tr>
  *   <tr><td>clientToken      </td><td><code>Serializable</code></td><td>The <i>optional</i> client token that will be passed directly
  *                                                                 through to the connectors, which may use it and/or pass it
  *                                                                 down to their underlying data source.
@@ -109,32 +101,32 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  * <table>
  * </p>
  */
-public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable, MMURL_Properties {
+public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable {
 
     // constant indicating Virtual database name
-    public static final String VDB_NAME = MMURL_Properties.JDBC.VDB_NAME; 
+    public static final String VDB_NAME = MMURL.JDBC.VDB_NAME; 
     // constant indicating Virtual database version
-    public static final String VDB_VERSION = MMURL_Properties.JDBC.VDB_VERSION; 
+    public static final String VDB_VERSION = MMURL.JDBC.VDB_VERSION; 
     // constant for vdb version part of serverURL
-    public static final String VERSION = MMURL_Properties.JDBC.VERSION; 
+    public static final String VERSION = MMURL.JDBC.VERSION; 
     // name of the application which is obtaining connection
-    public static final String APP_NAME = MMURL_Properties.JDBC.APP_NAME; 
+    public static final String APP_NAME = MMURL.CONNECTION.APP_NAME; 
     // constant for username part of url
-    public static final String USER_NAME = MMURL_Properties.JDBC.USER_NAME; 
+    public static final String USER_NAME = MMURL.CONNECTION.USER_NAME; 
     // constant for password part of url
-    public static final String PASSWORD = MMURL_Properties.JDBC.PASSWORD; 
+    public static final String PASSWORD = MMURL.CONNECTION.PASSWORD; 
     // string constant that the url contains
-    public static final String LOG_FILE = MMURL_Properties.JDBC.LOG_FILE; 
+    public static final String LOG_FILE = MMURL.JDBC.LOG_FILE; 
     // string constant that the url contains
-    public static final String LOG_LEVEL = MMURL_Properties.JDBC.LOG_LEVEL; 
+    public static final String LOG_LEVEL = MMURL.JDBC.LOG_LEVEL; 
     // logging level that would log messages
-    public static final int LOG_NONE = MMURL_Properties.JDBC.LOG_NONE;
+    public static final int LOG_NONE = MMURL.JDBC.LOG_NONE;
     // logging level that would log exception stack traces
-    public static final int LOG_ERROR = MMURL_Properties.JDBC.LOG_ERROR;    
+    public static final int LOG_ERROR = MMURL.JDBC.LOG_ERROR;    
     // logging level that would log messages
-    public static final int LOG_INFO = MMURL_Properties.JDBC.LOG_INFO;
+    public static final int LOG_INFO = MMURL.JDBC.LOG_INFO;
     // logging level that would traces method calls
-    public static final int LOG_TRACE = MMURL_Properties.JDBC.LOG_TRACE;
+    public static final int LOG_TRACE = MMURL.JDBC.LOG_TRACE;
 
     
     protected static final int DEFAULT_TIMEOUT = 0;
@@ -323,6 +315,11 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public static final String TXN_AUTO_WRAP_OPTIMISTIC = "OPTIMISTIC"; //$NON-NLS-1$
 
     /**
+     * String to hold additional properties that are not represented with an explicit getter/setter
+     */
+    private String additionalProperties;
+    
+    /**
      * Constructor for MMDataSource.
      */
     public BaseDataSource() {
@@ -361,7 +358,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         Serializable token = this.getClientToken();
         if ( token != null ) {
             // Special case: token is a Serializable, not necessarily a String
-            props.put(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, token);
+            props.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, token);
         }
 
         if ( this.getLogFile() != null && this.getLogFile().trim().length() != 0 ) {
@@ -394,6 +391,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         
         if (this.getDisableLocalTxn() != null) {
             props.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, this.getDisableLocalTxn());
+        }
+        
+        if (this.additionalProperties != null) {
+        	MMJDBCURL.parseConnectionProperties(this.additionalProperties, props);
         }
                       
         return props;
@@ -1081,6 +1082,14 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         String messageTemplate = messages.getString(key);
         return MessageFormat.format(messageTemplate, (Object[])null);
     }
+
+	public void setAdditionalProperties(String additionalProperties) {
+		this.additionalProperties = additionalProperties;
+	}
+
+	public String getAdditionalProperties() {
+		return additionalProperties;
+	}
 
 }
 

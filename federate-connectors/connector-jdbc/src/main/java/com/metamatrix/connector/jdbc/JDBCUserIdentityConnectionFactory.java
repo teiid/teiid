@@ -25,8 +25,6 @@
 package com.metamatrix.connector.jdbc;
 
 import java.sql.Driver;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.data.api.ConnectorEnvironment;
@@ -104,58 +102,19 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
         // credential lookup strategy.
         
         Object commandPayload = context.getExecutionPayload();
-        if(commandPayload != null && commandPayload instanceof CredentialMap) {
+        if(commandPayload instanceof CredentialMap) {
             return extractPayload((CredentialMap)commandPayload);
         }
         
         // By default, assume the session token is a CredentialMap and pull out the user/password props
         Object trustedPayload = context.getTrustedPayload(); 
         
-        try {
-			trustedPayload = buildCredentialMap(trustedPayload);
-		} catch (Exception e) {
-	        throw new ConnectorException(JDBCPlugin.Util.getString("JDBCUserIdentityConnectionFactory.Unable_to_get_credentials")); //$NON-NLS-1$			
-		}
-
-		if(trustedPayload != null && trustedPayload instanceof CredentialMap) {
+		if(trustedPayload instanceof CredentialMap) {
             return extractPayload((CredentialMap)trustedPayload);
         }
 
         throw new ConnectorException(JDBCPlugin.Util.getString("JDBCUserIdentityConnectionFactory.Unable_to_get_credentials")); //$NON-NLS-1$
-    }
-    
-	private Object buildCredentialMap(Object payload) throws Exception {
-		
-		if (payload instanceof CredentialMap || !(payload instanceof HashMap)) {
-			return payload;
-		}
-		
-		HashMap load = (HashMap)payload;
-		
-		String credentials = (String)load.get("TRUST_KEY"); //$NON-NLS-1$
-		CredentialMap credentialMap = null;
-		boolean defaultToLogon = false;
-		if(credentials.startsWith("defaultToLogon")) { //$NON-NLS-1$
-		    defaultToLogon = true;
-		}
-		int parenIndex = credentials.indexOf("("); //$NON-NLS-1$
-		if(parenIndex >= 0) {
-		    credentialMap = CredentialMap.parseCredentials(credentials.substring(parenIndex));                    
-		} else {
-		    credentialMap = new CredentialMap();
-		}
-		if(defaultToLogon) {
-		    credentialMap.setDefaultCredentialMode(CredentialMap.MODE_USE_DEFAULTS_GLOBALLY);
-		    Map defaultCredentials = new HashMap();
-		    defaultCredentials.put(CredentialMap.USER_KEYWORD, load.get("user")); //$NON-NLS-1$
-		    defaultCredentials.put(CredentialMap.PASSWORD_KEYWORD, load.get("password")); //$NON-NLS-1$
-		    credentialMap.setDefaultCredentials(defaultCredentials);
-		} else {
-		    credentialMap.setDefaultCredentialMode(CredentialMap.MODE_IGNORE_DEFAULTS);
-		}
-		
-		return credentialMap;
-	}    
+    }   
 
     /** 
      * @param credentialMap

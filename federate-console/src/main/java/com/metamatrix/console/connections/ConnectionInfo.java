@@ -38,7 +38,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
@@ -62,6 +62,7 @@ public class ConnectionInfo {
     private List ports;
     private String connectedPort;
     private MMURL mmurl;
+    private ServerAdmin serverAdmin;
     
     // DEFAULT Initial delay before trying to connect
     private static final long INIT_RETRY_DELAY_DEFAULT_VAL = 1000*10;
@@ -304,11 +305,11 @@ public class ConnectionInfo {
         }
         
         Properties properties = new Properties();
-        properties.setProperty(MMURL_Properties.JDBC.USER_NAME, user);
-        properties.setProperty(MMURL_Properties.JDBC.PASSWORD, new String(password));
-        properties.setProperty(MMURL_Properties.JDBC.APP_NAME, applicationName);
-        properties.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
-        properties.setProperty(MMURL_Properties.SERVER.SERVER_URL, mmurl.getAppServerURL());
+        properties.setProperty(MMURL.CONNECTION.USER_NAME, user);
+        properties.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        properties.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
+        properties.setProperty(MMURL.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
+        properties.setProperty(MMURL.CONNECTION.SERVER_URL, mmurl.getAppServerURL());
         connection = SocketServerConnectionFactory.getInstance().createConnection(properties);
         ModelManager.clearServices(this);
 
@@ -376,6 +377,9 @@ public class ConnectionInfo {
         if (connection != null) {
         	connection.shutdown();
         }
+        if (this.serverAdmin != null) {
+        	this.serverAdmin.close();
+        }
     }
     
     
@@ -385,8 +389,10 @@ public class ConnectionInfo {
      * @throws CommunicationException 
 	 */
     public synchronized ServerAdmin getServerAdmin() throws AdminException, LogonException, CommunicationException {
-
-        return ServerAdminFactory.getInstance().createAdmin(user, password, url, applicationName);            
+    	if (this.serverAdmin == null) {
+    		this.serverAdmin = ServerAdminFactory.getInstance().createAdmin(user, password, url, applicationName);
+    	}
+        return this.serverAdmin;
     }
    
 }

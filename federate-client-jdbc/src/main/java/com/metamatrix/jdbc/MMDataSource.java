@@ -31,12 +31,10 @@ import java.sql.DriverManager;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.Logger;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.log.NullLogger;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -90,9 +88,7 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
      
     /**
      * Specify a set of data source credentials to pass to the connectors as defined in 
-     * {@link com.metamatrix.jdbc.api.ConnectionProperties#PROP_CREDENTIALS}.  This
-     * property will be parsed and used to create a {@link com.metamatrix.data.pool.CredentialMap}
-     * which will be set as the session token.
+     * {@link MMURL.JDBC.CREDENTIALS}.  
      */
     private String credentials; 
     
@@ -108,9 +104,15 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
      * be used for connection fail-over.
      * @since 5.5
      */
-    private String alternateServers = null;
+    private String alternateServers;
     
+    /**
+     * The auto failover mode for calls made to the query engine.  If true query engine calls that fail will
+     * allow the connection to choose another process.
+     */
     private String autoFailover;
+    
+    private String discoveryStrategy;
     
     private transient Logger logger;
 
@@ -127,14 +129,18 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
     protected Properties buildProperties(final String userName, final String password) {               
         Properties props = super.buildProperties(userName, password);
         
-        props.setProperty(MMURL_Properties.SERVER.SERVER_URL,this.buildServerURL());
+        props.setProperty(MMURL.CONNECTION.SERVER_URL,this.buildServerURL());
         
         if (this.getAutoFailover() != null) {
-            props.setProperty(CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
+            props.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
         }
         
         if (this.getCredentials() != null) {
-            props.setProperty(ConnectionProperties.PROP_CREDENTIALS, this.getCredentials());
+            props.setProperty(MMURL.JDBC.CREDENTIALS, this.getCredentials());
+        }
+        
+        if (this.getDiscoveryStrategy() != null) {
+        	props.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
         }
 
         return props;
@@ -513,6 +519,14 @@ public class MMDataSource extends BaseDataSource implements javax.sql.XADataSour
     public void setAutoFailover(String autoFailover) {
         this.autoFailover = autoFailover;
     }
+
+	public String getDiscoveryStrategy() {
+		return discoveryStrategy;
+	}
+
+	public void setDiscoveryStrategy(String discoveryStrategy) {
+		this.discoveryStrategy = discoveryStrategy;
+	}
 
 }
 

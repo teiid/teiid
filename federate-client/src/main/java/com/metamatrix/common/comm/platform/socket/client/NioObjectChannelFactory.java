@@ -38,6 +38,7 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
 import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.socket.SSLAwareChannelHandler;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 import com.metamatrix.common.queue.WorkerPoolFactory;
@@ -87,7 +88,7 @@ public class NioObjectChannelFactory implements ObjectChannelFactory {
         	if (future.getCause() instanceof IOException) {
         		throw (IOException)future.getCause();
         	}
-        	throw new CommunicationException(future.getCause());
+        	throw new SingleInstanceCommunicationException(future.getCause());
         }
 	}
 }

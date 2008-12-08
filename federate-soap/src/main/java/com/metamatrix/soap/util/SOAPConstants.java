@@ -24,7 +24,7 @@
 
 package com.metamatrix.soap.util;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 
 /**
  * This file will contain all of the constants used by the MetaMatrix SOAP service
@@ -40,17 +40,17 @@ public final class SOAPConstants {
     /**
      * Name of property used to set the application name in a MetaMatrix connection.
      */
-    public static final String APP_NAME = MMURL_Properties.JDBC.APP_NAME; 
+    public static final String APP_NAME = MMURL.CONNECTION.APP_NAME; 
 
     /**
      * Non-secure MetaMatrix Protocol.
      */
-    public static final String NON_SECURE_PROTOCOL = MMURL_Properties.SERVER.NON_SECURE_PROTOCOL; 
+    public static final String NON_SECURE_PROTOCOL = MMURL.CONNECTION.NON_SECURE_PROTOCOL; 
 
     /**
      * Non-secure MetaMatrix Protocol.
      */
-    public static final String SECURE_PROTOCOL = MMURL_Properties.SERVER.SECURE_PROTOCOL; 
+    public static final String SECURE_PROTOCOL = MMURL.CONNECTION.SECURE_PROTOCOL; 
 
     /**
      * Indicates that the client did not have enough information to process the authentication or that the authentication message

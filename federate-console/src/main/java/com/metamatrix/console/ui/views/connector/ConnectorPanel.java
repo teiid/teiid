@@ -401,17 +401,9 @@ public class ConnectorPanel extends BasePanel implements WorkspacePanel,
     
     
     private void exportCAFFile(String filename) throws Exception {        
-        ServerAdmin admin = null;
-        try {
-            admin = getConnection().getServerAdmin();
-            byte[] bytes = admin.exportConnectorArchive(selectedConnectorName);
-            FileUtils.write(bytes, filename);
-        } finally {
-            if (admin != null) {
-                admin.close();
-            }
-        }
-        
+        ServerAdmin admin = getConnection().getServerAdmin();
+        byte[] bytes = admin.exportConnectorArchive(selectedConnectorName);
+        FileUtils.write(bytes, filename);
     }
     
     private void exportCDKFile(String filename) throws Exception {

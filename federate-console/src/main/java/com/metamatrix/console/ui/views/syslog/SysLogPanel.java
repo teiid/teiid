@@ -1108,12 +1108,7 @@ is called within each block below. need to investigate this later.
                 theException.printStackTrace();
                 ExceptionUtility.showMessage(theException.getMessage(), theException);
                 LogManager.logError(LogContexts.SYSTEMLOGGING, theException, getClass() + ":exportLogs"); //$NON-NLS-1$
-            } finally {
-                try {
-                    admin.close();
-                } catch (Exception e) {
-                }
-            }
+            } 
         }
     }
     

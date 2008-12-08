@@ -24,18 +24,12 @@
 
 package com.metamatrix.common.comm.platform.socket.client;
 
-import java.io.Serializable;
-
 import com.metamatrix.common.api.HostInfo;
-import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.api.MessageListener;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.util.crypto.Cryptor;
 
 public interface SocketServerInstance {
 
-	void send(Message message, MessageListener listener, Serializable messageKey)
-			throws CommunicationException;
+	<T> T getService(Class<T> iface);
 
 	void shutdown();
 

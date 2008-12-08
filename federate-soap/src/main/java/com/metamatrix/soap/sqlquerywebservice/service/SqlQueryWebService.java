@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.MessageContext;
@@ -43,11 +44,10 @@ import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.client.impl.ServerConnectionInfo;
 import com.metamatrix.dqp.client.impl.ServerRequest;
 import com.metamatrix.jdbc.MMCallableStatement;
 import com.metamatrix.jdbc.MMDriver;
@@ -75,11 +75,6 @@ import com.metamatrix.soap.util.WebServiceUtil;
  */
 public class SqlQueryWebService {
 
-	/**
-	 * Static constants used to add the application name as an additional property.
-	 */
-	public static final String APP_NAME_PROP = MMURL_Properties.JDBC.APP_NAME;
-
 	public static final String APP_NAME = "SQL Query Web Service"; //$NON-NLS-1$
 
 	/**
@@ -99,8 +94,8 @@ public class SqlQueryWebService {
 		Results results = null;
 		Statement stmt = null;
 		try {
-			ServerConnectionInfo connectionProperties = getConnectionInfo(connectionlessRequest.getParameters());
-			conn = MMDriver.getInstance().createMMConnection(null, connectionProperties.getConnectionProperties());
+			Properties connectionProperties = getConnectionInfo(connectionlessRequest.getParameters());
+			conn = MMDriver.getInstance().createMMConnection(null, connectionProperties);
 			ServerRequest request = getRequestInfo(connectionlessRequest);
             
             if (request.getRequestType() == ServerRequest.REQUEST_TYPE_PREPARED_STATEMENT) {
@@ -203,17 +198,17 @@ public class SqlQueryWebService {
 		}
 	}
 
-	private ServerConnectionInfo getConnectionInfo( final LogInParameters params ) throws SqlQueryWebServiceFault {
-		ServerConnectionInfo connectionInfo = new ServerConnectionInfo();
-		connectionInfo.setServerUrl(params.getMmServerUrl());
-		connectionInfo.setVDBName(params.getVdbName());
-		connectionInfo.setVDBVersion(params.getVdbVersion());
-		connectionInfo.setTrustedPayload(params.getConnectionPayload());
+	private Properties getConnectionInfo( final LogInParameters params ) throws SqlQueryWebServiceFault {
+		Properties connectionInfo = new Properties();
+		connectionInfo.setProperty(MMURL.CONNECTION.SERVER_URL, params.getMmServerUrl());
+		connectionInfo.setProperty(MMURL.JDBC.VDB_NAME, params.getVdbName());
+		connectionInfo.setProperty(MMURL.JDBC.VDB_VERSION, params.getVdbVersion());
+		connectionInfo.setProperty(MMURL.CONNECTION.CLIENT_TOKEN_PROP, params.getConnectionPayload());
 
 		/*
 		 * Set the additional property for the application name.
 		 */
-		connectionInfo.setOptionalProperty(APP_NAME_PROP, APP_NAME);
+		connectionInfo.setProperty(MMURL.CONNECTION.APP_NAME, APP_NAME);
 
 		/*
 		 * Set additional properties, if any, on the ConnectionInfo object.
@@ -223,7 +218,7 @@ public class SqlQueryWebService {
 			for (int i = 0; i < params.getOptionalProperties().length; i++) {
 				String propName = params.getOptionalProperties()[i].getPropertyName();
 				String propValue = params.getOptionalProperties()[i].getPropertyValue();
-				connectionInfo.setOptionalProperty(propName, propValue);
+				connectionInfo.setProperty(propName, propValue);
 			}
 		}
 
@@ -239,8 +234,8 @@ public class SqlQueryWebService {
 			throwFaultException(new MetaMatrixProcessingException(e.getMessage()));
 		}
 
-		connectionInfo.setUser(credential.getUserName());
-		connectionInfo.setPassword(new String(credential.getPassword()));
+		connectionInfo.setProperty(MMURL.CONNECTION.USER_NAME, credential.getUserName());
+		connectionInfo.setProperty(MMURL.CONNECTION.PASSWORD, new String(credential.getPassword()));
 
 		return connectionInfo;
 	}

@@ -1,10 +1,3 @@
-package com.metamatrix.common.comm.platform.socket.client;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.metamatrix.common.api.HostInfo;
-import com.metamatrix.common.api.MMURL;
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright (C) 2008 Red Hat, Inc.
@@ -29,6 +22,14 @@ import com.metamatrix.common.api.MMURL;
  * 02110-1301 USA.
  */
 
+package com.metamatrix.common.comm.platform.socket.client;
+
+import java.util.List;
+import java.util.Properties;
+
+import com.metamatrix.common.api.HostInfo;
+import com.metamatrix.common.api.MMURL;
+
 /**
  * Simple URL discovery strategy
  */
@@ -36,18 +37,37 @@ public class UrlServerDiscovery implements ServerDiscovery {
 
 	private MMURL url;
 	
+	public UrlServerDiscovery() {
+	}
+	
 	public UrlServerDiscovery(MMURL url) {
+		this.url = url;
+	}
+	
+	@Override
+	public List<HostInfo> getKnownHosts() {
+		return url.getHostInfo();
+	}
+
+	@Override
+	public void init(MMURL url, Properties p) {
 		this.url = url;
 	}
 
 	@Override
-	public List<HostInfo> getKnownHosts() {
-		return new ArrayList(url.getHostInfo());
+	public void connectionSuccessful(HostInfo info,
+			SocketServerInstance instance) {
+		
 	}
 
 	@Override
 	public void markInstanceAsBad(HostInfo info) {
 		
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return false;
 	}
 	
 }

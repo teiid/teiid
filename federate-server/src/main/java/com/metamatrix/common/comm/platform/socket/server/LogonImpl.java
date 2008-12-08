@@ -25,6 +25,8 @@
 package com.metamatrix.common.comm.platform.socket.server;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -33,10 +35,13 @@ import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.pool.CredentialMap;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
+import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -47,32 +52,38 @@ import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.util.ProductInfoConstants;
+import com.metamatrix.server.ServerPlugin;
 
 public class LogonImpl implements ILogon {
 	
 	private SessionServiceInterface service;
+	private String clusterName;
 
-	public LogonImpl(SessionServiceInterface service) {
+	public LogonImpl(SessionServiceInterface service, String clusterName) {
 		this.service = service;
+		this.clusterName = clusterName;
 	}
 
 	public LogonResult logon(Properties connProps) throws LogonException,
 			ComponentNotFoundException {
 		
-		Object payload = connProps.get(MMURL_Properties.JDBC.CLIENT_TOKEN_PROP);
-        if (payload == null) {
-        	payload = connProps.get(MMURL_Properties.JDBC.TRUSTED_PAYLOAD_PROP);
-        }
-        String applicationName = connProps.getProperty(MMURL_Properties.JDBC.APP_NAME);
+        String applicationName = connProps.getProperty(MMURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
-        String user = connProps.getProperty(MMURL_Properties.JDBC.USER_NAME);
+        String user = connProps.getProperty(MMURL.CONNECTION.USER_NAME);
         // password may be null if using trustedToken to log on
-        String password = connProps.getProperty(MMURL_Properties.JDBC.PASSWORD);
-		String productName = connProps.getProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME);
+        String password = connProps.getProperty(MMURL.CONNECTION.PASSWORD);
+		String productName = connProps.getProperty(MMURL.CONNECTION.PRODUCT_NAME);
 		Credentials credential = null;
         if (password != null) {
             credential = new Credentials(password.toCharArray());
         }
+        
+        if(connProps.containsKey(ConnectionProperties.PROP_CREDENTIALS)) {
+            handleCredentials(connProps, user, password);
+        }
+        
+		Object payload = connProps.get(MMURL.CONNECTION.CLIENT_TOKEN_PROP);
+        
 		try {
 			MetaMatrixSessionInfo sessionInfo = service.createSession(user,
 					credential, (Serializable) payload, applicationName,
@@ -81,7 +92,7 @@ public class LogonImpl implements ILogon {
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
 			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {
 					"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), service.getPingInterval());
+			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), service.getPingInterval(), clusterName);
 		} catch (MetaMatrixAuthenticationException e) {
 			throw new LogonException(e, e.getMessage());
 		} catch (ServiceException e) {
@@ -89,6 +100,45 @@ public class LogonImpl implements ILogon {
 		} catch (SessionServiceException e) {
 			throw new LogonException(e, e.getMessage());
 		}
+	}
+
+	private void handleCredentials(Properties connProps, String user,
+			String password) throws LogonException {
+		// Check if both credentials AND session token are used - if so, this is an error
+		if(connProps.containsKey(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD)) {
+		    throw new LogonException(ServerPlugin.Util.getString("LogonImpl.Invalid_use_of_credentials_and_token"));                //$NON-NLS-1$
+		} 
+		
+		// Parse credentials and store CredentialMap as session token
+		try { 
+		    String credentials = connProps.getProperty(ConnectionProperties.PROP_CREDENTIALS);
+		    CredentialMap credentialMap = null;
+		    boolean defaultToLogon = false;
+		    if(credentials.startsWith(ConnectionProperties.DEFAULT_TO_LOGON)) {
+		        defaultToLogon = true;
+		    }
+		    int parenIndex = credentials.indexOf("("); //$NON-NLS-1$
+		    if(parenIndex >= 0) {
+		        credentialMap = CredentialMap.parseCredentials(credentials.substring(parenIndex));                    
+		    } else {
+		        credentialMap = new CredentialMap();
+		    }
+		    if(defaultToLogon) {
+		        credentialMap.setDefaultCredentialMode(CredentialMap.MODE_USE_DEFAULTS_GLOBALLY);
+		        Map<String, String> defaultCredentials = new HashMap<String, String>();
+		        defaultCredentials.put(CredentialMap.USER_KEYWORD, user);
+		        defaultCredentials.put(CredentialMap.PASSWORD_KEYWORD, password);
+		        credentialMap.setDefaultCredentials(defaultCredentials);
+		    } else {
+		        credentialMap.setDefaultCredentialMode(CredentialMap.MODE_IGNORE_DEFAULTS);
+		    }
+		    connProps.put(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, credentialMap);
+		} catch(ConnectorException e) {
+		    throw new LogonException(e.getMessage());
+		}
+		
+		// Remove credentials from info properties
+		connProps.remove(ConnectionProperties.PROP_CREDENTIALS);
 	}
 
 	private MetaMatrixSessionID updateDQPContext(MetaMatrixSessionInfo sessionInfo) {

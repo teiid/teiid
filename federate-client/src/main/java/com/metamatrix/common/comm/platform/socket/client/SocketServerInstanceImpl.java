@@ -28,19 +28,27 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.SSLEngine;
 
+import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
+import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
@@ -56,39 +64,44 @@ import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
+import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.ResultsFuture;
 
+/**
+ * Client view of a socket server connection that exposes remote services
+ * On construction this class will create a channel and exchange a handshake.
+ * That handshake will establish a {@link Cryptor} to be used for secure traffic.
+ */
 public class SocketServerInstanceImpl implements ChannelListener, SocketServerInstance {
 	
     static String RELEASE_NUMBER;
-	
+
+	private AtomicInteger MESSAGE_ID = new AtomicInteger();
+
 	private HostInfo hostInfo;
+	private boolean ssl;
     private ObjectChannel socketChannel;
     private SocketLog log;
+    private long synchTimeout;
+
     private Cryptor cryptor;
     
     private Map<Serializable, MessageListener> asynchronousListeners = new ConcurrentHashMap<Serializable, MessageListener>();
     
-    private volatile boolean handshakeCompleted;
-    private volatile CommunicationException handshakeError;
-	private boolean ssl;
+    private boolean handshakeCompleted;
+    private CommunicationException handshakeError;
     
-    /**
-     * SocketServerInstance
-     * @param host
-     * @param workerPool
-     * @param synchronousSendTimeout
-     * @param log
-     * @param classLoader
-     * @param objectSocketFactory Factory to use when creating underlying
-     *            ObjectSocket.
-     * @throws IOException 
-     */
-    SocketServerInstanceImpl(final HostInfo host, boolean ssl, SocketLog log, ObjectChannelFactory channelFactory)
+    public SocketServerInstanceImpl() {
+    	
+    }
+
+    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, SocketLog log, ObjectChannelFactory channelFactory, long handShakeTimeout, long synchTimeout)
         throws CommunicationException, IOException {
 
         this.hostInfo = host;
         this.log = log;
         this.ssl = ssl;
+        this.synchTimeout = synchTimeout;
 
         InetSocketAddress address = null;
         if (hostInfo.getInetAddress() != null) {
@@ -116,7 +129,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 			
 		});
 		synchronized (this) {
-			long endTime = System.currentTimeMillis() + Handshake.HANDSHAKE_TIMEOUT;
+			long endTime = System.currentTimeMillis() + handShakeTimeout;
 			while (!this.handshakeCompleted && this.handshakeError == null) {
 				long remainingTimeout = endTime - System.currentTimeMillis();
 				if (remainingTimeout <= 0) {
@@ -125,7 +138,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 				try {
 					this.wait(remainingTimeout);
 				} catch (InterruptedException e) {
-					throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error")); //$NON-NLS-1$
+					throw new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error")); //$NON-NLS-1$
 				}
 			}
 			if (this.handshakeError != null) {
@@ -135,7 +148,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 				if (this.socketChannel != null) {
 					this.socketChannel.close();
 				}
-				throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_timeout")); //$NON-NLS-1$
+				throw new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_timeout")); //$NON-NLS-1$
 			}
 		}
     }
@@ -198,17 +211,22 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     }
 
     public void send(Message message, MessageListener listener, Serializable messageKey)
-        throws CommunicationException {
+        throws CommunicationException, InterruptedException {
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
 	    }
 	    message.setMessageKey(messageKey);
+	    boolean success = false;
 	    try {
 	        Future<?> writeFuture = socketChannel.write(message);
 	        writeFuture.get(); //client writes are blocking to ensure proper failure handling
-	    } catch (Throwable e) {
-	        asynchronousListeners.remove(messageKey);
-	        throw new SingleInstanceCommunicationException(e);
+	        success = true;
+	    } catch (ExecutionException e) {
+        	throw new SingleInstanceCommunicationException(e);
+	    } finally {
+	    	if (!success) {
+	    		asynchronousListeners.remove(messageKey);	    		
+	    	}
 	    }
     }
 
@@ -224,26 +242,26 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	            log.logDetail("SocketServerInstance.read", e, "Unable to read: socket was already closed."); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
     	} else if (e instanceof EOFException) {
-    		e = new CommunicationException(e);
     		log.logDetail("SocketServerInstance.read", e, "Unable to read: socket was already closed."); //$NON-NLS-1$ //$NON-NLS-2$
     	} else {
     		log.logDetail("SocketServerInstance.read", e, "Unable to read: unexpected exception"); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
-    	if (!handshakeCompleted) {
-    		synchronized (this) {
-				this.handshakeError = new CommunicationException(e, CommPlatformPlugin.Util.getString(ssl?"SocketServerInstanceImpl.secure_error_during_handshake":"SocketServerInstanceImpl.error_during_handshake")); //$NON-NLS-1$ //$NON-NLS-2$  
+		synchronized (this) {
+			if (!handshakeCompleted) {
+				this.handshakeError = new SingleInstanceCommunicationException(e, CommPlatformPlugin.Util.getString(ssl?"SocketServerInstanceImpl.secure_error_during_handshake":"SocketServerInstanceImpl.error_during_handshake")); //$NON-NLS-1$ //$NON-NLS-2$  
 				this.notify();
 			}
-    	}
+		}
+		
         Message messageHolder = new Message();
-        messageHolder.setContents(e);
+        messageHolder.setContents(e instanceof SingleInstanceCommunicationException?e:new SingleInstanceCommunicationException(e));
 
         Set<Map.Entry<Serializable, MessageListener>> entries = this.asynchronousListeners.entrySet();
         for (Iterator<Map.Entry<Serializable, MessageListener>> iterator = entries.iterator(); iterator.hasNext();) {
 			Map.Entry<Serializable, MessageListener> entry = iterator.next();
 			iterator.remove();
-			deliverAsynchronousResponse(entry.getKey(), messageHolder, entry.getValue());
+			entry.getValue().deliverMessage(messageHolder, entry.getKey());
 		}
     }
 
@@ -269,14 +287,10 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
             log.logDetail("SocketServerInstance.read", "read asynch message:" + message); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        MessageListener listener = asynchronousListeners.remove(messageKey);
+    	MessageListener listener = asynchronousListeners.remove(messageKey);
         if (listener != null) {
-            deliverAsynchronousResponse(messageKey, message, listener);
+            listener.deliverMessage(message, messageKey);
         }
-    }
-
-    private void deliverAsynchronousResponse(Serializable messageKey, Message message, MessageListener listener) {
-        listener.deliverMessage(message, messageKey);
         log.logDetail("SocketServerInstanceImpl.deliverMessage", "message delivered"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -293,6 +307,71 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 
 	public void onConnection() {
 		
+	}
+
+	@Override
+	public <T> T getService(Class<T> iface) {
+		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
+	}
+	
+	public class RemoteInvocationHandler implements InvocationHandler {
+
+		private boolean secure;
+		private Class<?> targetClass;
+		
+		public RemoteInvocationHandler(Class<?> targetClass) {
+			this.targetClass = targetClass;
+			this.secure = !ClientSideDQP.class.isAssignableFrom(targetClass);
+		}
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			Throwable t = null;
+			try {
+				Message message = new Message();
+				message.setContents(new ServiceInvocationStruct(args, method.getName(),
+						targetClass));
+				if (secure) {
+					message.setContents(getCryptor().sealObject(message.getContents()));
+				}
+				ResultsFuture results = new ResultsFuture() {
+					@Override
+					protected Object convertResult() throws ExecutionException {
+						try {
+							return getCryptor().unsealObject((Serializable) super.convertResult());
+						} catch (CryptoException e) {
+							throw new ExecutionException(e);
+						}
+					}
+				};
+				final ResultsReceiver receiver = results.getResultsReceiver();
+	
+				send(message, new MessageListener() {
+	
+					public void deliverMessage(Message responseMessage,
+							Serializable messageKey) {
+						Serializable result = responseMessage.getContents();
+						if (result instanceof Throwable) {
+							receiver.exceptionOccurred((Throwable)result);
+						} else {
+							receiver.receiveResults(result);
+						}
+					}
+	
+				}, new Integer(MESSAGE_ID.getAndIncrement()));
+				if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
+					return results;
+				}
+				return results.get(synchTimeout, TimeUnit.MILLISECONDS);
+			} catch (ExecutionException e) {
+				t = e.getCause();
+			} catch (Throwable e) {
+				t = e;
+			}
+			throw ExceptionUtil.convertException(method, t);
+		}
+
 	}
 
 }

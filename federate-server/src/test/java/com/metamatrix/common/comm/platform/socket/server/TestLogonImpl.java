@@ -29,7 +29,8 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.api.exception.security.LogonException;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
@@ -45,9 +46,9 @@ public class TestLogonImpl extends TestCase {
 		String applicationName = "test"; //$NON-NLS-1$
 		String productName = "foo"; //$NON-NLS-1$
 		Properties p = new Properties();
-		p.setProperty(MMURL_Properties.JDBC.USER_NAME, userName);
-		p.setProperty(MMURL_Properties.JDBC.APP_NAME, applicationName);
-		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, productName);
+		p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
+		p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
+		p.setProperty(MMURL.CONNECTION.PRODUCT_NAME, productName);
 
 		MetaMatrixSessionInfo resultInfo = new MetaMatrixSessionInfo(
 				new MetaMatrixSessionID(1), userName, 0, applicationName, 0,
@@ -56,10 +57,36 @@ public class TestLogonImpl extends TestCase {
 		Mockito.stub(ssi.createSession(userName, null, null, applicationName,
 								productName, p)).toReturn(resultInfo);
 
-		LogonImpl impl = new LogonImpl(ssi);
+		LogonImpl impl = new LogonImpl(ssi, "fakeCluster");
 
 		LogonResult result = impl.logon(p);
 		assertEquals(userName, result.getUserName());
 		assertEquals(new MetaMatrixSessionID(1), result.getSessionID());
 	}
+	
+	public void testCredentials() throws Exception {
+		SessionServiceInterface ssi = Mockito.mock(SessionServiceInterface.class);
+		LogonImpl impl = new LogonImpl(ssi, "fakeCluster");
+		Properties p = new Properties();
+		p.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, new Object());
+		//invalid credentials
+		p.setProperty(MMURL.JDBC.CREDENTIALS, "(...)");
+		
+		try {
+			impl.logon(p);
+			fail("exception expected");
+		} catch (LogonException e) {
+			assertEquals("Conflicting use of both client session token and credentials. ", e.getMessage());
+		}
+		
+		p.remove(MMURL.CONNECTION.CLIENT_TOKEN_PROP);
+		
+		try {
+			impl.logon(p);
+			fail("exception expected");
+		} catch (LogonException e) {
+			assertEquals("Credentials string must contain \"system\" property.", e.getMessage());
+		}
+	}
+	
 }

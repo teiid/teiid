@@ -25,13 +25,26 @@
 package com.metamatrix.common.comm.platform.socket.client;
 
 import java.util.List;
+import java.util.Properties;
 
 import com.metamatrix.common.api.HostInfo;
+import com.metamatrix.common.api.MMURL;
 
+/**
+ * Customizable ServerDiscovery interface
+ * 
+ * TODO: add knowledge of the cluster/ServerConnection in the getKnownHosts calls 
+ */
 public interface ServerDiscovery {
+	
+	void init(MMURL url, Properties p);
 	
 	List<HostInfo> getKnownHosts();
 	
+	void connectionSuccessful(HostInfo info, SocketServerInstance instance);
+	
 	void markInstanceAsBad(HostInfo info);
-
+	
+	boolean isDynamic();
+	
 }

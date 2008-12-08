@@ -31,15 +31,15 @@ import java.util.Timer;
 
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL_Properties;
-import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.SocketConstants;
 import com.metamatrix.common.comm.platform.socket.SocketLog;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.common.util.NetUtils;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.util.ReflectionHelper;
 
 public class SocketServerConnectionFactory implements ServerConnectionFactory, SocketServerInstanceFactory {
 	
@@ -61,7 +61,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	}
 	
 	public SocketServerInstance createServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
-		return new SocketServerInstanceImpl(info, ssl, this.log, this.channelFactory);
+		return new SocketServerInstanceImpl(info, ssl, this.log, this.channelFactory, Handshake.HANDSHAKE_TIMEOUT, SocketConstants.getSynchronousTTL());
 	}
 	
 	/**
@@ -71,29 +71,34 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 		updateConnectionProperties(connectionProperties);
 		
-		MMURL url = new MMURL(connectionProperties.getProperty(MMURL_Properties.SERVER.SERVER_URL));
+		MMURL url = new MMURL(connectionProperties.getProperty(MMURL.CONNECTION.SERVER_URL));
 		
-		return new SocketServerConnection(this, url.isUsingSSL(), new UrlServerDiscovery(url), connectionProperties, pingTimer);
+		String discoveryStrategyName = connectionProperties.getProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, AdminApiServerDiscovery.class.getName());
+		
+		ServerDiscovery discovery;
+		try {
+			discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, Thread.currentThread().getContextClassLoader());
+		} catch (MetaMatrixCoreException e) {
+			throw new ConnectionException(e);
+		}
+		
+		discovery.init(url, connectionProperties);
+		
+		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties, pingTimer, this.log);
 	}
 
 	static void updateConnectionProperties(Properties connectionProperties) {
 		try {
-			connectionProperties.put(CONNECTION.CLIENT_IP_ADDRESS, NetUtils.getHostAddress());
+			connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, NetUtils.getHostAddress());
         } catch (UnknownHostException err1) {
-        	connectionProperties.put(CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
+        	connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
         }
         
         try {
-        	connectionProperties.put(CONNECTION.CLIENT_HOSTNAME, NetUtils.getHostname());
+        	connectionProperties.put(MMURL.CONNECTION.CLIENT_HOSTNAME, NetUtils.getHostname());
         } catch (UnknownHostException err1) {
-        	connectionProperties.put(CONNECTION.CLIENT_HOSTNAME, "UnknownClientHost"); //$NON-NLS-1$
+        	connectionProperties.put(MMURL.CONNECTION.CLIENT_HOSTNAME, "UnknownClientHost"); //$NON-NLS-1$
         }
-               
-		String productName = connectionProperties.getProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME);
-		
-		if (MetaMatrixProductNames.Platform.PRODUCT_NAME.equalsIgnoreCase(productName)) {
-			connectionProperties.setProperty(MMURL_Properties.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-		}
 	}
 
 }

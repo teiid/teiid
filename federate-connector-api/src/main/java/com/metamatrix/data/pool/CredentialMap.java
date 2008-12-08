@@ -25,10 +25,15 @@
 package com.metamatrix.data.pool;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.data.DataPlugin;
+import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Class intended to accomodate cases in which credentials must be passed on a
@@ -138,17 +143,16 @@ public class CredentialMap implements Serializable {
 	 *
 	 * @param inputStr		the string to be parsed;  first non-blank must be a '(', last non-blank must be a ')'
 	 * @return             a CredentialMap containing the input
-	 * @throws Exception   upon any syntax error;  descriptive text included
+	 * @throws ConnectorException   upon any syntax error;  descriptive text included
 	 */
-	public static CredentialMap parseCredentials(String inputStr)
-			throws Exception {
+	public static CredentialMap parseCredentials(String inputStr) throws ConnectorException {
 
 		for (int i = 0; i < escape_chars.length; i++) {
 			inputStr = StringUtil.replaceAll(inputStr, escape_chars[i], escape_strings[i]);
 		}
 
 		if (inputStr == null) {
-			throw new Exception(DataPlugin.Util.getString("CredentialMap.Null_input")); //$NON-NLS-1$
+			throw new ConnectorException(DataPlugin.Util.getString("CredentialMap.Null_input")); //$NON-NLS-1$
 		}
 
 		inputStr = inputStr.trim();
@@ -159,12 +163,12 @@ public class CredentialMap implements Serializable {
 		//Check that not empty
 
 		if (strLen == 0) {
-			throw new Exception(DataPlugin.Util.getString("CredentialMap.Empty_input")); //$NON-NLS-1$
+			throw new ConnectorException(DataPlugin.Util.getString("CredentialMap.Empty_input")); //$NON-NLS-1$
 		}
 
 		//Check that first non-blank char is left paren
 		if (!inputStr.startsWith("(")|| !inputStr.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-			throw new Exception(DataPlugin.Util.getString("CredentialMap.Missing_parens")); //$NON-NLS-1$
+			throw new ConnectorException(DataPlugin.Util.getString("CredentialMap.Missing_parens")); //$NON-NLS-1$
 		}
 
 		// strip of ()'s
@@ -182,7 +186,7 @@ public class CredentialMap implements Serializable {
 			Map newMap = getCredentialMap(credential.trim());
 			String system = (String) newMap.get(SYSTEM_KEYWORD);
 			if (system == null || system.length() == 0) {
-				throw new Exception(DataPlugin.Util.getString("CredentialMap.Missing_system_prop")); //$NON-NLS-1$
+				throw new ConnectorException(DataPlugin.Util.getString("CredentialMap.Missing_system_prop")); //$NON-NLS-1$
 			}
 			credentialMap.addSystemCredentials(system, newMap); // add to Map of Maps.
 		}

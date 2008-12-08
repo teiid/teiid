@@ -31,7 +31,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestMMDriver extends TestCase {
@@ -99,85 +99,42 @@ public class TestMMDriver extends TestCase {
 
     public void testParseURL() throws SQLException{
         Properties p = new Properties();
-        MMDriver.parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234", p); //$NON-NLS-1$
+        MMDriver.getInstance().parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL_Properties.SERVER.SERVER_URL).equals("mm://slwxp157:1234")); //$NON-NLS-1$
+        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234")); //$NON-NLS-1$
         assertEquals(2, p.size());        
     }
 
     public void testParseURL2() throws SQLException {
         Properties p = new Properties();       
-        MMDriver.parseURL("jdbc:metamatrix:BQT@mms://slwxp157:1234;version=3", p); //$NON-NLS-1$
+        MMDriver.getInstance().parseURL("jdbc:metamatrix:BQT@mms://slwxp157:1234;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL_Properties.SERVER.SERVER_URL).equals("mms://slwxp157:1234")); //$NON-NLS-1$
+        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mms://slwxp157:1234")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
         assertEquals(4, p.size());
     }
     
     public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        MMDriver.parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;txnAutoWrap=ON;partialResultsMode=YES;logFile=jdbcLogFile.log", p); //$NON-NLS-1$
+        MMDriver.getInstance().parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;txnAutoWrap=ON;partialResultsMode=YES;logFile=jdbcLogFile.log", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));         //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.LOG_FILE).equals("jdbcLogFile.log")); //$NON-NLS-1$
-        assertTrue(p.getProperty(MMURL_Properties.SERVER.SERVER_URL).equals("mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302")); //$NON-NLS-1$
+        assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
         assertEquals(7, p.size());        
     }    
     
-    /**should prompt for VirtualDatabaseVersion, logFile and logLevel */
     public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:metamatrix:vdb@mm://localhost:12345", null); //$NON-NLS-1$
 
-        assertNotNull(info);
-        assertEquals(13, info.length);
-        for(int i=0; i< info.length; i++) {
-            DriverPropertyInfo propInfo = info[i];
-            assertTrue(propInfo.name == "VirtualDatabaseVersion" || propInfo.name == "user" || propInfo.name == "password"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                || propInfo.name == "logFile" || propInfo.name == "logLevel" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "txnAutoWrap" ||  propInfo.name == "partialResultsMode"  //$NON-NLS-1$ //$NON-NLS-2$ 
-                || propInfo.name == "clientToken" || propInfo.name == "resultSetCacheMode"  //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "socketsPerVM" || propInfo.name == "stickyConnections" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "allowDoubleQuotedVariable" || propInfo.name == "sqlOptions" //$NON-NLS-1$ //$NON-NLS-2$
-            	|| propInfo.name == "disableLocalTxn" || propInfo.name == "autoFailover"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        assertEquals(6, info.length);
+        assertEquals(true, info[0].required);
+        assertEquals("VirtualDatabaseName", info[0].name);
+        assertEquals("vdb", info[0].value);
     }
     
-    /** prompt for logFile and logLevel */
-    public void testGetPropertyInfo2() throws Exception {
-        DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:metamatrix:vdb@mm://localhost:12345;version=1", null); //$NON-NLS-1$
-
-        assertNotNull(info);
-        assertEquals(12, info.length);
-        for(int i=0; i< info.length; i++) {
-            DriverPropertyInfo propInfo = info[i];
-            assertTrue( propInfo.name == "user" || propInfo.name == "password" || propInfo.name == "logFile" || propInfo.name == "logLevel" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                || propInfo.name == "txnAutoWrap" ||  propInfo.name == "partialResultsMode" //$NON-NLS-1$ //$NON-NLS-2$ 
-                || propInfo.name == "clientToken" || propInfo.name == "resultSetCacheMode" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "socketsPerVM" || propInfo.name == "stickyConnections" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "allowDoubleQuotedVariable" || propInfo.name == "sqlOptions" //$NON-NLS-1$ //$NON-NLS-2$
-            	|| propInfo.name == "disableLocalTxn" || propInfo.name == "autoFailover"); //$NON-NLS-1$ //$NON-NLS-2$            
-        }
-    }      
-    
-    /** prompt for logFile and logLevel */
-    public void testGetPropertyInfo3() throws Exception {
-        DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:metamatrix:vdb@mm://localhost:12345,localhost:23456;version=1", null); //$NON-NLS-1$
-
-        assertNotNull(info);
-        assertEquals(12, info.length);
-        for(int i=0; i< info.length; i++) {
-            DriverPropertyInfo propInfo = info[i];
-            assertTrue( propInfo.name == "user" || propInfo.name == "password" || propInfo.name == "logFile" || propInfo.name == "logLevel" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                || propInfo.name == "txnAutoWrap" ||  propInfo.name == "partialResultsMode" //$NON-NLS-1$ //$NON-NLS-2$ 
-                || propInfo.name == "clientToken" || propInfo.name == "resultSetCacheMode" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "socketsPerVM" || propInfo.name == "stickyConnections" //$NON-NLS-1$ //$NON-NLS-2$
-                || propInfo.name == "allowDoubleQuotedVariable" || propInfo.name == "sqlOptions" //$NON-NLS-1$ //$NON-NLS-2$
-               	|| propInfo.name == "disableLocalTxn" || propInfo.name == "autoFailover"); //$NON-NLS-1$ //$NON-NLS-2$                	
-        }
-    }    
-
 }

@@ -54,7 +54,7 @@ import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
@@ -207,7 +207,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
-			listener.exceptionOccurred(new CommunicationException(CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed"))); //$NON-NLS-1$
+			listener.exceptionOccurred(new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed"))); //$NON-NLS-1$
 		}
 	}
 

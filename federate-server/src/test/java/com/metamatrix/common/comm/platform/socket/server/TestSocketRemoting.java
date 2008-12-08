@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
@@ -44,9 +46,11 @@ import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceFactory;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImpl;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.NullCryptor;
@@ -62,7 +66,7 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 public class TestSocketRemoting extends TestCase {
 	
-	private interface FakeService {
+	public interface FakeService {
 		
 		ResultsFuture<Integer> asynchResult();
 		
@@ -84,12 +88,13 @@ public class TestSocketRemoting extends TestCase {
 		
 	}
 	
-	private static class FakeServerInstance implements SocketServerInstance, ClientInstance {
+	private static class FakeClientServerInstance extends SocketServerInstanceImpl implements ClientInstance {
 		
 		ClientServiceRegistry clientServiceRegistry;
 		private MessageListener listener;
 
-		public FakeServerInstance(ClientServiceRegistry clientServiceRegistry) {
+		public FakeClientServerInstance(ClientServiceRegistry clientServiceRegistry) throws CommunicationException, IOException {
+			super();
 			this.clientServiceRegistry = clientServiceRegistry;
 		}
 
@@ -130,7 +135,7 @@ public class TestSocketRemoting extends TestCase {
 	 * No server was supplied, will throw an NPE under the covers
 	 */
 	public void testUnckedException() throws Exception {
-		FakeServerInstance serverInstance = new FakeServerInstance(null);
+		FakeClientServerInstance serverInstance = new FakeClientServerInstance(null);
 		try {
 			createFakeConnection(serverInstance);
 			fail("expected exception"); //$NON-NLS-1$
@@ -170,7 +175,7 @@ public class TestSocketRemoting extends TestCase {
 				}
 			});
 		csr.registerClientService(FakeService.class, new FakeServiceImpl());
-		final FakeServerInstance serverInstance = new FakeServerInstance(csr);
+		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);
 		SocketServerConnection connection = createFakeConnection(serverInstance);
 		ILogon logon = connection.getService(ILogon.class);
 		Future<?> result = logon.ping();
@@ -202,7 +207,7 @@ public class TestSocketRemoting extends TestCase {
 	}
 
 	private SocketServerConnection createFakeConnection(
-			final FakeServerInstance serverInstance)
+			final FakeClientServerInstance serverInstance)
 			throws CommunicationException, ConnectionException {
 		SocketServerConnection connection = new SocketServerConnection(new SocketServerInstanceFactory() {
 		
@@ -212,7 +217,7 @@ public class TestSocketRemoting extends TestCase {
 				return serverInstance;
 			}
 			
-		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
+		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null, Mockito.mock(SocketLog.class)); //$NON-NLS-1$
 		return connection;
 	}
 	

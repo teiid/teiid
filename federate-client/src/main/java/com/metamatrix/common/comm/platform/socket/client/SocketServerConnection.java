@@ -28,12 +28,12 @@
 package com.metamatrix.common.comm.platform.socket.client;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,47 +42,49 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.HostInfo;
-import com.metamatrix.common.api.MMURL_Properties;
-import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.api.MessageListener;
-import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.SocketConstants;
-import com.metamatrix.common.util.crypto.CryptoException;
+import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 
+/**
+ * Represents a client connection that maintains session state and allows for service fail over.
+ * Implements a sticky random selection policy.
+ */
 public class SocketServerConnection implements ServerConnection {
+	
+	private static final int RETRY_COUNT = 3;
 
 	private Map<HostInfo, SocketServerInstance> existingConnections = new HashMap<HostInfo, SocketServerInstance>();
 	private SocketServerInstanceFactory connectionFactory;
-
-	private AtomicInteger MESSAGE_ID = new AtomicInteger();
-    private SocketServerInstance serverInstance;
     private ServerDiscovery serverDiscovery;
+    private SocketLog log;
+
+	private boolean secure;
+    private Properties connProps;
+	
+	private SocketServerInstance serverInstance;
     private volatile LogonResult logonResult;
     private ILogon logon;
     private Timer pingTimer;
-    private Properties connProps;
-    private boolean secure;
+    private volatile boolean closed;
     
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
 			ServerDiscovery serverDiscovery, Properties connProps,
-			Timer pingTimer) throws CommunicationException, ConnectionException {
+			Timer pingTimer, SocketLog log) throws CommunicationException, ConnectionException {
 		this.connectionFactory = connectionFactory;
 		this.serverDiscovery = serverDiscovery;
 		this.connProps = connProps;
@@ -90,7 +92,9 @@ public class SocketServerConnection implements ServerConnection {
 		this.logon = this.getService(ILogon.class);
 
         authenticate(); 
-
+        if (serverDiscovery.isDynamic()) {
+        	selectNewServerInstance();
+        }
         this.pingTimer = pingTimer;
         if (this.pingTimer != null && logonResult.getPingInterval() > 0) {
         	schedulePing();
@@ -99,20 +103,28 @@ public class SocketServerConnection implements ServerConnection {
 	
 	/**
 	 * Implements a sticky random selection policy
+	 * TODO: make this customizable
+	 * TODO: put more information on hostinfo as to process response time, last successful connect, etc.
 	 */
 	public synchronized SocketServerInstance selectServerInstance()
 			throws CommunicationException {
-		if (this.serverInstance != null) {
-			return this.serverInstance;
+		if (closed) {
+			throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
 		}
-		List<HostInfo> hostKeys = this.serverDiscovery.getKnownHosts();
+		if (this.serverInstance != null) {
+			if (this.serverInstance.isOpen()) {
+				return this.serverInstance;
+			}
+			this.serverInstance = null;
+		}
+		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
 		int knownHosts = hostKeys.size();
 		for (int i = 0; i < hostKeys.size(); i++) {
 			HostInfo hostInfo = hostKeys.remove((int) (Math.random() * hostKeys.size()));
 
 			SocketServerInstance instance = existingConnections.get(hostInfo);
 			if (instance != null) {
-				if (instance.isOpen()) { // TODO: do ping
+				if (instance.isOpen()) {
 					this.serverInstance = instance;
 					return this.serverInstance;
 				}
@@ -121,49 +133,50 @@ public class SocketServerConnection implements ServerConnection {
 			}
 			Exception ex = null;
 			try {
-				this.serverInstance = connectionFactory.createServerInstance(hostInfo, secure);
+				instance = connectionFactory.createServerInstance(hostInfo, secure);
 				if (this.logonResult != null) {
-					this.logon.assertIdentity(logonResult.getSessionID());
+					ILogon newLogon = instance.getService(ILogon.class);
+					newLogon.assertIdentity(logonResult.getSessionID());
 				}
-				this.existingConnections.put(hostInfo, this.serverInstance);
+				this.existingConnections.put(hostInfo, instance);
+				this.serverDiscovery.connectionSuccessful(hostInfo, instance);
+				this.serverInstance = instance;
 				return this.serverInstance;
 			} catch (IOException e) {
 				ex = e;
 			} catch (InvalidSessionException e) {
+				shutdown();
 				throw new CommunicationException(e,CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), e.getMessage())); //$NON-NLS-1$
+			} catch (SingleInstanceCommunicationException e) { 
+				ex = e;
 			} catch (MetaMatrixComponentException e) {
 				ex = e;
-			}	
-			this.serverInstance = null;
+			} 	
 			this.serverDiscovery.markInstanceAsBad(hostInfo);
 			if (knownHosts == 1) { //just a single host, use the exception
 				if (ex instanceof UnknownHostException) {
-					throw new CommunicationException(ex, CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Uknown_Host", hostInfo.getHostName())); //$NON-NLS-1$
+					throw new SingleInstanceCommunicationException(ex, CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Unknown_Host", hostInfo.getHostName())); //$NON-NLS-1$
 				}
-				throw new CommunicationException(ex,CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
+				throw new SingleInstanceCommunicationException(ex,CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
 			}
+			log.logDetail("SocketServerConnection.selectServerInstance", ex, "Unable to connect to host"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available")); //$NON-NLS-1$
 	}
 	
 	public synchronized void authenticate() throws ConnectionException, CommunicationException {
 		this.logonResult = null;
-		CommunicationException ce = null;
-		for (int i = 0; i < 3; i++) {
-	        // Log on to server
-	        try {
-	            logonResult = logon.logon(connProps);
-	            return;
-	        } catch (LogonException e) {
-	            // Propagate the original message as it contains the message we want
-	            // to give to the user
-	            throw new ConnectionException(e, e.getMessage());
-	        } catch (MetaMatrixComponentException e) {
-	            ce = new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
-	        } 	
-	        selectNewServerInstance();
-		}
-		throw ce;
+        // Log on to server
+        try {
+            logonResult = logon.logon(connProps);
+            return;
+        } catch (LogonException e) {
+            // Propagate the original message as it contains the message we want
+            // to give to the user
+            throw new ConnectionException(e, e.getMessage());
+        } catch (MetaMatrixComponentException e) {
+            throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
+        } 	
 	}
 	
 	private void schedulePing() {
@@ -188,87 +201,61 @@ public class SocketServerConnection implements ServerConnection {
 	class ServerConnectionInvocationHandler implements InvocationHandler {
 		
 		private Class<?> targetClass;
+		private SocketServerInstance instance;
+		private Object target;
+		private boolean failOver;
 		
 		public ServerConnectionInvocationHandler(Class<?> targetClass) {
 			this.targetClass = targetClass;
+			this.failOver = Boolean.valueOf(connProps.getProperty(MMURL.CONNECTION.AUTO_FAILOVER)).booleanValue()
+					|| !ClientSideDQP.class.isAssignableFrom(targetClass);
 		}
-
+		
+		private synchronized Object getTarget() throws CommunicationException {
+			if (this.target == null) {
+				this.instance = selectServerInstance();
+				this.target = this.instance.getService(targetClass);
+			}
+			return this.target;
+		}
+				
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
-	        Throwable exception = null;
-            try {
-                return doOneInvocation(method, args);
-            } catch (ExecutionException e) {
-            	exception = e.getCause();
-            } catch (InvocationTargetException e) {
-            	exception = e.getCause();
-            } catch (Throwable t) {
-            	exception = t;
-            }
-	        
+			Throwable exception = null;
+            for (int i = 0; i < RETRY_COUNT; i++) {
+		        try {
+	                return method.invoke(getTarget(), args);
+	            } catch (InvocationTargetException t) {
+	            	exception = t.getTargetException();
+	            } catch (Throwable t) {
+	            	exception = t;
+	            }
+	            if (exception instanceof SingleInstanceCommunicationException
+						|| exception.getCause() instanceof SingleInstanceCommunicationException) {
+	            	if (!isOpen()) {
+	            		break;
+	            	}
+	            	if (!failOver) {
+			        	break;
+		        	}
+	            	invalidateTarget();
+	            } else {
+	            	break;
+	            }
+	            //TODO: look for invalid session exception
+			}
 	        throw ExceptionUtil.convertException(method, exception);
 		}
 		
-	    private Object doOneInvocation(Method method, Object[] args) throws Throwable {
-	    	final SocketServerInstance instance = selectServerInstance();
-	    	Message message = new Message();
-	        message.setContents(new ServiceInvocationStruct(args, method.getName(), targetClass));
-	        //ping and close don't need secured. this would be better as an annotation
-	        boolean isDQPMethod = ClientSideDQP.class.isAssignableFrom(method.getDeclaringClass());
-	        if (!isDQPMethod) {
-	        	message.setContents(instance.getCryptor().sealObject(message.getContents()));
-	        }
-	        boolean isLogonMethod = ILogon.class.isAssignableFrom(method.getDeclaringClass());
-	        boolean isAdminMethod = !ClientSideDQP.class.isAssignableFrom(method.getDeclaringClass()) && !isLogonMethod;
-	        int retryCount = isAdminMethod?3:1;
-	        ResultsFuture results = new ResultsFuture() {
-	        	@Override
-	        	protected Object convertResult() throws ExecutionException {
-	        		try {
-						return instance.getCryptor().unsealObject((Serializable)super.convertResult());
-					} catch (CryptoException e) {
-						throw new ExecutionException(e);
-					}
-	        	}
-	        };
-	        final ResultsReceiver receiver = results.getResultsReceiver();
-			for (int i = 0; i < retryCount; i++) {
-		        try {
-			        instance.send(message, new MessageListener() {
-		
-						public void deliverMessage(Message responseMessage,
-								Serializable messageKey) {
-							try {
-								receiver.receiveResults(convertResponse(responseMessage));
-							} catch (Throwable e) {
-								receiver.exceptionOccurred(e);
-							}
-						}
-			        	
-			        }, new Integer(MESSAGE_ID.getAndIncrement()));
-			        break;
-		        } catch (CommunicationException e) {
-		        	if (!isLogonMethod && Boolean.valueOf(connProps.getProperty(MMURL_Properties.CONNECTION.AUTO_FAILOVER)).booleanValue()) {
-			        	selectServerInstance();
-		        	}
-		        	if (i == retryCount - 1) {
-		        		throw e;
-		        	} 
-		        }
-			}
-	        if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
-	        	return results;
-	        }
-	        return results.get(SocketConstants.getSynchronousTTL(), TimeUnit.MILLISECONDS);
-	    }
+		private synchronized void invalidateTarget() {
+			this.target = null;
+		}
 
-		private Object convertResponse(Message responseMessage)
-				throws Throwable {
-			Serializable result = responseMessage.getContents();
-	        if (result instanceof Throwable) {
-	            throw (Throwable)result;
-	        }
-	        return result;
+		synchronized SocketServerInstance getInstance() throws CommunicationException {
+			if (instance == null) {
+				getTarget();
+			}
+			return instance;
 		}
 	    
 	}
@@ -278,6 +265,9 @@ public class SocketServerConnection implements ServerConnection {
 	}
 
 	public synchronized void shutdown() {
+		if (this.closed) {
+			return;
+		}
 		try {
 			//make a best effort to send the logoff
 			Future<?> writeFuture = this.logon.logoff();
@@ -296,9 +286,13 @@ public class SocketServerConnection implements ServerConnection {
 			instance.shutdown();
 		}
 		existingConnections.clear();
+		this.closed = true;
 	}
 
 	public boolean isOpen() {
+		if (this.closed) {
+			return false;
+		}
 		try {
 			return selectServerInstance().isOpen();
 		} catch (CommunicationException e) {
@@ -310,12 +304,18 @@ public class SocketServerConnection implements ServerConnection {
 		return logonResult;
 	}
 	
-	public SocketServerInstance getSocketServerInstance() {
-		return this.serverInstance;
-	}
-
 	public synchronized void selectNewServerInstance() {
 		this.serverInstance = null;
+	}
+	
+	public static boolean isSameInstance(Object service, Object otherService) throws CommunicationException {
+		try {
+			ServerConnectionInvocationHandler handler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(service);
+			ServerConnectionInvocationHandler otherHandler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(otherService);
+			return handler.getInstance().getHostInfo().equals(otherHandler.getInstance().getHostInfo());
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
 	}
 
 }

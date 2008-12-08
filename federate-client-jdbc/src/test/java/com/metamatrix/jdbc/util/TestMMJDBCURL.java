@@ -31,7 +31,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.EmbeddedDriver;
 import com.metamatrix.jdbc.MMDriver;
@@ -62,7 +62,7 @@ public class TestMMJDBCURL extends TestCase {
         expectedProperties.setProperty("logLevel", "1");
         expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi");
         expectedProperties.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, "true");
-        expectedProperties.setProperty(CONNECTION.AUTO_FAILOVER, "false");
+        expectedProperties.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, "false");
         MMJDBCURL url = new MMJDBCURL(URL); //$NON-NLS-1$
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
         assertEquals("mm://localhost:12345", url.getConnectionURL()); //$NON-NLS-1$

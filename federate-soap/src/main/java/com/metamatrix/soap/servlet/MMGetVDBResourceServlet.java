@@ -47,7 +47,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.log.FileLogWriter;
@@ -256,8 +257,8 @@ public class MMGetVDBResourceServlet extends HttpServlet {
     	
     	    //Create Properties object and add username\password for connection
     		Properties props = new Properties();
-    		props.put(MMURL_Properties.JDBC.USER_NAME, userid);
-    		props.put(MMURL_Properties.JDBC.PASSWORD, password);
+    		props.put(MMURL.CONNECTION.USER_NAME, userid);
+    		props.put(MMURL.CONNECTION.PASSWORD, password);
     		
             Class.forName("com.metamatrix.jdbc.MMDriver");  //$NON-NLS-1$
                             

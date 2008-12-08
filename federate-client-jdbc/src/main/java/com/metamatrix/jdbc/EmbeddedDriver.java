@@ -34,10 +34,10 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -47,8 +47,6 @@ import java.util.regex.Pattern;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
-import com.metamatrix.jdbc.api.ConnectionProperties;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -285,88 +283,14 @@ public final class EmbeddedDriver extends BaseDriver {
         return matched;
     }
 
+	@Override
+	List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
+			Properties info) {
+        DriverPropertyInfo dpi = new DriverPropertyInfo(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, info.getProperty(EmbeddedDataSource.DQP_BOOTSTRAP_FILE));
+        dpi.required = true;
+        return Arrays.asList(dpi);
+	}    
     
-    
-    /**
-     * This method could be used to prompt the user for properties to connect to
-     * metamatrix (properties that are not already specified for obtaining connection).
-     * @param The URL used to establish a connection.
-     * @param A properties object containing properties needed to obtain a connection.
-     * @return An array containing DriverPropertyInfo objects
-     * @throws SQLException, if parsing error occurs
-     */
-    public DriverPropertyInfo[] getPropertyInfo(String url,
-                                                Properties info) throws SQLException {
-        if (info == null) {
-            info = new Properties();
-        }
-
-        // parse the url and update properties object
-        parseURL(url, info);
-
-        // construct list of driverPropertyInfo objects
-        List driverProps = new LinkedList();
-
-        if (info.getProperty(BaseDataSource.VDB_NAME) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.VDB_NAME, null));
-        }
-
-        if (info.getProperty(BaseDataSource.VDB_VERSION) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.VDB_VERSION, null));
-        }
-
-        if (info.getProperty(BaseDataSource.APP_NAME) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.APP_NAME, null));
-        }
-        
-        if (info.getProperty(EmbeddedDataSource.DQP_BOOTSTRAP_FILE) == null) {
-            driverProps.add(new DriverPropertyInfo(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, null));
-        }
-        
-        
-        if (info.getProperty(BaseDataSource.USER_NAME) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.USER_NAME, null));
-        }
-
-        if (info.getProperty(BaseDataSource.PASSWORD) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.PASSWORD, null));
-        }
-
-        if (info.getProperty(BaseDataSource.LOG_FILE) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.LOG_FILE, null));
-        }
-
-        if (info.getProperty(BaseDataSource.LOG_LEVEL) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.LOG_LEVEL, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.RESULT_SET_CACHE_MODE, null));
-        }
-
-        if (info.getProperty(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD) == null) {
-            driverProps.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.PROP_SQL_OPTIONS) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.PROP_SQL_OPTIONS, null));
-        }
-
-        // create an array of DriverPropertyInfo objects
-        DriverPropertyInfo[] propInfo = new DriverPropertyInfo[driverProps.size()];
-
-        // copy the elements from the list to the array
-        return (DriverPropertyInfo[])driverProps.toArray(propInfo);
-    }
-
     /**
      * Get's the driver's major version number. Initially this should be 1.
      * @return major version number of the driver.

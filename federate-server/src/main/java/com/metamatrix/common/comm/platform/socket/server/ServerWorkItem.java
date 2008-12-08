@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.client.ServiceInvocationStruct;
 import com.metamatrix.common.log.LogManager;
@@ -83,7 +82,7 @@ public class ServerWorkItem implements Runnable {
     		 * MessageHolder containing the exception. Since we can no longer continue processing,
     		 * we should notify the client of the problem immediately.
     		 */
-        	if (message.getContents() instanceof CommunicationException) {
+        	if (message.getContents() instanceof Throwable) {
         		LogManager.logWarning(SocketVMController.SOCKET_CONTEXT, (Throwable)message.getContents(), 
 		                     "Exception while deserializing message packet."); //$NON-NLS-1$
                 result = message;

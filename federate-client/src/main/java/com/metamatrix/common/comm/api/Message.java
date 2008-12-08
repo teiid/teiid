@@ -30,7 +30,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
 
 public class Message implements Externalizable {
 	public static final long serialVersionUID = 1063704220782714098L;
@@ -53,8 +52,10 @@ public class Message implements Externalizable {
 			ClassNotFoundException {
 		try {
 			this.contents = (Serializable) in.readObject();
+		} catch (IOException t) {
+			throw t;
 		} catch (Throwable t) {
-			this.contents = new CommunicationException(t);
+			this.contents = t;
 		}
 		this.messageKey = (Serializable) in.readObject();
 	}

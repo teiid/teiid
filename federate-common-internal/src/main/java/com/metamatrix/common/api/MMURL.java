@@ -40,14 +40,69 @@ import com.metamatrix.common.CommonPlugin;
  */
 public class MMURL {
 
-    public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
+    public static interface JDBC {
+	    // constant indicating Virtual database name
+	    public static final String VDB_NAME = "VirtualDatabaseName"; //$NON-NLS-1$
+	    // constant indicating Virtual database version
+	    public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
+	    // constant for vdb version part of serverURL
+	    public static final String VERSION = "version"; //$NON-NLS-1$
+	    // string constant that the url contains
+	    public static final String LOG_FILE = "logFile"; //$NON-NLS-1$
+	    // string constant that the url contains
+	    public static final String LOG_LEVEL = "logLevel"; //$NON-NLS-1$
+	    
+	    // logging level that would log messages
+	    public static final int LOG_NONE = 0;
+	    // logging level that would log error messages
+	    public static final int LOG_ERROR = 1;
+	    // logging level that would log all info level messages
+	    public static final int LOG_INFO = 2;
+	    // logging level that would traces method calls
+	    public static final int LOG_TRACE = 3;
+		public static final String CREDENTIALS = "credentials"; //$NON-NLS-1$
+	}
+
+	public static interface CONNECTION {
+		public static final String PRODUCT_NAME = "productName"; //$NON-NLS-1$
+		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
+		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+		/**
+		 * If true, will automatically select a new server instance after a communication exception.
+		 * @since 5.6
+		 */
+		public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
+		
+		/**
+		 * A plugable discovery strategy for the client.  Defaults to using the AdminApi. 
+		 */
+		public static final String DISCOVERY_STRATEGY = "discoveryStategy";
+		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
+		/**
+		 * Non-secure MetaMatrix Protocol.
+		 */        
+		public static final String NON_SECURE_PROTOCOL = "mm"; //$NON-NLS-1$
+		/**
+		 * Non-secure MetaMatrix Protocol.
+		 */
+		public static final String SECURE_PROTOCOL = "mms"; //$NON-NLS-1$
+		// name of the application which is obtaining connection
+		public static final String APP_NAME = "ApplicationName"; //$NON-NLS-1$
+		// constant for username part of url
+		public static final String USER_NAME = "user"; //$NON-NLS-1$
+		// constant for password part of url
+		public static final String PASSWORD = "password"; //$NON-NLS-1$
+		public static final String CLIENT_TOKEN_PROP = "clientToken"; //$NON-NLS-1$ 
+	}
+
+	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
     public static final String DOUBLE_SLASH_DELIMITER = "//"; //$NON-NLS-1$
     public static final String COMMA_DELIMITER = ","; //$NON-NLS-1$
 
     public static final String COLON_DELIMITER = ":"; //$NON-NLS-1$
     public static final String BACKSLASH_DELIMITER = "\\"; //$NON-NLS-1$
-    public static final String DEFAULT_PROTOCOL= MMURL_Properties.SERVER.NON_SECURE_PROTOCOL + "://"; //$NON-NLS-1$
-    public static final String SECURE_PROTOCOL= MMURL_Properties.SERVER.SECURE_PROTOCOL + "://"; //$NON-NLS-1$
+    public static final String DEFAULT_PROTOCOL= MMURL.CONNECTION.NON_SECURE_PROTOCOL + "://"; //$NON-NLS-1$
+    public static final String SECURE_PROTOCOL= MMURL.CONNECTION.SECURE_PROTOCOL + "://"; //$NON-NLS-1$
 
     public static final String FORMAT_SERVER = CommonPlugin.Util.getString("MMURL.FORMAT_SERVER"); //$NON-NLS-1$
 
@@ -60,9 +115,9 @@ public class MMURL {
      */
     private String appServerURL;
     /*
-     * List of <code> HostData </code> in a cluster to connect to Matamatrix
+     * List of <code> HostData </code> in a cluster to connect to Metamatrix
      */
-    private List hosts = new ArrayList();
+    private List<HostInfo> hosts = new ArrayList<HostInfo>();
 
     private boolean usingSSL = false;
     
@@ -113,7 +168,7 @@ public class MMURL {
         return ( url != null && (url.startsWith(DEFAULT_PROTOCOL)) || url.startsWith(SECURE_PROTOCOL));        
     }
     
-    public List getHostInfo() {
+    public List<HostInfo> getHostInfo() {
         return hosts;
     }
     
@@ -126,7 +181,7 @@ public class MMURL {
     public String getHosts() {
         StringBuffer hostList = new StringBuffer("");  //$NON-NLS-1$
         if( hosts != null) {
-            Iterator iterator = hosts.iterator();
+            Iterator<HostInfo> iterator = hosts.iterator();
             while (iterator.hasNext()) {
                 HostInfo element = (HostInfo)iterator.next();
                 hostList.append(element.getHostName());
@@ -147,7 +202,7 @@ public class MMURL {
     public String getPorts() {
         StringBuffer portList = new StringBuffer("");  //$NON-NLS-1$
         if( hosts != null) {
-            Iterator iterator = hosts.iterator();
+            Iterator<HostInfo> iterator = hosts.iterator();
             while (iterator.hasNext()) {
                 HostInfo element = (HostInfo)iterator.next();
                 portList.append(element.getPortNumber());
@@ -217,7 +272,7 @@ public class MMURL {
             } else {
                 sb.append(DEFAULT_PROTOCOL);
             }
-            Iterator iter = hosts.iterator();
+            Iterator<HostInfo> iter = hosts.iterator();
             while (iter.hasNext()) {
                 HostInfo host = (HostInfo)iter.next();
                 sb.append(host.getHostName());
@@ -245,18 +300,14 @@ public class MMURL {
      * @since 4.2
      */
     public boolean equals(Object obj) {
-        boolean same;
-        if (obj == null) {
-            same = false;
-        } else if (obj == this) {
-            same = true;
-        } else if (!(obj instanceof MMURL)) {
-            same = false;
-        } else {
-            MMURL url = (MMURL)obj;
-            same = (appServerURL.equals(url.getAppServerURL()));
-        }
-        return same;
+        if (obj == this) {
+            return true;
+        } 
+        if (!(obj instanceof MMURL)) {
+            return false;
+        } 
+        MMURL url = (MMURL)obj;
+        return (appServerURL.equals(url.getAppServerURL()));
     }
     
     /** 
@@ -270,7 +321,5 @@ public class MMURL {
 	public boolean isUsingSSL() {
 		return usingSSL;
 	}
-
-    
 
 }

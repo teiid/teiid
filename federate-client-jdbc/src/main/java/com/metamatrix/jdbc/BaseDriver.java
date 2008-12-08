@@ -25,6 +25,11 @@
 package com.metamatrix.jdbc;
 
 import java.sql.Driver;
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 /** 
  * @since 5.0
@@ -44,5 +49,43 @@ public abstract class BaseDriver implements Driver {
     public boolean jdbcCompliant() {
         return false;
     }
+    
+    /**
+     * This method could be used to prompt the user for properties to connect to
+     * metamatrix (properties that are not already specified for obtaining connection).
+     * @param The URL used to establish a connection.
+     * @param A properties object containing properties needed to obtain a connection.
+     * @return An array containing DriverPropertyInfo objects
+     * @throws SQLException, if parsing error occurs
+     */
+    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+        if(info == null) {
+            info = new Properties();
+        }
+
+        // parse the url and update properties object
+        parseURL(url, info);
+
+        // construct list of driverPropertyInfo objects
+        List<DriverPropertyInfo> driverProps = new LinkedList<DriverPropertyInfo>();
+
+        DriverPropertyInfo dpi = new DriverPropertyInfo(BaseDataSource.VDB_NAME, info.getProperty(BaseDataSource.VDB_NAME));
+        dpi.required = true;
+        driverProps.add(dpi);
+
+        driverProps.add(new DriverPropertyInfo(BaseDataSource.VDB_VERSION, info.getProperty(BaseDataSource.VDB_VERSION)));
+        
+        driverProps.addAll(getAdditionalPropertyInfo(url, info));
+        
+        // create an array of DriverPropertyInfo objects
+        DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
+
+        // copy the elements from the list to the array
+        return (DriverPropertyInfo[])driverProps.toArray(propInfo);
+    }
+    
+    abstract List<DriverPropertyInfo> getAdditionalPropertyInfo(String url, Properties info);
+    
+    abstract void parseURL(String url, Properties info) throws SQLException;
 
 }

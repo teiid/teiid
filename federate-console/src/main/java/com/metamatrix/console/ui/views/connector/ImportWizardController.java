@@ -251,8 +251,6 @@ public class ImportWizardController extends WizardInterfaceImpl implements Impor
                             
                 String errorWhy = checkVDBAssosiations(admin, duplicateConnectorTypes);
                 
-                admin.close();                
-                
                 // show the duplicates panel
                 duplicatesPanel.setDuplicateConnectorTypes(duplicateConnectorTypes);
                 duplicatesPanel.setDuplicateExtensionModules(duplicateExtensionModules);
@@ -501,28 +499,24 @@ public class ImportWizardController extends WizardInterfaceImpl implements Impor
             
             ServerAdmin admin = conn.getServerAdmin();
             
-            try {
-                for (Iterator i = this.connectorTypesToImport.keySet().iterator(); i.hasNext();) {
-                    String name = (String)i.next(); 
-                    ConnectorBindingType type = (ConnectorBindingType)this.connectorTypesToImport.get(name);
-                    
-                    // since we do not have a way to add the conector type with object model, and we
-                    // may have come from CAF format, we do not have char[] to import; So we export this
-                    // first; then import. 
-                    Collection types = admin.getConnectorTypes(name);
-                    if (types != null && !types.isEmpty()) {
-                        admin.deleteConnectorType(name);
-                    }
-                    
-                    // add the new connector type
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream(4096);
-                    getImportExportUtility().exportConnector(bos, type, getExportProperties());
-                    
-                    char[] contents = new String(bos.toByteArray()).toCharArray();
-                    admin.addConnectorType(name, contents);
+            for (Iterator i = this.connectorTypesToImport.keySet().iterator(); i.hasNext();) {
+                String name = (String)i.next(); 
+                ConnectorBindingType type = (ConnectorBindingType)this.connectorTypesToImport.get(name);
+                
+                // since we do not have a way to add the conector type with object model, and we
+                // may have come from CAF format, we do not have char[] to import; So we export this
+                // first; then import. 
+                Collection types = admin.getConnectorTypes(name);
+                if (types != null && !types.isEmpty()) {
+                    admin.deleteConnectorType(name);
                 }
-            } finally {
-                admin.close();
+                
+                // add the new connector type
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(4096);
+                getImportExportUtility().exportConnector(bos, type, getExportProperties());
+                
+                char[] contents = new String(bos.toByteArray()).toCharArray();
+                admin.addConnectorType(name, contents);
             }
         }
         
@@ -544,23 +538,19 @@ public class ImportWizardController extends WizardInterfaceImpl implements Impor
         	// Get list of duplicates
         	List duplicateExtensionJars = this.duplicatesPanel.getDuplicateExtensionModules();
             ServerAdmin admin = conn.getServerAdmin();
-            try {
-                for (int i=0; i<extModulesToImport.length; i++) {
-                    ExtensionModule module = extModulesToImport[i];
-                    String moduleName = module.getFullName();
-                    // If this is duplicate, use overwrite value to determine overwrite
-                    if(duplicateExtensionJars.contains(moduleName)) {
-                    	if(overwriteDuplicateExtJars) {
-                        	admin.deleteExtensionModule(moduleName);
-                        	admin.addExtensionModule(module.getModuleType(), moduleName, module.getFileContents(), module.getDescription());
-                    	}
-                    } else {
+            for (int i=0; i<extModulesToImport.length; i++) {
+                ExtensionModule module = extModulesToImport[i];
+                String moduleName = module.getFullName();
+                // If this is duplicate, use overwrite value to determine overwrite
+                if(duplicateExtensionJars.contains(moduleName)) {
+                	if(overwriteDuplicateExtJars) {
                     	admin.deleteExtensionModule(moduleName);
                     	admin.addExtensionModule(module.getModuleType(), moduleName, module.getFileContents(), module.getDescription());
-                    }
+                	}
+                } else {
+                	admin.deleteExtensionModule(moduleName);
+                	admin.addExtensionModule(module.getModuleType(), moduleName, module.getFileContents(), module.getDescription());
                 }
-            } finally {
-                admin.close();
             }
         }
     }

@@ -61,7 +61,7 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
+import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;

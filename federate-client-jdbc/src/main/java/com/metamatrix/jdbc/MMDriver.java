@@ -32,7 +32,6 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -40,8 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL_Properties;
-import com.metamatrix.common.api.MMURL_Properties.CONNECTION;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
@@ -50,7 +48,6 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.jdbc.api.ConnectionProperties;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.transport.MultiTransportFactory;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
@@ -185,7 +182,7 @@ public final class MMDriver extends BaseDriver {
      * @param The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
      */
-    static void parseURL(String url, Properties info) throws SQLException {
+    void parseURL(String url, Properties info) throws SQLException {
         if(url == null) {
             String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
             throw new MMSQLException(msg);
@@ -193,7 +190,7 @@ public final class MMDriver extends BaseDriver {
         try {
             MMJDBCURL jdbcURL = new MMJDBCURL(url);
             info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
-            info.setProperty(MMURL_Properties.SERVER.SERVER_URL, jdbcURL.getConnectionURL());
+            info.setProperty(MMURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
             Properties optionalParams = jdbcURL.getProperties();
             MMJDBCURL.normalizeProperties(info);
             Enumeration keys = optionalParams.keys();
@@ -247,52 +244,7 @@ public final class MMDriver extends BaseDriver {
             String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
             throw new MMSQLException(msg);
         }  
-        
-        createCredentialToken(info); 
     }
-
-    /** 
-     * Use the credentials property to construct a CredentialMap and turn it into the session token.
-     * 
-     * @param info
-     * @throws MMSQLException
-     * @since 4.3
-     */
-    static void createCredentialToken(Properties info) throws MMSQLException {
-        // Handle creation of SessionToken from credentials property
-        if(info.containsKey(ConnectionProperties.PROP_CREDENTIALS)) {
-            // Check if both credentials AND session token are used - if so, this is an error
-            if(info.containsKey(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD)) {
-                throw new MMSQLException(JDBCPlugin.Util.getString("MMDriver.Invalid_use_of_credentials_and_token"));                //$NON-NLS-1$
-            } 
-            
-            // Parse credentials and store CredentialMap as session token
-            try { 
-                String credentials = info.getProperty(ConnectionProperties.PROP_CREDENTIALS);
-                info.put(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, buildCredentialMap(info, credentials));
-            } catch(Exception e) {
-                throw MMSQLException.create(e);
-            }
-            
-            // Remove credentials from info properties
-            info.remove(ConnectionProperties.PROP_CREDENTIALS);
-        }
-    }
-
-	static private HashMap buildCredentialMap(Properties info, String credentials) {
-		HashMap credentialMap = new HashMap();
-		boolean defaultToLogon = false;
-		if(credentials.startsWith(ConnectionProperties.DEFAULT_TO_LOGON)) {
-		    defaultToLogon = true;
-		}
-		if(defaultToLogon) {
-			credentialMap.put("user", info.getProperty(BaseDataSource.USER_NAME)); //$NON-NLS-1$
-			credentialMap.put("password", info.getProperty(BaseDataSource.PASSWORD)); //$NON-NLS-1$
-		}
-		credentialMap.put("TRUST_KEY", credentials);  //$NON-NLS-1$
-		
-		return credentialMap;
-	}
     
     /**
      * Returns true if the driver thinks that it can open a connection to the given URL.
@@ -307,84 +259,6 @@ public final class MMDriver extends BaseDriver {
     public boolean acceptsURL(String url) throws SQLException {
         Matcher m = urlPattern.matcher(url);
         return m.matches();
-    }
-
-    /**
-     * This method could be used to prompt the user for properties to connect to
-     * metamatrix (properties that are not already specified for obtaining connection).
-     * @param The URL used to establish a connection.
-     * @param A properties object containing properties needed to obtain a connection.
-     * @return An array containing DriverPropertyInfo objects
-     * @throws SQLException, if parsing error occurs
-     */
-    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
-        if(info == null) {
-            info = new Properties();
-        }
-
-        // parse the url and update properties object
-        parseURL(url, info);
-
-        // construct list of driverPropertyInfo objects
-        List driverProps = new LinkedList();
-
-        if (info.getProperty(BaseDataSource.VDB_VERSION) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.VDB_VERSION, null));
-        }
-
-        if (info.getProperty(BaseDataSource.USER_NAME) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.USER_NAME, null));
-        }
-
-        if (info.getProperty(BaseDataSource.PASSWORD) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.PASSWORD, null));
-        }
-
-        if (info.getProperty(BaseDataSource.LOG_FILE) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.LOG_FILE, null));
-        }
-
-        if (info.getProperty(BaseDataSource.LOG_LEVEL) == null) {
-            driverProps.add(new DriverPropertyInfo(BaseDataSource.LOG_LEVEL, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.PROP_TXN_AUTO_WRAP, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, null));
-        }
-        
-        if (info.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.RESULT_SET_CACHE_MODE, null));
-        }
-
-        if (info.getProperty(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD) == null) {
-            driverProps.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, null));
-        }
-        
-        if (info.getProperty(CONNECTION.AUTO_FAILOVER) == null) {
-            driverProps.add(new DriverPropertyInfo(CONNECTION.AUTO_FAILOVER, null));
-        }
-        
-        if (info.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE, null));
-        }
-
-        if (info.getProperty(ExecutionProperties.PROP_SQL_OPTIONS) == null) {
-            driverProps.add(new DriverPropertyInfo(ExecutionProperties.PROP_SQL_OPTIONS, null));
-        }
-
-        // create an array of DriverPropertyInfo objects
-        DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
-
-        // copy the elements from the list to the array
-        return (DriverPropertyInfo[])driverProps.toArray(propInfo);
     }
 
     /**
@@ -410,6 +284,19 @@ public final class MMDriver extends BaseDriver {
     public String getDriverName() {
         return DRIVER_NAME;
     }
-
+    
+    @Override
+    List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
+    		Properties info) {
+    	List<DriverPropertyInfo> dpis = new LinkedList<DriverPropertyInfo>();
+        DriverPropertyInfo dpi = new DriverPropertyInfo(MMURL.CONNECTION.SERVER_URL, info.getProperty(MMURL.CONNECTION.SERVER_URL));
+        dpi.required = true;
+        dpis.add(dpi);
+        dpis.add(new DriverPropertyInfo(BaseDataSource.USER_NAME, info.getProperty(BaseDataSource.USER_NAME)));
+        dpis.add(new DriverPropertyInfo(BaseDataSource.PASSWORD, info.getProperty(BaseDataSource.PASSWORD)));
+        dpis.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, info.getProperty(BaseDataSource.PASSWORD)));
+        return dpis;
+    }
+    
 }
 

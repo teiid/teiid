@@ -55,7 +55,6 @@ import java.util.Properties;
 import javax.transaction.xa.Xid;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.xa.MMXid;
@@ -227,7 +226,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
                 String key = (String)enumeration.nextElement();
                 Object anObj = info.get(key);
                 // Log each property except for password and token.
-                if (!MMURL_Properties.JDBC.CREDENTIALS.equalsIgnoreCase(key) && !MMURL_Properties.JDBC.PASSWORD.equalsIgnoreCase(key) && !MMURL_Properties.JDBC.CLIENT_TOKEN_PROP.equalsIgnoreCase(key)) { //$NON-NLS-1$
+                if (!MMURL.JDBC.CREDENTIALS.equalsIgnoreCase(key) && !MMURL.CONNECTION.PASSWORD.equalsIgnoreCase(key) && !MMURL.CONNECTION.CLIENT_TOKEN_PROP.equalsIgnoreCase(key)) { //$NON-NLS-1$
                     logger.log(MessageLevel.INFO, key+"="+anObj); //$NON-NLS-1$
                 }
             }

@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.client.ExceptionUtil;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
@@ -65,13 +65,13 @@ public class LocalTransportHandler implements ServerConnectionFactory {
 		private LocalServerConnection(Properties connectionProperties) {
 			result = new LogonResult(new MetaMatrixSessionID(SESSION_ID
 					.getAndIncrement()), connectionProperties
-					.getProperty(MMURL_Properties.JDBC.USER_NAME), connectionProperties, -1);
+					.getProperty(MMURL.CONNECTION.USER_NAME), connectionProperties, -1, "local"); //$NON-NLS-1$
 			
 			//Initialize the workContext
 			workContext = new DQPWorkContext();
 			workContext.setSessionId(result.getSessionID());
-			workContext.setVdbName(connectionProperties.getProperty(MMURL_Properties.JDBC.VDB_NAME));
-			workContext.setVdbVersion(connectionProperties.getProperty(MMURL_Properties.JDBC.VDB_VERSION));
+			workContext.setVdbName(connectionProperties.getProperty(MMURL.JDBC.VDB_NAME));
+			workContext.setVdbVersion(connectionProperties.getProperty(MMURL.JDBC.VDB_VERSION));
 			DQPWorkContext.setWorkContext(workContext);
 			if (configurationConnectionListener != null) {
 				configurationConnectionListener.connectionAdded(this);

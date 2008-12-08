@@ -156,11 +156,6 @@ public class MaterializationPanel extends JPanel implements
             LogManager.logError(LogContexts.VIRTUAL_DATABASE, e, UNEXPECTED_ERROR);
             ExceptionUtility.showMessage(UNEXPECTED_ERROR, e);
             return false;
-        } finally {
-            try {
-                admin.close();
-            } catch (Exception e) {
-            }
-        }
+        } 
     }
 }

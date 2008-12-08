@@ -43,17 +43,19 @@ public class LogonResult implements Serializable {
     private final Properties productInfo;
     private String userName;
     private long pingInterval;
+    private String clusterName;
 
     public LogonResult() {
 		this.productInfo = new Properties();
 	}
     
     public LogonResult(MetaMatrixSessionID sessionID,
-			String userName, Properties productInfo, long pingInterval) {
+			String userName, Properties productInfo, long pingInterval, String clusterName) {
 		this.sessionID = sessionID;
 		this.userName = userName;
 		this.productInfo = productInfo;
 		this.pingInterval = pingInterval;
+		this.clusterName = clusterName;
 	}
 
 	/**
@@ -79,6 +81,10 @@ public class LogonResult implements Serializable {
 
 	public long getPingInterval() {
 		return pingInterval;
+	}
+
+	public String getClusterName() {
+		return clusterName;
 	}
     
 }

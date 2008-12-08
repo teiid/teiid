@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -70,10 +70,10 @@ public class MultiTransportFactory {
         }
         
         //specific to JDBC
-        connProps.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME);
+        connProps.setProperty(MMURL.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME);
         
-        if (!connProps.containsKey(MMURL_Properties.JDBC.APP_NAME)) {
-        	connProps.setProperty(MMURL_Properties.JDBC.APP_NAME, "JDBC API"); //$NON-NLS-1$
+        if (!connProps.containsKey(MMURL.CONNECTION.APP_NAME)) {
+        	connProps.setProperty(MMURL.CONNECTION.APP_NAME, "JDBC API"); //$NON-NLS-1$
         }
         
         return handler.createConnection(connProps);

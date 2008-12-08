@@ -27,12 +27,28 @@
  */
 package com.metamatrix.common.comm.platform.socket.client;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.api.MMURL_Properties;
-import com.metamatrix.common.util.MetaMatrixProductNames;
+import org.mockito.Mockito;
+
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.InvalidSessionException;
+import com.metamatrix.api.exception.security.LogonException;
+import com.metamatrix.common.api.HostInfo;
+import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
+import com.metamatrix.common.comm.platform.socket.SocketLog;
+import com.metamatrix.common.util.crypto.NullCryptor;
+import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.ResultsFuture;
+import com.metamatrix.platform.security.api.ILogon;
+import com.metamatrix.platform.security.api.LogonResult;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 /**
  * <code>TestCase</case> for <code>SocketServerConnection</code>
@@ -41,6 +57,45 @@ import com.metamatrix.common.util.MetaMatrixProductNames;
  */
 public class TestSocketServerConnection extends TestCase {
 	
+	private final class FakeILogon implements ILogon {
+		
+		Throwable t;
+		
+		@Override
+		public void assertIdentity(
+				MetaMatrixSessionID sessionId)
+				throws InvalidSessionException,
+				MetaMatrixComponentException {
+			
+		}
+
+		@Override
+		public ResultsFuture<?> logoff()
+				throws InvalidSessionException,
+				MetaMatrixComponentException {
+			return null;
+		}
+
+		@Override
+		public LogonResult logon(
+				Properties connectionProperties)
+				throws LogonException,
+				MetaMatrixComponentException {
+			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), 1, "fake"); //$NON-NLS-1$
+		}
+
+		@Override
+		public ResultsFuture<?> ping()
+				throws InvalidSessionException,
+				MetaMatrixComponentException {
+			if (t != null) {
+				MetaMatrixComponentException e = new MetaMatrixComponentException(t);
+				t = null;
+				throw e;
+			}
+			return null;
+		}
+	}
 
 	/**
 	 * Validate that the client host name and IP address property in 
@@ -60,13 +115,88 @@ public class TestSocketServerConnection extends TestCase {
 	public void testSocketServerConnection_PropertiesClientHost() throws Throwable {
 		Properties p = new Properties();
 		
-		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
-
 		SocketServerConnectionFactory.updateConnectionProperties(p);
        
-		assertTrue(p.containsKey(MMURL_Properties.CONNECTION.CLIENT_HOSTNAME));
-		assertTrue(p.containsKey(MMURL_Properties.CONNECTION.CLIENT_IP_ADDRESS));
-		assertEquals(Boolean.TRUE.toString(), p.getProperty(MMURL_Properties.CONNECTION.AUTO_FAILOVER));
+		assertTrue(p.containsKey(MMURL.CONNECTION.CLIENT_HOSTNAME));
+		assertTrue(p.containsKey(MMURL.CONNECTION.CLIENT_IP_ADDRESS));
+	}
+	
+	public void testLogon() throws Exception {
+		Properties p = new Properties();
+		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
+			@Override
+			public SocketServerInstance createServerInstance(HostInfo info,
+					boolean ssl) throws CommunicationException, IOException {
+				return null;
+			}
+		};
+		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("fake", 1, false));
+		try {
+			new SocketServerConnection(instanceFactory, false, discovery, p, null, Mockito.mock(SocketLog.class));
+			fail("exception expected");
+		} catch (CommunicationException e) {
+			assertEquals("Unable to find a component used in logging on to MetaMatrix", e.getMessage());
+		}
+		
+		SocketServerConnection connection = createConnection(null);
+		assertEquals("00000000-0000-0001-0000-000000000001", connection.getLogonResult().getSessionID().toString());
+	}
+	
+	/**
+	 * Since the original instance is still open, this will be a transparent retry
+	 */
+	public void testRetry() throws Exception {
+		SocketServerConnection connection = createConnection(new SingleInstanceCommunicationException());
+		ILogon logon = connection.getService(ILogon.class);
+		logon.ping();
+	}
+	
+	public void testImmediateFail() throws Exception {
+		SocketServerConnection connection = createConnection(new CommunicationException());
+		ILogon logon = connection.getService(ILogon.class);
+		try {
+			logon.ping();
+			fail("expected exception");
+		} catch (MetaMatrixComponentException e) {
+			
+		}
+	}
+
+	private SocketServerConnection createConnection(final Throwable throwException) throws CommunicationException, ConnectionException {
+		return createConnection(throwException, new HostInfo("foo", 1));
+	}
+	
+	private SocketServerConnection createConnection(final Throwable t, HostInfo hostInfo)
+			throws CommunicationException, ConnectionException {
+		Properties p = new Properties();
+		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
+		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
+			@Override
+			public SocketServerInstance createServerInstance(final HostInfo info,
+					boolean ssl) throws CommunicationException, IOException {
+				SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
+				Mockito.stub(instance.getCryptor()).toReturn(new NullCryptor());
+				Mockito.stub(instance.getHostInfo()).toReturn(info);
+				FakeILogon logon = new FakeILogon();
+				logon.t = t;
+				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
+				Mockito.stub(instance.isOpen()).toReturn(true);
+				return instance;
+			}
+		};
+		SocketServerConnection connection = new SocketServerConnection(instanceFactory, false, discovery, p, null, Mockito.mock(SocketLog.class));
+		return connection;
+	}
+	
+	public void testIsSameInstance() throws Exception {
+		SocketServerConnection conn = createConnection(null, new HostInfo("foo", 1));
+		SocketServerConnection conn1 = createConnection(null, new HostInfo("bar", 1));
+		
+		ClientSideDQP dqp = conn.getService(ClientSideDQP.class);
+		ClientSideDQP dqp1 = conn1.getService(ClientSideDQP.class);
+		
+		assertFalse(SocketServerConnection.isSameInstance(dqp, dqp1));
+		assertTrue(SocketServerConnection.isSameInstance(dqp, dqp));
 	}
 
 }

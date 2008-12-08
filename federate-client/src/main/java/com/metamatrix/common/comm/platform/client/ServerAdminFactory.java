@@ -24,6 +24,9 @@
 
 package com.metamatrix.common.comm.platform.client;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
@@ -32,14 +35,14 @@ import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.MixinProxy;
 
 /** 
  * Singleton factory for ServerAdmins.
@@ -47,32 +50,83 @@ import com.metamatrix.core.util.MixinProxy;
  */
 public class ServerAdminFactory {
 	
-    private static final int BOUNCE_WAIT = 4000;
-    
-    private final class ClientAdminState {
-		private ServerAdmin remoteProxy;
-		private SocketServerConnection registry;
+    private static final int BOUNCE_WAIT = 2000;
+        
+    private final static class ReconnectingProxy implements InvocationHandler {
 
-		public ClientAdminState(ServerAdmin serverAdmin, SocketServerConnection registry) {
-			this.remoteProxy = serverAdmin;
-			this.registry = registry;
+    	private ServerAdmin target;
+    	private SocketServerConnection registry;
+    	private Properties p;
+    	private boolean closed;
+    	
+    	public ReconnectingProxy(Properties p) {
+    		this.p = p;
+		}
+    	
+    	private synchronized ServerAdmin getTarget() throws AdminComponentException, CommunicationException {
+    		if (closed) {
+    			throw new AdminComponentException(CommPlatformPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
+    		}
+    		if (target != null && registry.isOpen()) {
+    			return target;
+    		}
+    		try {
+    			registry = SocketServerConnectionFactory.getInstance().createConnection(p);
+    		} catch (ConnectionException e) {
+    			throw new AdminComponentException(e.getMessage());
+    		}
+    		target = registry.getService(ServerAdmin.class);
+    		return target;
+    	}
+    	
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			if (method.getName().equals("close")) {
+				close();
+				return null;
+			}
+			Throwable t = null;
+			for (int i = 0; i < 3; i++) {
+				try {
+					return method.invoke(getTarget(), args);
+				} catch (InvocationTargetException e) {
+					throw e.getTargetException();
+				} catch (CommunicationException e) {
+					t = e;
+				}
+			}
+			if (method.getName().endsWith("bounceSystem")) {
+				bounceSystem(((Boolean)args[1]).booleanValue());
+				return null;
+			}
+			throw t;
 		}
 		
-		public void close() {
-			registry.shutdown();
+		public synchronized void close() {
+			if (closed) {
+				return;
+			}
+			this.closed = true;
+			if (registry != null) {
+				registry.shutdown();
+			}
 		}
 		
 		public void bounceSystem(boolean waitUntilDone) throws AdminException {
-			remoteProxy.bounceSystem(waitUntilDone);
-			
 	        if (waitUntilDone) {
-	        	boolean down = false;
-	        	for (int i = 0; i < 3; i++) {
+	        	//we'll wait 2 seconds for the server to go down
+	        	try {
+					Thread.sleep(BOUNCE_WAIT);
+				} catch (InterruptedException e) {
+					throw new MetaMatrixRuntimeException(e);
+				}
+				//we'll wait 30 seconds for the server to come back up
+	        	for (int i = 0; i < 15; i++) {
 	        		try {
-	        			remoteProxy.getSystem();
+	        			getTarget().getSystem();
 	        		} catch (Exception e) {
-	        			down = true;
-	        			break; //the system is down
+	        			
 	        		} finally {
 	                    //reestablish a connection and retry
 	                    try {
@@ -82,44 +136,20 @@ public class ServerAdminFactory {
 						}                                        
 	                }
 	        	}
-	        	if (!down) {
-	        		return;
-	        	}
-	        	for (int i = 0; i < 3; i++) {
-	                try {
-	                	registry.authenticate();
-	                	//check that we can connect to the server
-	                    remoteProxy.getSystem();
-	                    break; // must be back up
-	                } catch (Exception e) {
-	                    //ignore
-	                } finally {
-	                    //reestablish a connection and retry
-	                    try {
-							Thread.sleep(BOUNCE_WAIT);
-						} catch (InterruptedException e) {
-							throw new MetaMatrixRuntimeException(e);
-						}                                        
-	                }
-	            }
 	        }
 		}
-	}
+    }
 
 	public static final String DEFAULT_APPLICATION_NAME = "Admin"; //$NON-NLS-1$
 
     /**Singleton instance*/
-    private static ServerAdminFactory instance = null;
+    private static ServerAdminFactory instance = new ServerAdminFactory();
     
     private ServerAdminFactory() {        
     }
     
     /**Get the singleton instance*/
-    public synchronized static ServerAdminFactory getInstance() {
-        if (instance == null) {
-            instance = new ServerAdminFactory();           
-        }
-        
+    public static ServerAdminFactory getInstance() {
         return instance;
     }
     
@@ -169,42 +199,20 @@ public class ServerAdminFactory {
             throw new IllegalArgumentException(AdminPlugin.Util.getString("ERR.014.001.00100")); //$NON-NLS-1$
         }
         
-        return createAdminProxy(userName, password, serverURL, applicationName);
-    }
-    
-    private ServerAdmin createAdminProxy(final String userName,
-                                         final char[] password,
-                                         final String serverURL,
-                                         final String applicationName) throws AdminException {
     	final Properties p = new Properties();
-    	p.setProperty(MMURL_Properties.JDBC.APP_NAME, applicationName);
-    	p.setProperty(MMURL_Properties.JDBC.USER_NAME, userName);
-    	p.setProperty(MMURL_Properties.JDBC.PASSWORD, new String(password));
-    	p.setProperty(MMURL_Properties.SERVER.SERVER_URL, serverURL);
+    	p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
+    	p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
+    	p.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+    	p.setProperty(MMURL.CONNECTION.SERVER_URL, serverURL);
     	return createAdmin(p);
     }
 
 	public ServerAdmin createAdmin(final Properties p)
 			throws AdminComponentException, AdminException {
-		p.setProperty(MMURL_Properties.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
+		p.setProperty(MMURL.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
     	
-		SocketServerConnection registry;
-		try {
-			registry = SocketServerConnectionFactory.getInstance().createConnection(p);
-		} catch (CommunicationException e) {
-			throw new AdminComponentException(e.getMessage());
-		} catch (ConnectionException e) {
-			throw new AdminComponentException(e.getMessage());
-		}
-    	
-    	ServerAdmin serverAdmin = registry.getService(ServerAdmin.class);
-    	
-    	ClientAdminState clientAdminState = new ClientAdminState(serverAdmin, registry);
-    	
-    	//mixin local behavior
-    	serverAdmin = (ServerAdmin) Proxy.newProxyInstance(Thread.currentThread()
-				.getContextClassLoader(), new Class[] { ServerAdmin.class },
-				new MixinProxy(new Object[] { clientAdminState, serverAdmin }));
+		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread()
+				.getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
     	
         //make a method call, to test that we are connected 
     	serverAdmin.getSystem();

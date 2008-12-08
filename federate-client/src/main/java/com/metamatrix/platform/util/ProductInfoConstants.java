@@ -24,11 +24,11 @@
 
 package com.metamatrix.platform.util;
 
-import com.metamatrix.common.api.MMURL_Properties;
+import com.metamatrix.common.api.MMURL;
 
 public interface ProductInfoConstants {
 
-	public static final String VIRTUAL_DB = MMURL_Properties.JDBC.VDB_NAME;
-	public static final String VDB_VERSION = MMURL_Properties.JDBC.VDB_VERSION;
+	public static final String VIRTUAL_DB = MMURL.JDBC.VDB_NAME;
+	public static final String VDB_VERSION = MMURL.JDBC.VDB_VERSION;
 
 }

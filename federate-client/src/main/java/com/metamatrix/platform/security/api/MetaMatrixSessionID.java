@@ -37,8 +37,6 @@ public final class MetaMatrixSessionID implements
 
     public final static long serialVersionUID = -7872739911360962975L;
     
-    public static final String DEFAULT_USER = "unknown"; //$NON-NLS-1$
-
     private UUID id;
     
     /**

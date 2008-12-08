@@ -80,13 +80,6 @@ public class TestMMDataSource extends TestCase {
         dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
     }
 
-    /**
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     // =========================================================================
     //                      H E L P E R   M E T H O D S
     // =========================================================================
@@ -679,6 +672,15 @@ public class TestMMDataSource extends TestCase {
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
                             "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logLevel=1;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+    }
+    
+    public void testBuildURL_AdditionalProperties() {
+    	final MMDataSource ds = new MMDataSource();
+    	ds.setAdditionalProperties("foo=bar;a=b");
+    	ds.setServerName("hostName");
+    	ds.setDatabaseName("vdbName");
+    	ds.setPortNumber(1);
+    	assertEquals("jdbc:metamatrix:vdbName@mm://hostname:1;fetchSize=2000;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {

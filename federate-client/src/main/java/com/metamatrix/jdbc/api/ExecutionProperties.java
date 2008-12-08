@@ -84,12 +84,6 @@ public interface ExecutionProperties {
     public static final String PROP_FETCH_SIZE = "fetchSize";   //$NON-NLS-1$ 
     
     /**
-     * If true, will automatically select a new server instance after a communication exception.
-     * @since 5.6
-     */
-    public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
-    
-    /**
      * If true, will ignore autocommit for local transactions.
      * @since 5.5.2
      */

@@ -24,12 +24,15 @@
 
 package com.metamatrix.jdbc.api;
 
+import com.metamatrix.common.api.MMURL;
+
 
 /**
  * MetaMatrix-specific connection properties.  These connection properties can 
  * be set via the java.sql.DriverManager.getConnection(jdbcUrl, connectionProps)
  * method.
  *    
+ * WARNING: This class does not contain all possible properties.
  */
 public interface ConnectionProperties {
 
@@ -47,7 +50,7 @@ public interface ConnectionProperties {
      * authentication to the system and to connectors that may require it at the data source 
      * level.</p> 
      */
-    public static final String PROP_CLIENT_SESSION_PAYLOAD = "clientToken"; //$NON-NLS-1$
+    public static final String PROP_CLIENT_SESSION_PAYLOAD = MMURL.CONNECTION.CLIENT_TOKEN_PROP;
 
     /**
      * <p>Data source credential sets.  The credentials will be decoded and passed in a 
@@ -72,39 +75,8 @@ public interface ConnectionProperties {
      * credentials from the CredentialMap.
      * </p>
      */
-    public static final String PROP_CREDENTIALS = "credentials"; //$NON-NLS-1$
+    public static final String PROP_CREDENTIALS = MMURL.JDBC.CREDENTIALS;
     
     public static final String DEFAULT_TO_LOGON = "defaultToLogon"; //$NON-NLS-1$
 
-	// constant for host part of serverURL
-	public static final String HOST = "host"; //$NON-NLS-1$
-
-	// constant for port part of serverURL
-	public static final String PORT = "port"; //$NON-NLS-1$
-
-	public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
-
-	//constant indicating Virtual database name
-	public static final String VDB_NAME = "VirtualDatabaseName"; //$NON-NLS-1$
-
-	// constant indicating Virtual database version
-	public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
-
-	//constant indicating Virtual database name for the DQP
-	public static final String VDB_NAME_DQP = "vdbName"; //$NON-NLS-1$
-
-	//constant indicating Virtual database version for the DQP
-	public static final String VDB_VERSION_DQP = "vdbVersion"; //$NON-NLS-1$
-
-	public static final String TRUSTED_PAYLOAD_PROP = "trustedPayload"; //$NON-NLS-1$
-
-	public static final String APP_NAME = "ApplicationName"; //$NON-NLS-1$
-
-	public static final String USER_PROP = "user"; //$NON-NLS-1$
-
-	public static final String PWD_PROP = "password"; //$NON-NLS-1$
-
-	public static final String CLIENT_TOKEN_PROP = "clientToken"; //$NON-NLS-1$ 
-
-	public static final String CONNECTION_ID = "connectionID"; //$NON-NLS-1$
 }

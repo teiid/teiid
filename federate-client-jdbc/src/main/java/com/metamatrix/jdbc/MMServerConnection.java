@@ -33,7 +33,6 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
 
 /** 
  * @since 4.3
@@ -121,9 +120,7 @@ public class MMServerConnection extends MMConnection {
 		if (conn instanceof MMServerConnection
 				&& this.serverConn instanceof SocketServerConnection
 				&& conn.serverConn instanceof SocketServerConnection) {
-			SocketServerInstance thisInstance = ((SocketServerConnection)this.serverConn).selectServerInstance();
-			SocketServerInstance thatInstance = ((SocketServerConnection)conn.serverConn).selectServerInstance();
-			return thisInstance.getHostInfo().equals(thatInstance.getHostInfo());
+			return SocketServerConnection.isSameInstance(this.dqp, conn.dqp);
 		}
 		return false;
 	}

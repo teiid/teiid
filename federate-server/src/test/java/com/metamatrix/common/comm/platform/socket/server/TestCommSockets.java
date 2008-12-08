@@ -32,10 +32,8 @@ import javax.net.ssl.SSLEngine;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
-
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL_Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
@@ -43,6 +41,7 @@ import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImpl;
+import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.net.SocketHelper;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
@@ -66,18 +65,16 @@ public class TestCommSockets extends TestCase {
 		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
-		csr.registerClientService(ILogon.class, new LogonImpl(csr
-				.getSessionService()));
+		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"));
 		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
 						"testIO", 1, 120000), null); //$NON-NLS-1$
 
 		try {
 			Properties p = new Properties();
-			p.setProperty(MMURL_Properties.SERVER.SERVER_URL, new MMURL(addr.getHostName(),
+			p.setProperty(MMURL.CONNECTION.SERVER_URL, new MMURL(addr.getHostName(),
 					listener.getPort() - 1, false).getAppServerURL()); //wrong port
-			SocketServerConnectionFactory.getInstance()
-					.createConnection(p);
+			SocketServerConnectionFactory.getInstance().createConnection(p);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 
@@ -107,7 +104,7 @@ public class TestCommSockets extends TestCase {
 		try {
 			SocketServerConnection conn = helpEstablishConnection(false, null);
 			assertTrue(((SocketServerInstanceImpl) conn
-					.getSocketServerInstance()).getCryptor() instanceof NullCryptor);
+					.selectServerInstance()).getCryptor() instanceof NullCryptor);
 			conn.shutdown();
 		} finally {
 			SocketHelper.setClientEncryptionEnabled(true);
@@ -121,7 +118,7 @@ public class TestCommSockets extends TestCase {
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
 		csr.registerClientService(ILogon.class, new LogonImpl(csr
-				.getSessionService()) {
+				.getSessionService(), "fakeCluster") {
 			@Override
 			public LogonResult logon(Properties connProps)
 					throws LogonException, ComponentNotFoundException {
@@ -139,9 +136,9 @@ public class TestCommSockets extends TestCase {
 		assertEquals(0, stats.sockets);
 
 		Properties p = new Properties();
-		p.setProperty(MMURL_Properties.SERVER.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
+		p.setProperty(MMURL.CONNECTION.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
 				secure).getAppServerURL()); 
-		
+		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		return (SocketServerConnection) SocketServerConnectionFactory
 				.getInstance().createConnection(p);
 	}
