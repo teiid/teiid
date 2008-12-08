@@ -31,8 +31,8 @@ import java.util.Date;
  * 
  * A user may be allowed to have multiple sessions active simultaneously.
  * 
- * <p>an Session identifier usally is a number, this gets automatically asssigned 
- * to a connection, when user logs into the system</p>
+ * <p>a Session identifier gets automatically assigned 
+ * to a connection when user logs into the system</p>
  * 
  * @since 4.3
  */
