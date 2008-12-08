@@ -24,8 +24,6 @@
 
 package com.metamatrix.common.id;
 
-import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.id.LongID;
 import com.metamatrix.core.id.ObjectID;
 
@@ -77,10 +75,6 @@ public class TransactionID extends LongID {
      */
     public int compareTo(Object obj) {
         TransactionID that = (TransactionID) obj;     // May throw ClassCastException
-        if ( obj == null ) {
-            throw new AssertionError(CommonPlugin.Util.getString(ErrorMessageKeys.MISC_ERR_0001, "TransactionID")); //$NON-NLS-1$
-
-        }
 
         long diff = this.getValue() - that.getValue();
         if ( diff < 0 ) {
