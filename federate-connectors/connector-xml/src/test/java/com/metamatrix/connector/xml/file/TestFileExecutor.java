@@ -1,5 +1,25 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.file;
@@ -57,7 +77,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidate() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-        	state.setLogger(new SysLogger());
+        	state.setLogger(new SysLogger(false));
         	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
         	XMLConnectionImpl conn = ProxyObjectFactory.getDefaultXMLConnection();
         	RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(ProxyObjectFactory.getStateCollegeVDBLocation());
@@ -72,7 +92,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateSourceFromModel() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-        	state.setLogger(new SysLogger());
+        	state.setLogger(new SysLogger(false));
         	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
         	XMLConnectionImpl conn = ProxyObjectFactory.getDefaultXMLConnection();
         	RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(ProxyObjectFactory.getStateCollegeVDBLocation());
@@ -92,7 +112,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateSourceDirectory() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-        	state.setLogger(new SysLogger());
+        	state.setLogger(new SysLogger(false));
         	Properties props;
         	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
         	state.setFileName(null);
@@ -114,7 +134,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateSourceDirectoryEmpty() {
 	try {
 		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	state.setFileName(null);
     	File nullDir = UnitTestUtil.getTestScratchFile("devnull");
@@ -142,7 +162,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateFileAsDirectory() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	state.setFileName(null);
     	File nullDir = UnitTestUtil.getTestScratchFile("devnull");
@@ -167,7 +187,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateParameter() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	String strQuery = "select DefaultedValue from DefaultedRequiredValueTable";
     	
@@ -192,7 +212,7 @@ public class TestFileExecutor extends TestCase {
     public void testValidateNotXML() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	state.setFileName("StateCollege.vdb");
     	XMLConnectionImpl conn = ProxyObjectFactory.getDefaultXMLConnection();
@@ -209,7 +229,7 @@ public class TestFileExecutor extends TestCase {
     public void testGetXMLDocument() {
     	try {
     		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getStateCollegeVDBLocation());
     	
@@ -231,7 +251,7 @@ public class TestFileExecutor extends TestCase {
     public void testGetXMLDocumentCache() {
     	try {
     	FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getStateCollegeVDBLocation());
     	
@@ -257,7 +277,7 @@ public class TestFileExecutor extends TestCase {
     	try {
             
     		FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger());
+    	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
     	String fileName = "empty.xml";
     	File tempFile = new File(ProxyObjectFactory.getDocumentsFolder() + "/" + fileName);
@@ -282,136 +302,6 @@ public class TestFileExecutor extends TestCase {
 		}
     }
     
-    
-    public void testUniqueIds() {
-		String query = "select Author_Last, Title, TitleId1, TitleId2 from Document"; //$NON-NLS-1$
-        String vdb = ProxyObjectFactory.getDocumentsFolder() + "/Gutenberg.vdb";//$NON-NLS-1$
-        Properties props = new Properties();
-        
-        
-        props.setProperty(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000")); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("0")); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000")); //$NON-NLS-1$
-        //props.setProperty(XMLConnectorStateImpl.PREPROCESS, Boolean.FALSE.toString());
-        props.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE.toString());
-        props.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState"); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION, "cache"); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, "1"); //$NON-NSL-1$
-        props.setProperty(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities"); //$NON-NSL-1$
-        props.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters");
-        props.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
-        
-        props.setProperty(FileConnectorState.DIRECTORY_PATH, ProxyObjectFactory.getDocumentsFolder() + "/books");
-        props.setProperty(FileConnectorState.FILE_NAME, "mdprp10.xml");
-        //props.setProperty(FileConnectorState.PREPROCESS, "true");
-        
-        try { 
-        	
-        	FileConnectorState state = new FileConnectorState();
-        	state.setLogger(new SysLogger());
-        	state.setState(getEnv(props));
-
-        	String requestId = "Request"; //$NON-NLS-1$
-        	String partId = "testPartId"; //$NON-NLS-1$
-
-        	ExecutionContext context = EnvironmentUtility.createExecutionContext(requestId, partId);
-            ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
-            RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdb);
-                
-            SecurityContext ctx = ProxyObjectFactory.getDefaultSecurityContext();
-            
-            XMLConnector conn = new XMLConnector();
-            conn.initialize(env);
-            
-            Connection cn = (XMLConnectionImpl) conn.getConnection(ctx);
-            XMLExecutionImpl exec = (XMLExecutionImpl)cn.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, context, meta);
-    		
-        	final int batchSize = 50;
-    		
-        	IQuery iq = ProxyObjectFactory.getDefaultIQuery(vdb, query);
-    	    	
-    		exec.execute(iq, batchSize);
-    		
-    		Batch batch = exec.nextBatch();
-    		List[] results = batch.getResults();
-    		for(int i = 0; i < results.length; i++) {
-    			List theList = results[i];
-    			Iterator iter = theList.iterator();
-    			while(iter.hasNext()) {
-    				Object col = iter.next();
-    				System.out.print("\t" + col);    				
-    			}
-    			System.out.println();
-    		}    		
-    	} catch (ConnectorException e) {
-    		e.printStackTrace();
-    		fail(e.getMessage());
-    	}
-	}
-    
-	public void testUniqueIdsForMultipleDocs() {
-		String query = "select Author_Last, Title, TitleId1, TitleId2 from Document"; //$NON-NLS-1$
-        String vdb = ProxyObjectFactory.getDocumentsFolder() + "/Gutenberg.vdb";//$NON-NLS-1$
-        Properties props = new Properties();
-        
-        
-        props.setProperty(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000")); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("0")); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000")); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE.toString());
-        props.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState"); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION, "cache"); //$NON-NLS-1$
-        props.setProperty(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, "1"); //$NON-NSL-1$
-        props.setProperty(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities"); //$NON-NSL-1$
-        props.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters");
-        props.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
-        
-        props.setProperty(FileConnectorState.DIRECTORY_PATH, ProxyObjectFactory.getDocumentsFolder() + "/books");
-        props.setProperty(FileConnectorState.FILE_NAME, "");
-        
-        try { 
-        	
-        	FileConnectorState state = new FileConnectorState();
-        	state.setLogger(new SysLogger());
-        	state.setState(getEnv(props));
-
-        	String requestId = "Request2"; //$NON-NLS-1$
-        	String partId = "testPartId2"; //$NON-NLS-1$
-
-        	ExecutionContext context = EnvironmentUtility.createExecutionContext(requestId, partId);
-            ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
-            RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdb);
-                
-            SecurityContext ctx = ProxyObjectFactory.getDefaultSecurityContext();
-            
-            XMLConnector conn = new XMLConnector();
-            conn.initialize(env);
-            
-            Connection cn = (XMLConnectionImpl) conn.getConnection(ctx);
-            XMLExecutionImpl exec = (XMLExecutionImpl)cn.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, context, meta);
-    		
-        	final int batchSize = 50;
-    		
-        	IQuery iq = ProxyObjectFactory.getDefaultIQuery(vdb, query);
-    	    	
-    		exec.execute(iq, batchSize);
-    		
-    		Batch batch = exec.nextBatch();
-    		List[] results = batch.getResults();
-    		for(int i = 0; i < results.length; i++) {
-    			List theList = results[i];
-    			Iterator iter = theList.iterator();
-    			while(iter.hasNext()) {
-    				Object col = iter.next();
-    				System.out.print("\t" + col);    				
-    			}
-    			System.out.println();
-    		}    		
-    	} catch (ConnectorException e) {
-    		e.printStackTrace();
-    		fail(e.getMessage());
-    	}
-	}
     
     private Element getElement(String query) throws ConnectorException {
     	return getElement(query, 0);

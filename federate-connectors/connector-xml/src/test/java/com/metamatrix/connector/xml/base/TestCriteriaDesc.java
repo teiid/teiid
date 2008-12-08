@@ -1,5 +1,25 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.base;
@@ -70,7 +90,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -92,7 +111,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -113,7 +131,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNull("CriteriaDesc is not null", desc);
         } catch (ConnectorException ce) {
@@ -134,7 +151,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -155,7 +171,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("exception not thrown");
         } catch (ConnectorException ce) {
@@ -175,7 +190,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNull("CriteriaDesc is not null", desc);
         } catch (ConnectorException ce) {
@@ -196,7 +210,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -220,7 +233,6 @@ public class TestCriteriaDesc extends TestCase {
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
     				CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-        	System.out.println(multiplicityStr);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -242,7 +254,6 @@ public class TestCriteriaDesc extends TestCase {
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-        	System.out.println(multiplicityStr);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -264,7 +275,6 @@ public class TestCriteriaDesc extends TestCase {
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-        	System.out.println(multiplicityStr);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("should not be able to handle default value");
         } catch (ConnectorException ce) {
@@ -285,7 +295,6 @@ public class TestCriteriaDesc extends TestCase {
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-        	System.out.println(multiplicityStr);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("could not create CriteriaDesc", desc);
         } catch (ConnectorException ce) {
@@ -307,7 +316,6 @@ public class TestCriteriaDesc extends TestCase {
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-        	System.out.println(multiplicityStr);
             CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("should not be able to handle default value");
         } catch (ConnectorException ce) {
@@ -327,7 +335,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -349,7 +356,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -370,7 +376,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -391,7 +396,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -414,7 +418,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -434,7 +437,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -454,7 +456,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -475,7 +476,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
         } catch (ConnectorException ce) {
@@ -495,7 +495,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals(desc.getColumnName(), desc.getInputXpath());
         } catch (ConnectorException ce) {
@@ -516,7 +515,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals(desc.getColumnName(), desc.getInputXpath());
         } catch (ConnectorException ce) {
@@ -536,7 +534,6 @@ public class TestCriteriaDesc extends TestCase {
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
-        	System.out.println(symbol.toString());
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals("", desc.getDataAttributeName());
         } catch (ConnectorException ce) {
@@ -711,9 +708,7 @@ public class TestCriteriaDesc extends TestCase {
 	    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
 	    	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
 	    	Element elem = (Element) metadata.getObject(elementID);
-	    	System.out.println(symbol.toString());
 	        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-	        System.out.println(desc.getCurrentIndexValue());
 	        assertEquals("There should be two values" , 2, desc.getNumberOfValues());
 	        assertEquals("foo", desc.getCurrentIndexValue());
 	        desc.incrementIndex();
@@ -748,7 +743,6 @@ public class TestCriteriaDesc extends TestCase {
             Element elem = getElement(query);
             ArrayList list = new ArrayList();
             CriteriaDesc desc = new CriteriaDesc(elem, list);
-            System.out.println(desc.getCurrentIndexValue());
             assertEquals("", desc.getCurrentIndexValue());
         } catch (ConnectorException ce) {
             ce.printStackTrace();
@@ -762,7 +756,6 @@ public class TestCriteriaDesc extends TestCase {
             Element elem = getElement(query);
             ArrayList list = new ArrayList();
             CriteriaDesc desc = new CriteriaDesc(elem, list);
-            System.out.println(desc.getCurrentIndexValue());
             assertNull(desc.getCurrentIndexValue());
         } catch (ConnectorException ce) {
             ce.printStackTrace();
@@ -911,11 +904,5 @@ public class TestCriteriaDesc extends TestCase {
         MetadataID id = group.getMetadataID();
         return (Group) metadata.getObject(id);
     }
-    
-    private void checkPath() {
-    	File foo = new File(".");
-    	System.out.println("using path: " + foo.getAbsolutePath());
-    }
-    
     
 }

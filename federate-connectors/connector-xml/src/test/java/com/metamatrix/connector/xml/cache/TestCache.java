@@ -1,16 +1,36 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.cache;
 
 
 import java.io.File;
-import java.util.ArrayList;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.data.exception.ConnectorException;
 
@@ -164,8 +184,7 @@ public class TestCache extends TestCase {
     
     
     public void testFetchFromMemoryCache() throws Exception {
-        final int timeout = 5000;
-        final long sleepySleepy = 10000;
+        final int timeout = 1000;
         DocumentCache cache = new DocumentCache(CACHE_SIZE, CACHE_SIZE, CACHE_LOC, timeout, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestFetchFromCache"); //$NON-NLS-1$
         final String newString = new String("blah, blah, blah"); //$NON-NLS-1$
         final String cacheKey = "foo1";
@@ -176,9 +195,7 @@ public class TestCache extends TestCase {
         assertEquals("File cache size is wrong", cache.getCurrentFileCacheSize(), 0);
         assertEquals("Got the wrong value out of the cache", ((String)newObject), newString);
         cache.dumpCache();
-        long current = System.currentTimeMillis();
-        while(System.currentTimeMillis() < (current + timeout)){};
-        Thread.sleep(sleepySleepy);
+        Thread.sleep(timeout + 1000);
         cache.dumpCache();
         assertNotNull("Should have been able to fetch this expired object", cache.fetchObject(cacheKey, "foo"));
         assertNull("Got an object from the cache that should have expired", cache.fetchObject(cacheKey, "bar"));
@@ -187,8 +204,7 @@ public class TestCache extends TestCase {
     }
     
     public void testFetchFromFileCache() throws Exception {
-        final int timeout = 10000;
-        final long sleepySleepy = 1000;
+        final int timeout = 1000;
         DocumentCache cache = new DocumentCache(0, CACHE_SIZE, CACHE_LOC, timeout, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestFetchFromCache"); //$NON-NLS-1$
         final String newString = new String("blah, blah, blah"); //$NON-NLS-1$
         final String cacheKey = "foo1";
@@ -200,9 +216,7 @@ public class TestCache extends TestCase {
         assertEquals("File cache size is wrong", newString.length(), cache.getCurrentFileCacheSize());
         
         cache.dumpCache();
-        long current = System.currentTimeMillis();
-        while(System.currentTimeMillis() < (current + timeout)){};
-        Thread.sleep(sleepySleepy);
+        Thread.sleep(timeout + 1000);
         cache.dumpCache();
         Object expObj = cache.fetchObject(cacheKey, null);
         assertNull("Got an object from the cache that should have expired", expObj);
@@ -286,7 +300,7 @@ public class TestCache extends TestCase {
         cache.addToCache(cacheKey, newString, newString.length(), "foo"); //$NON-NLS-1$
         cache.dumpCache();
         cache.shutdownCleaner();
-        Thread.sleep(100000);
+        //Thread.sleep(100000);
         cache.dumpCache();
         assertZero("Memory cache size is not equal to zero.",  cache.getCurrentMemoryCacheSize());
         assertZero("File cache size is not equal to zero.", cache.getCurrentFileCacheSize());
@@ -331,8 +345,7 @@ public class TestCache extends TestCase {
         }
     }
     
-    public void testMultithreaded() {
-        try{
+    /*public void testMultithreaded() throws Exception {
         final String id1 = "foo1"; //$NON-NLS-1$
         final String id2 = "foo2"; //$NON-NLS-1$
         final String id3 = "foo3"; //$NON-NLS-1$
@@ -372,32 +385,26 @@ public class TestCache extends TestCase {
         cache5.addToCache(id2, string2, string2.length(), "foo");
         cache5.addToCache(id3, string3, string3.length(), "foo");
 
-        try {
-            System.out.println("Entering Multithreaded try block");
-        	Fetcher F = new Fetcher(cache, IDs);
-            Fetcher F2 = new Fetcher(cache, IDs);
-            Fetcher F3 = new Fetcher(cache, IDs);
-            Fetcher F4 = new Fetcher(cache, IDs);
-            Fetcher F5 = new Fetcher(cache, IDs);
-            Thread.sleep(58000);
-            F.start();
-            F2.start();
-            F3.start();
-            F4.start();
-            F5.start();
-        }catch(Throwable e) {
-            assertTrue("Exception!!!" + e.getMessage(), false);
-        }
+    	Fetcher F = new Fetcher(cache, IDs);
+        Fetcher F2 = new Fetcher(cache, IDs);
+        Fetcher F3 = new Fetcher(cache, IDs);
+        Fetcher F4 = new Fetcher(cache, IDs);
+        Fetcher F5 = new Fetcher(cache, IDs);
+        F.start();
+        F2.start();
+        F3.start();
+        F4.start();
+        F5.start();
+        F.join();
+        F2.join();
+        F3.join();
+        F4.join();
+        F5.join();
         cache.shutdownCleaner();
         cache2.shutdownCleaner();
         cache3.shutdownCleaner();
         cache4.shutdownCleaner();
         cache5.shutdownCleaner();
-        assertTrue("Good no exceptions", true);
-        }catch(Throwable t){
-            System.out.println("Throwable: " + t.getMessage());
-        }
-
     }
     
     public class Fetcher extends Thread {
@@ -411,21 +418,15 @@ public class TestCache extends TestCase {
         }
 
         public void run() {
-            super.run();
-            try {
-                for(int i = 0; i < 100; i++) {
-                    cache.fetchObject((String)IDs.get(0), null);
-                    cache.fetchObject((String)IDs.get(1), null);
-                    cache.fetchObject((String)IDs.get(2), null);
-                }
-            } catch (RuntimeException re) {
-                assertTrue(re.getMessage(), false);
-            }
-            
+            for(int i = 0; i < 100; i++) {
+                cache.fetchObject((String)IDs.get(0), null);
+                cache.fetchObject((String)IDs.get(1), null);
+                cache.fetchObject((String)IDs.get(2), null);
+            }            
         }
         
         
-    }
+    }*/
 
     //TODO: synchronization tests
 }

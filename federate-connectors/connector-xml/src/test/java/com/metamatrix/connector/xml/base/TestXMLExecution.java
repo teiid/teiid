@@ -1,24 +1,36 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.base;
 
-import java.util.Properties;
-
 import junit.framework.TestCase;
 
-import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLExecution;
-import com.metamatrix.connector.xml.file.FileConnectorState;
 import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * created by JChoate on Jun 16, 2005
@@ -43,10 +55,6 @@ public class TestXMLExecution extends TestCase {
 	public TestXMLExecution(String test) {
         super(test);
         checkVdbPath();
-    }
-    
-    protected void setUp() throws Exception {
-        super.setUp();
     }
     
     public void testInit() {        
@@ -131,56 +139,7 @@ public class TestXMLExecution extends TestCase {
             ce.printStackTrace();
             fail(ce.getMessage());
         }
-    } 
- 
-    
-    public void testNextBatchClob() {
-    	String vdb = ProxyObjectFactory.getDocumentsFolder() + "/Gutenberg.vdb";
-    	               
-    	Properties testFileProps = new Properties();
-        testFileProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("500000"));
-        testFileProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("5000"));
-        testFileProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000"));
-        testFileProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
-        testFileProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, new String("./cache"));
-        testFileProps.put(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, new String("1"));
-        testFileProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities");
-        testFileProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState");
-        testFileProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
-        testFileProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters"); 
-        
-        testFileProps.put(FileConnectorState.FILE_NAME, "mdprp10.xml");
-        String localPath = ProxyObjectFactory.getDocumentsFolder() + "/books";
-        testFileProps.put(FileConnectorState.DIRECTORY_PATH, localPath);
-        
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(testFileProps);
-    	XMLConnector ctor = new XMLConnector();
-        try {
-	    	ctor.initialize(env);
-	    	SecurityContext exCtx = EnvironmentUtility.createExecutionContext("Request", "testPartId");
-	    	XMLConnectionImpl conn = new XMLConnectionImpl(ctor, exCtx, env);
-	    	
-	    	TranslationUtility transUtil = new TranslationUtility(vdb);
-	        RuntimeMetadata meta = transUtil.createRuntimeMetadata();  
-	    	XMLExecutionImpl execution = new XMLExecutionImpl(conn, meta, exCtx, env);
-	    	
-	    	assertNull(execution.getInfo());
-	        String queryString = "select Author_Last, Title, Pub_Year, Header_About, Text from Document";
-	        IQuery query = ProxyObjectFactory.getDefaultIQuery(vdb, queryString);
-	        
-	        
-	        final int maxBatch = 1;
-
-            execution.execute(query, maxBatch);
-            Batch batch = execution.nextBatch();
-            assertNotNull("Batch is null", batch);
-            assertTrue(batch.getRowCount() > 0);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-    }
-    
+    }     
     
     public void testClose() {
         XMLExecution execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);

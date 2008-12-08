@@ -1,5 +1,25 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.jms;
@@ -26,7 +46,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 		super.setUp();
 		
 		state = new JMSSOAPConnectorState();
-		state.setLogger(new SysLogger());
+		state.setLogger(new SysLogger(false));
 		state.setState(getEnv(ProxyObjectFactory.getSOAPJMSPropertiesAuth()));
 	}
 	
@@ -45,7 +65,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 	public void testSetState() {
 		JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
 		try {
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getSOAPJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -58,7 +78,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 	public void testJMSConnectorState() {
 		JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
 		try {
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getSOAPJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -71,7 +91,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 	public void testJMSConnectorStateProperties() {
 		try {
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getSOAPJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -83,7 +103,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.INITIAL_CONTEXT_FACTORY, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -97,7 +117,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.PROVIDER_URL, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -111,7 +131,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CONNECTION_FACTORY, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -125,7 +145,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.OUTBOUND_JMS_DESTINATION, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -138,7 +158,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.INBOUND_JMS_DESTINATION, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -152,7 +172,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			props.setProperty(JMSConnectorState.INBOUND_JMS_DESTINATION, "");
 			props.setProperty(JMSConnectorState.OUTBOUND_JMS_DESTINATION, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			assertTrue(true);
@@ -165,7 +185,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 		try {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesNoAuth();
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -177,7 +197,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 		try {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesNoAuth();
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -190,7 +210,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.ACKNOWLEDGEMENT_MODE, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -203,7 +223,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CORRELATION_ID, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -215,7 +235,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_DELIVERY_MODE, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -228,7 +248,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.REPLY_TO_DESTINATION, "");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -240,7 +260,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.RECEIVE_TIMEOUT, "not a number");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -253,7 +273,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CONNECTION_RETRY_COUNT, "lots");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -266,7 +286,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_PRIORITY, "high");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -279,7 +299,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_DURATION, "really long");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -292,7 +312,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_PRIORITY, "16");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -305,7 +325,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, SOAPConnectorStateImpl.DOC_LITERAL_STYLE);
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 			assertFalse("Should not be encoded", testState.isEncoded());
 			assertFalse("Should not be RPC", testState.isRPC());
@@ -319,7 +339,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, SOAPConnectorStateImpl.DOC_ENCODED_STYLE);
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 			assertTrue("Should be encoded", testState.isEncoded());
 			assertFalse("Should not be RPC", testState.isRPC());
@@ -333,7 +353,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, SOAPConnectorStateImpl.RPC_ENC_STYLE);
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 			assertTrue("Should be encoded", testState.isEncoded());
 			assertTrue("Should be RPC", testState.isRPC());
@@ -347,7 +367,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, SOAPConnectorStateImpl.RPC_LITERAL_STYLE);
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 			assertFalse("Should not be encoded", testState.isEncoded());
 			assertTrue("Should be RPC", testState.isRPC());
@@ -361,7 +381,7 @@ public class TestJMSSOAPConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getSOAPJMSPropertiesAuth();
 			props.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, "Shizno");
 			JMSSOAPConnectorState testState = new JMSSOAPConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			assertTrue(e.getMessage().indexOf("Encoding Style")!= -1);

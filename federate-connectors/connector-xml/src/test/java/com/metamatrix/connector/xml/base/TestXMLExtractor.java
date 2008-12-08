@@ -1,5 +1,25 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.base;
@@ -11,6 +31,7 @@ import junit.framework.TestCase;
 
 import org.jdom.Document;
 
+import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.exception.ConnectorException;
 
@@ -24,36 +45,8 @@ public class TestXMLExtractor extends TestCase {
 	}
 */	
 
-    private static class DummyLogger implements ConnectorLogger
-    {
-        public void logError(String s) {
-        	System.out.println(s);
-        }
-        
-        public void logError(String s, Throwable e) {
-            System.out.println(s);
-            e.printStackTrace();
-        }
-        
-        public void logWarning(String s) {
-            System.out.println(s);
-        }
-        
-        public void logInfo(String s) {
-            System.out.println(s);
-        }
-        
-        public void logDetail(String s) {
-            System.out.println(s);
-        }
-        
-        public void logTrace(String s) {     
-            System.out.println(s);
-        }
-        
-    }
 	public void testXMLFileExtractor() {
-		XMLExtractor extractor = new XMLExtractor(0, true, true, null, new DummyLogger());
+		XMLExtractor extractor = new XMLExtractor(0, true, true, null, new SysLogger(false));
 		assertNotNull(extractor);
 	}
 
@@ -86,7 +79,7 @@ public class TestXMLExtractor extends TestCase {
 
     public void testCreateDocumentFromString() {
         String file = "<root><foo type='myfoo'/></root>";
-        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new DummyLogger());
+        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new SysLogger(false));
         try {
             byte[] bytes = file.getBytes();
             InputStream inputStream = new ByteArrayInputStream(bytes);
@@ -105,7 +98,7 @@ public class TestXMLExtractor extends TestCase {
         for (int i = 0; i < 1000; i++) { buf.append("This is some text.\n");}
         buf.append("</root>");
         String file = buf.toString();
-        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new DummyLogger());
+        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new SysLogger(false));
         try {
             byte[] bytes = file.getBytes();
             InputStream inputStream = new ByteArrayInputStream(bytes);
@@ -120,7 +113,7 @@ public class TestXMLExtractor extends TestCase {
 	public void testCreateDocumentFromStringNotXML() {
 		//malformed xml
 		String file = "<root><foo type='myfoo'/>";
-        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new DummyLogger());
+        XMLExtractor extractor = new XMLExtractor(0, true, true, null, new SysLogger(false));
 		try {			
 			byte[] bytes = file.getBytes();
 			InputStream inputStream = new ByteArrayInputStream(bytes);

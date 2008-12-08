@@ -1,5 +1,25 @@
 /*
- * © 2007 Varsity Gateway LLC. All Rights Reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
 
 package com.metamatrix.connector.xml.jms;
@@ -22,10 +42,9 @@ public class TestJMSConnectorState extends TestCase {
 	JMSXMLConnectorState state;
 	
 	protected void setUp() throws Exception {
-		System.out.println("JMSConnectorStateTest.setUp()");
         super.setUp();
 		state = new JMSXMLConnectorState();
-		state.setLogger(new SysLogger());
+		state.setLogger(new SysLogger(false));
 		state.setState(getEnv(ProxyObjectFactory.getJMSPropertiesAuth()));
 	}
 
@@ -35,7 +54,7 @@ public class TestJMSConnectorState extends TestCase {
 	public void testSetState() {
 		JMSXMLConnectorState testState = new JMSXMLConnectorState();
 		try {
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -55,7 +74,7 @@ public class TestJMSConnectorState extends TestCase {
 	public void testJMSConnectorState() {
 		JMSXMLConnectorState testState = new JMSXMLConnectorState();
 		try {
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -68,7 +87,7 @@ public class TestJMSConnectorState extends TestCase {
 	public void testJMSConnectorStateProperties() {
 		try {
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(ProxyObjectFactory.getJMSPropertiesAuth()));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -80,7 +99,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.INITIAL_CONTEXT_FACTORY, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -94,7 +113,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.PROVIDER_URL, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -108,7 +127,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CONNECTION_FACTORY, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			this.assertTrue(true);
@@ -122,7 +141,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.OUTBOUND_JMS_DESTINATION, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -135,7 +154,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.INBOUND_JMS_DESTINATION, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -149,7 +168,7 @@ public class TestJMSConnectorState extends TestCase {
 			props.setProperty(JMSConnectorState.INBOUND_JMS_DESTINATION, "");
 			props.setProperty(JMSConnectorState.OUTBOUND_JMS_DESTINATION, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			assertTrue(true);
@@ -162,7 +181,7 @@ public class TestJMSConnectorState extends TestCase {
 		try {
 			Properties props = ProxyObjectFactory.getJMSPropertiesNoAuth();
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -174,7 +193,7 @@ public class TestJMSConnectorState extends TestCase {
 		try {
 			Properties props = ProxyObjectFactory.getJMSPropertiesNoAuth();
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getLocalizedMessage());
@@ -187,7 +206,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.ACKNOWLEDGEMENT_MODE, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -200,7 +219,7 @@ public class TestJMSConnectorState extends TestCase {
             Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
             props.setProperty(JMSConnectorState.ACKNOWLEDGEMENT_MODE, JMSConnectorState.DUPS_OK_ACKNOWLEDGE);
             JMSXMLConnectorState testState = new JMSXMLConnectorState();
-            testState.setLogger(new SysLogger());
+            testState.setLogger(new SysLogger(false));
             testState.setState(getEnv(props));
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -212,7 +231,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CORRELATION_ID, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -224,7 +243,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_DELIVERY_MODE, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -237,7 +256,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.REPLY_TO_DESTINATION, "");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			fail(e.getMessage());
@@ -249,7 +268,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.RECEIVE_TIMEOUT, "not a number");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -262,7 +281,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.CONNECTION_RETRY_COUNT, "lots");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -275,7 +294,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_PRIORITY, "high");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -288,7 +307,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_DURATION, "really long");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
@@ -301,7 +320,7 @@ public class TestJMSConnectorState extends TestCase {
 			Properties props = ProxyObjectFactory.getJMSPropertiesAuth();
 			props.setProperty(JMSConnectorState.MESSAGE_PRIORITY, "16");
 			JMSXMLConnectorState testState = new JMSXMLConnectorState();
-			testState.setLogger(new SysLogger());
+			testState.setLogger(new SysLogger(false));
 			testState.setState(getEnv(props));
 		} catch (ConnectorException e) {
 			return;
