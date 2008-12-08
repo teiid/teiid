@@ -84,11 +84,6 @@ public class TupleInputSource extends InputSource {
                     if (obj != null 
                         && types[i] != DataTypeManager.getDataTypeClass(DataTypeManager.DefaultDataTypes.CLOB) 
                         && types[i] != DataTypeManager.getDataTypeClass(DataTypeManager.DefaultDataTypes.BLOB)) {
-                        // damn; stupid xml still need to convert to string; but 
-                        // at least this way we escaped the
-                        // tuple--> string--> paerse -->sax
-                        // to
-                        // tuple --> sax
                         value = XmlUtil.escapeCharacterData(obj.toString());                    
                     }
                     saxHandler.characters (value.toCharArray(), 0, value.length());
