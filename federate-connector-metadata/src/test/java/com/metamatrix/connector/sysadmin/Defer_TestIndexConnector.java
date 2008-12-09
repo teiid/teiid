@@ -75,7 +75,7 @@ public class Defer_TestIndexConnector extends TestCase{
         super.setUp();
         // must set the system property to indicate the current running metamatrix vm, otherwise
         // the system admin feature is not enabled.
-        System.setProperty(VMNaming.VM_NAME_PROPERTY, "TestVM");//$NON-NLS-1$
+        VMNaming.setVMName("TestVM");
         
     }
 
