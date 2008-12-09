@@ -31,7 +31,6 @@ import com.metamatrix.data.language.IParameter;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.*;
-import com.metamatrix.query.sql.lang.StoredProcedure;
 
 import junit.framework.TestCase;
 
@@ -43,6 +42,7 @@ public class TestProcedureImpl extends TestCase {
      */
     public TestProcedureImpl(String name) {
         super(name);
+        System.setProperty("metamatrix.config.none", "true");
     }
 
     public static ProcedureImpl example() throws Exception {
