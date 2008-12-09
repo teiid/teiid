@@ -490,6 +490,13 @@ public class DocumentCache implements IDocumentCache {
         return obj;
     }
 
+    public void shutdownCleaner(boolean waitForShutdown) throws InterruptedException {
+    	this.shutdownCleaner();
+    	if (waitForShutdown && m_performanceCache) {
+    		m_cleaner.join();
+    	}
+    }
+
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.xml.cache.IDocumentCache#shutdownCleaner()
 	 */
