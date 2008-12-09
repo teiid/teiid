@@ -122,7 +122,14 @@ public class QueryService extends AbstractService implements ClientServiceRegist
                 LogManager.logWarning(LogCommonConstants.CTX_CONFIG, e, message);            
             }
         }    	
-        FunctionLibraryManager.registerSource(new UDFSource(retrieveUDFStream(udfSource), urls));
+        
+        InputStream in = retrieveUDFStream(udfSource);
+        if (in != null) {
+        	FunctionLibraryManager.registerSource(new UDFSource(in, urls));
+        }
+        else {
+        	LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("QueryService.no_udf")); //$NON-NLS-1$
+        }
     }
     
     private InputStream retrieveUDFStream(String udfSource) {

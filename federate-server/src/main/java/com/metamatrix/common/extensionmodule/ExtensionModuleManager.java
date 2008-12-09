@@ -724,10 +724,8 @@ public class ExtensionModuleManager {
         } catch ( ExtensionModuleNotFoundException e ) {
             throw e;
         } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0022, sourceName));
 			throw e;
 		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0022, sourceName));
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0022, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0022, sourceName));
         } finally {
             if ( transaction != null ) {
