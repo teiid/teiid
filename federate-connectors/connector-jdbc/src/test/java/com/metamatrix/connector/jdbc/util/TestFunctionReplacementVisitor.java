@@ -43,6 +43,7 @@ public class TestFunctionReplacementVisitor extends TestCase {
      */
     public TestFunctionReplacementVisitor(String name) {
         super(name);
+        System.setProperty("metamatrix.config.none", "true");
     }
 
     public Map getModifierSet1() {
