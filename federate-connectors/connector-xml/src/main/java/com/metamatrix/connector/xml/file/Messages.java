@@ -31,9 +31,7 @@ import java.util.ResourceBundle;
 public class Messages {
 	private static final String BUNDLE_NAME = "com.metamatrix.connector.xml.file.I18N"; //$NON-NLS-1$
 
-	//CHECKSTYLE:OFF
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
-	//CHECKSTYLE:ON
 
 	private Messages() {
 	}

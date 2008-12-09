@@ -102,8 +102,7 @@ public class SOAPExecutor extends RequestResponseDocumentProducer {
             String responseid = (String) (criterion.getValues().get(0));
             getExecution().getConnection().getConnector().createCacheObjectRecord(requestID, partID, executionID,
                   Integer.toString(invocationNumber), responseid);
-            result = new Response(responseid, this, cache, true,
-            		cacheReference);
+            result = new Response(responseid, this, cache, cacheReference);
         } else {
         	createRequest(getExecutionInfo().getParameters());
         	Document response = executeCall();
@@ -117,7 +116,7 @@ public class SOAPExecutor extends RequestResponseDocumentProducer {
 			cache.addToCache(cacheKey, doc, info.m_memoryCacheSize, cacheReference);
             connector.createCacheObjectRecord(requestID, partID, executionID,
                   Integer.toString(invocationNumber), cacheKey);
-            result = new Response(docs, cacheKeys, this, cache, getState().isErrorOnRecreateDoc(), cacheReference);
+            result = new Response(docs, cacheKeys, this, cache, cacheReference);
 			
         }
         return result;

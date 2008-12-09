@@ -191,8 +191,7 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
             String responseid = (String) (criterion.getValues().get(0));
             getExecution().getConnection().getConnector().createCacheObjectRecord(requestID, partID, executionID,
                   Integer.toString(invocationNumber), responseid);
-            return new Response(responseid, this, cache, h_state.isErrorOnRecreateDoc(),
-            		cacheReference);
+            return new Response(responseid, this, cache, cacheReference);
         }
 
         int documentCount = getDocumentCount();
@@ -224,7 +223,7 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
             docs[i] = doc;
             cacheKeys[i] = cacheKey;
         }
-        return new Response(docs, cacheKeys, this, cache, h_state.isErrorOnRecreateDoc(), cacheReference);
+        return new Response(docs, cacheKeys, this, cache, cacheReference);
 	}
 
     private void createRequests() throws ConnectorException {

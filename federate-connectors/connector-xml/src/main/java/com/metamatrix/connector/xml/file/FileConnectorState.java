@@ -50,8 +50,6 @@ public class FileConnectorState extends XMLConnectorStateImpl {
 		super();
 		setFileName(""); //$NON-NLS-1$
 		setDirectoryPath(""); //$NON-NLS-1$
-		//override the base default
-		setErrorOnRecreateDoc(false);
 	}
 	
 	public Properties getState() {

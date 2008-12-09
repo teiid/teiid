@@ -40,7 +40,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     private int m_cacheTimeout;
 
-    // private boolean m_reloadLatest;
     private int m_maxMemoryCacheSize;
 
     private int m_maxInMemoryStringSize;
@@ -49,17 +48,11 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     private boolean m_preprocess;
 
-    private boolean m_cacheEnabled;
-
-	private boolean m_performanceCacheEnabled;
-
     private String m_cacheLocation;
 
     private String m_saxProviderClass;
 
     private String m_queryPreprocessorClass;
-
-    private boolean m_errorOnRecreateDoc;
 
     private boolean m_logRequestResponse;
     
@@ -81,8 +74,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     public static final String FILE_CACHE_LOCATION = "FileCacheLocation"; //$NON-NLS-1$
 
-    public static final String THROW_ERROR_ON_RECREATE = "ExceptionOnIntraQueryCacheExpiration"; //$NON-NLS-1$
-
     public static final String LOG_REQUEST_RESPONSE_DOCS = "LogRequestResponseDocs"; //$NON-NLS-1$
 
     public static final String SAX_FILTER_PROVIDER_CLASS = "SaxFilterProviderClass"; //$NON-NLS-1$
@@ -98,20 +89,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     private static final String INPUT_STREAM_FILTER_CLASS_DEFAULT = "com.metamatrix.connector.xml.base.PluggableInputStreamFilterImpl"; //$NON-NLS-1$
 
     public static final String CONNECTOR_CAPABILITES = "ConnectorCapabilities";
-
-	private static final String PERFORMANCE_CACHING = "PerformanceCaching";
-
-    private String DQP_KEY = "MetaMatrix DQP";
-
-    private String XML_CONNECTOR_KEY = "Connector/XML";
-
-    private String VERSION_4_2 = "4.2";
-
-    private String VERSION_4_3 = "4.3";
-
-    private String VERSION_5_0 = "5.0";
-    
-    private String VERSION_5_5 = "5.5";
 
     protected ConnectorLogger logger;
 
@@ -132,7 +109,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         setMaxInMemoryStringSize(128 * 1024);
         setMaxFileCacheSizeKB(defaultFileCacheSize);
         setPreprocess(true);
-        setErrorOnRecreateDoc(true);
         setLogRequestResponse(false);
         setSaxProviderClass(SAX_FILTER_PROVIDER_CLASS_DEFAULT);
         setQueryPreprocessorClass(QUERY_PREPROCESS_CLASS_DEFAULT);
@@ -171,11 +147,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             setCacheLocation(temp);
         }
         
-        String throwError = props.getProperty(THROW_ERROR_ON_RECREATE);
-        if (throwError != null) {
-            setErrorOnRecreateDoc(Boolean.valueOf(throwError).booleanValue());
-        }
-
         String logReqRes = props.getProperty(LOG_REQUEST_RESPONSE_DOCS);
         if (logReqRes != null) {
             setLogRequestResponse(Boolean.valueOf(logReqRes).booleanValue());
@@ -270,8 +241,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             location = "";//$NON-NLS-1$
         }
         props.setProperty(FILE_CACHE_LOCATION, location);
-        props.setProperty(THROW_ERROR_ON_RECREATE, Boolean
-                .toString(isErrorOnRecreateDoc()));
         props.setProperty(SAX_FILTER_PROVIDER_CLASS, getSaxProviderClass());
         props.setProperty(QUERY_PREPROCESS_CLASS, getQueryPreprocessorClass());
         return props;
@@ -416,19 +385,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
      */
     public String getCacheLocation() {
         return m_cacheLocation;
-    }
-
-    protected void setErrorOnRecreateDoc(boolean errorOnRecreateDoc) {
-        m_errorOnRecreateDoc = errorOnRecreateDoc;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#isErrorOnRecreateDoc()
-     */
-    public boolean isErrorOnRecreateDoc() {
-        return m_errorOnRecreateDoc;
     }
 
     private void setLogRequestResponse(boolean logRequestResponse) {

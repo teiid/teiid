@@ -134,8 +134,7 @@ public class FileExecutor implements DocumentProducer, NamedDocumentExecutor {
         Response result;
 		if(null != criterion) {
 			cacheKey = (String)(criterion.getValues().get(0));
-			result =  new Response(cacheKey, this, cache, m_state.isErrorOnRecreateDoc(),
-					cacheReference);
+			result =  new Response(cacheKey, this, cache, cacheReference);
             execution.getConnection().getConnector().createCacheObjectRecord(requestID, partID, executionID,
                   Integer.toString(invocationNumber), cacheKey);
 		} else {
@@ -167,7 +166,7 @@ public class FileExecutor implements DocumentProducer, NamedDocumentExecutor {
                docs[docNumber] = doc;
                cacheKeys[docNumber] = cacheKey;
            }
-           result = new Response(docs, cacheKeys, this, cache, m_state.isErrorOnRecreateDoc(), cacheReference);
+           result = new Response(docs, cacheKeys, this, cache, cacheReference);
         }
         
         return result;

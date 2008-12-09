@@ -169,8 +169,7 @@ public class JMSRequestExecutor implements AsynchronousDocumentProducer , Messag
 			String responseid = (String)(criterion.getValues().get(0));
             connection.getConnector().createCacheObjectRecord(requestID, partID, executionID,
                   Integer.toString(invocationNumber), responseid);
-            return new Response(responseid, this, cache, jmsState.isErrorOnRecreateDoc(), 
-            		cacheReference);
+            return new Response(responseid, this, cache, cacheReference);
 		}
 		int documentCount = getDocumentCount();
         String[] cacheKeys = new String[documentCount];
@@ -211,8 +210,7 @@ public class JMSRequestExecutor implements AsynchronousDocumentProducer , Messag
         }
         connection.getConnector().createCacheObjectRecord(requestID, partID, executionID,
               Integer.toString(invocationNumber), cacheKeys[0]);
-        return new Response(docs, cacheKeys, this, cache, jmsState.isErrorOnRecreateDoc(), 
-        		cacheReference);
+        return new Response(docs, cacheKeys, this, cache, cacheReference);
 	}
 
 	public boolean hasResponse() throws ConnectorException {

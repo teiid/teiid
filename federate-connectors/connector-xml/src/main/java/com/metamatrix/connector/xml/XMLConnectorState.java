@@ -61,8 +61,6 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 
 	public abstract String getCacheLocation();
 
-	public abstract boolean isErrorOnRecreateDoc();
-
 	public abstract boolean isLogRequestResponse();
 
 	public abstract SAXFilterProvider getSAXFilterProvider();

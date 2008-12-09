@@ -54,30 +54,25 @@ public class Response {
 
 	IDocumentCache cache;
 
-	private boolean expOnRecreate;
-    
-    private String cacheReference;
+	private String cacheReference;
 
 	public Response(XMLDocument[] docs, String[] cacheKeys,
-			DocumentProducer docProducer, IDocumentCache cache, boolean expOnRecreate,
-			String cacheReference) {
+			DocumentProducer docProducer, IDocumentCache cache, String cacheReference) {
 		this.docs = docs;
 		this.cacheKeys = cacheKeys;
 		this.id = null;
 		this.docProducer = docProducer;
 		this.cache = cache;
-		this.expOnRecreate = expOnRecreate;
-        this.cacheReference = cacheReference;
+		this.cacheReference = cacheReference;
 	}
 
 	public Response(String id, DocumentProducer docProducer,
-			IDocumentCache cache, boolean expOnRecreate, String cacheReference) {
+			IDocumentCache cache, String cacheReference) {
 		this.docs = null;
 		this.cacheKeys = null;
 		this.id = id;
 		this.docProducer = docProducer;
 		this.cache = cache;
-		this.expOnRecreate = expOnRecreate;
 		this.cacheReference = cacheReference;
 	}
 

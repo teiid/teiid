@@ -30,10 +30,8 @@ import java.util.ResourceBundle;
 
 
 public class Messages {
-	//CHECKSTYLE:OFF - don't want to recreate bundle every time
 	private static final String BUNDLE_NAME = "com.metamatrix.connector.xml.http.I18N"; //$NON-NLS-1$ 
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
-	//CHECKSTYLE:ON
 	
 	private Messages() {
 	}
