@@ -89,6 +89,7 @@ import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.service.metadata.IndexMetadataService;
 import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
+import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceNotInitializedException;
@@ -343,12 +344,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // Create and install a metadata service on the connector manager
         QueryMetadataCache sharedCache = null;        
         try {
-            String systemVbdUrl = CurrentConfiguration.getProperty(ServerPropertyNames.SYSTEM_VDB_URL);
-            if(systemVbdUrl == null) {
-                throw new ApplicationInitializationException(ServerPlugin.Util.getString("ConnectorService.1")); //$NON-NLS-1$
-            }
-            URL systemUrl = URLFactory.parseURL(systemVbdUrl);
-            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(systemUrl);            
+            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(RuntimeMetadataCatalog.getSystemVDBArchive());            
         } catch(Exception e) {
             throw new ApplicationInitializationException(e, ServerPlugin.Util.getString("ConnectorService.0")); //$NON-NLS-1$
         }

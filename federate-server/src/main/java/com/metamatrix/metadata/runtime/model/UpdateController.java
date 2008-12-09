@@ -24,6 +24,9 @@
 
 package com.metamatrix.metadata.runtime.model;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -47,6 +50,7 @@ import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.DateUtil;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
@@ -441,7 +445,8 @@ public class UpdateController {
         while(iter.hasNext()){
             ModelInfo mInfo = (ModelInfo)iter.next();
             BasicModelID modelID = new BasicModelID(mInfo.getName(), mInfo.getVersion(), getNextModelUid());
-            modelID.setVersionDate(DateUtil.getDateAsString(mInfo.getDateVersioned()));
+            Date versionDate = (mInfo.getDateVersioned() != null)?mInfo.getDateVersioned():new Date();
+            modelID.setVersionDate(DateUtil.getDateAsString(versionDate));
             modelID.setUuid(mInfo.getUUID());
             BasicModel model = new BasicModel(modelID, vdbID, mInfo);
             vdbModels.add(model);
@@ -512,10 +517,23 @@ public class UpdateController {
         byte[] archive = null;
         ExtensionModuleManager extension = ExtensionModuleManager.getInstance();
             try {
-                if (!extension.isSourceInUse(fileName)) {
-                    throw new VirtualDatabaseException(RuntimeMetadataPlugin.Util.getString("UpdateController.VDB_File_does_not_exist_in_extension_modules_1",fileName)); //$NON-NLS-1$
-                }                
-                archive = extension.getSource(fileName);
+                if (extension.isSourceInUse(fileName)) {
+                	archive = extension.getSource(fileName);                    
+                } else {
+					try {
+						InputStream in = ClassLoader.getSystemResourceAsStream(fileName);
+						if (in != null) {
+							ByteArrayOutputStream byteStream = new ByteArrayOutputStream(100*1024);
+							FileUtils.write(in, byteStream, 10*1024);
+							archive = byteStream.toByteArray();
+						}
+					} catch (IOException e) {
+						// it will error below now.
+					}
+                }
+                if (archive == null) {
+                	throw new VirtualDatabaseException(RuntimeMetadataPlugin.Util.getString("UpdateController.VDB_File_does_not_exist_in_extension_modules_1",fileName)); //$NON-NLS-1$
+                }
             } catch (ExtensionModuleNotFoundException e) {
                 throw new VirtualDatabaseException(e);
             } catch (VirtualDatabaseException e) {
