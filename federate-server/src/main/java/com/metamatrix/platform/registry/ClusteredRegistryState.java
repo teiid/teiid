@@ -359,7 +359,7 @@ public class ClusteredRegistryState {
 	@NodeRemoved
 	@NodeModified
 	@NodeMoved
-	void registryChanged(NodeEvent ne) {
+	public void registryChanged(NodeEvent ne) {
     	Fqn fqn = ne.getFqn();
     	if (fqn.isChildOf(rootRegistryNode.getFqn())) {
     		for(RegistryListener l:this.listeners) {
