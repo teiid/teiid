@@ -52,17 +52,8 @@ public class TestCache extends TestCase {
     private final int CACHE_TIMEOUT = 0;
     private final int LOGGING_LEVEL = 1;
     
-    public TestCache() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
-
-    /**
-     * @param arg0
-     */
     public TestCache(String arg0) {
         super(arg0);
-        // TODO Auto-generated constructor stub
     }
     
     public static Test suite() {
@@ -100,8 +91,7 @@ public class TestCache extends TestCase {
         }
     }
     
-    public void testAddToCache() {
-        try{
+    public void testAddToCache() throws ConnectorException {
         DocumentCache cache = new DocumentCache(CACHE_SIZE, CACHE_SIZE, CACHE_LOC, CACHE_TIMEOUT, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestAddToCache"); //$NON-NLS-1$
         String newString = new String("blah, blah, blah"); //$NON-NLS-1$
         cache.addToCache("foo1", newString, newString.length(), "foo"); //$NON-NLS-1$
@@ -110,15 +100,10 @@ public class TestCache extends TestCase {
         assertEquals("File cache size is wrong", cache.getCurrentFileCacheSize(), 0);
         cache.dumpCache();
         cache.shutdownCleaner();
-        }catch(Throwable t){
-        	fail(t.getMessage());
-        }
-
     }
     
     
     public void testOverloadMemoryCache() throws Exception {
-        try{
         final int maxSize = 18;
         final String id1 = "foo1"; //$NON-NLS-1$
         final String id2 = "foo2"; //$NON-NLS-1$
@@ -135,9 +120,6 @@ public class TestCache extends TestCase {
         assertEquals("File cache size is wrong", string1.length(), cache.getCurrentFileCacheSize());
         cache.dumpCache();
         cache.shutdownCleaner();
-        }catch(Throwable t){
-        	fail(t.getMessage());
-        }
     }
     
     public void testOverloadFileCache() throws Exception {
@@ -248,16 +230,11 @@ public class TestCache extends TestCase {
         assertZero("File cache size is not zero", cache.getCurrentFileCacheSize());                     
     }
 
-    private void assertZero(int item) {
-        assertZero("item is not equal to zero", item);
-    }
-    
     private void assertZero(String message, int item) {
         assertEquals(message, 0, item);
     }
 
-    public void testCacheStraightToFile() {
-        try{
+    public void testCacheStraightToFile() throws ConnectorException {
         //what happens if we skip the memory cache?
         DocumentCache cache = new DocumentCache(0, CACHE_SIZE, CACHE_LOC, CACHE_TIMEOUT, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestCacheStraightFromFile"); //$NON-NLS-1$
         final String newString = new String("blah, blah, blah"); //$NON-NLS-1$
@@ -267,14 +244,9 @@ public class TestCache extends TestCase {
         assertZero("Memory cache size is not zero", cache.getCurrentMemoryCacheSize());
         assertEquals("File cache size is wrong", cache.getCurrentFileCacheSize(), newString.length());
         cache.shutdownCleaner();
-        }catch(Throwable t){
-        	fail(t.getMessage());
-        }
-
     }
     
-    public void testCacheToFileTooBig() {
-        try{
+    public void testCacheToFileTooBig() throws ConnectorException {
         //what happens if we try to send something to the file cache
         //but its too big?
         final int memoryCache = 0;
@@ -287,10 +259,6 @@ public class TestCache extends TestCase {
         assertZero("Memory cache size is not zero", cache.getCurrentMemoryCacheSize());
         assertZero("File cache size is not zero", cache.getCurrentFileCacheSize());
         cache.shutdownCleaner();
-        }catch(Throwable t){
-        	fail(t.getMessage());
-        }
-
     }
     
     public void testCleanerShutdown() throws Exception {
@@ -299,7 +267,7 @@ public class TestCache extends TestCase {
         final String cacheKey = "foo1";
         cache.addToCache(cacheKey, newString, newString.length(), "foo"); //$NON-NLS-1$
         cache.dumpCache();
-        cache.shutdownCleaner();
+        cache.shutdownCleaner(true);
         //Thread.sleep(100000);
         cache.dumpCache();
         assertZero("Memory cache size is not equal to zero.",  cache.getCurrentMemoryCacheSize());
@@ -307,13 +275,11 @@ public class TestCache extends TestCase {
     }
     
     
-    public void testFetchOlderObject() {
+    public void testFetchOlderObject() throws ConnectorException {
         final String id1 = "foo1"; //$NON-NLS-1$
         final String id2 = "foo2"; //$NON-NLS-1$
         final String id3 = "foo3"; //$NON-NLS-1$
         
-        try {
-			
         IDocumentCache cache = new DocumentCache(CACHE_SIZE, CACHE_SIZE, CACHE_LOC, 500, EnvironmentUtility.createStdoutLogger(6), "TestFetchOlderObject"); //$NON-NLS-1$
         String string1 = new String("blah, blah, blah"); //$NON-NLS-1$
         String string2 = new String("blab, blab, blab"); //$NON-NLS-1$
@@ -324,13 +290,9 @@ public class TestCache extends TestCase {
         Object obj1 = cache.fetchObject(id1, null);
         assertEquals("Got the wrong value out of the cache", string1, ((String) obj1));
         cache.shutdownCleaner();
-        } catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
     }
     
     public void testRemoveFromCache() throws Exception {
-        try{
         final String id = "foo1"; //$NON-NLS-1$
         DocumentCache cache = new DocumentCache(CACHE_SIZE, CACHE_SIZE, CACHE_LOC, CACHE_TIMEOUT, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestRemoveFromCache"); //$NON-NLS-1$
         String newString = new String("blah, blah, blah"); //$NON-NLS-1$
@@ -340,9 +302,6 @@ public class TestCache extends TestCase {
         assertNull("Found an object in the cache we shouldn't have.", cache.fetchObject(id, "foo"));
         cache.dumpCache();
         cache.shutdownCleaner();
-        }catch(Throwable t){
-        	fail(t.getMessage());
-        }
     }
     
     /*public void testMultithreaded() throws Exception {
