@@ -24,7 +24,9 @@
 
 package com.metamatrix.connector.metadata.internal;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
@@ -42,10 +44,9 @@ import com.metamatrix.metadata.runtime.FakeMetadataService;
 import com.metamatrix.metadata.runtime.FakeQueryMetadata;
 
 public class TestObjectQueryProcessor extends TestCase {
-    public static final String TEST_FILE_NAME = UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
 
     private CommandBuilder commandBuilder;
-    private static TstFileReader testFile;
+    private static BufferedReader testFile;
 
     private static PrintWriter actualResultsFile;
 
@@ -54,16 +55,23 @@ public class TestObjectQueryProcessor extends TestCase {
     }
 
     private void runNextTest() throws Exception {
-        FakeMetadataService metaService = new FakeMetadataService(TEST_FILE_NAME);
+        FakeMetadataService metaService = new FakeMetadataService(TestObjectQueryProcessor.class.getResource("/PartsSupplier.vdb")); //$NON-NLS-1$
 
-        String queryText = testFile.readQuery();
+        String queryText = testFile.readLine();
         actualResultsFile.append(queryText);
         actualResultsFile.append(StringUtil.LINE_SEPARATOR);
 
         ObjectQuery query = new ObjectQuery(getRuntimeMetadata(), getCommand(queryText));
         Iterator results = new ObjectQueryProcessor(metaService.getMetadataObjectSource("PartsSupplier", "1")).process(query); //$NON-NLS-1$ //$NON-NLS-2$
 
-        checkResults(testFile.readResults(), dumpResults(results));
+        String nextLine = testFile.readLine();
+        StringBuffer sb = new StringBuffer();
+        while(nextLine != null && nextLine.trim().length()>0){
+            sb.append(nextLine).append(StringUtil.LINE_SEPARATOR);
+            nextLine = testFile.readLine();
+        }
+        
+        checkResults(sb.toString(), dumpResults(results));
     }
 
     public static RuntimeMetadata getRuntimeMetadata() {
@@ -207,7 +215,7 @@ public class TestObjectQueryProcessor extends TestCase {
         super.setUp();
         commandBuilder = new CommandBuilder(FakeQueryMetadata.getQueryMetadata());
         if (testFile == null) {
-            testFile = new TstFileReader(UnitTestUtil.getTestDataPath() + File.separator+"tests.txt"); //$NON-NLS-1$
+            testFile = new BufferedReader(new FileReader(UnitTestUtil.getTestDataPath() + File.separator+"tests.txt")); //$NON-NLS-1$
         }
         if (actualResultsFile == null) {
             actualResultsFile = new PrintWriter(UnitTestUtil.getTestScratchFile("results.txt")); //$NON-NLS-1$

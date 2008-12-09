@@ -24,6 +24,7 @@
 
 package com.metamatrix.connector.metadata;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,9 +39,10 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
+import com.metamatrix.connector.metadata.internal.TestConnectorHost;
 import com.metamatrix.connector.metadata.internal.TestObjectQueryProcessor;
 import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
-import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorCapabilities;
@@ -59,7 +61,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class TestIndexConnector extends TestCase {
     private FakeMetadataService fakeApplicationService = null;
-    public static final String TEST_FILE_NAME = UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
     
     public TestIndexConnector(String name) {
         super(name);
@@ -169,7 +170,11 @@ public class TestIndexConnector extends TestCase {
             public ApplicationService findService(String type) {
                 if (type.equals(DQPServiceNames.METADATA_SERVICE)) {
                     clearApplicationService();
-                    fakeApplicationService = new FakeMetadataService(TEST_FILE_NAME);
+                    try {
+						fakeApplicationService = new FakeMetadataService(TestConnectorHost.TEST_FILE);
+					} catch (IOException e) {
+						throw new MetaMatrixRuntimeException(e);
+					}
                     return fakeApplicationService;
                 }
                 return null;

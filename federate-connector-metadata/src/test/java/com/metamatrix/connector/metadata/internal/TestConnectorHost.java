@@ -25,6 +25,7 @@
 package com.metamatrix.connector.metadata.internal;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
@@ -34,7 +35,6 @@ import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.metadata.IndexConnector;
-import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
@@ -42,13 +42,13 @@ import com.metamatrix.metadata.runtime.FakeQueryMetadata;
 
 public class TestConnectorHost extends TestCase {
     private FakeMetadataService fakeApplicationService;
-    public static final String TEST_FILE_NAME = UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
+    public static final URL TEST_FILE = TestConnectorHost.class.getResource("/PartsSupplier.vdb"); //$NON-NLS-1$
 
     public TestConnectorHost(String name) {
         super(name);
     }
 
-    public void testWithIndexConnector() throws ConnectorException {
+    public void testWithIndexConnector() throws ConnectorException, IOException {
         IConnectorHost host = getConnectorHost(null);
         host.setSecurityContext("testName", "testVersion", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         List results = host.executeCommand("select FullName from tables"); //$NON-NLS-1$
@@ -57,16 +57,16 @@ public class TestConnectorHost extends TestCase {
         assertEquals("PartsSupplier.PARTSSUPPLIER.PARTS", row.get(0).toString()); //$NON-NLS-1$
     }
 
-    private IConnectorHost getConnectorHost(Properties properties) {
+    private IConnectorHost getConnectorHost(Properties properties) throws IOException {
         clearApplicationService();
-        fakeApplicationService =  new FakeMetadataService(TEST_FILE_NAME);
+        fakeApplicationService =  new FakeMetadataService(TEST_FILE);
         ConnectorHost host = new ConnectorHost(new IndexConnector(), properties, new TranslationUtility(FakeQueryMetadata.getQueryMetadata()));
         host.addResourceToConnectorEnvironment(DQPServiceNames.METADATA_SERVICE, fakeApplicationService);
         return host;
     }
 
     public void testWithIndexConnectorAndVdb() throws ConnectorException, IOException {
-        ConnectorHost host = new ConnectorHost(new IndexConnector(), null, TestObjectQueryProcessor.TEST_FILE_NAME, false);
+        ConnectorHost host = new ConnectorHost(new IndexConnector(), null, new TranslationUtility(TEST_FILE), false);
         host.setSecurityContext("testName", "testVersion", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
