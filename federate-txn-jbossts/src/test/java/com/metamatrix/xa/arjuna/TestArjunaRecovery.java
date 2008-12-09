@@ -47,6 +47,10 @@ public class TestArjunaRecovery extends TestCase {
     private static final String CONN1 = "conn1";//$NON-NLS-1$
 
 
+    public TestArjunaRecovery() {
+    	super();
+    	System.setProperty("metamatrix.config.none", "true");
+    }
     
     public void testRecovery() throws Exception{
         final List done = new ArrayList();
