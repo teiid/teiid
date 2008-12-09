@@ -31,7 +31,6 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -47,6 +45,7 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.StartupStateController;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.net.SocketHelper;
@@ -86,23 +85,8 @@ public class HostController extends Thread {
 
     private final static String[] commands = {"StartAllVMs", "StartVM", "KillAllVMs", "KillVM", "Ping", "Exit" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     
-    public static final String VM_STARTER_COMMAND_PROPERTY_NAME = "vm.starter.command"; //$NON-NLS-1$
-
-    private static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME; 
-    private static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME; 
-
-
-    private static final String DEFAULT_VM_STARTER_COMMAND = "java com.metamatrix.common.comm.platform.socket.SocketVMController"; //$NON-NLS-1$
-    private static final String VM_MINIMUM_HEAP_SIZE_ARG_PREFIX = "-ms"; //$NON-NLS-1$
-    private static final String VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX = "-mx"; //$NON-NLS-1$
-    private static final String VM_HEAP_SIZE_ARG_POSTFIX = "m";     // megabytes //$NON-NLS-1$
-    private static final String JAVA_IO_TEMP_OPTION = "-D" + FileUtils.JAVA_IO_TEMP_DIR;     //temp directory //$NON-NLS-1$
-        
-    // Hotspot options
-    private static final String VM_HOTSPOT_OPTION = "-hotspot"; //$NON-NLS-1$
-    private static final String VM_SERVER_OPTION = "-server"; //$NON-NLS-1$
-    private static final String VM_CLASSIC_OPTION = "-classic"; //$NON-NLS-1$    
-
+    private static final String DEFAULT_JAVA_MAIN = "com.metamatrix.common.comm.platform.socket.SocketVMController"; //$NON-NLS-1$
+ 
     private static Host host=null;
     
     private Map processMap = new HashMap(3);
@@ -113,7 +97,7 @@ public class HostController extends Thread {
         
     private ClusteredRegistryState registry;
 
-    // Initialized TextManager with I18N namespaces
+    // Initialized  I18N namespaces
     static {
 		VMResources.initResourceBundles();
     }
@@ -143,8 +127,7 @@ public class HostController extends Thread {
         
         this.port = getPortNumber();
         
-        String vmName =  CurrentConfiguration.getVM().getFullName();
-		Injector injector = Guice.createInjector(new ServerGuiceModule(host, vmName));
+		Injector injector = Guice.createInjector(new ServerGuiceModule(host, "hostControllerProcess"));
         
 		this.registry = injector.getInstance(ClusteredRegistryState.class);
         
@@ -318,6 +301,138 @@ public class HostController extends Thread {
         System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
         System.out.println("-------------------------------------------------------\n"); //$NON-NLS-1$
     }
+    
+    void doStartAllVMs() {
+        logMessage("StartAllVMs"); //$NON-NLS-1$
+
+        try {
+            String hostname = getHostname();
+            CurrentConfiguration.verifyBootstrapProperties();
+            ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+//            Configuration currentConfig = CurrentConfiguration.getConfiguration(true);
+            Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostname);
+
+            if ( deployedVMs != null && deployedVMs.size() > 0) {
+                Iterator vmIterator = deployedVMs.iterator();
+
+                while ( vmIterator.hasNext() ) {
+                    VMComponentDefn deployedVM = (VMComponentDefn) vmIterator.next();
+                    startVM(deployedVM, hostname, currentConfig);
+                }
+            } else {
+                String msg = "Unable to start VM's on host \"" + hostname +
+                            "\" due to the configuration has no VM's deployed to this host.";
+                logMessage(msg);
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            logMessage(e.getMessage());
+        }
+    }
+
+    private void doStartVM(String vmName) {
+
+        logMessage("StartVM " + vmName); //$NON-NLS-1$
+
+        try {
+            Host h = getHost();
+            CurrentConfiguration.verifyBootstrapProperties();
+            ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+
+            VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(h.getFullName(), vmName);
+
+            if (deployedVM != null) {
+            	startVM(deployedVM, h.getFullName(), currentConfig);
+            } 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void startVM(VMComponentDefn deployedVM, String hostname, ConfigurationModelContainer currentConfig) throws Exception {
+        // Get all of the properties for the deployed VM plus all of the
+        // properties inherited from parents and the configuration.
+        // The properties defined on this VM override inherited properties.
+        Properties vmPropsAndConfigProps = new Properties();
+        Properties props = currentConfig.getDefaultPropertyValues(deployedVM.getComponentTypeID());
+        Properties vmProps = currentConfig.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
+        vmPropsAndConfigProps.putAll(props);
+        vmPropsAndConfigProps.putAll(getHost().getProperties());                    
+        vmPropsAndConfigProps.putAll(vmProps);
+
+        // pass the instance name and its properties
+        startVM( deployedVM.getID().getName(), hostname, deployedVM.isEnabled(), vmPropsAndConfigProps );
+  	
+    }
+
+    private void doKillAllVMs() {
+
+        logMessage("KillAllVMs"); //$NON-NLS-1$
+        
+        // must copy the map so that when
+        // doKillVM tries to remove it from the map
+        // while its being iterated over.
+        Map copyMap = new HashMap();
+        copyMap.putAll(processMap);
+
+        Iterator processes = copyMap.keySet().iterator();
+        while (processes.hasNext()) {
+            String vmName = (String) processes.next();
+            doKillVM(vmName);
+        }
+        processMap.clear();
+    }
+
+    private void doKillVM(String vmName) {
+
+        logMessage("KillVM " + vmName); //$NON-NLS-1$
+        
+        // find the vm and shut it down.
+        List<VMRegistryBinding> vms = HostController.this.registry.getVMs(null);
+        for (VMRegistryBinding vm:vms) {
+            if (vm.getHostName().equalsIgnoreCase(getHostname())) {
+                if (vm.getVMName().equalsIgnoreCase(vmName)) {
+                    try {
+                        vm.getVMController().shutdownNow();
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                    break;
+                }
+            }
+        }
+        
+        Process process = (Process) processMap.get(vmName.toUpperCase());
+        if (process != null) {
+            processMap.remove(vmName.toUpperCase());
+            process.destroy();
+        }
+    }
+
+    private void doPing() {
+    }
+
+    private void doExit() {
+        doKillAllVMs();
+        System.exit(0);
+    }
+         
+
+    private void startVM(String vmName, String hostName, boolean enabled, Properties props) throws Exception {
+
+        String name = vmName.toUpperCase();
+        if (processMap.containsKey(name)) {
+            logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0011,vmName));
+            doKillVM(vmName);
+        }
+        
+        if (enabled) {
+            processMap.put(name, startDeployVM(vmName, hostName, props, host));
+        } else {
+            logMessage(PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", vmName));//$NON-NLS-1$
+
+        }
+    }    
 
 
     public class StarterThread extends Thread {
@@ -345,7 +460,7 @@ public class HostController extends Thread {
                 // start processes on this host using operational configuration
                 String host = hc.getHostname();
                 logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0008, host));
-                MetaMatrixController.startHost(host);
+                hc.doStartAllVMs();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -459,7 +574,7 @@ public class HostController extends Thread {
             switch (commandType) {
 
                 case COMMAND_START_ALL_VMS:
-                    doStartAllVMs();
+                    hc.doStartAllVMs();
                     break;
 
                 case COMMAND_START_VM:
@@ -467,12 +582,12 @@ public class HostController extends Thread {
                         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0010));
                     } else {
                         String vmName = (String) parsedCommand.get(1);
-                        doStartVM(vmName);
+                        hc.doStartVM(vmName);
                     }
                     break;
 
                 case COMMAND_KILL_ALL_VMS:
-                    doKillAllVMs();
+                    hc.doKillAllVMs();
                     break;
 
                 case COMMAND_KILL_VM:
@@ -480,16 +595,16 @@ public class HostController extends Thread {
                         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0010));
                     } else {
                         String vmName = (String) parsedCommand.get(1);
-                        doKillVM(vmName);
+                        hc.doKillVM(vmName);
                     }
                     break;
 
                 case COMMAND_PING:
-                    doPing();
+                    hc.doPing();
                     break;
 
                 case COMMAND_EXIT:
-                    doExit();
+                    hc.doExit();
                     break;
 
                 case COMMAND_INVALID:
@@ -497,146 +612,7 @@ public class HostController extends Thread {
             }
         }
 
-        void doStartAllVMs() {
-            logMessage("StartAllVMs"); //$NON-NLS-1$
-
-            try {
-                String hostname = hc.getHostname();
-                CurrentConfiguration.verifyBootstrapProperties();
-                ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
-//                Configuration currentConfig = CurrentConfiguration.getConfiguration(true);
-                Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostname);
-
-                if ( deployedVMs != null && deployedVMs.size() > 0) {
-                    Iterator vmIterator = deployedVMs.iterator();
-
-                    while ( vmIterator.hasNext() ) {
-                        VMComponentDefn deployedVM = (VMComponentDefn) vmIterator.next();
-
-                        // Get all of the properties for the deployed VM plus all of the
-                        // properties inherited from parents and the configuration.
-                        // The properties defined on this VM override inherited properties.
-                        Properties vmPropsAndConfigProps = new Properties();
-                        Properties props = currentConfig.getDefaultPropertyValues(deployedVM.getComponentTypeID());
-                        Properties vmProps = currentConfig.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
-                        vmPropsAndConfigProps.putAll(props);
-                        vmPropsAndConfigProps.putAll(hc.getHost().getProperties());
-                        vmPropsAndConfigProps.putAll(vmProps);
-                        
-                        // pass the instance name and its properties
-                        startVM( deployedVM.getID().getName(), hostname, deployedVM.isEnabled(), vmPropsAndConfigProps );
-                    }
-                } else {
-//                    String msg = "Unable to start VM's on host \"" + hostname +
-//                                "\" due to the configuration has no VM's deployed to this host.";
-    //                logError(msg);
-    //                throw new ConfigurationException(msg);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                logMessage(e.getMessage());
-            }
-        }
-
-        private void doStartVM(String vmName) {
-
-            logMessage("StartVM " + vmName); //$NON-NLS-1$
-
-            try {
-                Host h = hc.getHost();
-                CurrentConfiguration.verifyBootstrapProperties();
-                ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
-
-                VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(h.getFullName(), vmName);
-
-                if (deployedVM != null) {
-                    // Get all of the properties for the deployed VM plus all of the
-                    // properties inherited from parents and the configuration.
-                    // The properties defined on this VM override inherited properties.
-                    Properties vmPropsAndConfigProps = new Properties();
-                    Properties props = currentConfig.getDefaultPropertyValues(deployedVM.getComponentTypeID());
-                    Properties vmProps = currentConfig.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
-                    vmPropsAndConfigProps.putAll(props);
-                    vmPropsAndConfigProps.putAll(hc.getHost().getProperties());                    
-                    vmPropsAndConfigProps.putAll(vmProps);
-
-                    // pass the instance name and its properties
-                    startVM( deployedVM.getID().getName(), h.getFullName(), deployedVM.isEnabled(), vmPropsAndConfigProps );
-
-                } 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void doKillAllVMs() {
-
-            logMessage("KillAllVMs"); //$NON-NLS-1$
-            
-            // must copy the map so that when
-            // doKillVM tries to remove it from the map
-            // while its being iterated over.
-            Map copyMap = new HashMap();
-            copyMap.putAll(processMap);
-
-            Iterator processes = copyMap.keySet().iterator();
-            while (processes.hasNext()) {
-                String vmName = (String) processes.next();
-                doKillVM(vmName);
-            }
-            processMap.clear();
-        }
-
-        private void doKillVM(String vmName) {
-
-            logMessage("KillVM " + vmName); //$NON-NLS-1$
-            
-            // find the vm and shut it down.
-            List<VMRegistryBinding> vms = HostController.this.registry.getVMs(null);
-            for (VMRegistryBinding vm:vms) {
-                if (vm.getHostName().equalsIgnoreCase(hc.getHostname())) {
-                    if (vm.getVMName().equalsIgnoreCase(vmName)) {
-                        try {
-                            vm.getVMController().shutdownNow();
-                        } catch (Exception e) {
-                            // ignore
-                        }
-                        break;
-                    }
-                }
-            }
-            
-            Process process = (Process) processMap.get(vmName.toUpperCase());
-            if (process != null) {
-                processMap.remove(vmName.toUpperCase());
-                process.destroy();
-            }
-        }
-
-        private void doPing() {
-        }
-
-        private void doExit() {
-            doKillAllVMs();
-            System.exit(0);
-        }
-             
-
-        private void startVM(String vmName, String hostName, boolean enabled, Properties props) throws Exception {
-
-            String name = vmName.toUpperCase();
-            if (processMap.containsKey(name)) {
-                logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0011,vmName));
-                doKillVM(vmName);
-            }
-            
-            if (enabled) {
-                processMap.put(name, startDeployVM(vmName, hostName, props, host));
-            } else {
-                logMessage(PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", vmName));//$NON-NLS-1$
-
-            }
-        }
+  
     }
 
     private void logMessage(String msg) {
@@ -646,12 +622,11 @@ public class HostController extends Thread {
 
     private static void printUsage() {
 
-        String msg = "java com.metamatrix.platform.host.HostController [-port portNum] [-startProcesses] [-wait] [-help]" + //$NON-NLS-1$
+        String msg = "java com.metamatrix.platform.host.HostController [-port portNum] [-config hostName] [-noprocesses] [-help]" + //$NON-NLS-1$
                      "\nWhere:" + //$NON-NLS-1$
                      "\n                  -help" + //$NON-NLS-1$
-                     "\n                  -host hostName (deprecated, see -config)" + //$NON-NLS-1$                                         
-                     "\n                  -config hostName" + //$NON-NLS-1$
-                     "\n                  -noprocesses" ; //$NON-NLS-1$
+                     "\n                  -config hostName indicates specific host configuration to use" + //$NON-NLS-1$
+                     "\n                  -noprocesses indicates to not start the processes" ; //$NON-NLS-1$
 
         System.out.println(msg);
     }
@@ -671,7 +646,7 @@ public class HostController extends Thread {
         int parmIndex = args.length;
         for (int i = 0; i < parmIndex; i++) {
             String command = args[i];
-            if (command.equalsIgnoreCase("-config") || command.equalsIgnoreCase("-host")) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (command.equalsIgnoreCase("-config") ) { //$NON-NLS-1$ //$NON-NLS-2$
                 i++;
                 if (i == parmIndex) {
                     printUsage();
@@ -784,155 +759,48 @@ public class HostController extends Thread {
     
    
    private static Process startDeployVM( String vmName, String hostName, Properties vmprops, Host host ) {
+	   logInfo("Start deploy VM " + vmName);
        String command = buildVMCommand(vmName,hostName,vmprops, "true", host); //$NON-NLS-1$
        return execCommand(command);
    }
 
    private static String buildVMCommand( String vmname, String hostName, Properties vmprops, String startDeployedServices, Host host ) {
-
-       String command = getVMStarterCommand();
-
-       // Add the heap size specifications ...
-       String minHeapSizeValue = vmprops.getProperty(VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME);
-       String maxHeapSizeValue = vmprops.getProperty(VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME);
-
-       List tokens = new ArrayList(11);
-       StringTokenizer tokenizer = new StringTokenizer(command);
-       String token = null;
-       String existingMinHeap = null;
-       String existingMaxHeap = null;
-       String hotspotOption = null;
-       String vmNameCommandLineParam = "-D" + VMNaming.VM_NAME_PROPERTY + "=" + getCommandArgument(vmname); //$NON-NLS-1$ //$NON-NLS-2$
-       boolean hasJavaIOTemp = false;
-       
-      
-       if ( tokenizer.hasMoreTokens() ) {
-           token = tokenizer.nextToken();
-           tokens.add(token);       // should be "java"
-       }
-       while ( tokenizer.hasMoreTokens() ) {
-           token = tokenizer.nextToken();
-           if ( token.startsWith(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX) ) {
-               existingMinHeap = token;
-           } else if ( token.startsWith(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX) ) {
-               existingMaxHeap = token;
-           } else if ( token.equalsIgnoreCase(VM_CLASSIC_OPTION)) {   // check for hotspot options
-               hotspotOption = VM_CLASSIC_OPTION;                     // hotspot option must be first param after "java "
-           } else if ( token.equalsIgnoreCase(VM_HOTSPOT_OPTION)) {
-               hotspotOption = VM_HOTSPOT_OPTION;
-           } else if ( token.equalsIgnoreCase(VM_SERVER_OPTION)) {
-               hotspotOption = VM_SERVER_OPTION;
-           } else if ( token.startsWith(JAVA_IO_TEMP_OPTION)) {
-               hasJavaIOTemp = true;   
-               tokens.add(token);
-           } else {
-               tokens.add(token);
-           }
-       }
-
-       // now build up the command.
-       if ( tokens.size() > 1 ) {
-
-           Iterator iter = tokens.iterator();
-           StringBuffer newCommand = new StringBuffer(iter.next().toString()); // "java"
-           newCommand.append(" "); //$NON-NLS-1$
-
-           // hotspot option must be first option
-           if (hotspotOption != null) {
-               newCommand.append(hotspotOption);
-               newCommand.append(" "); //$NON-NLS-1$
-           }
-
-           // insert vm name property
-           newCommand.append(vmNameCommandLineParam);
-           newCommand.append(" "); //$NON-NLS-1$
-           
-           if (!hasJavaIOTemp) {
-               String tempdir = host.getTempDirectory();
-               String tempCommandLineParam = JAVA_IO_TEMP_OPTION + "=" + getCommandArgument(tempdir); //$NON-NLS-1$ 
-               newCommand.append(tempCommandLineParam);
-               newCommand.append(" "); //$NON-NLS-1$
-           }
-
-           String minHeapValue = null;
-           String maxHeapValue = null;
-           if ( minHeapSizeValue != null ) {
-               minHeapValue = minHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX;
-           } else {
-               if ( existingMinHeap != null ) {
-                   minHeapValue = existingMinHeap.substring(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX.length());
-               }
-           }
-           if ( maxHeapSizeValue != null ) {
-               if ( isFirstHeapSizeLarger(maxHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX,minHeapValue) ) {
-                   maxHeapValue = maxHeapSizeValue + VM_HEAP_SIZE_ARG_POSTFIX;
-               }
-           }
-           if ( maxHeapValue == null ) {
-               if ( existingMaxHeap != null ) {
-                   maxHeapValue = existingMaxHeap.substring(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX.length());
-                   if ( ! isFirstHeapSizeLarger(maxHeapValue,minHeapValue) ) {
-                       minHeapValue = null;
-                   }
-               }
-           }
-           if ( minHeapValue != null ) {
-               newCommand.append(VM_MINIMUM_HEAP_SIZE_ARG_PREFIX);
-               newCommand.append(minHeapValue);
-               newCommand.append(" "); //$NON-NLS-1$
-           }
-           if ( maxHeapValue != null ) {
-               newCommand.append(VM_MAXIMUM_HEAP_SIZE_ARG_PREFIX);
-               newCommand.append(maxHeapValue);
-               newCommand.append(" "); //$NON-NLS-1$
-           }
-           while ( iter.hasNext() ) {
-               newCommand.append(" "); //$NON-NLS-1$
-               newCommand.append(iter.next().toString());
-
-           }
-           command = newCommand.toString();
-       }
-
-       // Start a new named VM running in DEPLOY mode on this machine
-       String cmd = command + " " + getCommandArgument(vmname) + " " + getCommandArgument(hostName) + " " + startDeployedServices; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-       //+ " " + getCommandArgument(logFile);  //$NON-NLS-4$
+	   String java = vmprops.getProperty(HostType.JAVA_EXEC, "java");
+	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS);
+	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
+	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS);
+	   
+	   java = replaceToken(java, vmprops);
+	   java_opts = replaceToken(java_opts, vmprops);
+	   java_main = replaceToken(java_main, vmprops);
+	   java_args = replaceToken(java_args, vmprops);
+   
+	   String cmd = java + " " + java_opts + " " + java_main + " " + java_args;
        return cmd;
    }
+   
+   /*
+    * Replace any defined ${...} properties with associated properties
+    * that exist in the vmprops
+    */
+   private static String replaceToken(String value, Properties props) {
+	   String rtn = value;
+	   while (true) {
+		   int startidx = rtn.indexOf("${");
+		   if (startidx == -1) return rtn;
+		   
+		   int endidx = rtn.indexOf("}");
+		   if (endidx < startidx)  return rtn;
+		   
+		   String tokenprop = rtn.substring(startidx + 2, endidx);
+		   String tokenvalue = props.getProperty(tokenprop);
+		   StringBuffer buf = new StringBuffer(rtn);
+		   rtn = buf.replace(startidx, endidx + 1, tokenvalue).toString();
+	
 
-   private static boolean isFirstHeapSizeLarger( String first, String second ) {
-       if ( first.length() == second.length() ) {
-           return first.compareTo(second) >= 0;
-       }
-       if ( first.length() < second.length() ) {
-           return false;
-       }
-       return true;
+	   }
    }
 
-   private static String getCommandArgument(String arg) {
-       if (arg.indexOf(' ') > 0) {
-           return StringUtil.replaceAll(arg, " ", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-       }
-       return arg;
-   }
-
-   private static String getVMStarterCommand() {
-
-       // Attempt to get the starter command from the system props
-       String starterCommand = System.getProperty( VM_STARTER_COMMAND_PROPERTY_NAME );
-       if ( starterCommand == null || starterCommand.length() == 0 ) {
-           // Starter command property wasn't specified via the system props, so
-           // attempt to get the starter command from the property service
-           starterCommand = CurrentConfiguration.getProperty(VM_STARTER_COMMAND_PROPERTY_NAME);
-
-           if ( starterCommand == null || starterCommand.length() == 0 ) {
-               logCritical(PlatformPlugin.Util.getString(LogMessageKeys.VM_0048, VM_STARTER_COMMAND_PROPERTY_NAME, DEFAULT_VM_STARTER_COMMAND));
-               starterCommand = DEFAULT_VM_STARTER_COMMAND;
-           }
-       }
-       return starterCommand;
-   }
 
    /**
     * Execute the specified command. The command executed MUST be an executable.
