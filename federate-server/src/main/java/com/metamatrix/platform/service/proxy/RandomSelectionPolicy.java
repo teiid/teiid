@@ -34,98 +34,73 @@ import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
 
-public class RandomSelectionPolicy extends ServiceSelectionPolicy implements AllServiceSelectionPolicy {
+public class RandomSelectionPolicy implements ServiceSelectionPolicy  {
 
-    // The name of the policy.
-    private static final String NAME = ServiceSelectionPolicy.RANDOM_SELECTION_POLICY_NAME;
     // Does this policy prefer local services?
-    private static final boolean PREFERS_LOCAL = false;
+    private boolean preferLocal = false;
 
     // State necessary to implement random
     private Random randomizer;
-
-    private List<ServiceRegistryBinding> allServices;
+    
+    List<ServiceRegistryBinding> localServices;
+	List<ServiceRegistryBinding> remoteServices;    
 
     /**
      * ctor
      */
-    RandomSelectionPolicy() {
-        super();
-        randomizer = new Random();
+    public RandomSelectionPolicy(boolean preferLocal) {
+        this.randomizer = new Random();
+        this.preferLocal = preferLocal;
     }
 
-    /**
-     * Update the service list that this selection policy uses.
-     * @param allServices All the service instances of the type handled by this
-     * selection policy that are known to the system.
-     */
-    public synchronized void updateServices(List allServices) {
-        this.allServices = allServices;
+    @Override
+    public synchronized List<ServiceRegistryBinding> getInstances() throws ServiceNotFoundException {
+        List allServices = new ArrayList(this.localServices);
+        allServices.addAll(this.remoteServices);
+        Collections.shuffle(allServices);
+        if (allServices.isEmpty() ) {
+            throw new ServiceNotFoundException(ServiceMessages.SERVICE_0053, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0053, getClass().getSimpleName()));
+        }
+        return allServices;
     }
-
-    /**
-     * Get the name of the policy - useful for logging/debugging.
-     * @return This policy's type name.
-     * @see com.metamatrix.platform.service.proxy.ServiceSelectionPolicy
-     */
-    public String getServiceSelectionPolicyName() {
-        return NAME;
-    }
-
-    /**
-     * Return whether or not the policy preference is local.
-     * @return the local preference of this policy.
-     */
-    public boolean prefersLocal() {
-        return PREFERS_LOCAL;
-    }
-
-    /**
-     * Get the next service instance from the given service selection policy.
-     * @return The <code>ServiceRegistryBinding</code> for the next instance after
-     * being operated on by the selection policy.
-     * @throws ServiceNotFoundException if the policy has no more services to
-     * hand out.
-     */
+    
+    @Override
     public synchronized ServiceRegistryBinding getNextInstance() throws ServiceNotFoundException {
-
         ServiceRegistryBinding serviceBinding = null;
 
-        if ( allServices != null && ! allServices.isEmpty() ) {
-	        // Get random value in range of list size
-    	    int index = randomizer.nextInt(allServices.size());
-            serviceBinding = (ServiceRegistryBinding) allServices.get(index);
-	    }
+        List allServices = this.remoteServices;
+        if (this.preferLocal) {
+	        if ( localServices != null && ! localServices.isEmpty() ) {
+		        // Get random value in range of list size
+	    	    int index = randomizer.nextInt(localServices.size());
+	            serviceBinding = (ServiceRegistryBinding) localServices.get(index);
+		    }
+        } else {
+        	allServices = new ArrayList(localServices);
+        	allServices.addAll(remoteServices);
+        }
 
         if ( serviceBinding == null ) {
-            throw new ServiceNotFoundException(ServiceMessages.SERVICE_0052, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0053, NAME));
+            if ( allServices != null && ! allServices.isEmpty() )  {
+	            // Get random value in range of list size
+    	        int index = randomizer.nextInt(allServices.size());
+                serviceBinding = (ServiceRegistryBinding) allServices.get(index);
+	        }
+        }
+
+        if ( serviceBinding == null ) {
+            throw new ServiceNotFoundException(ServiceMessages.SERVICE_0053, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0053, getClass().getSimpleName()));
         }
 
         return serviceBinding;
     }
 
-    /**
-     * Get list of instances from the given service selection policy.
-     * @return The List of <code>ServiceRegistryBinding</code> objects for the instances after
-     * being operated on by the selection policy.
-     * @see com.metamatrix.common.service.ServiceInterface
-     * @throws ServiceNotFoundException if the policy has no more services to
-     * hand out.
-     */
-    public List getInstances() throws ServiceNotFoundException {
 
-        List newList = null;
-
-        if ( allServices != null && ! allServices.isEmpty() ) {
-	        newList = new ArrayList(allServices);
-    	    Collections.shuffle(newList);
-        }
-
-        if ( newList == null || newList.isEmpty() ) {
-            throw new ServiceNotFoundException(ServiceMessages.SERVICE_0052, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0053, NAME));
-        }
-        return newList;
-    }
+	@Override
+	public void updateServices(List<ServiceRegistryBinding> localServices, List<ServiceRegistryBinding> remoteServices) {
+		this.localServices = new ArrayList(localServices);
+		this.remoteServices = new ArrayList(remoteServices);
+	}    
 }
 
 

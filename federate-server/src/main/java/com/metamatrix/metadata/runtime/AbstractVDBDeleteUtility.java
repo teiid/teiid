@@ -41,7 +41,6 @@ import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.proxy.ServiceProxyProperties;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.util.VDBDeleteUtility;
 
@@ -206,7 +205,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
      */
     private SessionServiceInterface getSessionServiceProxy() throws ServiceException {
     	SessionServiceInterface sessionServiceProxy =
-                PlatformProxyHelper.getSessionServiceProxy(ServiceProxyProperties.ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME);
+                PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
         return sessionServiceProxy;
     }
 

@@ -74,7 +74,6 @@ import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
-import com.metamatrix.platform.service.proxy.ServiceProxyProperties;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.admin.api.MaterializationLoadScripts;
 import com.metamatrix.vdb.materialization.DatabaseDialect;
@@ -608,7 +607,7 @@ public class RuntimeMetadataHelper {
 
 	private static AuthorizationServiceInterface getAuthorizationService() throws ServiceException {
 		// Get proxy for Authorizartion service
-		AuthorizationServiceInterface authProxy = PlatformProxyHelper.getAuthorizationServiceProxy(ServiceProxyProperties.ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME);
+		AuthorizationServiceInterface authProxy = PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
 		return authProxy;
 	}
 

@@ -41,6 +41,8 @@ import com.metamatrix.platform.registry.RegistryListener;
 import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.util.PlatformProxyHelper;
+import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.Configuration;
 
 /**
@@ -63,12 +65,15 @@ public class ProxyManager implements RegistryListener{
 	String hostName;
 		
 	String vmName;
+	
+	VMControllerID vmID;
 
     @Inject
-    public ProxyManager(@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.VMNAME)String vmName, ClusteredRegistryState registry) {
+    public ProxyManager(@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.VMNAME)String vmName, VMControllerID vmID, ClusteredRegistryState registry) {
     	this.hostName = hostName;
     	this.vmName = vmName;
     	this.registry = registry;
+    	this.vmID = vmID;
     	this.registry.addListener(this);
     }
     
@@ -101,7 +106,7 @@ public class ProxyManager implements RegistryListener{
 
         if (policy == null) {
              // Create policy and populate with service instances
-             policy = createPolicy(policyKey);
+             policy = createPolicy(policyKey.getPolicyType());
 
              // Add service instances to policy
              setServiceInstances(policy, serviceTypeName);
@@ -164,10 +169,8 @@ public class ProxyManager implements RegistryListener{
      * service instance updates in all service selection policies.
      */
     private synchronized void doUpdate() {
-        Iterator policyKeyItr = this.policyRegistry.keySet().iterator();
-        while ( policyKeyItr.hasNext() ) {
-            ServiceSelectionPolicyKey key = (ServiceSelectionPolicyKey) policyKeyItr.next();
-            setServiceInstances((ServiceSelectionPolicy)policyRegistry.get(key), key.getServiceTypeName());
+        for ( ServiceSelectionPolicyKey key:this.policyRegistry.keySet()) {
+            setServiceInstances(policyRegistry.get(key), key.getServiceTypeName());
         }
     }
 
@@ -182,12 +185,7 @@ public class ProxyManager implements RegistryListener{
         if ( policyTypeName == null ) {
             throw new IllegalArgumentException(ServicePlugin.Util.getString(ServiceMessages.SERVICE_0051));
         }
-        int policyType = ServiceSelectionPolicy.getPolicyTypeFromName(policyTypeName);
-
-        // Does policy have local preference?
-        boolean prefersLocal = ServiceSelectionPolicy.isPolicyPreferenceLocal(policyType);
-
-        ServiceSelectionPolicyKey key = new ServiceSelectionPolicyKey(serviceTypeName, policyType, prefersLocal);
+        ServiceSelectionPolicyKey key = new ServiceSelectionPolicyKey(serviceTypeName, policyTypeName);
         return key;
     }
 
@@ -197,11 +195,22 @@ public class ProxyManager implements RegistryListener{
      * creation.
      * @return The newly created service selection policy.
      */
-    private ServiceSelectionPolicy createPolicy(ServiceSelectionPolicyKey policyKey) {
-        ServiceSelectionPolicy policy = null;
-        int policyType = policyKey.getPolicyType();
-        policy = ServiceSelectionPolicy.createPolicy(policyType);
-        return policy;
+    private ServiceSelectionPolicy createPolicy(String policy) {
+        if (policy.equals(PlatformProxyHelper.RANDOM)) {
+        	return new RandomSelectionPolicy(false);
+        }
+        else if (policy.equals(PlatformProxyHelper.RANDOM_LOCAL)) {
+        	return new RandomSelectionPolicy(true);
+        }
+        else if (policy.equals(PlatformProxyHelper.ROUND_ROBIN)) {
+        	return new RoundRobinSelectionPolicy(false);	
+        }
+        else if (policy.equals(PlatformProxyHelper.ROUND_ROBIN_LOCAL)) {
+        	return new RoundRobinSelectionPolicy(true);
+        }
+        else {
+            throw new IllegalArgumentException(ServicePlugin.Util.getString(ServiceMessages.SERVICE_0060, policy));
+        }
     }
 
     /**
@@ -211,19 +220,11 @@ public class ProxyManager implements RegistryListener{
      * @param serviceType The type of the service of interest.
      */
     private void setServiceInstances(ServiceSelectionPolicy policy, String serviceType) {
-        List serviceBindings = null;
-
-        if ( policy.prefersLocal() ) {
-            List localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.vmName, serviceType);
-            serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
-            serviceBindings.removeAll(localServiceBindings);
-            ((LocalServiceSelectionPolicy)policy).updateServices(localServiceBindings, serviceBindings);
-        } else {
-        	serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
-            ((AllServiceSelectionPolicy)policy).updateServices(serviceBindings);
-        }
+        List localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.vmID.toString(), serviceType);
+        List serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
+        serviceBindings.removeAll(localServiceBindings);
+        policy.updateServices(localServiceBindings, serviceBindings);
     }
-    
     
 } // End class ProxyManager
 

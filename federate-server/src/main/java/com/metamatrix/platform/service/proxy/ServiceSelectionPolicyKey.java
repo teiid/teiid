@@ -51,12 +51,7 @@ class ServiceSelectionPolicyKey implements Comparable {
     /**
      * Cache the service selection policy type
      */
-    private final int policyType;
-
-    /**
-     * Cache the service selection policy type
-     */
-    private final boolean isLocal;
+    private final String policyType;
 
     /**
      * Sets the hashcode for this key object using given parameters.  Once
@@ -67,15 +62,13 @@ class ServiceSelectionPolicyKey implements Comparable {
      * @param prefersLocal Indicates whether this proxy prefers to use a service
      * that's local to thiis VM.
      */
-    ServiceSelectionPolicyKey(String serviceTypeName, int policyType, boolean isLocal) {
+    ServiceSelectionPolicyKey(String serviceTypeName, String policyType) {
         int hashCode = HashCodeUtil.hashCode(0, serviceTypeName);
         hashCode = HashCodeUtil.hashCode(hashCode, policyType);
-        hashCode = HashCodeUtil.hashCode(hashCode, isLocal);
         this.hashCode = hashCode;
 
         this.serviceTypeName = serviceTypeName;
         this.policyType = policyType;
-        this.isLocal = isLocal;
     }
 
     /**
@@ -174,9 +167,8 @@ class ServiceSelectionPolicyKey implements Comparable {
         s.append(" ServiceName <"); //$NON-NLS-1$
         s.append(this.serviceTypeName);
         s.append("> PolicyType <"); //$NON-NLS-1$
-        s.append(ServiceSelectionPolicy.getPolicyNameFromType(this.policyType));
+        s.append(this.policyType);
         s.append("> Local <"); //$NON-NLS-1$
-        s.append(this.isLocal);
         s.append(">)"); //$NON-NLS-1$
         return s.toString();
     }
@@ -185,16 +177,8 @@ class ServiceSelectionPolicyKey implements Comparable {
      * Return the service selection policy type.
      * @see com.metamatrix.platform.service.proxy.ServiceSelectionPolicy
      */
-    int getPolicyType() {
+    String getPolicyType() {
         return policyType;
-    }
-
-    /**
-     * Return whether or not the policy preference is local.
-     * @return the local preference of this policy.
-     */
-    boolean isLocal() {
-        return isLocal;
     }
 
     /**

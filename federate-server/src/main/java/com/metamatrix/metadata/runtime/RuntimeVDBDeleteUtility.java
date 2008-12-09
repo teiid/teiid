@@ -27,7 +27,6 @@ package com.metamatrix.metadata.runtime;
 import java.util.Collection;
 import java.util.Iterator;
 
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
@@ -42,7 +41,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.proxy.ServiceProxyProperties;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 
 
@@ -137,6 +135,6 @@ public class RuntimeVDBDeleteUtility extends AbstractVDBDeleteUtility {
      * Convenience method that will create an AuthorizationServiceProxy
      */
     private AuthorizationServiceInterface getAuthorizationServiceProxy() throws ServiceException {
-        return PlatformProxyHelper.getAuthorizationServiceProxy(ServiceProxyProperties.ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME);
+        return PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
     }
 }

@@ -32,7 +32,6 @@ import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
 
 /**
@@ -52,8 +51,6 @@ public abstract class ServiceProxy implements InvocationHandler {
 
     private ServiceSelectionPolicy serviceSelectionPolicy;
 
-    private boolean connected = false;
-    
     private boolean sticky = false;
     
     public ServiceProxy(String serviceType) {
@@ -102,34 +99,6 @@ public abstract class ServiceProxy implements InvocationHandler {
         } catch ( ServiceNotFoundException e ) {
             throw new ServiceNotFoundException(e, ServiceMessages.SERVICE_0054, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0054, getServiceType()));
         }
-    }
-
-    protected final void checkConnection() throws ServiceException {
-        if (!connected) {
-            throw new ServiceException(ServiceMessages.SERVICE_0056, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0056) );
-        }
-    }
-
-    /**
-     * Instruct the proxy to connect to a service instance using the proxy's
-     * connection information and registry.  If the proxy is already connected
-     * and has a service instance referenced, invoking this method forces
-     * the selection of a new instance.
-     */
-    public void connect() {
-        connected = true;
-    }
-
-    public void close() {
-        connected = false;
-    }
-
-    public boolean isClosed() {
-        return ( !connected );
-    }
-
-    public boolean isConnected() {
-        return ( connected );
     }
 
     public int getRetryLimit() {

@@ -71,7 +71,6 @@ import com.metamatrix.platform.security.api.AuthorizationPolicyID;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
-import com.metamatrix.platform.service.proxy.ServiceProxyProperties;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.admin.api.MaterializationLoadScripts;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
@@ -628,7 +627,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         LogManager.logDetail(
             ServerAdminLogConstants.CTX_RUNTIME_METADATA_ADMIN_API,
             "getEntitlementTree: Getting entitlements for policy: [" + policyID + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-        AuthorizationServiceInterface authProxy = PlatformProxyHelper.getAuthorizationServiceProxy(ServiceProxyProperties.ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME);
+        AuthorizationServiceInterface authProxy = PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
         
         PermissionDataNode root = RuntimeMetadataHelper.getPermissionDataNodes(new AuthorizationRealm(vDBName, vDBVersion, null),
                                                                                policyID,

@@ -43,11 +43,11 @@ public class PlatformProxyHelper {
 	@Inject
 	static ProxyManager proxy; // in ServerGuiceModule, there is explicit call to inject this.
 	
-    public static final String RANDOM            = ServiceProxyProperties.RANDOM_SELECTION_POLICY_NAME;
-    public static final String RANDOM_LOCAL      = ServiceProxyProperties.RANDOM_LOCAL_SELECTION_POLICY_NAME;
-    public static final String ROUND_ROBIN       = ServiceProxyProperties.ROUND_ROBIN_SELECTION_POLICY_NAME;
-    public static final String ROUND_ROBIN_LOCAL = ServiceProxyProperties.ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME;
-
+    public static final String RANDOM = "RANDOM"; //$NON-NLS-1$
+    public static final String ROUND_ROBIN = "ROUND_ROBIN"; //$NON-NLS-1$
+    public static final String ROUND_ROBIN_LOCAL = "ROUND_ROBIN_LOCAL"; //$NON-NLS-1$
+    public static final String RANDOM_LOCAL = "RANDOM_LOCAL"; //$NON-NLS-1$
+    
     public final static String SESSION_SERVICE_PROXY_CLASS         = SessionServiceInterface.class.getName();
     public final static String AUTHORIZATION_SERVICE_PROXY_CLASS   = AuthorizationServiceInterface.class.getName();
     public final static String MEMBERSHIP_SERVICE_PROXY_CLASS      = MembershipServiceInterface.class.getName();
@@ -109,6 +109,5 @@ public class PlatformProxyHelper {
         props.put(ServiceProxyProperties.SERVICE_SELECTION_POLICY_NAME, policyType);
         props.put(ServiceProxyProperties.SERVICE_SELECTION_STICKY, Boolean.TRUE.toString());
         return (ConnectorServiceInterface) proxy.findOrCreateProxy(routingID, props);
-    }    
-
+    }      
 }

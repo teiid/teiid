@@ -49,16 +49,4 @@ public class ServiceProxyProperties {
      */
     public static final String SERVICE_MULTIPLE_DELEGATION = "metamatrix.core.proxy.serviceMultipleDelegation"; //$NON-NLS-1$
 
-    /**
-     * The service selection policy type names.<br>
-     * These are <emph>not</emph> properties of <code>ServiceProxy</code>.  They
-     * are the list of possible property values allowed for
-     * {@link #SERVICE_SELECTION_POLICY_NAME SERVICE_SELECTION_POLICY_NAME}.  They
-     * are listed here for a central place for the code to reference.
-     */
-    public static final String RANDOM_SELECTION_POLICY_NAME            = "RANDOM_SELECTION_POLICY"; //$NON-NLS-1$
-    public static final String RANDOM_LOCAL_SELECTION_POLICY_NAME      = "RANDOM_LOCAL_SELECTION_POLICY"; //$NON-NLS-1$
-    public static final String ROUND_ROBIN_SELECTION_POLICY_NAME       = "ROUND_ROBIN_SELECTION_POLICY"; //$NON-NLS-1$
-    public static final String ROUND_ROBIN_LOCAL_SELECTION_POLICY_NAME = "ROUND_ROBIN_LOCAL_SELECTION_POLICY"; //$NON-NLS-1$
-
 }
