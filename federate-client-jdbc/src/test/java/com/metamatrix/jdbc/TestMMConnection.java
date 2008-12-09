@@ -47,6 +47,7 @@ public class TestMMConnection extends TestCase {
 
     public TestMMConnection(String name) {
         super(name);
+        System.setProperty("metamatrix.config.none", "true");
     }
     
     public static MMServerConnection getMMConnection() throws SQLException {
