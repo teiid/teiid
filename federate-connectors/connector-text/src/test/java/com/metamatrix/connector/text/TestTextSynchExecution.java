@@ -40,6 +40,8 @@ public class TestTextSynchExecution extends TestCase {
 	
     public TestTextSynchExecution(String name) {
         super(name);
+    	System.setProperty("metamatrix.config.none", "true");
+
     }
 
     public void testNextBatch2() throws Exception {
