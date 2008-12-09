@@ -111,7 +111,7 @@ public class MMServerConnection extends MMConnection {
 		//perform load balancing
 		if (this.serverConn instanceof SocketServerConnection) {
 			SocketServerConnection conn = (SocketServerConnection)this.serverConn;
-			conn.selectNewServerInstance();
+			SocketServerConnection.selectNewServerInstance(this.dqp);
 		}
 	}
 
