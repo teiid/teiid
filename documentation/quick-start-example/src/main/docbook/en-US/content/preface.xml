@@ -22,9 +22,9 @@
     Platform.</para>
   <sect1>
     <title>What this about?</title>
-    <para>In this guide will take you through download, quick concepts, and building and deploying a virtual
-      database in 60 minutes. It is assumed that you are familiar with SQL, Java language and have worked with JDBC
-      API before. There is lot to cover, so let's begin!</para>
+    <para>This guide takes you through an introduction to the concepts important to Federate Embedded, 
+    downloading the software,  and building and deploying a demonstration virtual database in 60 minutes.
+    There is a lot to cover, so let's begin!</para>
   </sect1>
   <note>
     <para>

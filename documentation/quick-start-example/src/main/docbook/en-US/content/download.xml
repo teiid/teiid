@@ -3,7 +3,7 @@
 <chapter id="download">
   <title>Download</title>
   <para>
-    Download binaries for
+    You need to download the binaries for
     <ulink url="http://jboss.org/federate/download">Federate Embedded</ulink>
     . Note that there are three different artifacts are available for download.
   </para>
@@ -20,20 +20,21 @@
     </listitem>
   </orderedlist>
   <para>
-    Download
-    <emphasis> Federate Embedded Kit</emphasis>
-    and expand this tar/zip file in a known accessible location.
+    For this Quick Start, download the
+    <emphasis>Federate Embedded Kit</emphasis>
+    and extract this tar/zip file to a directory you can access.
   </para>
-  <para>In the expanded directory, you will find "federate-${version}-embedded.jar" which is the required binary
-    jar file for Federate Embedded and all the files under the "lib" directory are supporting 3rd party binaries
-    required to execute Federate Embedded. Later in the guide we will go over the deployment.</para>
+  <para>In the expanded directory, you will find "federate-${version}-embedded.jar", which is the main binary jar
+    file for Federate Embedded, and the "lib" and "extension" directories contain supporting 3rd party binaries
+    required to execute Federate Embedded. Later sections describe installing these artifacts.</para>
   <note>
     <para>
-      Access to the physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Federate relies
-      upon user supplying their own JDBC drivers in the deployment. Federate code base has been tested extensively
-      with
+      Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Federate relies upon
+      the user supplying their own JDBC drivers in the deployment. Open source JDBC drivers for MySQL, Postgres,
+      and Derby are included in the "lib" folder as the LGPL license permits them. Additionally, Federate Embedded
+      has been tested extensively with
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
-      JDBC Drivers. If you already have access to these drivers, please use those drivers.
+       If you have access to these JDBC drivers, we recommend using these drivers.
     </para>
     <para>JDBC drivers for MySQL, Postgres,and Derby were already included in the "lib" folder as the LGPL
       license permits them to be included with the Federate Embedded kit.</para>

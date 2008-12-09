@@ -4,12 +4,25 @@
   <title>Example Explained</title>
   <sect1>
     <title>Portfolio Application Explained</title>
-    <para>Now let's start in building a small "Portfolio" example, that has accounts with multiple stock
-      securities and let's you view up-to date value of an account based on the provided external market data. For
-      example purposes the "Account" specific data exists in a relational database and the "market data" exists in
-      a comma separated file (CSV). This example will take you through all the steps required in building virtual
-      database (VDB) to integrate the both relational source and CSV file, then deploying VDB file and querying VDB
-      through your application.</para>
+    <para>
+      o demonstrate how Federate Modeler and Federate Embedded work together, follow these steps to build a simple
+      portfolio valuation virtual database. The investor's portfolio information is stored in a Derby database and
+      "current" stock prices are stored in a delimited text file. When completed, a single query will cause
+      Federate Embedded to access the relational and non-relational sources, calculate the portfolio values, and
+      return the results. Here are some of key points to consider as you build this example:
+      <itemizedlist>
+        <listitem>
+          <para>It's pretty simple to do</para>
+        </listitem>
+        <listitem>
+          <para>You're querying a text file as though it was a relational database</para>
+        </listitem>
+        <listitem>
+          <para>Imagine how much more complete this would be if you replaced the text file with a connection
+            to a financial Web site. (Hint: You can with Federate Embedded and a custom connector.)</para>
+        </listitem>
+      </itemizedlist>
+    </para>
     <figure id="steps">
       <title>Various Steps involved in creating the example</title>
       <graphic align="center" scale="100" fileref="../images/steps-defined.png" />
@@ -17,12 +30,12 @@
     <itemizedlist>
       <listitem>
         <para>
-          <link linkend="step-1">Step-1: Create schema and load sample data in the Relational Database</link>
+          <link linkend="step-1">Step-1: Create the Relational Database's schema and load the sample data</link>
         </para>
       </listitem>
       <listitem>
         <para>
-          <link linkend="step-2">Step-2: Identify the CSV file and its contents</link>
+          <link linkend="step-2">Step-2: Describe the CSV file and its contents</link>
         </para>
       </listitem>
       <listitem>
@@ -32,7 +45,7 @@
       </listitem>
       <listitem>
         <para>
-          <link linkend="step-4">Step-4: Deploy the VDB</link>
+          <link linkend="step-4">Step-4: Deploy the VDB in Federate Embedded</link>
         </para>
       </listitem>
       <listitem>
@@ -42,8 +55,16 @@
       </listitem>
     </itemizedlist>
   </sect1>
+  <note>
+    <para>
+      <ulink url="http://db.apache.org/derby/">Derby</ulink>
+      is suggested as it is Open Source, easily obtained, and light-weight. You can substitute any other relational
+      database, as long as you have a suitable JDBC driver. The schema file provided, and described below, is
+      specific to Derby, but can be easily converted for use with other databases.
+    </para>
+  </note>
   <sect1 id="step-1">
-    <title>Step-1: Create schema and load sample data in the Relational Database</title>
+    <title>Step-1: Create the Relational Database's schema and load the sample data</title>
     <para>
       In this example written using
       <ulink url="http://db.apache.org/derby/">"Derby"</ulink>
@@ -53,11 +74,6 @@
       expected that you create a database called "accounts" in this Derby instance that is used by this example
       application.
     </para>
-    <note>
-      <para> you can substitute Derby for any database of your choice, as long as you have a JDBC driver to access
-        it. The schema file defined below is specific to Derby, however it can be easily converted to other
-        databases.</para>
-    </note>
     <para>
       Below find the corresponding schema. For complete schema, please refer to
       <emphasis>"examples/portfolio/customer-schema.sql"</emphasis>
@@ -107,19 +123,18 @@
           );                  
     ]]>
     </programlisting>
-    <para>You need to start the Derby and create the "accounts" database with the above schema. The directions
-      below are given for Linux environment, for starting the Derby instance, however find the similar commands if
-      you are working with Windows environment. Start a terminal session, and change directory to where Derby is
-      installed and execute following commands</para>
+    <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. The
+      directions below are given for Linux environment, for starting the Derby instance, however find the similar
+      commands if you are working with Windows environment. Start a terminal session, and change directory to where
+      Derby is installed and execute following commands</para>
     <programlisting><![CDATA[
       export DERBY_HOME=`pwd`
       ./bin/startNetworkServer
     ]]>        
     </programlisting>
-    <para>The above starts the Derby in network mode. Now, start another terminal and you need to use 'ij' tool
-      of the Derby (like SQL*PLus for Oracle) to create the schema. Use the "customer-schema.sql" file in
-      "examples/portfolio" directory. Note this script file also has some sample data in addition to above schema
-    </para>
+    <para>The above starts the Derby in network mode. Now, start another terminal and we will start 'ij' tool of
+      the Derby (like SQL*PLus for Oracle) to create the schema, and use the "customer-schema.sql" file in
+      "examples/portfolio" directory</para>
     <programlisting><![CDATA[
       export DERBY_HOME=`pwd`
       ./bin/ij /path/to/customer-schema.sql
@@ -135,15 +150,15 @@
     </para>
   </sect1>
   <sect1 id="step-2">
-    <title>Step-2: Identify the CSV file and its contents</title>
+    <title>Step-2: Describe the CSV file and its contents</title>
     <para>In order to use a Text file as the source, we need to define two different types of files. A descriptor
       file and one or more data files. Conceptually, a Descriptor file defines schema, and each data file defines
-      data inside a single table</para>
+      data inside a table</para>
     <orderedlist>
       <listitem>
         <para>Text Descriptor File - The Text Descriptor file contains information that describes the structure
-          of the data text file you want to use as a data source, path to the data file name and delimiter
-          information inside the file etc. Shown below is an sample format of the file</para>
+          of the text file you want to use as a data source, path to the file name and delimiter information etc.
+          Below shown a sample format of the file</para>
         <programlisting><![CDATA[
             MarketData.Price.location = /path/to/marketdata-price.txt
             MarketData.Price.delimiter = ,
@@ -211,15 +226,14 @@
           point to different data file.</para>
       </listitem>
       <listitem>
-        <para>Data File: This is the file that is identified by "location" property in the Descriptor file. Each
-          data file contains column information for the table and all the associated data for that table.
-          The column information is typically defined on line 1 as header line in the file, and all the following
-          lines contain the actual rows of data. Each single line corresponds to single row. The sample file is shown
+        <para>Data File: This is the file that is identified by "location" property in the Descriptor file.
+          Each data file contains column information for the table and all the associated data for that table. The
+          column information is typically defined on line 1 as header line in the file, and all the following lines
+          contain the actual rows of data. Each single line corresponds to single row. The sample file is shown
           below. A complete sample file is in the "examples/portfolio/marketdata-price.txt" file</para>
         <programlisting><![CDATA[
            SYMBOL,PRICE
            IBM,83.46
-           MSFT,21.19
            RHT,11.84
            BA, 44.58
            ORCL,17.37           
