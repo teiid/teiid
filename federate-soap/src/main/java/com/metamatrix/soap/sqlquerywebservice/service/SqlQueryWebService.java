@@ -41,23 +41,21 @@ import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.MessageContext;
 
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.impl.ServerRequest;
 import com.metamatrix.jdbc.MMCallableStatement;
-import com.metamatrix.jdbc.MMDriver;
 import com.metamatrix.jdbc.MMPreparedStatement;
 import com.metamatrix.jdbc.MMStatement;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.jdbc.api.ResultSetMetaData;
+import com.metamatrix.jdbc.api.SQLStates;
 import com.metamatrix.jdbc.api.Statement;
 import com.metamatrix.soap.SOAPPlugin;
 import com.metamatrix.soap.security.Credential;
+import com.metamatrix.soap.service.ConnectionSource;
+import com.metamatrix.soap.service.PoolingConnectionSource;
 import com.metamatrix.soap.sqlquerywebservice.helper.Cell;
 import com.metamatrix.soap.sqlquerywebservice.helper.ColumnMetadata;
 import com.metamatrix.soap.sqlquerywebservice.helper.ConnectionlessRequest;
@@ -78,6 +76,32 @@ public class SqlQueryWebService {
 	public static final String APP_NAME = "SQL Query Web Service"; //$NON-NLS-1$
 
 	/**
+	 * Contextually aware credential provider.  Abstracted to facilitate testing.
+	 */
+	public interface CredentialProvider {
+		Credential getCredentials() throws SqlQueryWebServiceFault;
+	}
+	
+	private ConnectionSource connectionSource = PoolingConnectionSource.getInstance();
+	private CredentialProvider credentialProvider = new CredentialProvider() {
+		@Override
+		public Credential getCredentials() throws SqlQueryWebServiceFault {
+			MessageContext msgCtx = MessageContext.getCurrentMessageContext();
+			if (msgCtx == null) {
+				throwFaultException(true, new MetaMatrixProcessingException(SOAPPlugin.Util.getString("SqlQueryWebService.0"))); //$NON-NLS-1$
+			}
+
+			Credential credential = null;
+			try {
+				credential = WebServiceUtil.getCredentials(msgCtx);
+			} catch (AxisFault e) {
+				throwFaultException(true, e);
+			}
+			return credential;
+		}
+	};
+	
+	/**
 	 * This method is used as a shortcut when no Connection state is required on the server side. It will simply make a connection
 	 * using the information supplied in the passed in object, and execute the query as defined also in the passed in object. This
 	 * method saves server round trips, but sacrifices the performance of keeping a Connection open on the server side when
@@ -95,7 +119,7 @@ public class SqlQueryWebService {
 		Statement stmt = null;
 		try {
 			Properties connectionProperties = getConnectionInfo(connectionlessRequest.getParameters());
-			conn = MMDriver.getInstance().createMMConnection(null, connectionProperties);
+			conn = connectionSource.getConnection(connectionProperties);
 			ServerRequest request = getRequestInfo(connectionlessRequest);
             
             if (request.getRequestType() == ServerRequest.REQUEST_TYPE_PREPARED_STATEMENT) {
@@ -124,7 +148,7 @@ public class SqlQueryWebService {
             	try {
 					stmt.attachStylesheet(new StringReader(request.getXMLStyleSheet()));
 				} catch (IOException e) {
-					throw new MetaMatrixComponentException(e);
+					throwFaultException(true, e);
 				}
             }
             stmt.setExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, String.valueOf(request.getPartialResults()));
@@ -139,7 +163,7 @@ public class SqlQueryWebService {
                 case ServerRequest.AUTOWRAP_ON:          autowrap = ExecutionProperties.AUTO_WRAP_ON;          break;
                 case ServerRequest.AUTOWRAP_OPTIMISTIC:  autowrap = ExecutionProperties.AUTO_WRAP_OPTIMISTIC;  break;
                 case ServerRequest.AUTOWRAP_PESSIMISTIC: autowrap = ExecutionProperties.AUTO_WRAP_PESSIMISTIC; break;
-                default: throw new MetaMatrixProcessingException(AdminPlugin.Util.getString("ServerFacadeImpl.invalid_txnautowrap", transactionAutowrap)); //$NON-NLS-1$
+                default: throwFaultException(true, new MetaMatrixProcessingException(AdminPlugin.Util.getString("ServerFacadeImpl.invalid_txnautowrap", transactionAutowrap))); //$NON-NLS-1$
             }
             
             stmt.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, autowrap);
@@ -158,17 +182,8 @@ public class SqlQueryWebService {
 			}
 
     		results = buildResults(stmt, rs, connectionlessRequest, connectionlessRequest.isIncludeMetadata());
-        } catch (MetaMatrixException e) {
-			throwFaultException(e);
-		} catch (SQLException e) {
-			if (e.getCause() instanceof MetaMatrixException) {
-				throwFaultException((MetaMatrixException)e.getCause());
-			}
-			throwFaultException(new MetaMatrixComponentException(e));
-		} catch (ConnectionException e) {
-			throwFaultException(new MetaMatrixProcessingException(e));
-		} catch (CommunicationException e) {
-			throwFaultException(new MetaMatrixComponentException(e));
+        } catch (SQLException e) {
+			throwFaultException(e.getSQLState() == null?true:SQLStates.isUsageErrorState(e.getSQLState()), e);
 		} finally {
 			if (stmt != null) {
 				try {
@@ -200,10 +215,18 @@ public class SqlQueryWebService {
 
 	private Properties getConnectionInfo( final LogInParameters params ) throws SqlQueryWebServiceFault {
 		Properties connectionInfo = new Properties();
-		connectionInfo.setProperty(MMURL.CONNECTION.SERVER_URL, params.getMmServerUrl());
-		connectionInfo.setProperty(MMURL.JDBC.VDB_NAME, params.getVdbName());
-		connectionInfo.setProperty(MMURL.JDBC.VDB_VERSION, params.getVdbVersion());
-		connectionInfo.setProperty(MMURL.CONNECTION.CLIENT_TOKEN_PROP, params.getConnectionPayload());
+		if (params.getMmServerUrl() != null) {
+			connectionInfo.setProperty(MMURL.CONNECTION.SERVER_URL, params.getMmServerUrl());
+		}
+		if (params.getVdbName() != null) {
+			connectionInfo.setProperty(MMURL.JDBC.VDB_NAME, params.getVdbName());
+		}
+		if (params.getVdbVersion() != null) {
+			connectionInfo.setProperty(MMURL.JDBC.VDB_VERSION, params.getVdbVersion());
+		}
+		if (params.getConnectionPayload() != null) {
+			connectionInfo.setProperty(MMURL.CONNECTION.CLIENT_TOKEN_PROP, params.getConnectionPayload());
+		}
 
 		/*
 		 * Set the additional property for the application name.
@@ -222,18 +245,8 @@ public class SqlQueryWebService {
 			}
 		}
 
-		MessageContext msgCtx = MessageContext.getCurrentMessageContext();
-		if (msgCtx == null) {
-			throwFaultException(new MetaMatrixProcessingException(SOAPPlugin.Util.getString("SqlQueryWebService.0"))); //$NON-NLS-1$
-		}
-
-		Credential credential = null;
-		try {
-			credential = WebServiceUtil.getCredentials(msgCtx);
-		} catch (AxisFault e) {
-			throwFaultException(new MetaMatrixProcessingException(e.getMessage()));
-		}
-
+		Credential credential = this.credentialProvider.getCredentials();
+		
 		connectionInfo.setProperty(MMURL.CONNECTION.USER_NAME, credential.getUserName());
 		connectionInfo.setProperty(MMURL.CONNECTION.PASSWORD, new String(credential.getPassword()));
 
@@ -446,13 +459,21 @@ public class SqlQueryWebService {
 		return metadataArray;
 	}
 
-	private void throwFaultException( MetaMatrixException e ) throws SqlQueryWebServiceFault {
+	private void throwFaultException( boolean client, Throwable e ) throws SqlQueryWebServiceFault {
 
-		SqlQueryWebServiceFault fault = SqlQueryWebServiceFault.create(e);
+		SqlQueryWebServiceFault fault = SqlQueryWebServiceFault.create(client, e);
 
 		SqlQueryWebServicePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
 
 		throw fault;
+	}
+
+	public void setConnectionSource(ConnectionSource connectionSource) {
+		this.connectionSource = connectionSource;
+	}
+
+	public void setCredentialProvider(CredentialProvider credentialProvider) {
+		this.credentialProvider = credentialProvider;
 	}
 
 }

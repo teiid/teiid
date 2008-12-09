@@ -40,6 +40,8 @@ import com.metamatrix.soap.SOAPPlugin;
  */
 public class PoolingConnectionSource implements
                                     ConnectionSource {
+	
+	private static PoolingConnectionSource INSTANCE = new PoolingConnectionSource();
 
     /**
      * The internal factory used to create pools.
@@ -68,6 +70,10 @@ public class PoolingConnectionSource implements
      */
     public PoolingConnectionSource(final ConnectionPoolFactory poolFactory) {
         this.poolFactory = poolFactory;
+    }
+    
+    public static PoolingConnectionSource getInstance() {
+    	return INSTANCE;
     }
 
     /**

@@ -28,9 +28,6 @@ import javax.xml.namespace.QName;
 
 import org.apache.axis2.AxisFault;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-
 /**
  * This is an exception class that is thrown from the SqlQueryWebService implementation that repesents a SOAP fault.
  * 
@@ -56,7 +53,7 @@ public class SqlQueryWebServiceFault extends AxisFault{
 	}
 
   
-    public static final SqlQueryWebServiceFault create(MetaMatrixException e) {
+    public static final SqlQueryWebServiceFault create(boolean client, Throwable e) {
 
         String faultCodeString = null;
 
@@ -65,7 +62,7 @@ public class SqlQueryWebServiceFault extends AxisFault{
          * the SOAP 1.1 specification. If there is some 'internal' server side reason for not being able to fulfill the request,
          * then the fault code should be 'Server' per the SOAP 1.1 specification.
          */
-        if (e instanceof MetaMatrixProcessingException) {
+        if (client) {
             faultCodeString = SOAP_11_STANDARD_CLIENT_FAULT_CODE;
         } else {
             /*

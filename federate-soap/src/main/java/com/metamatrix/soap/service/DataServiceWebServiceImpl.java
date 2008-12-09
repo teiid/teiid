@@ -88,20 +88,20 @@ public class DataServiceWebServiceImpl {
 	// constant for username part of url
 	public static final String USER_NAME = "user"; //$NON-NLS-1$
 
-	public static ConnectionSource connectionSource = new PoolingConnectionSource();
-
 	// constant for password part of url
 	public static final String PASSWORD = "password"; //$NON-NLS-1$
 
 	public static final String ERROR_PREFIX = "Procedure error: "; //$NON-NLS-1$
 
+	private ConnectionSource connectionSource = PoolingConnectionSource.getInstance();
+	
 	// constructor
 	public DataServiceWebServiceImpl() {
 	}
 
 	public DataServiceWebServiceImpl(MessageFactory factory,
 			ConnectionSource connectionSource) {
-		DataServiceWebServiceImpl.connectionSource = connectionSource;
+		this.connectionSource = connectionSource;
 	}
 
 	/**
