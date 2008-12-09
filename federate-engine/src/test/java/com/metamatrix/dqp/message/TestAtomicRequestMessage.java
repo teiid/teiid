@@ -58,7 +58,6 @@ public class TestAtomicRequestMessage extends TestCase {
         //AtomicRequestMessage-specific stuff
         message.setConnectorBindingID("connectorBindingID"); //$NON-NLS-1$
         message.setConnectorID(new ConnectorID("10000")); //$NON-NLS-1$
-        message.setNextRow(200);
         return message;
     }
 
@@ -77,7 +76,6 @@ public class TestAtomicRequestMessage extends TestCase {
         //AtomicRequestMessage-specific stuff
         assertEquals("connectorBindingID", copy.getConnectorBindingID()); //$NON-NLS-1$
         assertEquals(new ConnectorID("10000"), copy.getConnectorID()); //$NON-NLS-1$
-        assertEquals(200, copy.getNextRow());
         assertEquals(1000, copy.getAtomicRequestID().getNodeID());
     }
 }

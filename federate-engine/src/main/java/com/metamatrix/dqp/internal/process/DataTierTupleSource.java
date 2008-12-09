@@ -120,11 +120,6 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
         // check that the same request hasn't already been sent
         if(! waitingForData) { 
 
-            // determine next batch to request
-            int nextRow = this.rowsProcessed + 1;
-            
-            // send request
-            this.aqr.setNextRow(nextRow);
             this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), connectorId);
             
             // update waitingForData

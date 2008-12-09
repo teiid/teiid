@@ -66,11 +66,6 @@ public class AtomicRequestMessage implements Serializable {
      */
     private ConnectorID connectorID;
 
-    /**
-     * First row of next batch for MORE requests
-     */
-    private int nextRow = -1;
-
     // Transaction context for the current request
     private TransactionContext txnContext;
     
@@ -80,8 +75,6 @@ public class AtomicRequestMessage implements Serializable {
     // results fetch size
     private int fetchSize;
     
-    private int cursorType;
-
     // The time when the command was created by the client    
     private Date submittedTimestamp;
     
@@ -125,10 +118,6 @@ public class AtomicRequestMessage implements Serializable {
         this.connectorID = connectorID;
     }    
 
-    public int getNextRow() {
-        return nextRow;
-    }
-
     public void setConnectorBindingID(String string) {
         connectorBindingID = string;
     }
@@ -141,10 +130,6 @@ public class AtomicRequestMessage implements Serializable {
         this.modelName = modelName;
     }
     
-    public void setNextRow(int i) {
-        nextRow = i;
-    }
-
     public TransactionContext getTransactionContext() {
         return txnContext;
     }
@@ -173,14 +158,6 @@ public class AtomicRequestMessage implements Serializable {
 		this.fetchSize = fetchSize;
 	}   
 
-	public int getCursorType() {
-		return cursorType;
-	}
-
-	public void setCursorType(int cursorType) {
-		this.cursorType = cursorType;
-	}
-	
     /**
      * Get time that the time when the command was created by the client.
      * @return timestamp in millis
