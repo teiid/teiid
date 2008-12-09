@@ -45,6 +45,8 @@ public class TestConnectionPool extends TestCase{
         
     public TestConnectionPool(String name) {
         super(name);
+    	System.setProperty("metamatrix.config.none", "true");
+
     }
     
     public void setUp() throws Exception{
