@@ -125,7 +125,6 @@ public class DataTierManagerImpl implements DataTierManager {
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());
         }
-        aqr.setCursorType(request.getCursorType());
         aqr.setFetchSize(this.bufferService.getBufferManager().getConnectorBatchSize());
 
         // Set routing name
