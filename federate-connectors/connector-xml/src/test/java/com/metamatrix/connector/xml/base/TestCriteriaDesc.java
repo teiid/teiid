@@ -67,7 +67,8 @@ public class TestCriteriaDesc extends TestCase {
     }
     
     public TestCriteriaDesc() {
-    	
+    	super();
+    	System.setProperty("metamatrix.config.none", "true");
     }
     
     /**
@@ -76,6 +77,7 @@ public class TestCriteriaDesc extends TestCase {
      */
     public TestCriteriaDesc(String arg0) {
         super(arg0);
+        System.setProperty("metamatrix.config.none", "true");
     }
 
     public void testGetCriteriaDescForColumn() {  
