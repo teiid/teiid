@@ -156,7 +156,7 @@ public final class MMDriver extends BaseDriver {
         return myConnection;
     }
 
-    public MMServerConnection createMMConnection(String url, Properties info)
+    MMServerConnection createMMConnection(String url, Properties info)
         throws ConnectionException, CommunicationException, LogonException {
 
         String transport = setupTransport(info);
