@@ -48,7 +48,7 @@ import com.metamatrix.server.query.service.QueryService;
 
 public class TestProxies extends TestCase {
 
-    private final class FakePolicy extends ServiceSelectionPolicy {
+    private final class FakePolicy implements ServiceSelectionPolicy {
 
         private final List bindings;
 
@@ -74,6 +74,13 @@ public class TestProxies extends TestCase {
         public List getInstances() throws ServiceNotFoundException {
             return this.bindings;
         }
+
+		@Override
+		public void updateServices(List<ServiceRegistryBinding> localServices,
+				List<ServiceRegistryBinding> remoteServices) {
+			// rameshTODO Auto-generated method stub
+			
+		}
     }
 
     public void testMultipleInvocation() throws Exception {
