@@ -522,7 +522,7 @@ public abstract class VMController implements VMControllerInterface {
                         String routingID = scd.getRoutingUUID();
                         serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, routingID);
                     }
-                    startService(null, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
+                    startService(this.clientServices, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
 
                 } else {
                     String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()});

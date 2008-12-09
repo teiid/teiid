@@ -153,7 +153,7 @@ public class ServiceRegistryBinding implements Serializable {
         this.stateChangeTime = time;
         this.essential = essential;
         this.messageBus = bus;
-        this.replaceServiceInstace(si);
+        this.setService(si);
         
     }
 
@@ -228,6 +228,9 @@ public class ServiceRegistryBinding implements Serializable {
     }
 
     public Collection getQueueNames() {
+    	if (this.queueNames == null) {
+    		this.queueNames = buildQueueNames(this.service);
+    	}
         return this.queueNames;
     }
 
