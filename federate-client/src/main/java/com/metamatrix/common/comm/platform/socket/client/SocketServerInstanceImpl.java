@@ -339,7 +339,12 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 					@Override
 					protected Object convertResult() throws ExecutionException {
 						try {
-							return getCryptor().unsealObject((Serializable) super.convertResult());
+							Object result = getCryptor().unsealObject((Serializable) super.convertResult());
+							if (result instanceof Throwable) {
+								throw new ExecutionException((Throwable)result);
+							} else {
+								return result;
+							}
 						} catch (CryptoException e) {
 							throw new ExecutionException(e);
 						}
@@ -352,11 +357,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 					public void deliverMessage(Message responseMessage,
 							Serializable messageKey) {
 						Serializable result = responseMessage.getContents();
-						if (result instanceof Throwable) {
-							receiver.exceptionOccurred((Throwable)result);
-						} else {
-							receiver.receiveResults(result);
-						}
+						receiver.receiveResults(result);
 					}
 	
 				}, new Integer(MESSAGE_ID.getAndIncrement()));
