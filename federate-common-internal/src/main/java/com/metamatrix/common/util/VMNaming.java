@@ -30,8 +30,6 @@ import com.metamatrix.core.util.HashCodeUtil;
 
 public final class VMNaming {
 
-    public static final String VM_NAME_PROPERTY = "metamatrix.vmname"; //$NON-NLS-1$
-
     private static int VM_ID = 0;
     private static int MAX_VM_ID = 9999;
     
@@ -53,8 +51,10 @@ public final class VMNaming {
      */
     private static String BIND_ADDRESS = "";//$NON-NLS-1$
     
-    
-    private static String VMNAME = System.getProperty(VM_NAME_PROPERTY, "");//$NON-NLS-1$
+    /*
+     * VMNAME refers to the name of the process that is currently running.
+     */
+    private static String VMNAME = "";//$NON-NLS-1$
 
    static {
         String hostName = ""; //$NON-NLS-1$
@@ -81,6 +81,10 @@ public final class VMNaming {
 
     public static String getVMName() {
         return VMNAME;
+    }
+    
+    public static void setVMName(String vmname) {
+    	VMNAME = vmname;
     }
     
     public static String getLogicalHostName() {
