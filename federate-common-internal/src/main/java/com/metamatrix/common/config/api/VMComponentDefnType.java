@@ -53,5 +53,21 @@ public interface VMComponentDefnType extends ServiceComponentType {
      */
     public static final String VM_BIND_ADDRESS = "vm.bind.address"; //$NON-NLS-1$
     
+    
+    /**
+     * Java Starter Command Properties
+     * These properties are used to create the java command to execute when starting
+     * the process.  These are used in conjuction with {@link HostType.JAVA_EXEC} property to 
+     * complete the executable command. 
+     * 
+     * Example:   ${vm.start.cmd.java_opts} ${vm.starter.cmd.java_main} ${vm.starter.cmd.java_args}
+     */
+    
+    public static final String JAVA_OPTS = "vm.starter.cmd.java_opts"; //$NON-NLS-1$
+    public static final String JAVA_MAIN = "vm.starter.cmd.java_main"; //$NON-NLS-1$
+    public static final String JAVA_ARGS = "vm.starter.cmd.java_args"; //$NON-NLS-1$
+    
+    
+    
   
 } 
