@@ -34,6 +34,7 @@ import com.metamatrix.admin.api.objects.ProcessObject;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Will discover hosts based upon an anon admin api call.
@@ -48,7 +49,13 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 	public static final String USE_URL_HOST = "AdminApiServerDiscovery.useUrlHost"; //$NON-NLS-1$
 	
 	private volatile List<HostInfo> knownHosts;
+	
 	private volatile boolean discoveredHosts;
+	private volatile boolean authenticated;
+	
+	private HostInfo lastHostInfo;
+	private SocketServerInstance lastServerInstance;
+	
 	private boolean useUrlHost;
 	
 	@Override
@@ -66,19 +73,18 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 	}
 		
 	@Override
-	public void connectionSuccessful(HostInfo info, SocketServerInstance instance) {
+	public synchronized void connectionSuccessful(HostInfo info, SocketServerInstance instance) {
 		super.connectionSuccessful(info, instance);
-		if (!discoveredHosts) {
-			synchronized (this) {
-				if (!discoveredHosts) {
-					discoverHosts(info, instance);
-				}
-			}
-		}
+		this.lastHostInfo = info;
+		this.lastServerInstance = instance;
+		discoverHosts();
 	}
 
-	private void discoverHosts(HostInfo info, SocketServerInstance instance) {
-		ServerAdmin serverAdmin = instance.getService(ServerAdmin.class);
+	private synchronized void discoverHosts() {
+		if (discoveredHosts || !authenticated) {
+			return;
+		}
+		ServerAdmin serverAdmin = lastServerInstance.getService(ServerAdmin.class);
 		try {
 			Collection<ProcessObject> processes = serverAdmin.getProcesses("*");
 			this.knownHosts = new ArrayList<HostInfo>(processes.size());
@@ -87,7 +93,7 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 					continue;
 				}
 				if (useUrlHost) {
-					this.knownHosts.add(new HostInfo(info.getHostName(), processObject.getPort()));
+					this.knownHosts.add(new HostInfo(lastHostInfo.getHostName(), processObject.getPort()));
 				} else {
 					this.knownHosts.add(new HostInfo(processObject.getInetAddress().getHostName(), processObject.getPort(), processObject.getInetAddress()));
 				}
@@ -99,7 +105,9 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 	}
 	
 	@Override
-	public boolean isDynamic() {
-		return true;
+	public boolean setLogonResult(LogonResult result) {
+		this.authenticated = true;
+		discoverHosts();
+		return this.discoveredHosts;
 	}
 }

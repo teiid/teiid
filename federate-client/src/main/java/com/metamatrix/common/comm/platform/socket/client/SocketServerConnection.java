@@ -92,9 +92,7 @@ public class SocketServerConnection implements ServerConnection {
 		this.logon = this.getService(ILogon.class);
 
         authenticate(); 
-        if (serverDiscovery.isDynamic()) {
-        	selectNewServerInstance();
-        }
+        
         this.pingTimer = pingTimer;
         if (this.pingTimer != null && logonResult.getPingInterval() > 0) {
         	schedulePing();
@@ -168,7 +166,10 @@ public class SocketServerConnection implements ServerConnection {
 		this.logonResult = null;
         // Log on to server
         try {
-            logonResult = logon.logon(connProps);
+            this.logonResult = logon.logon(connProps);
+            if (this.serverDiscovery.setLogonResult(this.logonResult)) {
+            	selectNewServerInstance();
+            }
             return;
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
@@ -287,6 +288,7 @@ public class SocketServerConnection implements ServerConnection {
 		}
 		existingConnections.clear();
 		this.closed = true;
+		this.serverDiscovery.shutdown();
 	}
 
 	public boolean isOpen() {
@@ -300,11 +302,11 @@ public class SocketServerConnection implements ServerConnection {
 		}
 	}
 
-	public synchronized LogonResult getLogonResult() {
+	public LogonResult getLogonResult() {
 		return logonResult;
 	}
 	
-	public synchronized void selectNewServerInstance() {
+	synchronized void selectNewServerInstance() {
 		this.serverInstance = null;
 	}
 	
@@ -316,6 +318,11 @@ public class SocketServerConnection implements ServerConnection {
 		} catch (IllegalArgumentException e) {
 			return false;
 		}
+	}
+	
+	public static void selectNewServerInstance(Object service) {
+		ServerConnectionInvocationHandler handler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(service);
+		handler.invalidateTarget();
 	}
 
 }

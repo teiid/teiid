@@ -36,6 +36,7 @@ import com.metamatrix.admin.api.objects.ProcessObject;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.platform.security.api.LogonResult;
 
 public class TestAdminApiServerDiscovery extends TestCase {
 
@@ -65,7 +66,7 @@ public class TestAdminApiServerDiscovery extends TestCase {
 		Mockito.stub(serverAdmin.getProcesses("*")).toReturn(processes);
 		Mockito.stub(instance.getService(ServerAdmin.class)).toReturn(serverAdmin);
 		discovery.connectionSuccessful(discovery.getKnownHosts().get(0), instance);
-		
+		discovery.setLogonResult(new LogonResult());
 		List<HostInfo> knownHosts = discovery.getKnownHosts();
 		assertEquals(1, knownHosts.size());
 		HostInfo h = knownHosts.get(0);

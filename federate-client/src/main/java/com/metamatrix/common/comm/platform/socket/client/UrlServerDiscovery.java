@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Simple URL discovery strategy
@@ -66,8 +67,13 @@ public class UrlServerDiscovery implements ServerDiscovery {
 	}
 
 	@Override
-	public boolean isDynamic() {
+	public boolean setLogonResult(LogonResult result) {
 		return false;
+	}
+	
+	@Override
+	public void shutdown() {
+		
 	}
 	
 }

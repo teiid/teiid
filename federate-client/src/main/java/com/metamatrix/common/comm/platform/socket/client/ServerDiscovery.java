@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Customizable ServerDiscovery interface
@@ -45,6 +46,14 @@ public interface ServerDiscovery {
 	
 	void markInstanceAsBad(HostInfo info);
 	
-	boolean isDynamic();
+	void shutdown();
+	
+	/**
+	 * Sets the {@link LogonResult} after authentication.  The {@link LogonResult} will contain information
+	 * such as the cluster name that can be used for more efficient discovery.
+	 * @param result
+	 * @return <code>true</code> if the connection should select another instance after logon.
+	 */
+	boolean setLogonResult(LogonResult result);
 	
 }
