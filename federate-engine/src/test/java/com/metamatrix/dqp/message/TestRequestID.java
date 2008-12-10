@@ -26,7 +26,6 @@ package com.metamatrix.dqp.message;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.TestExternalizeUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -90,10 +89,7 @@ public class TestRequestID extends TestCase {
     }
     
     public void testSerialize1() throws Exception {
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(new RequestID("1", 100)); //$NON-NLS-1$
-        assertNotNull(serialized);
-        assertTrue(serialized instanceof RequestID);
-        RequestID copy = (RequestID)serialized;
+        RequestID copy = UnitTestUtil.helpSerialize(new RequestID("1", 100)); //$NON-NLS-1$
 
         assertEquals("1", copy.getConnectionID()); //$NON-NLS-1$
         assertEquals(100, copy.getExecutionID());
@@ -101,10 +97,7 @@ public class TestRequestID extends TestCase {
     }
 
     public void testSerialize2() throws Exception {
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(new RequestID(100));
-        assertNotNull(serialized);
-        assertTrue(serialized instanceof RequestID);
-        RequestID copy = (RequestID)serialized;
+        RequestID copy = UnitTestUtil.helpSerialize(new RequestID(100)); //$NON-NLS-1$
 
         assertEquals(null, copy.getConnectionID());
         assertEquals(100, copy.getExecutionID());

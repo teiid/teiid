@@ -30,8 +30,10 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.TestExternalizeUtil;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.language.TestQueryImpl;
+import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestRequestMessage extends TestCase {
 
@@ -61,7 +63,11 @@ public class TestRequestMessage extends TestCase {
         message.setProcessingTimestamp(new Date(12345678L));
         message.setStyleSheet("myStyleSheet"); //$NON-NLS-1$
         message.setExecutionPayload("myExecutionPayload"); //$NON-NLS-1$
-        message.setTxnAutoWrapMode("txnAutoWrapMode"); //$NON-NLS-1$
+        try {
+			message.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_ON);
+		} catch (MetaMatrixProcessingException e) {
+			throw new RuntimeException(e);
+		} 
 
         message.setValidationMode(true);
         message.setXMLFormat("xMLFormat"); //$NON-NLS-1$
@@ -71,10 +77,7 @@ public class TestRequestMessage extends TestCase {
     }
 
     public void testSerialize() throws Exception {
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(example());
-        assertNotNull(serialized);
-        assertTrue(serialized instanceof RequestMessage);
-        RequestMessage copy = (RequestMessage)serialized;
+        RequestMessage copy = UnitTestUtil.helpSerialize(example());
 
         assertTrue(copy.isCallableStatement());
         assertEquals(TestQueryImpl.helpExample(), copy.getCommand());
@@ -91,12 +94,22 @@ public class TestRequestMessage extends TestCase {
         assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
         assertEquals("myStyleSheet", copy.getStyleSheet()); //$NON-NLS-1$
         assertEquals("myExecutionPayload", copy.getExecutionPayload()); //$NON-NLS-1$
-        assertEquals("txnAutoWrapMode", copy.getTxnAutoWrapMode()); //$NON-NLS-1$
+        assertEquals(ExecutionProperties.AUTO_WRAP_ON, copy.getTxnAutoWrapMode()); //$NON-NLS-1$
         assertTrue(copy.getValidationMode());
         assertEquals("xMLFormat", copy.getXMLFormat()); //$NON-NLS-1$
         assertTrue(copy.getShowPlan());
         assertEquals(1313, copy.getRowLimit());
         
     }
+    
+    public void testInvalidTxnAutoWrap() {
+		RequestMessage rm = new RequestMessage();
+		try {
+			rm.setTxnAutoWrapMode("foo"); //$NON-NLS-1$
+			fail("exception expected"); //$NON-NLS-1$
+		} catch (MetaMatrixProcessingException e) {
+			assertEquals("'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
+		}
+	}
 
 }

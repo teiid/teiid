@@ -28,14 +28,14 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.TestExternalizeUtil;
+import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestServiceInvocationStruct extends TestCase {
 
     public void testSerialize() throws Exception {
     	ServiceInvocationStruct struct = new ServiceInvocationStruct(new Object[] {new Integer(1), "hello"}, "doSomething", TestServiceInvocationStruct.class); 
     	
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(struct);
+        Object serialized = UnitTestUtil.helpSerialize(struct);
         assertNotNull(serialized);
         assertTrue(serialized instanceof ServiceInvocationStruct);
         ServiceInvocationStruct copy = (ServiceInvocationStruct)serialized;

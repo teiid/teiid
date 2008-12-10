@@ -33,7 +33,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.util.TestExternalizeUtil;
+import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestResultsMessage extends TestCase {
 
@@ -89,11 +89,7 @@ public class TestResultsMessage extends TestCase {
     public void testSerialize() throws Exception {
         ResultsMessage message = example();
         
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(message);
-        
-        assertNotNull(serialized);
-        assertTrue(serialized instanceof ResultsMessage);
-        ResultsMessage copy = (ResultsMessage)serialized;
+        ResultsMessage copy = UnitTestUtil.helpSerialize(message);
         
         assertNotNull(copy.getColumnNames());
         assertEquals(4, copy.getColumnNames().length);

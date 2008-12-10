@@ -26,7 +26,7 @@ package com.metamatrix.dqp.internal.process;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.TestExternalizeUtil;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 public class TestDQPWorkContext extends TestCase {
@@ -52,11 +52,7 @@ public class TestDQPWorkContext extends TestCase {
 	}
 
 	public void testSerialize() throws Exception {
-		Object serialized = TestExternalizeUtil
-				.helpSerializeRoundtrip(example());
-		assertNotNull(serialized);
-		assertTrue(serialized instanceof DQPWorkContext);
-		DQPWorkContext copy = (DQPWorkContext) serialized;
+		DQPWorkContext copy = UnitTestUtil.helpSerialize(example());
 
 		assertEquals("5", "5"); //$NON-NLS-1$
 		assertEquals("myTrustedPayload", copy.getTrustedPayload()); //$NON-NLS-1$

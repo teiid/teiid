@@ -28,7 +28,7 @@ import java.util.Date;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.TestExternalizeUtil;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.language.TestQueryImpl;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
@@ -62,10 +62,7 @@ public class TestAtomicRequestMessage extends TestCase {
     }
 
     public void testSerialize() throws Exception {
-        Object serialized = TestExternalizeUtil.helpSerializeRoundtrip(example());
-        assertNotNull(serialized);
-        assertTrue(serialized instanceof AtomicRequestMessage);
-        AtomicRequestMessage copy = (AtomicRequestMessage)serialized;
+    	AtomicRequestMessage copy = UnitTestUtil.helpSerialize(example());
 
         assertEquals(TestQueryImpl.helpExample(), copy.getCommand());
         assertEquals(100, copy.getFetchSize());

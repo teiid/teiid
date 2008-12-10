@@ -29,6 +29,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.comm.CommonCommPlugin;
+import com.metamatrix.jdbc.api.ExecutionProperties;
+
 /**
  * Request Message, used by MMXStatement for submitting queries.
  */
@@ -228,14 +232,27 @@ public class RequestMessage implements Serializable {
      * @return String
      */
     public String getTxnAutoWrapMode() {
+    	if (txnAutoWrapMode == null) {
+    		return ExecutionProperties.AUTO_WRAP_OPTIMISTIC;
+    	}
         return txnAutoWrapMode;
     }
 
     /**
      * Sets the txnAutoWrapMode.
      * @param txnAutoWrapMode The txnAutoWrapMode to set
+     * @throws MetaMatrixProcessingException 
      */
-    public void setTxnAutoWrapMode(String txnAutoWrapMode) {
+    public void setTxnAutoWrapMode(String txnAutoWrapMode) throws MetaMatrixProcessingException {
+    	if (txnAutoWrapMode != null) {
+    		txnAutoWrapMode = txnAutoWrapMode.toUpperCase();
+    		if (!(txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_OFF)
+    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_ON)
+    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_OPTIMISTIC)
+    			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_PESSIMISTIC))) {
+    			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode));
+    		}
+    	} 
         this.txnAutoWrapMode = txnAutoWrapMode;
     }
 

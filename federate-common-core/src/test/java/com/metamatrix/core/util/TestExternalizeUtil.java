@@ -67,21 +67,6 @@ public class TestExternalizeUtil extends TestCase {
         }
     }
     
-    
-    public static Object helpSerializeRoundtrip(Object testObject) throws Exception {
-        Object result = null;
-        // build a buffer to use for the output
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(4096);
-        ObjectOutputStream oout = new ObjectOutputStream(bout);         
-        oout.writeObject(testObject);
-        oout.close();
-        
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream oin = new ObjectInputStream(bin);
-        result = oin.readObject();
-        return result;    
-    }
-    
     /**
      * Test ExternalizeUtil writeThrowable() and readThrowable() on Throwables. 
      * @throws Exception

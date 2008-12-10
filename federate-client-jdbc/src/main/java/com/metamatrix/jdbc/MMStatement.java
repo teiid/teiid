@@ -879,8 +879,9 @@ public class MMStatement extends WrapperImpl implements Statement {
      * Helper method for copy the connection properties to request message.
      * @param res Request message that these properties to be copied to.
      * @param props Connection properties.
+     * @throws MMSQLException 
      */
-    protected void copyPropertiesToRequest(RequestMessage res, Properties props) {
+    protected void copyPropertiesToRequest(RequestMessage res, Properties props) throws MMSQLException {
         // Get partial mode
         String partial = getExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         res.setPartialResults(Boolean.valueOf(partial).booleanValue());
@@ -905,7 +906,11 @@ public class MMStatement extends WrapperImpl implements Statement {
 
         // Get transaction auto-wrap mode
         String txnAutoWrapMode = getExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
-        res.setTxnAutoWrapMode(txnAutoWrapMode);
+        try {
+			res.setTxnAutoWrapMode(txnAutoWrapMode);
+		} catch (MetaMatrixProcessingException e) {
+			throw MMSQLException.create(e);
+		}
         
         // Get result set cache mode
         String rsCache = getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
