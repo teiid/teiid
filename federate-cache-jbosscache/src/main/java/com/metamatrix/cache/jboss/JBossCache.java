@@ -141,7 +141,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	@NodeRemoved
 	@NodeModified
 	@NodeMoved
-	synchronized void cacheChanged(NodeEvent ne) {
+	public synchronized void cacheChanged(NodeEvent ne) {
     	if (listeners != null) {
 	    	Fqn fqn = ne.getFqn();
 	    	if (fqn.isChildOrEquals(rootFqn)) {
