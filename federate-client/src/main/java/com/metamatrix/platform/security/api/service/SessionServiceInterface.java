@@ -25,7 +25,6 @@
 package com.metamatrix.platform.security.api.service;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Properties;
 
