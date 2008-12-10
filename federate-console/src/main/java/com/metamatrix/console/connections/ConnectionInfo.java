@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
