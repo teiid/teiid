@@ -46,7 +46,7 @@
             <format>
               <formatName>pdf</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-              <finalName>embedded_guide.pdf</finalName>
+              <finalName>quick_start_example.pdf</finalName>
             </format>
             <!-- <format>
               <formatName>html_single</formatName>
