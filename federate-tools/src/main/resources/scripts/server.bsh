@@ -17,13 +17,14 @@ String user_pwd = "mm";
 String user_protocol = "mm:"; // colon is important
 String user_driver = "com.metamatrix.jdbc.MMDriver";
 String user_vdb = "BQT";
+user_optional_url="";
 
 /**
  * Connect to the server using the properties specified in the connection.properties file.
  * use currentConnectionName() to get connection name
  */
 Connection connect () {
-    return connect(user_host, user_port, user_vdb, user_id, user_pwd);
+    return connect(user_host, user_port, user_vdb, user_id, user_pwd, user_optional_url);
 }
 
 /**
@@ -121,7 +122,7 @@ void connectAsAdmin() {
 void disconnect() {
     closeConnection();
     
-    if (currentContext().internalAdmin != null) {
+    if (currentContext().internalAdmin != void && currentContext().internalAdmin != null) {
         currentContext().internalAdmin.close();
         currentContext().internalAdmin=null;
     }  
