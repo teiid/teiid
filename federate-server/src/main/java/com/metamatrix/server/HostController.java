@@ -85,9 +85,9 @@ public class HostController extends Thread {
 
     private final static String[] commands = {"StartAllVMs", "StartVM", "KillAllVMs", "KillVM", "Ping", "Exit" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     
-    private static final String DEFAULT_JAVA_MAIN = "com.metamatrix.common.comm.platform.socket.SocketVMController"; //$NON-NLS-1$
+    private static final String DEFAULT_JAVA_MAIN = "com.metamatrix.server.Main"; //$NON-NLS-1$
  
-    private static Host host=null;
+    private Host host;
     
     private Map processMap = new HashMap(3);
     private ServerSocket serverSocket;
@@ -111,48 +111,32 @@ public class HostController extends Thread {
      * @param startProcess - if true local process are started (overridden by startMetaMatrix
      * @param wait - time in seconds to wait for appServer to startup before attempting to start processes.
      */
-    public HostController(String hostname, boolean startProcesses, int wait) throws Exception {
-
-        // Create an instance of the registry.
-    	// This will implicitely create a JGroups Distributed hashtable.
-    	// This is a workaround for a jgroups problem, there must be 1 instance
-    	// of a JChannel/Group started, if more than 1 channel start at the same time
-    	// then they do not join the same group. By starting an instance in host
-    	// controller there will be an instance running by the time the vm's come up.
-    	// There is still a potential problem if 2 host-controller start up at 
-    	// the exact same time on two different hosts. 
+    public HostController(Host host, boolean startProcesses, int wait) throws Exception {
         super("HostControllerThread"); //$NON-NLS-1$
         
+        this.host = host;
+        this.port = Integer.parseInt(host.getPort());
+        
         init();
-        
-        this.port = getPortNumber();
-        
-		Injector injector = Guice.createInjector(new ServerGuiceModule(host, "hostControllerProcess"));
-        
+                
+		Injector injector = Guice.createInjector(new ServerGuiceModule(host, "hostControllerProcess")); //$NON-NLS-1$
 		this.registry = injector.getInstance(ClusteredRegistryState.class);
-        
         
         addShutdown();        
         
-
         if (startProcesses ) {
-            starterThread = new StarterThread(this,  wait);
+            starterThread = new StarterThread(wait);
             starterThread.start();
         }
-
-                
     }
     
     private void init() {
-        // initialize hostName
-       
-        try {
-                        
+
+    	try {
             VMNaming.setLogicalHostName(host.getFullName());
             VMNaming.setHostAddress(host.getHostAddress());
             VMNaming.setBindAddress(host.getBindAddress());
             
-                       
             // setup the log file
             String hostFileName = StringUtil.replaceAll(host.getFullName(), ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
             
@@ -180,10 +164,7 @@ public class HostController extends Thread {
                 if (!tempDir.exists()) {           
                     tempDir.mkdirs();
                 }
-
             }
-           
-
         } catch (Exception e) {
             logMessage(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, host.getFullName()));
         }
@@ -242,26 +223,23 @@ public class HostController extends Thread {
         }
         return false;
     }
-  
     
-   // Run
     public void run() {
 
         logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0004, getHostname()));
         try {
             // the listener should use the bindaddress
-			InetAddress inet = InetAddress.getByName(getHost().getBindAddress());
-
-			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0012, Integer.toString(port), getHost().getBindAddress()));
+			InetAddress inet = InetAddress.getByName(this.host.getBindAddress());
+			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0012, Integer.toString(port), this.host.getBindAddress()));
             serverSocket = SocketHelper.getInternalServerSocket(port, 50, inet);
         } catch (Exception e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0003,  port);
-            logCritical("ERROR " + msg);//$NON-NLS-1$
-//            LogManager.stop();
+            logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0003,  port));//$NON-NLS-1$
             System.exit(1);
         }
+        
         this.isListening = true;
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0005, port));
+        
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -270,33 +248,17 @@ public class HostController extends Thread {
             }
         } catch (Exception e) {
             if (!hcKilled) { // if ^C was entered then this exception is expected.
-                String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0004);
-                logCritical("ERROR " + msg);//$NON-NLS-1$
+                logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0004));//$NON-NLS-1$
                 e.printStackTrace();
             }
         }
     }
 
-    private int getPortNumber() throws Exception {
-
-        try {
-            String portString = host.getPort();           
-            return Integer.parseInt(portString);
-
-        } catch (Exception e) {
-            logMessage(PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0005));
-            throw e;
-        }
-    }
-
-
     public static void logInfo(String msg) {
-//        LogManager.logInfo(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
         System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
     }
 
     public static void logCritical(String msg) {
-//        LogManager.logCritical(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
         System.out.println("-------------------------------------------------------\n"); //$NON-NLS-1$
         System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
         System.out.println("-------------------------------------------------------\n"); //$NON-NLS-1$
@@ -309,7 +271,6 @@ public class HostController extends Thread {
             String hostname = getHostname();
             CurrentConfiguration.verifyBootstrapProperties();
             ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
-//            Configuration currentConfig = CurrentConfiguration.getConfiguration(true);
             Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostname);
 
             if ( deployedVMs != null && deployedVMs.size() > 0) {
@@ -320,8 +281,8 @@ public class HostController extends Thread {
                     startVM(deployedVM, hostname, currentConfig);
                 }
             } else {
-                String msg = "Unable to start VM's on host \"" + hostname +
-                            "\" due to the configuration has no VM's deployed to this host.";
+                String msg = "Unable to start VM's on host \"" + hostname +	 //$NON-NLS-1$
+                            "\" due to the configuration has no VM's deployed to this host."; //$NON-NLS-1$
                 logMessage(msg);
             }
         } catch (Throwable e) {
@@ -427,40 +388,32 @@ public class HostController extends Thread {
         }
         
         if (enabled) {
-            processMap.put(name, startDeployVM(vmName, hostName, props, host));
+            processMap.put(name, startDeployVM(vmName, hostName, props));
         } else {
             logMessage(PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", vmName));//$NON-NLS-1$
-
         }
     }    
 
 
-    public class StarterThread extends Thread {
-
-        private HostController hc;
+    class StarterThread extends Thread {
         private int wait;
 
-        public StarterThread(HostController hc, int wait) {
+        public StarterThread(int wait) {
             super("StarterThread");  //$NON-NLS-1$
-            this.hc = hc;
             this.wait = wait;
         }
-        
 
         public void run() {
-
             // wait for host controller to start listening.
-            while (!hc.isListening()) {
+            while (!isListening()) {
                 try {
                     Thread.sleep(wait);
                 } catch (Exception e) {}
             }
             try {
-
                 // start processes on this host using operational configuration
-                String host = hc.getHostname();
                 logInfo(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0008, host));
-                hc.doStartAllVMs();
+                doStartAllVMs();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -616,7 +569,6 @@ public class HostController extends Thread {
     }
 
     private void logMessage(String msg) {
-//        LogManager.logInfo(LogPlatformConstants.CTX_HOST_CONTROLLER, hostname + ": " + msg);
         System.out.println(new Date(System.currentTimeMillis()) + " : " + msg); //$NON-NLS-1$
     }
 
@@ -646,13 +598,12 @@ public class HostController extends Thread {
         int parmIndex = args.length;
         for (int i = 0; i < parmIndex; i++) {
             String command = args[i];
-            if (command.equalsIgnoreCase("-config") ) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (command.equalsIgnoreCase("-config") ) { //$NON-NLS-1$ 
                 i++;
                 if (i == parmIndex) {
                     printUsage();
                     System.exit(-1);
                 } else {
-                    
                     hostname = args[i];
                 }
                 
@@ -683,21 +634,17 @@ public class HostController extends Thread {
             logCritical(logMsg);
            
             // find the host in the last used configuration 
-            host =CurrentConfiguration.findHost(hostname);
+            Host host = CurrentConfiguration.findHost(hostname);
             
             if (host != null) {
-                hostname = host.getFullName();
-                
-                // if this host is still running do not try to start
-                if (NetUtils.ping(host.getHostAddress(), Integer.parseInt(host.getPort()))) {                            
-                   logCritical(PlatformPlugin.Util.getString("HostController.Host_is_already_running_startprocesses", hostname)); //$NON-NLS-1$ //$NON-NLS-2$/
+                if (isAHostRunning(host)) {                            
+                   logCritical(PlatformPlugin.Util.getString("HostController.Host_is_already_running_startprocesses", host.getFullName())); //$NON-NLS-1$ 
                     MetaMatrixController.startHost(host.getName());
                     System.exit(1);
-                    
                 }
             }                       
             
-            checkToPromoteNextStartupConfig(hostname);
+            checkToPromoteNextStartupConfig();
             
             // if the host was not resolved,
             // then try after the configuration was updated
@@ -707,12 +654,9 @@ public class HostController extends Thread {
                     logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, hostname)); //$NON-NLS-1$
                     System.exit(-1);
                 }
-                
-                hostname = host.getFullName();
-                
             }           
 
-            controller = new HostController(hostname, startProcesses, wait);
+            controller = new HostController(host, startProcesses, wait);
             controller.start();
         } catch (Exception e) {
             logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0011));//$NON-NLS-1$
@@ -720,62 +664,53 @@ public class HostController extends Thread {
         }
     }
     
-    private static boolean checkToPromoteNextStartupConfig(String hostname) {
-        try {
-            
-          // if another host is not running, then it must be assumed that this is the first
-          // and that the configuration must be initialized
-          if (!isAHostRunning(hostname)) {
-//              logCritical("Copying NextStartup configuration to Startup configuration."); //$NON-NLS-1$
-              StartupStateController.performSystemInitialization(true);
-              return true;
-          }
-
-          
-      } catch (Exception e) {
-      }
-      return false;
+    private static boolean checkToPromoteNextStartupConfig(){
+      // if another host is not running, then it must be assumed that this is the first
+      // and that the configuration must be initialized
+		try {
+			Collection<Host> hosts = CurrentConfiguration.getConfigurationModel().getHosts();
+			for(Host h:hosts) {
+				if (!isAHostRunning(h)) {
+					StartupStateController.performSystemInitialization(true);
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			// ignore..
+		}
+		return false;
     }
        
-   private static boolean isAHostRunning(String hostname) {
-        try {
-            
-            Collection hosts = CurrentConfiguration.getConfigurationModel().getHosts();
-            if (hosts.size() > 1) {
-               
-                for (Iterator it=hosts.iterator(); it.hasNext();) {
-                    Host h = (Host) it.next();
-                    if (NetUtils.ping(h.getHostAddress(), Integer.parseInt(h.getPort()))) {                            
-                        return true;
-                    } 
-                 }
-            }
-          
-      } catch (Exception e) {
-      }        
-        
+   private static boolean isAHostRunning(Host host) {
+	    try {
+			if (NetUtils.ping(host.getHostAddress(), Integer.parseInt(host.getPort()))) {                            
+			    return true;
+			}
+		} catch (Exception e) {
+			// ignore.
+		} 
         return false;
     }      
     
    
-   private static Process startDeployVM( String vmName, String hostName, Properties vmprops, Host host ) {
-	   logInfo("Start deploy VM " + vmName);
-       String command = buildVMCommand(vmName,hostName,vmprops, "true", host); //$NON-NLS-1$
+   private Process startDeployVM( String vmName, String hostName, Properties vmprops) {
+	   logInfo("Start deploy VM " + vmName + "on host"+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
+       String command = buildVMCommand(vmprops);
        return execCommand(command);
    }
 
-   private static String buildVMCommand( String vmname, String hostName, Properties vmprops, String startDeployedServices, Host host ) {
-	   String java = vmprops.getProperty(HostType.JAVA_EXEC, "java");
-	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS);
+   private String buildVMCommand(Properties vmprops) {
+	   String java = vmprops.getProperty(HostType.JAVA_EXEC, "java"); //$NON-NLS-1$
+	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
 	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
-	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS);
+	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS, ""); //$NON-NLS-1$
 	   
 	   java = replaceToken(java, vmprops);
 	   java_opts = replaceToken(java_opts, vmprops);
 	   java_main = replaceToken(java_main, vmprops);
 	   java_args = replaceToken(java_args, vmprops);
    
-	   String cmd = java + " " + java_opts + " " + java_main + " " + java_args;
+	   String cmd = java + " " + java_main +" " +java_args; //$NON-NLS-1$ //$NON-NLS-2$ 
        return cmd;
    }
    
@@ -783,21 +718,19 @@ public class HostController extends Thread {
     * Replace any defined ${...} properties with associated properties
     * that exist in the vmprops
     */
-   private static String replaceToken(String value, Properties props) {
+   private String replaceToken(String value, Properties props) {
 	   String rtn = value;
 	   while (true) {
-		   int startidx = rtn.indexOf("${");
+		   int startidx = rtn.indexOf("${"); //$NON-NLS-1$
 		   if (startidx == -1) return rtn;
 		   
-		   int endidx = rtn.indexOf("}");
+		   int endidx = rtn.indexOf("}"); //$NON-NLS-1$
 		   if (endidx < startidx)  return rtn;
 		   
 		   String tokenprop = rtn.substring(startidx + 2, endidx);
 		   String tokenvalue = props.getProperty(tokenprop);
 		   StringBuffer buf = new StringBuffer(rtn);
 		   rtn = buf.replace(startidx, endidx + 1, tokenvalue).toString();
-	
-
 	   }
    }
 
@@ -805,7 +738,7 @@ public class HostController extends Thread {
    /**
     * Execute the specified command. The command executed MUST be an executable.
     */
-   private static Process execCommand(String cmd) {
+   private Process execCommand(String cmd) {
        Runtime rt = Runtime.getRuntime();
        Process process = null;
        try {

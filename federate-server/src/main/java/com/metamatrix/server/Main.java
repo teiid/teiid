@@ -34,7 +34,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.DbLogListener;
 import com.metamatrix.common.log.DbWriterException;
