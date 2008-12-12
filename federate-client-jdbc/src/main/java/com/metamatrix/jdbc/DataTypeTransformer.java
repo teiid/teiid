@@ -61,20 +61,16 @@ final class DataTypeTransformer {
     	return transform(value, type, type, typeName);
     }
     
-    static final <T> T transform(Object value, Class<T> type, Class runtimeType, String typeName) throws SQLException {
-    	if (value == null || type.isAssignableFrom(value.getClass())) {
+    static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType, String typeName) throws SQLException {
+    	if (value == null || targetType.isAssignableFrom(value.getClass())) {
     		return (T)value;
     	}
     	try {
-    		return (T)DataTypeManager.transformValue(value, runtimeType);
+    		return (T)DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), runtimeType);
     	} catch (TransformationException e) {
-            throw createConversionError(value, typeName, e); //$NON-NLS-1$
+    		String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", value, typeName); //$NON-NLS-1$
+            throw MMSQLException.create(e, msg);
     	} 
-    }
-    
-    private static MMSQLException createConversionError(Object value, String type, TransformationException e) {
-        String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", type, value); //$NON-NLS-1$
-        return MMSQLException.create(e, msg);        
     }
     
     /**
