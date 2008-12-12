@@ -119,7 +119,7 @@ public class HostController extends Thread {
         
         init();
                 
-		Injector injector = Guice.createInjector(new ServerGuiceModule(host, "hostControllerProcess")); //$NON-NLS-1$
+		Injector injector = Guice.createInjector(new HostControllerGuiceModule(host, "hostControllerProcess")); //$NON-NLS-1$
 		this.registry = injector.getInstance(ClusteredRegistryState.class);
         
         addShutdown();        
