@@ -37,11 +37,13 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.server.SocketListener;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefnType;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.net.SocketHelper;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -143,8 +145,7 @@ public class SocketVMController extends VMController {
         try {
             listener = new SocketListener(socketPort, hostaddress, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, SocketHelper.getServerSSLEngine());
         } catch (IOException e) {
-            logError(CommPlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
-            e.printStackTrace();
+        	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, CommPlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 
         }
     }

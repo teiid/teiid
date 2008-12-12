@@ -43,7 +43,6 @@ import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.SimpleManagedConnection;
 import com.metamatrix.common.connection.TransactionFactory;
 import com.metamatrix.common.connection.TransactionInterface;
-import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingException;

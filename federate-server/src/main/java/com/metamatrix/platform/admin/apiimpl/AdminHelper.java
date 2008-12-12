@@ -113,7 +113,6 @@ public class AdminHelper implements IAdminHelper {
 
         if (!isAuthorized){
             String msg = AdminPlugin.Util.getString(AdminMessages.ADMIN_0008, adminToken, roleName.toString());
-            LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API, AdminMessages.ADMIN_0008);
             throw new AuthorizationException(AdminMessages.ADMIN_0008, msg);
         }
     	if (LogManager.isMessageToBeRecorded(PlatformAdminLogConstants.CTX_ADMIN_API, MessageLevel.TRACE)) {
@@ -147,7 +146,6 @@ public class AdminHelper implements IAdminHelper {
             throw new ComponentNotFoundException(e,AdminMessages.ADMIN_0010, SESSION_SERVICE_DOWN_MSG);
         } catch (ServiceException e) {
             String msg = AdminPlugin.Util.getString(AdminMessages.ADMIN_0013);
-            LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API,e,msg);
             throw new ComponentNotFoundException(e,msg);
         }
 

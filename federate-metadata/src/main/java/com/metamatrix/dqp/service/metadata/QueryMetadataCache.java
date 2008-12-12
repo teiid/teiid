@@ -84,8 +84,7 @@ public class QueryMetadataCache {
         try {
             this.systemVDBSelector = getRuntimeIndexSelector(systemVdbUrl);
         } catch(Exception e) {
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
-            throw new MetaMatrixComponentException(e);
+            throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
         }        
     }
 
@@ -97,8 +96,7 @@ public class QueryMetadataCache {
         try {
 	        this.systemVDBSelector = getRuntimeIndexSelector(CoreConstants.SYSTEM_VDB, sysemVdbContent);
 	    } catch(Exception e) {
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
-	        throw new MetaMatrixComponentException(e);
+	        throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
 	    }        
     }
 
@@ -111,8 +109,7 @@ public class QueryMetadataCache {
             URL systemVdbUrl = new URL( "file:///" + filePath); //$NON-NLS-1$
             this.systemVDBSelector = getRuntimeIndexSelector(systemVdbUrl);
         } catch(Exception e) {
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
-            throw new MetaMatrixComponentException(e);
+            throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
         }        
     }
 
@@ -287,8 +284,7 @@ public class QueryMetadataCache {
             // force the extraction of indexes for the vdb            
             runtimeSelector.getIndexes();
         } catch (IOException e) {            
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
-            throw new MetaMatrixRuntimeException(e);
+            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
         }
         return runtimeSelector;
     }
@@ -301,8 +297,7 @@ public class QueryMetadataCache {
             // force the extraction of indexes for the vdb            
             runtimeSelector.getIndexes();
         } catch (IOException e) {            
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
-            throw new MetaMatrixRuntimeException(e);
+            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
         }
         return runtimeSelector;
     }    
@@ -314,8 +309,7 @@ public class QueryMetadataCache {
             // force the extraction of indexes for the vdb            
             runtimeSelector.getIndexes();
         } catch (IOException e) {            
-            LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", path));  //$NON-NLS-1$
-            throw new MetaMatrixRuntimeException(e);
+            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", path));  //$NON-NLS-1$
         }
         return runtimeSelector;
     }

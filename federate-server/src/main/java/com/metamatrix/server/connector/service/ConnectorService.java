@@ -31,7 +31,6 @@ package com.metamatrix.server.connector.service;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EventObject;

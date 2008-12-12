@@ -58,6 +58,7 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
 import com.metamatrix.platform.config.spi.ConfigurationTransaction;
+import com.metamatrix.platform.config.spi.SystemConfigurationNames;
 import com.metamatrix.platform.config.transaction.ConfigTransactionException;
 import com.metamatrix.platform.config.transaction.ConfigUserTransaction;
 
@@ -427,7 +428,6 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
              try {
                 configUserTransaction.commit();
              } catch (Exception ce) {
-                LogManager.logError(LogCommonConstants.CTX_CONFIG, ce, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0111, new Object[]{ configUserTransaction.getTransaction().getLockAcquiredBy()}));
                 throw new ManagedConnectionException(ce, ConfigMessages.CONFIG_0111,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0111, configUserTransaction.getTransaction().getLockAcquiredBy()));
              }
 
@@ -469,7 +469,6 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
             affectedIDs = getConfigurationWriter().executeActions(actions, configUserTransaction.getTransaction());
 
         } catch (TransactionException e) {
-            LogManager.logError(LogCommonConstants.CTX_CONFIG, e, ConfigPlugin.Util.getString(ConfigMessages.MSG_0006));
             LogManager.logTrace(LogCommonConstants.CTX_CONFIG, e, new Object[]{"Failed actions: ", actions}); //$NON-NLS-1$
 
 			try {
@@ -477,9 +476,8 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
 			} catch(Exception re) {
 			}
 
-            throw new ConfigurationException(e);
+            throw new ConfigurationException(e, ConfigPlugin.Util.getString(ConfigMessages.MSG_0006));
         } catch (ConfigurationException e) {
-            LogManager.logError(LogCommonConstants.CTX_CONFIG, e, ConfigPlugin.Util.getString(ConfigMessages.MSG_0006));
             LogManager.logTrace(LogCommonConstants.CTX_CONFIG, e, new Object[]{"Failed actions: ", actions}); //$NON-NLS-1$
 
 			try {
@@ -536,13 +534,8 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
 //            LogManager.logCritical(LogCommonConstants.CTX_CONFIG, e, "Unable to execute actions; use trace logging for actions");
 //            LogManager.logTrace(LogCommonConstants.CTX_CONFIG, e, new Object[]{"Failed actions: ", actions});
             throw new ConfigurationException(te);
-
-        } catch (ConfigurationException e) {
-            LogManager.logError(LogCommonConstants.CTX_CONFIG, e, ConfigPlugin.Util.getString(ConfigMessages.MSG_0006));
-        	
-            throw e;
         }
-        LogManager.logError(LogCommonConstants.CTX_CONFIG, ConfigPlugin.Util.getString(ConfigMessages.MSG_0008));
+        LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ConfigPlugin.Util.getString(ConfigMessages.MSG_0008));
 
         return resultID;
     }
@@ -569,10 +562,6 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
 
         } catch (ConfigTransactionException te) {
             throw new ConfigurationException(te);
-
-        } catch (ConfigurationException e) {
-            LogManager.logError(LogCommonConstants.CTX_CONFIG, e, ConfigPlugin.Util.getString(ConfigMessages.MSG_0006));
-            throw e;
         }
 
 

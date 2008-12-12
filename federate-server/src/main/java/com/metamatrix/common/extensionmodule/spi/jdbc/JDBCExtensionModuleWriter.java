@@ -24,6 +24,7 @@
 
 package com.metamatrix.common.extensionmodule.spi.jdbc;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -181,10 +182,8 @@ public class JDBCExtensionModuleWriter {
                 
                 if (statement.executeUpdate() != 1){
                     if (JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-						LogManager.logError(CONTEXT,  CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0053, sourceName));
-                        throw new DuplicateExtensionModuleException(sourceName);
+                        throw new DuplicateExtensionModuleException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0053, sourceName));
                     }
-                    LogManager.logError(CONTEXT,  CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
                 }
                 
@@ -208,10 +207,8 @@ public class JDBCExtensionModuleWriter {
             }
 
             if (JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0053, sourceName));
                 throw new DuplicateExtensionModuleException(sourceName);
             }
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
 
         } catch ( DuplicateExtensionModuleException e ) {
@@ -219,11 +216,9 @@ public class JDBCExtensionModuleWriter {
             throw e;
         } catch ( MetaMatrixComponentException e ) {
             firstException = true;
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
             throw e;
         } catch (Exception e) {
             firstException = true;
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
         } finally {
             if ( statement != null ) {
@@ -238,11 +233,11 @@ public class JDBCExtensionModuleWriter {
             try {
                 jdbcConnection.setAutoCommit(orignalAutocommit);
             } catch (SQLException e) {
-                LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
                 if (!firstException) {
                     throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
+                } else {
+                	LogManager.logDetail(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
                 }
-                
             }
         }
         
@@ -291,10 +286,8 @@ public class JDBCExtensionModuleWriter {
 
                 if (statement.executeUpdate() != 1){
                     if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                        throw new ExtensionModuleNotFoundException(sourceName);
+                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                     }
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                 }
                 
@@ -309,7 +302,6 @@ public class JDBCExtensionModuleWriter {
                 
                 if ( ! statement.execute() ) {
                     //already checked if name wasn't in use above, shouldn't be a problem here
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0072, sql));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0072, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0072, sourceName,sql));
                 }
 
@@ -321,7 +313,6 @@ public class JDBCExtensionModuleWriter {
                         
                         jdbcConnection.commit();
                     } else {
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064, sourceName));
                         throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0064, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064,sourceName));
                     }
                 } catch (SQLException se){
@@ -364,10 +355,8 @@ public class JDBCExtensionModuleWriter {
 
                 if (r != 1){
                     if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                        throw new ExtensionModuleNotFoundException(sourceName);
+                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                     }
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                 }
                                
@@ -376,19 +365,11 @@ public class JDBCExtensionModuleWriter {
 
             //check if name is in use
             if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                 throw new ExtensionModuleNotFoundException(sourceName);
             }
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
 
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-            throw e;
-        } catch (Exception e) {            
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
+        } catch (IOException e) {            
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
         } finally {
             if ( statement != null ) {
@@ -430,10 +411,8 @@ public class JDBCExtensionModuleWriter {
                 
                 if (statement.executeUpdate() != 1) {
                     if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                        throw new ExtensionModuleNotFoundException(sourceName);
+                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                     }
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0060, new Object[]{sourceName, sql}));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0060, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0060, sourceName,sql));
                 }
                 LogManager.logTrace(CONTEXT, "SUCCESS-reset Blob: " + sql); //$NON-NLS-1$
@@ -448,7 +427,6 @@ public class JDBCExtensionModuleWriter {
 
                 if ( ! statement.execute() ) {
                     //already checked if name wasn't in use above, shouldn't be a problem here
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0061, sql));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0062, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0062, sourceName,sql));
                 }
                 
@@ -461,7 +439,6 @@ public class JDBCExtensionModuleWriter {
                         jdbcConnection.commit();
     
                     } else {
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064, sourceName));
                         throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0064, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064,sourceName));
                     }
                 } catch (SQLException se){
@@ -504,10 +481,8 @@ public class JDBCExtensionModuleWriter {
 
                 if (statement.executeUpdate() != 1){
                     if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                        throw new ExtensionModuleNotFoundException(sourceName);
+                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                     }
-                    LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
                 }                
             }
@@ -515,19 +490,11 @@ public class JDBCExtensionModuleWriter {
 
             //check if name is in use
             if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                 throw new ExtensionModuleNotFoundException(sourceName);
             }
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
 
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-            throw e;
-        } catch (Exception e) {
-            LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
+        } catch (IOException e) {
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
         } finally {
             if ( statement != null ) {
@@ -620,7 +587,6 @@ public class JDBCExtensionModuleWriter {
     throws ExtensionModuleOrderingException, MetaMatrixComponentException{
         int rowCount = JDBCExtensionModuleReader.getExtensionModuleCount(jdbcConnection);
         if (sourceNames.size() != rowCount){
-            LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0066, sourceNames));
             throw new ExtensionModuleOrderingException(ErrorMessageKeys.EXTENSION_0066, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0066, sourceNames));
         }
 

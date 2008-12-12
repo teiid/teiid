@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Properties;
 
 import com.metamatrix.admin.api.embedded.EmbeddedConfigAdmin;
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -41,6 +42,7 @@ import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMAdminStatus;
+import com.metamatrix.api.exception.ComponentNotAvailableException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -91,8 +93,10 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // the Configuration Service. Since we do not have dynamic properties on
             // DQP this should be OK for now.
             getConfigurationService().setSystemProperty(propertyName, propertyValue);            
-        }catch(Exception e) {
-        	throw createSystemException(e);
+        } catch(ComponentNotAvailableException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
     
@@ -108,7 +112,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // DQP this should be OK for now.
             getConfigurationService().updateSystemProperties(properties);            
         }catch(Exception e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -177,9 +181,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                     getConfigurationService().updateConnectorBinding(binding);
                     
                 } catch (MetaMatrixComponentException e) {
-                	throw createSystemException(e);
-                } catch (MetaMatrixProcessingException e) {
-                	throw createProcessingException(e);
+                	throw new AdminComponentException(e);
                 } 
                 break;
        
@@ -213,9 +215,13 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             else {
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", new Object[] {deployName})); //$NON-NLS-1$
             }
-        } catch (Exception e) {
-        	throw createSystemException(e);
-        }            
+        } catch (ComponentNotAvailableException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+		} catch (MetaMatrixProcessingException e) {
+			throw new AdminProcessingException(e);
+		}            
     }
 
     /** 
@@ -229,9 +235,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_ct_name")); //$NON-NLS-1$                
             }            
             getConfigurationService().deleteConnectorType(deployName);
-        } catch (Exception e) {
-        	throw createSystemException(e);
-        }         
+        } catch (ComponentNotAvailableException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+		}         
     }
 
     /** 
@@ -290,7 +298,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         } catch (AdminException e) {
             throw e;
         } catch (Exception e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         }                
         return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
     }
@@ -364,11 +372,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // now that all of the input parameters validated, add the connector binding
             binding = addConnectorBinding(deployName, binding, type, true);
                                 
-        } catch (AdminException e) {
-            throw e;
-        } catch (Exception e) {
-        	throw createSystemException(e);
-        }         
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixProcessingException e) {
+        	throw new AdminProcessingException(e);
+        }
         
         return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
     }
@@ -396,7 +404,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                     binding = getConfigurationService().addConnectorBinding(deployName, binding, replace);
                     return binding;
                 } catch (Exception e) {
-                	throw createSystemException(e);
+                	throw new AdminComponentException(e);
                 }
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.connector_load_failed_wrong_type", deployName));  //$NON-NLS-1$                    
@@ -416,7 +424,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }
             getConfigurationService().deleteConnectorBinding(identifier);
         } catch (Exception e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         }          
     }
 
@@ -475,7 +483,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         } catch (AdminException e) {
             throw e;               
         } catch (Exception e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         } 
     }
 
@@ -641,9 +649,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", new Object[] {sourceName})); //$NON-NLS-1$
             }
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -659,9 +665,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }                        
             getConfigurationService().deleteExtensionModule(sourceName);
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }        
     }
 
@@ -697,9 +701,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Vdb_or_Model_notfound")); //$NON-NLS-1$
             }
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }                        
     }
 
@@ -734,9 +736,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             ExtensionModule extModule = getConfigurationService().getExtensionModule(sourceName);            
             return extModule.getFileContents();
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -749,9 +749,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             ConfigurationModelContainer model = getConfigurationService().getSystemConfiguration();
             return ServerConfigFileWriter.writeToCharArray(model);
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch(MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -786,9 +784,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_binding_does_not_exists", identifier)); //$NON-NLS-1$
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         } 
     }
 
@@ -818,9 +814,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_does_not_exists", identifier)); //$NON-NLS-1$
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         } 
     }
 
@@ -842,9 +836,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.vdb_does_not_exists", name, version)); //$NON-NLS-1$
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -910,9 +902,9 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }        
                         
         } catch (MetaMatrixComponentException e) {
-            throw createSystemException(e);
+            throw new AdminComponentException(e);
         } catch(MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminProcessingException(e);
         }
     }
 
@@ -1016,9 +1008,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             return ConnectorConfigurationWriter.writeToByteArray(archive);
            
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         } 
     }
     
@@ -1057,9 +1047,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			// reload the new UDF
 			getConfigurationService().loadUDF();
 		} catch (MetaMatrixComponentException e) {
-			createSystemException(e);
-		} catch (MetaMatrixProcessingException e) {
-			createProcessingException(e);
+			new AdminComponentException(e);
 		}
 	}
 
@@ -1071,9 +1059,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			getConfigurationService().unloadUDF();
 			deleteExtensionModule(ConfigurationService.USER_DEFINED_FUNCTION_MODEL); 
 		} catch (MetaMatrixComponentException e) {
-			createSystemException(e);
-		} catch (MetaMatrixProcessingException e) {
-			createProcessingException(e);
+			new AdminComponentException(e);
 		}
 	}    
 }

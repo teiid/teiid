@@ -29,7 +29,6 @@ package com.metamatrix.connector.jdbc;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.data.api.Connection;
@@ -204,8 +203,7 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
             }
             this.physicalConnection.close();
         } catch(SQLException e) {
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e), e.getMessage());
+            throw new ConnectorException(e);
         }
     }
 

@@ -26,22 +26,12 @@ package com.metamatrix.admin.server;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.server.AbstractAdminImpl;
-
 /**
  * Unit tests of AbstractAdminImpl
  * 
  * @since 4.3
  */
 public class TestAbstractAdminImpl extends TestCase {
-
-    public void setUp() throws Exception {
-
-    }
-
-    public void tearDown() throws Exception {
-
-    }
 
     public void testIdentifierMatches1() {
         assertFalse(AbstractAdminImpl.identifierMatches("a", "a.b.c")); //$NON-NLS-1$//$NON-NLS-2$

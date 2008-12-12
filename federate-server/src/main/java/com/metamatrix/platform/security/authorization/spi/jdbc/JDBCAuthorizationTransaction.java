@@ -1543,12 +1543,10 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Inserted permissions for policy " + perm.getResourceName()); //$NON-NLS-1$ 
          } catch ( DBIDGeneratorException e ) {
              String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0108, perm.getResourceName(), perm.getRealmName());
-             I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0111, e, msg);
              throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0111, msg);
 
         } catch ( SQLException e ) {
          String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0108, perm.getResourceName(), perm.getRealmName());
-         I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0111, e, msg);
          throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0111, msg);
 
         } finally {
@@ -1969,8 +1967,6 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
          LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Inserted policy " + nameValue); //$NON-NLS-1$ 
      } catch ( DBIDGeneratorException e ) {
          String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0116, nameValue);
-         I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0116,
-                 e, msg);
          throw new AuthorizationSourceConnectionException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0116, msg);
 
       } finally {
@@ -2101,8 +2097,6 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 //          }
       } catch ( DBIDGeneratorException e ) {
           String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0121, realm);
-          I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0121,
-                  e, msg);
           throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0121, msg);
       }catch (SQLException se){
           throw new AuthorizationSourceException(se, ErrorMessageKeys.SEC_AUTHORIZATION_0119,
@@ -2337,7 +2331,6 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         } catch ( DBIDGeneratorException e ) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0108, perm.getResourceName(), perm.getRealmName());
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0111, e, msg);
             throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0111, msg);
 
         } finally {

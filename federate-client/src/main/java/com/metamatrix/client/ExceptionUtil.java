@@ -35,24 +35,20 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 public class ExceptionUtil {
 	
 	public static Throwable convertException(Method method, Throwable exception) {
-		boolean canThrowComponent = false;
-		boolean canThrowAdmin = false;
 		boolean canThrowXATransactionException = false;
-        Class[] exceptionClasses = method.getExceptionTypes();
+        Class<?>[] exceptionClasses = method.getExceptionTypes();
         for (int i = 0; i < exceptionClasses.length; i++) {
 			if (exception.getClass().isAssignableFrom(exceptionClasses[i])) {
 				return exception;
 			}
-			canThrowAdmin |= AdminException.class == exceptionClasses[i];
-			canThrowComponent |= MetaMatrixComponentException.class == exceptionClasses[i];
-			canThrowXATransactionException |= XATransactionException.class == exceptionClasses[i];
+			if (MetaMatrixComponentException.class.isAssignableFrom(exceptionClasses[i])) {
+				return new MetaMatrixComponentException(exception);	
+			}
+			if (AdminException.class.isAssignableFrom(exceptionClasses[i])) {
+	        	return new AdminComponentException(exception);
+			}
+			canThrowXATransactionException |= XATransactionException.class.isAssignableFrom(exceptionClasses[i]);
 		}
-        if (canThrowAdmin) {
-        	return new AdminComponentException(exception.getMessage());
-        }
-        if (canThrowComponent) {
-        	return new MetaMatrixComponentException(exception);
-        }
         if (canThrowXATransactionException) {
         	return new XATransactionException(exception);
         }

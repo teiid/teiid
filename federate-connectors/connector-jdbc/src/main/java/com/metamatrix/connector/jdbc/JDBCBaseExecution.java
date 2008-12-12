@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
@@ -164,8 +163,6 @@ public abstract class JDBCBaseExecution {
      */
     protected ConnectorException createError(SQLException error,
                                              TranslatedCommand command) {
-        // Defect 15316 - always unroll SQLExceptions
-        error = SQLExceptionUnroller.unRollException(error);
         String msg = (command == null ? error.getMessage()
                         : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
                                                     error.getMessage(), createSql(command)));
@@ -198,9 +195,7 @@ public abstract class JDBCBaseExecution {
                 statement.close();
             }
         } catch (SQLException e) {
-            logger.logError(e.getMessage());
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }
     }
 

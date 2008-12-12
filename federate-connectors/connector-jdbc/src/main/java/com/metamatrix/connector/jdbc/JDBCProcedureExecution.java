@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
@@ -103,7 +102,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 
             logger.logError(JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
             // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }           
     }
         
@@ -129,8 +128,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.resultsTranslator.getValueTranslators(), this.resultsTranslator.getTypefacility(), trimString, context);
             return result;
         } catch (SQLException e) {
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }
     }
     

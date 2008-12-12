@@ -81,7 +81,6 @@ public final class JDBCRuntimeMetadataWriter {
                 throw new VirtualDatabaseException(ErrorMessageKeys.JDBCW_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0003, new Short(status), virtualDBID) );
             }
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
         }finally {
             if ( statement != null ) {
@@ -215,7 +214,6 @@ public final class JDBCRuntimeMetadataWriter {
               }
           }
       }catch (SQLException se){
-          I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
           throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
       }finally {
           if ( statement != null ) {
@@ -270,7 +268,6 @@ public final class JDBCRuntimeMetadataWriter {
                   }    
           }
       }catch (SQLException se){
-          I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
           throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
       }finally {
           if ( statement != null ) {
@@ -404,7 +401,6 @@ public final class JDBCRuntimeMetadataWriter {
             }
 
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
         }finally {
             if ( statement != null ) {
@@ -476,7 +472,6 @@ public final class JDBCRuntimeMetadataWriter {
             }
 
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
         }finally {
             if ( statement != null ) {
@@ -590,7 +585,6 @@ public final class JDBCRuntimeMetadataWriter {
             }
         
         }catch (Exception se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
 //        } catch (ConfigurationException err) {
             
@@ -667,7 +661,6 @@ public final class JDBCRuntimeMetadataWriter {
                 }
             }
         }catch (Exception se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCW_0001, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCW_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCW_0002, sql) );
         }finally {
             if ( statement != null ) {
@@ -707,7 +700,6 @@ public final class JDBCRuntimeMetadataWriter {
 //                }
             } // end while
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0007, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
         }finally {
             if ( statement != null ) {

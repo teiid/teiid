@@ -316,13 +316,8 @@ public class SessionServiceImpl extends AbstractService implements
 		// level issue.
 		if (!authenticatedToken.isAuthenticated()) {
 			Object[] params = new Object[] { userName };
-			String msg = PlatformPlugin.Util
-					.getString(
-							"SessionServiceImpl.The_username_0_and/or_password_are_incorrect", params); //$NON-NLS-1$
-			MetaMatrixAuthenticationException e = new MetaMatrixAuthenticationException(
-					msg);
-			LogManager.logError(LogSecurityConstants.CTX_SESSION, e, msg);
-			throw e;
+			String msg = PlatformPlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", params); //$NON-NLS-1$
+			throw new MetaMatrixAuthenticationException(msg);
 		}
 
 		return authenticatedToken;

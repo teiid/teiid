@@ -50,7 +50,6 @@ import com.metamatrix.core.util.MetaMatrixProductVersion;
 public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
 
     private static Map productsToSubsystems;
-    private static Map subsystemsToAPIClassname;
 
     public static class Platform {
         public static final String PRODUCT_NAME = PLATFORM_TYPE_NAME;
@@ -62,14 +61,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
             public static final String AUTHORIZATION = "Authorization"; //$NON-NLS-1$
             public static final String EXTENSION_SOURCE = "Extension Source"; //$NON-NLS-1$
         }
-        public static class SubSystemAPIClassnames {
-            public static final String CONFIGURATION = "com.metamatrix.platform.admin.apiimpl.ConfigurationAdminAPIFacade"; //$NON-NLS-1$
-            public static final String RUNTIME_STATE = "com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIFacade"; //$NON-NLS-1$
-            public static final String MEMBERSHIP = "com.metamatrix.platform.admin.apiimpl.MembershipAdminAPIFacade"; //$NON-NLS-1$
-            public static final String SESSION = "com.metamatrix.platform.admin.apiimpl.SessionAdminAPIFacade"; //$NON-NLS-1$
-            public static final String AUTHORIZATION = "com.metamatrix.platform.admin.apiimpl.AuthorizationAdminAPIFacade"; //$NON-NLS-1$
-            public static final String EXTENSION_SOURCE = "com.metamatrix.platform.admin.apiimpl.ExtensionSourceAdminAPIFacade"; //$NON-NLS-1$
-        }
     }
 
     public static class MetaMatrixServer {
@@ -80,21 +71,12 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
             public static final String CONNECTOR = "Connector"; //$NON-NLS-1$
             public static final String RUNTIME_METADATA = "Runtime MetaData"; //$NON-NLS-1$
         }
-        public static class SubSystemAPIClassnames {
-            public static final String QUERY = "com.metamatrix.server.admin.apiimpl.QueryAdminAPIFacade"; //$NON-NLS-1$
-            public static final String TRANSACTION = "com.metamatrix.server.admin.apiimpl.TransactionAdminAPIFacade"; //$NON-NLS-1$
-            public static final String CONNECTOR = "com.metamatrix.server.admin.apiimpl.ConnectorManagementAdminAPIFacade"; //$NON-NLS-1$
-            public static final String RUNTIME_METADATA = "com.metamatrix.server.admin.apiimpl.RuntimeMetadataAdminAPIFacade"; //$NON-NLS-1$
-        }
     }
 
     public static class MetaDataServer {
         public static final String PRODUCT_NAME = METADATA_SERVER_TYPE_NAME;
         public static class SubSystemNames {
             public static final String METADATA_DIRECTORY = "MetaData Directory"; //$NON-NLS-1$
-        }
-        public static class SubSystemAPIClassnames {
-            public static final String METADATA_DIRECTORY = "com.metamatrix.metadata.server.admin.apiimpl.MetaDataDirectoryAdminAPIFacade"; //$NON-NLS-1$
         }
     }
 
@@ -106,26 +88,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
         public static final String CUSTOM = "Connector/Custom"; //$NON-NLS-1$
         public static final String XML = "Connector/XML"; //$NON-NLS-1$
         public static final String DATASOURCES = "Sources"; //$NON-NLS-1$
-    }
-
-    public static class DQP_Product {
-        public static final String PRODUCT_NAME = "Query Engine"; //$NON-NLS-1$
-        public static final String TRANSACTIONS = "Query/Transactions"; //$NON-NLS-1$
-        public static final String UPDATES = "Query/Updates"; //$NON-NLS-1$
-
-        public static final String CONNECTOR_JDBC_ = "Connector/JDBC"; //$NON-NLS-1$
-        public static final String CONNECTOR_TEXT_ = "Connector/Text"; //$NON-NLS-1$
-        public static final String CONNECTOR_LIBRADOS_ = "Connector/Librados"; //$NON-NLS-1$
-    }
-
-    public static class Views {
-        public static final String RELATIONAL_VIEWS = "Views/Relational"; //$NON-NLS-1$
-        public static final String XML_VIEWS = "Views/XML"; //$NON-NLS-1$
-    }
-    
-    public static class IntegrationAPI {
-        public static final String JDBC = "Integration API/JDBC"; //$NON-NLS-1$
-        public static final String ODBC = "Integration API/ODBC"; //$NON-NLS-1$
     }
 
     /**
@@ -152,21 +114,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
             initializeMap();
         }
         return (Collection)productsToSubsystems.get(productName);
-    }
-
-    /**
-     * Returns the classname of the Admin API Facade Implementation for a
-     * given subsystem
-     * @param subsystemName name for which Admin API Facade Impl classname is
-     * sought
-     * @return String classname of the Admin API Facade Impl for the subsystem
-     * passed in, or null if the parameter is invalid
-     */
-    public static String getAPIClassnameForSubsystemName(final String subsystemName){
-        if (subsystemsToAPIClassname == null){
-            initializeClassnameMap();
-        }
-        return (String)subsystemsToAPIClassname.get(subsystemName);
     }
 
     /**
@@ -209,21 +156,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
         productsToSubsystems.put(MetaDataServer.PRODUCT_NAME, aList);
 
         productsToSubsystems.put(ConnectorProduct.PRODUCT_NAME, Collections.EMPTY_LIST);
-    }
-
-    private static void initializeClassnameMap(){
-        subsystemsToAPIClassname = new HashMap();
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.CONFIGURATION, Platform.SubSystemAPIClassnames.CONFIGURATION);
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.RUNTIME_STATE, Platform.SubSystemAPIClassnames.RUNTIME_STATE);
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.MEMBERSHIP, Platform.SubSystemAPIClassnames.MEMBERSHIP);
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.SESSION, Platform.SubSystemAPIClassnames.SESSION);
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.AUTHORIZATION, Platform.SubSystemAPIClassnames.AUTHORIZATION);
-        subsystemsToAPIClassname.put(Platform.SubSystemNames.EXTENSION_SOURCE, Platform.SubSystemAPIClassnames.EXTENSION_SOURCE);
-        subsystemsToAPIClassname.put(MetaMatrixServer.SubSystemNames.QUERY, MetaMatrixServer.SubSystemAPIClassnames.QUERY);
-        subsystemsToAPIClassname.put(MetaMatrixServer.SubSystemNames.TRANSACTION, MetaMatrixServer.SubSystemAPIClassnames.TRANSACTION);
-        subsystemsToAPIClassname.put(MetaMatrixServer.SubSystemNames.CONNECTOR, MetaMatrixServer.SubSystemAPIClassnames.CONNECTOR);
-        subsystemsToAPIClassname.put(MetaMatrixServer.SubSystemNames.RUNTIME_METADATA, MetaMatrixServer.SubSystemAPIClassnames.RUNTIME_METADATA);
-        subsystemsToAPIClassname.put(MetaDataServer.SubSystemNames.METADATA_DIRECTORY, MetaDataServer.SubSystemAPIClassnames.METADATA_DIRECTORY);
     }
 
 }

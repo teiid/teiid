@@ -38,13 +38,15 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.util.PropertiesUtils.InvalidPropertyException;
+import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  * Tests primarily the various cloning scenarios available with PropertiesUtils
  */
 public class TestPropertiesUtils extends TestCase {
 
-    private final static String TEMP_FILE = "temp.properties";  //$NON-NLS-1$
+    private final static String TEMP_FILE = UnitTestUtil.getTestScratchPath() + "/temp.properties";  //$NON-NLS-1$
     
     
     
@@ -658,5 +660,16 @@ public class TestPropertiesUtils extends TestCase {
         assertEquals("bar", p1.getProperty("foo"));
         
         assertEquals(1, p1.size());
+    }
+    
+    public void testGetInvalidInt() {
+    	Properties p = new Properties();
+    	p.setProperty("x", "y");
+    	try {
+    		PropertiesUtils.getIntProperty(p, "x", 1);
+    		fail("expected exception");
+    	} catch (InvalidPropertyException e) {
+    		assertEquals("Property 'x' with value 'y' is not a valid Integer.", e.getMessage());
+    	}
     }
 }

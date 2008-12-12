@@ -254,15 +254,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.setConnectorBindingNames(" + vdbID + ", " + modelAndCBNames + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        try {
-            RuntimeMetadataCatalog.setConnectorBindingNames(vdbID, modelAndCBNames, callerToken.getUsername());
-        } catch (VirtualDatabaseException e) {
-            LogManager.logError(
-                ServerAdminLogConstants.CTX_RUNTIME_METADATA_ADMIN_API,
-                e,
-                RuntimeMetadataPlugin.Util.getString("RuntimeMetadataAdminAPIImpl.Unable_to_set_connector_bindings.")); //$NON-NLS-1$
-            throw e;
-        }
+        RuntimeMetadataCatalog.setConnectorBindingNames(vdbID, modelAndCBNames, callerToken.getUsername());
     }
 
     /**

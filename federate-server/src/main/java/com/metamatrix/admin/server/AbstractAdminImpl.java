@@ -24,6 +24,7 @@
 
 package com.metamatrix.admin.server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
@@ -46,8 +51,10 @@ import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMModel;
 import com.metamatrix.admin.objects.MMPropertyDefinition;
 import com.metamatrix.admin.objects.MMVDB;
-import com.metamatrix.admin.util.AdminExceptionConverter;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
@@ -153,65 +160,42 @@ public class AbstractAdminImpl {
     }
 
     /**
-     * Handle an unexpected system exception: log it, convert and rethrow as a AdminComponentException.
-     * The conversion takes place to shield the client from undesirable exception dependancies.
+     * Convert an exception to an appropriate AdminException.
      * 
      * @param e the exception to handle
      * @throws AdminComponentException
      * @since 4.3
      */
-    public static void logAndConvertSystemException(Exception e) throws AdminComponentException {
-        final String msg = AdminServerPlugin.Util.getString("AbstractAdminImpl.System_Exception"); //$NON-NLS-1$
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, msg);
-
-        throw AdminExceptionConverter.convertToComponentException(e, msg);
+    public static void convertException(Exception e) throws AdminException {
+        convertException(e, null);
     }
 
     /**
-     * Handle an unexpected system exception: log it, convert and rethrow as a AdminComponentException.
-     * The conversion takes place to shield the client from undesirable exception dependancies.
+     * Convert an exception to an appropriate AdminException.
      * 
      * @param e the exception to handle
      * @throws AdminComponentException
      * @since 4.3
      */
-    public static void logAndConvertSystemException(Exception e, String appendMsg) throws AdminComponentException {
-        String msg = AdminServerPlugin.Util.getString("AbstractAdminImpl.System_Exception"); //$NON-NLS-1$
-        if (appendMsg != null && appendMsg.length() > 0) {
-            msg = msg + appendMsg;
+    public static void convertException(Exception e, String msg) throws AdminException {
+        if (e instanceof AdminException) {
+        	if (msg == null) {
+        		throw (AdminException)e;
+        	}
+        	if (e instanceof AdminProcessingException) {
+        		throw new AdminProcessingException(msg, e);
+        	}
+        } 
+        String systemMsg = AdminServerPlugin.Util.getString("AbstractAdminImpl.System_Exception"); //$NON-NLS-1$
+        if (msg != null && msg.length() > 0) {
+        	systemMsg = systemMsg + msg;
         }
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, msg);
-
-        throw AdminExceptionConverter.convertToComponentException(e, msg);
-    }
-
-    /**
-     * Handle an expected component exception: log it, convert and rethrow as a AdminComponentException.
-     * The conversion takes place to shield the client from undesirable exception dependancies.
-     * 
-     * @param e the exception to handle
-     * @throws AdminComponentException
-     * @since 4.3
-     */
-    public static void logAndConvertProcessingException(Exception e) throws AdminProcessingException {
-        final String msg = AdminServerPlugin.Util.getString("AbstractAdminImpl.System_Exception"); //$NON-NLS-1$
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, msg);
-
-        throw AdminExceptionConverter.convertToProcessingException(e, msg);
-    }
-
-    /**
-     * Throw a processing exception with a localized message.
-     * 
-     * @param key
-     *            Key of message in i18n.properties file.
-     * @since 4.3
-     */
-    protected void throwProcessingException(String key) throws AdminException {
-        final String msg = AdminServerPlugin.Util.getString(key);
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, msg);
-
-        throw new AdminProcessingException(msg);
+        if (e instanceof MetaMatrixComponentException) {
+        	throw new AdminComponentException(systemMsg, e);
+        } else if (e instanceof MetaMatrixProcessingException) {
+        	throw new AdminProcessingException(msg, e);
+        }
+        throw new AdminComponentException(systemMsg, e);
     }
 
     /**
@@ -225,45 +209,7 @@ public class AbstractAdminImpl {
      */
     protected void throwProcessingException(String key,
                                             Object[] objects) throws AdminException {
-        final String msg = AdminServerPlugin.Util.getString(key, objects);
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, msg);
-
-        throw new AdminProcessingException(msg);
-    }
-
-    /**
-     * Throw a processing exception with a localized message.
-     * 
-     * @param key
-     *            Key of message in i18n.properties file.
-     * @since 4.3
-     */
-    protected void logAndThrowSystemException(String key) throws AdminComponentException {
-        final String msg = AdminServerPlugin.Util.getString(key);
-        AdminComponentException e = new AdminComponentException(msg);
-        
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, msg);
-
-        throw e;
-    }
-
-    /**
-     * Throw a processing exception with a localized message.
-     * 
-     * @param key
-     *            Key of message in i18n.properties file.
-     * @param objects
-     *            Objects to substitute into message.
-     * @since 4.3
-     */
-    protected void logAndThrowSystemException(String key,
-                                            Object[] objects) throws AdminComponentException {
-        final String msg = AdminServerPlugin.Util.getString(key, objects);
-        AdminComponentException e = new AdminComponentException(msg);
-        
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, msg);
-
-        throw e;
+        throw new AdminProcessingException(AdminServerPlugin.Util.getString(key, objects));
     }
 
     /**
@@ -279,33 +225,6 @@ public class AbstractAdminImpl {
                              Object[] params) {
         final String msg = AdminServerPlugin.Util.getString(key, params);
         LogManager.logDetail(PlatformAdminConstants.CTX_ADMIN, msg);
-    }
-
-    /**
-     * Log a localized message.
-     * 
-     * @param key
-     *            Key of message in i18n.properties file.
-     * @param param
-     *            Object to substitute into message.
-     * @since 4.3
-     */
-    protected void logDetail(String key,
-                             Object param) {
-        logDetail(key, new Object[] {
-            param
-        });
-    }
-
-    /**
-     * Log an exception.  Assumes that the externalized
-     * message has been converted. 
-     * 
-     * @param e the exception to log.
-     * @since 4.3
-     */
-    protected void logException(Throwable e) {
-        LogManager.logError(PlatformAdminConstants.CTX_ADMIN, e, e.getMessage());
     }
 
     protected synchronized SessionServiceInterface getSessionServiceProxy() throws ServiceException {
@@ -442,7 +361,7 @@ public class AbstractAdminImpl {
                 vdb.addModel(model);
             }
         } catch (final Exception err) {
-            logAndConvertSystemException(err);
+            convertException(err);
         }
         return vdb;
     }
@@ -545,7 +464,7 @@ public class AbstractAdminImpl {
                 vmController.shutdownService(serviceID);
             }
         } catch (final Exception err) {
-            logAndConvertSystemException(err);
+            convertException(err);
         }
     }
 
@@ -693,8 +612,18 @@ public class AbstractAdminImpl {
             getAuthorizationServiceProxy().migratePolicies(session, rpt, vdbName, vdbVersion, allPaths, roles, options);
 
             return rpt.toString();
-        } catch (Exception e) {
-            logAndConvertProcessingException(e);
+        } catch (InvalidSessionException e) {
+        	convertException(e);
+		} catch (AuthorizationException e) {
+			convertException(e);
+		} catch (MetaMatrixComponentException e) {
+			convertException(e);
+		} catch (SAXException e) {
+			convertException(e);
+		} catch (IOException e) {
+			convertException(e);
+		} catch (ParserConfigurationException e) {
+			convertException(e);
         }
         return null;
     }    
@@ -707,7 +636,7 @@ public class AbstractAdminImpl {
                 return AuthorizationPolicyFactory.exportPolicies(roles);
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return null;
     }    

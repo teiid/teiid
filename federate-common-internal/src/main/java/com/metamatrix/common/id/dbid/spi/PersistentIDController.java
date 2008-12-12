@@ -105,8 +105,6 @@ public class PersistentIDController implements DBIDController {
             } catch (Exception sqle) {
             }
 
-            I18nLogManager.logError(LogCommonConstants.CTX_DBIDGEN, ErrorMessageKeys.ID_ERR_0014, e,
-            		new Object[] {String.valueOf(blockSize), context});
             throw new DBIDGeneratorException(e,ErrorMessageKeys.ID_ERR_0014, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0014,
             		new Object[] {String.valueOf(blockSize), context}));
         } finally {

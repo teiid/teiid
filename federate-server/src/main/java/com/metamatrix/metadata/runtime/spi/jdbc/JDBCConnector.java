@@ -80,7 +80,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             this.jdbcConnection = jdbcManagedConnection.getConnection();
             platform = JDBCPlatformFactory.getPlatform(jdbcConnection);
         } catch ( Exception e ) {
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCC_0001, e, new Object[]{(readonly ? "read." : "write")} );
             throw new ManagedConnectionException(ErrorMessageKeys.JDBCC_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0002, JDBCMgdResourceConnection.class.getName() ) );
         }
 
@@ -231,7 +230,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             sql = StringUtil.replace(sql, "?", Integer.toString(model.getModelType()));
             sql = StringUtil.replace(sql, "?", model.getModelURI());
 
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0007, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
         }finally {
             if ( statement != null ) {
@@ -276,7 +274,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,new Object[]{"Inserted VirtualDatabase with DBID ",new Long(((BasicVirtualDatabaseID)vdb.getID()).getUID())});
 
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0007, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
         }finally {
             if ( statement != null ) {
@@ -351,7 +348,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             // some jdbc drivers throw a NullPointer if close is called more than once
             statement = null;
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0007, se, new Object[]{sql});
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
         }finally {
             if ( statement != null ) {

@@ -73,6 +73,7 @@ import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.ZipFileUtil;
 import com.metamatrix.platform.PlatformPlugin;
@@ -234,15 +235,15 @@ public abstract class VMController implements VMControllerInterface {
      * @throws MetaMatrixComponentException
      */
     private void registerSubSystemAdminAPIs() throws MetaMatrixComponentException {
-        this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry));
-        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry));
-        this.clientServices.registerClientService(MembershipAdminAPI.class, MembershipAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(SessionAdminAPI.class, SessionAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(QueryAdminAPI.class, QueryAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance());
-        this.clientServices.registerClientService(TransactionAdminAPI.class, TransactionAdminAPIImpl.getInstance());
+        this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
+        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
+        this.clientServices.registerClientService(MembershipAdminAPI.class, MembershipAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(SessionAdminAPI.class, SessionAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
+        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(QueryAdminAPI.class, QueryAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);
+        this.clientServices.registerClientService(TransactionAdminAPI.class, TransactionAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
     }	
     
     
@@ -257,7 +258,7 @@ public abstract class VMController implements VMControllerInterface {
     	AdminMethodRoleResolver adminMethodRoleResolver = new AdminMethodRoleResolver();
     	adminMethodRoleResolver.init();
     	ServerAdmin roleCheckedServerAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ServerAdmin.class}, new AdminAuthorizationInterceptor(new AdminHelper(), adminMethodRoleResolver, serverAdminImpl));
-    	this.clientServices.registerClientService(ServerAdmin.class, roleCheckedServerAdmin);
+    	this.clientServices.registerClientService(ServerAdmin.class, roleCheckedServerAdmin, PlatformAdminConstants.CTX_ADMIN);
     }
     
     /** 
@@ -266,7 +267,7 @@ public abstract class VMController implements VMControllerInterface {
      * @throws ConfigurationException 
      */
     private void registerILogonAPI() throws ConfigurationException, ServiceException {
-    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getSystemName()));
+    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getSystemName()), LogCommonConstants.CTX_LOGON);
     }    
 
 	private void addShutdownHook() {
@@ -284,7 +285,7 @@ public abstract class VMController implements VMControllerInterface {
     /**
      * Lazily get Current Configuration
      */
-    ConfigurationModelContainer getConfigurationModel() throws Exception {
+    ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
         return CurrentConfiguration.getConfigurationModel();
     }    
 
@@ -337,14 +338,6 @@ public abstract class VMController implements VMControllerInterface {
 
     protected void logMessage(String s) {
         LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, s);
-    }
-
-    protected void logError(String s) {
-        LogManager.logError(LogCommonConstants.CTX_CONTROLLER, s);
-    }
-
-    protected void logException(Throwable e) {
-        LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0009) );
     }
 
     protected static void doUsage() {
@@ -415,15 +408,12 @@ public abstract class VMController implements VMControllerInterface {
                     }
                 }
             } else {
-                logError(PlatformPlugin.Util.getString(LogMessageKeys.VM_0015, vmComponentDefnID.getName(), host.getID().getName()));
+            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString(LogMessageKeys.VM_0015, vmComponentDefnID.getName(), host.getID().getName()));
             }
             logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0016, new Integer(deployedServices.size()),  vmComponentDefnID.getName()));
 
         } catch (ConfigurationException e) {
-            logError(PlatformPlugin.Util.getString(LogMessageKeys.VM_0017, vmComponentDefnID.getName(), host.getID().getName()));
-            logException(e);
-        } catch (Exception e) {
-            logException(e);
+            logException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0017, vmComponentDefnID.getName(), host.getID().getName()));
         }
     }
 
@@ -526,20 +516,16 @@ public abstract class VMController implements VMControllerInterface {
 
                 } else {
                     String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()});
-                    logError(msg);
                     throw new ServiceException(msg);
                 }
 
             } else {
                 String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0027, deployedService.getServiceComponentDefnID().getName(), id, host.getID().getName());
-                logError(msg);
                 throw new ServiceException(msg);
             }
 
         } catch (Exception e) {
-            logException(e);
             String msg =PlatformPlugin.Util.getString(LogMessageKeys.VM_0028, deployedService.getServiceComponentDefnID().getName(), id, host.getID().getName());
-            logError(msg);
 
             throw new ServiceException(e, msg);
         }
@@ -586,9 +572,9 @@ public abstract class VMController implements VMControllerInterface {
 		try {
             stopServices(now, shutdown);
         } catch (MultipleException e) {
-            logError(e.getMessage()); // log and continue
+        	logException(e, e.getMessage());
         } catch (ServiceException e) {
-            logError(e.getMessage()); // log and continue
+            logException(e, e.getMessage());
         } 
 
 		// shutdown resourcePoolMgr - Should be LAST component shut down!
@@ -948,9 +934,7 @@ public abstract class VMController implements VMControllerInterface {
             logMessage(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0009, serviceType, serviceInstanceName));
 
         } catch (Exception e) {
-            String message = PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName);
-            logException(e, message);
-            throw new ServiceException(e);
+            throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
         }
     }    
     

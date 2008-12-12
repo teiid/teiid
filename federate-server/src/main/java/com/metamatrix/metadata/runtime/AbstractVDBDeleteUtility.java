@@ -32,7 +32,6 @@ import com.metamatrix.api.exception.ComponentCommunicationException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
@@ -82,12 +81,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
             deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
             // Finally, delete VDB
-            try {
-                RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
-            } catch ( VirtualDatabaseException e ) {
-                I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,ErrorMessageKeys.VDBDU_0001 , e, new Object[]{vdbID});
-                throw e;
-            }
+            RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
             
             LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,  RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
             
@@ -123,13 +117,8 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
                 deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
                 // Finally, delete VDB
-                try {
-                    RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
-                    LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
-                } catch ( VirtualDatabaseException e ) {
-                    I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,ErrorMessageKeys.VDBDU_0001 , e, new Object[]{vdbID});
-                    throw e;
-                }
+                RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
+                LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
                 
             } else {
                 LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "deleteVDBsMarkedForDelete(): NOT deleting " + vdbID + //$NON-NLS-1$
@@ -166,14 +155,8 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
                 deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
                 // Finally, delete VDB
-                try {
-                    RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
-                    LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
-                    
-                } catch ( VirtualDatabaseException e ) {
-                    I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,ErrorMessageKeys.VDBDU_0002 , e, new Object[]{id, vdbID});
-                    throw e;
-                }
+                RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
+                LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
             } 
         }
     }
@@ -188,10 +171,8 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
         try {
             sessionIDs = getSessionServiceProxy().getSessionsLoggedInToVDB(VDBName, VDBVersion);
         } catch (SessionServiceException e) {
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.VDBDU_0003 , e, new Object[]{VDBName, VDBVersion});
             throw new ComponentCommunicationException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
         } catch (ServiceException e) {
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.VDBDU_0003 , e, new Object[]{VDBName, VDBVersion});
             throw new ComponentCommunicationException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
         }
         return sessionIDs;

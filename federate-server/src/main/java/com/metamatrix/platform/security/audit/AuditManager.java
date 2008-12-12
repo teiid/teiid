@@ -35,6 +35,7 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.I18nLogManager;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
@@ -222,8 +223,7 @@ public final class AuditManager {
 
     protected void initialize() {
         // Log the beginning of the initialization
-        I18nLogManager.logCritical(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0001,
-                PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0001));
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0001));
 
         // Initialize the message destinations ...
         if ( CONFIGURATION.getAuditLevel() != AuditLevel.NONE ) {
@@ -233,8 +233,7 @@ public final class AuditManager {
         this.isInitialized = true;
 
         // Log the destinations for the log messages ...
-        I18nLogManager.logCritical(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0008,
-                PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, CONFIGURATION.toString()));
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, CONFIGURATION.toString()));
         Iterator iter = this.auditDestinations.iterator();
         StringBuffer dests = new StringBuffer();
         while ( iter.hasNext() ) {
@@ -246,13 +245,11 @@ public final class AuditManager {
         if ( dests.length() >= 2 ) {
             dests.setLength(dests.length() - 2);
         }
-        I18nLogManager.logCritical(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0002,
-                PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0002, dests.toString()));
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0002, dests.toString()));
 
         // Initialize the queue workers ...
         this.initializeQueueWorkers();
-        I18nLogManager.logCritical(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0003,
-                PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0003));
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0003));
     }
 
 
@@ -465,8 +462,7 @@ public final class AuditManager {
                 }
                 manager.isStopped = manager.workerPool.isTerminated();
             } else {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0009,
-                        PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0009));
+                LogManager.logWarning(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0009));
             }
         }
     }
@@ -493,8 +489,7 @@ public final class AuditManager {
 
     public static void setAuditConfiguration( AuditConfiguration config ) {
         if ( config != null ) {
-            I18nLogManager.logCritical(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0008,
-                    PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, config));
+            LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, config));
             if ( config instanceof UnmodifiableAuditConfiguration ) {
                 UnmodifiableAuditConfiguration unmodConfig = (UnmodifiableAuditConfiguration) config;
                 CONFIGURATION = (AuditConfiguration) unmodConfig.deepClone();

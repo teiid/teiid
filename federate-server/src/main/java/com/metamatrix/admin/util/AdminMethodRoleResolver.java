@@ -24,6 +24,7 @@
 
 package com.metamatrix.admin.util;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,11 +32,10 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.server.AdminRoles;
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-
+import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.common.util.PropertiesUtils;
 
 
@@ -83,10 +83,8 @@ public class AdminMethodRoleResolver {
         Properties properties = null;
         try {
             properties = PropertiesUtils.loadAsResource(this.getClass(), DEFAULT_METHOD_ROLES_FILE);
-        } catch (Exception err) {
-            AdminException e = new AdminComponentException("Unable to load " + DEFAULT_METHOD_ROLES_FILE + " file: " + err.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$);
-            e.setStackTrace(err.getStackTrace());
-            throw e;
+        } catch (IOException err) {
+            throw new AdminComponentException("Unable to load " + DEFAULT_METHOD_ROLES_FILE + " file", err); //$NON-NLS-1$ //$NON-NLS-2$);
         }
         Properties allProps = new Properties();
         allProps.putAll(properties);

@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.jdbc.JDBCReservedWords;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.DateUtil;
@@ -54,7 +53,6 @@ import com.metamatrix.metadata.runtime.model.BasicModel;
 import com.metamatrix.metadata.runtime.model.BasicModelID;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabase;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabaseID;
-import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 
 public class JDBCTranslator {
@@ -545,7 +543,6 @@ public class JDBCTranslator {
                 result.add(vdb);
             }
         }catch(ParseException pe){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCT_0001, pe);
             throw new MetaMatrixRuntimeException(ErrorMessageKeys.JDBCT_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCT_0001) );
         }
         return result;
@@ -583,7 +580,6 @@ public class JDBCTranslator {
             vdb.setUpdateDate(DateUtil.convertStringToDate(resultSet.getString(JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE)));
             vdb.setFileName(resultSet.getString(JDBCNames.VirtualDatabases.ColumnName.VDB_FILE_NAME));
         }catch(ParseException pe){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCT_0001, pe);
             throw new MetaMatrixRuntimeException(ErrorMessageKeys.JDBCT_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCT_0001) );
         }
         return vdb;

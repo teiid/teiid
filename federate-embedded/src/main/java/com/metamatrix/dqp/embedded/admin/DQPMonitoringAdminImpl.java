@@ -35,6 +35,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.admin.api.embedded.EmbeddedMonitoringAdmin;
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -42,7 +43,6 @@ import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -102,9 +102,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
             }                        
             return (List)convertToAdminObjects(matchedVdbs);
         } catch (MetaMatrixComponentException err) {
-        	throw createSystemException(err);
-        } catch (MetaMatrixProcessingException err) {
-        	throw createProcessingException(err);
+        	throw new AdminComponentException(err);
         }
     }
 
@@ -150,9 +148,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
                 }
             }
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }      
         return (List)convertToAdminObjects(bindings.values());
     }    
@@ -173,9 +169,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
             extModules = (List)convertToAdminObjects(extModules);
             return matchedCollection(identifier, extModules);            
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -210,9 +204,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
                 }                
             }
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw createProcessingException(e);
+        	throw new AdminComponentException(e);
         }
                 
         if (!results.isEmpty()) {
@@ -363,7 +355,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
             }
             
         } catch (Exception e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         }
     }
 

@@ -195,7 +195,7 @@ public class SimpleQueryResolver implements CommandResolver {
                     }
                 } catch (QueryMetadataException e) {
                     //log that an unknown groups was used in the no cache
-                    LogManager.logError(LogConstants.CTX_QUERY_RESOLVER, e, QueryPlugin.Util.getString("SimpleQueryResolver.unknown_group_in_nocache", groupName)); //$NON-NLS-1$
+                    LogManager.logWarning(LogConstants.CTX_QUERY_RESOLVER, e, QueryPlugin.Util.getString("SimpleQueryResolver.unknown_group_in_nocache", groupName)); //$NON-NLS-1$
                 }
             }
     	}

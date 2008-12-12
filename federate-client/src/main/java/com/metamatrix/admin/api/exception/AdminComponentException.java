@@ -32,7 +32,7 @@ package com.metamatrix.admin.api.exception;
  * <p>This exception class is capable of containing multiple exceptions.  See
  * {@link AdminException} for details.
  */
-public class AdminComponentException extends AdminException {
+public final class AdminComponentException extends AdminException {
 
     /**
      * No-arg ctor.
@@ -51,6 +51,10 @@ public class AdminComponentException extends AdminException {
     public AdminComponentException(String msg) {
         super(msg);
     }
+    
+    public AdminComponentException(Throwable cause) {
+    	super(cause);
+    }
 
     /**
      * Construct with an optional error code and a message.
@@ -60,6 +64,14 @@ public class AdminComponentException extends AdminException {
      */
     public AdminComponentException(int code, String msg) {
         super(code, msg);
+    }
+    
+    public AdminComponentException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
+    public AdminComponentException(int code, String msg, Throwable cause) {
+        super(code, msg, cause);
     }
 
 }

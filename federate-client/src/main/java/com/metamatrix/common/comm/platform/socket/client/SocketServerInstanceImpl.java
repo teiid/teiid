@@ -50,6 +50,7 @@ import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
@@ -340,6 +341,9 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 					protected Object convertResult() throws ExecutionException {
 						try {
 							Object result = getCryptor().unsealObject((Serializable) super.convertResult());
+							if (result instanceof ExceptionHolder) {
+								throw new ExecutionException(((ExceptionHolder)result).convertException());
+							}
 							if (result instanceof Throwable) {
 								throw new ExecutionException((Throwable)result);
 							} else {

@@ -283,7 +283,6 @@ public class MetaMatrixController {
         
         if (host == null) {            
             String msg = PlatformPlugin.Util.getString("MetaMatrixController.Host_not_defined_in_configuration", "Unknown Host");//$NON-NLS-1$ //$NON-NLS-2$
-            LogManager.logError(LogCommonConstants.CTX_CONTROLLER, msg);
             throw new MetaMatrixException(msg);
         }
 
@@ -294,7 +293,7 @@ public class MetaMatrixController {
 			boolean isAlive;
 			try {
 				isAlive = NetUtils.ping(host.getHostAddress(), port.intValue());
-			} catch (Exception e) {
+			} catch (UnknownHostException e) {
 				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, "Unable to ping bindaddress: " + host.getHostAddress()); //$NON-NLS-1$
 				continue;
 			}
@@ -306,7 +305,6 @@ public class MetaMatrixController {
                 Collection vms = currentConfig.getVMsForHost((HostID) host.getID());
                 if (vms == null || vms.size() == 0) {
                     String msg = PlatformPlugin.Util.getString("MetaMatrixController.No_VMS_setup_for_host", host.getFullName());//$NON-NLS-1$
-                    LogManager.logError(LogCommonConstants.CTX_CONTROLLER, msg);
                     throw new MetaMatrixException(msg);
                 }
                 return;
@@ -505,7 +503,6 @@ public class MetaMatrixController {
 
         if (host == null) {            
             String msg = PlatformPlugin.Util.getString("MetaMatrixController.Host_not_defined_in_configuration", hostName);//$NON-NLS-1$ 
-            LogManager.logError(LogCommonConstants.CTX_CONTROLLER, msg);
             throw new MetaMatrixException(msg);
         }  
         

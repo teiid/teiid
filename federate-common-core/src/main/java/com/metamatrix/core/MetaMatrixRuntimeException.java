@@ -24,11 +24,15 @@
 
 package com.metamatrix.core;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.Iterator;
+import java.sql.SQLException;
 
 import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
 
 /**
@@ -67,6 +71,7 @@ public class MetaMatrixRuntimeException extends RuntimeException {
 
     /** An error code. */
     private String code;
+	private transient Throwable realCause;
 
     //############################################################################################################################
     //# Constructors                                                                                                             #
@@ -140,7 +145,8 @@ public class MetaMatrixRuntimeException extends RuntimeException {
      * @param message The error message or a resource bundle key
      */
     public MetaMatrixRuntimeException(final Throwable e, final int code, final String message) {
-        super(message, e);
+        super(message);
+        this.realCause = e;
         // The following setCode call should be executed after setting the message 
         setCode(code);
     }
@@ -174,28 +180,6 @@ public class MetaMatrixRuntimeException extends RuntimeException {
         	return this.getCause();
         }
         return null;
-    }
-
-    /**
-     * <p>Returns an Iterator which enumerates any nested children <code>Throwable</code>s.
-     * The first Object returned (if any) by <code>next()</code> will be the same
-     * <code>Throwable</code> as returned by the {@link #getChild} method of
-     * this Object.</p>
-     *
-     * <p>In general, each Object A returned by the <code>next()</code> method
-     * is guaranteed to be an instance of <code>Throwable</code>; the
-     * <i>previous</i> Object B will have been a <code>MetaMatrixRuntimeException</code>
-     * or a {@link MetaMatrixCoreException} whose {@link #getChild}
-     * method will return the same Throwable A.</p>
-     *
-     * <p>Note that if this MetaMatrixRuntimeException is modified (for example,
-     * through the {@link #setChild setChild} method) while a children Iterator is
-     * open for that object, the results are undefined.</p> 
-     *
-     * @return Iterator enumerating nested <code>Throwable</code> children
-     */
-    public Iterator getChildren(){
-        return new MetaMatrixExceptionUtil.NestedExceptionIterator(this);
     }
     
     /**
@@ -258,7 +242,39 @@ public class MetaMatrixRuntimeException extends RuntimeException {
     public void superPrintStackTrace(PrintWriter output) {
         super.printStackTrace(output);
     }
+    
+    @Override
+    public Throwable getCause() {
+    	return this.realCause;
+    }
+    
+    @Override
+    public synchronized Throwable initCause(Throwable cause) {
+    	if (this.realCause != this)
+            throw new IllegalStateException("Can't overwrite cause"); //$NON-NSL-1$
+        if (cause == this)
+            throw new IllegalArgumentException("Self-causation not permitted"); //$NON-NSL-1$
+        this.realCause = cause;
+        return this;
+    }
+    
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	try {
+    		realCause = (Throwable)in.readObject();
+    	} catch (ClassNotFoundException cnfe) {
+    		realCause = new MetaMatrixRuntimeException(cnfe, CorePlugin.Util.getString("MetaMatrixException.deserialization_exception")); //$NON-NSL-1$
+    	}
+    }
+    
+    private void writeObject(ObjectOutputStream out) throws IOException {
+    	getStackTrace();
+    	out.defaultWriteObject();
+    	if (realCause != this && realCause instanceof SQLException) {
+    		out.writeObject(SQLExceptionUnroller.unRollException((SQLException)realCause));
+    	} else {
+    		out.writeObject(realCause);
+    	}
+    }
 
 }
-
-

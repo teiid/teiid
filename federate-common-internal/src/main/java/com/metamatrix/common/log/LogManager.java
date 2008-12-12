@@ -307,43 +307,6 @@ public final class LogManager {
     }
     
     /**
-     * Send an error message to the log.  Error messages are generally used
-     * to record unexpected problems, or errors that are not critical in nature
-     * and from which the system can automatically recover.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param e the exception that is to be logged; the message is
-     * not logged if this parameter is null
-     * @param msgParts the individual parts of the log message (may be null)
-     * @deprecated an explicit format is needed
-     */
-    public static void logError(String context, Throwable e, Object[] msgParts) {
-        LogManager.getInstance().logMessage(MessageLevel.ERROR,context,e,msgParts);
-    }
-    
-    /**
-     * Send a warning message to the log.  Warning messages generally described
-     * expected errors from which the system should recover.  However, this level
-     * is used to record the fact that such an error or event did occur.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param msgParts the individual parts of the log message; the message is
-     * not logged if this parameter is null
-     * @deprecated an explicit format is needed
-     */
-    public static void logWarning(String context, Object[] msgParts) {
-        if (msgParts != null) {
-            LogManager.getInstance().logMessage(MessageLevel.WARNING, context,msgParts);
-        }
-    }
-
-    /**
      * Send a warning message to the log.  Warning messages generally described
      * expected errors from which the system should recover.  However, this level
      * is used to record the fact that such an error or event did occur.
@@ -378,24 +341,6 @@ public final class LogManager {
         LogManager.getInstance().logMessage(MessageLevel.WARNING,context,e,message);
     }
     
-    /**
-     * Send a warning message to the log.  Warning messages generally described
-     * expected errors from which the system should recover.  However, this level
-     * is used to record the fact that such an error or event did occur.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param e the exception that is to be logged; the message is
-     * not logged if this parameter is null
-     * @param msgParts the individual parts of the log message (may be null)
-     * @deprecated an explicit format is needed
-     */
-    public static void logWarning(String context, Throwable e, Object[] msgParts) {
-        LogManager.getInstance().logMessage(MessageLevel.WARNING,context,e,msgParts);
-    }
-
     /**
      * Send a information message to the log.  This level of logging is the usually
      * the normal level.  All interesting periodic events should be logged at this

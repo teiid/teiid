@@ -135,8 +135,7 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
             }
             return new JDBCSourceConnection(conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
         }catch(SQLException se){
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(se));
+            throw new ConnectorException(se);
         }
     }
 

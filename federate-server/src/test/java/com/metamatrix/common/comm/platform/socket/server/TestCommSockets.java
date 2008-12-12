@@ -65,7 +65,7 @@ public class TestCommSockets extends TestCase {
 		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
-		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"));
+		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo");
 		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
 						"testIO", 1, 120000), null); //$NON-NLS-1$
@@ -124,7 +124,7 @@ public class TestCommSockets extends TestCase {
 					throws LogonException, ComponentNotFoundException {
 				return new LogonResult();
 			}
-		});
+		}, "foo");
 		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
 						"testIO", 1, 120000), serverSSL); //$NON-NLS-1$

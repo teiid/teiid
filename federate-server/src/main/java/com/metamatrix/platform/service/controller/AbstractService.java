@@ -170,7 +170,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
         } catch (Throwable e) {
             setInitException(e);
-            logExceptionPrivate(e);
             throw new ServiceException(e, ServiceMessages.SERVICE_0004, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0004, getServiceType()) );
         } finally {
             // Cleanup!
@@ -244,7 +243,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
             waitForServiceToClear();
             dieNow();
         } catch (Exception e) {
-            logExceptionPrivate(e);
             throw new ServiceException( e, ServiceMessages.SERVICE_0005, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0005, getServiceType()));
         }
     }
@@ -265,10 +263,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
             killService();
         } catch (Exception e) {
-            logExceptionPrivate(e);
             throw new ServiceException(e, ServiceMessages.SERVICE_0005, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0005, getServiceType()));
-        } finally {
-        }
+        } 
     }
 
 
@@ -432,22 +428,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     }
 
     /**
-     * Log a message. Subclassers can override and provide a more service-specific
-     * logging mechanism if desired.
-     */
-    protected void logMessage(String s) {
-        LogManager.logInfo(LogCommonConstants.CTX_SERVICE, s);
-    }
-
-    /**
-     * Log an exception. Subclassers can override and provide a more service-specific
-     * logging mechanism if desired.
-     */
-    protected void logException(Throwable e) {
-		LogManager.logError(LogCommonConstants.CTX_SERVICE, e, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0057,new Object[] {this.getClass().getName()}));
-    }
-
-    /**
      * This method is called when a ServiceEvent that service has registered for
      * is received via the MessageBus.
      */
@@ -495,15 +475,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      */
     private void logMessagePrivate(String s) {
         LogManager.logInfo(LogCommonConstants.CTX_SERVICE, s);
-    }
-
-    /**
-     * Log an exception. Due to a problem with logging to the logging subsystem when
-     * logMessage is overridden by the subclasser, this class uses these private
-     * log helpers to ensure that messages get logged somewhere.
-     */
-    private void logExceptionPrivate(Throwable e) {
-        LogManager.logError(LogCommonConstants.CTX_SERVICE, e, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0057,new Object[] {this.getClass().getName()}));
     }
 
     /**

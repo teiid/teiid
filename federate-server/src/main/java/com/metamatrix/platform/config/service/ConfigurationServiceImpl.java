@@ -162,10 +162,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
             I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0002, new Object[] { getInstanceName()});
 
-        } catch ( Throwable e ) {
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0038, e, new Object[] { getInstanceName()});
-            Exception e2 = new ConfigurationException(e);
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e);
         }
     }
 
@@ -288,10 +286,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 throw new ConfigurationException("No " + designation + " configuration was found"); //$NON-NLS-1$ //$NON-NLS-2$
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0040, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0040, designation));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0040, e2, new Object[] {designation} );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0040, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0040, designation));
         } finally {
             if ( transaction != null ) {
                 try {
@@ -316,14 +312,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             if (configID != null) {
                 LogManager.logTrace(CONTEXT, "Found " + designation + " configuration id " + configID); //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0042);
                 throw new ConfigurationException(ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0042, e2 );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
         } finally {
             if ( transaction != null ) {
                 try {
@@ -352,9 +345,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
 
         }catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0043, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0043));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0043, e2);
-            throw e2;
+        	throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0043, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0043));
         }finally {
             if ( transaction != null ) {
                 try {
@@ -388,10 +379,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 LogManager.logTrace(CONTEXT, "No current configuration found for " + configName); //$NON-NLS-1$
             }
 
-        }catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0044, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0044, configName));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0044, e2, new Object[] {configName} );
-            throw e2;
+        }catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0044, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0044, configName));
         }finally {
             if ( transaction != null ) {
                 try {
@@ -468,10 +457,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 			return result;
 
-        }catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0046, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0046, configID));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0046, e2, new Object[] {configID} );
-            throw e2;
+        }catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0046, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0046, configID));
         }finally {
             if ( transaction != null ) {
                 try {
@@ -521,10 +508,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             allObjects.addAll(transaction.getAllComponentTypes(true));
             allObjects.addAll(transaction.getProductTypes(true));
             allObjects.addAll(transaction.getHosts());
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0047, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0047));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0047, e2 );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0047, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0047));
         } finally {
             if ( transaction != null ) {
                 try {
@@ -556,10 +541,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 LogManager.logDetail(CONTEXT, "No component type found for " + id); //$NON-NLS-1$
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0048, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0048, "id")); //$NON-NLS-1$
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0048, e2, new Object[] {id} );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0048, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0048, "id")); //$NON-NLS-1$
         } finally {
             if ( transaction != null ) {
                 try {
@@ -585,14 +568,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                LogManager.logDetail(CONTEXT, "Found all component types"); //$NON-NLS-1$
 
             } else {
-               I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0049);
                throw new ConfigurationException(ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0049, e2);
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -622,10 +602,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                result = new ArrayList(1);
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0050, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0050));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0050, e2);
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0050, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0050));
         } finally {
             if ( transaction != null ) {
                 try {
@@ -653,10 +631,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 LogManager.logTrace(CONTEXT, new Object[] {"Couldn't find component type definitions for ", componentTypeID} ); //$NON-NLS-1$
             }
 
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0051, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0051, componentTypeID));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0051, e2, new Object[] {componentTypeID} );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0051, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0051, componentTypeID));
         } finally {
             if ( transaction != null ) {
                 try {
@@ -726,13 +702,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 map.put(id, defns);
             }
 
-        } catch ( Exception e ) {
-            if (e instanceof ConfigurationException) {
-                throw (ConfigurationException) e;
-            }
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0052, e2 );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -755,13 +726,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             Collection defns = getDependentComponentTypeDefinitions(transaction, componentTypeID);
             return defns;
 
-        } catch ( Exception e ) {
-            if (e instanceof ConfigurationException) {
-                throw (ConfigurationException) e;
-            }
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0052, e2 );
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -829,47 +795,33 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         }
 
         if (type == null) {
-            ConfigurationException ce = new ConfigurationException(ErrorMessageKeys.CONFIG_0053, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0053, componentTypeID));
-            LogManager.logError(CONTEXT, ce, ce.getFullMessage() );
-            throw ce;
+            throw new ConfigurationException(ErrorMessageKeys.CONFIG_0053, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0053, componentTypeID));
         }
 
         if (type.getSuperComponentTypeID() == null) {
             return defns;
         }
 
-        try {
-
-            Collection superDefns = transaction.getComponentTypeDefinitions(type.getSuperComponentTypeID());
-            // add the defns not already defined to the map
+        Collection superDefns = transaction.getComponentTypeDefinitions(type.getSuperComponentTypeID());
+        // add the defns not already defined to the map
 //            BaseID id;
-            ComponentTypeDefn sDefn;
-            if (superDefns != null && superDefns.size() > 0) {
-                Iterator it = superDefns.iterator();
+        ComponentTypeDefn sDefn;
+        if (superDefns != null && superDefns.size() > 0) {
+            Iterator it = superDefns.iterator();
 //                ComponentTypeDefn cdefn = null;
-                while (it.hasNext()) {
-                    sDefn = (ComponentTypeDefn) it.next();
-                    //this map has been changed to be keyed
-                    //on the PropertyDefn object of a ComponentTypeDefn,
-                    //instead of the i.d. of the ComponentTypeDefn
-                    if (!defnMap.containsKey(sDefn.getPropertyDefinition())) {
-                        defnMap.put(sDefn.getPropertyDefinition(), sDefn);
-                        defns.add(sDefn);
-                    }
+            while (it.hasNext()) {
+                sDefn = (ComponentTypeDefn) it.next();
+                //this map has been changed to be keyed
+                //on the PropertyDefn object of a ComponentTypeDefn,
+                //instead of the i.d. of the ComponentTypeDefn
+                if (!defnMap.containsKey(sDefn.getPropertyDefinition())) {
+                    defnMap.put(sDefn.getPropertyDefinition(), sDefn);
+                    defns.add(sDefn);
                 }
             }
+        }
 
-            return getSuperComponentTypeDefinitions(defnMap, defns, componentTypes, type.getSuperComponentTypeID(), transaction);
-
-      } catch ( Exception e ) {
-            if (e instanceof ConfigurationException) {
-                throw (ConfigurationException) e;
-            }
-            ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0054, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0054));
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0054, e2);
-            throw e2;
-      }
-
+        return getSuperComponentTypeDefinitions(defnMap, defns, componentTypes, type.getSuperComponentTypeID(), transaction);
     }
 
     public Collection getAllComponentTypeDefinitions(ComponentTypeID typeID)  throws ConfigurationException {
@@ -940,10 +892,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 transaction = getReadTransaction();
                 hosts = transaction.getHosts();
 
-        } catch ( Exception e ) {
-                ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0055, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0055));
-                I18nLogManager.logError(CONTEXT,ErrorMessageKeys.CONFIG_0055,  e2);
-                throw e2;
+        } catch ( ManagedConnectionException e ) {
+                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0055, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0055));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -986,10 +936,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                         }
                 }
 
-        } catch ( Exception e ) {
-                ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0056, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0056));
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0056, e2);
-                throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0056, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0056));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1024,10 +972,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
                 defn = transaction.getComponentDefinition(componentDefnID, configurationID);
 
 
-        } catch ( Exception e ) {
-                ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0058, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0058,componentDefnID.getName()));
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0058, e2, new Object[]{ componentDefnID.getName()});
-                throw e2;
+        } catch ( ManagedConnectionException e ) {
+                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0058, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0058,componentDefnID.getName()));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1082,10 +1028,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             return keepTypes;
 
 
-        } catch ( Exception e ) {
-                ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-                throw e2;
+        } catch ( ConfigurationException e ) {
+                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1135,10 +1079,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
             return keepTypes;
 
-        } catch ( Exception e ) {
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-            throw e2;
+        } catch ( ConfigurationException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1167,10 +1109,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
                 return transaction.getConnectionPools(configurationID);
 
-        } catch ( Exception e ) {
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1223,10 +1163,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
                 return result;
 
-        } catch ( Exception e ) {
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-			throw e2;
+        } catch ( ManagedConnectionException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1258,10 +1196,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
                 return transaction.getResources();
 
-        } catch ( Exception e ) {
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-			throw e2;
+        } catch ( ManagedConnectionException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1291,10 +1227,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
                 return transaction.getResources(componentTypeID);
 
-        } catch ( Exception e ) {
-			ConfigurationException e2 = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0060, e2);
-			throw e2;
+        } catch ( ManagedConnectionException e ) {
+			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
         } finally {
            if ( transaction != null ) {
                 try {
@@ -1319,6 +1253,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     public void saveResources(Collection resourceDescriptors, String principalName)
     throws ConfigurationException {
         ConfigurationTransaction transaction = null;
+        boolean success = false;
         try {
 
             transaction = this.getWriteTransaction();
@@ -1326,50 +1261,24 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             transaction.saveResources(resourceDescriptors, principalName);
 
             transaction.commit();                   // commit the transaction
-
-
-        } catch ( ConfigurationLockException e ) {
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0062, e);
-            try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0063, e2);
-            }
-            throw e;
-        } catch ( ConfigurationException e ) {
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0062, e);
-        // must increment by 1 because each actionList starts at zero
-            //actionCounter += e.getActionIndex() + 1;
-            //e.setActionIndex(actionCounter);
-
-            try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0063, e2);
-            }
-            throw e;
-        } catch ( Exception e ) {
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0062, e);
-            try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0063, e2);
-            }
+            success = true;
+        } catch ( ManagedConnectionException e ) {
             throw new ConfigurationException(e);
         } finally {
            if ( transaction != null ) {
+        	   if (!success) {
+	               try {
+	                   transaction.rollback();         // rollback the transaction
+	               } catch ( Exception e2 ) {
+	   				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0063, e2);
+	               }
+        	   }
+
                 try {
                     transaction.close();
                 } catch ( Exception txne ) {
                     I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
                 }
-                transaction = null;
             }
         }
 
@@ -1451,7 +1360,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             // Add the actions to the history ...
             this.actionHistory.addActionsForTransaction(actions);
         } catch ( ConfigurationLockException e ) {
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0064, e,new Object[]{ principalName, printActions(actions)});
             try {
                 if ( transaction != null ) {
                     transaction.rollback();         // rollback the transaction
@@ -1461,8 +1369,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
             throw e;
         } catch ( ConfigurationException e ) {
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0064, e,new Object[]{ principalName, printActions(actions)});
-
         // must increment by 1 because each actionList starts at zero
             //actionCounter += e.getActionIndex() + 1;
             //e.setActionIndex(actionCounter);
@@ -1476,8 +1382,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
             throw e;
         } catch ( Exception e ) {
-			I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0064, e,new Object[]{ principalName, printActions(actions)});
-
              try {
                 if ( transaction != null ) {
                     transaction.rollback();         // rollback the transaction
@@ -1525,32 +1429,26 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         }
         // Iterate through the actions, and set the ConfigurationID on the
         // arg if necessary
-        try {
-            ActionDefinition currentAction = null;
-            Iterator iter = actions.iterator();
-            Object argObj;
-            boolean chk = false;
-            while ( iter.hasNext() ) {
-                currentAction = (ActionDefinition) iter.next();
-                if ( currentAction instanceof CreateObject) {
-                    chk = true;
-                } else if (currentAction instanceof AddObject) {
-                    chk = false;
-                } else {
-                    throw new ModificationException(ErrorMessageKeys.CONFIG_0066, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0066));
-                }
-
-                // only CreateObjects have arguments
-                if (chk && assignConfigurationID != null)  {
-                    Object args[] = currentAction.getArguments();
-                    argObj = args[0];
-                    editor.assignConfigurationID(argObj,assignConfigurationID);
-                }
+        ActionDefinition currentAction = null;
+        Iterator iter = actions.iterator();
+        Object argObj;
+        boolean chk = false;
+        while ( iter.hasNext() ) {
+            currentAction = (ActionDefinition) iter.next();
+            if ( currentAction instanceof CreateObject) {
+                chk = true;
+            } else if (currentAction instanceof AddObject) {
+                chk = false;
+            } else {
+                throw new ModificationException(ErrorMessageKeys.CONFIG_0066, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0066));
             }
 
-        } catch ( Exception e ) {
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0067, e,new Object[] {printActions(actions) });
-            throw new ConfigurationException(e);
+            // only CreateObjects have arguments
+            if (chk && assignConfigurationID != null)  {
+                Object args[] = currentAction.getArguments();
+                argObj = args[0];
+                editor.assignConfigurationID(argObj,assignConfigurationID);
+            }
         }
 
         //Pass this on through to the executeTransaction method
@@ -1587,13 +1485,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             } catch ( ConfigurationException e ) {
                 // put the actions back on the history ...
                 this.actionHistory.addActionsForTransaction(actions);
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0069, e);
                 throw e;
-            } catch ( Exception e ) {
+            } catch ( ModificationException e ) {
                 ConfigurationException me = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0069, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0069));
                 // put the actions back on the history ...
                 this.actionHistory.addActionsForTransaction(actions);
-                I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0069, me);
                 throw me;
             }
         }
@@ -1674,11 +1570,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         try {
             transaction = getReadTransaction();
             timestamp = transaction.getServerStartupTime();
-        } catch ( Exception e ) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0070);
-            ConfigurationException e2 = new ConfigurationException(e, ErrorMessageKeys.CONFIG_0070, msg);
-            I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0070, e2);
-            throw e2;
+        } catch ( ManagedConnectionException e ) {
+            throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0070, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0070));
         } finally {
            if ( transaction != null ) {
                 try {

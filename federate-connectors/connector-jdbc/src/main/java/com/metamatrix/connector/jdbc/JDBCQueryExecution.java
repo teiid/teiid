@@ -27,16 +27,27 @@
 
 package com.metamatrix.connector.jdbc;
 
-import java.sql.*;
 import java.sql.Connection;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Properties;
+import java.util.TimeZone;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
-import com.metamatrix.connector.jdbc.extension.*;
+import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
-import com.metamatrix.data.api.*;
+import com.metamatrix.data.api.Batch;
+import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.data.api.SynchQueryCommandExecution;
+import com.metamatrix.data.api.SynchQueryExecution;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.*;
+import com.metamatrix.data.language.IQuery;
+import com.metamatrix.data.language.IQueryCommand;
 
 /**
  * 
@@ -142,8 +153,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
                 results.close();
                 results = null;
             } catch (SQLException e) {
-                logger.logError(e.getMessage());
-                throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+                throw new ConnectorException(e);
             }
         }
         super.close();

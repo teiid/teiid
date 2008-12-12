@@ -182,7 +182,6 @@ public class JDBCConnectionResourceAdapter implements ResourceAdapter {
 	        try {
 	        	driverClass = Class.forName(driverClassName).newInstance();
 	        } catch(Exception e) {
-	            LogManager.logError(LogCommonConstants.CTX_POOLING,"Unable to load the JDBC driver class " + driverClassName); //$NON-NLS-1$
 	            throw new ResourcePoolException(e, "Unable to load the JDBC driver class " + driverClassName); //$NON-NLS-1$
 	        }
 	        

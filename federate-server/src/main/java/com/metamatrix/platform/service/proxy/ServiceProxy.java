@@ -117,10 +117,6 @@ public abstract class ServiceProxy implements InvocationHandler {
 		LogManager.logError(LogContextsUtil.CommonConstants.CTX_PROXY,e, this.getClass().getName());
     }
 
-    protected final void logException(Throwable e, String message) {
-        LogManager.logError(LogContextsUtil.CommonConstants.CTX_PROXY, e, message);
-    }
-    
     /** 
      * @see com.metamatrix.platform.service.proxy.ServiceProxyInterface#getStickyFlag()
      */

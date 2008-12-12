@@ -98,7 +98,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             
             getQueryServiceProxy().cancelQuery(requestID, true);
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
 
@@ -130,7 +130,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             
             getQueryServiceProxy().cancelQuery(requestID, nodeID);
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
 
@@ -175,7 +175,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             parent.waitForServicesToStart(expectedServiceNames);
             
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
 
@@ -200,7 +200,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 parent.waitForServicesToStart(expectedServiceNames);
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
         
@@ -241,7 +241,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 parent.waitForServicesToStart(expectedServiceNames);
             }        
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
     
@@ -282,7 +282,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             //wait until runtime matches the configuration
             parent.waitForServicesToStop(expectedServiceNames); 
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
     
@@ -309,7 +309,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 }
             }            
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
 
@@ -345,7 +345,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 }
             }   
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
      }
     
@@ -359,7 +359,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         try {
             getRuntimeStateAdminAPIHelper().shutdownServer();
         } catch (Exception e) {
-        	logAndConvertSystemException(e);            
+        	convertException(e);            
         }
     }
 
@@ -373,7 +373,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         try {
             getRuntimeStateAdminAPIHelper().bounceServer();
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
     
@@ -397,7 +397,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             }
            
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
     
@@ -433,14 +433,14 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                                     String cacheName = (String)cacheIter.next();
                                     String cacheType = (String)caches.get(cacheName);
                                     if (cacheType.equals(cacheIdentifier)) {
-                                        super.logDetail("ServerRuntimeStateAdminImpl.clearing_cache",cacheName);  //$NON-NLS-1$
+                                        super.logDetail("ServerRuntimeStateAdminImpl.clearing_cache",new Object[] {cacheName});  //$NON-NLS-1$
                                         admin.clearCache(cacheName, null); // properties not currently used
                                     }
                                 }
                             }
                         }
                     } catch (Exception e) {
-                        logAndConvertSystemException(e);
+                        convertException(e);
                     }
                }
         } else {
@@ -467,7 +467,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         try {            
             getSessionServiceProxy().terminateSession(sessionID, null);
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
     }
     
@@ -516,14 +516,14 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.INACTIVE, getUserName());
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
                     } catch (VirtualDatabaseException err) {
-                        logAndConvertSystemException(err);
+                        convertException(err);
                     }
                 } else if ( currentStatus != VDBStatus.DELETED ) {
                     // don't delete if already marked for delete
                     try {
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
                     } catch (VirtualDatabaseException err) {
-                        logAndConvertSystemException(err);
+                        convertException(err);
                     }
                 }
             } finally {
@@ -532,9 +532,9 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 try {
                     vdbDeleter.deleteVDBMarkedForDelete(vdbID);
                 } catch (VirtualDatabaseException err) {
-                    logAndConvertSystemException(err);
+                    convertException(err);
                 } catch (MetaMatrixComponentException err) {
-                    logAndConvertSystemException(err);
+                    convertException(err);
                 }
             }
         } else {
@@ -544,7 +544,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             try {
                 RuntimeMetadataCatalog.setVDBStatus(vdbID, (short) newStatus, getUserName());
             } catch (VirtualDatabaseException err) {
-                logAndConvertSystemException(err);
+                convertException(err);
             }
         }
         

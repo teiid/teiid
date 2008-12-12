@@ -30,9 +30,10 @@
 package com.metamatrix.connector.jdbc.ssl;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.SQLException;
+import java.util.Properties;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.ConnectionQueryStrategy;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
@@ -40,8 +41,6 @@ import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.pool.SourceConnection;
-import java.sql.Driver;
-import java.util.Properties;
 
 public class JDBCSequeLinkSingleIdentityConnectionFactory extends
 		JDBCSingleIdentityConnectionFactory {
@@ -93,7 +92,7 @@ public class JDBCSequeLinkSingleIdentityConnectionFactory extends
                 connection.setTransactionIsolation(transactionIsolationLevel);
             }
         } catch ( SQLException e ) {
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }
 
         return new JDBCSourceConnection(connection, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());

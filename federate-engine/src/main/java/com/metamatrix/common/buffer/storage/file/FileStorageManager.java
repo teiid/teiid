@@ -50,6 +50,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -113,34 +114,10 @@ public class FileStorageManager implements StorageManager {
         }
 
         // Set up max number of open file descriptors
-        String numFilesStr = props.getProperty(BufferManagerPropertyNames.MAX_OPEN_FILES);
-        if(numFilesStr != null) {
-            try {
-                maxOpenFiles = Integer.parseInt(numFilesStr);
-            } catch(Exception e) {
-                // ignore and use default
-                LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR,
-                	 e,
-                	 new Object[] {BufferManagerPropertyNames.MAX_OPEN_FILES,
-                	 				numFilesStr,
-                	 				String.valueOf(this.maxOpenFiles)} );
-            }
-        }
-        // Set the max file size
-        String maxFileSizeString = props.getProperty(BufferManagerPropertyNames.MAX_FILE_SIZE);
-        if (maxFileSizeString != null) {
-            try {
-                maxFileSize = Long.parseLong(maxFileSizeString) * 1024L * 1024L; // Multiply by 1MB
-            } catch (Exception e) {
-                // ignore and use default
-                LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR,
-                     e,
-                     new Object[] {BufferManagerPropertyNames.MAX_FILE_SIZE,
-                                   maxFileSizeString,
-                                   String.valueOf(this.maxFileSize)} );
-            }
-        }
+        maxOpenFiles = PropertiesUtils.getIntProperty(props, BufferManagerPropertyNames.MAX_OPEN_FILES, 10);
         
+        // Set the max file size
+        maxFileSize = PropertiesUtils.getIntProperty(props, BufferManagerPropertyNames.MAX_FILE_SIZE, 2048) * 1024L * 1024L; // Multiply by 1MB
     }
 
     /**

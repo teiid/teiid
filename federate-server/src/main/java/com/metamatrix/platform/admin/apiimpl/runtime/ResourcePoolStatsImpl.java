@@ -25,12 +25,12 @@
 package com.metamatrix.platform.admin.apiimpl.runtime;
 
 
-import java.util.Map;
 import java.util.Collection;
+import java.util.Map;
 
+import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
 import com.metamatrix.common.pooling.impl.BasicResourcePoolStatistics;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 
 public class ResourcePoolStatsImpl implements ResourcePoolStats {

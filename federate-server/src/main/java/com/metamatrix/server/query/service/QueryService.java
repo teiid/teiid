@@ -94,7 +94,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
             if (udfSource != null) {
                 registerUDFSource(udfSource);
             }
-        } catch (Throwable t) {
+        } catch (IOException t) {
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
@@ -274,7 +274,7 @@ public class QueryService extends AbstractService implements ClientServiceRegist
      * @since 4.2
      */
     public void setClientServiceRegistry(ClientServiceRegistry registry) {
-        registry.registerClientService(ClientSideDQP.class, this.dqp);
+        registry.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
     }
 
 }

@@ -31,12 +31,15 @@ import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.connection.*;
+import com.metamatrix.common.connection.BaseTransaction;
+import com.metamatrix.common.connection.ManagedConnection;
+import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.jdbc.JDBCMgdResourceConnection;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
-import com.metamatrix.common.extensionmodule.exception.*;
+import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
+import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
+import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingException;
 import com.metamatrix.common.extensionmodule.spi.ExtensionModuleTransaction;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 
@@ -225,16 +228,7 @@ public class JDBCExtensionModuleTransaction extends BaseTransaction implements E
         try {
             return JDBCExtensionModuleReader.getSource(sourceName, jdbcConnection);
         } catch (SQLException se){
-
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sourceName));
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0047, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sourceName));
-
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            throw e;
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0047, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sourceName));
         }
 
     }

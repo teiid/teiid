@@ -53,6 +53,7 @@ import com.metamatrix.common.pooling.api.ResourcePoolMgr;
 import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
 import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.core.CorePlugin;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.HostData;
@@ -485,9 +486,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logCritical(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0016, new Object[] {
-            token.getUsername()
-        });
+        LogManager.logCritical(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0016, token.getUsername()));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.bounceServer()"); //$NON-NLS-1$

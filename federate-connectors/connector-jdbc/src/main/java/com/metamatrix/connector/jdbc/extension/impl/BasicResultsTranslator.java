@@ -37,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
@@ -195,12 +194,7 @@ public class BasicResultsTranslator implements ResultsTranslator {
         Class runtimeType = param.getType();
         int typeToSet = TypeFacility.getSQLTypeFromRuntimeType(runtimeType);
         
-        try {
-            statement.registerOutParameter(index,typeToSet);
-        } catch ( SQLException e ) {
-            SQLException e2 = SQLExceptionUnroller.unRollException(e);
-            throw e2;
-        }
+        statement.registerOutParameter(index,typeToSet);
     }
     
     /**

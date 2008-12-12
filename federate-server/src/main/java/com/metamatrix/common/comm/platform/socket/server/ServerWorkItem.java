@@ -34,10 +34,13 @@ import java.util.concurrent.ExecutionException;
 
 import javax.crypto.SealedObject;
 
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
+import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.client.ServiceInvocationStruct;
 import com.metamatrix.common.log.LogManager;
@@ -66,15 +69,17 @@ public class ServerWorkItem implements Runnable {
 		this.server = server;
 	}
 
-    /**
-     * main entry point for remote method calls.  encryption/decryption is handled here so that it won't be done by the io thread
-     */
-    public void run() {
-    	DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
-    	if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) {
-            LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "forwarding message to listener:" + message); //$NON-NLS-1$
-        }
+	/**
+	 * main entry point for remote method calls. encryption/decryption is
+	 * handled here so that it won't be done by the io thread
+	 */
+	public void run() {
+		DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
+		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) {
+			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "forwarding message to listener:" + message); //$NON-NLS-1$
+		}
 		Message result = null;
+		String service = null;
 		final boolean encrypt = message.getContents() instanceof SealedObject;
         try {
         	/* Defect 15211
@@ -92,7 +97,7 @@ public class ServerWorkItem implements Runnable {
 				if (!(message.getContents() instanceof ServiceInvocationStruct)) {
 					throw new AssertionError("unknown message contents"); //$NON-NLS-1$
 				}
-				ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
+				final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
 				Object instance = server.getClientService(serviceStruct.targetClass);
 				if (instance == null) {
 					throw new ComponentNotFoundException(PlatformPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
@@ -101,6 +106,7 @@ public class ServerWorkItem implements Runnable {
 					DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
 					server.getSessionService().validateSession(workContext.getSessionId());
 				}
+				service = serviceStruct.targetClass;
 				ReflectionHelper helper = new ReflectionHelper(instance.getClass());
 				Method m = helper.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 				Object methodResult;
@@ -112,39 +118,38 @@ public class ServerWorkItem implements Runnable {
 				if (ResultsFuture.class.isAssignableFrom(m.getReturnType()) && methodResult != null) {
 					ResultsFuture future = (ResultsFuture) methodResult;
 					future.addCompletionListener(new ResultsFuture.CompletionListener() {
-	
-						public void onCompletion(ResultsFuture completedFuture) {
-							Message asynchResult = new Message();
-							try {
-								asynchResult.setContents((Serializable)completedFuture.get());
-							} catch (InterruptedException e) {
-								//cannot happen
-							} catch (ExecutionException e) {
-								asynchResult.setContents(e.getCause());
-								logException(e.getCause());
-							}
-							sendResult(asynchResult, encrypt);
-						}
-						
-					});
-				} else { //synch call
+
+								public void onCompletion(
+										ResultsFuture completedFuture) {
+									Message asynchResult = new Message();
+									try {
+										asynchResult.setContents((Serializable) completedFuture.get());
+									} catch (InterruptedException e) {
+										asynchResult.setContents(processException(e, serviceStruct.targetClass));
+									} catch (ExecutionException e) {
+										asynchResult.setContents(processException(e.getCause(), serviceStruct.targetClass));
+									}
+									sendResult(asynchResult, encrypt);
+								}
+
+							});
+				} else { // synch call
 					Message resultHolder = new Message();
 					resultHolder.setContents((Serializable)methodResult);
 					result = resultHolder;
 				}
-            }
-        } catch (Throwable t) {
-        	logException(t);
-            Message holder = new Message();
-            holder.setContents(t);
-            result = holder;
-        } 
-        if (result != null) {
-            sendResult(result, encrypt);
-        }
-    }   
-    
-    void sendResult(Message result, boolean encrypt) {
+			}
+		} catch (Throwable t) {
+			Message holder = new Message();
+			holder.setContents(processException(t, service));
+			result = holder;
+		}
+		if (result != null) {
+			sendResult(result, encrypt);
+		}
+	}
+
+	void sendResult(Message result, boolean encrypt) {
 		if (encrypt) {
 			try {
 				result.setContents(socketClientInstance.getCryptor().sealObject(result.getContents()));
@@ -153,18 +158,33 @@ public class ServerWorkItem implements Runnable {
 			}
 		}
 		socketClientInstance.send(result, messageKey);
-    }
+	}
 
-        
-    private void logException(Throwable e) {
-        //Case 5558: Differentiate between system level errors and
-        //processing errors.  Only log system level errors as errors, 
-        //log the processing errors as warnings only
-        String msg = PlatformPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request"); //$NON-NLS-1$  
-        if(e instanceof MetaMatrixProcessingException) {                          
-            LogManager.logWarning(LogConstants.CTX_ROUTER, e, msg);
-        }else {
-            LogManager.logError(LogConstants.CTX_ROUTER, e, msg);
-        }
-    }
+	private Serializable processException(Throwable e, String service) {
+		String context = null;
+		if (service != null) {
+			context = this.server.getLoggingContextForService(service);
+		}
+		if (context == null) {
+			context = LogConstants.CTX_ROUTER;
+		}
+		// Case 5558: Differentiate between system level errors and
+		// processing errors. Only log system level errors as errors,
+		// log the processing errors as warnings only
+		String msg = PlatformPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request"); //$NON-NLS-1$
+		if (e instanceof MetaMatrixProcessingException) {
+			LogManager.logWarning(context, e, msg);
+		} else if (e instanceof AdminProcessingException) {
+			LogManager.logWarning(context, e, msg);
+		} else {
+			LogManager.logError(context, e, msg);
+		}
+		
+		if (e instanceof AdminException) {
+			return e;
+		}
+
+		return new ExceptionHolder(e);
+	}
+
 }

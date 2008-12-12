@@ -41,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.ValueRetriever;
@@ -192,7 +191,7 @@ public class JDBCExecutionHelper {
         } catch (SQLException e) {
 //            ConnectorLogManager.logError(null, null, e,
 //                    "Unexpected exception while translating results: " + e.getMessage());
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e),
+            throw new ConnectorException(e,
                     JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
         } catch (Throwable e) {
             throw new ConnectorException(

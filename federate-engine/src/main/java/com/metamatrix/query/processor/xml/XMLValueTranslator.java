@@ -32,10 +32,8 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionMethods;
-import com.metamatrix.query.util.LogConstants;
 
 
 /**
@@ -115,9 +113,10 @@ final class XMLValueTranslator {
      * @param runtimeType The runtime type
      * @param builtInType The design-time atomic built-in type (or null if none)
      * @return String representing the value
+     * @throws FunctionExecutionException 
      * @since 5.0
      */
-    static String translateToXMLValue(Object value, Class runtimeType, String builtInType) throws MetaMatrixComponentException {
+    static String translateToXMLValue(Object value, Class runtimeType, String builtInType) throws MetaMatrixComponentException, FunctionExecutionException {
         if (value == null) {
             return null;
         }
@@ -130,46 +129,38 @@ final class XMLValueTranslator {
             valueStr = defaultTranslation(value);
         } else {
         
-            try {
+            int type = typeCode.intValue();
             
-                int type = typeCode.intValue();
-                
-                switch (type) {
-                    case DATETIME_CODE:
-                        valueStr = timestampToDateTime((Timestamp)value);
-                        break;
-                    case DOUBLE_CODE:
-                        valueStr = doubleToDouble((Double)value);
-                        break;
-                    case FLOAT_CODE:
-                        valueStr = floatToFloat((Float)value);
-                        break;
-                    case GDAY_CODE:
-                        valueStr = bigIntegerTogDay((BigInteger)value);
-                        break;
-                    case GMONTH_CODE:
-                        valueStr = bigIntegerTogMonth((BigInteger)value);
-                        break;
-                    case GMONTHDAY_CODE:
-                        valueStr = (String)FunctionMethods.formatTimestamp(value, GMONTHDAY_FORMAT);
-                        break;
-                    case GYEAR_CODE:
-                        valueStr = (String)FunctionMethods.formatBigInteger(value, GYEAR_FORMAT);
-                        break;
-                    case GYEARMONTH_CODE:
-                        valueStr = timestampTogYearMonth(value);
-                        break;
-                    default:
-                        valueStr = defaultTranslation(value);
-                        break;
-                }
-            
-            //all conversions should be possible, but just in case
-            } catch (Exception e) {
-                LogManager.logWarning(LogConstants.CTX_XML_PLAN, e, new Object[] {"Conversion for builtInType "+builtInType+" and runtimeType " + runtimeType + //$NON-NLS-1$ //$NON-NLS-2$ 
-                    " for value " + value + " of class " + value.getClass().toString() + " failed."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                valueStr = defaultTranslation(value);
+            switch (type) {
+                case DATETIME_CODE:
+                    valueStr = timestampToDateTime((Timestamp)value);
+                    break;
+                case DOUBLE_CODE:
+                    valueStr = doubleToDouble((Double)value);
+                    break;
+                case FLOAT_CODE:
+                    valueStr = floatToFloat((Float)value);
+                    break;
+                case GDAY_CODE:
+                    valueStr = bigIntegerTogDay((BigInteger)value);
+                    break;
+                case GMONTH_CODE:
+                    valueStr = bigIntegerTogMonth((BigInteger)value);
+                    break;
+                case GMONTHDAY_CODE:
+                    valueStr = (String)FunctionMethods.formatTimestamp(value, GMONTHDAY_FORMAT);
+                    break;
+                case GYEAR_CODE:
+                    valueStr = (String)FunctionMethods.formatBigInteger(value, GYEAR_FORMAT);
+                    break;
+                case GYEARMONTH_CODE:
+                    valueStr = timestampTogYearMonth(value);
+                    break;
+                default:
+                    valueStr = defaultTranslation(value);
+                    break;
             }
+            
         }        
 
         //Per defects 11789, 14905, 15117

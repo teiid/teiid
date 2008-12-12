@@ -173,8 +173,8 @@ public class TestSocketRemoting extends TestCase {
 						MetaMatrixComponentException {
 					
 				}
-			});
-		csr.registerClientService(FakeService.class, new FakeServiceImpl());
+			}, "foo");
+		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo");
 		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);
 		SocketServerConnection connection = createFakeConnection(serverInstance);
 		ILogon logon = connection.getService(ILogon.class);

@@ -46,22 +46,6 @@ import com.metamatrix.core.util.MetaMatrixExceptionUtil;
  */
 public class MetaMatrixException extends MetaMatrixCoreException {
     //############################################################################################################################
-    //# Static Methods                                                                                                           #
-    //############################################################################################################################
-
-    /**
-     * Utility method to get the name of a class, without package information.
-     *
-     * @param cls The class to get the name of
-     * @return The name of the class, without package info
-     */
-    public static String getClassShortName(Class cls) {
-        if (cls == null) return ""; //$NON-NLS-1$
-        String className = cls.getName();
-        return className.substring(className.lastIndexOf('.') + 1);
-    }
-
-    //############################################################################################################################
     //# Variables                                                                                                                #
     //############################################################################################################################
 
@@ -154,28 +138,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
     }
 
     /**
-     * <p>Returns an Iterator which enumerates any nested children <code>Throwable</code>s.
-     * The first Object returned (if any) by <code>next()</code> will be the same
-     * <code>Throwable</code> as returned by the {@link #getChild} method of
-     * this Object.</p>
-     *
-     * <p>In general, each Object A returned by the <code>next()</code> method
-     * is guaranteed to be an instance of <code>Throwable</code>; the
-     * <i>previous</i> Object B will have been a <code>MetaMatrixException</code>
-     * or a {@link MetaMatrixRuntimeException} whose {@link #getChild}
-     * method will return the same Throwable A.</p>
-     *
-     * <p>Note that if this MetaMatrixException is modified (for example,
-     * through the {@link #setChild setChild} method) while a children Iterator is
-     * open for that object, the results are undefined.</p>
-     *
-     * @return Iterator enumerating nested <code>Throwable</code> children
-     */
-    public Iterator getChildren() {
-        return new MetaMatrixExceptionUtil.NestedExceptionIterator(this);
-    }
-
-    /**
      * Get the error code.
      *
      * @return The error code
@@ -208,7 +170,7 @@ public class MetaMatrixException extends MetaMatrixCoreException {
             code = null;
         }
         return ((level != 0) ? ("\n" + level + " ") : "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                + "[" + getClassShortName(throwable.getClass()) + "]" //$NON-NLS-1$ //$NON-NLS-2$
+                + "[" + throwable.getClass().getSimpleName() + "]" //$NON-NLS-1$ //$NON-NLS-2$
                 + ((code != null) ? (' ' + code + ": ") : "") //$NON-NLS-1$ //$NON-NLS-2$
                 + (throwable.getMessage() == null ? "" : throwable.getMessage()); //$NON-NLS-1$
     }

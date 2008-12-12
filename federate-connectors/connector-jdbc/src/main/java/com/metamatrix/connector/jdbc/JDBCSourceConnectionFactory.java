@@ -91,8 +91,7 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
         try {
             acceptsURL = driver.acceptsURL(url);
         } catch ( SQLException e ) {
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }
         if(!acceptsURL ){
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Driver__7", driver.getClass().getName(), url)); //$NON-NLS-1$
@@ -113,7 +112,7 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
                 connection.setTransactionIsolation(transactionIsolationLevel);
             }
         } catch ( SQLException e ) {
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(e));
+            throw new ConnectorException(e);
         }
 
         return new JDBCSourceConnection(connection, this.environment, createConnectionStrategy(), getConnectionListener());

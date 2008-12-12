@@ -33,9 +33,9 @@ import java.util.Properties;
 
 import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.admin.api.embedded.EmbeddedAdmin;
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.util.AdminExceptionConverter;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.admin.DQPConfigAdminImpl;
@@ -130,7 +130,7 @@ public class EmbeddedConnection extends MMConnection {
                             if (target instanceof AdminException) {
                                 throw target;
                             }
-                            throw AdminExceptionConverter.convertToComponentException(e, e.getMessage());
+                            throw new AdminComponentException(e);
                         }
                     }
                     if (ex != null) {

@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,6 +41,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
@@ -127,7 +129,7 @@ public final class ExtensionModuleInstallUtil {
         Properties resourceProps = null;
         try{
             resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.EXTENSION_SOURCE_MANAGER);
-        } catch (Exception e) {
+        } catch (ConfigurationException e) {
             LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0001));
         }
 		if (resourceProps!=null){
@@ -227,10 +229,13 @@ public final class ExtensionModuleInstallUtil {
 
 				esd = manager.addSource(principal, type, alternateName, data, description, true);
         	}
-        } catch (Exception e){
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0002, fileName));
- 			throw new MetaMatrixComponentException(e);
-        } finally {
+        } catch (FileNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} finally {
             try{
                 if (stream != null){
                     stream.close();
@@ -302,10 +307,13 @@ public final class ExtensionModuleInstallUtil {
 				esd = manager.addSource(principal, type, assignedName, data, description, true);
 	        }
 
-        } catch (Exception e){
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0002, fileFullPath));
- 			throw new MetaMatrixComponentException(e);
-        } finally {
+        } catch (FileNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} finally {
             try{
                 if (stream != null){
                     stream.close();
@@ -358,10 +366,13 @@ public final class ExtensionModuleInstallUtil {
 
             }
 
-        } catch (Exception e){
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0002, fileFullPath));
-            throw new MetaMatrixComponentException(e);
-        } finally {
+       	} catch (FileNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		} finally {
             try{
                 if (stream != null){
                     stream.close();

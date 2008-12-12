@@ -29,7 +29,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
-import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;

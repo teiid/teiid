@@ -53,9 +53,8 @@ import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.admin.objects.MMVDB;
-import com.metamatrix.admin.util.AdminExceptionConverter;
+import com.metamatrix.api.exception.ComponentNotAvailableException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
@@ -103,56 +102,25 @@ abstract class BaseAdmin {
         Cache.QUERY_SERVICE_RESULT_SET_CACHE
         };    
     
-    // TODO: reddyr delete all functionality is implemented
-    RuntimeException unsupported = new UnsupportedOperationException();
-    
     DQPEmbeddedManager manager = null; 
     
     BaseAdmin(DQPEmbeddedManager manager){
         this.manager = manager;       
     }
             
-    /**
-     * Handle an unexpected system exception: convert and rethrow as a AdminComponentException.
-     * <br>The conversion takes place to shield the client from undesirable exception dependancies.</br>
-     * <br>This method does no logging.</br>
-     * 
-     * @param e the exception to convert.
-     * @throws AdminComponentException as a result of conversion.
-     * @since 4.3
-     */
-    protected AdminComponentException createSystemException(Exception e) {
-        return AdminExceptionConverter.convertToComponentException(e, e.getMessage());
-    }
-      
-
     protected AdminException accumulateSystemException(AdminException parent, Exception e) {
         if (parent == null) {
-            return AdminExceptionConverter.convertToComponentException(e, e.getMessage()); 
+            return new AdminComponentException(e); 
         }
-        parent.addChild(AdminExceptionConverter.convertToComponentException(e, e.getMessage()));
+        parent.addChild(new AdminComponentException(e));
         return parent;
     }
     
-    /**
-     * Handle an unexpected system exception: convert and rethrow as a AdminProcessingException.
-     * <br>The conversion takes place to shield the client from undesirable exception dependancies.</br>
-     * <br>This method does no logging.</br>
-     * 
-     * @param e the exception to convert.
-     * @throws AdminProcessingException as a result of conversion.
-     * @since 4.3
-     */
-    protected AdminProcessingException createProcessingException(Exception e) {
-        // TODO: Exception logging?
-        return AdminExceptionConverter.convertToProcessingException(e, e.getMessage());
-    }
-
     protected AdminException accumulateProcessingException(AdminException parent, Exception e) {
         if (parent == null) {
-            return AdminExceptionConverter.convertToProcessingException(e, e.getMessage()); 
+            return new AdminProcessingException(e); 
         }
-        parent.addChild(AdminExceptionConverter.convertToProcessingException(e, e.getMessage()));
+        parent.addChild(new AdminProcessingException(e));
         return parent;
     }
     
@@ -181,27 +149,27 @@ abstract class BaseAdmin {
         return this.manager.getDQPConfig();
     }
 
-    VDBService getVDBService() throws MetaMatrixProcessingException {
+    VDBService getVDBService() throws ComponentNotAvailableException {
         try {
             return (VDBService)getDQPConfig().getService(DQPServiceNames.VDB_SERVICE);            
         } catch (ApplicationInitializationException e) {
-            throw new MetaMatrixProcessingException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
+            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
         }
     }
     
-    DataService getDataService() throws MetaMatrixProcessingException {
+    DataService getDataService() throws ComponentNotAvailableException {
         try {
             return (DataService)getDQPConfig().getService(DQPServiceNames.DATA_SERVICE);
         } catch (ApplicationInitializationException e) {
-            throw new MetaMatrixProcessingException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
+            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
         }
     }
     
-    ConfigurationService getConfigurationService() throws MetaMatrixProcessingException {
+    ConfigurationService getConfigurationService() throws ComponentNotAvailableException {
         try {
             return (ConfigurationService)getDQPConfig().getService(DQPServiceNames.CONFIGURATION_SERVICE);
         } catch (ApplicationInitializationException e) {
-            throw new MetaMatrixProcessingException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
+            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
         }
     }
         
@@ -501,8 +469,8 @@ abstract class BaseAdmin {
                     return clientConnection;
                 }
             }
-        } catch (MetaMatrixProcessingException e) {
-            throw createSystemException(e);
+        } catch (MetaMatrixComponentException e) {
+            throw new AdminComponentException(e);
         }
         return null;
     }
@@ -515,8 +483,8 @@ abstract class BaseAdmin {
     Set<ServerConnection> getClientConnections() throws AdminException{
         try {
             return getConfigurationService().getClientConnections();
-        } catch (MetaMatrixProcessingException e) {
-            throw createSystemException(e);
+        } catch (MetaMatrixComponentException e) {
+            throw new AdminComponentException(e);
         }
     }
 
@@ -547,9 +515,7 @@ abstract class BaseAdmin {
             connectorBindings = (List)convertToAdminObjects(connectorBindings);
             return matchedCollection(identifier, connectorBindings);
         } catch (MetaMatrixComponentException e) {
-            throw createSystemException(e);
-        } catch (MetaMatrixProcessingException e) {
-            throw createProcessingException(e);
+            throw new AdminComponentException(e);
         }
     }
     
@@ -565,10 +531,8 @@ abstract class BaseAdmin {
             connectorTypes = (List)convertToAdminObjects(connectorTypes);
             return matchedCollection(identifier, connectorTypes);
         } catch (MetaMatrixComponentException err) {
-            throw createSystemException(err);
-        } catch (MetaMatrixProcessingException err) {
-        	throw createProcessingException(err);
-        }
+            throw new AdminComponentException(err);
+        } 
     }
 
     /**
@@ -606,7 +570,7 @@ abstract class BaseAdmin {
         try {
             return CryptoUtil.stringEncrypt(value);
         } catch (CryptoException e) {
-            throw createSystemException(e);
+            throw new AdminComponentException(e);
         }
     }
     

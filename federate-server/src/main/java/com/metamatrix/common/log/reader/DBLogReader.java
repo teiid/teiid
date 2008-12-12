@@ -43,12 +43,10 @@ import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.jdbc.JDBCUtil;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
@@ -242,11 +240,10 @@ public class DBLogReader implements LogReader {
             ResultSet result = statement.getResultSet();
             return convertResults(result, maxRows);
             
-        } catch (Exception e) {
-            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0032, sqlString);
-            LogManager.logError(LogCommonConstants.CTX_LOGGING, e, ErrorMessageKeys.LOG_ERR_0032);
-            
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.LOG_ERR_0032, msg);
+        } catch (ManagedConnectionException e) { 
+        	throw new MetaMatrixComponentException(e, ErrorMessageKeys.LOG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0032, sqlString));
+        } catch (SQLException e) {
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.LOG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0032, sqlString));
         } finally {
             close(statement);
             close(connection);

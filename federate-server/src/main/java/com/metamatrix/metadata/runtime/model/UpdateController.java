@@ -100,7 +100,6 @@ public class UpdateController {
                 && status != VDBStatus.DELETED && checkCompletion)
                 throw new InvalidStateException(ErrorMessageKeys.UC_0007, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0007) );
         }catch(ManagedConnectionException e){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0008, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0008, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0008) );
         }finally {
             if (conn != null ) {
@@ -125,10 +124,8 @@ public class UpdateController {
                 I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0006, e2);
             }
             
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0008, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0008, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0008) );
         }catch(VirtualDatabaseException e){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0008, e, new Object[]{virtualID.getName()});
             try {
                 if ( conn != null ) {
                     conn.rollback();         // rollback the transaction
@@ -175,10 +172,8 @@ public class UpdateController {
                 I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0006, e2);
             }
             
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0012, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0012, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0012) );
         }catch(VirtualDatabaseException e){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0012, e, new Object[]{vdbID.getName()});
             try {
                 if ( conn != null ) {
                     conn.rollback();         // rollback the transaction
@@ -267,7 +262,6 @@ public class UpdateController {
                 I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0006, e2);
             }
             
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0015, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0015, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0015) );
         }finally {
             if ( conn != null ) {
@@ -305,7 +299,6 @@ public class UpdateController {
                 I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0006, e2);
             }
             
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0016, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0016, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0016) );
         }finally {
             if ( conn != null ) {
@@ -414,7 +407,6 @@ public class UpdateController {
         try{
             id = DBIDGenerator.getID("VirtualDatabases"); //$NON-NLS-1$
         }catch(DBIDGeneratorException e){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0004, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.GEN_0004, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0004) );
         }
         return id;
@@ -474,10 +466,8 @@ public class UpdateController {
             }catch (Exception e2 ) {
                 I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0006, e2);
             }
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0005, e);
             throw new VirtualDatabaseException(e, ErrorMessageKeys.UC_0005, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.UC_0005) );
         }catch(VirtualDatabaseException e){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.UC_0006, e, new Object[]{vdbInfo.getModels()});
             try {
                 if ( conn != null ) {
                     conn.rollback();         // rollback the transaction

@@ -56,12 +56,10 @@ import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.pooling.api.ResourcePoolMgr;
 import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
-import com.metamatrix.platform.admin.api.PlatformAdminLogConstants;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
@@ -1084,11 +1082,9 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         try {
             result = configAdmin.getProductReleaseInfos();
         } catch (ServiceException e) {
-            LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API, e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
-            throw new ComponentNotFoundException(e, e.getMessage());
+            throw new ComponentNotFoundException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
         } catch (ConfigurationException e) {
-            LogManager.logError(PlatformAdminLogConstants.CTX_ADMIN_API, e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
-            throw new ComponentCommunicationException(e, e.getMessage()); 
+            throw new ComponentCommunicationException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$ 
         }
         return result;
     }

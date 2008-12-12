@@ -111,13 +111,7 @@ public class JDBCExtensionModuleReader {
                 sourceNames.add(results.getString(JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME));
             }
         } catch (SQLException se){
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sql));                
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0047, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sql));
-
-        } catch ( MetaMatrixComponentException e ) {
-            throw e;
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0047, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sql));
         } finally {
             close(results);
             close(statement);
@@ -463,13 +457,7 @@ public class JDBCExtensionModuleReader {
                 throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0050, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0050, sql));
             }
         } catch (SQLException se){
-            LogManager.logError(CONTEXT, se, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0046, sql));                
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0046, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0046, sql));
-
-        } catch ( MetaMatrixComponentException e ) {
-            throw e;
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0046, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0046, sql));
         } finally {
             close(results);
             close(statement);

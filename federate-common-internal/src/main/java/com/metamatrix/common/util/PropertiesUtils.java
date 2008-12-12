@@ -40,7 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 
 
@@ -49,6 +51,14 @@ import com.metamatrix.core.util.ArgCheck;
  * java.util.Properties.
  */
 public final class PropertiesUtils {
+	
+	public static class InvalidPropertyException extends MetaMatrixRuntimeException {
+		
+		public InvalidPropertyException(String propertyName, String value, Class<?> expectedType, Throwable cause) {
+			super(cause, CommonPlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName()));
+		}
+
+	}
 
     /**
      * Returns a list of property names matching the given pattern. A '*' may be
@@ -329,13 +339,14 @@ public final class PropertiesUtils {
         }
     }
 
-    public static int getIntProperty(Properties props, String propName, int defaultValue) {
+    public static int getIntProperty(Properties props, String propName, int defaultValue) throws InvalidPropertyException {
         int val = defaultValue;
-        if(props.containsKey(propName)) {
+        String stringVal = props.getProperty(propName);
+        if(stringVal != null) {
             try {
-                val = Integer.parseInt(props.getProperty(propName));
+                val = Integer.parseInt(stringVal);
             } catch(NumberFormatException e) {
-                // ignore
+                throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
             }
         }
         return val;
@@ -429,7 +440,7 @@ public final class PropertiesUtils {
         }
     }
 
-    public static Properties loadAsResource(Class clazz, String resourceName) throws Exception { 
+    public static Properties loadAsResource(Class clazz, String resourceName) throws IOException { 
         InputStream is = null;
         Properties configProps = new Properties();
         try {
@@ -438,9 +449,6 @@ public final class PropertiesUtils {
             if (is != null) {
                    configProps.load(is);
             }
-        } catch (Exception e) {
-            throw e;
-                        
         } finally {
             if (is != null) {
                 try {

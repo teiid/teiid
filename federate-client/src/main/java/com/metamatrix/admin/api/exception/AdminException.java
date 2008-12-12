@@ -25,7 +25,10 @@
 package com.metamatrix.admin.api.exception;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import com.metamatrix.core.MetaMatrixCoreException;
 
 /**
  * <code>AdminException</code> is the base exception for the admin package.  Many *Admin methods throw this
@@ -37,7 +40,7 @@ import java.util.List;
  * clients should be aware of this and use the {@link #hasMultiple()} method to
  * determine if they need to check the child exceptions.</p>
  */
-public abstract class AdminException extends Exception {
+public abstract class AdminException extends MetaMatrixCoreException {
 
     /**
      * The error code is initialized to this value.
@@ -58,7 +61,7 @@ public abstract class AdminException extends Exception {
      *
      * @since 4.3
      */
-    public AdminException() {
+    AdminException() {
         super();
     }
 
@@ -67,8 +70,12 @@ public abstract class AdminException extends Exception {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminException(String msg) {
+    AdminException(String msg) {
         super(msg);
+    }
+    
+    AdminException(Throwable cause) {
+    	this(cause.getMessage(), cause);
     }
 
     /**
@@ -77,8 +84,17 @@ public abstract class AdminException extends Exception {
      * @param msg the error message.
      * @since 4.3
      */
-    public AdminException(int code, String msg) {
+    AdminException(int code, String msg) {
         super(msg);
+        this.errorCode = code;
+    }
+    
+    AdminException(String msg, Throwable cause) {
+        super(cause, msg);
+    }
+
+    AdminException(int code, String msg, Throwable cause) {
+        super(cause, msg);
         this.errorCode = code;
     }
 
@@ -123,7 +139,7 @@ public abstract class AdminException extends Exception {
      * @since 4.3
      */
     public List getChildren() {
-        return (children != null ? children : new ArrayList());
+        return (children != null ? children : Collections.EMPTY_LIST);
     }
 
     /**

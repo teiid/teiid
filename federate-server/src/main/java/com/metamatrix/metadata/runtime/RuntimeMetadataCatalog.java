@@ -264,14 +264,13 @@ public class RuntimeMetadataCatalog  {
             conn = getReadTransaction();
             vdbID = conn.getActiveVirtualDatabaseID(vdbName, vdbVersion);
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0002, vdbName));
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0002, vdbName) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -305,14 +304,13 @@ public class RuntimeMetadataCatalog  {
             vdbID = conn.getVirtualDatabaseID(vdbName, vdbVersion);
 
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0002, vdbName));
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0002, vdbName) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -373,14 +371,13 @@ public class RuntimeMetadataCatalog  {
             conn = getReadTransaction();
             vdbs = conn.getVirtualDatabases();
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0005));
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0005, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0005) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -426,14 +423,13 @@ public class RuntimeMetadataCatalog  {
             vdb = conn.getVirtualDatabase(vdbID);
             
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0006, vdbID.getName()));
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0006, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0006, vdbID.getName()) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -455,14 +451,13 @@ public class RuntimeMetadataCatalog  {
             conn = getReadTransaction();
             vdbs = conn.getDeletedVirtualDatabaseIDs();
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0007) );
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0007, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0007) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -572,14 +567,13 @@ public class RuntimeMetadataCatalog  {
             vdbModelsCache.put(vdbID, modelMap);
 
         }catch(ManagedConnectionException e){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0009, vdbID.getName() ));
             throw new VirtualDatabaseException(e, ErrorMessageKeys.RTMDC_0009, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0009, vdbID.getName() ) );
         }finally {
             if ( conn != null ) {
                 try {
                     conn.close();
                 } catch ( Exception e2 ) {
-                    LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
+                    LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e2, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0001));
                 }
             }
         }
@@ -782,7 +776,7 @@ public class RuntimeMetadataCatalog  {
         try {
             // clear all cached query metadata instances and indexes for the given vdb
             getQueryMetadataCache().removeFromCache(vdbID.getName(), vdbID.getVersion());
-        } catch(Exception e) {
+        } catch(VirtualDatabaseException e) {
             LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e, RuntimeMetadataPlugin.Util.getString("Error trying to get QueryMetadataCache")); //$NON-NLS-1$
         }
 
@@ -837,7 +831,6 @@ public class RuntimeMetadataCatalog  {
             prop.putAll(runtimeProps);
             prop.putAll(resourceProps);
         }catch(ConfigurationException ice){
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ice, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0003));
             throw new VirtualDatabaseException(ErrorMessageKeys.GEN_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0003) );
         }
 
@@ -851,8 +844,7 @@ public class RuntimeMetadataCatalog  {
 
             aTransMgr = new TransactionMgr(props, "RuntimeMetadata"); //$NON-NLS-1$
 
-        } catch ( Throwable e ) {
-            LogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0017));
+        } catch ( ManagedConnectionException e ) {
             throw new VirtualDatabaseException(ErrorMessageKeys.RTMDC_0017, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0017) );
         }
         return aTransMgr;

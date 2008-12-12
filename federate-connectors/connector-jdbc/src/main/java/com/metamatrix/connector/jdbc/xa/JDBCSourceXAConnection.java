@@ -59,7 +59,7 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
                 this.resource = xaConn.getXAResource();
             }                
         } catch (SQLException err) {
-            throw new ConnectorException(SQLExceptionUnroller.unRollException(err));
+            throw new ConnectorException(err);
         }
         return resource;
     }

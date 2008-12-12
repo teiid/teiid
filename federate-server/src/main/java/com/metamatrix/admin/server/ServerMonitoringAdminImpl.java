@@ -61,7 +61,6 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
@@ -211,7 +210,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         results.addAll(configMap.values());
         return results;
@@ -328,7 +327,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -415,7 +414,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             }
             return results;
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -515,7 +514,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -566,7 +565,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -649,7 +648,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -781,14 +780,14 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                    try {
                     process.setInetAddress(InetAddress.getByName(h.getHostAddress()));
                 } catch (final Exception err) {
-                    logAndConvertSystemException(err);
+                    convertException(err);
                 }
                    
                    results.add(process);
                }
            }
        } catch (Exception e) {
-           logAndConvertSystemException(e);
+           convertException(e);
        }
        return results;
     }
@@ -855,7 +854,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -935,7 +934,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -980,7 +979,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             }
 
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -1036,7 +1035,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 }
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -1084,7 +1083,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             system.setLastUpdatedBy(currentConfiguration.getLastChangedBy());
       
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return system;
     }
@@ -1111,7 +1110,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             //convert results into MMVDB objects
             results = getVDBs(identifier, virtualDatabases);
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return results;
     }
@@ -1182,7 +1181,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                     throwProcessingException("ServerMonitoringAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
             }
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
         }
         return Collections.EMPTY_LIST;
     }
@@ -1237,7 +1236,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             
             return new FileUtil(resultFile.getAbsolutePath()).readBytes();
         } catch (Exception e) {
-            logAndConvertSystemException(e);
+            convertException(e);
             return null;
         } finally {
             try {

@@ -31,6 +31,7 @@ import java.util.Set;
 
 import com.metamatrix.admin.api.embedded.EmbeddedLogger;
 import com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin;
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -69,7 +70,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             
             getManager().shutdown();
         } catch (ApplicationLifecycleException e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -86,7 +87,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             // requested.
             getManager().shutdown();                        
         } catch (ApplicationLifecycleException e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         } 
     }
 
@@ -113,8 +114,6 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
                     exceptionWrapper = accumulateSystemException(exceptionWrapper, e);
                 } catch (MetaMatrixComponentException e) {
                     exceptionWrapper = accumulateSystemException(exceptionWrapper, e);
-                } catch (MetaMatrixProcessingException e) {
-                    exceptionWrapper = accumulateProcessingException(exceptionWrapper, e);
                 }
             }
         }
@@ -151,8 +150,6 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
                     exceptionWrapper = accumulateSystemException(exceptionWrapper, e);
                 } catch (MetaMatrixComponentException e) {
                     exceptionWrapper = accumulateSystemException(exceptionWrapper, e);
-                } catch (MetaMatrixProcessingException e) {
-                    exceptionWrapper = accumulateProcessingException(exceptionWrapper, e);
                 }
             }
         }
@@ -199,9 +196,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
                             getDataService().clearConnectorBindingCache(binding.getName());
                         }
                     } catch (MetaMatrixComponentException e) {
-                    	throw createSystemException(e);
-                    } catch (MetaMatrixProcessingException e) {
-                    	throw createProcessingException(e);
+                    	throw new AdminComponentException(e);
                     }                                        
                 } 
             }
@@ -240,7 +235,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         	try {
 				this.manager.getDQP().terminateConnection(clientConnection.getLogonResult().getSessionID().toString());
 			} catch (MetaMatrixComponentException e) {
-				throw createSystemException(e);
+				throw new AdminComponentException(e);
 			}
 			
             // Shutdown the connection
@@ -269,9 +264,9 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         try {
 			this.manager.getDQP().cancelRequest(id);
 		} catch (MetaMatrixProcessingException e) {
-			throw createProcessingException(e);
+			throw new AdminProcessingException(e);
 		} catch (MetaMatrixComponentException e) {
-			throw createSystemException(e);
+			throw new AdminComponentException(e);
 		}
     }
 
@@ -296,7 +291,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         try {
             this.manager.getDQP().cancelAtomicRequest(id, nodeId);
 		} catch (MetaMatrixComponentException e) {
-			throw createSystemException(e);
+			throw new AdminComponentException(e);
 		}
     }
 
@@ -319,11 +314,9 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             // we can remove all the connector bindings associated with this VDB
             // the above delete will also remove them 
         } catch (ApplicationLifecycleException e) {
-        	throw createSystemException(e);
+        	throw new AdminComponentException(e);
         } catch (MetaMatrixComponentException e) {
-        	throw createSystemException(e);
-        } catch (MetaMatrixProcessingException err) {
-        	throw createProcessingException(err);
+        	throw new AdminComponentException(e);
         }
     }
     
@@ -338,7 +331,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             try{
                 EmbeddedConfigUtil.installLogListener(new DQPLogListener(listener));
             }catch(MetaMatrixComponentException e) {
-            	throw createProcessingException(e);
+            	throw new AdminProcessingException(e);
             }
         }
         else {

@@ -217,8 +217,6 @@ public class DataTierManagerImpl implements DataTierManager {
 				throw new MetaMatrixComponentException(e);
 			}
         } else if(existsCode == CodeTableCache.CACHE_OVERLOAD) {
-            String msg = DQPPlugin.Util.getString("DataTierManager.Unable_to_load_code_table_because_code_table_entries_exceeds_the_allowed_parameter_-_MaxCodeTables."); //$NON-NLS-1$
-            LogManager.logError(LogConstants.CTX_DQP, msg);
 			throw new MetaMatrixComponentException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
 
         } // else, CACHE_LOADING - do nothing other than block
@@ -264,11 +262,9 @@ public class DataTierManagerImpl implements DataTierManager {
             modelName = metadata.getFullName(modelID);
         } catch(QueryMetadataException e) {
             String msg = DQPPlugin.Util.getString("DataTierManager.Unable_to_get_metadata."); //$NON-NLS-1$
-            LogManager.logError(LogConstants.CTX_DQP, e, msg);
             throw new ComponentNotAvailableException(e, msg);
         } catch(QueryResolverException e) {
             String msg = DQPPlugin.Util.getString("DataTierManager.Unable_to_resolve_query."); //$NON-NLS-1$
-            LogManager.logError(LogConstants.CTX_DQP, e, msg);
             throw new ComponentNotAvailableException(e, msg);
         }
 
@@ -285,7 +281,7 @@ public class DataTierManagerImpl implements DataTierManager {
 		        try {
 					closeRequest(aqr.getAtomicRequestID(), aqr.getConnectorID());
 				} catch (MetaMatrixComponentException e1) {
-					LogManager.logDetail(LogConstants.CTX_DQP, "Exception closing code table request"); //$NON-NLS-1$
+					LogManager.logDetail(LogConstants.CTX_DQP, e1, "Exception closing code table request"); //$NON-NLS-1$
 				}
 		        notifyWaitingCodeTableRequests(requests);
 			}
@@ -296,10 +292,10 @@ public class DataTierManagerImpl implements DataTierManager {
 				}
 				// Determine whether the results should be added to code table cache
             	// Depends on size of results and available memory and system parameters
-            	boolean codeTableLoadable = isCodeTableLoadable(response.getLastRow());
+            	boolean codeTableLoadable = response.getLastRow() < maxCodeTableRecords;
 
             	if (!codeTableLoadable) {
-                    LogManager.logError(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DataTierManager.Unable_to_load_code_table_for_requestID_{0}_of_and_nodeID_of_{1}_because_result_sizes_exceeds_the_allowed_parameter_-_MaxCodeTableRecords.", new Object[]{aqr.getRequestID(), new Integer(aqr.getAtomicRequestID().getNodeID())})); //$NON-NLS-1$                    
+                    LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DataTierManager.Unable_to_load_code_table_for_requestID_{0}_of_and_nodeID_of_{1}_because_result_sizes_exceeds_the_allowed_parameter_-_MaxCodeTableRecords.", new Object[]{aqr.getRequestID(), new Integer(aqr.getAtomicRequestID().getNodeID())})); //$NON-NLS-1$                    
                     MetaMatrixComponentException me = new MetaMatrixComponentException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", aqr.getRequestID(), new Integer(aqr.getAtomicRequestID().getNodeID()))); //$NON-NLS-1$ //$NON-NLS-2$                    
                     exceptionOccurred(me);
             	} else {
@@ -309,7 +305,8 @@ public class DataTierManagerImpl implements DataTierManager {
                         try {
                         	requestBatch(aqr.getAtomicRequestID(), aqr.getConnectorID());
                         } catch(MetaMatrixComponentException e) {
-                            exceptionOccurred(e);
+                            LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
+                        	exceptionOccurred(e);
                         }
                     } else {
                         // Set the loading complete
@@ -324,14 +321,6 @@ public class DataTierManagerImpl implements DataTierManager {
                 }
 			}
         });
-    }
-
-    private boolean isCodeTableLoadable(int lastRow)  {
-		if (lastRow > this.maxCodeTableRecords) {
-			return false;
-		}
-
-		return true;
     }
 
     /* (non-Javadoc)

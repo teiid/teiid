@@ -31,6 +31,7 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 public class ClientServiceRegistry {
 	
     private ConcurrentHashMap<String, Object> localServices = new ConcurrentHashMap<String, Object>();
+    private ConcurrentHashMap<String, String> loggingContext = new ConcurrentHashMap<String, String>();
     private SessionServiceInterface sessionServiceProxy;
     
     public ClientServiceRegistry(SessionServiceInterface sessionService) {
@@ -49,8 +50,13 @@ public class ClientServiceRegistry {
 		return this.sessionServiceProxy;
 	}
 	
-	public void registerClientService(Class iface, Object instance) {
+	public void registerClientService(Class<?> iface, Object instance, String loggingContext) {
 		this.localServices.put(iface.getName(), instance);
+		this.loggingContext.put(iface.getName(), loggingContext);
 	}	
+	
+	public String getLoggingContextForService(String iface) {
+		return this.loggingContext.get(iface);
+	}
 
 }

@@ -49,6 +49,7 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
@@ -90,7 +91,7 @@ public final class JDBCExtensionModuleUtil {
         Properties resourceProps = null;
         try{
             resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.EXTENSION_SOURCE_MANAGER);
-        } catch (Exception e) {
+        } catch (ConfigurationException e) {
             LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0001));
         }
 		if (resourceProps!=null){

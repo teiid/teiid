@@ -89,7 +89,6 @@ public final class JDBCRuntimeMetadataReader {
             if(results.next())
                 result = JDBCTranslator.getMetaBaseInfo(results);
         }catch (SQLException se){
-                I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
                 throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -128,7 +127,6 @@ public final class JDBCRuntimeMetadataReader {
             if(results.next())
                 result = JDBCTranslator.getVirtualDatabase(results, virtualDatabaseID);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
                 throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -176,7 +174,6 @@ public final class JDBCRuntimeMetadataReader {
             ResultSet results = statement.getResultSet();
             result = JDBCTranslator.getVirtualDatabases(results);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -210,7 +207,6 @@ public final class JDBCRuntimeMetadataReader {
             ResultSet results = statement.getResultSet();
             result = JDBCTranslator.getVirtualDatabaseIDs(results);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -252,7 +248,6 @@ public final class JDBCRuntimeMetadataReader {
             //smUids.addAll(dtmUids);
             result = JDBCTranslator.getModels(results, vdbID, smUids);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -298,7 +293,6 @@ public final class JDBCRuntimeMetadataReader {
             ResultSet results = statement.getResultSet();
             result = JDBCTranslator.getProperties(results);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -339,7 +333,6 @@ public final class JDBCRuntimeMetadataReader {
             	}
             }
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -370,7 +363,6 @@ public final class JDBCRuntimeMetadataReader {
             ResultSet results = statement.getResultSet();
             result = JDBCTranslator.getModelIDs(results);
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {
@@ -430,7 +422,6 @@ public final class JDBCRuntimeMetadataReader {
                 result = JDBCTranslator.getVirtualDatabaseID(results);
             }
         }catch (SQLException se){
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.JDBCR_0001, se, new Object[]{sql} );
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
         }finally {
             if ( statement != null ) {

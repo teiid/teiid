@@ -36,6 +36,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
@@ -258,15 +259,9 @@ public class ExtensionModuleManager {
             transaction.commit();
             
             notifyFileChanged();
-        } catch ( DuplicateExtensionModuleException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0013, new Object[] {sourceName, principalName}) );
-            throw e;
-        } catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0013, new Object[] {sourceName, principalName}) );
-            throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0013, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0013, sourceName, principalName));
-        } finally {
+        } catch (ManagedConnectionException e) {
+			throw new MetaMatrixComponentException(e);
+		} finally {
             if ( transaction != null ) {
                 try {
                     transaction.close();
@@ -314,13 +309,7 @@ public class ExtensionModuleManager {
             transaction.commit();
             
             notifyFileChanged();
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0015, new Object[] {sourceName, principalName})  );
-            throw e;
-        } catch ( Exception e ) {
-			LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0015, new Object[] {sourceName, principalName} ));
+        } catch ( ManagedConnectionException e ) {
             throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0015, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0015, sourceName, principalName));
         } finally {
             if ( transaction != null ) {
@@ -365,12 +354,7 @@ public class ExtensionModuleManager {
             transaction = getReadTransaction();
             result = transaction.getSourceNames();
             transaction.commit();
-            
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0016));
-            throw e;
-        } catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0016));
+        } catch ( ManagedConnectionException e ) {
             throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0016, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0016));
         } finally {
             if ( transaction != null ) {
@@ -404,12 +388,7 @@ public class ExtensionModuleManager {
             transaction = getReadTransaction();
             result = transaction.getSourceDescriptors();
             transaction.commit();
-            
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0017));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0017));
+		} catch (ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0017, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0017));
         } finally {
             if ( transaction != null ) {
@@ -453,12 +432,7 @@ public class ExtensionModuleManager {
             boolean includeDisabled = true;
             result = transaction.getSourceDescriptors(type, includeDisabled);
             transaction.commit();
-            
-        } catch ( MetaMatrixComponentException e ) {
-			LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0018, type));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0018, type));
+		} catch ( ManagedConnectionException e ) {
             throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0018, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0018, type));
         } finally {
             if ( transaction != null ) {
@@ -497,12 +471,7 @@ public class ExtensionModuleManager {
             boolean result = transaction.isNameInUse(sourceName);
             transaction.commit();
             return  result;
-
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0019, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
         } finally {
             if ( transaction != null ) {
@@ -541,16 +510,9 @@ public class ExtensionModuleManager {
             transaction = getReadTransaction();
             result = transaction.getSourceDescriptor(sourceName);
             transaction.commit();
-            
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
-			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0019, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0019, sourceName));
-        } finally {
+        } catch (ManagedConnectionException e) {
+        	throw new MetaMatrixComponentException(e);
+		} finally {
             if ( transaction != null ) {
                 try {
                     transaction.close();
@@ -604,13 +566,7 @@ public class ExtensionModuleManager {
             
             notifyFileChanged();
             
-        } catch ( ExtensionModuleOrderingException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0020, principalName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0020, principalName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0020, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0020, principalName));
         } finally {
             if ( transaction != null ) {
@@ -677,13 +633,7 @@ public class ExtensionModuleManager {
                     result.add(descriptor);
                 }
             }
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0021, principalName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0021, principalName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0021, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0021, principalName));
         } finally {
             if ( transaction != null ) {
@@ -773,13 +723,7 @@ public class ExtensionModuleManager {
             transaction.commit();
             
             notifyFileChanged();
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0012, sourceName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0012, sourceName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0012, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0012, sourceName));
         } finally {
             if ( transaction != null ) {
@@ -828,13 +772,7 @@ public class ExtensionModuleManager {
             transaction.commit();
             
             notifyFileChanged();
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0023, sourceName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0023, sourceName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0023, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0023, sourceName));
         } finally {
             if ( transaction != null ) {
@@ -882,13 +820,7 @@ public class ExtensionModuleManager {
             transaction = getWriteTransaction();
             result = transaction.setSourceDescription(principalName, sourceName, description);
             transaction.commit();
-        } catch ( ExtensionModuleNotFoundException e ) {
-            throw e;
-        } catch ( MetaMatrixComponentException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0024, sourceName));
-			throw e;
-		} catch ( Exception e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0024, sourceName));
+		} catch ( ManagedConnectionException e ) {
 			throw new MetaMatrixComponentException(e,ErrorMessageKeys.EXTENSION_0024, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0024, sourceName));
         } finally {
             if ( transaction != null ) {
@@ -936,7 +868,7 @@ public class ExtensionModuleManager {
                  	resourceProps.setProperty(key, value);
                 }
             }
-        } catch (Exception e) {
+        } catch (ConfigurationException e) {
             LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0001));
         }
 
@@ -956,7 +888,7 @@ public class ExtensionModuleManager {
         try {
             env.setProperty(TransactionMgr.FACTORY, env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY));
             transMgr = new TransactionMgr(env, "ExtensionModuleManager"); //$NON-NLS-1$
-        } catch ( Throwable e ) {
+        } catch ( ManagedConnectionException e ) {
             LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0028));
             isInitialized = false;
         }

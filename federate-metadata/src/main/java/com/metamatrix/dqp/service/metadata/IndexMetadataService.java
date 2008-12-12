@@ -88,7 +88,6 @@ public class IndexMetadataService implements MetadataService, IndexSelectorSourc
 	        if(this.vdbService == null){
 	            this.vdbService = (VDBService)environment.findService(DQPServiceNames.VDB_SERVICE);
 	            if(this.vdbService == null){
-                    LogManager.logError(LogConstants.CTX_DQP, DQPPlugin.Util.getString("IndexMetadataService.VDB_Service_is_not_available._1"));  //$NON-NLS-1$
 	                throw new ApplicationLifecycleException(DQPPlugin.Util.getString("IndexMetadataService.VDB_Service_is_not_available._1"));  //$NON-NLS-1$
 	            }
 	        }

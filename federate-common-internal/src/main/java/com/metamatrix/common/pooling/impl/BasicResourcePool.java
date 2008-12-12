@@ -148,11 +148,6 @@ public class BasicResourcePool implements ResourcePool {
             // Create the cleaner thread
             cleanerThread = new CleanUpThread( this, this.shrinkPeriod );
             cleanerThread.start();
-
-
-        } catch (ResourcePoolException e) {
-               LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0016,this.resourceDescriptor.getName()));
-               throw e;
         } finally {
               lock.writeLock().unlock();
         }
@@ -273,21 +268,15 @@ public class BasicResourcePool implements ResourcePool {
                 return;
         }
 
-        try {
-            Properties props = PropertiesUtils.clone(properties, false);
+        Properties props = PropertiesUtils.clone(properties, false);
 
-            props = updatePoolProperties(props);
+        props = updatePoolProperties(props);
 
-            editor.modifyProperties(resourceDescriptor, props, BasicConfigurationObjectEditor.ADD);
+        editor.modifyProperties(resourceDescriptor, props, BasicConfigurationObjectEditor.ADD);
 
 
-            // save the changes to the keeper of the properties
-            this.properties.putAll(props);
-
-        } catch (Exception e) {
-        		LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0018, this.resourceDescriptor.getName()));
-               throw new ResourcePoolException(e, ErrorMessageKeys.POOLING_ERR_0018, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0018, this.resourceDescriptor.getName()));
-        }
+        // save the changes to the keeper of the properties
+        this.properties.putAll(props);
 
     }
 
@@ -828,7 +817,6 @@ public class BasicResourcePool implements ResourcePool {
                     return resource;
 
                 } catch (ResourcePoolException e) {
-                       LogManager.logError(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0029, this.resourceDescriptor.getName(), userName) ) ;
                        poolStatistics.increment(ResourcePoolStatisticNames.NUM_OF_UNSUCCESSFUL_REQUESTS);
                        throw e;
                 } finally {
@@ -838,8 +826,6 @@ public class BasicResourcePool implements ResourcePool {
         }
 
         poolStatistics.increment(ResourcePoolStatisticNames.NUM_OF_UNSUCCESSFUL_REQUESTS);
-
-        LogManager.logError(CONTEXT, CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0030, this.resourceDescriptor.getName(), userName, Long.toString(waitForResourceTime)));
 
         throw new ResourceWaitTimeOutException(CommonPlugin.Util.getString(ErrorMessageKeys.POOLING_ERR_0030, new Object[] {this.resourceDescriptor.getName(), userName, Long.toString(waitForResourceTime)} ));
     }
