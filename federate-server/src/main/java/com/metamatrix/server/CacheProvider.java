@@ -50,12 +50,19 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 		Cache cache = DefaultCacheFactory.getInstance().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		Configuration config = cache.getConfiguration();
 		config.getRuntimeConfig().setChannel(channel);
+		config.setClusterName(channel.getClusterName());
+		
+		// if the channel is already in connected state then cache is not 
+		// getting events about joining the cluster
+		if (channel.isConnected()) {
+			channel.disconnect();
+		}
 
 		try {
 			// register the MBean			
 			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cache);			
 			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			ObjectName on = new ObjectName("jboss.cache:service=MetaMatrixCacheTree"); //$NON-NLS-1$
+			ObjectName on = new ObjectName("jboss.cache:service=FederateCacheTree"); //$NON-NLS-1$
 			mbs.registerMBean(wrapper, on);
 			wrapper.create();
 			wrapper.start();
