@@ -107,20 +107,22 @@ public final class MMConnectionPool extends MMAdminObject implements ConnectionP
      * @since 4.3
      */
 	public boolean equals(Object object) {
-		boolean equals;
-		if (object == null) {
-			equals = false;
-		} else if (object == this) {
-			equals = true;
-		} else if (!(object instanceof MMConnectionPool)) {
-			equals = false;
-		} else {
-			MMConnectionPool cp = (MMConnectionPool)object;
-			equals = (this.getName().equals(cp.getName()) && 
+		if (object == this) {
+			return true;
+		} 
+		if (!(object instanceof MMConnectionPool)) {
+			return false;
+		} 
+
+		MMConnectionPool cp = (MMConnectionPool)object;
+		return (this.getName().equals(cp.getName()) && 
 			          this.poolType.equals(cp.getType())  &&
 			          this.active == cp.isActive());
-		}
-		return equals;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.getName().hashCode();
 	}
   
     

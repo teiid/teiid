@@ -115,10 +115,7 @@ public class MMScriptsContainer implements
                     byte[] fileContents = (byte[])fileMap.get(fileName);
                     FileUtils.write(fileContents, target);
                 } catch (IOException err) {
-                    Object[] params = new Object[] {
-                        fileName
-                    };
-                    throw new AdminProcessingException(AdminPlugin.Util.getString("MMScriptsContainer.error_writing_file", params)); //$NON-NLS-1$
+                    throw new AdminProcessingException(AdminPlugin.Util.getString("MMScriptsContainer.error_writing_file", fileName), err); //$NON-NLS-1$
                 }
             }
         } // if

@@ -167,7 +167,7 @@ public class BatchSerializer {
             out.writeInt(((Integer)obj).intValue());
         }
         protected Object readObject(ObjectInput in) throws IOException {
-            return new Integer(in.readInt());
+            return Integer.valueOf(in.readInt());
         }
     }
     
@@ -176,7 +176,7 @@ public class BatchSerializer {
             out.writeLong(((Long)obj).longValue());
         }
         protected Object readObject(ObjectInput in) throws IOException {
-            return new Long(in.readLong());
+            return Long.valueOf(in.readLong());
         }
     }
     
@@ -203,7 +203,7 @@ public class BatchSerializer {
             out.writeShort(((Short)obj).shortValue());
         }
         protected Object readObject(ObjectInput in) throws IOException {
-            return new Short(in.readShort());
+            return Short.valueOf(in.readShort());
         }
     }
     
@@ -277,7 +277,7 @@ public class BatchSerializer {
             out.writeByte(((Byte)obj).byteValue());
         }
         protected Object readObject(ObjectInput in) throws IOException {
-            return new Byte(in.readByte());
+            return Byte.valueOf(in.readByte());
         }
     }
     
@@ -286,7 +286,7 @@ public class BatchSerializer {
             out.writeChar(((Character)obj).charValue());
         }
         protected Object readObject(ObjectInput in) throws IOException {
-            return new Character(in.readChar());
+            return Character.valueOf(in.readChar());
         }
     }
     

@@ -68,13 +68,6 @@ public class ConfigUserTransaction implements UserTransaction {
 
 
     }
-    protected void finalize() {
-//    	configLockFactory = null;
-    	mgr =null;
-    	source = null;
-    	txn = null;
-    }
-
 
     String getName() {
         return this.name;
@@ -150,7 +143,7 @@ public class ConfigUserTransaction implements UserTransaction {
         }
 
         // Otherwise, return the status of the transaction to which this object is still bound
-        return this.getStatus();
+        return this.txn.getStatus();
     }
     public void rollback() throws TransactionException {
         if (this.mgr.hasTransaction()) {
