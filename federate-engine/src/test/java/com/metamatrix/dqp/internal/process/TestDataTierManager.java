@@ -42,7 +42,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -334,16 +333,11 @@ public class TestDataTierManager extends TestCase {
     }
     
     private static class FakeProcessorPlan implements ProcessorPlan {
-    	TupleSource source;
         public Object clone() {return this;}
         public void close() throws MetaMatrixComponentException {}
-        public void connectTupleSource(TupleSource source,int dataRequestID) {
-        	this.source = source;
-        }
         public List getAndClearWarnings() {return null;}
         public CommandContext getContext() {return null;}
         public List getOutputElements() {return null;}
-        public int getUpdateCount() {return 0;}
         public void initialize(CommandContext context,ProcessorDataManager dataMgr,BufferManager bufferMgr) {}
         public TupleBatch nextBatch() throws BlockedException,MetaMatrixComponentException {
         	ArrayList one = new ArrayList(); one.add("1");

@@ -138,10 +138,6 @@ class SourceState {
         return this.expressionIndexes;
     }
     
-    public List getExpressions() {
-        return this.expressions;
-    }
-
     void setMaxProbeMatch(int maxProbeMatch) {
         this.maxProbeMatch = maxProbeMatch;
     }

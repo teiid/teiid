@@ -31,12 +31,12 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 /** 
- * This noe represents a source node. A source node is which produces results from
+ * This represents a source node. A source node is which produces results from
  * executing a relational query.
  */
 public class MappingSourceNode extends MappingBaseNode {
     
-    ResultSetInfo resultSetInfo;
+    private transient ResultSetInfo resultSetInfo;
     private Map symbolMap = new HashMap();
     
     protected MappingSourceNode() {        
