@@ -33,7 +33,6 @@ import java.io.IOException;
  */
 public class StringArrayReader extends StringLineReader {
     String[] source = null;
-    boolean closed = false;
     int index = 0;
     
     public StringArrayReader(String[] src) {

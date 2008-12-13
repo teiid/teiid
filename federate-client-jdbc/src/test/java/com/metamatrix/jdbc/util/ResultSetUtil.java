@@ -73,7 +73,7 @@ public class ResultSetUtil {
             out = new ComparingPrintStream(defaultPrintStream, expectedResultsInput);
         } else if (resultsOutput!= null && expectedResultsInput == null) {
             PrintStream filePrintStream = new PrintStream(resultsOutput);
-            out = filePrintStream = new MuxingPrintStream(new PrintStream[] {defaultPrintStream, filePrintStream});
+            out = new MuxingPrintStream(new PrintStream[] {defaultPrintStream, filePrintStream});
         } else {
             PrintStream filePrintStream = new PrintStream(resultsOutput);
             out = new ComparingPrintStream(new MuxingPrintStream(new PrintStream[] {defaultPrintStream, filePrintStream}), expectedResultsInput);
