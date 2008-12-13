@@ -24,7 +24,6 @@
 
 package com.metamatrix.platform.security.api;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,7 +51,7 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
 
     private Set thePermissions;
     // Used to provide permissions collection synchronization
-    private Serializable lockObj;
+    private Object lockObj = new Object();
 
     private boolean readOnly;
 
@@ -62,7 +61,6 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
     public AuthorizationPermissionsImpl() {
         this.readOnly = false;
 	    this.thePermissions = new HashSet();
-        this.lockObj = Boolean.FALSE;
     }
 
     /**

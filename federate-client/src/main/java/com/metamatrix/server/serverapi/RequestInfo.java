@@ -160,5 +160,10 @@ public class RequestInfo implements Serializable {
     		return requestID.equals(value.getRequestID());
     	}
 		return requestID.equals(value.getRequestID()) && connectorBindingUUID.equals(value.getConnectorBindingUUID()) && nodeID == value.nodeID;
-	}	
+	}
+    
+    @Override
+    public int hashCode() {
+    	return requestID.hashCode();
+    }
 }
