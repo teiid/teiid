@@ -37,7 +37,7 @@ import com.metamatrix.query.sql.lang.Command;
  * This class is used to cahce plan and related objects for prepared statement
  */
 public class PreparedPlanCache {
-	public static int DEFAULT_MAX_SIZE_TOTAL = 100;
+	public static final int DEFAULT_MAX_SIZE_TOTAL = 100;
 
 	private LRUCache cache;
 	

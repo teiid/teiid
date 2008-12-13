@@ -309,7 +309,7 @@ public class MetaDataProcessor {
         }
         column.put(ResultsMetadataConstants.SEARCHABLE, searchable);
         
-        column.put(ResultsMetadataConstants.SIGNED, new Boolean(metadata.elementSupports(elementID, SupportConstants.Element.SIGNED))); 
+        column.put(ResultsMetadataConstants.SIGNED, Boolean.valueOf(metadata.elementSupports(elementID, SupportConstants.Element.SIGNED))); 
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, vdbName); 
         column.put(ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, vdbVersion);
         column.put(ResultsMetadataConstants.WRITABLE, new Boolean(metadata.elementSupports(elementID, SupportConstants.Element.UPDATE)));

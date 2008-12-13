@@ -369,24 +369,22 @@ public class FileStorageManager implements StorageManager {
      * This method removes all storage area files by walking through the file info
      * map and closing and removing each file.
      */
-    public void shutdown() {
+    public synchronized void shutdown() {
 
 	    LogManager.logDetail(LogCommonConstants.CTX_STORAGE_MGR, "Removing all storage area files "); //$NON-NLS-1$
 
-        synchronized(tupleSourceMap) {
-    		Iterator tsIter = tupleSourceMap.keySet().iterator();
+		Iterator tsIter = tupleSourceMap.keySet().iterator();
 
-    		while(tsIter.hasNext()) {
-    			TupleSourceID key = (TupleSourceID)tsIter.next();
-                try {
-                    removeBatches(key);
-                } catch (MetaMatrixComponentException e) {
-                    LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR, e, "Shutdown failed while removing batches for tuple source: " + key); //$NON-NLS-1$
-                }
-    		}
+		while(tsIter.hasNext()) {
+			TupleSourceID key = (TupleSourceID)tsIter.next();
+            try {
+                removeBatches(key);
+            } catch (MetaMatrixComponentException e) {
+                LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR, e, "Shutdown failed while removing batches for tuple source: " + key); //$NON-NLS-1$
+            }
+		}
 
-            tupleSourceMap = null;
-        }
+        tupleSourceMap = null;
     }
 
     public int getOpenFiles() {

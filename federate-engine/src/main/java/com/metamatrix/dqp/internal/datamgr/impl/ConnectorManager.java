@@ -256,7 +256,6 @@ public class ConnectorManager extends BasicApplication {
         if ( connectorClassString == null || connectorClassString.trim().length() == 0 ) {             
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Missing_required_property", new Object[]{ConnectorPropertyNames.CONNECTOR_CLASS, connectorName})); //$NON-NLS-1$
         }
-        connectorClassString = connectorClassString.trim();
 
         // Create the Connector env
         Properties clonedProps = PropertiesUtils.clone(appProps);
