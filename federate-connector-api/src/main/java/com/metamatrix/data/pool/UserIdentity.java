@@ -58,7 +58,7 @@ public class UserIdentity implements ConnectorIdentity {
             return true;
         }
 
-        if (this.getClass().isInstance(obj)) {
+        if (obj instanceof UserIdentity) {
             UserIdentity that = (UserIdentity)obj;
             return this.context.getUser().toUpperCase().equals(that.context.getUser().toUpperCase());
         }

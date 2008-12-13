@@ -24,11 +24,12 @@
 
 package com.metamatrix.data.transform;
 
-import java.io.Serializable;
-
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.connector.jdbc.extension.impl.BasicValueTranslator;
+import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.exception.ConnectorException;
 
@@ -42,7 +43,8 @@ public class TestBasicValueTranslator extends TestCase {
     public void testExceptionFromTransform() throws Exception {
     	BasicValueTranslator adaptor = new BasicValueTranslator(String.class, Short.class, new FakeTypeFacility());
         try {
-            adaptor.translate("mmuuid:blah", new FakeExecutionContextImpl()); //$NON-NLS-1$
+            adaptor.translate("mmuuid:blah", Mockito.mock(ExecutionContext.class)); //$NON-NLS-1$
+            fail("exceptoin expected"); //$NON-NLS-1$
         } catch(ConnectorException e) {
             // expected
         }
@@ -64,47 +66,6 @@ public class TestBasicValueTranslator extends TestCase {
 		public Object convertToRuntimeType(Object value) {
 			return value;
 		}
-    }
-    
-    public class FakeExecutionContextImpl implements com.metamatrix.data.api.ExecutionContext {
-
-		public String getConnectionIdentifier() {
-			return null;
-		}
-		public String getConnectorIdentifier() {
-			return null;
-		}
-		public String getExecutionCountIdentifier() {
-			return null;
-		}
-		public Serializable getExecutionPayload() {
-			return null;
-		}
-		public String getPartIdentifier() {
-			return null;
-		}
-		public String getRequestIdentifier() {
-			return null;
-		}
-		public Serializable getTrustedPayload() {
-			return null;
-		}
-		public String getUser() {
-			return null;
-		}
-		public String getVirtualDatabaseName() {
-			return null;
-		}
-		public String getVirtualDatabaseVersion() {
-			return null;
-		}
-		public void keepExecutionAlive(boolean alive) {
-			
-		}
-		public boolean useResultSetCache() {
-			return false;
-		}
-        
     }
     
 }

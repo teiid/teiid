@@ -82,7 +82,7 @@ import com.metamatrix.data.visitor.framework.AbstractLanguageVisitor;
 public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLReservedWords {
    
     private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$    
-    private final int MAX_ALIAS_LENGTH = 0;
+    private static final int MAX_ALIAS_LENGTH = 0;
 
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$

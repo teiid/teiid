@@ -54,7 +54,7 @@ public class SingleIdentity implements ConnectorIdentity {
      * Return true for everything - all identities are identical.
      */
     public boolean equals(Object obj){
-        return true;
+        return obj instanceof SingleIdentity;
     }
     
     public String toString(){
