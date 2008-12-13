@@ -39,7 +39,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 
@@ -62,8 +61,6 @@ public class AdminHelper implements IAdminHelper {
     private AuthorizationServiceInterface authAdmin;
     private SessionServiceInterface sessionAdmin;
 
-    // RolePermission Factory
-    RolePermissionFactory roleFactory;
 
     /**
      * ctor
@@ -75,8 +72,6 @@ public class AdminHelper implements IAdminHelper {
         // Init session svc proxy
         sessionAdmin = PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
 
-        // Init RolePermissionFactory
-        roleFactory = new RolePermissionFactory();
     }
 
     /**

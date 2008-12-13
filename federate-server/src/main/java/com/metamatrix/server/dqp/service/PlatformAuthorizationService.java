@@ -68,11 +68,9 @@ public class PlatformAuthorizationService implements AuthorizationService {
     static boolean USE_ENTITLEMENTS = Boolean.valueOf(CurrentConfiguration.getProperty(AuthorizationServicePropertyNames.DATA_ACCESS_AUTHORIZATION_ENABLED)).booleanValue();
 
     private AuthorizationServiceInterface authInterface;
-    private SessionServiceInterface sessionInterface;
 
     public PlatformAuthorizationService(AuthorizationServiceInterface authInterface, SessionServiceInterface sessionInterface) {
         this.authInterface = authInterface;
-        this.sessionInterface = sessionInterface;
     }
 
     /*

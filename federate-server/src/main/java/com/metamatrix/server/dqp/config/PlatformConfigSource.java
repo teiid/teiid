@@ -73,8 +73,6 @@ public class PlatformConfigSource implements DQPConfigSource {
 
     private Map services = new HashMap();
     
-    private Object clientId;
-    
     private static PlatformTransactionService transactionService;
     private static ApplicationService trackingService;    
 
@@ -87,7 +85,6 @@ public class PlatformConfigSource implements DQPConfigSource {
 
         this.queryServiceProps = queryServiceProps;
         this.bufferMgr = bufferMgr;
-        this.clientId = clientId;
     }
 
     /*
