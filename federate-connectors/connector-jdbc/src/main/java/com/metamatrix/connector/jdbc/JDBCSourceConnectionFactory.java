@@ -31,7 +31,6 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.pool.SourceConnection;

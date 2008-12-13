@@ -94,14 +94,14 @@ public class BasicValueRetriever implements ValueRetriever {
                     if(results.wasNull()) {
                         return null;
                     }
-                    return new Integer(value);
+                    return Integer.valueOf(value);
                 }
                 case LONG_CODE:  {
                     long value = results.getLong(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
-                    return new Long(value);
+                    return Long.valueOf(value);
                 }                
                 case DOUBLE_CODE:  {
                     double value = results.getDouble(columnIndex);                    
@@ -118,7 +118,7 @@ public class BasicValueRetriever implements ValueRetriever {
                     if(results.wasNull()) {
                         return null;
                     }                    
-                    return new Short(value);
+                    return Short.valueOf(value);
                 }
                 case FLOAT_CODE:  {
                     float value = results.getFloat(columnIndex);                    
@@ -142,6 +142,7 @@ public class BasicValueRetriever implements ValueRetriever {
     				} catch (SQLException e) {
     					// ignore
     				}
+    				break;
     			}
     			case CLOB_CODE: {
     				try {
@@ -149,6 +150,7 @@ public class BasicValueRetriever implements ValueRetriever {
     				} catch (SQLException e) {
     					// ignore
     				}
+    				break;
     			}                
             }
         }
@@ -178,14 +180,14 @@ public class BasicValueRetriever implements ValueRetriever {
                     if(results.wasNull()) {
                         return null;
                     }
-                    return new Integer(value);
+                    return Integer.valueOf(value);
                 }
                 case LONG_CODE:  {
                     long value = results.getLong(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
-                    return new Long(value);
+                    return Long.valueOf(value);
                 }                
                 case DOUBLE_CODE:  {
                     double value = results.getDouble(parameterIndex);                    
@@ -202,7 +204,7 @@ public class BasicValueRetriever implements ValueRetriever {
                     if(results.wasNull()) {
                         return null;
                     }                    
-                    return new Short(value);
+                    return Short.valueOf(value);
                 }
                 case FLOAT_CODE:  {
                     float value = results.getFloat(parameterIndex);                    

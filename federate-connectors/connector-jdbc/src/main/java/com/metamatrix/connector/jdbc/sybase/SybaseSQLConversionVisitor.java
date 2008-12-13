@@ -32,9 +32,9 @@ import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
  */
 public class SybaseSQLConversionVisitor extends SQLConversionVisitor {
 
-    private final int MAX_SELECT_ALIAS_LENGTH = 30;
+    private static final int MAX_SELECT_ALIAS_LENGTH = 30;
     
-    private final int MAX_TABLE_ALIAS_LENGTH = 30;
+    private static final int MAX_TABLE_ALIAS_LENGTH = 30;
         
     /* 
      * @see com.metamatrix.data.visitor.util.SQLStringVisitor#useAsInGroupAlias()

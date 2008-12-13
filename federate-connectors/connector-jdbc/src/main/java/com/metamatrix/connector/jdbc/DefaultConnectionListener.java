@@ -35,8 +35,6 @@ import com.metamatrix.data.api.ConnectorEnvironment;
  * @author Ramesh Reddy
  */
 public class DefaultConnectionListener implements ConnectionListener {
-    ConnectionListener customListener = null;
-    
     //  Since this going to used inside a pool, we would like to report only once  
     boolean alreadyReportedDetails = false;  
 
@@ -69,17 +67,11 @@ public class DefaultConnectionListener implements ConnectionListener {
             env.getLogger().logInfo(errorStr); 
         }
         
-        if (customListener != null) {
-            customListener.afterConnectionCreation(connection, env);
-        }
     }
 
     /**
      * defect request 13979 & 13978
      */
     public void beforeConnectionClose(Connection connection, ConnectorEnvironment env) {
-        if (customListener != null) {
-            customListener.beforeConnectionClose(connection, env);
-        }        
     }
 }

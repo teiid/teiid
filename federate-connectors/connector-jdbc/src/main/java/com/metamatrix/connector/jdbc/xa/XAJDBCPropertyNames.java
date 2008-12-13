@@ -67,14 +67,14 @@ public class XAJDBCPropertyNames {
     /**
      * Oracle-specific properties
      */
-    public class Oracle {
+    public static class Oracle {
         public static final String SID = "sid";//$NON-NLS-1$
     }
 
     /**
      * DB2-specific properties
      */
-    public class DB2 {
+    public static class DB2 {
         public static final String COLLECTIONID = "CollectionID";//$NON-NLS-1$
         public static final String PACKAGENAME = "PackageName";//$NON-NLS-1$
     }

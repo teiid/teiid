@@ -31,7 +31,6 @@ import java.sql.SQLException;
 
 import javax.transaction.xa.XAResource;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 import com.metamatrix.connector.jdbc.ConnectionListener;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
@@ -64,7 +63,7 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
         return resource;
     }
     
-    void setInTxn(boolean isInTxn) {
+    synchronized void setInTxn(boolean isInTxn) {
         this.isInTxn = isInTxn;
     }
     

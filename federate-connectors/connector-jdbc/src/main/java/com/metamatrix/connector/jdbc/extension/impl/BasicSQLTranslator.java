@@ -59,13 +59,13 @@ public class BasicSQLTranslator implements SQLTranslator {
 
         String timeZone = env.getProperties().getProperty(JDBCPropertyNames.DATABASE_TIME_ZONE);
         if(timeZone != null && timeZone.trim().length() > 0) {
+        	TimeZone tz = TimeZone.getTimeZone(timeZone);
             // Check that the dbms time zone is really different than the local time zone
-            if(!DEFAULT_TIME_ZONE.equals(timeZone)) {
-                this.databaseTimeZone = TimeZone.getTimeZone(timeZone);                
+            if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+                this.databaseTimeZone = tz;                
             }               
         }               
                 
-        //System.out.println("SQL Translator using time zone = " + this.databaseTimeZone);
     }
 
     /**

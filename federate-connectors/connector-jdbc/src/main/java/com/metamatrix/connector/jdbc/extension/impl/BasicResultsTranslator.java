@@ -100,9 +100,10 @@ public class BasicResultsTranslator implements ResultsTranslator {
                 
         String timeZone = env.getProperties().getProperty(JDBCPropertyNames.DATABASE_TIME_ZONE);
         if(timeZone != null && timeZone.trim().length() > 0) {
+        	TimeZone tz = TimeZone.getTimeZone(timeZone);
             // Check that the dbms time zone is really different than the local time zone
-            if(!LOCAL_TIME_ZONE.equals(timeZone)) {
-                this.dbmsTimeZone = TimeZone.getTimeZone(timeZone);                
+            if(!LOCAL_TIME_ZONE.hasSameRules(tz)) {
+                this.dbmsTimeZone = tz;                
             }               
         }               
     }

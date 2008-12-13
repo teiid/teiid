@@ -36,9 +36,6 @@ import javax.sql.DataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
-import com.metamatrix.connector.jdbc.ConnectionListener;
-import com.metamatrix.connector.jdbc.DefaultConnectionListener;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
@@ -56,7 +53,6 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
     private DataSource ds;
     private boolean isXA;
     private String resourceName;
-    protected ConnectionListener connectionListener = new DefaultConnectionListener();
 
     protected void verifyConnectionProperties(final Properties connectionProps) throws ConnectorException {
         final String isXAValue = connectionProps.getProperty(XAJDBCPropertyNames.IS_XA);
@@ -87,22 +83,18 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
                     XAJDBCPropertyNames.SERVER_NAME));
         }
-        serverName = serverName.trim();
         if ( serverPort == null || serverPort.trim().length() == 0 ) {
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
                     XAJDBCPropertyNames.PORT_NUMBER));
         }
-        serverPort = serverPort.trim();
         if ( username == null || username.trim().length() == 0 ) {
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
                     XAJDBCPropertyNames.USER));
         }
-        username = username.trim();
         if ( password == null || password.trim().length() == 0 ) {
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
                     XAJDBCPropertyNames.PASSWORD));
         }
-        password = password.trim();
 
         // create data source
         final DataSource baseDs;
@@ -197,11 +189,4 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
         return lcProps;
     }
     
-    /**
-     * Connection Listener only used in the SingleIdentityConnections for now.
-     * @see com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory#getConnectionListener()
-     */
-    protected ConnectionListener getConnectionListener() {
-        return connectionListener;
-    }
 }
