@@ -33,8 +33,8 @@ import com.metamatrix.core.CorePlugin;
 
 public class LogMessage implements Externalizable {
 
-  public static String VM_NAME = "VMName"; //$NON-NLS-1$
-  public static String HOST_NAME = "HostName"; //$NON-NLS-1$
+  public static final String VM_NAME = "VMName"; //$NON-NLS-1$
+  public static final String HOST_NAME = "HostName"; //$NON-NLS-1$
     
 //    public static String VM_NAME = VMNaming.getVMName();
 //    public static String HOST_NAME = VMNaming.getLogicalHostName();
@@ -63,6 +63,9 @@ public class LogMessage implements Externalizable {
     private String hostName;
     private String vmName;
     private int errorCode;
+    
+    public LogMessage() {
+    }
 
     public LogMessage(String msgID, String context, int level) {
 		this.msgID = msgID;

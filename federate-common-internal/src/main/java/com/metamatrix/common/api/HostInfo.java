@@ -109,10 +109,7 @@ public class HostInfo {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("HostInfo: "); //$NON-NLS-1$
-        sb.append(" hostName:  " + hostName); //$NON-NLS-1$
-        sb.append(" portNumber:  " + portNumber); //$NON-NLS-1$
-        sb.append(" inetAddress: "); //$NON-NLS-1$
+        sb.append(hostName).append(":").append(portNumber); //$NON-NLS-1$
         if (inetAddress != null) {
             sb.append(inetAddress);
         }
@@ -124,6 +121,12 @@ public class HostInfo {
      * @since 4.2
      */
     public boolean equals(Object obj) {
+    	if (obj == this) {
+    		return true;
+    	}
+    	if (!(obj instanceof HostInfo)) {
+    		return false;
+    	}
         HostInfo hostInfo = (HostInfo) obj;
         if (inetAddress == null || hostInfo.getInetAddress() == null) {
             return hostName.equals(hostInfo.getHostName()) && portNumber == hostInfo.getPortNumber();

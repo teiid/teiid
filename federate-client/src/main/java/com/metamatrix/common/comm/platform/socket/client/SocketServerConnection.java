@@ -90,7 +90,8 @@ public class SocketServerConnection implements ServerConnection {
 		this.connProps = connProps;
 		this.secure = secure;
 		this.logon = this.getService(ILogon.class);
-
+		this.log = log;
+		
         authenticate(); 
         
         this.pingTimer = pingTimer;
@@ -116,6 +117,7 @@ public class SocketServerConnection implements ServerConnection {
 			this.serverInstance = null;
 		}
 		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
+		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
 		int knownHosts = hostKeys.size();
 		for (int i = 0; i < hostKeys.size(); i++) {
 			HostInfo hostInfo = hostKeys.remove((int) (Math.random() * hostKeys.size()));
@@ -159,7 +161,7 @@ public class SocketServerConnection implements ServerConnection {
 			}
 			log.logDetail("SocketServerConnection.selectServerInstance", ex, "Unable to connect to host"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available")); //$NON-NLS-1$
+		throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
 	}
 	
 	public synchronized void authenticate() throws ConnectionException, CommunicationException {
@@ -176,6 +178,9 @@ public class SocketServerConnection implements ServerConnection {
             // to give to the user
             throw new ConnectionException(e, e.getMessage());
         } catch (MetaMatrixComponentException e) {
+        	if (e.getCause() instanceof CommunicationException) {
+        		throw (CommunicationException)e.getCause();
+        	}
             throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
         } 	
 	}

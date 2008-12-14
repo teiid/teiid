@@ -45,6 +45,7 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
     private Properties productInfo;
     private String clientIp;
     private String clientHostname;
+    private Serializable trustedToken;
 
     /**
      * Master constructor, allows a MetaMatrixSessionInfo to be created with
@@ -166,5 +167,13 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
 
 	public String getClientHostname() {
 		return clientHostname;
+	}
+
+	public void setTrustedToken(Serializable trustedToken) {
+		this.trustedToken = trustedToken;
+	}
+
+	public Serializable getTrustedToken() {
+		return trustedToken;
 	}
 }

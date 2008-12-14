@@ -177,7 +177,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         return RELEASE_NUMBER;
     }
     
-    private void receivedHahdshake(Handshake handshake) {
+    private synchronized void receivedHahdshake(Handshake handshake) {
         try {
             /*if (handshake.getVersion().indexOf(getVersionInfo()) == -1) {
                 throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
@@ -201,9 +201,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         } catch (CryptoException err) {
         	this.handshakeError = new CommunicationException(err);
         } finally {
-        	synchronized (this) {
-				this.notify();
-			}
+			this.notify();
         }
     }
 
@@ -364,7 +362,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 						receiver.receiveResults(result);
 					}
 	
-				}, new Integer(MESSAGE_ID.getAndIncrement()));
+				}, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
 				if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
 					return results;
 				}

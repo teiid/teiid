@@ -79,7 +79,7 @@ public class AttributeDefinition implements Comparable {
 
         // Check if object can be compared to this one
         // (this includes checking for null ) ...
-        if (obj instanceof ClassDefinition) {
+        if (obj instanceof AttributeDefinition) {
 
             // fail fast on different hash codes
             if (this.hashCode() != obj.hashCode()) {
@@ -118,7 +118,7 @@ public class AttributeDefinition implements Comparable {
 
         // Check if object cannot be compared to this one
         // (this includes checking for null ) ...
-        if (!(obj instanceof ClassDefinition)) {
+        if (!(obj instanceof AttributeDefinition)) {
             throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.ACTIONS_ERR_0005,
             		new Object[] {obj.getClass().getName(), this.getClass().getName()} ));
         }

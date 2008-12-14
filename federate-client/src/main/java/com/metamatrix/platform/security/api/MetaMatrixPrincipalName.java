@@ -132,14 +132,6 @@ public class MetaMatrixPrincipalName implements Serializable {
         return sb.toString();
     }
 
-    /**
-     * Return a cloned instance of this object.
-     * @return the object that is the clone of this instance.
-     */
-    public Object clone() {
-        return new MetaMatrixPrincipalName(this);
-    }
-
 }
 
 

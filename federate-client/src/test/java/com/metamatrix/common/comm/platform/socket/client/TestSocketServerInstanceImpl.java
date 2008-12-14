@@ -49,7 +49,7 @@ import com.metamatrix.platform.security.api.ILogon;
 
 public class TestSocketServerInstanceImpl extends TestCase {
 	
-	private final class FakeObjectChannel implements ObjectChannel {
+	private static final class FakeObjectChannel implements ObjectChannel {
 		Object msg;
 
 		@Override

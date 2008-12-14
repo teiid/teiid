@@ -249,11 +249,11 @@ public final class StringUtil {
         StringBuffer token = new StringBuffer();
 		while(tokens.hasMoreTokens()) {
             token.setLength(0);
-            token.append(tokens.nextToken().toString());
+            token.append(tokens.nextToken());
             if ( token.charAt(0) == '"' ) {
                 token.deleteCharAt(0);
                 while ( tokens.hasMoreTokens() ) {
-                    token.append(Constants.SPACE + tokens.nextToken().toString()); 
+                    token.append(Constants.SPACE + tokens.nextToken()); 
                     if ( token.charAt(token.length() -1) == '"' ) {
                         token.deleteCharAt(token.length() - 1);
                         break;

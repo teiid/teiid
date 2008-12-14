@@ -48,8 +48,6 @@ import com.metamatrix.common.pooling.resource.GenericResourcePoolMgr;
  */
 public class TestPoolingRP1 extends TestCase {
 
-	int count;
-
 	BasicConfigurationObjectEditor editor;
 
 	ResourceComponentType compType;

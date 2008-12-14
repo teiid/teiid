@@ -38,7 +38,6 @@ public class SessionToken implements Serializable, Comparable<SessionToken>, Clo
 
     /** The session ID */
     private MetaMatrixSessionID sessionID;
-    private Serializable trustedToken;
     private String userName;
     
     /**
@@ -54,8 +53,6 @@ public class SessionToken implements Serializable, Comparable<SessionToken>, Clo
     * for the session represented by this token.
     * @param id (long) the unique identifier for the session
      * @param userName (String) the userName for this session
-     * @param pinginterval (long) indicates how often the client (in mls) will ping the server to stay alive 
-     * @param resourceAlgorithm 
      * @throws IllegalArgumentException
      */
      public SessionToken(MetaMatrixSessionID id, String userName){
@@ -164,11 +161,4 @@ public class SessionToken implements Serializable, Comparable<SessionToken>, Clo
         return null;
     }
 
-    /** 
-     * @return Returns the serverTrustedToken.
-     * @since 4.2.2
-     */
-    public Serializable getTrustedToken() {
-        return this.trustedToken;
-    }
 }

@@ -57,7 +57,7 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
  */
 public class TestSocketServerConnection extends TestCase {
 	
-	private final class FakeILogon implements ILogon {
+	private static final class FakeILogon implements ILogon {
 		
 		Throwable t;
 		
@@ -121,23 +121,25 @@ public class TestSocketServerConnection extends TestCase {
 		assertTrue(p.containsKey(MMURL.CONNECTION.CLIENT_IP_ADDRESS));
 	}
 	
-	public void testLogon() throws Exception {
+	public void testLogonFailsWithMultipleHosts() throws Exception {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			@Override
 			public SocketServerInstance createServerInstance(HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
-				return null;
+				throw new SingleInstanceCommunicationException();
 			}
 		};
-		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("fake", 1, false));
+		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("mm://host1:1,host2:2"));
 		try {
 			new SocketServerConnection(instanceFactory, false, discovery, p, null, Mockito.mock(SocketLog.class));
 			fail("exception expected");
 		} catch (CommunicationException e) {
-			assertEquals("Unable to find a component used in logging on to MetaMatrix", e.getMessage());
+			assertEquals("No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage());
 		}
-		
+	}
+	
+	public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
 		assertEquals("00000000-0000-0001-0000-000000000001", connection.getLogonResult().getSessionID().toString());
 	}
