@@ -31,7 +31,6 @@ import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ProcedureErrorInstructionException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
@@ -194,23 +193,17 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
         super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode());
         
         if (addChildren) {
-            Throwable childException = ex; // this a child to the SQLException constructed from reason
+        	SQLException childException = ex; // this a child to the SQLException constructed from reason
 
             while (childException != null) {
                 if (childException instanceof MMSQLException) {
                     super.setNextException(ex);
                     break;
-                } else if (childException instanceof MetaMatrixException) {
-                    super.setNextException(new MMSQLException(childException.getMessage()));
-                    childException = ((MetaMatrixException)childException).getChild();
-                } else if (childException instanceof SQLException) {
+                } else {
                     super.setNextException(new MMSQLException((SQLException)childException, getMessage(childException, null),
                                                               false));
                     childException = ((SQLException)childException).getNextException();
-                } else {
-                    super.setNextException(new MMSQLException(childException.getMessage()));
-                    break;
-                }
+                } 
             }
         }
     }

@@ -3401,7 +3401,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      */
     public List getXMLSchemas(String documentName) throws SQLException {
         try {
-			return driverConnection.dqp.getXmlSchemas(documentName);
+			return driverConnection.getDQP().getXmlSchemas(documentName);
 		} catch (QueryMetadataException e) {
 			throw MMSQLException.create(e);
 		} catch (MetaMatrixComponentException e) {

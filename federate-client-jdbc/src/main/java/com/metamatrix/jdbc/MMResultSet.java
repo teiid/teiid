@@ -300,17 +300,17 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
         // defect 13539 - set the currentValue (defined in MMResultSet) so that wasNull() accurately returns whether this value was null
         currentValue = cursorRow.get(column-1);
                 
-        if(currentValue != null && currentValue instanceof ClobType){
+        if(currentValue instanceof ClobType){
             currentValue = MMClob.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (ClobType) currentValue);
         }
-        else if (currentValue != null && currentValue instanceof BlobType) {
+        else if (currentValue instanceof BlobType) {
             currentValue = MMBlob.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (BlobType) currentValue);
         }
-        else if (currentValue != null && currentValue instanceof XMLType) {
+        else if (currentValue instanceof XMLType) {
             currentValue = MMSQLXML.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (XMLType) currentValue);
         }
         
-        if (serverTimeZone != null && currentValue instanceof java.util.Date) {
+        if (currentValue instanceof java.util.Date) {
             return TimestampWithTimezone.create((java.util.Date)currentValue, serverTimeZone, getDefaultCalendar(), currentValue.getClass());
         }
         
@@ -422,16 +422,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if there is an error accessing metamatrix results.
 	 */
 	public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return null;
-		}
-		// do the necessary transformation depending on the datatype of the
-		// object at the given index.
-		return DataTypeTransformer.getBigDecimal(currentValue);
+		return DataTypeTransformer.getBigDecimal(getObject(columnIndex));
 	}
 
 	/**
@@ -466,16 +457,14 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	public BigDecimal getBigDecimal(int columnIndex, int scale)
 			throws SQLException {
 
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return null;
-		}
 		// do the necessary transformation depending on the datatype of the
 		// object at the given index.
 		BigDecimal bigDecimalObject = DataTypeTransformer
-				.getBigDecimal(currentValue);
+				.getBigDecimal(getObject(columnIndex));
+		
+		if (bigDecimalObject == null) {
+			return null;
+		}
 
 		// set the scale on the bigDecimal
 		return bigDecimalObject.setScale(scale);
@@ -548,14 +537,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if there is an error accessing metamatrix results.
 	 */
 	public Blob getBlob(int columnIndex) throws SQLException {
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-		if (currentValue == null) {
-			return null;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// Date
-		return DataTypeTransformer.getBlob(currentValue);
+		return DataTypeTransformer.getBlob(getObject(columnIndex));
 	}
 
 	/**
@@ -582,16 +564,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if there is an error accessing metamatrix results.
 	 */
 	public boolean getBoolean(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return false;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// Boolen
-		return DataTypeTransformer.getBoolean(currentValue).booleanValue();
+		return DataTypeTransformer.getBoolean(getObject(columnIndex));
 	}
 
 	/**
@@ -620,16 +593,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if there is an error accessing metamatrix results.
 	 */
 	public byte getByte(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return -1;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// Byte
-		return DataTypeTransformer.getByte(currentValue).byteValue();
+		return DataTypeTransformer.getByte(getObject(columnIndex));
 	}
 
 	/**
@@ -656,14 +620,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if there is an error accessing or converting the result value
 	 */
 	public byte[] getBytes(int columnIndex) throws SQLException {
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-		if (currentValue == null) {
-			return null;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// Date
-		return DataTypeTransformer.getBytes(currentValue);
+		return DataTypeTransformer.getBytes(getObject(columnIndex));
 	}
 
 	/**
@@ -745,11 +702,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		Date value = DataTypeTransformer.getDate(currentValue);
+		Date value = DataTypeTransformer.getDate(getObject(columnIndex));
 
 		if (value != null && cal != null) {
 			value = TimestampWithTimezone.createDate(value,
@@ -812,16 +765,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public double getDouble(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return 0;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// double
-		return DataTypeTransformer.getDouble(currentValue).doubleValue();
+		return DataTypeTransformer.getDouble(getObject(columnIndex));
 	}
 
 	/**
@@ -861,16 +805,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public float getFloat(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return 0;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// float
-		return DataTypeTransformer.getFloat(currentValue).floatValue();
+		return DataTypeTransformer.getFloat(getObject(columnIndex));
 	}
 
 	/**
@@ -896,15 +831,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public int getInt(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return 0;
-		}
-		// Depending on the type of object do the necessary tranform and get int
-		return DataTypeTransformer.getInteger(currentValue).intValue();
+		return DataTypeTransformer.getInteger(getObject(columnIndex));
 	}
 
 	/**
@@ -930,16 +857,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public long getLong(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return 0;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// long
-		return DataTypeTransformer.getLong(currentValue).longValue();
+		return DataTypeTransformer.getLong(getObject(columnIndex));
 	}
 
 	/**
@@ -978,16 +896,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public short getShort(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return 0;
-		}
-		// Depending on the type of object do the necessary tranform and get
-		// short
-		return DataTypeTransformer.getShort(currentValue).shortValue();
+		return DataTypeTransformer.getShort(getObject(columnIndex));
 	}
 
 	/**
@@ -1014,14 +923,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public String getString(int columnIndex) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		if (currentValue == null) {
-			return null;
-		}
-		return DataTypeTransformer.transform(currentValue, String.class, "String"); //$NON-NLS-1$
+		return DataTypeTransformer.getString(getObject(columnIndex));
 	}
 
 	/**
@@ -1079,11 +981,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 		if a results access error occurs or transform fails.
 	 */
 	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		Time value = DataTypeTransformer.getTime(currentValue);
+		Time value = DataTypeTransformer.getTime(getObject(columnIndex));
 
 		if (value != null && cal != null) {
 			value = TimestampWithTimezone.createTime(value,
@@ -1151,10 +1049,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 */
 	public Timestamp getTimestamp(int columnIndex, Calendar cal)
 			throws SQLException {
-		// get the object at the given index
-		currentValue = getObject(columnIndex);
-
-		Timestamp value = DataTypeTransformer.getTimestamp(currentValue);
+		Timestamp value = DataTypeTransformer.getTimestamp(getObject(columnIndex));
 
 		if (value != null && cal != null) {
 			value = TimestampWithTimezone.createTimestamp(value,
@@ -1513,7 +1408,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 
 	public void deleteRow() throws SQLException {
-		new SQLFeatureNotSupportedException();
+		throw new SQLFeatureNotSupportedException();
 	}
 
 	public Array getArray(int columnIndex) throws SQLException {
@@ -1533,19 +1428,11 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 
 	public Clob getClob(int columnIndex) throws SQLException {
-		currentValue = getObject(columnIndex);
-		if (currentValue == null) {
-			return null;
-		}
-		return DataTypeTransformer.getClob(currentValue);
+		return DataTypeTransformer.getClob(getObject(columnIndex));
 	}
 	
 	public SQLXML getSQLXML(int columnIndex) throws SQLException {
-		currentValue = getObject(columnIndex);
-		if (currentValue == null) {
-			return null;
-		}
-		return DataTypeTransformer.getSQLXML(currentValue);
+		return DataTypeTransformer.getSQLXML(getObject(columnIndex));
 	}
 
 	public Clob getClob(String columnLabel) throws SQLException {

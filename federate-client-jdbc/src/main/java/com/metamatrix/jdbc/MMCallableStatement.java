@@ -140,7 +140,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not BIT
      */
     public boolean getBoolean(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getBoolean(getObject(parameterIndex)).booleanValue();
+        return DataTypeTransformer.getBoolean(getObject(parameterIndex));
     }
 
     /**
@@ -150,7 +150,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not TINYINT
      */
     public byte getByte(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getByte(getObject(parameterIndex)).byteValue();
+        return DataTypeTransformer.getByte(getObject(parameterIndex));
     }
 
     /**
@@ -201,7 +201,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not DOUBLE or FLOAT
      */
     public double getDouble(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getDouble(getObject(parameterIndex)).doubleValue();
+        return DataTypeTransformer.getDouble(getObject(parameterIndex));
     }
 
     /**
@@ -211,7 +211,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not FLOAT
      */
     public float getFloat(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getFloat(getObject(parameterIndex)).floatValue();
+        return DataTypeTransformer.getFloat(getObject(parameterIndex));
     }
 
     /**
@@ -221,7 +221,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not INTEGER
      */
     public int getInt(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getInteger(getObject(parameterIndex)).intValue();
+        return DataTypeTransformer.getInteger(getObject(parameterIndex));
     }
 
     /**
@@ -231,14 +231,14 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not BIGINT
      */
     public long getLong(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getLong(getObject(parameterIndex)).longValue();
+        return DataTypeTransformer.getLong(getObject(parameterIndex));
     }
 
     /**
      * <p>Gets the value of a OUTPUT parameter as an object.
      * @param parameterIndex whose value is to be fetched from the result.
      * @return The parameter at the given index is returned as an object.
-     * @throws SQLException, should never occur
+     * @throws SQLException
      */
     public Object getObject(int parameterIndex) throws SQLException {
         //checkParameter(parameterIndex);
@@ -248,7 +248,8 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("MMCallableStatement.Param_not_found", parameterIndex)); //$NON-NLS-1$
         }
         checkStatement();
-        return resultSet.getOutputParamValue(((Integer)indexInResults).intValue());
+        parameterValue = resultSet.getOutputParamValue(((Integer)indexInResults).intValue());
+        return parameterValue;
     }
 
     /**
@@ -258,7 +259,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
      * @throws SQLException if param datatype is not SMALLINT
      */
     public short getShort(int parameterIndex) throws SQLException {
-        return DataTypeTransformer.getShort(getObject(parameterIndex)).shortValue();
+        return DataTypeTransformer.getShort(getObject(parameterIndex));
     }
 
     /**

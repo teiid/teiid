@@ -597,13 +597,6 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         }
     }
 
-    /**
-     * <p>Sets parameter number parameterIndex to an object value
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param an object value to which the parameter value is to be set.
-     * @param int value giving the JDBC type to conver the object to
-     * @throws SQLException, if there is an error setting the parameter value
-     */
     public void setObject(int parameterIndex, Object value, int targetJdbcType) throws SQLException {
 
         Object targetObject = null;

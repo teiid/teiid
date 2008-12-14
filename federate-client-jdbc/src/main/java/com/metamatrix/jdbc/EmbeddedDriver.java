@@ -385,7 +385,6 @@ public final class EmbeddedDriver extends BaseDriver {
                 this.connectionFactory.registerConnectionListener(this.connectionTracker);
             } catch (Exception e) {
                 DriverManager.println(e.getClass() +": "+e.getMessage()); //$NON-NLS-1$
-                DriverManager.println(e.getStackTrace().toString());                
                 throw new EmbeddedSQLException(e);                
             } finally {
                 Thread.currentThread().setContextClassLoader(current);

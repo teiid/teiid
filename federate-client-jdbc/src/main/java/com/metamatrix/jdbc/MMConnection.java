@@ -111,7 +111,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
     private boolean readOnly = false;
     
     private boolean disableLocalTransactions = false;
-    protected ClientSideDQP dqp;
+    private ClientSideDQP dqp;
     protected ServerConnection serverConn;
     
     /**
@@ -194,6 +194,10 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         this.propInfo = info;
         
         this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
+    }
+    
+    ClientSideDQP getDQP() {
+    	return this.dqp;
     }
     
     /**

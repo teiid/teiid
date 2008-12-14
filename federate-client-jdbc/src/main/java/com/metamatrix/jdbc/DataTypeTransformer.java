@@ -57,39 +57,49 @@ final class DataTypeTransformer {
     	return transform(value, BigDecimal.class, "BigDecimal"); //$NON-NLS-1$
     }
     
-    static final <T> T transform(Object value, Class<T> type, String typeName) throws SQLException {
+    private static final <T> T transform(Object value, Class<T> type, String typeName) throws SQLException {
     	return transform(value, type, type, typeName);
     }
     
-    static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType, String typeName) throws SQLException {
+    private static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType, String typeName) throws SQLException {
     	if (value == null || targetType.isAssignableFrom(value.getClass())) {
     		return (T)value;
     	}
     	try {
     		return (T)DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), runtimeType);
     	} catch (TransformationException e) {
-    		String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", value, typeName); //$NON-NLS-1$
+    		String valueStr = value.toString();
+    		if (valueStr.length() > 20) {
+    			valueStr = valueStr.substring(0, 20) + "..."; //$NON-NLS-1$
+    		}
+    		String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", valueStr, typeName); //$NON-NLS-1$
             throw MMSQLException.create(e, msg);
     	} 
     }
     
     /**
-     * Gets an object value and transforms it into a java.lang.Boolean object.
+     * Gets an object value and transforms it into a boolean
      * @param value, the object to be transformed
      * @return a Boolean object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Boolean getBoolean(Object value) throws SQLException {
+    static final boolean getBoolean(Object value) throws SQLException {
+    	if (value == null) {
+    		return false;
+    	}
     	return transform(value, Boolean.class, "Boolean"); //$NON-NLS-1$
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Byte object.
+     * Gets an object value and transforms it into a byte
      * @param value, the object to be transformed
      * @return a Byte object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Byte getByte(Object value) throws SQLException {
+    static final byte getByte(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Byte.class, "Byte"); //$NON-NLS-1$
     }
     
@@ -125,52 +135,67 @@ final class DataTypeTransformer {
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Double object.
+     * Gets an object value and transforms it into a double
      * @param value, the object to be transformed
-     * @return a Doublr object
+     * @return a Double object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Double getDouble(Object value) throws SQLException {
+    static final double getDouble(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Double.class, "Double"); //$NON-NLS-1$
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Float object.
+     * Gets an object value and transforms it into a float
      * @param value, the object to be transformed
      * @return a Float object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Float getFloat(Object value) throws SQLException {
+    static final float getFloat(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Float.class, "Float"); //$NON-NLS-1$
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Integer object.
+     * Gets an object value and transforms it into a integer
      * @param value, the object to be transformed
      * @return a Integer object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Integer getInteger(Object value) throws SQLException {
+    static final int getInteger(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Integer.class, "Integer"); //$NON-NLS-1$
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Long object.
+     * Gets an object value and transforms it into a long
      * @param value, the object to be transformed
      * @return a Long object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Long getLong(Object value) throws SQLException {
+    static final long getLong(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Long.class, "Long"); //$NON-NLS-1$
     }
 
     /**
-     * Gets an object value and transforms it into a java.lang.Short object.
+     * Gets an object value and transforms it into a short
      * @param value, the object to be transformed
      * @return a Short object
      * @throws SQLException if failed to transform to the desired datatype
      */
-    static final Short getShort(Object value) throws SQLException {
+    static final short getShort(Object value) throws SQLException {
+    	if (value == null) {
+    		return 0;
+    	}
     	return transform(value, Short.class, "Short"); //$NON-NLS-1$
     }
 
@@ -194,6 +219,10 @@ final class DataTypeTransformer {
      */
     static final Timestamp getTimestamp(Object value) throws SQLException {
     	return transform(value, Timestamp.class, "Timestamp"); //$NON-NLS-1$
+    }
+    
+    static final String getString(Object value) throws SQLException {
+    	return transform(value, String.class, "String"); //$NON-NLS-1$
     }
 
     /**
