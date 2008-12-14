@@ -142,12 +142,7 @@ public class VMRegistryBinding implements Serializable {
     }
 
     public String toString() {
-        try {
-            return "VMRegistryBinding: " + this.vmName + " <" + this.vmID + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return "VMRegistryBinding: " + this.vmName + " <" + this.vmID + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 }
 

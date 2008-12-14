@@ -147,7 +147,7 @@ public class LogonImpl implements ILogon {
 		workContext.setSessionToken(sessionInfo.getSessionToken());
 		workContext.setAppName(sessionInfo.getApplicationName());
 		workContext.setSessionId(sessionInfo.getSessionID());
-		workContext.setTrustedPayload(sessionInfo.getSessionToken().getTrustedToken());
+		workContext.setTrustedPayload(sessionInfo.getTrustedToken());
 		workContext.setUserName(sessionInfo.getUserName());
 		workContext.setVdbName(sessionInfo.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
 		workContext.setVdbVersion(sessionInfo.getProductInfo(ProductInfoConstants.VDB_VERSION));

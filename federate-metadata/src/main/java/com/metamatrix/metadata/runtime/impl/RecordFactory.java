@@ -65,7 +65,7 @@ public class RecordFactory {
      * The version number associated with any index records prior to the point
      * when version information was encoded in newly created records 
      */
-    public static int NONVERSIONED_RECORD_INDEX_VERSION = 0;
+    public static final int NONVERSIONED_RECORD_INDEX_VERSION = 0;
     
     /**
      * The version number that is associated with the change made to change the list
@@ -75,21 +75,21 @@ public class RecordFactory {
      * to {@link com.metamatrix.modeler.core.index.IndexConstants.PROP_DELIMITER}.  Added 07/22/2004.
      * @release 4.1.1
      */
-    public static int DELIMITER_INDEX_VERSION = 1;
+    public static final int DELIMITER_INDEX_VERSION = 1;
     
     /**
      * The version number that is associated with the change made to add materialization
      * property on tables. Added 08/18/2004.
      * @release 4.2
      */
-    public static int TABLE_MATERIALIZATION_INDEX_VERSION = 2;
+    public static final int TABLE_MATERIALIZATION_INDEX_VERSION = 2;
 
     /**
      * The version number that is associated with the change made to add native type
      * property on columns. Added 08/24/2004.
      * @release 4.2
      */
-    public static int COLUMN_NATIVE_TYPE_INDEX_VERSION = 3;
+    public static final int COLUMN_NATIVE_TYPE_INDEX_VERSION = 3;
 
     /**
      * The version number that is associated with the change made to add an input parameter
@@ -98,7 +98,7 @@ public class RecordFactory {
      * Mapping project.   Added 09/29/2004.
      * @release 4.2
      */
-    public static int COLUMN_INPUT_PARAMETER_FLAG_INDEX_VERSION = 4;
+    public static final int COLUMN_INPUT_PARAMETER_FLAG_INDEX_VERSION = 4;
 
     /**
      * The version number that is associated with the change made to remove property value
@@ -106,7 +106,7 @@ public class RecordFactory {
      * as part of the properties index. Added 12/14/2004.
      * @release 4.2
      */
-    public static int ANNOTATION_TAGS_INDEX_VERSION = 5;
+    public static final int ANNOTATION_TAGS_INDEX_VERSION = 5;
 
     /**
      * The version number that is associated with the change made to add uuid for the
@@ -114,33 +114,33 @@ public class RecordFactory {
      * as part of the transformation index. Added 1/13/2005.
      * @release 4.2
      */
-    public static int TRANSFORMATION_UUID_INDEX_VERSION = 6;
+    public static final int TRANSFORMATION_UUID_INDEX_VERSION = 6;
     
     /**
      * The version number that is associated with the change made to add count of null and
      * distinct values for columns on the column records 7/8/2005.
      * @release 4.2
      */
-    public static int COLUMN_NULL_DISTINCT_INDEX_VERSION = 7;
+    public static final int COLUMN_NULL_DISTINCT_INDEX_VERSION = 7;
     
     /**
      * The version number that is associated with the change made to add 
      * primitive type ID on datatype records 02/28/2006.
      * @release 5.0
      */
-    public static int PRIMITIVE_TYPE_ID_INDEX_VERSION = 8;
+    public static final int PRIMITIVE_TYPE_ID_INDEX_VERSION = 8;
     
     /**
      * The version number that is associated with the change made to add 
      * an update count to physical stored and XQuery procedures 04/29/2008.
      * @release 5.0
      */
-    public static int PROCEDURE_UPDATE_COUNT_VERSION = 9;
+    public static final int PROCEDURE_UPDATE_COUNT_VERSION = 9;
 
     /**
      * The version number that is encoded with all newly created index records
      */
-    public static int CURRENT_INDEX_VERSION = PROCEDURE_UPDATE_COUNT_VERSION;
+    public static final int CURRENT_INDEX_VERSION = PROCEDURE_UPDATE_COUNT_VERSION;
 
     // ==================================================================================
     //                      P U B L I C   M E T H O D S

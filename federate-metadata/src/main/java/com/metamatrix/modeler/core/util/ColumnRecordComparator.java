@@ -27,40 +27,21 @@ package com.metamatrix.modeler.core.util;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.modeler.core.metadata.runtime.ColumnRecord;
 
 /**
  */
-public class ColumnRecordComparator implements Comparator, Serializable {
+public class ColumnRecordComparator implements Comparator<ColumnRecord>, Serializable {
 
     /* 
      *  This method compares the objects with respect to their position.
      *  @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
-    public int compare(Object colRec1, Object colRec2) {
-        ArgCheck.isInstanceOf(ColumnRecord.class, colRec1);
-        ArgCheck.isInstanceOf(ColumnRecord.class, colRec2);
-
-        int position1 = ((ColumnRecord)colRec1).getPosition();
-        int position2 = ((ColumnRecord)colRec2).getPosition();
+    public int compare(ColumnRecord colRec1, ColumnRecord colRec2) {
+        int position1 = colRec1.getPosition();
+        int position2 = colRec2.getPosition();
 
         return position1 - position2;
     }
 
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
-            return true;
-        }
-        
-        if(anObject == this) {
-            return true;
-        }
-
-        if(anObject == null || anObject.getClass() != this.getClass()) {
-            return false;
-        }
-
-        return true;
-    }
 }

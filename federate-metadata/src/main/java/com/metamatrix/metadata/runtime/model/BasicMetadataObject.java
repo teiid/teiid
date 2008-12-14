@@ -212,15 +212,7 @@ abstract public class BasicMetadataObject implements MetadataObject, Serializabl
             return true;
         }
 
-        // Check if object can be compared to this one
-        // (this includes checking for null ) ...
-        if ( this.getClass().isInstance(obj) ) {
-
-        	// Do quick hash code check first
-        	if( this.hashCode() != obj.hashCode() ) {
-        		return false;
-		}
-
+        if (obj instanceof BasicMetadataObject) {
             BasicMetadataObject that = (BasicMetadataObject) obj;
             return this.getID().equals( that.getID() );
         }

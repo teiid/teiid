@@ -113,8 +113,7 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
             while(iter.hasNext()) {
                 SingleElementSymbol symbol = (SingleElementSymbol) iter.next();
                 Class type = symbol.getType();
-                String typeName = DataTypeManager.getDataTypeName(type);
-                row.add( getValue(typeName) );
+                row.add( getValue(type) );
             }
         }   
         
@@ -136,7 +135,7 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
     private static final java.sql.Time TIME_VAL = new java.sql.Time(0);
     private static final java.sql.Timestamp TIMESTAMP_VAL = new java.sql.Timestamp(0);
     
-    private Object getValue(String type) {
+    private Object getValue(Class<?> type) {
         if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
             return STRING_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.INTEGER)) {

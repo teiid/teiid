@@ -39,6 +39,10 @@ public class RemoteResultsReceiver implements ResultsReceiver<AtomicResultsMessa
 	private Object stub;
 	private MessageBus messageBus;
 	
+	public RemoteResultsReceiver() {
+		
+	}
+	
 	public RemoteResultsReceiver(MessageBus bus) {
 		this.messageBus = bus;
 	}

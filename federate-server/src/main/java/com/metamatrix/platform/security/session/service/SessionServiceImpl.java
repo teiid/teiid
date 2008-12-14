@@ -277,6 +277,7 @@ public class SessionServiceImpl extends AbstractService implements
         										productName, 
         										properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS), 
         										properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
+        newSession.setTrustedToken(trustedToken);
         if (this.sessionCache.put(newSession.getSessionID(), newSession) != null) {
         	try {
 				this.closeSession(newSession.getSessionID());

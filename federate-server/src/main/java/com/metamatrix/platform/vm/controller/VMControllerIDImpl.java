@@ -59,10 +59,9 @@ public class VMControllerIDImpl implements VMControllerID, Serializable {
 		if(this == obj) {
 			return true;
 		}
-		if(! this.getClass().isInstance(obj)) {
+		if(!(obj instanceof VMControllerID)) {
 			return false;
 		}
-
 		return ((VMControllerID)obj).getID() == getID();
     }
 

@@ -60,7 +60,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     private int rowsProcessed = 0;
     private boolean waitingForData = false;
     private Throwable exception;
-    private boolean supportsImplicitClose;
+    private volatile boolean supportsImplicitClose;
     
     /**
      * Constructor for DataTierTupleSource.

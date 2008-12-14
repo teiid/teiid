@@ -91,7 +91,6 @@ import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.exception.ServiceNotInitializedException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
@@ -180,34 +179,22 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     //=========================================================================
 
     public ConnectorID getConnectorID() throws ServiceStateException {
-        if ( this.connectorMgr == null || this.connectorMgr.getConnectorID() == null ) {
-            throw new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-        }
         return this.connectorMgr.getConnectorID();
     }
     
 	public void cancelRequest(AtomicRequestID request)
 			throws MetaMatrixComponentException {
-    	if (this.connectorMgr == null) {
-    		new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-    	}
     	this.connectorMgr.cancelRequest(request);
 	}
 
 	public void closeRequest(AtomicRequestID request)
 			throws MetaMatrixComponentException {
-    	if (this.connectorMgr == null) {
-    		new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-    	}
     	this.connectorMgr.closeRequest(request);
 	}
 
 	public void executeRequest(AtomicRequestMessage request,
 			ResultsReceiver<AtomicResultsMessage> resultListener)
 			throws MetaMatrixComponentException {
-    	if (this.connectorMgr == null) {
-    		new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-    	}
     	try {
 			this.connectorMgr.executeRequest(resultListener, request);
 		} catch (ApplicationLifecycleException e) {
@@ -217,9 +204,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
 
 	public void requestBatch(AtomicRequestID request)
 			throws MetaMatrixComponentException {
-    	if (this.connectorMgr == null) {
-    		new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-    	}
     	this.connectorMgr.requstMore(request);
 	}
     
@@ -443,9 +427,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
 			Serializable executionPayload,
 			DQPWorkContext message)
 			throws ConnectorException {
-	    if (this.connectorMgr == null) {
-    		new ServiceNotInitializedException(ServerPlugin.Util.getString("ConnectorService.This_connector_service_is_not_yet_ready.")); //$NON-NLS-1$
-    	}
     	return this.connectorMgr.getCapabilities(requestId, executionPayload, message);
     }
     

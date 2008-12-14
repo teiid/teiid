@@ -77,13 +77,10 @@ public class TestAssignmentStatement  extends TestCase {
 		assertEquals("Didn't get the same parts ", s1.getExpression(), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	public void testGetCommand() {
+	public void testGetCommand() throws Exception {
 		AssignmentStatement s2 = sample2();
-		QueryParser parser = new QueryParser();		
-		try {
-			Query query = (Query) parser.parseCommand("Select x from y"); //$NON-NLS-1$
+		Query query = (Query) QueryParser.getQueryParser().parseCommand("Select x from y"); //$NON-NLS-1$
 		assertEquals("Didn't get the same parts ", s2.getCommand(), query); //$NON-NLS-1$
-		} catch(MetaMatrixException e) {}
 	}
 	
 	public void testSelfEquivalence(){

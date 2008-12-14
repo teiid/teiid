@@ -29,9 +29,11 @@ import java.util.EventObject;
 import java.util.Properties;
 
 import org.jgroups.Channel;
+import org.jgroups.ChannelException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.messaging.jgroups.JGroupsMessageBus;
@@ -55,35 +57,31 @@ public class VMMessageBus implements MessageBus {
     // we are not passing in constructor 
     private Channel channel;
     
-    public VMMessageBus() {
+    public VMMessageBus() throws MetaMatrixComponentException {
+        Properties env = null;
+        // when the old messagebus Resource was replaced with the JGroups resource,
+        // the MESSAGE_BUS_TYPE property was moved to the global properties section
+        // however, (HERES THE HACK), CurrentConfiguration.getProperties() does not
+        // allow the system properties to override configuration settings, therefore,
+        // the MESSAGE_BUS_TYPE property could not be overridden with TYPE_NOOP
+        // so were looking at System.getProperty() to force the override
+        String mbType = System.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
         
-        synchronized (lock) {
-            Properties env = null;
-            try {
-                // when the old messagebus Resource was replaced with the JGroups resource,
-                // the MESSAGE_BUS_TYPE property was moved to the global properties section
-                // however, (HERES THE HACK), CurrentConfiguration.getProperties() does not
-                // allow the system properties to override configuration settings, therefore,
-                // the MESSAGE_BUS_TYPE property could not be overridden with TYPE_NOOP
-                // so were looking at System.getProperty() to force the override
-                String mbType = System.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
-                
-                if (mbType == null || mbType.trim().length() == 0) {
-                    env = CurrentConfiguration.getProperties();
-                    mbType = env.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
-                }
-
-                if (mbType != null && mbType.equals(MessageBusConstants.TYPE_NOOP)) {
-                    messageBus = new NoOpMessageBus();
-                } else {
-                    messageBus = new JGroupsMessageBus(channel, eventBroker);
-                }
-                closed = false;
-                    
-            } catch (Exception e) {
-                env = new Properties();
-            }
+        if (mbType == null || mbType.trim().length() == 0) {
+            env = CurrentConfiguration.getProperties();
+            mbType = env.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
         }
+
+        if (mbType != null && mbType.equals(MessageBusConstants.TYPE_NOOP)) {
+            messageBus = new NoOpMessageBus();
+        } else {
+            try {
+				messageBus = new JGroupsMessageBus(channel, eventBroker);
+			} catch (ChannelException e) {
+				throw new MetaMatrixComponentException(e);
+			}
+        }
+        closed = false;
     }
     
     @Inject

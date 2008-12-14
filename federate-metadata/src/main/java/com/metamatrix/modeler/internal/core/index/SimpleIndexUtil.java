@@ -148,7 +148,7 @@ public class SimpleIndexUtil {
         if (pattern == null)
             return true; // null pattern is equivalent to '*'
             
-        String delimiter = new Character(fieldDelimiter).toString();
+        String delimiter = String.valueOf(fieldDelimiter);
         List recordTokens  = StringUtil.split(new String(record),delimiter);
         List patternTokens = StringUtil.split(new String(pattern),delimiter);
         if (patternTokens.size() > recordTokens.size()) {

@@ -565,7 +565,7 @@ public class RuntimeIndexSelector extends AbstractIndexSelector {
      * @see java.lang.Object#finalize()
      * @since 4.2
      */
-    public void finalize() {
+    protected void finalize() {
         this.clearVDB();
     }
 
