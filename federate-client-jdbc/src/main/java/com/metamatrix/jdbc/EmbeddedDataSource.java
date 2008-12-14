@@ -89,7 +89,7 @@ public class EmbeddedDataSource extends BaseDataSource {
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
     
     // The driver used to connect
-    final EmbeddedDriver driver = new EmbeddedDriver();
+    private final transient EmbeddedDriver driver = new EmbeddedDriver();
     
     /**
      * Constructor for EmbeddedDataSource.

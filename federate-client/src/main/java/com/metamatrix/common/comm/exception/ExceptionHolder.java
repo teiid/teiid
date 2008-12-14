@@ -40,6 +40,9 @@ public class ExceptionHolder implements Externalizable {
 	private boolean isProcessingException;
 	private Throwable exception;
 	
+	public ExceptionHolder() {
+	}
+	
 	public ExceptionHolder(Throwable exception) {
 		this.exception = exception;
 		this.isProcessingException = exception instanceof MetaMatrixProcessingException;

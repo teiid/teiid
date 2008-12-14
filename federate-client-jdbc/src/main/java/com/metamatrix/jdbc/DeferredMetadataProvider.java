@@ -80,7 +80,7 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
         this.staticProvider = StaticMetadataProvider.createWithData(columnMetadata, -1, getLogger());    
     }
 
-    private synchronized void loadFullMetadata() throws SQLException {
+    private void loadFullMetadata() throws SQLException {
     	MetadataResult results;
 		try {
 			results = this.statement.getDQP().getMetadata(this.requestID);
