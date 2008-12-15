@@ -45,7 +45,6 @@ import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.AddObject;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
-import com.metamatrix.common.config.ProductReleaseInfoUtil;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -61,6 +60,7 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
+import com.metamatrix.common.config.api.ReleaseInfo;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.SharedResource;
@@ -80,6 +80,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.namedobject.BaseID;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.BuildVersion;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.api.service.ConfigurationServicePropertyNames;
@@ -1292,7 +1293,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an business error occurred within or during communication with the Configuration Service.
      */
     public Collection getProductReleaseInfos() throws ConfigurationException {
-        return ProductReleaseInfoUtil.getProductReleaseInfos();
+    	BuildVersion build = new BuildVersion();
+    	ReleaseInfo info = new ReleaseInfo("Server", build.getReleaseNumber(), build.getBuildDate(), build.getBuildNumber()); //$NON-NLS-1$
+    	List l = new ArrayList();
+    	l.add(info);
+        return l;
     }
 
 
