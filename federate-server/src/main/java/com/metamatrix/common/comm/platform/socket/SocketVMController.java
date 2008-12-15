@@ -33,7 +33,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.server.SocketListener;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefnType;
@@ -46,6 +45,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
@@ -140,12 +140,12 @@ public class SocketVMController extends VMController {
             this.vmName, bindaddress, String.valueOf(socketPort)
         };
         
-        logMessage(CommPlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
+        logMessage(PlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
         workerPool = WorkerPoolFactory.newWorkerPool(SOCKET_WORKER_POOL_NAME, maxThreads, timeToLive);
         try {
             listener = new SocketListener(socketPort, hostaddress, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, SocketHelper.getServerSSLEngine());
         } catch (IOException e) {
-        	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, CommPlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
+        	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 
         }
     }
