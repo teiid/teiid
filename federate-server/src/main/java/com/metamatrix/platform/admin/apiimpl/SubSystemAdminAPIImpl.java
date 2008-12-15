@@ -24,6 +24,7 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
+import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.admin.api.SubSystemAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
@@ -32,20 +33,12 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
  */
 public abstract class SubSystemAdminAPIImpl implements SubSystemAdminAPI {
 
-	private static ThreadLocal<MetaMatrixSessionID> SESSIONID = new ThreadLocal<MetaMatrixSessionID>();
-	
-    /**
+	/**
      * Get The <code>MetaMatrixSessionID</code> for this Connection
      * @return this Session ID
-     * @since 4.3
      */
     protected MetaMatrixSessionID getSessionID() {
-    	return SESSIONID.get();
+    	return DQPWorkContext.getWorkContext().getSessionId();
     }
-    
-    public void setMetaMatrixSessionId(MetaMatrixSessionID matrixSessionID) {
-    	SESSIONID.set(matrixSessionID);
-    }
-
 }
 
