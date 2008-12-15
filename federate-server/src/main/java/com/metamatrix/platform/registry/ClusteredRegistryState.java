@@ -68,14 +68,14 @@ public class ClusteredRegistryState {
 	}
 	
 	private Node addHost(String hostName) {
-		Fqn fqn = Fqn.fromString(hostName);
+		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
 		Node n = this.rootRegistryNode.addChild(fqn);
 		n.put(NAME, hostName);
 		return n;
 	}
 	
 	private Node getHostNode(String hostName) throws NodeNotFoundException {
-		Fqn fqn = Fqn.fromString(hostName);
+		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
 		Node node =  this.rootRegistryNode.getChild(fqn);
 		if (node == null) {
 			throw new NodeNotFoundException("Host Node not found");	 //$NON-NLS-1$
@@ -85,7 +85,7 @@ public class ClusteredRegistryState {
 	
 	private Node addVMNode(String hostName, String vmName) {
 		Node hostNode = addHost(hostName);
-		Fqn fqn = Fqn.fromString(vmName);
+		Fqn fqn = Fqn.fromString(vmName.toUpperCase());
 		Node n =  hostNode.addChild(fqn);
 		n.put(NAME, vmName);
 		return n;
@@ -93,7 +93,7 @@ public class ClusteredRegistryState {
 	
 	private Node getVMNode(String hostName, String vmName) throws NodeNotFoundException {
 		Node hostNode = getHostNode(hostName);
-		Node vmNode = hostNode.getChild(Fqn.fromString(vmName));
+		Node vmNode = hostNode.getChild(Fqn.fromString(vmName.toUpperCase()));
 		if (vmNode == null) {
 			throw new NodeNotFoundException("VM Node not found"); //$NON-NLS-1$
 		}
@@ -114,7 +114,7 @@ public class ClusteredRegistryState {
 	protected void removeVM(String hostName, String vmName) {
 		try {
 			Node hostNode = getHostNode(hostName);
-			hostNode.removeChild(Fqn.fromString(vmName));
+			hostNode.removeChild(Fqn.fromString(vmName.toUpperCase()));
 		} catch (NodeNotFoundException e) {
 			// this is OK, this is already gone.
 		}

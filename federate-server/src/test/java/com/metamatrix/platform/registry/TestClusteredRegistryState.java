@@ -48,7 +48,6 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 
 public class TestClusteredRegistryState extends TestCase {
 	Cache cache;
@@ -64,6 +63,10 @@ public class TestClusteredRegistryState extends TestCase {
 		cache.stop();
 	}
 	
+	private Fqn buildKey(String key) {
+		return Fqn.fromString(key.toUpperCase());
+	}
+	
 	public void testAddVM() {		
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
 		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
@@ -77,12 +80,12 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertEquals(rootNode.getChildren().size(), 2);
-		assertNotNull(rootNode.getChild(Fqn.fromString("host-1"))); //$NON-NLS-1$
-		assertNotNull(rootNode.getChild(Fqn.fromString("host-2"))); //$NON-NLS-1$
-		assertNotNull(rootNode.getChild(Fqn.fromString("host-2")).getChild(Fqn.fromString("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(buildKey("host-1"))); //$NON-NLS-1$
+		assertNotNull(rootNode.getChild(buildKey("host-2"))); //$NON-NLS-1$
+		assertNotNull(rootNode.getChild(buildKey("host-2")).getChild(buildKey("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-		assertEquals(rootNode.getChild(Fqn.fromString("host-1")).get("Name"), "host-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals(rootNode.getChild(Fqn.fromString("host-1")).getChild(Fqn.fromString("vm-1")).get("Name"), "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		assertEquals(rootNode.getChild(buildKey("host-1")).get("Name"), "host-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-1")).get("Name"), "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
 	public void testRemoveVM() {
@@ -101,9 +104,9 @@ public class TestClusteredRegistryState extends TestCase {
 		
 		state.removeVM("host-1", "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		assertNull(rootNode.getChild(Fqn.fromString("host-1")).getChild(Fqn.fromString("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
-		assertNotNull(rootNode.getChild(Fqn.fromString("host-1")).getChild(Fqn.fromString("vm-2"))); //$NON-NLS-1$ //$NON-NLS-2$
-		assertNotNull(rootNode.getChild(Fqn.fromString("host-2")).getChild(Fqn.fromString("vm-1")));		 //$NON-NLS-1$ //$NON-NLS-2$
+		assertNull(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-2"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(buildKey("host-2")).getChild(buildKey("vm-1")));		 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testGetVMs() throws Exception {
@@ -144,9 +147,9 @@ public class TestClusteredRegistryState extends TestCase {
 		buildRegistry();
 		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
 		
-		assertEquals(2, rootNode.getChild(Fqn.fromString("host-1/vm-1/Services")).getData().size()); //$NON-NLS-1$
-		assertEquals(1, rootNode.getChild(Fqn.fromString("host-1/vm-2/Services")).getData().size()); //$NON-NLS-1$
-		assertEquals(3, rootNode.getChild(Fqn.fromString("host-2/vm-1/Services")).getData().size()); //$NON-NLS-1$
+		assertEquals(2, rootNode.getChild(new Fqn(buildKey("host-1/vm-1"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(1, rootNode.getChild(new Fqn(buildKey("host-1/vm-2"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(3, rootNode.getChild(new Fqn(buildKey("host-2/vm-1"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	ClusteredRegistryState buildRegistry() throws ResourceAlreadyBoundException {
@@ -251,7 +254,7 @@ public class TestClusteredRegistryState extends TestCase {
 	
 	public void testUpdate() {
 		Node rootNode = cache.getRoot();
-		Node n = rootNode.addChild(Fqn.fromString("test")); //$NON-NLS-1$
+		Node n = rootNode.addChild(buildKey("test")); //$NON-NLS-1$
 		n.put("x", new Foo()); //$NON-NLS-1$
 		
 		Foo f = (Foo)n.get("x"); //$NON-NLS-1$
@@ -267,7 +270,7 @@ public class TestClusteredRegistryState extends TestCase {
 	
 	
 	static VMRegistryBinding buildVMRegistryBinding(String hostName, int vmID) {
-	    VMControllerID vmID1 = new VMControllerIDImpl(vmID, hostName);             
+	    VMControllerID vmID1 = new VMControllerID(vmID, hostName);             
 	    HostID hostID1 = new HostID(hostName); 
 	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, "process1");  //$NON-NLS-1$
 	    VMComponentDefn defn1 = new BasicVMComponentDefn(Configuration.NEXT_STARTUP_ID, hostID1, defnID1, new ComponentTypeID(VMComponentDefnType.COMPONENT_TYPE_NAME)); 
