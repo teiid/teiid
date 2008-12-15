@@ -52,7 +52,6 @@ import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 import com.metamatrix.server.query.service.QueryService;
 
 @CacheListener
@@ -106,7 +105,7 @@ public class FakeRegistryUtil {
 	
 	
 	public static VMRegistryBinding buildVMRegistryBinding(String hostName, int vmID, String process) throws Exception {
-	    VMControllerID vmID1 = new VMControllerIDImpl(vmID, hostName);             
+	    VMControllerID vmID1 = new VMControllerID(vmID, hostName);             
 	    HostID hostID1 = new HostID(hostName); 
 	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, process);  
 	    VMComponentDefn defn1 = new BasicVMComponentDefn(Configuration.NEXT_STARTUP_ID, hostID1, defnID1, new ComponentTypeID(VMComponentDefnType.COMPONENT_TYPE_NAME)); 
