@@ -363,7 +363,7 @@ public class JConsole extends JScrollPane
 		}
 
 		// Found one completion (possibly what we already have)
-		if ( complete.length == 1 && !complete.equals(part) ) {
+		if ( complete.length == 1 && !complete[0].equals(part) ) {
 			String append = complete[0].substring(part.length());
 			append( append );
 			return;
