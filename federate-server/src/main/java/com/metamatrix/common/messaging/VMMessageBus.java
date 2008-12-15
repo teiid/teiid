@@ -53,11 +53,8 @@ public class VMMessageBus implements MessageBus {
 
     private EventBroker eventBroker = new AsynchEventBroker("VMMessageBus"); //$NON-NLS-1$
     
-    // this value gets injected using the setter method. Since we can create a NoOP bus, 
-    // we are not passing in constructor 
-    private Channel channel;
-    
-    public VMMessageBus() throws MetaMatrixComponentException {
+    @Inject
+    public VMMessageBus(Channel channel) throws MetaMatrixComponentException {
         Properties env = null;
         // when the old messagebus Resource was replaced with the JGroups resource,
         // the MESSAGE_BUS_TYPE property was moved to the global properties section
@@ -84,11 +81,6 @@ public class VMMessageBus implements MessageBus {
         closed = false;
     }
     
-    @Inject
-    void setChannel(Channel channel) {
-    	this.channel = channel;
-    }
-
     public void addListener(Class eventClass, EventObjectListener listener) throws MessagingException {
         synchronized (lock) {
 	    	if (closed) {

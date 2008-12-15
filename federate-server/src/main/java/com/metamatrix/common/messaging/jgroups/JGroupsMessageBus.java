@@ -75,7 +75,7 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 	}
 
 	public static final String MESSAGE_KEY = "MessageKey"; //$NON-NLS-1$
-	public static final int REMOTE_TIMEOUT = 30000; //$NON-NLS-1$
+	public static final int REMOTE_TIMEOUT = 30000; 
 		
 	private Channel channel;
 	private PullPushAdapter adapter;
@@ -90,7 +90,7 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 	}
 
 	private synchronized void initChannel() throws ChannelException {
-		if (channel != null && channel.isOpen()) {
+		if (channel == null || !channel.isOpen()) {
 			return;
 		}
 		adapter = new PullPushAdapter(channel);
