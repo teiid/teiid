@@ -118,4 +118,12 @@ public interface SecurityMessagesKeys {
     public static final String SEC_UTIL_0001 = "ERR.014.607.0001"; //$NON-NLS-1$
     public static final String SEC_UTIL_0002 = "ERR.014.607.0002"; //$NON-NLS-1$
     public static final String SEC_UTIL_0003 = "ERR.014.607.0003"; //$NON-NLS-1$
+    
+	public static final String SEC_MEMBERSHIP_0013 = "ERR.014.407.0013"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0014 = "ERR.014.407.0014"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0015 = "ERR.014.407.0015"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0016 = "ERR.014.407.0016"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0017 = "ERR.014.407.0017"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0018 = "ERR.014.407.0018"; //$NON-NLS-1$
+	public static final String SEC_MEMBERSHIP_0019 = "ERR.014.407.0019"; //$NON-NLS-1$
 }

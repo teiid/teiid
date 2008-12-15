@@ -26,8 +26,42 @@ package com.metamatrix.platform.vm.controller;
 
 import java.io.Serializable;
 
-public interface VMControllerID extends Serializable {
-    public String getHostName();
-    public long getID();
+public class VMControllerID implements Serializable {
+    
+	private long id;
+    private String hostName;
+
+    public VMControllerID(long id, String hostName) {
+        this.id = id;
+        this.hostName = hostName.toUpperCase();
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public long getID() {
+        return id;
+    }
+
+    public String toString() {
+        return "VMControllerID<"+id+">:"+hostName; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public boolean equals(Object obj) {
+		if(this == obj) {
+			return true;
+		}
+		if(!(obj instanceof VMControllerID)) {
+			return false;
+		}
+		return ((VMControllerID)obj).getID() == getID();
+    }
+
+    public int hashCode() {
+        return (int) this.id;
+    }
 }
+
+
 

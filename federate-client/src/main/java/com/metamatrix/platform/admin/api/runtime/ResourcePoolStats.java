@@ -29,53 +29,91 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.metamatrix.common.config.api.ResourceDescriptorID;
+import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
+import com.metamatrix.common.pooling.impl.BasicResourcePoolStatistics;
 
 /**
  * Statistics an information about a particular Resource Pool that can be
  * displayed in a Table.
  */
-public interface ResourcePoolStats extends Serializable {
+public class ResourcePoolStats implements Serializable {
+
+    private BasicResourcePoolStatistics poolStats;
+    private String hostName;
+    private String processName;
+    private Collection resourcesStats;
+    private ResourceDescriptorID id;
+
+
+    public ResourcePoolStats(ResourcePoolStatistics statistics, ResourceDescriptorID id, String host, String process, Collection resStats) {
+        this.poolStats = (BasicResourcePoolStatistics) statistics;
+        this.id = id;
+        this.hostName = host;
+        this.processName = process;
+        this.resourcesStats = resStats;
+
+    }
 
     /**
      * The Pool name.
      * @return The name of the Pool.
      */
-    String getPoolName();
+    public String getPoolName() {
+        return this.poolStats.getResourceDescriptorID().getName();
+        // dont return the parent name 
+    //    return this.poolStats.getResourceDescriptorID().getFullName();
+    }
 
     /**
      * The Host name for this Pool.
      * @return The Host name on which this Pool is running.
      */
-    String getHostName();
+    public String getHostName() {
+        return this.hostName;
+    }
 
     /**
      * The Process name for this Pool.
      * @return The Process name in which this Pool is running.
      */
-    String getProcessName();
+    public String getProcessName() {
+        return this.processName;
+    }
 
     /**
      * The Resource Pool's type.
      * @return The type name for this Resource Pool.
      */
-    String getPoolType();
+    public String getPoolType() {
+        return this.poolStats.getComponentTypeID().getName();
+    }
 
     /**
-     * The Map of (String)StatisticName->(Object)StatisticValue available
-     * for this Pool.
+     * The Map of (String)StatisticName->(Object){@link com.metamatrix.common.pooling.api.PoolStatistic}
+     * available for this Pool.
      * @return The Map of all statistics available for this Pool.
      */
-    Map getPoolStatistics();
+    public Map getPoolStatistics(){
+        try {
+            return poolStats.getStatistics();
+        } catch (Exception e) {
+        }
+        return null;
+    }
 
     /**
      * Collection of ResourceStatistics objects for all resources in the pool.
      * @return Collection of all resource statistics available for this Pool.
      */
-    Collection getResourcesStatistics();
+    public Collection getResourcesStatistics() {
+        return this.resourcesStats;
+    }
 
     /**
      * Return the ResourceDescriptorID that identifies the pool
      * @return ResourceDescriptorID
      */
-    ResourceDescriptorID getID();
+    public ResourceDescriptorID getID() {
+        return id;
+    }
 }

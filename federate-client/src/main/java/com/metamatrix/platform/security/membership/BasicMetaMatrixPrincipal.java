@@ -25,13 +25,15 @@
 package com.metamatrix.platform.security.membership;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.metamatrix.api.exception.security.InvalidSessionException;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.util.ErrorMessageKeys;
+import com.metamatrix.platform.security.api.SecurityMessagesKeys;
+import com.metamatrix.platform.security.api.SecurityPlugin;
 
 public class BasicMetaMatrixPrincipal implements MetaMatrixPrincipal, Serializable {
 
@@ -51,14 +53,14 @@ public class BasicMetaMatrixPrincipal implements MetaMatrixPrincipal, Serializab
      */
     public BasicMetaMatrixPrincipal( String name, int type, Set groupNames) {
         if ( name == null || name.trim().length() == 0 ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0013));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0013));
         }
         if ( name.trim().length() > NAME_LEN_LIMIT ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0014,
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0014,
                                                 NAME_LEN_LIMIT));
         }
         if ( type < TYPE_USER || type > TYPE_ADMIN ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0015));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0015));
         }
         this.name = name;
         this.type = type;
@@ -84,7 +86,7 @@ public class BasicMetaMatrixPrincipal implements MetaMatrixPrincipal, Serializab
      */
     protected BasicMetaMatrixPrincipal( BasicMetaMatrixPrincipal obj ) {
         if ( obj == null ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0016));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0016));
         }
         this.type = obj.getType();
         this.name = obj.getName();
@@ -182,14 +184,14 @@ public class BasicMetaMatrixPrincipal implements MetaMatrixPrincipal, Serializab
     public static MetaMatrixPrincipal merge( MetaMatrixPrincipal p1, MetaMatrixPrincipal p2 )
     throws InvalidSessionException {
         if ( p1 == null || p2 == null ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0017));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0017));
         }
         if ( p1.getType() != p2.getType() ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0018, TYPE_NAMES[p1.getType()], TYPE_NAMES[p2.getType()]));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0018, TYPE_NAMES[p1.getType()], TYPE_NAMES[p2.getType()]));
         }
 
         if ( ! p1.getName().equals( p2.getName() ) ) {
-            throw new InvalidSessionException(ErrorMessageKeys.SEC_MEMBERSHIP_0019, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0019, p1.getName(),
+            throw new InvalidSessionException(SecurityMessagesKeys.SEC_MEMBERSHIP_0019, SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_MEMBERSHIP_0019, p1.getName(),
                             p2.getName() ));
         }
 
