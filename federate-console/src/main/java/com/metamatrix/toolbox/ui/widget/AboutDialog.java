@@ -52,7 +52,7 @@ public class AboutDialog extends DialogWindow {
     /**
      * @since 2.0
      */
-    public static void show(final Component parent, final String licenseId, final String licenseVersion) {
+    public static void show(final Component parent) {
         Window owner;
         if (parent instanceof Window) {
             owner = (Window)parent;
@@ -61,9 +61,9 @@ public class AboutDialog extends DialogWindow {
         }
         AboutDialog dlg;
         if (owner instanceof Frame) {
-            dlg = new AboutDialog((Frame)owner, licenseId, licenseVersion);
+            dlg = new AboutDialog((Frame)owner);
         } else if (owner instanceof Dialog) {
-            dlg = new AboutDialog((Dialog)owner, licenseId, licenseVersion);
+            dlg = new AboutDialog((Dialog)owner);
         } else {
             throw new IllegalArgumentException(ToolboxPlugin.Util.getString("AboutDialog.Parent_parameter_must_be_within_a_Dialog_(_2") + Dialog.class + ToolboxPlugin.Util.getString("AboutDialog.)_or_Frame_(_3") + //$NON-NLS-1$ //$NON-NLS-2$
                                                Frame.class + ")"); //$NON-NLS-1$
@@ -102,16 +102,16 @@ public class AboutDialog extends DialogWindow {
      * @param owner    The window that displayed the dialog
      * @since 2.0
      */
-    public AboutDialog(final Frame owner, final String licenseId, final String licenseVersion) {
-        super(owner, TITLE, new AboutPanel(licenseId, licenseVersion));
+    public AboutDialog(final Frame owner) {
+        super(owner, TITLE, new AboutPanel());
     }
 
     /**
      * @param owner    The window that displayed the dialog
      * @since 2.0
      */
-    public AboutDialog(final Dialog owner, final String licenseId, final String licenseVersion) {
-        super(owner, TITLE, new AboutPanel(licenseId, licenseVersion));
+    public AboutDialog(final Dialog owner) {
+        super(owner, TITLE, new AboutPanel());
     }
     
     /**

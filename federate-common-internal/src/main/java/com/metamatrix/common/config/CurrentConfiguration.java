@@ -524,22 +524,6 @@ public final class CurrentConfiguration {
 
 
     /**
-     * Obtain the List of {@link com.metamatrix.common.config.api.ReleaseInfo} objects
-     * which represent the installed products of the system.  Each ReleaseInfo contains
-     * the name of the product, as well as release info.
-     * @return Collection of {@link com.metamatrix.common.config.api.ReleaseInfo}
-     * objects of licensed, installed products.
-     * @throws ConfigurationException if an business error occurred within or during communication with the Configuration Service.
-     * @throws UnsupportedOperationException if this method is not implemented
-     * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
-     * implementation
-     */
-    public static Collection getProductReleaseInfos() throws ConfigurationException {
-        check();
-        return ProductReleaseInfoUtil.getProductReleaseInfos();
-    }
-
-    /**
      * Returns a <code>Collection</code> of type <code>ComponentType</code> .
      * that are flagged as being monitored.  A component of this type is considered
      * to be available for monitoring statistics.

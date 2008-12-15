@@ -61,15 +61,15 @@ public class SplashWindow extends JWindow {
     /**
      * @since 2.0
      */
-    public SplashWindow(final String licenseId, final String licenseVersion) {
-        this(null, licenseId, licenseVersion);
+    public SplashWindow() {
+        this(null);
     }
     
     /**
      * @since 2.0
      */
-    public SplashWindow(final String message, final String licenseId, final String licenseVersion) {
-        initializeSplashWindow(message, licenseId, licenseVersion);
+    public SplashWindow(final String message) {
+        initializeSplashWindow(message);
     }
     
     //############################################################################################################################
@@ -79,11 +79,11 @@ public class SplashWindow extends JWindow {
     /**
      * @since 2.0
      */
-    protected void initializeSplashWindow(String message, final String licenseId, final String licenseVersion) {
+    protected void initializeSplashWindow(String message) {
         if (message == null) {
             message = " ";
         }
-        splashPanel = new SplashPanel(licenseId, licenseVersion);
+        splashPanel = new SplashPanel();
         final JPanel statusPanel = new JPanel(null);
         statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS));
         final UIDefaults dflts = UIDefaults.getInstance();

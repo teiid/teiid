@@ -1872,16 +1872,6 @@ public final class ConfigurationManager
         configs.clear();
 
         try {
-/*                
-            Method[] ms = api.getClass().getMethods();
-            int l = ms.length;
-            for (int i=0; i<l; i++) {
-                Method m = ms[i];
-                System.out.println(m.getName());
-                
-            }
-            
- */ 
             ConfigurationModelContainer nextStartUp = getAPI().getConfigurationModel(Configuration.NEXT_STARTUP);
             if (nextStartUp == null) {
                 LogManager.logCritical(
@@ -1972,7 +1962,6 @@ public final class ConfigurationManager
         fireConfigurationChange(
             new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,
                                          this));
-//        refreshProducts();
         refreshConfigs();
         refreshHosts();
         refreshDeployedHosts();
@@ -1999,37 +1988,6 @@ public final class ConfigurationManager
             }
         }
     }
-
-//    private void refreshProducts()
-//        throws ExternalException {
-//
-//        products.clear();
-//
-//        try {
-//            Collection prods = api.getAllProductTypes(false);
-//            if ((prods == null) || (prods.isEmpty())) {
-//                LogManager.logCritical(
-//                    LogContexts.CONFIG,
-//                    "ConfigurationManager.refreshProducts:" + //$NON-NLS-1$
-//                        "No products found or is null."); //$NON-NLS-1$
-//            } else {
-//                Iterator prodItr = prods.iterator();
-//                while (prodItr.hasNext()) {
-//                    ProductType product = (ProductType)prodItr.next();
-//                    LogManager.logDetail(
-//                        LogContexts.CONFIG,
-//                        "ConfigurationManager.refreshProducts:" + //$NON-NLS-1$
-//                            "Adding Product:" + product); //$NON-NLS-1$
-//                    products.put(product.getID(), product);
-//                }
-//            }
-//        } catch (Exception theException) {
-//            theException.printStackTrace();
-//            throw new ExternalException(
-//                formatErrorMsg("refreshProducts", theException), //$NON-NLS-1$
-//                theException);
-//        }
-//    }
 
     /**
      * Removes the given listener from those being notified.

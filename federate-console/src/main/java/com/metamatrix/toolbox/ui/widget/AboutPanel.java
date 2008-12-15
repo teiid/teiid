@@ -53,8 +53,8 @@ public class AboutPanel extends DialogPanel {
     /**
      * @since 2.0
      */
-    public AboutPanel(final String licenseId, final String licenseVersion) {
-        initializeAboutPanel(licenseId, licenseVersion);
+    public AboutPanel() {
+        initializeAboutPanel();
     }
     
     //############################################################################################################################
@@ -71,11 +71,11 @@ public class AboutPanel extends DialogPanel {
     /**
      * @since 2.0
      */
-    protected void initializeAboutPanel(final String licenseId, final String licenseVersion) {
+    protected void initializeAboutPanel() {
         final ApplicationInfo info = ApplicationInfo.getInstance();
         final String url = info.getMainComponent().getAboutURL();
         
-        final SplashPanel panel = new SplashPanel(licenseId, licenseVersion);
+        final SplashPanel panel = new SplashPanel();
         final JLabel label = new JLabel("<html><a href='" + url + "'>" + url + "</a></html>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         label.addMouseListener(new MouseAdapter() {
         	Cursor prevCursor = null;

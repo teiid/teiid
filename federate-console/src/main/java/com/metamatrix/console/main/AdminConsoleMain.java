@@ -38,12 +38,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -132,18 +130,6 @@ public final class AdminConsoleMain {
             throw new RuntimeException(e.getMessage());
         }
 		setLogLevelAndDiscardedLogContexts();
-		try {
-            ApplicationInfo info = ApplicationInfo.getInstance();
-            info.setMainComponent("console.jar"); //$NON-NLS-1$
-            info.addComponent("metamatrix-server.jar"); //$NON-NLS-1$
-            info.markUnmodifiable();
-        } catch ( ComponentNotFoundException e ) {
-            e.printStackTrace();
-            LogManager.logError(LogContexts.GENERAL, e, getClass() + ":init"); //$NON-NLS-1$
-        } catch ( IllegalStateException e ) {
-            e.printStackTrace();
-            LogManager.logError(LogContexts.GENERAL, e, getClass() + ":init"); //$NON-NLS-1$
-        }
 
 		java.util.List /*<String>*/ urls = getURLNames();
         ConsoleLogin logon = new ConsoleLogin(urls, true, null);
@@ -247,7 +233,7 @@ public final class AdminConsoleMain {
 	    	splash.getContentPane().add(panel);
 	    	splash.pack();
 	    } else {
-	        splash = new SplashWindow("", ""); //$NON-NLS-1$ //$NON-NLS-2$
+	        splash = new SplashWindow();
 	    }
 	    
         splash.setLocation(StaticUtilities.centerFrame(splash.getSize()));

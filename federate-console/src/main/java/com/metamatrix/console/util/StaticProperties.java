@@ -40,6 +40,7 @@ import java.util.Vector;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ApplicationInfo;
+import com.metamatrix.core.util.BuildVersion;
 import com.metamatrix.toolbox.preference.UserPreferences;
 
 /**
@@ -143,13 +144,13 @@ public class StaticProperties {
     private static boolean useLastURLAsDefault = true;
     private static int numUDDIRegistries = -1;
 
-
+    static BuildVersion build = new BuildVersion();
     public static String getVersions() {
-        return ApplicationInfo.getInstance().getMainComponent().getLicenseVersion();
+        return build.getReleaseNumber();
     }
 
     public static String getBuild() {
-        return ApplicationInfo.getInstance().getMainComponent().getBuildNumber();
+        return build.getBuildNumber();
     }
 
     public StaticProperties() {

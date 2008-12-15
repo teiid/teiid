@@ -38,8 +38,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.metamatrix.common.properties.TextManager;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.BuildVersion;
 import com.metamatrix.toolbox.ui.UIDefaults;
 
 /**
@@ -82,9 +82,9 @@ public class SplashPanel extends JPanel {
     /**
      * @since 2.0
      */
-    public SplashPanel(final String licenseId, final String licenseVersion) {
+    public SplashPanel() {
         super(null);
-        initializeSplashPanel(licenseId, licenseVersion);
+        initializeSplashPanel();
     }
     
     //############################################################################################################################
@@ -171,7 +171,7 @@ public class SplashPanel extends JPanel {
     /**
      * @since 2.0
      */
-    protected void initializeSplashPanel(final String licenseId, final String licenseVersion) {
+    protected void initializeSplashPanel() {
         final TextManager textMgr = TextManager.INSTANCE;
         final UIDefaults dflts = UIDefaults.getInstance();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -179,28 +179,22 @@ public class SplashPanel extends JPanel {
         final Icon banner = dflts.getIcon(BANNER_PROPERTY);
         wth = banner.getIconWidth();
         add(new JLabel(banner));
-        final Font font = dflts.getFont("normalFont");
+        final Font font = dflts.getFont("normalFont"); //$NON-NLS-1$
         int margin = getFontMetrics(font).getHeight();
-        final ApplicationInfo.Component comp = ApplicationInfo.getInstance().getMainComponent();
-        final String name = comp.getTitle();
-        validateProperty(name, APPLICATION_NAME_PROPERTY);
-        final String version = comp.getReleaseNumber();
-        validateProperty(version, VERSION_NUMBER_PROPERTY);
-        final String build = comp.getBuildNumber();
-        validateProperty(build, BUILD_NUMBER_PROPERTY);
-        final String copyright = comp.getCopyright();
-        validateProperty(copyright, "Copyright");
+        String name = "Console"; //$NON-NLS-1$
+        BuildVersion build = new BuildVersion();
+        validateProperty(name, APPLICATION_NAME_PROPERTY); 
+        validateProperty(build.getReleaseNumber(), VERSION_NUMBER_PROPERTY);
+        validateProperty(build.getBuildNumber(), BUILD_NUMBER_PROPERTY);
+        validateProperty(build.getCopyright(), "Copyright"); //$NON-NLS-1$
         JPanel panel = new JPanel(null);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(getBackground());
         panel.setBorder(BorderFactory.createEmptyBorder(margin, 0, margin, 0));
         Color color = dflts.getColor(FOREGROUND_COLOR_PROPERTY);
         addLabels(panel, name, color, dflts.getFont(NAME_FONT_PROPERTY), 0);
-        addLabels(panel, textMgr.getText(VERSION_PROPERTY, version, build), color, font, 0);
-        final String desc = comp.getDescription();
-        if (desc != null  &&  desc.trim().length() > 0) {
-            addLabels(panel, desc, color, font, margin);
-        }
+        addLabels(panel, textMgr.getText(VERSION_PROPERTY, build.getReleaseNumber(), build), color, font, 0);
+
         add(panel);
         add(new JLabel(dflts.getIcon(IMAGE_PROPERTY)));
         panel = new JPanel(null);
@@ -209,7 +203,7 @@ public class SplashPanel extends JPanel {
         color = dflts.getColor(LEGAL_TEXT_FOREGROUND_COLOR_PROPERTY);
         margin /= 2;
         panel.setBorder(BorderFactory.createEmptyBorder(margin, 0, margin, 0));
-        addLabels(panel, textMgr.getText(COPYRIGHT_PROPERTY, copyright), color,
+        addLabels(panel, textMgr.getText(COPYRIGHT_PROPERTY, build.getCopyright()), color,
                   font.deriveFont((float)font.getSize() - 1), 0);
         addLabels(panel, textMgr.translate(TRADEMARK_PROPERTY), color, font.deriveFont((float)font.getSize() - 2), margin);
         addLabels(panel, textMgr.translate(PENALTY_NOTICE_PROPERTY), color, font.deriveFont((float)font.getSize() - 3), margin);
