@@ -63,7 +63,6 @@ import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
-import com.metamatrix.platform.admin.apiimpl.runtime.ResourcePoolStatsImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
@@ -80,7 +79,6 @@ import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 import com.metamatrix.platform.vm.controller.VMStatistics;
 
 public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements RuntimeStateAdminAPI {
@@ -1226,7 +1224,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
             ResourcePoolStatistics stats = mgr.getResourcePoolStatistics(descriptorID);
             Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
             String processName = this.helper.getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-            ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
+            ResourcePoolStats poolStats = new ResourcePoolStats(stats, stats.getResourceDescriptorID(),
                                                                     binding.getID().getHostName(),
                                                                     processName, resStats);
 
@@ -1356,7 +1354,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         throws AuthorizationException,InvalidSessionException, MetaMatrixComponentException {
         
         AdminAPIHelper.validateSession(getSessionID());
-        VMControllerID vmID = new VMControllerIDImpl(id, hostName);
+        VMControllerID vmID = new VMControllerID(id, hostName);
         String result = null;
         Iterator vmIter = getVMControllerBindings().iterator();
         while (vmIter.hasNext()) {

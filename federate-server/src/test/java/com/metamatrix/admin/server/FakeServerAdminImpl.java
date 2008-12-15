@@ -38,7 +38,7 @@ import com.metamatrix.platform.security.api.service.AuthorizationServiceInterfac
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
+import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
 
@@ -91,7 +91,7 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
     
     protected synchronized QueryServiceInterface getQueryServiceProxy() throws ServiceException {
         if (fqs == null) {
-            fqs = new FakeQueryService(new ServiceID(1, new VMControllerIDImpl(2, "dummy"))); //$NON-NLS-1$
+            fqs = new FakeQueryService(new ServiceID(1, new VMControllerID(2, "dummy"))); //$NON-NLS-1$
         }
         return fqs; 
     }

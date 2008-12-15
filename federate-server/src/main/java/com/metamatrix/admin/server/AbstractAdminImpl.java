@@ -86,7 +86,6 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 import com.metamatrix.server.admin.apiimpl.RuntimeMetadataHelper;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
@@ -453,7 +452,7 @@ public class AbstractAdminImpl {
     
     protected void shutDownConnectorBinding(MMConnectorBinding binding, boolean stopNow) throws AdminException {
             
-        VMControllerID vmControllerID = new VMControllerIDImpl(binding.getProcessID(), binding.getHostName()); 
+        VMControllerID vmControllerID = new VMControllerID(binding.getProcessID(), binding.getHostName()); 
         ServiceID serviceID = new ServiceID(binding.getServiceID(), vmControllerID);
         
         try {

@@ -41,7 +41,6 @@ import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 
 
 /** 
@@ -199,7 +198,7 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.isEmpty());
         
-        VMControllerID vmId = new VMControllerIDImpl(2, "2.2.2.2"); //$NON-NLS-1$
+        VMControllerID vmId = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
         try {
 			ServiceRegistryBinding binding = admin.registry.getServiceBinding(vmId.getHostName(), vmId.toString(), new ServiceID(2,vmId));
 			binding.updateState(ConnectorBinding.STATE_CLOSED);

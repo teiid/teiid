@@ -61,7 +61,6 @@ import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 
 /**
  * @since 4.3
@@ -163,7 +162,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                     
                     expectedServiceNames.addAll(getServiceNamesFromConfiguration(hostName, processName, bindingName));
                     
-                    VMControllerID vmControllerID = new VMControllerIDImpl(binding.getProcessID(), hostName); 
+                    VMControllerID vmControllerID = new VMControllerID(binding.getProcessID(), hostName); 
                     
                     ServiceID serviceID = new ServiceID(binding.getServiceID(), vmControllerID);
                     
@@ -272,7 +271,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 expectedServiceNames.addAll(getServiceNamesFromConfiguration(hostName, processName, bindingName));
     
                 
-                VMControllerID vmControllerID = new VMControllerIDImpl(binding.getProcessID(), hostName); 
+                VMControllerID vmControllerID = new VMControllerID(binding.getProcessID(), hostName); 
                 ServiceID serviceID = new ServiceID(binding.getServiceID(), vmControllerID);
                 
                 getRuntimeStateAdminAPIHelper().stopService(serviceID, stopNow);
@@ -331,7 +330,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 
         try {
             MMProcess process = (MMProcess) processes.iterator().next();
-            VMControllerID vmControllerID = new VMControllerIDImpl(process.getProcessID(), process.getHostName()); 
+            VMControllerID vmControllerID = new VMControllerID(process.getProcessID(), process.getHostName()); 
 
             getRuntimeStateAdminAPIHelper().stopProcess(vmControllerID, stopNow);
             

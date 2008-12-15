@@ -48,7 +48,6 @@ import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 
 class ServerGuiceModule extends AbstractModule {
 
@@ -81,7 +80,7 @@ class ServerGuiceModule extends AbstractModule {
 			e.printStackTrace();
 		}
 		
-		bind(VMControllerID.class).to(VMControllerIDImpl.class).in(Scopes.SINGLETON);
+		bind(VMControllerID.class).toInstance(new VMControllerID(vmID, host.getFullName()));
 		bind(Channel.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);

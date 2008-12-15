@@ -57,7 +57,6 @@ import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
-import com.metamatrix.platform.admin.apiimpl.runtime.ResourcePoolStatsImpl;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
@@ -65,7 +64,6 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMControllerIDImpl;
 import com.metamatrix.platform.vm.controller.VMStatistics;
 import com.metamatrix.server.connector.service.ConnectorService;
 import com.metamatrix.server.query.service.QueryService;
@@ -149,7 +147,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         statistics1.addStatistic(new SumStat("stat1", "stat1", "stat1", BasicPoolStatistic.SUM_AGGREGATE_TYPE)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         statistics1.addStatistic(new SumStat("stat2", "stat2", "stat2", BasicPoolStatistic.SUM_AGGREGATE_TYPE)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
-        ResourcePoolStats stats1 = new ResourcePoolStatsImpl(statistics1, (ResourceDescriptorID) resourceDescriptor1.getID(), 
+        ResourcePoolStats stats1 = new ResourcePoolStats(statistics1, (ResourceDescriptorID) resourceDescriptor1.getID(), 
                                                              "1.1.1.1", "process1",  //$NON-NLS-1$ //$NON-NLS-2$ 
                                                              new ArrayList());
         statsList.add(stats1);
@@ -160,7 +158,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         ResourceDescriptor resourceDescriptor2 = configuration.getResourcePool("pool2"); //$NON-NLS-1$
         pool2.init(resourceDescriptor2);
         ResourcePoolStatistics statistics2 = new BasicResourcePoolStatistics(pool2);
-        ResourcePoolStats stats2 = new ResourcePoolStatsImpl(statistics2, (ResourceDescriptorID) resourceDescriptor2.getID(),
+        ResourcePoolStats stats2 = new ResourcePoolStats(statistics2, (ResourceDescriptorID) resourceDescriptor2.getID(),
                                                              "2.2.2.2", "process2", //$NON-NLS-1$ //$NON-NLS-2$
                                                              new ArrayList()); 
         statsList.add(stats2);
@@ -262,11 +260,11 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     public List getServices() throws MetaMatrixComponentException {
         List results = new ArrayList();
         
-        VMControllerID vmControllerID2 = new VMControllerIDImpl(2, "2.2.2.2"); //$NON-NLS-1$
+        VMControllerID vmControllerID2 = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
         ServiceID serviceID2 = new ServiceID(2, vmControllerID2);
         results.add(serviceID2);
         
-        VMControllerID vmControllerID3 = new VMControllerIDImpl(3, "3.3.3.3"); //$NON-NLS-1$
+        VMControllerID vmControllerID3 = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
         ServiceID serviceID3 = new ServiceID(3, vmControllerID3);
         results.add(serviceID3);
         
@@ -293,14 +291,14 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         List hosts = new ArrayList();
         
         List processes2 = new ArrayList();   
-        VMControllerID vmControllerID1 = new VMControllerIDImpl(2, "2.2.2.2"); //$NON-NLS-1$
+        VMControllerID vmControllerID1 = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
         ProcessData process2 = new ProcessData(vmControllerID1, null, "2.2.2.2", new ArrayList(), "process2", "31000", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes2.add(process2);        
         HostData host2 = new HostData("2.2.2.2", processes2, true, true); //$NON-NLS-1$
         hosts.add(host2);
 
         List processes3 = new ArrayList();        
-        VMControllerID vmControllerID3 = new VMControllerIDImpl(3, "3.3.3.3"); //$NON-NLS-1$
+        VMControllerID vmControllerID3 = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
         ProcessData process3 = new ProcessData(vmControllerID3, null, "3.3.3.3", new ArrayList(), "process3", "31001", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes3.add(process3);        
         HostData host3 = new HostData("3.3.3.3", processes3, true, true); //$NON-NLS-1$

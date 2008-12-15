@@ -60,7 +60,6 @@ import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.admin.api.runtime.SystemStateBuilder;
-import com.metamatrix.platform.admin.apiimpl.runtime.ResourcePoolStatsImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
@@ -533,7 +532,7 @@ public class RuntimeStateAdminAPIHelper {
                 ResourcePoolStatistics stats = (ResourcePoolStatistics)iter.next();
                 Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
                 String processName = getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-                ResourcePoolStats poolStats = new ResourcePoolStatsImpl(stats, stats.getResourceDescriptorID(),
+                ResourcePoolStats poolStats = new ResourcePoolStats(stats, stats.getResourceDescriptorID(),
                                                                         binding.getID().getHostName(),
                                                                         processName, resStats);
 
