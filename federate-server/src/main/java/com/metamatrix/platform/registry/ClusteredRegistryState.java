@@ -27,6 +27,7 @@ package com.metamatrix.platform.registry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.cache.Cache;
@@ -257,8 +258,10 @@ public class ClusteredRegistryState {
 			else if (hostName != null && vmName != null) {
 				Node vmNode = getVMNode(hostName, vmName);
 			    Node services = vmNode.addChild(Fqn.fromString(SERVICES));
-			    
-			    list.addAll(services.getData().values());
+				Map m = services.getData();
+				synchronized (m) {
+					list.addAll(m.values());
+				}			    
 			}
 		} catch (NodeNotFoundException e) {
 			// this OK, this should not happen however in error return the empty list.
@@ -322,7 +325,11 @@ public class ClusteredRegistryState {
 			else if (hostName != null && vmName != null) {
 				Node vmNode = getVMNode(hostName, vmName);
 				Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
-				list.addAll(resources.getData().values());
+				
+				Map m = resources.getData();
+				synchronized (m) {
+					list.addAll(m.values());
+				}
 			}
 		} catch (NodeNotFoundException e) {
 			// this is Ok, just return the empty list.
