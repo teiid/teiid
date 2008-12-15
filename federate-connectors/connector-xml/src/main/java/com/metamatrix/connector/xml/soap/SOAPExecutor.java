@@ -81,7 +81,6 @@ public class SOAPExecutor extends RequestResponseDocumentProducer {
 	
 	SOAPEnvelope envelope = new SOAPEnvelope(SOAPConstants.SOAP11_CONSTANTS);
 	SecurityToken secToken;
-	SOAPBody requestDoc;
 	
 	public SOAPExecutor(SOAPConnectorState state, XMLExecution execution) throws ConnectorException {
         super((XMLConnectorState)state, execution);
@@ -136,7 +135,7 @@ public class SOAPExecutor extends RequestResponseDocumentProducer {
 			secToken.handleSecurity(call);
 			
 			Message message = new Message(envelope);
-			attemptConditionalLog("XML Connector Framework: request body set to: " + envelope.getBody().getValue()); //$NON-NLS-1$
+			attemptConditionalLog("XML Connector Framework: request body set to: " + envelope.getBody().toString()); //$NON-NLS-1$
 			getLogger().logDetail("XML Connector Framework: request created"); //$NON-NLS-1$
 			SOAPEnvelope response = call.invoke(message);
 			SOAPBody responseBody = response.getBody();
@@ -224,10 +223,13 @@ public class SOAPExecutor extends RequestResponseDocumentProducer {
         cacheKey.append("|");
         cacheKey.append(getExecution().getConnection().getQueryId());
         cacheKey.append("|");
-        cacheKey.append("|");
         cacheKey.append(buildUriString());
         cacheKey.append("|"); //$NON-NLS-1$
-        cacheKey.append(requestDoc);
+        try {
+			cacheKey.append(envelope.getBody().toString());
+		} catch (SOAPException e) {
+			throw new ConnectorException(e.getMessage());
+		}
         return cacheKey.toString();
 	}
 
