@@ -202,7 +202,7 @@ public class DataTierManagerImpl implements DataTierManager {
 
         int existsCode = this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context);
         if(existsCode == CodeTableCache.CACHE_EXISTS ) {
-            return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue);
+            return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
         } else if(existsCode == CodeTableCache.CACHE_NOT_EXIST ) {
         	String failureKey = codeTableName.toLowerCase();
         	CodeTableFailure failure = codeTableCacheFailures.get(failureKey);
@@ -268,7 +268,7 @@ public class DataTierManagerImpl implements DataTierManager {
             throw new ComponentNotAvailableException(e, msg);
         }
 
-        int nodeId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, requestID);
+        int nodeId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, requestID, context);
         final AtomicRequestMessage aqr = createRequest(context.getProcessorID(), query, modelName, nodeId);
         this.executeRequest(aqr, aqr.getConnectorID(), new ResultsReceiver<AtomicResultsMessage>() {
 

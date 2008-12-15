@@ -89,7 +89,7 @@ class CodeTableCache {
         //     If no, return CACHE_OVERLOAD
         
         // Create a CacheKey
-        CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement);
+        CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
         
 		if (cacheKeyDone.contains(cacheKey)) { // CacheKey exists in codeTableCache
 			return CodeTableCache.CACHE_EXISTS;
@@ -125,9 +125,9 @@ class CodeTableCache {
      * @param requestID Request ID
      * @param nodeID Plan Node ID
      */
-    public int createCacheRequest(String codeTable, String returnElement, String keyElement, RequestID requestID) {
+    public int createCacheRequest(String codeTable, String returnElement, String keyElement, RequestID requestID, CommandContext context) {
         // Create a cache key
-		CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement);
+		CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
 		int result = this.requestSequence.getAndDecrement();
 		RequestKey requestKey = new RequestKey(requestID, result);
 		
@@ -185,11 +185,11 @@ class CodeTableCache {
      * @param keyValue Input key value
      * @return Object of return value in code table cache
      */ 
-    public synchronized Object lookupValue(String codeTable, String returnElement, String keyElement, Object keyValue) throws MetaMatrixComponentException {
+    public synchronized Object lookupValue(String codeTable, String returnElement, String keyElement, Object keyValue, CommandContext context) throws MetaMatrixComponentException {
 		Object returnValue = null;
 		        
         // Create CacheKey
-        CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement);
+        CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
 
         // Find the corresponding data map in cache for the cache key
         Map dataMap = (Map) codeTableCache.get(cacheKey);
@@ -277,18 +277,24 @@ class CodeTableCache {
         private String codeTable;
         private String returnElement;
         private String keyElement;
+        private String vdbName;
+        private String vdbVersion;
         
         private int hashCode;
         
-        public CacheKey(String codeTable, String returnElement, String keyElement) {
+        public CacheKey(String codeTable, String returnElement, String keyElement, String vdbName, String vdbVersion) {
             this.codeTable = codeTable;
             this.returnElement = returnElement;
             this.keyElement = keyElement;
+            this.vdbName = vdbName;
+            this.vdbVersion = vdbVersion;
             
             // Compute hash code and cache it
             hashCode = HashCodeUtil.hashCode(0, codeTable);
             hashCode = HashCodeUtil.hashCode(hashCode, returnElement);
-            hashCode = HashCodeUtil.hashCode(hashCode, keyElement);                                    
+            hashCode = HashCodeUtil.hashCode(hashCode, keyElement);   
+            hashCode = HashCodeUtil.hashCode(hashCode, vdbName);
+            hashCode = HashCodeUtil.hashCode(hashCode, vdbVersion);
         }
         
         public String getCodeTable() {
@@ -311,18 +317,15 @@ class CodeTableCache {
             if(this == obj) {
                 return true;                
             }
-            if(obj == null) {
-                return false;
-            }
-            
             if(obj instanceof CacheKey) {
                 CacheKey other = (CacheKey) obj;
                 
                 return (other.hashCode() == hashCode() &&
                     this.codeTable.equals(other.codeTable) &&
                     this.returnElement.equals(other.returnElement) && 
-                    this.keyElement.equals(other.keyElement));
-                                        
+                    this.keyElement.equals(other.keyElement) &&
+                    this.vdbName.equals(other.vdbName) &&
+                    this.vdbVersion.equals(other.vdbVersion));
             }
             return false;
         }
