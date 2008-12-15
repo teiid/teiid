@@ -52,6 +52,7 @@ import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.common.vdb.api.VDBInfo;
+import com.metamatrix.common.vdb.api.VDBStreamImpl;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ConfigurationManager;
@@ -172,7 +173,7 @@ public class CreateVDBPanel extends WizardInterfaceImpl {
     private VdbWizardUserAndPasswordPanel upPanel = null;
     private VdbWizardSaveMaterializationFilesPanel savePanel = null;
     private VdbWizardWrittenMaterializationFilesPanel matFilesPanel = null;
-    private boolean importing;
+    private boolean importing = true;
     private boolean creatingNewVDBVersion = false; // else creating new VDB
     private VirtualDatabase sourceVirtualDatabase;
     private MaterializationLoadScripts scripts = null;
@@ -1425,6 +1426,7 @@ public class CreateVDBPanel extends WizardInterfaceImpl {
 			vdb.setName(newVDBName);
 
 			vdbDefn = vdb.getConfigurationDef();
+			vdbDefn.setVDBStream(new VDBStreamImpl(file));
 			if (vdb.getVDBValidityErrors() != null) {
 			    StaticUtilities.displayModalDialogWithOK("VDB.DEF Processing Error", "VDB " + vdb.getName() + " is at a nondeployable severity state of " +  VDBStatus.VDB_STATUS_NAMES[vdb.getStatus()]); 
 			    return false;
@@ -1462,10 +1464,9 @@ public class CreateVDBPanel extends WizardInterfaceImpl {
         int i = 0;
         for (Iterator it = mdls.iterator(); it.hasNext();) {
             ModelInfo me = (ModelInfo)it.next();
-            int v = Integer.parseInt(me.getVersion());
             int numBindings = me.getConnectorBindingNames().size();
             boolean multipleSourceEditable = (me.supportsMultiSourceBindings() && (numBindings <= 1));
-            visInfo[i] = new ModelVisibilityInfo(me.getName(), v, me.getModelTypeName(), me.isVisible(),
+            visInfo[i] = new ModelVisibilityInfo(me.getName(),me.getModelTypeName(), me.isVisible(),
                                                  me.supportsMultiSourceBindings(), multipleSourceEditable,
                                                  me.isMultiSourceBindingEnabled());
             ++i;

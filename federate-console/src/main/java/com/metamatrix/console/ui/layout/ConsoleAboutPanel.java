@@ -66,8 +66,8 @@ public class ConsoleAboutPanel extends AboutPanel {
     /**
      * @since 2.0
      */
-    public ConsoleAboutPanel(final String licenseId, final String licenseVersion) {
-        super(licenseId, licenseVersion);
+    public ConsoleAboutPanel() {
+        super();
     }
     
     //############################################################################################################################
@@ -84,7 +84,7 @@ public class ConsoleAboutPanel extends AboutPanel {
     /**
      * @since 2.0
      */
-    protected void initializeAboutPanel(final String licenseId, final String licenseVersion) {
+    protected void initializeAboutPanel() {
         final ApplicationInfo info = ApplicationInfo.getInstance();
         //final String url = ConsolePlugin.Util.getString("ConsoleAboutPanel.url");  //$NON-NLS-1$
         final String alternateSplash = ConsolePlugin.Util.getString("Console.alternateSplash");  //$NON-NLS-1$
@@ -106,7 +106,7 @@ public class ConsoleAboutPanel extends AboutPanel {
             layout.setConstraints(urlPnl, new GridBagConstraints(0, 1, 1, 1, 0.0,0.0,
                     GridBagConstraints.SOUTH, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
         } else {
-        	panel = new SplashPanel(licenseId,licenseVersion);
+        	panel = new SplashPanel();
             panel.add(urlPnl);
         }
         

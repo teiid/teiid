@@ -37,7 +37,7 @@ import com.metamatrix.toolbox.ui.widget.table.DefaultTableModel;
 public class NewVDBWizardModelVisibilityTable extends TableWidget {
     public final static int NUM_COLUMNS = 4;
     public final static int NAME_COLUMN_NUM = 0;
-    public final static String NAME = "Name";
+    public final static String NAME = "Name"; //$NON-NLS-1$
     public final static int TYPE_COLUMN_NUM = 1;
     public final static int VISIBILITY_COLUMN_NUM = 2;
     public final static int MULTIPLE_SOURCE_COLUMN_NUM = 3;
@@ -84,7 +84,7 @@ public class NewVDBWizardModelVisibilityTable extends TableWidget {
         ModelVisibilityInfo[] updatedInfo = new ModelVisibilityInfo[info.length];
         for (int i = 0; i < updatedInfo.length; i++) {
             updatedInfo[i] = new ModelVisibilityInfo(info[i].getModelName(),
-                    info[i].getModelVersion(), info[i].getModelType(),
+                    info[i].getModelType(),
                     model.publicCheckedForRow(i), info[i].isMultipleSourceEligible(),
                     info[i].isMultipleSourceFlagEditable(), 
                     model.multipleSourceCheckedForRow(i));

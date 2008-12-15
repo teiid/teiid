@@ -26,25 +26,22 @@ package com.metamatrix.console.ui.views.vdb;
 
 /**
  * NOTE-- despite the name of ModelVisiblityInfo, this class has been expanded to include
- * the instance variables 'multipleSourceEligible' and 'hasMultipleSources, respecitively
+ * the instance variables 'multipleSourceEligible' and 'hasMultipleSources, respectively
  * indicating whether or not the model can have and does have multiple sources.  
- * BWP 01/18/05
  */
 public class ModelVisibilityInfo {
     private String modelName;
-    private int modelVersion;
     private String modelType;
     private boolean visible;
     private boolean multipleSourceEligible; //input information
     private boolean multipleSourceFlagEditable; //input information
     private boolean multipleSourcesSelected; //output information
 
-    public ModelVisibilityInfo(String name, int version, String type,
+    public ModelVisibilityInfo(String name, String type,
             boolean vis, boolean multSourceEligible, boolean multSourceFlagEditable,
             boolean multSourcesSelected) {
         super();
         modelName = name;
-        modelVersion = version;
         modelType = type;
         visible = vis;
         multipleSourceEligible = multSourceEligible;
@@ -54,10 +51,6 @@ public class ModelVisibilityInfo {
 
     public String getModelName() {
         return modelName;
-    }
-
-    public int getModelVersion() {
-        return modelVersion;
     }
 
     public String getModelType() {

@@ -125,7 +125,6 @@ public class VdbMainPanel extends BasePanel implements
 
     private ConnectionInfo connection;
 
-    private PanelAction actionRedeployVDB;
     private PanelAction actionImportVDB;
     private PanelAction actionExportVDB;
     private PanelAction actionEditConnBind;
@@ -179,7 +178,6 @@ public class VdbMainPanel extends BasePanel implements
     private VdbEntitlementsPanel pnlEntitlements;
     private javax.swing.JTabbedPane tpnDetails;
 
-    private ButtonWidget btnRedeployVDB;
     private ButtonWidget btnImportVDB;
     private ButtonWidget btnExportVDB;
     // private ButtonWidget btnChangeStatus;
@@ -252,9 +250,6 @@ public class VdbMainPanel extends BasePanel implements
         pnlEntitlements = new VdbEntitlementsPanel(connection);
         javax.swing.JPanel pnlMaterialization = new MaterializationPanel(connection);
         javax.swing.JPanel pnlOps = new javax.swing.JPanel();
-        btnRedeployVDB = new ButtonWidget();
-        setup(MenuEntry.ACTION_MENUITEM, btnRedeployVDB, actionRedeployVDB);
-        actionRedeployVDB.setEnabled(false);
         btnImportVDB = new ButtonWidget();
         setup(MenuEntry.ACTION_MENUITEM, btnImportVDB, actionImportVDB);
         actionImportVDB.setEnabled(bCanModify);
@@ -311,18 +306,9 @@ public class VdbMainPanel extends BasePanel implements
         gridBagConstraints1.weighty = 1.0;
         add(splitMain, gridBagConstraints1);
 
-        javax.swing.JPanel mbrpanel = new javax.swing.JPanel();
-        TitledBorder tBorder = new TitledBorder("MetaBase Repository"); //$NON-NLS-1$
-        tBorder.setTitleJustification(TitledBorder.LEFT);
-        tBorder.setTitleFont(tBorder.getTitleFont().deriveFont(Font.BOLD));
-        mbrpanel.setBorder(tBorder);
-
-        mbrpanel.setLayout(new FlowLayout());
-        mbrpanel.add(btnRedeployVDB);
-
         javax.swing.JPanel filepanel = new javax.swing.JPanel();
 
-        tBorder = new TitledBorder("File"); //$NON-NLS-1$
+        TitledBorder tBorder = new TitledBorder("File"); //$NON-NLS-1$
         tBorder.setTitleJustification(TitledBorder.LEFT);
         tBorder.setTitleFont(tBorder.getTitleFont().deriveFont(Font.BOLD));
         filepanel.setBorder(tBorder);
@@ -333,7 +319,6 @@ public class VdbMainPanel extends BasePanel implements
 
         pnlOps.setLayout(new java.awt.GridLayout(1, 2, 3, 0));
 
-        pnlOps.add(mbrpanel);
         pnlOps.add(filepanel);
 
         gridBagConstraints1 = new java.awt.GridBagConstraints();
@@ -399,7 +384,6 @@ public class VdbMainPanel extends BasePanel implements
         addActionToList(MenuEntry.ACTION_MENUITEM, actionDeleteVdb);
 
         // load popup action array
-        arylPopupActions.add(actionRedeployVDB);
         arylPopupActions.add(actionImportVDB);
         arylPopupActions.add(actionExportVDB);
         arylPopupActions.add(actionEditConnBind);
@@ -1091,7 +1075,6 @@ public class VdbMainPanel extends BasePanel implements
             setEnabledForDeleteAction();
             actionExportVDB.setEnabled(true);
         } else {
-            actionRedeployVDB.setEnabled(false);
             actionDeleteVdb.setEnabled(false);
             actionChangeStatus.setEnabled(false);
             actionChangeDefaultStatus.setEnabled(false);
@@ -1204,7 +1187,6 @@ public class VdbMainPanel extends BasePanel implements
     }
 
     private void updateDetailForTableDeselection() {
-        actionRedeployVDB.setEnabled(false);
         actionExportVDB.setEnabled(false);
         actionChangeStatus.setEnabled(false);
         actionChangeDefaultStatus.setEnabled(false);
@@ -1231,7 +1213,6 @@ public class VdbMainPanel extends BasePanel implements
 
     public void postRealize() {
         splitMain.setDividerLocation(0.50);
-        // int iLoc =
         splitMain.getDividerLocation();
         if (tblVdb.getRowCount() > 0) {
             tblVdb.setRowSelectionInterval(0, 0);

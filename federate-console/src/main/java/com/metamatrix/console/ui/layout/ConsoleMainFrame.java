@@ -381,7 +381,7 @@ public class ConsoleMainFrame extends JFrame implements ConsoleMenuBarListener,
 
     public void aboutItemSelected() {
         String title = ConsolePlugin.Util.getString("ConsoleAboutDialog.title"); //$NON-NLS-1$
-        AboutDialog.show(this, title, new ConsoleAboutPanel("", "")); //$NON-NLS-1$ //$NON-NLS-2$
+        AboutDialog.show(this, title, new ConsoleAboutPanel());
     }
 
 	public void addConnectionItemSelected() {

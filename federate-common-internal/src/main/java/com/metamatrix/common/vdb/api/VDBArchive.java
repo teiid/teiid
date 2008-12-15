@@ -152,7 +152,7 @@ public class VDBArchive {
 			// check if the data roles file is available, if found load it.
 			InputStream rolesStream = getStream(VdbConstants.DATA_ROLES_FILE, archive);
 			if (rolesStream != null) {
-				File rolesFile = new File(this.tempDirectory.getPath(), Math.abs(RANDOM.nextLong())+"_roles.xml");
+				File rolesFile = new File(this.tempDirectory.getPath(), Math.abs(RANDOM.nextLong())+"_roles.xml"); //$NON-NLS-1$
                 FileUtils.write(rolesStream, rolesFile);
                 rolesStream.close();
                 this.dataRoles = FileUtil.read(new FileReader(rolesFile)).toCharArray();
@@ -236,14 +236,14 @@ public class VDBArchive {
 	
 		
 	private File getTempName(String ext) {
-		File parent = new File(this.tempDirectory.getPath()+File.separator+"workspace");
+		File parent = new File(this.tempDirectory.getPath()+File.separator+"workspace");//$NON-NLS-1$
 		parent.mkdirs();
-		return new File(parent, Math.abs(RANDOM.nextLong())+"."+ext);
+		return new File(parent, Math.abs(RANDOM.nextLong())+"."+ext); //$NON-NLS-1$
 	}
 	
 	private void open() {
 		if (!open) {
-			this.tempDirectory = new TempDirectory(FileUtils.TEMP_DIRECTORY+File.separator+"metamatrix", System.currentTimeMillis(), RANDOM.nextLong());
+			this.tempDirectory = new TempDirectory(FileUtils.TEMP_DIRECTORY+File.separator+"federate", System.currentTimeMillis(), RANDOM.nextLong()); //$NON-NLS-1$
 			this.tempDirectory.create();
 			open = true;
 		}
@@ -251,7 +251,7 @@ public class VDBArchive {
 	
 	private void checkOpen() {
 		if(!open) {
-			throw new IllegalStateException("Archive already closed");
+			throw new IllegalStateException("Archive already closed"); //$NON-NLS-1$
 		}
 	}
 	
@@ -275,7 +275,11 @@ public class VDBArchive {
 	 * @throws IOException
 	 */
 	public void updateConfigurationDef(BasicVDBDefn vdbDef) throws IOException {
-		File f = getTempName("xml");
+		if (vdbDef == null) {
+			return;
+		}
+		
+		File f = getTempName("xml"); //$NON-NLS-1$
 		DEFReaderWriter writer = new DEFReaderWriter();
 		
 		FileOutputStream fos = new FileOutputStream(f);
@@ -302,22 +306,23 @@ public class VDBArchive {
 	 * @throws IOException
 	 */
 	public void updateRoles(char[] roles) throws IOException {
-		
-		checkOpen();
-		
-		File f = getTempName("bin");
-		FileWriter fw = new FileWriter(f);	
-		fw.write(roles);
-		fw.close();
-		
-		InputStream in = null;
-		try {
-			in = new FileInputStream(f);		
-			ZipFileUtil.replace(this.vdbFile, VdbConstants.DATA_ROLES_FILE, in);
-		} finally {
-			in.close();
-			f.delete();
-		}			
+		if (roles != null && roles.length > 0) {
+			checkOpen();
+			
+			File f = getTempName("bin"); //$NON-NLS-1$
+			FileWriter fw = new FileWriter(f);	
+			fw.write(roles);
+			fw.close();
+			
+			InputStream in = null;
+			try {
+				in = new FileInputStream(f);		
+				ZipFileUtil.replace(this.vdbFile, VdbConstants.DATA_ROLES_FILE, in);
+			} finally {
+				in.close();
+				f.delete();
+			}	
+		}
 	}
 
 	
@@ -418,7 +423,7 @@ public class VDBArchive {
 		// make sure this is one of ours
 		if (this.pathsInArchive.contains(pathInVdb)) {
 		
-	        String entry = StringUtil.getLastToken(pathInVdb, "/");
+	        String entry = StringUtil.getLastToken(pathInVdb, "/"); //$NON-NLS-1$
 	        // index files should not be visible
 			if( entry.endsWith(VdbConstants.INDEX_EXT) || entry.endsWith(VdbConstants.SEARCH_INDEX_EXT)) {
 				return true;
@@ -462,6 +467,6 @@ public class VDBArchive {
 	}	
 	
 	public String toString() {
-		return getName()+"_"+getVersion();
+		return getName()+"_"+getVersion(); //$NON-NLS-1$
 	}
 }

@@ -234,7 +234,11 @@ public class VdbManager extends Manager {
     }
 
     public VirtualDatabase getLatestVDBVersion(String vdbName) throws Exception {
-        return ModelManager.getRuntimeMetadataAPI(getConnection()).getLatestVirtualDatabase(vdbName);
+        try {
+			return ModelManager.getRuntimeMetadataAPI(getConnection()).getLatestVirtualDatabase(vdbName);
+		} catch (Exception e) {
+			return null;
+		}
     }
 
     public Object[] importVDB(VDBArchive vdbArchive, boolean importRoles) throws Exception {
