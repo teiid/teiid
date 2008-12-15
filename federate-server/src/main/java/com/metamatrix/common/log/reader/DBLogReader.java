@@ -191,7 +191,12 @@ public class DBLogReader implements LogReader {
                 String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0023);
                 throw new MetaMatrixException(msg);                
             }
-            pwd = CryptoUtil.stringDecrypt(password);
+            if (CryptoUtil.isValueEncrypted(password)) {
+            	pwd = CryptoUtil.stringDecrypt(password);
+            }
+            else {
+            	pwd = password;
+            }
         } catch (CryptoException e) {
             String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0024);
             throw new MetaMatrixException(msg);                
