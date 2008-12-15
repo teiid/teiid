@@ -24,29 +24,83 @@
 
 package com.metamatrix.cdk.api;
 
+import java.util.Date;
+
+import com.metamatrix.data.api.ConnectorLogger;
+
 /**
  * ConnectorLogger that prints output to System.out.
  */
-public class SysLogger extends BaseLogger {
+public class SysLogger implements ConnectorLogger {
 	
-	private boolean shouldLog;
+	public static final int OFF = 0;
+    public static final int ERROR = 1;
+    public static final int WARNING = 2;
+    public static final int INFO = 3;
+    public static final int DETAIL = 4;
+    public static final int TRACE = 5;
 	
+    private int logLevel = INFO;
+
 	public SysLogger() {
-		this(true);
+		
 	}
 	
 	public SysLogger(boolean shouldLog) {
-		this.shouldLog = shouldLog;
+		if (shouldLog) {
+			this.logLevel = TRACE;
+		} else {
+			this.logLevel = OFF;
+		}
 	}
 
     protected void log(int level, String message, Throwable error) {
-    	if (!shouldLog) {
-    		return;
+    	if (level <= this.logLevel) {
+	        System.out.println(getCurrentTimestampString() + " " + message); //$NON-NLS-1$
+	        if(error != null) {
+	            error.printStackTrace(System.out);
+	        }
     	}
-        System.out.println(getCurrentTimestampString() + " " + message); //$NON-NLS-1$
-        if(error != null) {
-            error.printStackTrace(System.out);
-        }
+    }
+    
+    public int getLevel() {
+        return this.logLevel; 
+    }
+    
+    public void setLevel(int level) {
+        this.logLevel = level;
+    }
+
+    protected Date getCurrentTimestamp() {
+        return new Date();
+    }
+    
+    protected String getCurrentTimestampString() {
+        return getCurrentTimestamp().toString();
+    }
+    
+    public void logError(String message) {
+        log(ERROR, message, null);
+    }
+
+    public void logError(String message, Throwable error) {
+        log(ERROR, message, error);
+    }
+
+    public void logWarning(String message) {
+        log(WARNING, message, null);
+    }
+
+    public void logInfo(String message) {
+        log(INFO, message, null);
+    }
+
+    public void logDetail(String message) {
+        log(DETAIL, message, null);
+    }
+
+    public void logTrace(String message) {
+        log(TRACE, message, null);
     }
 
 }

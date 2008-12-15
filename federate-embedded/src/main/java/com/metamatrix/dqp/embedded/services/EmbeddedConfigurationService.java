@@ -581,7 +581,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         VDBArchive vdb = getVDB(vdbName, version);
         
         BasicVDBDefn def = vdb.getConfigurationDef();
-        if (binding != null && vdb != null) {
+        if (binding != null && def != null) {
             // Get the model from the VDB, note that we are referencing BasicModelInfo
             // this is implementation of the ModelInfo class.             
             BasicModelInfo model = (BasicModelInfo)def.getModel(modelName);
@@ -1249,7 +1249,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 throw new MetaMatrixRuntimeException(e);
             }
         }
-        throw new MetaMatrixRuntimeException("bad configuration"+ file); //$NON-NLS-1$
+        throw new MetaMatrixRuntimeException("bad configuration"); //$NON-NLS-1$
     }
     
     URL getFullyQualifiedPath(URL context, String file){
@@ -1263,7 +1263,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 throw new MetaMatrixRuntimeException(e);
             }
         }
-        throw new MetaMatrixRuntimeException("bad configuration"+ file); //$NON-NLS-1$
+        throw new MetaMatrixRuntimeException("bad configuration"); //$NON-NLS-1$
     }    
         
     void initializeEncryption() throws ApplicationInitializationException {        

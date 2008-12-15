@@ -32,20 +32,10 @@ import java.io.ObjectOutput;
 import com.metamatrix.common.util.VMNaming;
 
 public class AuditMessage implements Externalizable {
-    public static String VM_NAME = VMNaming.getVMName();
-    public static String HOST_NAME = VMNaming.getLogicalHostName();
+    public static final String VM_NAME = VMNaming.getVMName();
+    public static final String HOST_NAME = VMNaming.getLogicalHostName();
 
-    private static final String DEFAULT_VM_NAME = ""; //$NON-NLS-1$
     private static final String RESOURCE_DELIMITER = ", "; //$NON-NLS-1$
-
-//    private static int MAX_VM_ID = 9999;
-
-    static {
-
-        if ( VM_NAME == null ) {
-            VM_NAME = DEFAULT_VM_NAME;
-        }
-    }
 
 	private String context;
 	private String activity;

@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.data.exception.ConnectorException;
 
 /**
@@ -43,7 +44,7 @@ import com.metamatrix.data.exception.ConnectorException;
  */
 public class TestCache extends TestCase {
 
-    private static final String CACHE_LOC = System.getProperty("user.dir") + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String CACHE_LOC = UnitTestUtil.getTestScratchPath() + File.separator + "cache"; //$NON-NLS-1$ //$NON-NLS-2$
     /**
      * 
      */

@@ -148,7 +148,7 @@ public class LocalTransportHandler implements ServerConnectionFactory {
         this.connectionListener = connListener;
     }
     
-    public boolean isAlive() {
+    public synchronized boolean isAlive() {
         return alive && (dqpManager != null && dqpManager.isDQPAlive());
     }
     
@@ -204,7 +204,7 @@ public class LocalTransportHandler implements ServerConnectionFactory {
         return dqpManager;
     }
     
-    void setManager(DQPEmbeddedManager manager) {
+    synchronized void setManager(DQPEmbeddedManager manager) {
         dqpManager = manager;
     }
 

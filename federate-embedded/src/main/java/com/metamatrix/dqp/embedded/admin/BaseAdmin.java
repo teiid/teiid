@@ -443,7 +443,7 @@ abstract class BaseAdmin {
             request = new MMRequest(new String[] {connId, String.valueOf(src.getRequestID().getExecutionID())}); 
         }
         
-        request.setSqlCommand(src.getCommand().toString());
+        request.setSqlCommand(src.getCommand());
         
         request.setCreated(src.getProcessingTimestamp());
         

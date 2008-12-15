@@ -49,7 +49,7 @@ public class EnvironmentUtility {
     
     /**
      * Create a ConnectorLogger that prints to STDOUT at the specified log level (and above).  
-     * @param logLevel The logLevel as defined in {@link BaseLogger}.
+     * @param logLevel The logLevel as defined in {@link SysLogger}.
      * @return A logger
      */
     public static ConnectorLogger createStdoutLogger(int logLevel) {
@@ -89,7 +89,7 @@ public class EnvironmentUtility {
      * @return A ConnectorEnvironment instance
      */
     public static ConnectorEnvironment createEnvironment(Properties props, boolean stdoutLog) {
-        return EnvironmentUtility.createEnvironment(props, stdoutLog?createStdoutLogger(BaseLogger.INFO):new SysLogger(false));
+        return EnvironmentUtility.createEnvironment(props, stdoutLog?createStdoutLogger(SysLogger.INFO):new SysLogger(false));
     }
     
     /**

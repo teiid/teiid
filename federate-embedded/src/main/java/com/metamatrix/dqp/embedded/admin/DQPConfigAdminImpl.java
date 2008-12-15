@@ -1047,7 +1047,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			// reload the new UDF
 			getConfigurationService().loadUDF();
 		} catch (MetaMatrixComponentException e) {
-			new AdminComponentException(e);
+			throw new AdminComponentException(e);
 		}
 	}
 
@@ -1059,7 +1059,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			getConfigurationService().unloadUDF();
 			deleteExtensionModule(ConfigurationService.USER_DEFINED_FUNCTION_MODEL); 
 		} catch (MetaMatrixComponentException e) {
-			new AdminComponentException(e);
+			throw new AdminComponentException(e);
 		}
 	}    
 }

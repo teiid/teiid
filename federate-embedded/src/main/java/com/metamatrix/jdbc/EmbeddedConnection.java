@@ -59,7 +59,6 @@ public class EmbeddedConnection extends MMConnection {
     
     DQPEmbeddedManager manager = null;
     ConnectionListener listener = null;
-    Properties properties = null;
     
     public static EmbeddedConnection newInstance(DQPEmbeddedManager manager, ServerConnection serverConn, Properties info, ConnectionListener listner) {
         return new EmbeddedConnection(manager, serverConn, info, listner);        
@@ -75,7 +74,6 @@ public class EmbeddedConnection extends MMConnection {
         super(serverConn, info, null);
         this.manager = manager;
         this.listener = listner;
-        this.properties = info;
 
         // tell the listener that connection has been created
         this.listener.connectionAdded(getConnectionId(), this);
