@@ -44,6 +44,15 @@ import java.util.Stack;
  * @since JTS 3.0.
  */
 
+/**
+ * This is here due to an incomplete fix for JBTM-365.  
+ * _currentrecord and _synchs are accessed by addSynchronization and need to prevent
+ * inconsistent access from before/after completion
+ */
+
+/*
+ * To be removed after 4.4.CR1 see JBTM-365 
+ */
 public class TwoPhaseCoordinator extends BasicAction implements Reapable
 {
 
@@ -119,31 +128,33 @@ public class TwoPhaseCoordinator extends BasicAction implements Reapable
 		{
 			case ActionStatus.RUNNING:
 			{
-				synchronized (_syncLock)
+				synchronized (this)
 				{
 					if (_synchs == null)
 					{
 						// Synchronizations should be stored (or at least iterated) in their natural order
 						_synchs = new TreeSet();
 					}
+				}
 
-					// disallow addition of Synchronizations that would appear
-					// earlier in sequence than any that has already been called
-					// during the pre-commmit phase. This generic support is required for
-					// JTA Synchronization ordering behaviour
-					if(sr instanceof Comparable && _currentRecord != null) {
-						Comparable c = (Comparable)sr;
-						if(c.compareTo(_currentRecord) != 1) {
-							return AddOutcome.AR_REJECTED;
-						}
-					}
-	
-					if (_synchs.add(sr))
-					{
-						result = AddOutcome.AR_ADDED;
+				// disallow addition of Synchronizations that would appear
+				// earlier in sequence than any that has already been called
+				// during the pre-commmit phase. This generic support is required for
+				// JTA Synchronization ordering behaviour
+				if(sr instanceof Comparable && _currentRecord != null) {
+					Comparable c = (Comparable)sr;
+					if(c.compareTo(_currentRecord) != 1) {
+						return AddOutcome.AR_REJECTED;
 					}
 				}
-			}
+                // need to guard against synchs being added while we are performing beforeCompletion processing
+                synchronized (_synchs) {
+				if (_synchs.add(sr))
+				{
+					result = AddOutcome.AR_ADDED;
+				}
+                }
+            }
 			break;
 		default:
 			break;
@@ -232,16 +243,21 @@ public class TwoPhaseCoordinator extends BasicAction implements Reapable
 					 */
 
 					int lastIndexProcessed = -1;
-					SynchronizationRecord[] copiedSynchs = (SynchronizationRecord[])_synchs.toArray(new SynchronizationRecord[] {});
-
+                    SynchronizationRecord[] copiedSynchs;
+                    // need to guard against synchs being added while we are performing beforeCompletion processing
+                    synchronized (_synchs) {
+                        copiedSynchs = (SynchronizationRecord[])_synchs.toArray(new SynchronizationRecord[] {});
+                    }
 					while( (lastIndexProcessed < _synchs.size()-1) && !problem) {
 
+                        synchronized (_synchs) {
 						// if new Synchronization have been registered, refresh our copy of the collection:
 						if(copiedSynchs.length != _synchs.size()) {
 							copiedSynchs = (SynchronizationRecord[])_synchs.toArray(new SynchronizationRecord[] {});
 						}
+                        }
 
-						lastIndexProcessed = lastIndexProcessed+1;
+                        lastIndexProcessed = lastIndexProcessed+1;
 						_currentRecord = copiedSynchs[lastIndexProcessed];
 
 						try

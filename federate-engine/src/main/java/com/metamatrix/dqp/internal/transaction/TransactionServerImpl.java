@@ -177,17 +177,14 @@ public class TransactionServerImpl implements
 
         TransactionContextImpl tc = checkXAState(threadId, xid, true, false);        
         try {
+            if (onePhase && prepare(threadId, xid) == XAResource.XA_RDONLY) {
+                return;
+            }
             // TODO: for one phase, MM needs to check if there are multiple resources involved
             // or single, in its txn, if it has single it can use onePhase.
-            // Also, Arjuna has bug, where on single phase commit, they do not call the synchronization
+            // Also, Arjuna has bug JBTM-457, where on single phase commit, they do not call the synchronization
             // when they fix the bug, we can re-write next couple lines differently to make use of the
             // optimization of onePhase.
-            if (onePhase) {
-                // if in case this just read only just return.
-                if (prepare(threadId, xid) == XAResource.XA_RDONLY) {
-                    return;
-                }            
-            }
             this.provider.getXATerminator().commit(xid, false);
         } catch (XAException err) {
             throw new XATransactionException(err);

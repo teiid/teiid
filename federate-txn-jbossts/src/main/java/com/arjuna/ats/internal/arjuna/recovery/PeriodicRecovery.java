@@ -70,6 +70,9 @@ import com.arjuna.common.util.logging.*;
  * @message com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery_10 [com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery_10] - Ignoring request to scan because RecoveryManager state is: {0}
  */
 
+/*
+ * To be removed after 4.5 see JBTM-434
+ */
 public class PeriodicRecovery extends Thread
 {
 
