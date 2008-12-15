@@ -43,6 +43,7 @@ import com.metamatrix.common.comm.ClientServiceRegistrant;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
+import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -61,7 +62,6 @@ import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.dqp.config.PlatformConfigSource;
-import com.metamatrix.server.util.ErrorMessageKeys;
 import com.metamatrix.server.util.LogConstants;
 import com.metamatrix.server.util.ServerPropertyNames;
 
@@ -98,10 +98,6 @@ public class QueryService extends AbstractService implements ClientServiceRegist
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
-        // Add system properties to the config source
-        props.setProperty(
-            ServerPropertyNames.SYSTEM_VDB_URL,
-            CurrentConfiguration.getProperty(ServerPropertyNames.SYSTEM_VDB_URL));
         DQPConfigSource configSource = new PlatformConfigSource(props, ResourceFinder.getBufferManager(), new Long(getID().getID()));
         dqp = new DQPLauncher(configSource).createDqp();
     }
@@ -123,23 +119,22 @@ public class QueryService extends AbstractService implements ClientServiceRegist
             }
         }    	
         
-        InputStream in = retrieveUDFStream(udfSource);
-        if (in != null) {
-        	FunctionLibraryManager.registerSource(new UDFSource(in, urls));
-        }
-        else {
-        	LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("QueryService.no_udf")); //$NON-NLS-1$
+        try {
+        	InputStream in = retrieveUDFStream(udfSource);
+            if (in != null) {
+            	FunctionLibraryManager.registerSource(new UDFSource(in, urls));
+            }        	
+        } catch(ExtensionModuleNotFoundException e) {
+        	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, e, ServerPlugin.Util.getString("QueryService.no_udf")); //$NON-NLS-1$
+        } catch(MetaMatrixComponentException e) {
+        	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, e, ServerPlugin.Util.getString("QueryService.no_udf")); //$NON-NLS-1$
         }
     }
     
-    private InputStream retrieveUDFStream(String udfSource) {
+    private InputStream retrieveUDFStream(String udfSource) throws ExtensionModuleNotFoundException, MetaMatrixComponentException {
         // Load the user defined function file from the extension source manager
-        try {
-            byte[] xmlData = ExtensionModuleManager.getInstance().getSource(udfSource);
-            return new ByteArrayInputStream(xmlData);
-        } catch (Throwable e) {
-            throw new MetaMatrixRuntimeException(e,ErrorMessageKeys.function_0005,ServerPlugin.Util.getString(ErrorMessageKeys.function_0005, udfSource));
-        }
+        byte[] xmlData = ExtensionModuleManager.getInstance().getSource(udfSource);
+        return new ByteArrayInputStream(xmlData);
     }    
 
     /*
