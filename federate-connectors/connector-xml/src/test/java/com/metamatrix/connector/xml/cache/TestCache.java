@@ -70,7 +70,6 @@ public class TestCache extends TestCase {
         suite.addTest(new TestCache("testFetchOlderObject")); //$NON-NLS-1$
         suite.addTest(new TestCache("testCacheStraightToFile")); //$NON-NLS-1$
         suite.addTest(new TestCache("testCacheToFileTooBig")); //$NON-NLS-1$
-        suite.addTest(new TestCache("testCleanerShutdown")); //$NON-NLS-1$
         //suite.addTest(new CacheTest("testMultithreaded")); //$NON-NLS-1$
         return suite;        
     }
@@ -261,20 +260,6 @@ public class TestCache extends TestCase {
         assertZero("File cache size is not zero", cache.getCurrentFileCacheSize());
         cache.shutdownCleaner();
     }
-    
-    public void testCleanerShutdown() throws Exception {
-        DocumentCache cache = new DocumentCache(0, CACHE_SIZE, CACHE_LOC, 8000, EnvironmentUtility.createStdoutLogger(LOGGING_LEVEL), "TestCleanerShutdown"); //$NON-NLS-1$
-        final String newString = new String("blah, blah, blah"); //$NON-NLS-1$
-        final String cacheKey = "foo1";
-        cache.addToCache(cacheKey, newString, newString.length(), "foo"); //$NON-NLS-1$
-        cache.dumpCache();
-        cache.shutdownCleaner(true);
-        //Thread.sleep(100000);
-        cache.dumpCache();
-        assertZero("Memory cache size is not equal to zero.",  cache.getCurrentMemoryCacheSize());
-        assertZero("File cache size is not equal to zero.", cache.getCurrentFileCacheSize());
-    }
-    
     
     public void testFetchOlderObject() throws ConnectorException {
         final String id1 = "foo1"; //$NON-NLS-1$
