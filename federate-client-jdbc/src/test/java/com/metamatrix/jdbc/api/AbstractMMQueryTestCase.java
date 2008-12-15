@@ -47,7 +47,6 @@ import junit.framework.TestSuite;
 import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.EmbeddedDriver;
-import com.metamatrix.jdbc.MMDriver;
 import com.metamatrix.script.io.MetadataReader;
 import com.metamatrix.script.io.ResultSetReader;
 import com.metamatrix.script.io.StringArrayReader;
