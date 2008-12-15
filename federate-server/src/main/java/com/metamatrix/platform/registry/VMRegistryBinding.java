@@ -28,6 +28,7 @@ import java.io.Serializable;
 
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.messaging.MessageBus;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
@@ -61,7 +62,7 @@ public class VMRegistryBinding implements Serializable {
     // TODO: this is part of configuration, this should be removed from here..
     private VMComponentDefn vmComponent;
 
-    private MessageBus messageBus;
+    private transient MessageBus messageBus;
     
     public VMRegistryBinding(String hostName, VMControllerID vmID, VMComponentDefn deployedComponent, VMControllerInterface vmController, MessageBus bus) {
     	this.hostName = hostName;
@@ -113,7 +114,12 @@ public class VMRegistryBinding implements Serializable {
         if (this.vmControllerStub == null) {
         	return null;
         }
-        vmController = (VMControllerInterface)this.messageBus.getRPCProxy(this.vmControllerStub);
+    	// when exported to the remote, use remote's message bus instance.
+    	MessageBus bus = this.messageBus;
+    	if(bus == null) {
+    		bus = ResourceFinder.getMessageBus();
+    	}        
+        vmController = (VMControllerInterface)bus.getRPCProxy(this.vmControllerStub);
         return vmController;
     }
 

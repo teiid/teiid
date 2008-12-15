@@ -28,6 +28,7 @@ import java.io.Serializable;
 
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.pooling.api.ResourcePoolMgr;
+import com.metamatrix.dqp.ResourceFinder;
 
 
 
@@ -49,7 +50,7 @@ public class ResourcePoolMgrBinding implements Serializable {
     /** Remote reference to ResourcePoolMgr */
     private Object resourcePoolMgrStub;
 
-    private MessageBus messageBus;
+    private transient MessageBus messageBus;
     
     /**
      * Create a new instance of ResourcePoolMgr.
@@ -98,7 +99,12 @@ public class ResourcePoolMgrBinding implements Serializable {
         if (this.resourcePoolMgrStub == null) {
         	return null;
         }
-        this.resourcePoolMgr = (ResourcePoolMgr)this.messageBus.getRPCProxy(resourcePoolMgrStub);
+    	// when exported to the remote, use remote's message bus instance.
+    	MessageBus bus = this.messageBus;
+    	if(bus == null) {
+    		bus = ResourceFinder.getMessageBus();
+    	}
+        this.resourcePoolMgr = (ResourcePoolMgr)bus.getRPCProxy(resourcePoolMgrStub);
         return this.resourcePoolMgr;
     }
 

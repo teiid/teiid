@@ -38,6 +38,7 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 
@@ -119,7 +120,7 @@ public class ServiceRegistryBinding implements Serializable {
     /** Exception during initialization */
     private Throwable initException;
     
-    private MessageBus messageBus;
+    private transient MessageBus messageBus;
     
     /**
      * Create new ServiceRegistryInstance
@@ -177,7 +178,12 @@ public class ServiceRegistryBinding implements Serializable {
     	if (this.serviceStub == null) {
     		return null;
     	}
-    	this.service = (ServiceInterface)this.messageBus.getRPCProxy(this.serviceStub);
+    	// when exported to the remote, use remote's message bus instance.
+    	MessageBus bus = this.messageBus;
+    	if(bus == null) {
+    		bus = ResourceFinder.getMessageBus();
+    	}
+    	this.service = (ServiceInterface)bus.getRPCProxy(this.serviceStub);
     	return this.service;
     }
     
@@ -246,14 +252,7 @@ public class ServiceRegistryBinding implements Serializable {
         this.currentState = state;
         this.stateChangeTime = new Date();
     }
-
-    public void replaceServiceInstace(ServiceInterface newService) {
-        // Now replace the binding with new one. and rebuild all the dependent
-        // objects from the new service.
-        this.setService(newService);
-        this.queueNames = buildQueueNames(newService);
-    }
-    
+   
     private Collection buildQueueNames(ServiceInterface si) {
         ArrayList queue = null;
         
@@ -310,7 +309,7 @@ public class ServiceRegistryBinding implements Serializable {
 	
 	public void markServiceAsBad() {
 		this.currentState = ServiceInterface.STATE_FAILED;
-		replaceServiceInstace(null);
+		setService(null);
 	}
 }
 
