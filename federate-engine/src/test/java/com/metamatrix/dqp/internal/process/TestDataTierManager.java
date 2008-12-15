@@ -129,6 +129,8 @@ public class TestDataTierManager extends TestCase {
         context = new CommandContext();
         context.setProcessorID(requestID);
         context.setTupleSourceID(new TupleSourceID("fakeid")); //$NON-NLS-1$
+        context.setVdbName("test"); //$NON-NLS-1$
+        context.setVdbVersion("1"); //$NON-NLS-1$
         processor = new QueryProcessor(new FakeProcessorPlan(), context, bs.getBufferManager(), dtm);
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, processor, null, null, null, workContext);
         
