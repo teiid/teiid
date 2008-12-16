@@ -49,6 +49,7 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
  * in JIRA
  */
 class Manifest {
+	private static final String MODELS = "models"; //$NON-NLS-1$
 	private static final String ACCESSIBILITY = "accessibility"; //$NON-NLS-1$
 	private static final String PRIMARY_METAMODEL_URI = "primaryMetamodelUri"; //$NON-NLS-1$
 	private static final String UUID = "uuid"; //$NON-NLS-1$
@@ -78,10 +79,10 @@ class Manifest {
 				// Build VDB info
 				vdb = new BasicVDBDefn(vdbElement.getAttributeValue(NAME));
 				vdb.setDescription(vdbElement.getAttributeValue(DESCRIPTION));
-				vdb.setVersion("1");
+				vdb.setVersion("1"); //$NON-NLS-1$
 				
 				// build the models
-				List<Element> modelElements = vdbElement.getChildren("models");
+				List<Element> modelElements = vdbElement.getChildren(MODELS);
 				for(Element modelElement:modelElements) {
 					
 					BasicModelInfo model = new BasicModelInfo(StringUtil.getFirstToken(modelElement.getAttributeValue(NAME), ".")); //$NON-NLS-1$
@@ -107,7 +108,7 @@ class Manifest {
 				}
 			}
 		} catch (JDOMException e) {
-			throw new IOException("Failed to read the VDB-Manifest file");
+			throw new IOException("Failed to read the VDB-Manifest file"); //$NON-NLS-1$
 		}
 	}
 	

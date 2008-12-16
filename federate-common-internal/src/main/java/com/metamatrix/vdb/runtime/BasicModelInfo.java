@@ -101,25 +101,19 @@ public class BasicModelInfo implements ModelInfo, Serializable {
     }
     
     public String getUUID() {
-        return uuid;
+        return uuid!=null?uuid:"NoUUID";//$NON-NLS-1$
     }
 
     public String getName() {
         return name;
     }
 
-    /** 
-     * @see com.metamatrix.common.vdb.api.ModelInfo#getDescription()
-     * @since 4.2
-     */
     public String getDescription() {
         return description;
     }
-    /* (non-Javadoc)
-     * @see com.metamatrix.metadata.runtime.api.ModelInfo#getVersion()
-     */
+
     public String getVersion() {
-        return version;
+        return version!=null?version:"0"; //$NON-NLS-1$
     }
     
     public int getModelType() {
@@ -419,7 +413,7 @@ public class BasicModelInfo implements ModelInfo, Serializable {
     }
     
     public String getPath() {
-    	return this.pathInVdb;
+    	return this.pathInVdb!=null?pathInVdb:"NoPath";//$NON-NLS-1$
     }
     
     public void setPath(String path) {

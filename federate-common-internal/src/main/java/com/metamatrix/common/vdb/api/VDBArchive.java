@@ -70,8 +70,6 @@ public class VDBArchive {
 	// data roles contents
 	char[] dataRoles;
 	
-	short status = VDBStatus.INCOMPLETE;
-	
 	Manifest manifest;
 	
 	boolean wsdlAvailable = false;
@@ -406,12 +404,15 @@ public class VDBArchive {
 	
 	public short getStatus() {
 		checkOpen();
-		return this.status;
+		if (getVDBValidityErrors() != null && getVDBValidityErrors().length > 0) {
+			return VDBStatus.INCOMPLETE;
+		}
+		return this.def.getStatus();
 	}
 	
 	public void setStatus(short status) {
 		checkOpen();
-		this.status = status;
+		this.def.setStatus(status);
 	}	
 	
 	public Set<String> getEntries(){

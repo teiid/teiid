@@ -46,13 +46,15 @@ import com.metamatrix.common.config.xml.XMLConfig_42_HelperImpl;
 import com.metamatrix.common.config.xml.XMLElementNames;
 import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
+import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
 import com.metamatrix.vdb.runtime.BasicVDBInfo;
 
 
 public class DEFReaderWriter {
-    private final static String UNKNOWN = "Unknown";
+    private static final String TRUE = "true"; //$NON-NLS-1$
+	private final static String UNKNOWN = "Unknown"; //$NON-NLS-1$
     
     public BasicVDBDefn read(InputStream defStream) throws IOException {
     	BasicVDBDefn vdbDefn = null;
@@ -87,7 +89,7 @@ public class DEFReaderWriter {
     private void loadHeaderSection(BasicVDBDefn vdbDefn, Element root) throws IOException {
     	Element headElement = root.getChild(Header.ELEMENT);
         if (headElement == null) {
-            throw new IOException("VDBDefnXMLHelper.Invalid_xml_section");
+            throw new IOException("VDBDefnXMLHelper.Invalid_xml_section"); //$NON-NLS-1$
         }
     	
         Properties header = new Properties();
@@ -120,19 +122,25 @@ public class DEFReaderWriter {
         
     	Element vdbInfoElement = root.getChild(VDBInfo.ELEMENT);
         if (vdbInfoElement == null) {
-            throw new IOException("VDBDefnXMLHelper.Invalid_xml_section");
+            throw new IOException("VDBDefnXMLHelper.Invalid_xml_section"); //$NON-NLS-1$
         }
 
         Properties vdbProps = getElementProperties(vdbInfoElement);
         if (vdbProps == null || vdbProps.isEmpty()) {
-            throw new IOException("VDBDefnXMLHelper.No_properties_defined_to_create_defn");
+            throw new IOException("VDBDefnXMLHelper.No_properties_defined_to_create_defn"); //$NON-NLS-1$
         }
         
         vdbDefn.setName(vdbProps.getProperty(VDBInfo.NAME));
-        vdbDefn.setVersion(vdbProps.getProperty(VDBInfo.VERSION, "1"));
+        vdbDefn.setVersion(vdbProps.getProperty(VDBInfo.VERSION, "1")); //$NON-NLS-1$
         vdbDefn.setFileName(vdbProps.getProperty(VDBInfo.ARCHIVE_NAME));
         vdbDefn.setDescription(vdbProps.getProperty(VDBInfo.DESCRIPTION));
-        vdbDefn.setUUID(vdbProps.getProperty(VDBInfo.GUID));        
+        vdbDefn.setUUID(vdbProps.getProperty(VDBInfo.GUID)); 
+        if (TRUE.equals(vdbProps.getProperty(VDBInfo.ACTIVE))) { 
+        	vdbDefn.setStatus(VDBStatus.ACTIVE);
+        }
+        else {
+        	vdbDefn.setStatus(VDBStatus.INACTIVE);
+        }
     }
               
     private void loadModelsSection(BasicVDBDefn vdbDefn, Element root) throws IOException {
@@ -241,7 +249,7 @@ public class DEFReaderWriter {
        rootElement.addContent(createHeaderElement(headerProperties));
        
        // write vdbinfo
-       rootElement.addContent(createVDBInfoElement(def));
+       rootElement.addContent(createVDBInfoElement(def, def.getStatus()));
 
        // write the model elements
        Collection<ModelInfo> models = def.getModels();
@@ -281,7 +289,7 @@ public class DEFReaderWriter {
    }
    
    
-   private Element createVDBInfoElement(BasicVDBInfo info) throws IOException{
+   private Element createVDBInfoElement(BasicVDBInfo info, int status) throws IOException{
        Element vdbInfoElement = new Element(VDBInfo.ELEMENT);
        boolean valid = addPropertyElement(vdbInfoElement, VDBInfo.NAME, info.getName());
        if (valid) {
@@ -289,9 +297,12 @@ public class DEFReaderWriter {
            addPropertyElement(vdbInfoElement, VDBInfo.VERSION, info.getVersion());
            addPropertyElement(vdbInfoElement, VDBInfo.ARCHIVE_NAME, info.getFileName());           
            addPropertyElement(vdbInfoElement, VDBInfo.DESCRIPTION, info.getDescription());
+           if (status == VDBStatus.ACTIVE) {
+        	   addPropertyElement(vdbInfoElement, VDBInfo.ACTIVE, TRUE); 
+           }
        }
        else {
-    	   throw new IOException("Invalid DEF, No name supplied");
+    	   throw new IOException("Invalid DEF, No name supplied"); //$NON-NLS-1$
        }
        return vdbInfoElement;
    }   
@@ -351,6 +362,7 @@ public class DEFReaderWriter {
         public static final String DESCRIPTION = "Description"; //$NON-NLS-1$
         // Optional - defaults to VDB Name
         public static final String GUID = "GUID"; //$NON-NLS-1$
+        public static final String ACTIVE = "Active"; //$NON-NLS-1$
 	}   
    
    public static class Property {
