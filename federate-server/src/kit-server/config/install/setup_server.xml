@@ -1,0 +1,420 @@
+<?xml version="1.0"?>
+<!--  JBoss, Home of Professional Open Source.
+ Copyright (C) 2008 Red Hat, Inc.
+ Copyright (C) 2000-2007 MetaMatrix, Inc.
+  -->
+<project name="installer"
+                default="install.server"
+         basedir=".">
+
+	<property name="relative.install.dir"    value="config/install" />	
+		
+	<property name="repository.xml.file"    location="${metamatrix.installationDir}/${relative.install.dir}/setup_repository.xml" />
+	<property name="extensions.xml.file"    location="${metamatrix.installationDir}/${relative.install.dir}/setup_extensions.xml" />
+
+ <!-- see mmanttaskdefs.xml file for descriptions of all MetaMatrix defined taskdef's -->   
+	<taskdef name="importExtensionTask" classname="com.metamatrix.installer.anttask.extensions.ExtensionModuleImportTask"/>
+	<taskdef name="importConfigExtensionTask" classname="com.metamatrix.installer.anttask.extensions.ExtensionConfigImportTask"/>    
+	<taskdef name="createKeystoreTask"	classname="com.metamatrix.installer.anttask.security.KeystoreTask"/>
+	<taskdef name="encryptPasswordTask"	classname="com.metamatrix.installer.anttask.security.EncryptPasswordTask"/>
+
+      
+    <!-- ********************************************************************************* -->
+    <!-- The target to control the setup process 		              -->
+    <!-- ********************************************************************************* -->
+	<target name="install.server" depends="init.env, db.validation, check.ports"
+		description="Perform Server Installation Process...">
+
+        <echo>Perform server installation process...</echo>
+
+			<antcall target="perform.security" />
+    
+			<antcall target="setup.schema.tables"/>
+
+			 <antcall target="create.bootstrap.file" />
+			<antcall target="load.configuration" />
+
+    <!--	
+			<antcall target="load.extensions" />
+     -->
+            <antcall target="postprocess"/> 
+        <echo>Installation process has completed</echo>
+   
+    </target>
+	
+ 
+    <target name="init.env"
+        depends=""
+        if=""
+        description="Initialize Environment ">
+        <echo>Initialize environment, load properties and check os type</echo>
+    
+        <condition property="isUnix">
+            <and>
+                <os family="unix"/>
+                <not>
+                    <os name="Linux"/>   
+                </not>
+                <not>
+			<os name="HP-UX"/>
+                </not>
+            </and>
+        </condition>        
+        <condition property="isLinux">
+            <os name="Linux"/>   
+        </condition>
+		<condition property="isHP-UX">
+            <os name="HP-UX"/>   
+        </condition>
+        <condition property="isWindows">
+            <os family="windows"/>
+        </condition>  
+     
+        <condition property="UnixOS">
+            <os family="unix"/>   
+        </condition>               
+        <condition property="WinOS">
+            <os family="windows"/>
+        </condition>   
+    	
+     	<delete file="${metamatrix.installationDir}/config/metamatrix.properties"/>    
+    	<delete file="${metamatrix.installationDir}/config/${keystore.file}"/>    
+   	
+    </target>  
+	
+	<target name="db.validation"  >
+		<fail unless="driver" message="Database driver property was not set" />
+		<fail unless="url" message="URL database connection property was not set" />
+		<fail unless="user" message="Username datababse connection property was not set" />
+		<fail unless="password" message="Password datababse connection property was not set" />
+
+	</target>	
+	
+<!--
+  Check the ports to verify nothing else is already running on that port 
+-->
+    <target name="check.ports"
+        depends=""
+        if=""
+        unless=""  >
+         <echo>Checking ports</echo>
+
+		  	<antcall target="is.port.available">
+		   		<param name="host" value="${host.bind.address}"/>
+				<param name="port" value="${host.port.number}"/>
+		  	</antcall>	 
+		   	<antcall target="is.port.available">
+		   		<param name="host" value="${host.bind.address}"/>
+				<param name="port" value="${vm.portnumber}"/>
+		  	</antcall>	
+    	
+		  	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${web.server.port}"/>
+		  	</antcall>	 
+		   	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${web.shutdown.port}"/>
+		  	</antcall>	
+		  	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${web.ssl.port}"/>
+		  	</antcall>	 
+		   	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${web.ajp.port}"/>
+		  	</antcall>	
+		  	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${web.proxied.port}"/>
+		  	</antcall>	 
+		   	<antcall target="is.port.available">
+		   		<param name="host" value="${host.name}"/>
+				<param name="port" value="${odbc.port}"/>
+		  	</antcall>	   	
+    	
+    </target>   
+
+    <target name="is.port.available" >
+         <echo>Is port ${host}:${port} available </echo>
+
+    	<condition property="port.in.use">
+  			<socket server="${host}" port="${port}"/>
+		</condition>
+		<fail message="Port ${port} is already in use on host ${host} " 
+	   		if="port.in.use" />    
+      
+    </target> 
+  <!-- 
+has.schema.been.installed, clean.tables, create.tables
+-->
+    <target name="setup.schema.tables"
+		depends="has.schema.been.installed, clean.tables, create.tables" >
+<!--
+        <ant antfile="${repository.xml.file}" target="insert.defaults"  inheritAll="true" inheritRefs="true" />        
+    -->  
+    </target> 
+
+    <target name="create.tables"
+	depends=""
+        if=""
+        unless="ddlwasrun"  >
+         <echo>Create Schema Tables on database ${url}</echo>
+             
+        <ant antfile="${repository.xml.file}" target="create.schema"  inheritAll="true" inheritRefs="true" />        
+      
+    </target>  
+
+          <!-- 
+               This checks the database to determine if the create DDL scripts has already been run.               
+             -->   
+
+      <target name="has.schema.been.installed"
+          unless="override.update.schema"
+          description="Verify Schema has been installed">
+          <echo>Check if the schema has been installed...</echo>
+          
+           <!-- this task is used to determine if the create ddl script has been run 
+           		for the indicated version
+            	 so that the available condition can set the property to be used to turn off
+                the create ddl script related tasks if it already exist
+                NOTE: this will turn off the ddl script tasks
+               
+           <checkifrowexistTask     driver="${driver}"
+                               url="${url}"
+                               userid="${user}"
+                               password="${password}"
+           					   propertytotrue="ddlwasrun" 
+             				  sql="Select SCRIPTNAME From MMSCHEMAINFO_CA Where SCRIPTNAME='INSTALL.MM_CREATE.SQL'  AND SCRIPTREV='${release.buildnum}'"                
+
+               >        
+            </checkifrowexistTask>      
+   -->
+           <echo>Has the schema already been installed: ${ddlwasrun}</echo>
+          
+       </target> 
+ 
+ <!-- 
+  The clean tables will be run if the schema already exist and the schema.create.override was not specified
+ --> 
+    <target name="clean.tables"
+        depends=""
+        if="ddlwasrun"
+        unless=""  >
+         <echo>Clean Schema Tables on database ${url}</echo>
+             
+        <ant antfile="${repository.xml.file}" target="clean.schema"  inheritAll="true" inheritRefs="true" />        
+      
+    </target>     
+
+
+	<target name="perform.security">
+		<createKeystoreTask keystoreFile="${metamatrix.installationDir}/config/${keystore.file}"  /> 
+ 		<echo>Performed createkeystore task ${metamatrix.installationDir}/config/${keystore.file}</echo>
+
+	</target>
+	
+
+    <!--
+    Import files into the extension modules.
+    -->	
+	
+    <target name="load.extensions"
+       depends=""
+       if=""
+       description="Import Extension Modeule(s)">
+       <echo>Import extensions modules</echo>
+
+    <!-- export all extensions defined in descriptor file   -->   
+       <importExtensionTask extensionpath="${metamatrix.installationDir}/${relative.install.dir}/extensions"
+                            extensiondescriptor="${extensions.xml.file}" />   
+
+   </target>  	
+
+	
+	<target name="load.configuration"
+		description="Load the configuration">
+				
+		<delete file="${metamatrix.installationDir}/${relative.install.dir}/extensions/config.xml"/>  
+
+		<copy file="${metamatrix.installationDir}/${relative.install.dir}/config.xml.orig" tofile="${metamatrix.installationDir}/${relative.install.dir}/extensions/config.xml"/>
+	       <encryptPasswordTask passwordProperty="encrypted.admin.password"
+								encryptPassword="${admin.password}"
+                         />
+		
+		
+	       <encryptPasswordTask passwordProperty="encrypted.ssl.keystore.default.Password"
+								encryptPassword="${ssl.keystore.default.Password}"
+                      />
+		
+		
+		<replace 
+		    	file="${metamatrix.installationDir}/${relative.install.dir}/extensions/config.xml"
+		    	 >
+	  			<replacefilter 
+	    				token="(admin.username)" 
+	    				value="${admin.username}"/>				
+	  			<replacefilter 
+	    				token="(admin.password)" 
+	    				value="${encrypted.admin.password}"/>			
+		  		<replacefilter 
+		    			token="(install.directory)" 
+		    			value="${metamatrix.installationDir}"/>
+		  		<replacefilter 
+		    			token="(host.log.dir)" 
+		    			value="${metamatrix.installationDir}/log"/>
+		  		<replacefilter 
+		    			token="(host.data.dir)" 
+		    			value="${host.path}/data"/>
+		  		<replacefilter 
+		    			token="(host.dir)" 
+		    			value="${host.path}"/>
+		  		<replacefilter 
+		    			token="(vm.port)" 
+		    			value="${vm.portnumber}"/>
+		  		<replacefilter 
+		    			token="(host.java)" 
+		    			value="${java.home}/bin/java"/>
+		  		<replacefilter 
+		    			token="(cluster.name)" 
+		    			value="${system.name}"/>
+		  		<replacefilter 
+		    			token="(multicast.port)" 
+		    			value="${multicast.port}"/>
+		  		<replacefilter 
+		    			token="(gossip_host)" 
+		    			value="${host.name}"/>
+		  		<replacefilter 
+		    			token="(config.name)" 
+		    			value="${config.name}"/>
+		  		<replacefilter 
+		    			token="(host.name)" 
+		    			value="${host.name}"/>
+		  		<replacefilter 
+		    			token="(host.controller.port)" 
+		    			value="${hostController.port.number}"/>
+		  		<replacefilter 
+		    			token="(host.bind.address)" 
+		    			value="${host.bind.address}"/>
+		  		<replacefilter 
+		    			token="(webhost.name)" 
+		    			value="${host.name}"/>
+		  		<replacefilter 
+		    			token="(webhost.port)" 
+		    			value="${web.server.port}"/>
+		  		<replacefilter 
+		    			token="(webservices.security)" 
+		    			value="${web.services.security}"/>
+				<replacefilter 
+						token="(ssl.keystore.password)" 
+						value="${encrypted.ssl.keystore.default.Password}"/>
+<!--			
+	  		<replacefilter 
+	    			token="(xa.url)" 
+	    			value="${metamatrix.xatxnmgr.naming.provider.url}"/>
+	  		<replacefilter 
+	    			token="(xa.contextfactory)" 
+	    			value="${metamatrix.xatxnmgr.naming.factory.initial}"/>
+	  		<replacefilter 
+	    			token="(xa.credentials)" 
+	    			value="${metamatrix.xatxnmgr.naming.security.credentials}"/>			
+	  		<replacefilter 
+	    			token="(xa.principal)" 
+	    			value="${metamatrix.xatxnmgr.naming.security.principal}"/>
+-->
+			
+		</replace>
+		
+		
+	    <importConfigExtensionTask extensionpath="${metamatrix.installationDir}/${relative.install.dir}/extensions/config.xml"
+	                           extensionname="Next Startup"
+	                           extensiontype="Configuration Model"
+	                           extensiondescription="Next Startup Configuration"
+	    					    /> 
+		
+	    <importConfigExtensionTask extensionpath="${metamatrix.installationDir}/${relative.install.dir}/extensions/config.xml"
+	                           extensionname="Startup"
+	                           extensiontype="Configuration Model"
+	                           extensiondescription="Startup Configuration"
+			   				    />  		
+	</target>
+
+	<target name="encrypt.password">
+
+	       <encryptPasswordTask passwordProperty="${password.property}"
+								encryptPassword="${password}"
+                            />
+		<echo>Encrypted password ${password} into property ${password.property} </echo>
+		
+	
+	</target>
+		
+	
+	<target name="create.bootstrap.file">
+
+		<delete file="${metamatrix.installationDir}/config/metamatrix.properties"/>  
+
+		<copy file="${metamatrix.installationDir}/${relative.install.dir}/metamatrix-template.properties" tofile="${metamatrix.installationDir}/config/metamatrix.properties"/>		
+		
+		<replace 
+		    	file="${metamatrix.installationDir}/config/metamatrix.properties"
+		    	 >
+	  		<replacefilter 
+	    			token="(url)" 
+	    			value="${url}"/>			
+	  		<replacefilter 
+	    			token="(driver)" 
+	    			value="${driver}"/>
+	  		<replacefilter 
+	    			token="(password)" 
+	    			value="${password}"/>
+	  		<replacefilter 
+	    			token="(user)" 
+	    			value="${user}"/>	
+	  		<replacefilter 
+	    			token="(install.date)" 
+	    			value="${metamatrix.installationDate}"/>				
+		</replace>
+	</target> 
+
+	
+   <target name="postprocess">
+
+                     
+        <antcall target="postprocess.WinOS"/>   
+        <antcall target="postprocess.UnixOS"/>   
+
+     </target> 
+
+    <target name="postprocess.WinOS"
+        if="WinOS"
+        description="Performing Windows post process operations">
+        <echo>Perform Windows post processing </echo>
+
+        <delete>
+          <fileset dir="${metamatrix.installationDir}" includes="**/*.sh"/>
+        </delete>                     
+        <delete dir="${metamatrix.installationDir}\META-INF"/>
+         
+     </target> 
+ 
+    <target name="postprocess.UnixOS"
+        if="UnixOS"
+        description="Performing Unix post process operations">
+        <echo>Perform Unix post processing </echo>
+ 
+          <delete >
+            <fileset dir="${metamatrix.installationDir}" includes="**/*.cmd"/>
+            <fileset dir="${metamatrix.installationDir}" includes="**/*.bat"/>            
+          </delete>     
+          <delete dir="${metamatrix.installationDir}/META-INF"/>
+        
+          <chmod dir="${metamatrix.installationDir}" perm="ugo+rx" includes="**/*.sh"/>   
+        
+     </target> 
+ 
+  
+ 
+</project>
+
+
