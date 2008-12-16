@@ -831,7 +831,7 @@ public class CreateVDBPanel extends WizardInterfaceImpl {
                 try {
                 	vdbArchive = new VDBArchive(newVDBDefn.getVDBStream().getInputStream());
                 	vdbArchive.updateConfigurationDef((BasicVDBDefn)newVDBDefn);
-                	
+                	vdbArchive.setStatus(pnlConfirm.getStatus());
                 	results = getVdbManager().importVDB(vdbArchive,importRoles);	
                 } finally {
                 	if (vdbArchive != null) {
