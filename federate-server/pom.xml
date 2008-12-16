@@ -34,7 +34,50 @@
             </goals>
           </execution>
         </executions>        
-      </plugin>      
+      </plugin>   
+       <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2-beta-2</version>      
+        <configuration>
+              <descriptors>
+                  <descriptor>src/assembly/binaries.xml</descriptor>
+              </descriptors>
+              <outputDirectory>target/distribution</outputDirectory>
+              <workDirectory>target/assembly/work</workDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase> 
+            <goals>
+              <goal>attached</goal> 
+            </goals>
+          </execution>
+        </executions>        
+      </plugin>     
+      
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-antrun-plugin</artifactId>
+         <executions>
+            <execution>
+               <phase>package</phase>
+               <configuration>
+                  <tasks>
+                   	<property name="product.version" value="${project.version}" />
+ 					<property name="relative.artifact.dir" value="target/distribution/artifacts/${project.version}"></property>
+                  
+                  	<ant antfile="src/assembly/assemble-artifacts.xml"/>
+                  </tasks>
+               </configuration>
+               <goals>
+                  <goal>run</goal>
+               </goals>
+            </execution>
+		</executions>
+      </plugin>           
+      
+  
     </plugins>
   </build>
   
@@ -99,6 +142,13 @@
       <groupId>org.federate</groupId>
       <artifactId>federate-cache-jbosscache</artifactId>
     </dependency>
+ 	<dependency>
+      <groupId>ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.7.0</version>
+    </dependency> 
+    
   </dependencies>
+ 
   
 </project>
