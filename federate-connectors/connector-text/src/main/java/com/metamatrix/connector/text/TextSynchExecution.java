@@ -477,7 +477,7 @@ public class TextSynchExecution implements SynchQueryExecution {
      * @return Object
      */
     protected Object submitRequest(Object req) {
-        Properties connprops = ((TextConnection)txtConn).env.getProperties();
+        Properties connprops = txtConn.env.getProperties();
         metadataProps.put(TextPropertyNames.CONNECTOR_PROPERTIES, connprops);
         
         String cnt_edit = (String) connprops.get(TextPropertyNames.COLUMN_CNT_MUST_MATCH_MODEL);

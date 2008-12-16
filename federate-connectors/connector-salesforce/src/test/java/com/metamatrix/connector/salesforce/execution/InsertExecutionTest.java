@@ -25,8 +25,6 @@ package com.metamatrix.connector.salesforce.execution;
 
 import java.util.List;
 
-import junit.framework.Test;
-
 import com.metamatrix.data.exception.ConnectorException;
 
 public class InsertExecutionTest extends BaseExecutionTest {

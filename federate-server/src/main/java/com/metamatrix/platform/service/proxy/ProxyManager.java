@@ -102,7 +102,7 @@ public class ProxyManager implements RegistryListener{
     public synchronized ServiceInterface findOrCreateProxy(String serviceTypeName, Properties props) {
         // Try looking in policy registry first
         ServiceSelectionPolicyKey policyKey = createPolicyKey(serviceTypeName, props);
-        ServiceSelectionPolicy policy = (ServiceSelectionPolicy) policyRegistry.get(policyKey);
+        ServiceSelectionPolicy policy = policyRegistry.get(policyKey);
 
         if (policy == null) {
              // Create policy and populate with service instances

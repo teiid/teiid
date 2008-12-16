@@ -24,7 +24,6 @@
 
 package com.metamatrix.connector.xml.base;
 
-import java.util.Properties;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;

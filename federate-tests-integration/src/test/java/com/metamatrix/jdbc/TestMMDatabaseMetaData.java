@@ -57,7 +57,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties"; //$NON-NLS-1$
 
     static Connection conn = null;
-    static String primaryUrl = "jdbc:metamatrix:QT_Ora9DS@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$
+    static String primaryUrl = "jdbc:metamatrix:QT_Ora9DS@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$ //$NON-NLS-2$
     // URL for local DQP
     static String serverUrl = primaryUrl + ";logLevel=1;partialResultsMode=false"; //$NON-NLS-1$
     
@@ -540,7 +540,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             //rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE ModelName = 'System' OPTION DEBUG");
             
             // Returns 0 rows (but should be identical and return 24 rows):
-            rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE UCASE(ModelName) = 'SYSTEM'");
+            rs = stmt.executeQuery("SELECT Name FROM System.Groups WHERE UCASE(ModelName) = 'SYSTEM'"); //$NON-NLS-1$
 
             int count = 0;
             while(rs.next()) {
@@ -642,7 +642,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
         
         stream.println("getImportedKeys2"); //$NON-NLS-1$
-        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close(); 
 
@@ -669,7 +669,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();
         
@@ -696,7 +696,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();  
         
@@ -728,7 +728,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
         
         // Check for empty
-        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();  
         
@@ -754,11 +754,11 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getProcedureColumns(null, "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedureColumns(null, "Foo%", null, null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
-        rs = dbmd.getProcedureColumns("foo", "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedureColumns("foo", "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
                      Collections.EMPTY_LIST,
@@ -780,11 +780,11 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
-        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
                      Collections.EMPTY_LIST,
@@ -876,7 +876,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         
-        rs = dbmd.getColumnPrivileges(null, "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        rs = dbmd.getColumnPrivileges(null, "%foo", null, null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
@@ -932,7 +932,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         try {
             //List expected = getExpectedColumns();
             DatabaseMetaData dbmd = conn.getMetaData();
-            rs = dbmd.getTables(null, null, "SYSTEM.VIRTUALDATABASES", null); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getTables(null, null, "SYSTEM.VIRTUALDATABASES", null); //$NON-NLS-1$ 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
                        Collections.EMPTY_LIST,
@@ -953,7 +953,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             
             String[] tables = new String[] { "Table" }; //$NON-NLS-1$
             
-            rs = dbmd.getTables(null, null, null, tables); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getTables(null, null, null, tables); 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
                        Collections.EMPTY_LIST,
@@ -974,7 +974,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             
             String[] tables = new String[] { "Table", "View" }; //$NON-NLS-1$ //$NON-NLS-2$
             
-            rs = dbmd.getTables(null, null, null, tables); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getTables(null, null, null, tables); 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
                        Collections.EMPTY_LIST,
@@ -990,11 +990,11 @@ public class TestMMDatabaseMetaData extends TestCase {
     public void testGetTables() throws Exception{
         initResultSetStreams("testGetTables"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
-        ResultSet rs = dbmd.getTables(null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSet rs = dbmd.getTables(null, null, null, null); 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();
         
-        rs = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        rs = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
@@ -1012,7 +1012,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         ResultSet rs = null;
         try {
             DatabaseMetaData dbmd = conn.getMetaData();
-            rs = dbmd.getTables(null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getTables(null, null, null, null); 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1147,11 +1147,11 @@ public class TestMMDatabaseMetaData extends TestCase {
         DatabaseMetaData dbmd = conn.getMetaData();
         ResultSet rs = dbmd.getVersionColumns(null, null, null);
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
-        rs = dbmd.getVersionColumns(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getVersionColumns(null, "Foo%", null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
-        rs = dbmd.getVersionColumns("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getVersionColumns("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
                      Collections.EMPTY_LIST,
@@ -1174,7 +1174,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getBestRowIdentifier(null, "%foo", null, 1,true); //$NON-NLS-1$ //$NON-NLS-2$
+        rs = dbmd.getBestRowIdentifier(null, "%foo", null, 1,true); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
@@ -1213,7 +1213,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     
     public void testGetColumnsWithEscape() throws Exception {
         DatabaseMetaData dbmd = conn.getMetaData();
-        ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey");
+        ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         columns.next();
         assertEquals("QT_Ora9DS", columns.getString(2));//$NON-NLS-1$  
         assertFalse(columns.next());
@@ -1225,7 +1225,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         try { 
             DatabaseMetaData dbmd = conn.getMetaData();
             stream.println("getCrossReference1"); //$NON-NLS-1$
-            rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$
+            rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1255,7 +1255,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         ResultSet rs = null;
         try {
             DatabaseMetaData dbmd = conn.getMetaData();
-            rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1263,7 +1263,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();
         
@@ -1282,7 +1282,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         try { 
             DatabaseMetaData dbmd = conn.getMetaData();
             stream.println("getImportedKeys1"); //$NON-NLS-1$
-            rs = dbmd.getImportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getImportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1291,7 +1291,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
         
         stream.println("getImportedKeys2"); //$NON-NLS-1$
-        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close(); 
 
@@ -1311,7 +1311,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         try {
             DatabaseMetaData dbmd = conn.getMetaData();
             //ResultSet rs = dbmd.getIndexInfo(null, null, "BQT1.SmallA", true, true); //$NON-NLS-1$
-            rs = dbmd.getIndexInfo(null, "QT\\_Ora9DS", "System.KeyElements", true, true); //$NON-NLS-1$
+            rs = dbmd.getIndexInfo(null, "QT\\_Ora9DS", "System.KeyElements", true, true); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1319,7 +1319,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();  
         
@@ -1342,7 +1342,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             // This is only a way to do unit test. Actually, the primary key of BQT.smallA
             // should be tested here, the only tables should be queried are just system
             // tables. 
-            rs = dbmd.getPrimaryKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$
+            rs = dbmd.getPrimaryKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1351,7 +1351,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
         
         // Check for empty
-        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();  
         
@@ -1369,7 +1369,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         ResultSet rs = null;
         try {
             DatabaseMetaData dbmd = conn.getMetaData();
-            rs = dbmd.getProcedures(null, "QT\\_Ora9DS", null);
+            rs = dbmd.getProcedures(null, "QT\\_Ora9DS", null); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
             if(rs != null) {
@@ -1377,11 +1377,11 @@ public class TestMMDatabaseMetaData extends TestCase {
             }
         }
         
-        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();   
         
-        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        rs = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
                      Collections.EMPTY_LIST,
@@ -1412,88 +1412,88 @@ public class TestMMDatabaseMetaData extends TestCase {
     //////////////////////Expected Result//////////////////
 
     private Map getExpected() {
-        Map expected = new HashMap();
+        Map<String, Object> expected = new HashMap<String, Object>();
         // return type -- boolean
-        expected.put("allProceduresAreCallable", new Boolean(true)); //$NON-NLS-1$
-        expected.put("allTablesAreSelectable", new Boolean(true)); //$NON-NLS-1$
-        expected.put("doesMaxRowSizeIncludeBlobs", new Boolean(false)); //$NON-NLS-1$
-        expected.put("isCatalogAtStart", new Boolean(false)); //$NON-NLS-1$
-        expected.put("isReadOnly", new Boolean(false)); //$NON-NLS-1$
-        expected.put("locatorsUpdateCopy", new Boolean(false)); //$NON-NLS-1$
-        expected.put("nullPlusNonNullIsNull", new Boolean(true)); //$NON-NLS-1$
-        expected.put("nullsAreSortedAtEnd", new Boolean(false)); //$NON-NLS-1$
-        expected.put("nullsAreSortedAtStart", new Boolean(false)); //$NON-NLS-1$
-        expected.put("nullsAreSortedHigh", new Boolean(false)); //$NON-NLS-1$
-        expected.put("nullsAreSortedLow", new Boolean(true)); //$NON-NLS-1$
-        expected.put("storesLowerCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("storesLowerCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("storesMixedCaseIdentifiers", new Boolean(true)); //$NON-NLS-1$
-        expected.put("storesMixedCaseQuotedIdentifiers", new Boolean(true)); //$NON-NLS-1$
-        expected.put("storesUpperCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("storesUpperCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsAlterTableWithAddColumn", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsAlterTableWithDropColumn", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsANSI92EntryLevelSQL", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsANSI92FullSQL", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsANSI92IntermediateSQL", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsBatchUpdates", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsCatalogsInDataManipulation", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsCatalogsInIndexDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsCatalogsInPrivilegeDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsCatalogsInProcedureCalls", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsCatalogsInTableDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsColumnAliasing", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsCorrelatedSubqueries", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsCoreSQLGrammar", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsDataDefinitionAndDataManipulationTransactions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsDataManipulationTransactionsOnly", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsDifferentTableCorrelationNames", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsExpressionsInOrderBy", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsExtendedSQLGrammar", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsFullOuterJoins", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsGetGeneratedKeys", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsGroupBy", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsGroupByBeyondSelect", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsGroupByUnrelated", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsIntegrityEnhancementFacility", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsLikeEscapeClause", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsLimitedOuterJoins", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsMinimumSQLGrammar", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsMixedCaseIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsMixedCaseQuotedIdentifiers", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsOpenCursorsAcrossCommit", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsMultipleResultSets", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsMultipleOpenResults", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsMultipleTransactions", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsNamedParameters", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsNonNullableColumns", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsOpenCursorsAcrossRollback", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsOpenStatementsAcrossCommit", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsOpenStatementsAcrossRollback", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsOrderByUnrelated", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsOuterJoins", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsPositionedDelete", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsPositionedUpdate", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsSavepoints", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsSchemasInDataManipulation", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSchemasInIndexDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsSchemasInPrivilegeDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsSchemasInProcedureCalls", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSchemasInTableDefinitions", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsSelectForUpdate", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsStatementPooling", new Boolean(false)); //$NON-NLS-1$
-        expected.put("supportsStoredProcedures", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSubqueriesInComparisons", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSubqueriesInExists", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSubqueriesInIns", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsSubqueriesInQuantifieds", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsTableCorrelationNames", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsTransactions", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsUnion", new Boolean(true)); //$NON-NLS-1$
-        expected.put("supportsUnionAll", new Boolean(true)); //$NON-NLS-1$
-        expected.put("usesLocalFilePerTable", new Boolean(false)); //$NON-NLS-1$
-        expected.put("usesLocalFiles", new Boolean(false)); //$NON-NLS-1$
-        expected.put("usesLocalFilePerTable", new Boolean(false)); //$NON-NLS-1$
+        expected.put("allProceduresAreCallable", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("allTablesAreSelectable", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("doesMaxRowSizeIncludeBlobs", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("isCatalogAtStart", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("isReadOnly", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("locatorsUpdateCopy", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("nullPlusNonNullIsNull", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("nullsAreSortedAtEnd", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("nullsAreSortedAtStart", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("nullsAreSortedHigh", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("nullsAreSortedLow", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("storesLowerCaseIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("storesLowerCaseQuotedIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("storesMixedCaseIdentifiers", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("storesMixedCaseQuotedIdentifiers", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("storesUpperCaseIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("storesUpperCaseQuotedIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsAlterTableWithAddColumn", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsAlterTableWithDropColumn", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsANSI92EntryLevelSQL", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsANSI92FullSQL", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsANSI92IntermediateSQL", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsBatchUpdates", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsCatalogsInDataManipulation", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsCatalogsInIndexDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsCatalogsInPrivilegeDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsCatalogsInProcedureCalls", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsCatalogsInTableDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsColumnAliasing", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsCorrelatedSubqueries", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsCoreSQLGrammar", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsDataDefinitionAndDataManipulationTransactions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsDataManipulationTransactionsOnly", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsDifferentTableCorrelationNames", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsExpressionsInOrderBy", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsExtendedSQLGrammar", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsFullOuterJoins", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsGetGeneratedKeys", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsGroupBy", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsGroupByBeyondSelect", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsGroupByUnrelated", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsIntegrityEnhancementFacility", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsLikeEscapeClause", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsLimitedOuterJoins", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsMinimumSQLGrammar", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsMixedCaseIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsMixedCaseQuotedIdentifiers", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsOpenCursorsAcrossCommit", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsMultipleResultSets", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsMultipleOpenResults", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsMultipleTransactions", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsNamedParameters", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsNonNullableColumns", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsOpenCursorsAcrossRollback", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsOpenStatementsAcrossCommit", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsOpenStatementsAcrossRollback", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsOrderByUnrelated", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsOuterJoins", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsPositionedDelete", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsPositionedUpdate", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsSavepoints", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsSchemasInDataManipulation", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSchemasInIndexDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsSchemasInPrivilegeDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsSchemasInProcedureCalls", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSchemasInTableDefinitions", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsSelectForUpdate", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsStatementPooling", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsStoredProcedures", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInComparisons", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInExists", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInIns", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsSubqueriesInQuantifieds", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsTableCorrelationNames", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsTransactions", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsUnion", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("supportsUnionAll", Boolean.TRUE); //$NON-NLS-1$
+        expected.put("usesLocalFilePerTable", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("usesLocalFiles", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("usesLocalFilePerTable", Boolean.FALSE); //$NON-NLS-1$
 
         // return type -- int
         expected.put("getDatabaseMinorVersion", new Integer(EmbeddedDriver.MINOR_VERSION)); //$NON-NLS-1$

@@ -48,7 +48,6 @@ import com.metamatrix.console.ui.views.summary.SummaryHostInfo;
 import com.metamatrix.console.ui.views.summary.SummaryInfoProvider;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
-import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;

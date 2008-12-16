@@ -67,7 +67,7 @@ public class RoundRobinSelectionPolicy implements ServiceSelectionPolicy  {
         if (this.preferLocal) {
 	        if ( localServices != null && ! localServices.isEmpty() ) {
 		        this.localCurrentIndex = (this.localCurrentIndex+1) % localServices.size();
-	    	    serviceBinding = (ServiceRegistryBinding) localServices.get(localCurrentIndex);
+	    	    serviceBinding = localServices.get(localCurrentIndex);
 	        }
         }
         else {

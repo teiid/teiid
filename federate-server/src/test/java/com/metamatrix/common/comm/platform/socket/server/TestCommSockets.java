@@ -139,8 +139,7 @@ public class TestCommSockets extends TestCase {
 		p.setProperty(MMURL.CONNECTION.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
 				secure).getAppServerURL()); 
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
-		return (SocketServerConnection) SocketServerConnectionFactory
-				.getInstance().createConnection(p);
+		return SocketServerConnectionFactory.getInstance().createConnection(p);
 	}
 
 	public void testSSLConnectWithNonSSLServer() throws Exception {

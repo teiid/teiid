@@ -25,7 +25,6 @@
 package com.metamatrix.connector.xml.base;
 
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -90,7 +89,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -111,7 +110,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -131,7 +130,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNull("CriteriaDesc is not null", desc);
@@ -151,7 +150,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -171,7 +170,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("exception not thrown");
@@ -190,7 +189,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNull("CriteriaDesc is not null", desc);
@@ -210,7 +209,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -231,7 +230,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
     				CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
@@ -252,7 +251,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
@@ -273,7 +272,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
@@ -293,7 +292,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
@@ -314,7 +313,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
@@ -335,7 +334,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -356,7 +355,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -376,7 +375,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -396,7 +395,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -418,7 +417,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -437,7 +436,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -456,7 +455,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -476,7 +475,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertNotNull("CriteriaDesc is null", desc);
@@ -495,7 +494,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals(desc.getColumnName(), desc.getInputXpath());
@@ -515,7 +514,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals(desc.getColumnName(), desc.getInputXpath());
@@ -534,7 +533,7 @@ public class TestCriteriaDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             assertEquals("", desc.getDataAttributeName());
@@ -708,7 +707,7 @@ public class TestCriteriaDesc extends TestCase {
 	    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
 	    	IExpression expr = symbol.getExpression();
 	    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-	    	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+	    	MetadataID elementID = ((IElement) expr).getMetadataID();
 	    	Element elem = (Element) metadata.getObject(elementID);
 	        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
 	        assertEquals("There should be two values" , 2, desc.getNumberOfValues());
@@ -729,7 +728,7 @@ public class TestCriteriaDesc extends TestCase {
 	    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
 	    	IExpression expr = symbol.getExpression();
 	    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-	    	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+	    	MetadataID elementID = ((IElement) expr).getMetadataID();
 	    	Element elem = (Element) metadata.getObject(elementID);
 	        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
 	        assertTrue("We should be able to increment this CriteriaDesc", desc.incrementIndex());
@@ -889,7 +888,7 @@ public class TestCriteriaDesc extends TestCase {
         IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
     	IExpression expr = symbol.getExpression();
-    	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+    	MetadataID elementID = ((IElement) expr).getMetadataID();
     	Element elem = (Element) metadata.getObject(elementID);
     	return elem;        		
 	}

@@ -63,7 +63,6 @@ import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.dqp.config.PlatformConfigSource;
 import com.metamatrix.server.util.LogConstants;
-import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * Wraps up a QueryServiceEngine to tie it into the platform concept of services.  Is a remote object.

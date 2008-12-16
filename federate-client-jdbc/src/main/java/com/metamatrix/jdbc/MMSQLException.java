@@ -200,9 +200,9 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
                     super.setNextException(ex);
                     break;
                 } else {
-                    super.setNextException(new MMSQLException((SQLException)childException, getMessage(childException, null),
+                    super.setNextException(new MMSQLException(childException, getMessage(childException, null),
                                                               false));
-                    childException = ((SQLException)childException).getNextException();
+                    childException = childException.getNextException();
                 } 
             }
         }

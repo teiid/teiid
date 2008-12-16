@@ -76,7 +76,7 @@ public class MMURL {
 		/**
 		 * A plugable discovery strategy for the client.  Defaults to using the AdminApi. 
 		 */
-		public static final String DISCOVERY_STRATEGY = "discoveryStategy";
+		public static final String DISCOVERY_STRATEGY = "discoveryStategy"; //$NON-NLS-1$
 		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
 		/**
 		 * Non-secure MetaMatrix Protocol.
@@ -165,7 +165,7 @@ public class MMURL {
     }
     
     private boolean hasValidURLProtocol(String url) {
-        return ( url != null && (url.startsWith(DEFAULT_PROTOCOL)) || url.startsWith(SECURE_PROTOCOL));        
+        return url != null && (url.startsWith(DEFAULT_PROTOCOL) || url.startsWith(SECURE_PROTOCOL));        
     }
     
     public List<HostInfo> getHostInfo() {
@@ -183,7 +183,7 @@ public class MMURL {
         if( hosts != null) {
             Iterator<HostInfo> iterator = hosts.iterator();
             while (iterator.hasNext()) {
-                HostInfo element = (HostInfo)iterator.next();
+                HostInfo element = iterator.next();
                 hostList.append(element.getHostName());
                 if( iterator.hasNext()) { 
                     hostList.append(COMMA_DELIMITER); 
@@ -204,7 +204,7 @@ public class MMURL {
         if( hosts != null) {
             Iterator<HostInfo> iterator = hosts.iterator();
             while (iterator.hasNext()) {
-                HostInfo element = (HostInfo)iterator.next();
+                HostInfo element = iterator.next();
                 portList.append(element.getPortNumber());
                 if( iterator.hasNext()) { 
                     portList.append(COMMA_DELIMITER); 
@@ -274,7 +274,7 @@ public class MMURL {
             }
             Iterator<HostInfo> iter = hosts.iterator();
             while (iter.hasNext()) {
-                HostInfo host = (HostInfo)iter.next();
+                HostInfo host = iter.next();
                 sb.append(host.getHostName());
                 sb.append(COLON_DELIMITER); 
                 sb.append(host.getPortNumber());

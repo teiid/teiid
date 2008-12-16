@@ -61,8 +61,8 @@ public class WebServiceUtil {
 	 * to assure that the getUpdatedVDBResources is the only procedure used by this account. The password 
 	 * is not checked so it's value is not important, it just can't be blank.
 	 */
-	public static String WSDLUSER = "MetaMatrixWSDLUser"; //$NON-NLS-1$
-	public static String WSDLPASSWORD = "mmx"; //$NON-NLS-1$
+	public static final String WSDLUSER = "MetaMatrixWSDLUser"; //$NON-NLS-1$
+	public static final String WSDLPASSWORD = "mmx"; //$NON-NLS-1$
 
 	/**
 	 * This method will validate that the action value is set. If the value is not set a SOAPException will be thrown. The value

@@ -99,7 +99,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
     	Iterator iter = attrList.iterator();
     	Iterator eIter = expectedAttrNameList.iterator();
     	while(iter.hasNext()&&eIter.hasNext()) {
-			String actualName = (String)((Attribute)iter.next()).getID();
+			String actualName = ((Attribute)iter.next()).getID();
 			String expectedName = (String)eIter.next();
 			assertEquals(actualName, expectedName);
     	}

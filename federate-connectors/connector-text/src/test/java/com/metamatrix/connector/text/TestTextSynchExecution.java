@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  * TODO: test cancel
@@ -55,12 +56,12 @@ public class TestTextSynchExecution extends TestCase {
         List[] expected = new List[2];
         List value1 = new ArrayList();
         value1.add(new Integer(1));
-        value1.add(new java.sql.Date(103, 2, 25));
+        value1.add(TimestampUtil.createDate(103, 2, 25));
         value1.add("Blind"); //$NON-NLS-1$
 
         List value2 = new ArrayList();
         value2.add(new Integer(2));
-        value2.add(new java.sql.Date(98, 3, 29));
+        value2.add(TimestampUtil.createDate(98, 3, 29));
         value2.add("Antipop"); //$NON-NLS-1$
         expected[0] = value1;
         expected[1] = value2;

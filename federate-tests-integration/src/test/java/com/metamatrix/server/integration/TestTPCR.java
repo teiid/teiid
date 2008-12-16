@@ -24,7 +24,6 @@
 package com.metamatrix.server.integration;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +36,7 @@ import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.processor.HardcodedDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.unittest.TimestampUtil;
 
 
 /** 
@@ -72,9 +72,9 @@ public class TestTPCR extends BaseQueryTest {
         HardcodedDataManager dataMgr = new HardcodedDataManager();
     
         List[] expected =
-            new List[] { Arrays.asList(new Object[] { new Double(2456423.0), new BigDecimal("406181.0111"), new Date(95, 2, 5), new Double(0.0) }), //$NON-NLS-1$
-                         Arrays.asList(new Object[] { new Double(3459808.0), new BigDecimal("405838.6989"), new Date(95, 2, 4), new Double(0.0) }), //$NON-NLS-1$
-                         Arrays.asList(new Object[] { new Double(492164.0), new BigDecimal("390324.0610"), new Date(95, 1, 19), new Double(0.0) }) }; //$NON-NLS-1$
+            new List[] { Arrays.asList(new Object[] { new Double(2456423.0), new BigDecimal("406181.0111"), TimestampUtil.createDate(95, 2, 5), new Double(0.0) }), //$NON-NLS-1$
+                         Arrays.asList(new Object[] { new Double(3459808.0), new BigDecimal("405838.6989"), TimestampUtil.createDate(95, 2, 4), new Double(0.0) }), //$NON-NLS-1$
+                         Arrays.asList(new Object[] { new Double(492164.0), new BigDecimal("390324.0610"), TimestampUtil.createDate(95, 1, 19), new Double(0.0) }) }; //$NON-NLS-1$
 
         dataMgr.addData("SELECT g_2.l_orderkey AS c_0, SUM((g_2.l_extendedprice * (1 - g_2.l_discount))) AS c_1, g_1.o_orderdate AS c_2, g_1.o_shippriority AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_2.l_orderkey = g_1.o_orderkey) AND (g_2.l_shipdate > {ts'1995-03-15 00:00:00.0'}) AND (g_0.c_custkey = g_1.o_custkey) AND (g_0.c_mktsegment = 'BUILDING') AND (g_1.o_orderdate < {d'1995-03-15'}) GROUP BY g_2.l_orderkey, g_1.o_orderdate, g_1.o_shippriority ORDER BY c_1 DESC, c_2", //$NON-NLS-1$
                         expected);

@@ -81,7 +81,7 @@ public abstract class BaseDriver implements Driver {
         DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
 
         // copy the elements from the list to the array
-        return (DriverPropertyInfo[])driverProps.toArray(propInfo);
+        return driverProps.toArray(propInfo);
     }
     
     abstract List<DriverPropertyInfo> getAdditionalPropertyInfo(String url, Properties info);

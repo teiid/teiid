@@ -87,7 +87,7 @@ public class TestOutputXPathDesc extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -110,7 +110,7 @@ public class TestOutputXPathDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             OutputXPathDesc desc = new OutputXPathDesc(elem);
             assertNotNull("OutputXPathDesc is null", desc);
@@ -129,7 +129,7 @@ public class TestOutputXPathDesc extends TestCase {
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
         	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
+        	MetadataID elementID = ((IElement) expr).getMetadataID();
         	Element elem = (Element) metadata.getObject(elementID);
             OutputXPathDesc desc = new OutputXPathDesc(elem);
             fail("should not be able to create OuputXPathDesc with no XPath");
@@ -189,7 +189,7 @@ public class TestOutputXPathDesc extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -214,7 +214,7 @@ public class TestOutputXPathDesc extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");

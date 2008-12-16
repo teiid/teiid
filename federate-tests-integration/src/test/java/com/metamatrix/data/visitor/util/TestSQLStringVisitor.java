@@ -115,7 +115,7 @@ public class TestSQLStringVisitor extends TestCase {
         FakeMetadataObject bqt1 = FakeMetadataFactory.createPhysicalModel("BQT1"); //$NON-NLS-1$
         FakeMetadataObject bqt1SmallA = FakeMetadataFactory.createPhysicalGroup("BQT1.SmallA", bqt1); //$NON-NLS-1$
         bqt1SmallA.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "SmallishA");//$NON-NLS-1$
-        FakeMetadataObject doubleNum = FakeMetadataFactory.createElement("DoubleNum", bqt1SmallA, DataTypeManager.DefaultDataTypes.DOUBLE, 0);
+        FakeMetadataObject doubleNum = FakeMetadataFactory.createElement("DoubleNum", bqt1SmallA, DataTypeManager.DefaultDataTypes.DOUBLE, 0); //$NON-NLS-1$
         doubleNum.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "doublishNum");//$NON-NLS-1$
 
         FakeMetadataStore store = new FakeMetadataStore();
@@ -136,7 +136,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testVisitIAggregateDistinct() throws Exception {
         String expected = "COUNT(DISTINCT *)"; //$NON-NLS-1$
         AggregateImpl impl = new AggregateImpl("COUNT", true, null, Integer.class); //$NON-NLS-1$
-        assertEquals(expected, getString(impl)); //$NON-NLS-1$
+        assertEquals(expected, getString(impl)); 
     }
 
     /*
@@ -270,9 +270,9 @@ public class TestSQLStringVisitor extends TestCase {
 
         IExpression [] params = null;
         params = new IExpression[2];
-        IGroup g = new GroupImpl("SmallA", null, metadataFactory.createMetadataID(facade.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP), MetadataID.TYPE_GROUP));
-        IElement e = new ElementImpl(g, "DoubleNum", metadataFactory.createMetadataID(facade.getStore().findObject("DoubleNum", FakeMetadataObject.ELEMENT), MetadataID.TYPE_ELEMENT), Double.class); //$NON-NLS-1$
-        params[0] = e; //$NON-NLS-1$
+        IGroup g = new GroupImpl("SmallA", null, metadataFactory.createMetadataID(facade.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP), MetadataID.TYPE_GROUP)); //$NON-NLS-1$
+        IElement e = new ElementImpl(g, "DoubleNum", metadataFactory.createMetadataID(facade.getStore().findObject("DoubleNum", FakeMetadataObject.ELEMENT), MetadataID.TYPE_ELEMENT), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
+        params[0] = e;
         params[1] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
 
         
@@ -280,7 +280,7 @@ public class TestSQLStringVisitor extends TestCase {
         final String expected = "convert(SmallishA.doublishNum, integer)"; //$NON-NLS-1$
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
         
-        assertEquals(expected, getString(test, metadata  )); //$NON-NLS-1$
+        assertEquals(expected, getString(test, metadata  )); 
     }
     
     public void testVisitConvertFunctionOracleStyle() throws Exception {
@@ -292,7 +292,7 @@ public class TestSQLStringVisitor extends TestCase {
         params[1] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
         
-        assertEquals(expected, getString(test)); //$NON-NLS-1$
+        assertEquals(expected, getString(test)); 
     }
 
     public void testVisitConvertFunctionSQLServerStyle() throws Exception {
@@ -304,7 +304,7 @@ public class TestSQLStringVisitor extends TestCase {
         params[1] = new ElementImpl(null, "columnA", null, String.class); //$NON-NLS-1$
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
         
-        assertEquals(expected, getString(test)); //$NON-NLS-1$
+        assertEquals(expected, getString(test)); 
         
     }
 
@@ -476,7 +476,7 @@ public class TestSQLStringVisitor extends TestCase {
      */
     public void testVisitISubqueryCompareCriteria() throws Exception {
         String expected = "g1.e1 > SOME (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestSubqueryCompareCriteriaImpl.example())); //$NON-NLS-1$
+        assertEquals(expected, getString(TestSubqueryCompareCriteriaImpl.example())); 
     }
 
     /*
@@ -484,7 +484,7 @@ public class TestSQLStringVisitor extends TestCase {
      */
     public void testVisitISubqueryInCriteria() throws Exception {
         String expected = "g1.e1 NOT IN (SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE (100 >= 200) AND (500 < 600) GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING (100 >= 200) AND (500 < 600) ORDER BY e1, e2 DESC, e3, e4 DESC)"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestSubqueryInCriteriaImpl.example())); //$NON-NLS-1$
+        assertEquals(expected, getString(TestSubqueryInCriteriaImpl.example())); 
     }
 
     public void testVisitIUnion1() throws Exception {

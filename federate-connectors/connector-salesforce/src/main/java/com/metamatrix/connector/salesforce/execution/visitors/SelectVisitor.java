@@ -35,7 +35,6 @@ import com.metamatrix.data.language.IElement;
 import com.metamatrix.data.language.IExpression;
 import com.metamatrix.data.language.IFrom;
 import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IOrderBy;
 import com.metamatrix.data.language.IQuery;
 import com.metamatrix.data.language.ISelect;
 import com.metamatrix.data.language.ISelectSymbol;
@@ -156,7 +155,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			boolean first = true;
 			Iterator<String> iter = criteriaList.iterator();
 			while(iter.hasNext()) {
-				String criterion = (String) iter.next();
+				String criterion = iter.next();
 				if(first) {
 					result.append(criterion).append(SPACE);
 					first = false;

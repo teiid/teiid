@@ -82,7 +82,7 @@ public class TestParameterDescriptor extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -106,7 +106,7 @@ public class TestParameterDescriptor extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -131,7 +131,7 @@ public class TestParameterDescriptor extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -193,7 +193,7 @@ public class TestParameterDescriptor extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");
@@ -218,7 +218,7 @@ public class TestParameterDescriptor extends TestCase {
         IExpression expr = selectSymbol.getExpression();
         Element element = null;
         try {
-             MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+             MetadataID elementID = ((IElement) expr).getMetadataID();    
              element = (Element) metadata.getObject(elementID);
              assertTrue(ParameterDescriptor.testForParam(element));
         } catch (ConnectorException ce) {
@@ -233,7 +233,7 @@ public class TestParameterDescriptor extends TestCase {
         expr = selectSymbol.getExpression();
         element = null;
         try {
-             MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+             MetadataID elementID = ((IElement) expr).getMetadataID();    
              element = (Element) metadata.getObject(elementID);
              assertFalse(ParameterDescriptor.testForParam(element));
         } catch (ConnectorException ce) {
@@ -252,7 +252,7 @@ public class TestParameterDescriptor extends TestCase {
         Element element = null;
         try {
             if (expr instanceof IElement) {
-                MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();    
+                MetadataID elementID = ((IElement) expr).getMetadataID();    
                 element = (Element) metadata.getObject(elementID); 
             } else {
                 fail("select symbols is not an element");

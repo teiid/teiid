@@ -222,7 +222,7 @@ public class TestMMURL extends TestCase {
     public final void testHostInfoEquals() {
         HostInfo expectedResults = new HostInfo("localhost","31000");  //$NON-NLS-1$//$NON-NLS-2$
         MMURL url = new MMURL("mm://localhost:31000"); //$NON-NLS-1$
-        HostInfo actualResults = (HostInfo) url.getHostInfo().get(0);
+        HostInfo actualResults = url.getHostInfo().get(0);
         assertEquals(expectedResults,actualResults);
     }
         
@@ -233,7 +233,7 @@ public class TestMMURL extends TestCase {
         List hosts = url.getHostInfo();
         assertNotNull("MMURL should have 1 Host", hosts );  //$NON-NLS-1$ 
         assertEquals(1,hosts.size());  
-        HostInfo actualResults = (HostInfo) url.getHostInfo().get(0);
+        HostInfo actualResults = url.getHostInfo().get(0);
         assertEquals(expectedResults,actualResults);
     }
     
@@ -244,7 +244,7 @@ public class TestMMURL extends TestCase {
         List hosts = url.getHostInfo();
         assertNotNull("MMURL should have 1 Host", hosts );  //$NON-NLS-1$ 
         assertEquals(1,hosts.size());  
-        HostInfo actualResults = (HostInfo) url.getHostInfo().get(0);
+        HostInfo actualResults = url.getHostInfo().get(0);
         assertEquals(expectedResults,actualResults);
         assertEquals("mm://myhost:12345", url.getAppServerURL()); //$NON-NLS-1$
     }
@@ -256,7 +256,7 @@ public class TestMMURL extends TestCase {
         List hosts = url.getHostInfo();
         assertNotNull("MMURL should have 1 Host", hosts );  //$NON-NLS-1$ 
         assertEquals(1,hosts.size());  
-        HostInfo actualResults = (HostInfo) url.getHostInfo().get(0);
+        HostInfo actualResults = url.getHostInfo().get(0);
         assertEquals(expectedResults,actualResults);
         assertEquals("mms://myhost:12345", url.getAppServerURL()); //$NON-NLS-1$
     }

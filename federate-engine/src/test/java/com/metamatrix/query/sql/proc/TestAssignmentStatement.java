@@ -28,7 +28,6 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.sql.lang.From;

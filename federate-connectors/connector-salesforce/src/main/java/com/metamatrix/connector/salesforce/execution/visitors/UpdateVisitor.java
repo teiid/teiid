@@ -66,7 +66,7 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		boolean first = true;
 		Iterator<String> iter = criteriaList.iterator();
 		while(iter.hasNext()) {
-			String criterion = (String) iter.next();
+			String criterion = iter.next();
 			if(first) {
 				result.append(criterion).append(SPACE);
 				first = false;

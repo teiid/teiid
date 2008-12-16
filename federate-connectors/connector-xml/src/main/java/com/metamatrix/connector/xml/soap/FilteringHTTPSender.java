@@ -1,6 +1,5 @@
 package com.metamatrix.connector.xml.soap;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 
@@ -9,7 +8,6 @@ import org.apache.commons.httpclient.HttpMethodBase;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
 import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class FilteringHTTPSender extends CommonsHTTPSender {
 
