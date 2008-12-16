@@ -86,6 +86,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     // time current state was set
     private Date stateChangeTime;
 
+    private Throwable initException = null;
+    
     /**
      * Default constructor.
      * Set stateChangedTime
@@ -122,23 +124,11 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
         this.props = props;
 
         serviceType = props.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME);
-//        routingID = props.getProperty(ServicePropertyNames.SERVICE_ROUTING_ID);
         instanceName = props.getProperty(ServicePropertyNames.INSTANCE_NAME);
 
         if (serviceType == null || serviceType.trim().length() == 0) {
             throw new ServiceException(ServiceMessages.SERVICE_0002, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0002, ServicePropertyNames.COMPONENT_TYPE_NAME ));
         }
-
-        // This code is required for remote objects. The class must either extend
-        // javax.rmi.PortableRemoteObject or call PortableRemoteObject.exportObject(this)
-        // in the constructor. Extending PortableRemoteObject will not work with Weblogic's
-        // RMI implementation, so the solution is to check the application server, if Websphere
-        // we export the object.
-        // [JC] Moved this out of the ctor and took out call to PropertyService.getProperty().
-        //String platformString = props.getProperty(CommonPropertyNames.SERVER_PLATFORM);
-        //if(platformString != null && platformString.equalsIgnoreCase(CommonPropertyNames.WEBSPHERE_PLATFORM)) {
-        //    PortableRemoteObject.exportObject(this);
-        //}
 
         logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0001, instanceName));
         logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0002, instanceName, System.getProperty("java.class.path"))); //$NON-NLS-1$
@@ -229,7 +219,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
     /**
      * This method will gracefully shutdown the service.
-     * Subclassers of AbstractService class should implemenent
+     * Sub classes of AbstractService class should implement
      * unregisterForEvents(), closeService(), waitForServiceToClear() and
      * killService to gracefully shut down the service.
      *
@@ -249,7 +239,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
     /**
      * This method will shutdown the service immediately.
-     * Subclassers of AbstractService class should implemenent
+     * Sub classes of AbstractService class should implement
      * unregisterForEvents() and killService().
      */
     public final void dieNow(){
@@ -260,7 +250,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
                 markAsClosed();
                 unregisterForEvents();
             }
-
+            this.initException = null;
             killService();
         } catch (Exception e) {
             throw new ServiceException(e, ServiceMessages.SERVICE_0005, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0005, getServiceType()));
@@ -607,8 +597,13 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @param Throwable 
      *      */
     public void setInitException(Throwable error) {
+    	this.initException = error;
     }
 
+    public Throwable getInitException() {
+    	return this.initException;
+    }
+    
     /**
      * Return name of service (instance name)
      */

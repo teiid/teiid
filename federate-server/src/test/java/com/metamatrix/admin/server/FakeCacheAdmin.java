@@ -152,4 +152,9 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
 		this.state = state;
 	}
 
+	@Override
+	public Throwable getInitException() {
+		return null;
+	}
+
 }

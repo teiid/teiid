@@ -263,4 +263,9 @@ public class FakeServerSessionService implements SessionServiceInterface {
 	public void updateState(int state) {
 	}
 
+	@Override
+	public Throwable getInitException() {
+		return null;
+	}
+
 }

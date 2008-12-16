@@ -56,19 +56,17 @@ public class ServiceRegistryBinding implements Serializable {
 			if (!m.getDeclaringClass().equals(ServiceInterface.class)) {
 				proxiedService.checkState();
 			}
-			else {
-				if (m.getName().equals("updateState")) { //$NON-NLS-1$
-					ServiceRegistryBinding.this.updateState(((Integer)args[0]).intValue());
-				}
-				else if (m.getName().equals("setInitException")) { //$NON-NLS-1$
-					ServiceRegistryBinding.this.setInitException((Throwable)args[0]);
-				}				
-			}
+
+			Object returnObj = null;
 			try {
-		        return m.invoke(proxiedService, args);
+				returnObj = m.invoke(proxiedService, args);
 		    } catch (InvocationTargetException err) {
 		        throw err.getTargetException();
 		    }
+		    
+		    ServiceRegistryBinding.this.updateState(proxiedService.getCurrentState());
+		    ServiceRegistryBinding.this.setInitException(proxiedService.getInitException());
+		    return returnObj;
 		}
 	}
 

@@ -133,6 +133,8 @@ public interface ServiceInterface {
      */
     void setInitException(Throwable t);
 
+    Throwable getInitException();
+    
     /**
      * There are reflective based calls on this
      */    

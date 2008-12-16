@@ -778,4 +778,9 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 	public void updateState(int state) {
 	}
 
+	@Override
+	public Throwable getInitException() {
+		return null;
+	}
+
 }

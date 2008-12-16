@@ -34,6 +34,7 @@ import com.google.inject.name.Named;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
@@ -111,7 +112,12 @@ public class VMMonitor implements ServerEvents {
         		List<ServiceRegistryBinding> bindings = registry.getServiceBindings(hostName, vmId.toString());
                 for (ServiceRegistryBinding binding:bindings) {
             		try {
-    					binding.getService().checkState();
+            			// when service in stopped state; this will be null
+            			// if shut down there will not be a binding for it.
+            			ServiceInterface si = binding.getService();
+            			if(si != null) {
+            				binding.getService().checkState();
+            			}
     				} catch (ServiceStateException e) {
     					// OK to throw up, service will capture the error to logs.
     				}

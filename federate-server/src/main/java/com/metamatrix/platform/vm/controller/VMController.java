@@ -927,7 +927,7 @@ public abstract class VMController implements VMControllerInterface {
             final Object[] param1 = new Object[] { serviceID };
             DeployedComponentID deployedComponentID = (DeployedComponentID) deployedComponent.getID();
             logMessage(PlatformPlugin.Util.getString("ServiceController.1",param1)); //$NON-NLS-1$
-            service.init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry); 
+            binding.getService().init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry); 
             logMessage(PlatformPlugin.Util.getString("ServiceController.2",param1)); //$NON-NLS-1$
             logMessage(PlatformPlugin.Util.getString("ServiceController.3",param1)); //$NON-NLS-1$                
                                
@@ -1007,7 +1007,9 @@ public abstract class VMController implements VMControllerInterface {
         }
         
         // Leave binding in registry but remove service instance.
-        events.serviceRemoved(binding.getServiceID());
+        if (shutdown) {
+        	events.serviceRemoved(binding.getServiceID());
+        }
     }
     
     
