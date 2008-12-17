@@ -68,23 +68,8 @@ public class TestMMDatabaseMetaData extends TestCase {
 
     // constant 
     private static final int NO_LIMIT = 0;
-    // constant value giving the names of numeric funtions supported
-        private final static String NUMERIC_FUNCTIONS = "ABS, ACOS, ASIN, ATAN, ATAN2, BITAND, BITNOT, BITOR, BITXOR, CEILING" //$NON-NLS-1$
-        +", COS, COT, DEGREES, EXP, FLOOR, FORMATBIGDECIMAL, FORMATBIGINTEGER" //$NON-NLS-1$
-        +", FORMATDOUBLE, FORMATFLOAT, FORMATINTEGER, FORMATLONG, LOG, LOG10" //$NON-NLS-1$
-        +", MOD, PARSEBIGDECIMAL, PARSEBIGINTEGER, PARSEDOUBLE, PARSEFLOAT" //$NON-NLS-1$
-    +", PARSEINTEGER, PARSELONG, PI, POWER, RADIANS, RAND, ROUND, SIGN, SIN, SQRT, TAN"; //$NON-NLS-1$
     // constant value giving the key words used in metamatrix not in SQL-92
     private final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG"; //$NON-NLS-1$
-    // constant value giving the names of string funtions supported
-        private final static String STRING_FUNCTIONS = "ASCII, CHR, CHAR, CONCAT, INITCAP, INSERT, LCASE, LEFT, LENGTH, LOCATE, LOWER, LPAD, LTRIM, " + //$NON-NLS-1$
-    "REPEAT, REPLACE, RIGHT, RPAD, RTRIM, SUBSTRING, TRANSLATE, UCASE, UPPER"; //$NON-NLS-1$
-    // constant value giving the names of system funtions supported    
-    private final static String SYSTEM_FUNCTIONS = "CAST, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NVL, LOOKUP"; //$NON-NLS-1$
-    // constant value giving the names of date/time funtions supported
-        private final static String DATE_FUNCTIONS = "CURDATE, CURTIME, NOW, DAYNAME, DAYOFMONTH, DAYOFWEEK, DAYOFYEAR, FORMATDATE, " + //$NON-NLS-1$
-        "FORMATTIME, FORMATTIMESTAMP, HOUR, MINUTE, MONTH, MONTHNAME, PARSEDATE, PARSETIME, " + //$NON-NLS-1$
-    "PARSETIMESTAMP, QUARTER, SECOND, TIMESTAMPADD, TIMESTAMPDIFF, WEEK, YEAR"; //$NON-NLS-1$
 
     //==============================================================================
     //  The following 2 constants are defined here to provide access to constants
@@ -1535,14 +1520,14 @@ public class TestMMDatabaseMetaData extends TestCase {
         expected.put("getDriverVersion", "5.5"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getExtraNameCharacters", ".@"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getIdentifierQuoteString", "\""); //$NON-NLS-1$ //$NON-NLS-2$
-        expected.put("getNumericFunctions", NUMERIC_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getNumericFunctions", MMDatabaseMetaData.NUMERIC_FUNCTIONS); //$NON-NLS-1$
         expected.put("getProcedureTerm", "StoredProcedure"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getSchemaTerm", "VirtualDatabase"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getSearchStringEscape", "\\"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getSQLKeywords", KEY_WORDS); //$NON-NLS-1$
-        expected.put("getStringFunctions", STRING_FUNCTIONS); //$NON-NLS-1$
-        expected.put("getSystemFunctions", SYSTEM_FUNCTIONS); //$NON-NLS-1$
-        expected.put("getTimeDateFunctions", DATE_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getStringFunctions", MMDatabaseMetaData.STRING_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getSystemFunctions", MMDatabaseMetaData.SYSTEM_FUNCTIONS); //$NON-NLS-1$
+        expected.put("getTimeDateFunctions", MMDatabaseMetaData.DATE_FUNCTIONS); //$NON-NLS-1$
         //expected.put("getUrl", primaryUrl + serverUrl); //$NON-NLS-1$
         expected.put("getUserName", null); //$NON-NLS-1$
 
