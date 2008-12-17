@@ -388,6 +388,11 @@
         <artifactId>netty</artifactId>
         <version>3.0.2.GA</version>
       </dependency>
+      <dependency>
+      	<groupId>ant</groupId>
+      	<artifactId>ant</artifactId>
+      	<version>1.7.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <modules>
@@ -409,5 +414,6 @@
     <module>federate-tests-integration</module>
     <module>federate-connector-metadata</module>
     <module>federate-cache-jbosscache</module>
+    <module>federate-server-installer</module>
   </modules>
 </project>

@@ -27,15 +27,13 @@
 			<fileset dir="${sql.dir}"/>
 		</copy>		
 
-		
 		<unzip dest="${deploy.dir}/docs">
 			<fileset dir="${bin.dir}">
 			  <include name="*-xa-docs.zip"/>
 			</fileset>
 		</unzip>
-		
 	</target>
-	<!--
+	
 	<target name="build-client-jar" >
 		<mkdir dir="${temp.dir}/client"/>
 		
@@ -52,7 +50,6 @@
 		<delete dir="${temp.dir}/client"/>
 	
 	</target>
-	-->
 	
 	<target name="build-lib-dir" >		
 		<copy todir="${deploy.dir}/lib">
@@ -64,26 +61,16 @@
 			</fileset>
 		</copy>				
 	</target>
-	
-	   <target name="set.os">
-     
-	        <condition property="UnixOS">
-	            <os family="unix"/>   
-	        </condition>               
-	        <condition property="WinOS">
-	            <os family="windows"/>
-	        </condition>   
-
-	    </target>   
-
-	 
-	    <target name="chmod" depends="set.os"  if="UnixOS">
-	        
-	          <chmod dir="${deploy.dir}" perm="ugo+rx" includes="**/*.sh"/>   
-	        
-	     </target> 
-	 
-
-	    	
+	<target name="set.os">
+		<condition property="UnixOS">
+			<os family="unix"/>   
+			</condition>               
+			<condition property="WinOS">
+			<os family="windows"/>
+		</condition>   
+	</target>   
+	<target name="chmod" depends="set.os"  if="UnixOS">
+	    <chmod dir="${deploy.dir}" perm="ugo+rx" includes="**/*.sh"/>   
+    </target> 
 	
 </project>
