@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import junit.framework.TestCase;
 
@@ -86,10 +87,7 @@ public class TestQueryRewriter extends TestCase {
     
     private Criteria parseCriteria(String critStr, QueryMetadataInterface metadata) {
         try {
-            // parse
-            QueryParser parser = new QueryParser();
-            Criteria crit = parser.parseCriteria(critStr);
-
+            Criteria crit = QueryParser.getQueryParser().parseCriteria(critStr);
             
             // resolve against metadata
             QueryResolver.resolveCriteria(crit, metadata);
@@ -2087,7 +2085,12 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteFromUnixTime() throws Exception {
-    	helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+    	try {
+    		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
+    	} finally {
+    		TimeZone.setDefault(null);
+    	}
     }
     
     public void testRewriteNullIf() throws Exception {
