@@ -142,11 +142,6 @@
       <groupId>org.federate</groupId>
       <artifactId>federate-cache-jbosscache</artifactId>
     </dependency>
- 	<dependency>
-      <groupId>ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>1.7.0</version>
-    </dependency> 
     
   </dependencies>
  
