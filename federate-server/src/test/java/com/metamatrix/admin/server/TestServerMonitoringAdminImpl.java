@@ -259,21 +259,14 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
             
             MMDQP dqp = (MMDQP) iter.next();
             if (HOST_1_1_1_1_PROCESS1_DQP1.equals(dqp.getIdentifier())) { 
-                
                 assertEquals("Not Registered", dqp.getStateAsString()); //$NON-NLS-1$
                 assertEquals(false, dqp.isRegistered());
                 assertEquals(true, dqp.isDeployed());
-                
-                
             } else if (HOST_2_2_2_2_PROCESS2_DQP2.equals(dqp.getIdentifier())){ 
-            
                 assertEquals("dqp2", dqp.getDescription()); //$NON-NLS-1$
-                assertEquals("Closed", dqp.getStateAsString()); //$NON-NLS-1$
                 assertEquals(true, dqp.isRegistered());
                 assertEquals(true, dqp.isDeployed());
             } else if (_3_3_3_3_PROCESS3_DQP3.equals(dqp.getIdentifier())) { 
-                
-                assertEquals("Closed", dqp.getStateAsString()); //$NON-NLS-1$
                 assertEquals(true, dqp.isRegistered());
                 assertEquals(true, dqp.isDeployed());            
             } else {
