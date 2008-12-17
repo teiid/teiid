@@ -56,6 +56,7 @@ public class FunctionMethod implements Serializable {
     public static final int CAN_PUSHDOWN = 0;
     public static final int CANNOT_PUSHDOWN = 1;
     public static final int MUST_PUSHDOWN = 2;
+    public static final int SYNTHETIC = 3;
     
     /*
      * always -> normal deterministic functions

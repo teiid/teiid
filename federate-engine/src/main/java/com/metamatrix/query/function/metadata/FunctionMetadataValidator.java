@@ -212,7 +212,7 @@ public class FunctionMetadataValidator {
      * @throws FunctionMetadataException Thrown if invocation method is not valid in some way
      */
     public static final void validateInvocationMethod(String invocationClass, String invocationMethod, int pushdown) throws FunctionMetadataException {
-        if (pushdown != FunctionMethod.MUST_PUSHDOWN) {
+    	if (pushdown == FunctionMethod.CAN_PUSHDOWN || pushdown == FunctionMethod.CANNOT_PUSHDOWN) {
             validateIsNotNull(invocationClass, "Invocation class"); //$NON-NLS-1$
             validateIsNotNull(invocationMethod, "Invocation method"); //$NON-NLS-1$
             validateJavaIdentifier(invocationClass, "Invocation class", true); //$NON-NLS-1$

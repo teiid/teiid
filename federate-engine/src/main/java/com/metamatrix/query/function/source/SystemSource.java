@@ -31,7 +31,9 @@ import java.util.Collection;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataTypes;
 import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionMetadataSource;
 import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
@@ -50,14 +52,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName(); 
     
     /** Cached list of system function metadata, created in constructor */
-    private List functions;
+    private List<FunctionMethod> functions = new ArrayList<FunctionMethod>();
     
     /**
      * Construct a source of system metadata.
      */
     public SystemSource() {
-        this.functions = new ArrayList();
-		
 		// +, -, *, /
         addArithmeticFunction("+", QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         addArithmeticFunction("-", QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -115,6 +115,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addTimestampDiffFunction();
         addTimeZoneFunctions();
         addTimestampCreateFunction();
+        addUnixTimeFunctions();
 		                  
         // string
         addStringFunction("length", QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -179,6 +180,26 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addXpathFunction();
         
         addSecurityFunctions();
+        
+        String[] comparableTypes = new String[] {
+        		DefaultDataTypes.BIG_DECIMAL,
+        		DefaultDataTypes.BIG_INTEGER,
+        		DefaultDataTypes.BOOLEAN,
+        		DefaultDataTypes.BYTE,
+        		DefaultDataTypes.CHAR,
+        		DefaultDataTypes.DATE,
+        		DefaultDataTypes.DOUBLE,
+        		DefaultDataTypes.FLOAT,
+        		DefaultDataTypes.INTEGER,
+        		DefaultDataTypes.LONG,
+        		DefaultDataTypes.SHORT,
+        		DefaultDataTypes.STRING
+        };
+        
+        for (int i = 0; i < comparableTypes.length; i++) {
+        	addTypedNullIfFunction(comparableTypes[i]);
+        	addTypedCoalesceFunction(comparableTypes[i]);
+        }
 
     }
 
@@ -476,7 +497,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                     new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         
-        FunctionMethod concat2 = new FunctionMethod("concat2", QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat2", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        FunctionMethod concat2 = new FunctionMethod("concat2", QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ //$NON-NLS-2$ 
                            new FunctionParameter[] {
                                new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                                new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -1109,6 +1130,33 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                              new FunctionParameter("endTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
+    }
+    
+    private void addUnixTimeFunctions() {
+    	functions.add(new FunctionMethod(FunctionLibrary.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ 
+    			new FunctionParameter[] {
+    				new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1")) //$NON-NLS-1$ //$NON-NLS-2$
+    			},
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")), false, FunctionMethod.DETERMINISTIC )); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    private void addTypedNullIfFunction(String type) {
+        functions.add(
+            new FunctionMethod(FunctionLibrary.NULLIF, QueryPlugin.Util.getString("SystemSource.nullif_description"), MISCELLANEOUS, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("op1", type, QueryPlugin.Util.getString("SystemSource.nullif_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("op2", type, QueryPlugin.Util.getString("SystemSource.nullif_param1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.nullif_result")))); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    //TODO: add support for varargs
+    private void addTypedCoalesceFunction(String type) {
+        functions.add(
+            new FunctionMethod(FunctionLibrary.COALESCE, QueryPlugin.Util.getString("SystemSource.coalesce_description"), MISCELLANEOUS, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("op1", type, QueryPlugin.Util.getString("SystemSource.coalesce_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("op2", type, QueryPlugin.Util.getString("SystemSource.coalesce_param1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.coalesce_result")))); //$NON-NLS-1$ //$NON-NLS-2$
     }
 		
     /**

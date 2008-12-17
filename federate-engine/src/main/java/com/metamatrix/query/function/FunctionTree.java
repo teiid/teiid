@@ -346,7 +346,7 @@ class FunctionTree {
     private FunctionDescriptor createFunctionDescriptor(FunctionMetadataSource source, FunctionMethod method, Class[] inputTypes, Class outputType) {
         Method invocationMethod = null;
         boolean requiresContext = false;
-        if (method.getPushdown() != FunctionMethod.MUST_PUSHDOWN) {
+        if (method.getPushdown() == FunctionMethod.CAN_PUSHDOWN || method.getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
             // Defect 20007 - Ignore the invocation method if pushdown is required.
             Class[] methodSignature = null;
             try {

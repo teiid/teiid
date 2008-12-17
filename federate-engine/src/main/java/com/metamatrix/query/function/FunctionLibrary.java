@@ -78,6 +78,12 @@ public class FunctionLibrary {
     public static final String SUBSTRING = "substring"; //$NON-NLS-1$
     public static final String NVL = "NVL"; //$NON-NLS-1$
     
+    public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
+    public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$
+    
+    public static final String NULLIF = "nullif"; //$NON-NLS-1$
+    public static final String COALESCE = "coalesce"; //$NON-NLS-1$
+
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
 

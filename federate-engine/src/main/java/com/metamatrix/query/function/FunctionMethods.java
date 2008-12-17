@@ -904,23 +904,6 @@ public final class FunctionMethods {
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"concat", str1.getClass().getName(), str2.getClass().getName()})); //$NON-NLS-1$
 	}
 
-    public static Object concat2(Object str1, Object str2)
-        throws FunctionExecutionException {
-
-        if(str1 == null && str2 == null) {
-            return null;
-        } else if (str1 != null && str2 == null) {
-            return str1;
-        } else if (str1 == null && str2 != null) {
-            return str2;
-        }
-        else if(str1 instanceof String && str2 instanceof String) {
-            return (String) str1 + (String) str2;
-        }
-    
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"concat", str1.getClass().getName(), str2.getClass().getName()})); //$NON-NLS-1$
-    }
-    
 	// ================== Function = substring =====================
 
 	public static Object substring(Object str, Object start, Object length)

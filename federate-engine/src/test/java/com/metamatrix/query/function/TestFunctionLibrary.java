@@ -1358,14 +1358,6 @@ public class TestFunctionLibrary extends TestCase {
         helpInvokeMethod("commandpayload", new Class[] {String.class}, new Object[] {"payload"}, c, "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }    
     
-    public void testInvokeConcat2() throws Exception {
-        CommandContext c = new CommandContext();
-        helpInvokeMethod("concat2", new Class[] {String.class, String.class}, new Object[] {null, null}, c,  null); //$NON-NLS-1$ 
-        helpInvokeMethod("concat2", new Class[] {String.class, String.class}, new Object[] {"Foo", null}, c,  "Foo"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpInvokeMethod("concat2", new Class[] {String.class, String.class}, new Object[] {null, "Bar"}, c,  "Bar"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpInvokeMethod("concat2", new Class[] {String.class, String.class}, new Object[] {"Foo", "Bar"}, c,  "FooBar"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }
-    
     public void testNullDependent() {
         FunctionDescriptor actual = library.findFunction("concat2", new Class[] {String.class, String.class}); //$NON-NLS-1$
         assertTrue(actual.isNullDependent());

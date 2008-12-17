@@ -1988,6 +1988,50 @@ public class QueryRewriter {
      * </ol></p>
      */
 	private static Expression rewriteFunction(Function function, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+		//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
+		if (function.getName().equalsIgnoreCase(FunctionLibrary.FROM_UNIXTIME)) {
+			//change the function into timestampadd
+			Function result = new Function(FunctionLibrary.TIMESTAMPADD,
+					new Expression[] {new Constant(ReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
+			//resolve the function
+			FunctionDescriptor descriptor = 
+	        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+			result.setFunctionDescriptor(descriptor);
+			result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
+			return rewriteFunction(result, procCommand, context, metadata);
+		}
+		
+		//rewrite nullif => case when (a = b) then null else a
+		if (function.getName().equalsIgnoreCase(FunctionLibrary.NULLIF)) {
+			List when = Arrays.asList(new Criteria[] {new CompareCriteria(function.getArg(0), CompareCriteria.EQ, function.getArg(1))});
+			Constant nullConstant = new Constant(null, function.getType());
+			List then = Arrays.asList(new Expression[] {nullConstant});
+			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
+			caseExpr.setElseExpression(function.getArg(0));
+			caseExpr.setType(function.getType());
+			return rewriteExpression(caseExpr, procCommand, context, metadata);
+		}
+		
+		//rewrite coalesce(a, b) => case when (a is not null) then a when (b is not null) b else null
+		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
+			Expression[] args = function.getArgs();
+
+			List<Criteria> when = new ArrayList<Criteria>(args.length);
+			List<Expression> then = new ArrayList<Expression>(args.length);
+			for (int i = 0; i < args.length; i++) {
+				IsNullCriteria inc = new IsNullCriteria(args[i]);
+				inc.setNegated(true);
+				when.add(inc);
+				then.add(args[i]);
+			}
+			
+			Constant nullConstant = new Constant(null, function.getType());
+			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
+			caseExpr.setElseExpression(nullConstant);
+			caseExpr.setType(function.getType());
+			return rewriteExpression(caseExpr, procCommand, context, metadata);
+		}
+		
 		//rewrite concat2 - CONCAT2(a, b) ==> CASE WHEN (a is NULL AND b is NULL) THEN NULL ELSE CONCAT( NVL(a, ''), NVL(b, '') )
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.CONCAT2)) {
 			Expression[] args = function.getArgs();

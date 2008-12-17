@@ -29,7 +29,6 @@ import java.sql.Clob;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -388,11 +387,9 @@ public class DataTypeManager {
 		// string)
 		// 2) Choose a non-narrowing over narrowing
 		// 3) Choose t1 arbitrarily
-		if (firstTypeName.equals(DataTypeManager.DefaultDataClasses.STRING
-				.getName())) {
+		if (firstTypeName.equals(DataTypeManager.DefaultDataClasses.STRING.getName())) {
 			return t1;
-		} else if (secondTypeName
-				.equals(DataTypeManager.DefaultDataClasses.STRING.getName())) {
+		} else if (secondTypeName.equals(DataTypeManager.DefaultDataClasses.STRING.getName())) {
 			return t2;
 		} else if (!t1.isNarrowing() && t2.isNarrowing()) {
 			return t1;
@@ -492,30 +489,6 @@ public class DataTypeManager {
 			return conversions.contains(tgtType);
 		}
 		return false;
-	}
-
-	/**
-	 * Get a Comparator that can be used for sorting objects of the given type.
-	 * 
-	 * @param type
-	 * 		Type for comparator
-	 * @return Comparator
-	 */
-	public static Comparator getComparator(Class type) {
-		return null;
-	}
-
-	/**
-	 * Get a Comparator that can be used for sorting objects of the given type
-	 * name. The Class for the specified type does not need to be loaded to get
-	 * this Comparator (although the Comparator class must be, of course).
-	 * 
-	 * @param typeName
-	 * 		Type name for comparator
-	 * @return Comparator
-	 */
-	public static Comparator getComparator(String typeName) {
-		return null;
 	}
 
 	/**

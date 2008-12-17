@@ -85,25 +85,25 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     private final static String KEY_WORDS = "OPTION, SHOWPLAN, DEBUG"; //$NON-NLS-1$
     // constant value giving metamatrix preferred name for a procedure
     private final static String PROCEDURE_TERM = "StoredProcedure"; //$NON-NLS-1$
-    // constant value giving the names of numeric funtions supported
+    // constant value giving the names of numeric functions supported
     private final static String NUMERIC_FUNCTIONS =
         "ABS, ACOS, ASIN, ATAN, ATAN2, BITAND, BITNOT, BITOR, BITXOR, CEILING" //$NON-NLS-1$
         + ", COS, COT, DEGREES, EXP, FLOOR, FORMATBIGDECIMAL, FORMATBIGINTEGER" //$NON-NLS-1$
         + ", FORMATDOUBLE, FORMATFLOAT, FORMATINTEGER, FORMATLONG, LOG, LOG10" //$NON-NLS-1$
         + ", MOD, PARSEBIGDECIMAL, PARSEBIGINTEGER, PARSEDOUBLE, PARSEFLOAT" //$NON-NLS-1$
         + ", PARSEINTEGER, PARSELONG, PI, POWER, RADIANS, RAND, ROUND, SIGN, SIN, SQRT, TAN"; //$NON-NLS-1$
-    // constant value giving the names of string funtions supported
+    // constant value giving the names of string functions supported
     private final static String STRING_FUNCTIONS =
-        "ASCII, CHR, CHAR, CONCAT, INITCAP, INSERT, LCASE, LEFT, LENGTH, LOCATE, LOWER, LPAD, LTRIM, " + //$NON-NLS-1$
+        "ASCII, CHR, CHAR, CONCAT, CONCAT2, INITCAP, INSERT, LCASE, LEFT, LENGTH, LOCATE, LOWER, LPAD, LTRIM, " + //$NON-NLS-1$
         "REPEAT, REPLACE, RIGHT, RPAD, RTRIM, SUBSTRING, TRANSLATE, UCASE, UPPER"; //$NON-NLS-1$
-    // constant value giving the names of date/time funtions supported
+    // constant value giving the names of date/time functions supported
     private final static String DATE_FUNCTIONS =
         "CURDATE, CURTIME, NOW, DAYNAME, DAYOFMONTH, DAYOFWEEK, DAYOFYEAR, FORMATDATE, " + //$NON-NLS-1$
-        "FORMATTIME, FORMATTIMESTAMP, HOUR, MINUTE, MONTH, MONTHNAME, PARSEDATE, PARSETIME, " + //$NON-NLS-1$
+        "FORMATTIME, FORMATTIMESTAMP, FROM_UNIXTIME, HOUR, MINUTE, MONTH, MONTHNAME, PARSEDATE, PARSETIME, " + //$NON-NLS-1$
         "PARSETIMESTAMP, QUARTER, SECOND, TIMESTAMPADD, TIMESTAMPDIFF, WEEK, YEAR"; //$NON-NLS-1$
-    // constant value giving the names of system funtions supported
+    // constant value giving the names of system functions supported
     private final static String SYSTEM_FUNCTIONS =
-        "CAST, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NVL, LOOKUP"; //$NON-NLS-1$
+        "CAST, COALESCE, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NULLIF, NVL, LOOKUP"; //$NON-NLS-1$
     // constant value giving max length of a catalog name allowed in MetaMatrix
     private final static int MAX_CATALOG_NAME_LENGTH = 0;
     // constant value giving max length of a procedure name allowed in MetaMatrix

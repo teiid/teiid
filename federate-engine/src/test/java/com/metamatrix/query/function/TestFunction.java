@@ -1401,11 +1401,4 @@ public class TestFunction extends TestCase {
         assertEquals(systemProperty+"_lowercase", FunctionMethods.env(context, systemProperty.toUpperCase())); //$NON-NLS-1$
     }
     
-    
-    public void testConcat_2() throws Exception {
-        assertEquals(null, FunctionMethods.concat2(null, null)); 
-        assertEquals("Bar", FunctionMethods.concat2(null, "Bar")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("Foo", FunctionMethods.concat2("Foo", null)); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("FooBar", FunctionMethods.concat2("Foo", "Bar")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
 }

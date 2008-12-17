@@ -2085,4 +2085,17 @@ public class TestQueryRewriter extends TestCase {
     public void testRewiteEvaluatableAggregate() {
     	helpTestRewriteCommand("select pm1.g1.e1, max(1) from pm1.g1", "SELECT pm1.g1.e1, 1 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    public void testRewriteFromUnixTime() throws Exception {
+    	helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testRewriteNullIf() throws Exception {
+    	helpTestRewriteCriteria("nullif(pm1.g1.e2, pm1.g1.e4) = 1", "CASE WHEN pm1.g1.e2 = pm1.g1.e4 THEN convert(null, double) ELSE pm1.g1.e2 END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testRewriteCoalesce() throws Exception {
+    	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "CASE WHEN convert(pm1.g1.e2, double) IS NOT NULL THEN convert(pm1.g1.e2, double) WHEN pm1.g1.e4 IS NOT NULL THEN pm1.g1.e4 ELSE convert(null, double) END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
 }

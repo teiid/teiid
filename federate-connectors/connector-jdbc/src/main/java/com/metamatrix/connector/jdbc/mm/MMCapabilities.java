@@ -130,8 +130,9 @@ public class MMCapabilities extends JDBCCapabilities {
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("USER"); //$NON-NLS-1$
-    
-
+        supportedFunctions.add("FROM_UNIXTIME"); //$NON-NLS-1$
+        supportedFunctions.add("NULLIF"); //$NON-NLS-1$
+        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         return supportedFunctions;
     }
     
