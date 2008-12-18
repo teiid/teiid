@@ -364,51 +364,47 @@ public abstract class VMController implements VMControllerInterface {
             ArrayList essentialServices = new ArrayList();
             ArrayList otherServices = new ArrayList();
             
-            if (deployedServices != null) {
-                // create a list of platform services and other services
-                Iterator servicesIterator = deployedServices.iterator();
-                while (servicesIterator.hasNext()) {
-                    DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
+            // create a list of platform services and other services
+            Iterator servicesIterator = deployedServices.iterator();
+            while (servicesIterator.hasNext()) {
+                DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
 
-                    ServiceComponentDefn scd = (ServiceComponentDefn) depComp.getDeployedComponentDefn(configuration.getConfiguration());
+                ServiceComponentDefn scd = (ServiceComponentDefn) depComp.getDeployedComponentDefn(configuration.getConfiguration());
 
-                    if (scd.isEssential()) {
-                        essentialServices.add(depComp);
-                    } else {
-                        otherServices.add(depComp);
-                    }
+                if (scd.isEssential()) {
+                    essentialServices.add(depComp);
+                } else {
+                    otherServices.add(depComp);
                 }
+            }
 
-                // start platform services first (synchronously) 
-                boolean errored = false;
-                servicesIterator = essentialServices.iterator();
-                while (servicesIterator.hasNext()) {
-                    DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
-                    try {
-                        startDeployedService(depComp, null, configuration, true);
-                    } catch (Exception e) {
-                        errored = true;
-                        // error already logged from startDeployedService method.
-                        // continue starting services.
-                    }
+            // start platform services first (synchronously) 
+            boolean errored = false;
+            servicesIterator = essentialServices.iterator();
+            while (servicesIterator.hasNext()) {
+                DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
+                try {
+                    startDeployedService(depComp, null, configuration, true);
+                } catch (Exception e) {
+                    errored = true;
+                    // error already logged from startDeployedService method.
+                    // continue starting services.
                 }
-                
-                if (errored) return;
-                
+            }
+            
+            if (errored) return;
+            
 
-                // now start the rest of the services asynchronously
-                servicesIterator = otherServices.iterator();
-                while (servicesIterator.hasNext()) {
-                    DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
-                    try {
-                        startDeployedService(depComp, null, configuration, false);
-                    } catch (Exception e) {
-                        // error already logged from startDeployedService method.
-                        // continue starting services.
-                    }
+            // now start the rest of the services asynchronously
+            servicesIterator = otherServices.iterator();
+            while (servicesIterator.hasNext()) {
+                DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
+                try {
+                    startDeployedService(depComp, null, configuration, false);
+                } catch (Exception e) {
+                    // error already logged from startDeployedService method.
+                    // continue starting services.
                 }
-            } else {
-            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString(LogMessageKeys.VM_0015, vmComponentDefnID.getName(), host.getID().getName()));
             }
             logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0016, new Integer(deployedServices.size()),  vmComponentDefnID.getName()));
 
@@ -468,67 +464,54 @@ public abstract class VMController implements VMControllerInterface {
 	 *  If synch is true then wait for service to start before returning.
 	 *  Any exceptions will then be thrown to the caller.
 	 *  If synch is false then start service asynchronously.
+	 * @throws ConfigurationException 
 	 */
-	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) {
-
-        try {
-            Properties defaultProps = null;
-            synchronized (this) {
-                defaultProps = defaultPropertiesCache.get(deployedService.getComponentTypeID());
-                
-                if (defaultProps == null) {
-                    if (hostProperties == null) {
-                        hostProperties = CurrentConfiguration.getSystemBootStrapProperties();
-                        hostProperties = new Properties(hostProperties);
-                        PropertiesUtils.putAll(hostProperties, host.getProperties());
-                    }
-                    defaultProps = new Properties(hostProperties);
-                    defaultProps.putAll(configModel.getDefaultPropertyValues(deployedService.getComponentTypeID()));
-                    defaultPropertiesCache.put(deployedService.getComponentTypeID(), defaultProps);
-                }
-            }
-            Properties serviceProps = new Properties(defaultProps);
-            Properties props = configModel.getConfiguration().getAllPropertiesForComponent(deployedService.getID());
-            serviceProps.putAll(props);
-            PropertiesUtils.setOverrideProperies(serviceProps, hostProperties);
+	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) throws ConfigurationException {
+        Properties defaultProps = null;
+        synchronized (this) {
+            defaultProps = defaultPropertiesCache.get(deployedService.getComponentTypeID());
             
-            ProductServiceConfigID pscID = deployedService.getProductServiceConfigID();
-            if (serviceProps != null) {
-
-                String serviceClassName = serviceProps.getProperty( ServicePropertyNames.SERVICE_CLASS_NAME );
-
-                if (serviceClassName != null && serviceClassName.length() > 0) {
-                    logMessage( PlatformPlugin.Util.getString(LogMessageKeys.VM_0025, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()));
-
-                    serviceProps.put(ServicePropertyNames.INSTANCE_NAME, deployedService.getName());
-                    serviceProps.put(ServicePropertyNames.SERVICE_NAME, deployedService.getServiceComponentDefnID().getName());
-                    serviceProps.put(ServicePropertyNames.COMPONENT_TYPE_NAME, deployedService.getComponentTypeID().getFullName());
-
-                    // get routing id.
-                    if (!deployedService.isDeployedConnector()) {
-                        serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, deployedService.getComponentTypeID().getFullName());
-                    } else {
-                        ServiceComponentDefn scd = (ServiceComponentDefn) deployedService.getDeployedComponentDefn(configModel.getConfiguration());
-                        String routingID = scd.getRoutingUUID();
-                        serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, routingID);
-                    }
-                    startService(this.clientServices, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
-
-                } else {
-                    String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()});
-                    throw new ServiceException(msg);
+            if (defaultProps == null) {
+                if (hostProperties == null) {
+                    hostProperties = CurrentConfiguration.getSystemBootStrapProperties();
+                    hostProperties = new Properties(hostProperties);
+                    PropertiesUtils.putAll(hostProperties, host.getProperties());
                 }
-
-            } else {
-                String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0027, deployedService.getServiceComponentDefnID().getName(), id, host.getID().getName());
-                throw new ServiceException(msg);
+                defaultProps = new Properties(hostProperties);
+                defaultProps.putAll(configModel.getDefaultPropertyValues(deployedService.getComponentTypeID()));
+                defaultPropertiesCache.put(deployedService.getComponentTypeID(), defaultProps);
             }
-
-        } catch (Exception e) {
-            String msg =PlatformPlugin.Util.getString(LogMessageKeys.VM_0028, deployedService.getServiceComponentDefnID().getName(), id, host.getID().getName());
-
-            throw new ServiceException(e, msg);
         }
+        Properties serviceProps = new Properties(defaultProps);
+        Properties props = configModel.getConfiguration().getAllPropertiesForComponent(deployedService.getID());
+        serviceProps.putAll(props);
+        PropertiesUtils.setOverrideProperies(serviceProps, hostProperties);
+        
+        ProductServiceConfigID pscID = deployedService.getProductServiceConfigID();
+        String serviceClassName = serviceProps.getProperty( ServicePropertyNames.SERVICE_CLASS_NAME );
+
+        if (serviceClassName != null && serviceClassName.length() > 0) {
+            logMessage( PlatformPlugin.Util.getString(LogMessageKeys.VM_0025, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()));
+
+            serviceProps.put(ServicePropertyNames.INSTANCE_NAME, deployedService.getName());
+            serviceProps.put(ServicePropertyNames.SERVICE_NAME, deployedService.getServiceComponentDefnID().getName());
+            serviceProps.put(ServicePropertyNames.COMPONENT_TYPE_NAME, deployedService.getComponentTypeID().getFullName());
+
+            // get routing id.
+            if (!deployedService.isDeployedConnector()) {
+                serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, deployedService.getComponentTypeID().getFullName());
+            } else {
+                ServiceComponentDefn scd = (ServiceComponentDefn) deployedService.getDeployedComponentDefn(configModel.getConfiguration());
+                String routingID = scd.getRoutingUUID();
+                serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, routingID);
+            }
+            startService(this.clientServices, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
+
+        } else {
+            String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()});
+            throw new ServiceException(msg);
+        }
+
     }
 
 	/**
