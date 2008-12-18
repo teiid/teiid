@@ -25,6 +25,7 @@
 package com.metamatrix.metadata.runtime.model;
 
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -65,9 +67,9 @@ import com.metamatrix.vdb.runtime.BasicModelInfo;
 
 /**
  */
-public class MetadataCache implements MetadataSourceAPI {
+public class MetadataCache implements MetadataSourceAPI, Serializable {
 	
-	private static class MetadataQuery implements IObjectQuery {
+	private static class MetadataQuery implements IObjectQuery, Serializable {
 		
 		private String[] columnNames;
 		private String tableNameInSource;
@@ -104,7 +106,7 @@ public class MetadataCache implements MetadataSourceAPI {
     private static final String GROUPS_NAME_IN_SOURCE = "TABLES.INDEX";  //$NON-NLS-1$
     private static final String[] GROUP_COLUMNS = new String [] {"UUID", "Name", "FullName",  "TableType", "isPhysical", "supportsUpdate", "ModelName", "isSystem"};  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$  //$NON-NLS-7$  //$NON-NLS-8$
     private static final String PROCEDURES_NAME_IN_SOURCE = "PROCEDURES.INDEX#E";  //$NON-NLS-1$
-    private static final String[] PROCEDURE_COLUMNS = new String [] {"FullName"};  //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String[] PROCEDURE_COLUMNS = new String [] {"FullName"};  //$NON-NLS-1$ 
     private static final String COLUMNS_NAME_IN_SOURCE = "COLUMNS.INDEX"; //$NON-NLS-1$
     private static final String[] ELEMENT_COLUMNS = new String [] {"UUID", "FullName", "isUpdatable", "ParentFullName"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$
     
@@ -160,7 +162,7 @@ public class MetadataCache implements MetadataSourceAPI {
          Map sys = new HashMap();
          
          includeMetadata = false;
-         BasicVirtualDatabaseID vdbid = new BasicVirtualDatabaseID(vdbName, vdbVersion);//$NON-NLS-1$
+         BasicVirtualDatabaseID vdbid = new BasicVirtualDatabaseID(vdbName, vdbVersion);
          BasicVirtualDatabase bvdb = new BasicVirtualDatabase(vdbid);
          bvdb.setFileName(CoreConstants.SYSTEM_VDB);
          vdb = bvdb;
@@ -170,8 +172,6 @@ public class MetadataCache implements MetadataSourceAPI {
          models.putAll(sys);
          
          LogManager.logInfo(RuntimeMetadataPlugin.PLUGIN_ID, RuntimeMetadataPlugin.Util.getString("RuntimeMetadataCatalog.System_cache_initialized"));  //$NON-NLS-1$
-         
-//         I18nLogManager.logCritical(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.MDC_0001);
      }
 
     /**
@@ -186,7 +186,7 @@ public class MetadataCache implements MetadataSourceAPI {
      */        
     public void init(String vdbName, String vdbVersion, String vdbFileName, byte[] vdbcontents) throws Exception {
         // needs system VDB
-        BasicVirtualDatabaseID vdbid = new BasicVirtualDatabaseID(vdbName, vdbVersion);//$NON-NLS-1$
+        BasicVirtualDatabaseID vdbid = new BasicVirtualDatabaseID(vdbName, vdbVersion);
         BasicVirtualDatabase bvdb = new BasicVirtualDatabase(vdbid);
         bvdb.setFileName(vdbFileName);
         vdb = bvdb;
@@ -229,12 +229,15 @@ public class MetadataCache implements MetadataSourceAPI {
 
         if (loadMetadata) {
             includeMetadata = true;
+            try {
+				RuntimeMetadataCatalog.getQueryMetadataCache().lookupMetadata(vdb.getVirtualDatabaseID().getFullName(), vdb.getVirtualDatabaseID().getVersion(), vdbcontents);
+			} catch (MetaMatrixComponentException e) {
+				throw new VirtualDatabaseException(e);
+			}
             loadMetadata();
         } 
         
         LogManager.logInfo(RuntimeMetadataPlugin.PLUGIN_ID, RuntimeMetadataPlugin.Util.getString("RuntimeMetadataCatalog.VDB_cache_initialized", vdb.getName()));  //$NON-NLS-1$
-        
-//        I18nLogManager.logCritical(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.MDC_0001);
      }
 
     public void loadModelDetails()  throws VirtualDatabaseException {
@@ -366,7 +369,6 @@ public class MetadataCache implements MetadataSourceAPI {
 
     public Collection getAllModels() throws VirtualDatabaseException {
         if (models != null) {
-//            System.out.println("GETMODELS in Cache");
             List m = new ArrayList();
             m.addAll(models.values());
             return m;
@@ -462,7 +464,6 @@ public class MetadataCache implements MetadataSourceAPI {
      */
     public List getGroups(ModelID modelID) throws VirtualDatabaseException {
         if (groupToModelMap.containsKey(modelID)) {
-//            System.out.println("getGroups in cache ");
             return (List) groupToModelMap.get(modelID);
         }
         return Collections.EMPTY_LIST;
@@ -481,10 +482,7 @@ public class MetadataCache implements MetadataSourceAPI {
      * @throws Exception
      */    
     public List getColumns(GroupID groupID) throws VirtualDatabaseException {
-//       System.out.println("CACHE: get Columns for " + groupID.getFullName());
         if (columnsToGroupMap.containsKey(groupID.getFullName())) {
-//            System.out.println("getColumns in Cache ");
-            
             return (List) columnsToGroupMap.get(groupID.getFullName());
         }
         // since all the columns for all the groups are loaded
@@ -508,95 +506,11 @@ public class MetadataCache implements MetadataSourceAPI {
      */
     public List getProcedures(ModelID modelID) throws VirtualDatabaseException {
         if (procToModelMap.containsKey(modelID)) {
-//            System.out.println("getProcedures in cache ");
             return (List) procToModelMap.get(modelID);
         }
         return Collections.EMPTY_LIST;  
     }
 
-    /**
-     * When making changes, refer to {@link #MODEL_COLUMNS MODEL_COLUMNS}
-     * regarding columns and order
-     */
-//    private Map buildModelsObjects(List objectList) {
-//        Map result = new HashMap(objectList.size());
-//       
-////        String version = "0";//$NON-NLS-1$
-////     System.out.println("*** BUILD MODEL OBJECTS *** : " + objectList.size());
-//        String uuid=null;
-//        String name=null;
-//        String uri = null;
-//        for (Iterator it=objectList.iterator(); it.hasNext(); ) {
-//            List cols = (List) it.next();
-//            BasicModel model;
-//            BasicModelID modelID;
-//            
-////            int i=0;
-////            for (Iterator it2=cols.iterator(); it2.hasNext(); ) {
-////                Object o = it2.next();
-////                System.out.println("Value("+i+"): " + (o==null?"null":o.toString()));
-////                i++;
-////            }
-////            
-//            uuid = (String) cols.get(0);
-//            name = (String) cols.get(1);
-//            Integer modelType = (Integer) cols.get(3);                                                 
-//            uri = (String) cols.get(4);
-//            Boolean isVisible = (Boolean) cols.get(5);
-////
-////            if (!isVisible.booleanValue()) {
-////                continue;            
-////            }
-//            
-////            if (modelType.intValue() != 0) {
-////                continue;            
-////            }
-//            
-//            
-//            // HACK for now, until the model types 
-//            // are being saved in the VDB's correctly.            
-////            if (name.equalsIgnoreCase(DatatypeConstants.DATATYPES_MODEL_FILE_NAME_WITHOUT_EXTENSION) ||
-////                name.equalsIgnoreCase(DatatypeConstants.DATATYPES_MODEL_FILE_NAME) )  { //$NON-NLS-1$
-////                
-////                continue;
-////           }
-////            boolean isphysical = ((Boolean) cols.get(2)).booleanValue();
-//              
-////            System.out.println("Model " + name + " ModelType " + ModelType.get(modelType.intValue()).getName());
-//            
-//            
-//            // NOTE: the best practice is to try to derive everything that can be
-//            // derived from the vdbcontents, not the database.
-//            // fill in with the database only for those things the model does
-//            // not track.
-//            // 1.  Visibility
-//            // 2.  ConnectorBinding 
-//            if (modelsFromDB.containsKey(name)) {
-//                model = (BasicModel) modelsFromDB.get(name);
-//                modelID = (BasicModelID) model.getID();
-//                
-//                // visibility should be stored in the database
-//               
-//            } else {
-//                modelID = new BasicModelID(name);
-//                model = new BasicModel(modelID, (BasicVirtualDatabaseID)vdb.getVirtualDatabaseID());
-//                // if the database provides the model, then do not override its value
-//                model.setIsVisible(isVisible.booleanValue());
-//            }
-//                        
-//            model.setModelType(modelType.intValue());
-//            modelID.setUuid(uuid);      
-//            model.setModelURI(uri);  
-//                              
-//            result.put(model.getID(), model);  
-//            
-//                
-//        }    
-//       
-//                        
-//        return result;
-//       
-//    }
     
     /**
      * Bould groups to be displayed in the metadata tree.
@@ -663,32 +577,22 @@ public class MetadataCache implements MetadataSourceAPI {
     private void buildColumnObjects(Iterator it) {
        
         String name=null;
-//        String path=null;
         boolean supportsUpdates;
         List columns = null;
         
         while (it.hasNext()) {
             List cols = (List) it.next();
             
-//          int i=0;
-//          for (Iterator it2=cols.iterator(); it2.hasNext(); ) {
-//              Object o = it2.next();
-//              System.out.println("Value("+i+"): " + (o==null?"null":o.toString()));
-//              i++;
-//          }
-//            String uuid = (String) cols.get(0);
             name = (String) cols.get(1);
 
              supportsUpdates = ((Boolean) cols.get(2)).booleanValue();           
             String parentPath = (String) cols.get(3);
-//          System.out.println("** COL: " + name + " parent " + parentPath);
 
             // if the column doesnt belong to a parent it cannot be displayed
             // in the tree, an example of these types are return type columns             
             if (parentPath != null && parentPath.trim().length() > 0) {
                 // if the parent doesnt exist, no tree node to add to
                 if (groupMap.containsKey(parentPath)) {
-//                    System.out.println("** ADDED COL: " + name + " parent " + parentPath);
 
                  BasicElementID elementID = new BasicElementID(name);
 
@@ -742,7 +646,7 @@ public class MetadataCache implements MetadataSourceAPI {
         return procs;
     }    
     
-    private class Resource {
+    private class Resource implements Serializable {
         private String path = null;
         private boolean isVisible = false;
         
@@ -792,7 +696,7 @@ public class MetadataCache implements MetadataSourceAPI {
         result.setGUID(uuid);
 
         result.setVersionDate(basicModel.getDateVersioned());
-        result.setVersionedBy(basicModel.getVersionedBy()); //$NON-NLS-1$
+        result.setVersionedBy(basicModel.getVersionedBy()); 
         return result;
     }    
     
