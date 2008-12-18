@@ -1,6 +1,27 @@
 /*
- * Copyright � 2000-2005 MetaMatrix, Inc.  All rights reserved.
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
  */
+
 package com.metamatrix.server.integration;
 
 import java.math.BigInteger;
@@ -28,8 +49,6 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         
     //NOTE that the gMonth and gDay values are invalid (but properly formatted)
     public void testXSDTranslations() throws Exception {
-        TimestampUtil tsutil = new TimestampUtil();
-        
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("sample", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         
@@ -51,14 +70,14 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         dataMgr.addData("SELECT g_0.\"timestamp\", g_0.\"double\", g_0.\"float\", convert(g_0.\"double\", biginteger), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), '1' FROM sample.RUNTIMEVALUE AS g_0", //$NON-NLS-1$ 
                         
                         new List[] { Arrays.asList(new Object[] { 
-                            tsutil.createTimestamp(3, 3, 4, 5, 6, 10, 200), 
+                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 10, 200), 
                             new Double(Double.NEGATIVE_INFINITY), 
                             new Float(Float.POSITIVE_INFINITY), 
                             new BigInteger("100"), //$NON-NLS-1$
                             new BigInteger("100"), //$NON-NLS-1$
-                            tsutil.createTimestamp(3, 3, 4, 5, 6, 7, 0), 
+                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 7, 0), 
                             new BigInteger("100"), //$NON-NLS-1$
-                            tsutil.createTimestamp(3, 3, 4, 5, 6, 7, 0),
+                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 7, 0),
                             "1" //$NON-NLS-1$
                                                    })});
         

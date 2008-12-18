@@ -33,15 +33,15 @@ public class TestLoopbackConnector extends AbstractMMQueryTestCase {
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
         
     public TestLoopbackConnector(String name) {
-        super(name); //$NON-NLS-1$ 
+        super(name); 
     }
     
     public void test() {
     	getConnection(VDB, DQP_PROP_FILE);
     	
-    	executeAndAssertResults("select * from parts", new String[] {
-    			"PART_ID[string]    PART_NAME[string]    PART_COLOR[string]    PART_WEIGHT[string]",
-    			"ABCDEFGHIJ    ABCDEFGHIJ    ABCDEFGHIJ    ABCDEFGHIJ"
+    	executeAndAssertResults("select * from parts", new String[] { //$NON-NLS-1$
+    			"PART_ID[string]    PART_NAME[string]    PART_COLOR[string]    PART_WEIGHT[string]", //$NON-NLS-1$
+    			"ABCDEFGHIJ    ABCDEFGHIJ    ABCDEFGHIJ    ABCDEFGHIJ"//$NON-NLS-1$
     	});
     }
 }

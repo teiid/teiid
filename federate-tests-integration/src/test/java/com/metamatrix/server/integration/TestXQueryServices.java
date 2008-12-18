@@ -59,6 +59,7 @@ public class TestXQueryServices extends TestCase {
     	Statement stmt = conn.createStatement();
     	try {
     		stmt.executeQuery("exec xqs.test()"); //$NON-NLS-1$
+    		fail("exception expected"); //$NON-NLS-1$
     	} catch (MMSQLException e) {
     		assertEquals("Statement does not return a result set.", e.getMessage()); //$NON-NLS-1$
     	}
