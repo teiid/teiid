@@ -196,7 +196,7 @@ public class TestBatchedUpdateNode extends TestCase {
         	this.numExecutedCommands = numExecutedCommands;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,MetaMatrixComponentException {return null;}
-        public TupleSource registerRequest(Object processorID,Command command,String modelName,int nodeID) throws MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
             assertEquals("myProcessorID", processorID); //$NON-NLS-1$
             assertEquals("myModelName", modelName); //$NON-NLS-1$
             assertEquals(1, nodeID);

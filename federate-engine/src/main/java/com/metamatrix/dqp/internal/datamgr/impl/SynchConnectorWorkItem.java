@@ -54,7 +54,7 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 	private TransactionLock lock;
 
 	SynchConnectorWorkItem(AtomicRequestMessage message,
-			ConnectorRequestStateManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+			ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
 		super(message, manager, resultsReceiver);
 	}
 	
@@ -87,7 +87,7 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 
 	private void interrupted(InterruptedException e) {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, this.id +" Interrupted, proceeding to close"); //$NON-NLS-1$
-		this.requestState = RequestState.CLOSE;
+		this.requestCancel();
 	}
 
 	@Override
@@ -169,7 +169,7 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 	}
 	
     private TransactionServer getTransactionServer() {
-        return manager.transactionService.getTransactionServer();
+        return manager.getTransactionService().getTransactionServer();
     }
 
 }

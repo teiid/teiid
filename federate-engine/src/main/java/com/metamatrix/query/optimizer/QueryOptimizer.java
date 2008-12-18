@@ -312,7 +312,7 @@ public class QueryOptimizer {
         
         if(node.getCommandType() == CommandTreeNode.TYPE_RELATIONAL_COMMAND) {    
             PlanHints hints = new PlanHints();
-            node.setProperty(RelationalCommandConstants.HINTS, hints);
+            node.setProperty(RelationalPlanner.HINTS, hints);
             RELATIONAL_PLANNER.generateCanonical(node, optMetadata, analysisRecord, context);
         } else {
             XML_PLANNER.generateCanonical(node, optMetadata, analysisRecord, context);            

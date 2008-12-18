@@ -25,6 +25,7 @@
 package com.metamatrix.query.eval;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.util.CommandContext;
 
@@ -47,12 +48,13 @@ public interface LookupEvaluator {
      * @return Return value for the specified key value, or null if not found
      * @throws BlockedException If code table must be loaded
      * @throws MetaMatrixComponentException If an unexpected error occurs
+     * @throws MetaMatrixProcessingException 
      */
     public abstract Object lookupCodeValue(CommandContext context,
                                            String codeTableName,
                                            String returnElementName,
                                            String keyElementName,
                                            Object keyValue) throws BlockedException,
-                                                           MetaMatrixComponentException;
+                                                           MetaMatrixComponentException, MetaMatrixProcessingException;
 
 }

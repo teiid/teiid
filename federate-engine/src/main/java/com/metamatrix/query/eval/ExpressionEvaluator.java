@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -181,7 +182,11 @@ public class ExpressionEvaluator {
             String returnElementName = (String) values[1];
             String keyElementName = (String) values[2];
             
-            return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
+            try {
+				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
+			} catch (MetaMatrixProcessingException e) {
+				throw new ExpressionEvaluationException(e, e.getMessage());
+			}
         } 
         
 		// Execute function

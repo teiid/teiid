@@ -38,7 +38,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.id.UUID;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -100,17 +99,16 @@ public class DataTierManagerImpl implements DataTierManager {
 	}
 
 	public TupleSource registerRequest(Object processorId, Command command,
-			String modelName, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+			String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId, true);
-		AtomicRequestMessage aqr = createRequest(processorId, command,
-				modelName, nodeID);
+		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
         DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorID(), workItem);
         tupleSource.open();
         return tupleSource;
 	}
 
 	private AtomicRequestMessage createRequest(Object processorId,
-			Command command, String modelName, int nodeID)
+			Command command, String modelName, String connectorBindingId, int nodeID)
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId, true);
 		
@@ -126,21 +124,18 @@ public class DataTierManagerImpl implements DataTierManager {
         	aqr.setTransactionContext(workItem.getTransactionContext());
         }
         aqr.setFetchSize(this.bufferService.getBufferManager().getConnectorBatchSize());
-
-        // Set routing name
-        String binding = modelName;
-        if(! modelName.startsWith(UUID.PROTOCOL)) {
-            List bindings = vdbService.getConnectorBindingNames(workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion(), modelName);
-            if (bindings == null || bindings.isEmpty()) {
-                // this should not happen, but it did occur when setting up the SystemAdmin models
-                throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
-            }
-            binding = (String)bindings.get(0); 
-            Assertion.isNotNull(binding, "could not obtain connector id"); //$NON-NLS-1$
+        if (connectorBindingId == null) {
+        	List bindings = vdbService.getConnectorBindingNames(workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion(), modelName);
+	        if (bindings == null || bindings.size() != 1) {
+	            // this should not happen, but it did occur when setting up the SystemAdmin models
+	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
+	        }
+	        connectorBindingId = (String)bindings.get(0); 
+	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$
         }
-        aqr.setConnectorBindingID(binding);
+        aqr.setConnectorBindingID(connectorBindingId);
         // Select any connector instance for this connector binding
-        ConnectorID connectorID = this.dataService.selectConnector(binding);
+        ConnectorID connectorID = this.dataService.selectConnector(connectorBindingId);
         // if we had this as null before
         aqr.setConnectorID(connectorID);
 		return aqr;
@@ -198,7 +193,7 @@ public class DataTierManagerImpl implements DataTierManager {
         String returnElementName,
         String keyElementName,
         Object keyValue)
-        throws BlockedException, MetaMatrixComponentException {
+        throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
         int existsCode = this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context);
         if(existsCode == CodeTableCache.CACHE_EXISTS ) {
@@ -208,16 +203,11 @@ public class DataTierManagerImpl implements DataTierManager {
         	CodeTableFailure failure = codeTableCacheFailures.get(failureKey);
         	//retry rate of 5 seconds
         	if (failure != null && System.currentTimeMillis() - failure.time < 5000) {
-    			throw new MetaMatrixComponentException(failure.exception);
+    			throw new MetaMatrixProcessingException(failure.exception);
         	} 
-            try {
-				registerCodeTableRequest(context, codeTableName, returnElementName, keyElementName);
-			} catch (MetaMatrixProcessingException e) {
-				//TODO: this is not right
-				throw new MetaMatrixComponentException(e);
-			}
+			registerCodeTableRequest(context, codeTableName, returnElementName, keyElementName);
         } else if(existsCode == CodeTableCache.CACHE_OVERLOAD) {
-			throw new MetaMatrixComponentException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new MetaMatrixProcessingException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
 
         } // else, CACHE_LOADING - do nothing other than block
 
@@ -269,7 +259,7 @@ public class DataTierManagerImpl implements DataTierManager {
         }
 
         int nodeId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, requestID, context);
-        final AtomicRequestMessage aqr = createRequest(context.getProcessorID(), query, modelName, nodeId);
+        final AtomicRequestMessage aqr = createRequest(context.getProcessorID(), query, modelName, null, nodeId);
         this.executeRequest(aqr, aqr.getConnectorID(), new ResultsReceiver<AtomicResultsMessage>() {
 
 			public void exceptionOccurred(Throwable e) {

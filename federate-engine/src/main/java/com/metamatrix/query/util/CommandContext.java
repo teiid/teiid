@@ -35,6 +35,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
+import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -42,7 +43,7 @@ import com.metamatrix.query.eval.SecurityFunctionEvaluator;
  * a means to pass context-specific information between users of the query processor
  * framework.
  */
-public class CommandContext implements Serializable, Cloneable {
+public class CommandContext implements Cloneable {
 
     /** Uniquely identify the command being processed */
     private Object processorID;
@@ -86,15 +87,15 @@ public class CommandContext implements Serializable, Cloneable {
     
     private boolean optimisticTransaction = false;
     
-    private transient Object multiSourcePlanModifier;
-    
-    private transient SecurityFunctionEvaluator securityFunctionEvaluator;
+    private SecurityFunctionEvaluator securityFunctionEvaluator;
     
     private List preparedBatchUpdateValues;
     
-    private transient Object tempTableStore;
+    private Object tempTableStore;
     
     private TimeZone timezone = TimeZone.getDefault();
+    
+    private PlanToProcessConverter planToProcessConverter;
     
     /**
      * Construct a new context.
@@ -152,8 +153,9 @@ public class CommandContext implements Serializable, Cloneable {
             this.recursionStack = (Stack)context.recursionStack.clone();
         }
         setOptimisticTransaction(context.isOptimisticTransaction());
-        this.setMultiSourcePlanModifier(context.getMultiSourcePlanModifier());
         this.setSecurityFunctionEvaluator(context.getSecurityFunctionEvaluator());
+        this.preparedBatchUpdateValues = context.preparedBatchUpdateValues;
+        this.planToProcessConverter = context.planToProcessConverter;
     }
         
     public CommandContext() {        
@@ -226,7 +228,6 @@ public class CommandContext implements Serializable, Cloneable {
     
     public Object clone() {
     	CommandContext clonedContext = new CommandContext(this);
-    	clonedContext.preparedBatchUpdateValues = this.preparedBatchUpdateValues;
         return clonedContext;
     }
     
@@ -414,20 +415,6 @@ public class CommandContext implements Serializable, Cloneable {
     }
 
     /** 
-     * @return Returns the multiSourcePlanModifier.
-     */
-    public Object getMultiSourcePlanModifier() {
-        return this.multiSourcePlanModifier;
-    }
-    
-    /** 
-     * @param multiSourcePlanModifier The multiSourcePlanModifier to set.
-     */
-    public void setMultiSourcePlanModifier(Object multiSourcePlanModifier) {
-        this.multiSourcePlanModifier = multiSourcePlanModifier;
-    }
-
-    /** 
      * @return Returns the securityFunctionEvaluator.
      */
     public SecurityFunctionEvaluator getSecurityFunctionEvaluator() {
@@ -459,5 +446,13 @@ public class CommandContext implements Serializable, Cloneable {
 	
 	public TimeZone getServerTimeZone() {
 		return timezone;
+	}
+
+	public void setPlanToProcessConverter(PlanToProcessConverter planToProcessConverter) {
+		this.planToProcessConverter = planToProcessConverter;
+	}
+
+	public PlanToProcessConverter getPlanToProcessConverter() {
+		return planToProcessConverter;
 	}
 }

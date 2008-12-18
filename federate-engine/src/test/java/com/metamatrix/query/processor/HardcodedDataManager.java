@@ -105,13 +105,13 @@ public class HardcodedDataManager implements
     }
     
     /** 
-     * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(java.lang.Object, com.metamatrix.query.sql.lang.Command, java.lang.String, int)
+     * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(java.lang.Object, com.metamatrix.query.sql.lang.Command, java.lang.String, String, int)
      * @since 4.2
      */
     public TupleSource registerRequest(Object processorID,
                                 Command command,
                                 String modelName,
-                                int nodeID) throws MetaMatrixComponentException {
+                                String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
         
         if(modelName != null && validModels != null && ! validModels.contains(modelName)) {
             throw new MetaMatrixComponentException("Detected query against invalid model: " + modelName + ": " + command);  //$NON-NLS-1$//$NON-NLS-2$

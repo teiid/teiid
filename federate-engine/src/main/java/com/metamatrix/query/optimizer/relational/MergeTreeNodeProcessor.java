@@ -199,8 +199,8 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
      * @param child
      */
     private static void combineHints(CommandTreeNode parent, CommandTreeNode child) {
-        PlanHints parentHints = (PlanHints) parent.getProperty(RelationalCommandConstants.HINTS);
-        PlanHints childHints = (PlanHints) child.getProperty(RelationalCommandConstants.HINTS);
+        PlanHints parentHints = (PlanHints) parent.getProperty(RelationalPlanner.HINTS);
+        PlanHints childHints = (PlanHints) child.getProperty(RelationalPlanner.HINTS);
 
         if(childHints.hasCriteria) {
             parentHints.hasCriteria = true;

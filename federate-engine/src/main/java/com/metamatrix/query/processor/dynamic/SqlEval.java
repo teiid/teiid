@@ -42,7 +42,6 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.execution.multisource.PlanModifier;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -90,17 +89,10 @@ public class SqlEval implements XQuerySQLEvaluator {
     public Source executeSQL(String sql) 
         throws QueryParserException, MetaMatrixProcessingException, MetaMatrixComponentException {
                
-        QueryParser parser = new QueryParser();
-        Command command = parser.parseCommand(sql);
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);            
         QueryRewriter.rewrite(command, null, metadata, context);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, AnalysisRecord.createNonRecordingRecord(), context);
-        
-        PlanModifier multiSourcePlanModifier = (PlanModifier) context.getMultiSourcePlanModifier();
-        
-        if (multiSourcePlanModifier != null) {
-            multiSourcePlanModifier.modifyPlan(plan, metadata);
-        }
         
         List elements = plan.getOutputElements();
         CommandContext copy = (CommandContext) context.clone();

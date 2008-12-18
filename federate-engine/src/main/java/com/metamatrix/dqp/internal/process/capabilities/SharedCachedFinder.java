@@ -39,15 +39,15 @@ public class SharedCachedFinder implements CapabilitiesFinder {
     private CapabilitiesFinder internalFinder;
     
     // Cache of SourceCapabilities by modelName
-    private Map capabilityCache; //synchronized
-    private Map userCache = new HashMap(); //unsynchronized
+    private Map<String, SourceCapabilities> capabilityCache; //synchronized
+    private Map<String, SourceCapabilities> userCache = new HashMap<String, SourceCapabilities>(); //unsynchronized
     
     /**
      * Construct a CacheFinder that wraps another finder
      * @param internalFinder Finder to wrap
      * @param sharedCache The shared cache - map of model name to SourceCapabilities
      */
-    public SharedCachedFinder(CapabilitiesFinder internalFinder, Map sharedCache) {
+    public SharedCachedFinder(CapabilitiesFinder internalFinder, Map<String, SourceCapabilities> sharedCache) {
         this.internalFinder = internalFinder;
         this.capabilityCache = sharedCache;
     }
@@ -56,17 +56,16 @@ public class SharedCachedFinder implements CapabilitiesFinder {
      * Find capabilities used the cache if possible, otherwise do the lookup.
      */
     public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
-    	SourceCapabilities caps = (SourceCapabilities) userCache.get(modelName);
+    	SourceCapabilities caps = userCache.get(modelName);
         if(caps != null) {
             return caps;
         }
-    	caps = (SourceCapabilities) capabilityCache.get(modelName);
+    	caps = capabilityCache.get(modelName);
         if(caps == null) {
 	        // Find capabilities 
 	        caps = this.internalFinder.findCapabilities(modelName);
 	        if(caps == null) {
-	            Object[] params = new Object[] { modelName };
-	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("SharedCacheFinder.Didnt_find_caps", params)); //$NON-NLS-1$
+	            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("SharedCacheFinder.Didnt_find_caps", modelName)); //$NON-NLS-1$
 	        }
         }
         if(caps.getScope() == SourceCapabilities.Scope.SCOPE_GLOBAL) {

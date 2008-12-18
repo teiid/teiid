@@ -98,7 +98,7 @@ public class SocketVMController extends VMController {
     protected void doStopVM(boolean now, boolean shutdown) {
         if (workerPool != null) {
             try {
-                workerPool.shutdown();                
+                workerPool.shutdownNow();                
             } catch (Exception e) {
                 //ignore
             } finally {

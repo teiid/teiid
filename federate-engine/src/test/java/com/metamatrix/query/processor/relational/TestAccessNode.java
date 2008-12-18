@@ -104,7 +104,7 @@ public class TestAccessNode extends TestCase {
             this.expectedCommand = command;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,MetaMatrixComponentException {return null;}
-        public TupleSource registerRequest(Object processorID,Command command,String modelName,int nodeID) throws MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
             registerRequestCalled = true;
             assertEquals(expectedCommand, command.toString());
             return null;

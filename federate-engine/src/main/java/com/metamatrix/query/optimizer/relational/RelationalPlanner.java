@@ -75,6 +75,11 @@ import com.metamatrix.query.util.LogConstants;
 public class RelationalPlanner implements CommandPlanner {
 
     /**
+	 * Key for a {@link PlanHints PlanHints} object 
+	 */
+	public static final Integer HINTS = new Integer(0);
+
+	/**
      * @see com.metamatrix.query.optimizer.CommandPlanner#generateCanonical(com.metamatrix.query.optimizer.CommandTreeNode, boolean)
      */
     public void generateCanonical(CommandTreeNode node, QueryMetadataInterface metadata, AnalysisRecord analysisRecord, CommandContext context)
@@ -83,7 +88,7 @@ public class RelationalPlanner implements CommandPlanner {
         // Create canonical plan for this command
         Command command = node.getCommand();
 
-        PlanHints hints = (PlanHints)node.getProperty(RelationalCommandConstants.HINTS);
+        PlanHints hints = (PlanHints)node.getProperty(RelationalPlanner.HINTS);
         PlanNode canonicalPlan = GenerateCanonical.generatePlan(command, hints, metadata);
         node.setCanonicalPlan(canonicalPlan);
     }
@@ -109,7 +114,7 @@ public class RelationalPlanner implements CommandPlanner {
 
         // Check whether command has virtual groups
         Command command = node.getCommand();
-        PlanHints hints = (PlanHints)node.getProperty(RelationalCommandConstants.HINTS);
+        PlanHints hints = (PlanHints)node.getProperty(RelationalPlanner.HINTS);
         RelationalPlanner.checkForVirtualGroups(command, hints, metadata);
 
         // Distribute make dependent hints as necessary
@@ -141,7 +146,15 @@ public class RelationalPlanner implements CommandPlanner {
         plan = RelationalPlanner.executeRules(rules, plan, metadata, capFinder, analysisRecord, context);
         node.setCanonicalPlan(plan);
 
-        RelationalPlan result = PlanToProcessConverter.convert(plan, metadata, idGenerator, analysisRecord, capFinder);
+        PlanToProcessConverter planToProcessConverter = null;
+        if (context != null) {
+        	planToProcessConverter = context.getPlanToProcessConverter();
+        }
+        if (planToProcessConverter == null) {
+        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
+        }
+        
+        RelationalPlan result = planToProcessConverter.convert(plan);
         
         result.setOutputElements(topCols);
         

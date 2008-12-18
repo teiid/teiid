@@ -44,7 +44,6 @@ import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.eval.ExpressionEvaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.execution.multisource.PlanModifier;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.optimizer.QueryOptimizer;
@@ -231,12 +230,6 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-            PlanModifier multiSourcePlanModifier = (PlanModifier) procEnv.getContext().getMultiSourcePlanModifier();
-            
-            if (multiSourcePlanModifier != null) {
-                multiSourcePlanModifier.modifyPlan(commandPlan, metadata);
-            }
-
 			List references = ReferenceCollectorVisitor.getReferences(command);
 
 			ExecSqlInstruction inst = new ExecSqlInstruction(commandPlan,

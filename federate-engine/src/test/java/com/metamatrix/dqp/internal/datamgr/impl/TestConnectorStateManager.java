@@ -33,8 +33,11 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.mockito.Mockito;
+
 import junit.framework.TestCase;
 
+import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -46,7 +49,7 @@ import com.metamatrix.dqp.message.RequestID;
  */
 public final class TestConnectorStateManager extends TestCase {
     private AtomicRequestMessage request;
-    private ConnectorRequestStateManager csm;
+    private ConnectorManager csm;
 
     /**
      * Constructor for TestConnectorStateManager.
@@ -59,11 +62,14 @@ public final class TestConnectorStateManager extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
-        csm = new ConnectorRequestStateManager(new FakeConnector(), new FakeConnectorManagerImpl(), null, null, null);
+        csm = new ConnectorManager();
+        csm.setConnectorWorkerPool(Mockito.mock(WorkerPool.class));
+        csm.setConnector(new FakeConnector());
     }
 
     void helpAssureOneState() {
-    	ConnectorWorkItem state = csm.createState(request, null);
+    	csm.executeRequest(null, request);
+    	ConnectorWorkItem state = csm.getState(request.getAtomicRequestID());
     	assertEquals(state, csm.getState(request.getAtomicRequestID()));
     }
 
@@ -99,10 +105,10 @@ public final class TestConnectorStateManager extends TestCase {
     	List<ResultsFuture<AtomicResultsMessage>> futures = new ArrayList<ResultsFuture<AtomicResultsMessage>>();
     	for (int i=0; i<20; i++) {
     		ResultsFuture<AtomicResultsMessage> future = new ResultsFuture<AtomicResultsMessage>();
-        	csm.createState(TestConnectorWorkItem.createNewAtomicRequestMessage(i, 1), future.getResultsReceiver());
+        	csm.executeRequest(future.getResultsReceiver(), TestConnectorWorkItem.createNewAtomicRequestMessage(i, 1));
         }
 
-        csm.shutdown();
+        csm.stop();
         
         for (ResultsFuture<AtomicResultsMessage> resultsFuture : futures) {
 			assertTrue(resultsFuture.isDone());

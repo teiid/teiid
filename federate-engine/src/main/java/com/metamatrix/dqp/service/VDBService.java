@@ -120,5 +120,5 @@ public interface VDBService extends ApplicationService {
         throws ApplicationLifecycleException, MetaMatrixComponentException;   
     
     // to be removed later..
-    public String getConnectorName(String connectorBindingID);    
+    public String getConnectorName(String connectorBindingID) throws MetaMatrixComponentException;    
 }

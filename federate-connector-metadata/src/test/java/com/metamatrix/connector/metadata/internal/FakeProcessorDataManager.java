@@ -53,7 +53,7 @@ public class FakeProcessorDataManager implements ProcessorDataManager {
     /* 
      * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(java.lang.Object, com.metamatrix.query.sql.lang.Command, java.lang.String, int)
      */
-    public TupleSource registerRequest(Object processorID, Command command, String modelName, int nodeID)
+    public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID)
         throws MetaMatrixComponentException {
         this.command = command;
         return new FakeTupleSource(new ArrayList(), new List[0]);

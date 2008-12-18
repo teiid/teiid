@@ -24,12 +24,15 @@
 
 package com.metamatrix.common.queue;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public interface WorkerPool extends Executor {
 	
 	void shutdown();
+	
+	List<Runnable> shutdownNow();
 
 	void awaitTermination(long timeout, TimeUnit unit)
 			throws InterruptedException;

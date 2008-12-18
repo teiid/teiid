@@ -41,13 +41,11 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.SystemVdbUtility;
 import com.metamatrix.core.event.EventObjectListener;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
@@ -104,7 +102,6 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
             Model model = RuntimeMetadataCatalog.getModel(modelName, vdbID);
             if (model == null) {
                 throw new MetaMatrixComponentException(ServerPlugin.Util.getString("PlatformVDBService.Model_not_found_in_vdb", new Object[] {modelName, vdbName})); //$NON-NLS-1$
-                
             }
 
             // return all bindings that could be associated with the model
@@ -236,24 +233,11 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
     /*
      * @see com.metamatrix.dqp.service.VDBService#getConnectorName(java.lang.String)
      */
-    public String getConnectorName(String connectorBindingID) {
+    public String getConnectorName(String connectorBindingID) throws MetaMatrixComponentException {
         
-        ServiceComponentDefn bindingName = null;
-
-        Configuration operational = null;
-        try{
-            operational = CurrentConfiguration.getConfiguration();
-        } catch (ConfigurationException e){
-            // Probably an invalid operation occured
-            //todo:
-            //I18nLogManager.logError(LogConstants.CTX_QUERY_SERVICE, ErrorMessageKeys.query_0008, e);
-        }
+        Configuration operational = CurrentConfiguration.getConfiguration();
         
-        // assert that operational is not null
-        Assertion.isNotNull(operational);
-            
-       
-        bindingName = operational.getConnectorBindingByRoutingID(connectorBindingID);
+        ServiceComponentDefn bindingName = operational.getConnectorBindingByRoutingID(connectorBindingID);
         
         if(bindingName != null) {
             return bindingName.toString();

@@ -36,7 +36,6 @@ import java.util.Set;
 import javax.transaction.SystemException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -59,7 +58,7 @@ import com.metamatrix.dqp.internal.process.capabilities.ConnectorCapabilitiesFin
 import com.metamatrix.dqp.internal.process.capabilities.SharedCachedFinder;
 import com.metamatrix.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import com.metamatrix.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
-import com.metamatrix.dqp.internal.process.multisource.MultiSourcePlanModifier;
+import com.metamatrix.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import com.metamatrix.dqp.internal.process.validator.AuthorizationValidationVisitor;
 import com.metamatrix.dqp.internal.process.validator.ModelVisibilityValidationVisitor;
 import com.metamatrix.dqp.message.RequestID;
@@ -268,13 +267,10 @@ public class Request {
         }
         
         if (multiSourceModels != null) {
-            MultiSourcePlanModifier modifier = new MultiSourcePlanModifier();
-            modifier.setVdbName(vdbName);
-            modifier.setVdbVersion(vdbVersion);
-            modifier.setVdbService(vdbService);
-            modifier.setIdGenerator(idGenerator);
-            modifier.setMultiSourceModels(this.multiSourceModels);
-            context.setMultiSourcePlanModifier(modifier);
+            MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
+					metadata, idGenerator, analysisRecord, capabilitiesFinder,
+					multiSourceModels, vdbName, vdbService, vdbVersion);
+            context.setPlanToProcessConverter(modifier);
         }
 
         context.setSecurityFunctionEvaluator((SecurityFunctionEvaluator)this.env.findService(DQPServiceNames.AUTHORIZATION_SERVICE));
@@ -522,16 +518,6 @@ public class Request {
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
                     System.out.println(debugLog); //TODO: fix me               
-                }
-            }
-            
-            // Modify the plan for multi-source models if necessary
-            if(this.multiSourceModels != null) {
-                MultiSourcePlanModifier modifier = (MultiSourcePlanModifier)this.context.getMultiSourcePlanModifier();
-                try {
-                    modifier.modifyPlan(processPlan, metadata);
-                } catch (CriteriaEvaluationException err) {
-                    throw new QueryPlannerException(err, err.getMessage());
                 }
             }
             

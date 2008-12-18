@@ -139,11 +139,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 			throws MetaMatrixComponentException {
         ConnectorManager mgr = getConnectorManager(connector);
         if(mgr != null) {
-            try {
-				mgr.executeRequest(resultListener, request);
-			} catch (ApplicationLifecycleException e) {
-				throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$
-			}            
+			mgr.executeRequest(resultListener, request);
         }
         else {
             throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$
@@ -248,8 +244,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
                 mgr.start();
                 
                 // Add the references to the mgr as loaded.
-                String connectorId = mgr.getConnectorEnvironment().getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_ID);
-                ConnectorID connID = new ConnectorID(connectorId); 
+                ConnectorID connID = mgr.getConnectorID(); 
                 this.connectorIDs.put(binding.getDeployedName(), connID);
                 this.connectorMgrs.put(connID, mgr);                
                 this.loadedConnectorBindingsMap.put(binding.getDeployedName(), binding);

@@ -64,13 +64,13 @@ public class TempTableDataManager implements ProcessorDataManager {
      * If a temp group is <i>not</i> being selected from, then this request will be
      * passed through to the underlying ProcessorDataManager.
 	 * @throws MetaMatrixProcessingException 
-	 * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(Object, Command, String, TupleSourceID)
+	 * @see com.metamatrix.query.processor.ProcessorDataManager#registerRequest(Object, Command, String, String, TupleSourceID)
 	 */
 	public TupleSource registerRequest(
 		Object processorID,
 		Command command,
 		String modelName,
-		int nodeID)
+		String connectorBindingId, int nodeID)
 		throws MetaMatrixComponentException, MetaMatrixProcessingException {          
 
         if(tempTableStore != null) {
@@ -79,7 +79,7 @@ public class TempTableDataManager implements ProcessorDataManager {
             	return result;
             }
         }
-        return this.processorDataManager.registerRequest(processorID, command, modelName, nodeID);
+        return this.processorDataManager.registerRequest(processorID, command, modelName, connectorBindingId, nodeID);
 	}
 
     public Object lookupCodeValue(
@@ -88,7 +88,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         String returnElementName,
         String keyElementName,
         Object keyValue)
-        throws BlockedException, MetaMatrixComponentException {
+        throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
             
         return this.processorDataManager.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
     }

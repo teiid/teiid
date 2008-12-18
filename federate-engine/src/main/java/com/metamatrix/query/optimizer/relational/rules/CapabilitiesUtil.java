@@ -523,11 +523,7 @@ public class CapabilitiesUtil {
         
         Object connectorID = caps.getSourceProperty(Capability.CONNECTOR_ID);
         
-        if (connectorID != null && connectorID.equals(caps1.getSourceProperty(Capability.CONNECTOR_ID))) {
-            return true;
-        }
-        
-        return false;
+        return connectorID != null && connectorID.equals(caps1.getSourceProperty(Capability.CONNECTOR_ID));
     }
 
     private static SourceCapabilities getCapabilities(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)

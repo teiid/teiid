@@ -42,8 +42,7 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
@@ -82,22 +81,13 @@ public class PlatformDataService implements DataService {
      * @return ConnectorID identifying a connector instance
      */
     public ConnectorID selectConnector(String connectorBindingID) {
-    	//Check for invalid connectorBindingID
-        if ( connectorBindingID == null ) {
-        	LogManager.logWarning(LogCommonConstants.CTX_SERVICE, ServerPlugin.Util.getString("DataRouterImpl.Cant_select_Connector_for_binding_ID_null")); //$NON-NLS-1$
-        	return null;
-        }
-
-        try {
-            // get a new proxy that will be sticky to an appropriate connector
-            ConnectorServiceInterface connector = PlatformProxyHelper.getConnectorServiceProxy(connectorBindingID, PlatformProxyHelper.ROUND_ROBIN_LOCAL);            
-            ConnectorID connectorId = connector.getConnectorID();
-            this.connectors.putIfAbsent(connectorId, connector);
-            return connectorId;
-        } catch (Exception e) {
-            LogManager.logWarning(LogCommonConstants.CTX_SERVICE, e, ServerPlugin.Util.getString("DQPDataService.Unable_to_select_a_connector_for_connector_binding_ID__{0}", connectorBindingID)); //$NON-NLS-1$
-            return null;
-		} 
+    	ArgCheck.isNotNull(connectorBindingID);
+    	
+        // get a new proxy that will be sticky to an appropriate connector
+        ConnectorServiceInterface connector = PlatformProxyHelper.getConnectorServiceProxy(connectorBindingID, PlatformProxyHelper.ROUND_ROBIN_LOCAL);            
+        ConnectorID connectorId = connector.getConnectorID();
+        this.connectors.putIfAbsent(connectorId, connector);
+        return connectorId;
     }
 
     /**
@@ -212,13 +202,6 @@ public class PlatformDataService implements DataService {
         throw new UnsupportedOperationException();
     }
     
-    /*
-     * @see com.metamatrix.dqp.service.DataService#restartConnector(java.lang.String)
-     */
-    public void restartConnector(String connectorName) throws ApplicationLifecycleException {
-        throw new UnsupportedOperationException();
-    }
-
     /** 
      * @see com.metamatrix.dqp.service.DataService#startConnectorBinding(java.lang.String)
      * @since 4.3

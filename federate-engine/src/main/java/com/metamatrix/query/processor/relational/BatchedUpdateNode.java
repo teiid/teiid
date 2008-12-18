@@ -99,7 +99,7 @@ public class BatchedUpdateNode extends RelationalNode {
             commandsWereExecuted = false;
         } else {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
-            tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, modelName, getID());
+            tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, modelName, null, getID());
         }
     }
     

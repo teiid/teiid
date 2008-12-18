@@ -42,47 +42,48 @@ import com.metamatrix.query.sql.lang.Command;
 public class AtomicRequestMessage implements Serializable {
     static final long serialVersionUID = -4060941593023225562L;
 
-    /**
-     * static counter to keep track of the Execution count. 
-     */
-    static AtomicInteger EXECUTION_COUNT = new AtomicInteger(0);
-    
-    // atomic request id (request-id + node-id + execution-count)
-    AtomicRequestID atomicRequestId;
-    
-    /**
-     * The connectorBindingID that identifies the connector needed for this query.
-     */
-     private String connectorBindingID;
-     
-     /**
-      * Name of model where the connector is bound to
-      */
-     private String modelName;
+	/**
+	 * static counter to keep track of the Execution count.
+	 */
+	private static AtomicInteger EXECUTION_COUNT = new AtomicInteger(0);
 
-    /**
-     * For cancel and update operations, the id of the data connector which
-     * originally handled the request.
-     */
-    private ConnectorID connectorID;
+	// atomic request id (request-id + node-id + execution-count)
+	private AtomicRequestID atomicRequestId;
 
-    // Transaction context for the current request
-    private TransactionContext txnContext;
-    
-    // command to execute
-    private Command command;
-    
-    // results fetch size
-    private int fetchSize;
-    
-    // The time when the command was created by the client    
-    private Date submittedTimestamp;
-    
-    // The time when command begins processing on the server.
-    private Date processingTimestamp;
-    
-    //whether to use ResultSet cache if there is one
-    private boolean useResultSetCache;
+	/**
+	 * The connectorBindingID that identifies the connector needed for this
+	 * query.
+	 */
+	private String connectorBindingID;
+
+	/**
+	 * Name of model where the connector is bound to
+	 */
+	private String modelName;
+
+	/**
+	 * For cancel and update operations, the id of the data connector which
+	 * originally handled the request.
+	 */
+	private ConnectorID connectorID;
+
+	// Transaction context for the current request
+	private TransactionContext txnContext;
+
+	// command to execute
+	private Command command;
+
+	// results fetch size
+	private int fetchSize;
+
+	// The time when the command was created by the client
+	private Date submittedTimestamp;
+
+	// The time when command begins processing on the server.
+	private Date processingTimestamp;
+
+	// whether to use ResultSet cache if there is one
+	private boolean useResultSetCache;
     
     private boolean partialResultsFlag;
     

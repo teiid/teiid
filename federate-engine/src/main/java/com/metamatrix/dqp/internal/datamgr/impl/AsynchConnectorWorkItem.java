@@ -36,7 +36,7 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
 
 public class AsynchConnectorWorkItem extends ConnectorWorkItem {
                 
-    AsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorRequestStateManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+    AsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
     	super(message, manager, resultsReceiver);
     	Assertion.assertTrue(!this.isTransactional, "Asynch work items are not suitable for transactions"); //$NON-NLS-1$
     }

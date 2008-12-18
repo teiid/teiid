@@ -32,11 +32,6 @@ import java.io.Serializable;
 public class ConnectorID implements Serializable {
     private static final long serialVersionUID = -3507451286236400399L;
 
-    /**
-     * Separator character used between vm controller ID and service ID.
-     */
-    public static final String SEPARATOR = "|"; //$NON-NLS-1$
-
     private String id;
 
     /**
@@ -67,11 +62,10 @@ public class ConnectorID implements Serializable {
     	if(this == obj) {
     		return true;
 		}
-
-		// Quick fail tests
-    	if(obj == null || obj.getClass() != this.getClass()) {
+    	
+    	if (!(obj instanceof ConnectorID)) {
     		return false;
-		}
+    	}
 
         ConnectorID other = (ConnectorID) obj;
 

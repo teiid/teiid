@@ -26,9 +26,11 @@ package com.metamatrix.dqp.internal.process.multisource;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -64,7 +66,7 @@ import com.metamatrix.query.util.CommandContext;
  * 
  * @since 4.2
  */
-public class TestMultiSourcePlanModifier extends TestCase {
+public class TestMultiSourcePlanToProcessConverter extends TestCase {
     
     private final class MultiSourceDataManager extends HardcodedDataManager {
         
@@ -72,7 +74,7 @@ public class TestMultiSourcePlanModifier extends TestCase {
             setMustRegisterCommands(false);
         }
 
-        public TupleSource registerRequest(Object processorID, Command command, String modelName, int nodeID) throws com.metamatrix.api.exception.MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID) throws com.metamatrix.api.exception.MetaMatrixComponentException {
             Collection elements = ElementCollectorVisitor.getElements(command, true, true);
             
             for (Iterator i = elements.iterator(); i.hasNext();) {
@@ -81,7 +83,7 @@ public class TestMultiSourcePlanModifier extends TestCase {
                     fail("Query Contains a MultiSourceElement -- MultiSource expansion did not happen"); //$NON-NLS-1$
                 }
             }
-            return super.registerRequest(processorID, command, modelName, nodeID);
+            return super.registerRequest(processorID, command, modelName, connectorBindingId, nodeID);
         }
     }
 
@@ -99,7 +101,7 @@ public class TestMultiSourcePlanModifier extends TestCase {
         for(int i=0; i<sourceCount; i++, sourceID++) {
             vdbService.addBinding(vdbName, vdbVersion, multiModel, "mmuuid:source_" + sourceID, "" + sourceID); //$NON-NLS-1$ //$NON-NLS-2$ 
         }
-        Collection multiSourceModels = vdbService.getMultiSourceModels(vdbName, vdbVersion);
+        Set<String> multiSourceModels = new HashSet<String>(vdbService.getMultiSourceModels(vdbName, vdbVersion));
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels); 
         AnalysisRecord analysis = new AnalysisRecord(false, false, DEBUG);
         
@@ -115,37 +117,19 @@ public class TestMultiSourcePlanModifier extends TestCase {
         IDGenerator idGenerator = new IDGenerator();
         idGenerator.setDefaultFactory(new IntegerIDFactory());            
         
-        ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, null);
-        
-        if(DEBUG) {
-            System.out.println(analysis.getDebugLog());
-        }
-        
-        MultiSourcePlanModifier modifier = new MultiSourcePlanModifier();
-        modifier.setVdbName(vdbName);
-        modifier.setVdbVersion(vdbVersion);
-        modifier.setVdbService(vdbService);
-        modifier.setIdGenerator(idGenerator);
-        modifier.setMultiSourceModels(multiSourceModels);
+        Properties props = new Properties();
+        CommandContext context = new CommandContext("0", "test", null, 5, "user", null, null, vdbName, vdbVersion, props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(metadata, idGenerator, analysis, finder, multiSourceModels, vdbName, vdbService, vdbVersion));
 
-        modifier.modifyPlan(plan, metadata);
-        
+        ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
+                        
         if(DEBUG) {
             System.out.println("\nMultiSource Plan:"); //$NON-NLS-1$
             System.out.println(plan);
         }
-        
-        CommandContext context = createCommandContext(modifier);
-        
+                
         TestProcessor.helpProcess(plan, context, dataMgr, expectedResults);                        
     }
-
-    private CommandContext createCommandContext(MultiSourcePlanModifier planModifier) {
-        Properties props = new Properties();
-        CommandContext context = new CommandContext("0", "test", null, 5, "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        context.setMultiSourcePlanModifier(planModifier);
-        return context;
-    } 
 
     public void testNoReplacement() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();

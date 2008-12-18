@@ -24,6 +24,7 @@
 
 package com.metamatrix.common.queue;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -194,6 +195,11 @@ public class WorkerPoolFactory {
 
 		public boolean hasWork() {
 			return this.executor.getSubmittedCount() - this.executor.getCompletedCount() > 0 && !this.executor.isTerminated();
+		}
+
+		@Override
+		public List<Runnable> shutdownNow() {
+			return this.executor.shutdownNow();
 		}
 	}
 	

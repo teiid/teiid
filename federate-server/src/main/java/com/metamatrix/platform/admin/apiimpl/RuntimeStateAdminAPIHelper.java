@@ -48,6 +48,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogConfiguration;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.pooling.api.ResourcePoolMgr;
 import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
 import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
@@ -584,6 +585,11 @@ public class RuntimeStateAdminAPIHelper {
         VMRegistryBinding vmBinding = this.registry.getVM(vmID.getHostName(), vmID.toString());
         
         VMControllerInterface vmController = vmBinding.getVMController();
+        try {
+        	vmController.shutdownServiceNow(serviceID);
+        } catch (ServiceException se) {
+        	LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, se, "Service exception stopping service during restart"); //$NON-NLS-1$
+        }
         try {
             vmController.startService(serviceID);
         } catch (ServiceException se) {

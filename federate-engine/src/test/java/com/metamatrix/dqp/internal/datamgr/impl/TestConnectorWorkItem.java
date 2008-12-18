@@ -62,10 +62,12 @@ public class TestConnectorWorkItem extends TestCase {
 		return command;
 	}
 
-	static ConnectorRequestStateManager getConnectorRequestStateManager() {
-		return new ConnectorRequestStateManager(new FakeConnector(),
-				new FakeConnectorManagerImpl(), null,
-				new FakeTransactionService(), new FakeMetadataService());
+	static ConnectorManager getConnectorManager() {
+		ConnectorManager cm = new ConnectorManager();
+		cm.setConnector(new FakeConnector());
+		cm.setTransactionService(new FakeTransactionService());
+		cm.setMetadataService(new FakeMetadataService());
+		return cm;
 	}
 
 	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid,
@@ -122,7 +124,7 @@ public class TestConnectorWorkItem extends TestCase {
 		// only one response is expected
 		ResultsFuture<AtomicResultsMessage> resultsFuture = new ResultsFuture<AtomicResultsMessage>();
 		ConnectorWorkItem state = new SynchConnectorWorkItem(request,
-				getConnectorRequestStateManager(), resultsFuture
+				getConnectorManager(), resultsFuture
 						.getResultsReceiver());
 
 		state.asynchCancel(); // cancel does not cause close, but the next
@@ -148,12 +150,12 @@ public class TestConnectorWorkItem extends TestCase {
 
 	private final class AsynchMoreResultsReceiver implements
 			ResultsReceiver<AtomicResultsMessage> {
-		private final ConnectorRequestStateManager manager;
+		private final ConnectorManager manager;
 		int msgCount;
 		ConnectorWorkItem workItem;
 		Throwable exception;
 
-		private AsynchMoreResultsReceiver(ConnectorRequestStateManager manager) {
+		private AsynchMoreResultsReceiver(ConnectorManager manager) {
 			this.manager = manager;
 		}
 
@@ -161,22 +163,21 @@ public class TestConnectorWorkItem extends TestCase {
 			switch (msgCount++) {
 			case 0:
 				// request more during delivery
-				((FakeConnector) manager.connector).setReturnsFinalBatch(true);
+				((FakeConnector) manager.getConnector()).setReturnsFinalBatch(true);
 				workItem.requestMore();
 				break;
 			case 1:
 				if (results.isRequestClosed()) {
-					exception = new AssertionError(
-							"request should not yet be closed");
+					exception = new AssertionError("request should not yet be closed"); //$NON-NLS-1$
 				}
 				break;
 			case 2:
 				if (!results.isRequestClosed()) {
-					exception = new AssertionError("request be closed");
+					exception = new AssertionError("request be closed"); //$NON-NLS-1$
 				}
 				break;
 			default:
-				exception = new AssertionError("expected only 3 responses");
+				exception = new AssertionError("expected only 3 responses"); //$NON-NLS-1$
 			}
 		}
 
@@ -209,7 +210,7 @@ public class TestConnectorWorkItem extends TestCase {
 
 	public void testMoreAsynch() throws Throwable {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		final ConnectorRequestStateManager manager = getConnectorRequestStateManager();
+		final ConnectorManager manager = getConnectorManager();
 		AsynchMoreResultsReceiver receiver = new AsynchMoreResultsReceiver(
 				manager);
 		ConnectorWorkItem state = new SynchConnectorWorkItem(request, manager,
@@ -221,11 +222,22 @@ public class TestConnectorWorkItem extends TestCase {
 			throw receiver.exception;
 		}
 	}
+	
+	public void testSynchInterrupt() throws Exception {
+		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
+		final ConnectorManager manager = getConnectorManager();
+		QueueResultsReceiver receiver = new QueueResultsReceiver();
+		ConnectorWorkItem state = new SynchConnectorWorkItem(request, manager, receiver);
+		Thread t = runRequest(state);
+		t.interrupt();
+		t.join();
+		assertTrue(state.isCancelled());
+	}
 
 	public void testImplicitClose() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorRequestStateManager manager = getConnectorRequestStateManager();
-		FakeConnector connector = (FakeConnector) manager.connector;
+		ConnectorManager manager = getConnectorManager();
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 
 		connector.setReturnsFinalBatch(true);
 
@@ -240,8 +252,7 @@ public class TestConnectorWorkItem extends TestCase {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
 		ResultsFuture<AtomicResultsMessage> resultsFuture = new ResultsFuture<AtomicResultsMessage>();
 		ConnectorWorkItem state = new SynchConnectorWorkItem(request,
-				getConnectorRequestStateManager(), resultsFuture
-						.getResultsReceiver());
+				getConnectorManager(), resultsFuture.getResultsReceiver());
 
 		state.requestClose();
 		assertFalse(resultsFuture.isDone());
@@ -255,8 +266,8 @@ public class TestConnectorWorkItem extends TestCase {
 
 	public void testAsynchBasicMore() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorRequestStateManager manager = getConnectorRequestStateManager();
-		FakeConnector connector = (FakeConnector) manager.connector;
+		ConnectorManager manager = getConnectorManager();
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver(); 
 		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
 				request, manager, resultsReceiver);
@@ -277,8 +288,8 @@ public class TestConnectorWorkItem extends TestCase {
 
 	public void testAsynchKeepAlive() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
-		ConnectorRequestStateManager manager = getConnectorRequestStateManager();
-		FakeConnector connector = (FakeConnector) manager.connector;
+		ConnectorManager manager = getConnectorManager();
+		FakeConnector connector = (FakeConnector) manager.getConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver();
 		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
 				request, manager, resultsReceiver);
@@ -304,7 +315,7 @@ public class TestConnectorWorkItem extends TestCase {
 		int resumeCount;
 
 		FakeQueuingAsynchConnectorWorkItem(AtomicRequestMessage message,
-				ConnectorRequestStateManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+				ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
 			super(message, manager, resultsReceiver);
 		}
 

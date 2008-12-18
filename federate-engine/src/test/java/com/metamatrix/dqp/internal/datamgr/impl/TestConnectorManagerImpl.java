@@ -64,7 +64,7 @@ public final class TestConnectorManagerImpl extends TestCase {
 
         appProperties.setProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "AFakeConnectorBinding"); //$NON-NLS-1$
         appProperties.setProperty(ConnectorPropertyNames.MAX_RESULT_ROWS, "10"); //$NON-NLS-1$
-        appProperties.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName()); //$NON-NLS-1$
+        appProperties.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
 
         return appProperties;
     }
@@ -94,7 +94,7 @@ public final class TestConnectorManagerImpl extends TestCase {
     		cm.stop();
             fail("Able to start ConnectorManager with null required props."); //$NON-NLS-1$
         } catch (ApplicationLifecycleException e) {
-        	assertEquals("Connector is missing required property ConnectorClass or wrong value supplied AFakeConnectorBinding ", e.getMessage()); //$NON-NLS-1$
+        	assertEquals("Connector is missing required property ConnectorClass or wrong value supplied AFakeConnectorBinding<null> ", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

@@ -25,95 +25,67 @@
 package com.metamatrix.dqp.internal.process.multisource;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.core.id.IntegerID;
-import com.metamatrix.core.id.IntegerIDFactory;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
+import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.NullNode;
 import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalNodeUtil;
-import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
 
-/** 
- * @since 4.2
- */
-public class MultiSourcePlanModifier implements com.metamatrix.query.execution.multisource.PlanModifier {
+public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
+	
+	private Set<String> multiSourceModels;
+	private String vdbName;
+	private String vdbVersion;
+	private VDBService vdbService;
+	
+	public MultiSourcePlanToProcessConverter(QueryMetadataInterface metadata,
+			IDGenerator idGenerator, AnalysisRecord analysisRecord,
+			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
+			String vdbName, VDBService vdbService, String vdbVersion) {
+		super(metadata, idGenerator, analysisRecord, capFinder);
+		this.multiSourceModels = multiSourceModels;
+		this.vdbName = vdbName;
+		this.vdbService = vdbService;
+		this.vdbVersion = vdbVersion;
+	}
 
-    private String vdbName;
-    private String vdbVersion;
-    private VDBService vdbService;
-    private IDGenerator idGenerator;
-    private Collection multiSourceModels;
-    
-    public void setIdGenerator(IDGenerator idGenerator) {
-        this.idGenerator = idGenerator;
-    }
-    public void setVdbName(String vdbName) {
-        this.vdbName = vdbName;
-    }
-    public void setVdbService(VDBService vdbService) {
-        this.vdbService = vdbService;
-    }
-    public void setVdbVersion(String vdbVersion) {
-        this.vdbVersion = vdbVersion;
-    }
-    public void setMultiSourceModels(Collection multiSourceModels) {
-        this.multiSourceModels = multiSourceModels;
-    }
-        
-    public void modifyPlan(ProcessorPlan plan, QueryMetadataInterface metadata) throws MetaMatrixComponentException, CriteriaEvaluationException {
-        if(plan instanceof RelationalPlan) {
-            RelationalPlan rplan = (RelationalPlan) plan;
-            RelationalNode root = rplan.getRootNode();
-            rplan.setRootNode(modifyPlan(root, metadata));
-        } 
-        
-        Collection subPlans = plan.getChildPlans();
-        if(subPlans != null && subPlans.size() > 0) {
-            Iterator planIter = subPlans.iterator();
-            while(planIter.hasNext()) {
-                ProcessorPlan subPlan = (ProcessorPlan) planIter.next();
-                modifyPlan(subPlan, metadata);
-            }
-        }
-    }
-    
-    private int getID() {
-        IntegerIDFactory intFactory = (IntegerIDFactory) idGenerator.getDefaultFactory();
-        return ((IntegerID) intFactory.create()).getValue();
-    }
-    
-    private RelationalNode modifyPlan(RelationalNode node, QueryMetadataInterface metadata) throws MetaMatrixComponentException, CriteriaEvaluationException {
-        if(!(node instanceof AccessNode)) {
-            RelationalNode[] children = node.getChildren();
-            for(int i=0; i<children.length; i++) {
-                if(children[i] != null) {
-                    children[i] = modifyPlan(children[i], metadata);
-                    children[i].setParent(node);
-                } 
-            }
-            return node;
-        }
-        // terminate on AccessNode
-        AccessNode accessNode = (AccessNode) node;
+	protected RelationalNode convertNode(PlanNode planNode) throws QueryPlannerException, MetaMatrixComponentException {
+		RelationalNode node = super.convertNode(planNode);
+		
+		if (node instanceof AccessNode) {
+			try {
+				return multiSourceModify((AccessNode)node);
+			} catch (CriteriaEvaluationException e) {
+				throw new QueryPlannerException(e, e.getMessage());
+			} 
+		}
+		
+		return node;
+	}
+	
+	private RelationalNode multiSourceModify(AccessNode accessNode) throws MetaMatrixComponentException, CriteriaEvaluationException {
         String modelName = accessNode.getModelName();
-        
-        if(!this.multiSourceModels.contains(modelName)) {
-            return node;
+
+		if(!this.multiSourceModels.contains(modelName)) {
+            return accessNode;
         }
         List bindings = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
         List<AccessNode> accessNodes = new ArrayList<AccessNode>(bindings.size());
@@ -126,7 +98,7 @@ public class MultiSourcePlanModifier implements com.metamatrix.query.execution.m
             // Create a new cloned version of the access node and set it's model name to be the bindingUUID
             AccessNode instanceNode = (AccessNode) accessNode.clone();
             instanceNode.setID(getID());
-            instanceNode.setModelName(bindingUUID);
+            instanceNode.setConnectorBindingId(bindingUUID);
             
             // Modify the command to pull the instance column and evaluate the criteria
             Command command = instanceNode.getCommand();
@@ -180,4 +152,5 @@ public class MultiSourcePlanModifier implements com.metamatrix.query.execution.m
             }
         }
     }
+
 }

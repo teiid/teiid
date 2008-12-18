@@ -185,7 +185,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     private void registerRequest(Command command) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, this.modelName, getID());        
+    	tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, this.modelName, null, getID());        
     }
     
     private void closeRequest() throws MetaMatrixComponentException {

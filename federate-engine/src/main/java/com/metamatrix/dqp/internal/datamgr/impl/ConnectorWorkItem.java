@@ -85,7 +85,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 	
     /* Permanent state members */
     protected AtomicRequestID id;
-    protected ConnectorRequestStateManager manager;
+    protected ConnectorManager manager;
     protected AtomicRequestMessage requestMsg;
     protected boolean isTransactional;
     
@@ -113,10 +113,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 
     ResultsReceiver<AtomicResultsMessage> resultsReceiver;
     
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorRequestStateManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
-        this.isTransactional = manager.connector instanceof XAConnector && message.isTransactional();
+        this.isTransactional = manager.getConnector() instanceof XAConnector && message.isTransactional();
         this.manager = manager;
         this.resultsReceiver = resultsReceiver;
     }
@@ -153,8 +153,8 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     protected void process() {
     	DQPWorkContext.setWorkContext(this.requestMsg.getWorkContext());
         ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-    	Thread.currentThread().setContextClassLoader(manager.connector.getClass().getClassLoader());
-    	boolean errorOccurred = false;
+    	Thread.currentThread().setContextClassLoader(manager.getConnector().getClass().getClassLoader());
+    	boolean success = true;
     	try {
     		checkForCloseEvent();
     		switch (this.requestState) {
@@ -179,13 +179,13 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		} catch (NeedsClosedException e) {
     		this.requestState = RequestState.CLOSE;
     	} catch (Throwable t){
-    		errorOccurred = true;
+    		success = false;
     		this.requestState = RequestState.CLOSE;
         	handleError(t);
         } finally {
         	try {
 	        	if (this.requestState == RequestState.CLOSE) {
-	    			processClose(errorOccurred);
+	    			processClose(success);
 	        	} 
         	} finally {
             	Thread.currentThread().setContextClassLoader(contextloader);
@@ -221,7 +221,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     
     public synchronized void requestClose() {
     	if (this.requestState == RequestState.CLOSE || this.closeRequested) {
-    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Already closing request"});
+    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Already closing request"}); //$NON-NLS-1$
     		return;
     	}
     	this.closeRequested = true;
@@ -242,7 +242,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 
         if (!(t instanceof CommunicationException)) {
             if (t instanceof ConnectorException) {
-                t = new ConnectorException(t, DQPPlugin.Util.getString("ConnectorWorker.error_occurred", this.requestMsg.getConnectorBindingID(), t.getMessage())); //$NON-NLS-1$
+                t = new ConnectorException(t, DQPPlugin.Util.getString("ConnectorWorker.error_occurred", this.manager.getName(), t.getMessage())); //$NON-NLS-1$
             }        	
             this.resultsReceiver.exceptionOccurred(t);
         }
@@ -351,8 +351,8 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 			ConnectorException, MetaMatrixProcessingException {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
 
-		QueryMetadataInterface queryMetadata = new TempMetadataAdapter(manager.metadataService.lookupMetadata(this.requestMsg.getWorkContext().getVdbName(), this.requestMsg.getWorkContext().getVdbVersion()), new TempMetadataStore());
-        createConnection(manager.connector, queryMetadata);
+		QueryMetadataInterface queryMetadata = new TempMetadataAdapter(manager.getMetadataService().lookupMetadata(this.requestMsg.getWorkContext().getVdbName(), this.requestMsg.getWorkContext().getVdbVersion()), new TempMetadataStore());
+        createConnection(manager.getConnector(), queryMetadata);
         
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating execution for atomic-request"});  //$NON-NLS-1$
 
@@ -412,16 +412,16 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         }    
 
         // Check for max result rows exceeded
-        if(manager.maxResultRows != 0 && this.rowCount > manager.maxResultRows){
-            if (manager.exceptionOnMaxRows) {
-                String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", manager.maxResultRows); //$NON-NLS-1$
+        if(manager.getMaxResultRows() != 0 && this.rowCount > manager.getMaxResultRows()){
+            if (manager.isExceptionOnMaxRows()) {
+                String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", manager.getMaxResultRows()); //$NON-NLS-1$
                 throw new ConnectorException(msg);
             }
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", manager.maxResultRows}); //$NON-NLS-1$
-        	this.rowCount = manager.maxResultRows;
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", manager.getMaxResultRows()}); //$NON-NLS-1$
+        	this.rowCount = manager.getMaxResultRows();
         	List[] origResults = aBatch.getResults();
-            List[] newResults = new List[manager.maxResultRows];
-            System.arraycopy(origResults, 0, newResults, 0, manager.maxResultRows);
+            List[] newResults = new List[manager.getMaxResultRows()];
+            System.arraycopy(origResults, 0, newResults, 0, manager.getMaxResultRows());
             List newResultsList = Arrays.asList(newResults);
             Batch newBatch = new BasicBatch(newResultsList);
             newBatch.setLast();
@@ -599,6 +599,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 	        }            
 	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
     	}
+    }
+    
+    boolean isCancelled() {
+    	return this.isCancelled;
     }
 
 	@Override

@@ -44,6 +44,7 @@ public class AccessNode extends RelationalNode {
     // Initialization state
     private Command command;
     private String modelName;
+    private String connectorBindingId;
     private boolean shouldEvaluate = false;
 
     // Processing state
@@ -103,7 +104,7 @@ public class AccessNode extends RelationalNode {
         isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
         
 		if(needProcessing) {
-            this.tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, getID());
+            this.tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
 		}
 	}
 
@@ -132,7 +133,7 @@ public class AccessNode extends RelationalNode {
                 needProcessing = prepareNextCommand(atomicCommand);
                 if (needProcessing) {
                 	closeSources();
-                    tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, getID());
+                    tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
                 }
             }
             
@@ -206,6 +207,7 @@ public class AccessNode extends RelationalNode {
 	protected void copy(AccessNode source, AccessNode target){
 		super.copy(source, target);
 		target.modelName = source.modelName;
+		target.connectorBindingId = source.connectorBindingId;
 		target.shouldEvaluate = source.shouldEvaluate;
 		target.command = (Command)source.command.clone();
 	}
@@ -221,5 +223,13 @@ public class AccessNode extends RelationalNode {
         props.put(PROP_MODEL_NAME, this.modelName);
         return props;
     }
+
+	public String getConnectorBindingId() {
+		return connectorBindingId;
+	}
+
+	public void setConnectorBindingId(String connectorBindingId) {
+		this.connectorBindingId = connectorBindingId;
+	}
     
 }

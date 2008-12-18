@@ -106,7 +106,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
         	this.waitingForData = true;
 	        try {
 	        	this.dataMgr.executeRequest(aqr, this.connectorId, this);
-	        } catch (Exception e) {
+	        } catch (MetaMatrixComponentException e) {
 	        	exceptionOccurred(e);
 	        }
         }

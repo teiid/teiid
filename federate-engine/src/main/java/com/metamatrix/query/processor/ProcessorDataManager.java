@@ -32,6 +32,6 @@ import com.metamatrix.query.sql.lang.Command;
 
 public interface ProcessorDataManager extends LookupEvaluator {
 
-	TupleSource registerRequest(Object processorId, Command command, String modelName, int nodeID)
+	TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID)
 		throws MetaMatrixComponentException, MetaMatrixProcessingException;
 }

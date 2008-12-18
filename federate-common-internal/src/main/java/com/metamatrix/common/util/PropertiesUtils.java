@@ -55,7 +55,7 @@ public final class PropertiesUtils {
 	public static class InvalidPropertyException extends MetaMatrixRuntimeException {
 		
 		public InvalidPropertyException(String propertyName, String value, Class<?> expectedType, Throwable cause) {
-			super(cause, CommonPlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName()));
+			super(cause, CommonPlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
 		}
 
 	}
@@ -342,7 +342,7 @@ public final class PropertiesUtils {
     public static int getIntProperty(Properties props, String propName, int defaultValue) throws InvalidPropertyException {
         int val = defaultValue;
         String stringVal = props.getProperty(propName);
-        if(stringVal != null) {
+        if(stringVal != null && stringVal.trim().length() > 0) {
             try {
                 val = Integer.parseInt(stringVal);
             } catch(NumberFormatException e) {

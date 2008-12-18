@@ -148,7 +148,7 @@ public class TestProjectIntoNode extends TestCase {
             this.exceptionOnClose = exceptionOnClose;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,MetaMatrixComponentException {return null;}
-        public TupleSource registerRequest(Object processorID,Command command,String modelName,int nodeID) throws MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
             callCount++;
             
             int batchSize = 1;

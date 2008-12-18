@@ -31,7 +31,6 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerID;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -86,9 +85,20 @@ import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.NeedsEvaluationVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
-public final class PlanToProcessConverter {
-
-    public static RelationalPlan convert(PlanNode planNode, QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder)
+public class PlanToProcessConverter {
+	protected QueryMetadataInterface metadata;
+	private IDGenerator idGenerator;
+	private AnalysisRecord analysisRecord;
+	private CapabilitiesFinder capFinder;
+	
+	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
+		this.metadata = metadata;
+		this.idGenerator = idGenerator;
+		this.analysisRecord = analysisRecord;
+		this.capFinder = capFinder;
+	}
+	
+    public RelationalPlan convert(PlanNode planNode)
         throws QueryPlannerException, MetaMatrixComponentException {
 
         boolean debug = analysisRecord.recordDebug();
@@ -98,7 +108,7 @@ public final class PlanToProcessConverter {
         }
 
         // Convert plan tree nodes into process tree nodes
-        RelationalNode processNode = convertPlan(planNode, idGenerator, metadata, capFinder);
+        RelationalNode processNode = convertPlan(planNode);
         if(debug) {
             analysisRecord.println("\nPROCESS PLAN = \n" + processNode); //$NON-NLS-1$
             analysisRecord.println("============================================================================"); //$NON-NLS-1$
@@ -109,15 +119,15 @@ public final class PlanToProcessConverter {
 
     }
 
-	private static RelationalNode convertPlan(PlanNode planNode, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+	private RelationalNode convertPlan(PlanNode planNode)
 		throws QueryPlannerException, MetaMatrixComponentException {
 
 		// Convert current node in planTree
-		RelationalNode convertedNode = convertNode(planNode, idGenerator, metadata, capFinder);
+		RelationalNode convertedNode = convertNode(planNode);
 		
 		if(convertedNode == null) {
 		    Assertion.assertTrue(planNode.getChildCount() == 1);
-	        return convertPlan(planNode.getFirstChild(), idGenerator, metadata, capFinder);
+	        return convertPlan(planNode.getFirstChild());
 		}
 		
 		RelationalNode nextParent = convertedNode;
@@ -129,19 +139,19 @@ public final class PlanToProcessConverter {
 		
 		// Call convertPlan recursively on children
 		for (PlanNode childNode : planNode.getChildren()) {
-		    nextParent.addChild(convertPlan(childNode, idGenerator, metadata, capFinder));
+		    nextParent.addChild(convertPlan(childNode));
 		}
 
         // Return root of tree for top node
 		return convertedNode;
 	}
 
-    private static int getID(IDGenerator idGenerator) {
+    protected int getID() {
         IntegerIDFactory intFactory = (IntegerIDFactory) idGenerator.getDefaultFactory();
         return ((IntegerID) intFactory.create()).getValue();
     }
     
-	private static RelationalNode convertNode(PlanNode node, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+	protected RelationalNode convertNode(PlanNode node)
 		throws QueryPlannerException, MetaMatrixComponentException {
 
 		RelationalNode processNode = null;
@@ -151,7 +161,7 @@ public final class PlanToProcessConverter {
 			case NodeConstants.Types.PROJECT:
                 GroupSymbol intoGroup = (GroupSymbol) node.getProperty(NodeConstants.Info.INTO_GROUP);
                 if(intoGroup != null) {
-                    ProjectIntoNode pinode = new ProjectIntoNode(getID(idGenerator));
+                    ProjectIntoNode pinode = new ProjectIntoNode(getID());
                     pinode.setIntoGroup(intoGroup);
                     try {
                         // Figure out what elements should be inserted based on what is being projected 
@@ -183,12 +193,12 @@ public final class PlanToProcessConverter {
                     List subqueryPlans = (List)node.getProperty(NodeConstants.Info.SUBQUERY_PLANS);
                     if (subqueryPlans == null){
                         // This is a normal select node
-        				ProjectNode pnode = new ProjectNode(getID(idGenerator));
+        				ProjectNode pnode = new ProjectNode(getID());
         				processNode = pnode;
                     } else {
                         // This project node has one or more subqueries
                         List subqueries = (List)node.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS);
-                        DependentProjectNode pnode = new DependentProjectNode(getID(idGenerator));
+                        DependentProjectNode pnode = new DependentProjectNode(getID());
                         pnode.setPlansAndValueProviders(subqueryPlans, subqueries);
 
                         List correlatedReferences = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
@@ -206,7 +216,7 @@ public final class PlanToProcessConverter {
                 JoinType jtype = (JoinType) node.getProperty(NodeConstants.Info.JOIN_TYPE);
                 JoinStrategyType stype = (JoinStrategyType) node.getProperty(NodeConstants.Info.JOIN_STRATEGY);
 
-                JoinNode jnode = new JoinNode(getID(idGenerator));
+                JoinNode jnode = new JoinNode(getID());
                 jnode.setJoinType(jtype);
                 
                 List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
@@ -247,9 +257,9 @@ public final class PlanToProcessConverter {
                         List references = (List)node.getProperty(NodeConstants.Info.PROCEDURE_INPUTS);
                         List defaults = (List)node.getProperty(NodeConstants.Info.PROCEDURE_DEFAULTS);
                         
-                        peNode = new DependentProcedureExecutionNode(getID(idGenerator), crit, references, defaults);                        
+                        peNode = new DependentProcedureExecutionNode(getID(), crit, references, defaults);                        
                     } else {
-                        peNode = new PlanExecutionNode(getID(idGenerator));
+                        peNode = new PlanExecutionNode(getID());
                     }
                     
                     peNode.setProcessorPlan(plan);
@@ -267,12 +277,12 @@ public final class PlanToProcessConverter {
                             List defaults = (List)node.getProperty(NodeConstants.Info.PROCEDURE_DEFAULTS);
                             Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.PROCEDURE_CRITERIA);
                             
-                            DependentProcedureAccessNode depAccessNode = new DependentProcedureAccessNode(getID(idGenerator), crit, references, defaults);
+                            DependentProcedureAccessNode depAccessNode = new DependentProcedureAccessNode(getID(), crit, references, defaults);
                             processNode = depAccessNode;
                             aNode = depAccessNode;
                         } else {
                             //create dependent access node
-                            DependentAccessNode depAccessNode = new DependentAccessNode(getID(idGenerator));
+                            DependentAccessNode depAccessNode = new DependentAccessNode(getID());
                             
                             int maxSetSize = -1;
                             if(modelID != null){
@@ -291,21 +301,17 @@ public final class PlanToProcessConverter {
                     } else {
                         
                         // create access node
-                        aNode = new AccessNode(getID(idGenerator));
+                        aNode = new AccessNode(getID());
                         processNode = aNode;
                                                 
                         //-- special handling for temp tables. currently they cannot perform projection
                         try {
                             if (command instanceof Query) {
                                 processNode = correctProjectionForTempTable(node,
-                                                                            idGenerator,
-                                                                            metadata,
                                                                             aNode,
                                                                             possiblyDependentObject);
                             }
                         } catch (QueryMetadataException err) {
-                            throw new MetaMatrixComponentException(err);
-                        } catch (QueryResolverException err) {
                             throw new MetaMatrixComponentException(err);
                         }
                         aNode.setShouldEvaluateExpressions(NeedsEvaluationVisitor.needsEvaluation(command));
@@ -318,7 +324,7 @@ public final class PlanToProcessConverter {
                         throw new MetaMatrixComponentException(err);
                     }
                     aNode.setCommand(command);
-                    aNode.setModelName(getRoutingName(node, metadata));
+                    aNode.setModelName(getRoutingName(node));
                 }
                 break;
 
@@ -328,7 +334,7 @@ public final class PlanToProcessConverter {
 				Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
                 if (subPlans == null){
 					// This is a normal select node
-					SelectNode selnode = new SelectNode(getID(idGenerator));
+					SelectNode selnode = new SelectNode(getID());
 					selnode.setCriteria(crit);
 
 					processNode = selnode;
@@ -336,7 +342,7 @@ public final class PlanToProcessConverter {
                     // This select node has one or more subqueries
 					List subCrits = (List)node.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS);
 
-                    DependentSelectNode selnode = new DependentSelectNode(getID(idGenerator));
+                    DependentSelectNode selnode = new DependentSelectNode(getID());
 					selnode.setCriteria(crit);
 					selnode.setPlansAndCriteriaMapping(subPlans, subCrits);
 
@@ -350,7 +356,7 @@ public final class PlanToProcessConverter {
 				break;
 
 			case NodeConstants.Types.SORT:
-                SortNode sortNode = new SortNode(getID(idGenerator));
+                SortNode sortNode = new SortNode(getID());
                 
 				List elements = (List) node.getProperty(NodeConstants.Info.SORT_ORDER);
 				List sortTypes = (List) node.getProperty(NodeConstants.Info.ORDER_TYPES);
@@ -361,12 +367,12 @@ public final class PlanToProcessConverter {
 				break;
 
 			case NodeConstants.Types.DUP_REMOVE:
-				processNode = new DupRemoveNode(getID(idGenerator));
+				processNode = new DupRemoveNode(getID());
 
 				break;
 
 			case NodeConstants.Types.GROUP:
-				GroupingNode gnode = new GroupingNode(getID(idGenerator));
+				GroupingNode gnode = new GroupingNode(getID());
 				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
 
 				processNode = gnode;
@@ -388,17 +394,17 @@ public final class PlanToProcessConverter {
                 Operation setOp = (Operation) node.getProperty(NodeConstants.Info.SET_OPERATION);
                 boolean useAll = ((Boolean) node.getProperty(NodeConstants.Info.USE_ALL)).booleanValue();
                 if(setOp == Operation.UNION) {
-                    RelationalNode unionAllNode = new UnionAllNode(getID(idGenerator));
+                    RelationalNode unionAllNode = new UnionAllNode(getID());
 
                     if(useAll) {
                         processNode = unionAllNode;
                     } else {
-                        processNode = new DupRemoveNode(getID(idGenerator));
+                        processNode = new DupRemoveNode(getID());
                         unionAllNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                         processNode.addChild(unionAllNode);
                     }
                 } else {
-                    JoinNode joinAsSet = new JoinNode(getID(idGenerator));
+                    JoinNode joinAsSet = new JoinNode(getID());
                     joinAsSet.setJoinStrategy(new MergeJoinStrategy(SortOption.SORT_DISTINCT, SortOption.SORT_DISTINCT, true));
                     List leftExpressions = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
                     List rightExpressions = (List) node.getLastChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
@@ -412,11 +418,11 @@ public final class PlanToProcessConverter {
             case NodeConstants.Types.TUPLE_LIMIT:
                 Expression rowLimit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
                 Expression offset = (Expression)node.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-                processNode = new LimitNode(getID(idGenerator), rowLimit, offset);
+                processNode = new LimitNode(getID(), rowLimit, offset);
                 break;
                 
             case NodeConstants.Types.NULL:
-                processNode = new NullNode(getID(idGenerator));
+                processNode = new NullNode(getID());
                 break;
 
 			default:
@@ -424,18 +430,15 @@ public final class PlanToProcessConverter {
 		}
 
 		if(processNode != null) {
-			processNode = prepareToAdd(node, idGenerator, processNode, possiblyDependentObject);
+			processNode = prepareToAdd(node, processNode, possiblyDependentObject);
 		}
 
 		return processNode;
 	}
 
-    private static RelationalNode correctProjectionForTempTable(PlanNode node,
-                                                                IDGenerator idGenerator,
-                                                                QueryMetadataInterface metadata,
+    private RelationalNode correctProjectionForTempTable(PlanNode node,
                                                                 AccessNode aNode,
                                                                 LanguageObject possiblyDependentObject) throws QueryMetadataException,
-                                                                                                       QueryResolverException,
                                                                                                        MetaMatrixComponentException {
         if (node.getGroups().size() != 1) {
             return aNode;
@@ -451,18 +454,17 @@ public final class PlanToProcessConverter {
             //if the parent is already a project, just correcting the output cols is enough
             return aNode;
         }
-        ProjectNode pnode = new ProjectNode(getID(idGenerator));
+        ProjectNode pnode = new ProjectNode(getID());
   
         pnode.setSelectSymbols(projectSymbols);
         //if the following cast fails it means that we have a dependent temp table - that is not yet possible
-        aNode = (AccessNode)prepareToAdd(node, idGenerator, aNode, possiblyDependentObject);
+        aNode = (AccessNode)prepareToAdd(node, aNode, possiblyDependentObject);
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectSymbols);
         pnode.addChild(aNode);
         return pnode;
     }
 
-    private static RelationalNode prepareToAdd(PlanNode node,
-                                          IDGenerator idGenerator,
+    private RelationalNode prepareToAdd(PlanNode node,
                                           RelationalNode processNode,
                                           LanguageObject possiblyDependentObject) {
         // Set the output elements from the plan node
@@ -485,7 +487,7 @@ public final class PlanToProcessConverter {
         return processNode;
     }
 
-	private static String getRoutingName(PlanNode node, QueryMetadataInterface metadata)
+	private String getRoutingName(PlanNode node)
 		throws QueryPlannerException, MetaMatrixComponentException {
 
 		// Look up connector binding name

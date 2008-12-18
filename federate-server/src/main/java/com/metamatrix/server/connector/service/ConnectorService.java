@@ -195,11 +195,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
 	public void executeRequest(AtomicRequestMessage request,
 			ResultsReceiver<AtomicResultsMessage> resultListener)
 			throws MetaMatrixComponentException {
-    	try {
-			this.connectorMgr.executeRequest(resultListener, request);
-		} catch (ApplicationLifecycleException e) {
-			throw new MetaMatrixComponentException(e);
-		}
+		this.connectorMgr.executeRequest(resultListener, request);
 	}
 
 	public void requestBatch(AtomicRequestID request)
@@ -260,7 +256,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
             
             // Create a stringified connector ID from the serviceID
             ServiceID id = this.getID();
-            String connID = "" + id.getVMControllerID().getID() + ConnectorID.SEPARATOR + id.getID();         //$NON-NLS-1$
+            String connID = id.getVMControllerID().getID() + "|" + id.getID();         //$NON-NLS-1$
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, loader);
@@ -358,16 +354,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
     }
 
-    /**
-     * Wait until the service has completed all outstanding work. This method
-     * is called by die() just before calling dieNow().
-     */
     protected void waitForServiceToClear() throws ApplicationLifecycleException {
-        if ( this.connectorMgr != null ) {
-            Object[] params = new Object[]{connectorMgrName};
-            LogManager.logInfo(LogCommonConstants.CTX_CONFIG,ServerPlugin.Util.getString("ConnectorService.Waiting_for_ConnectorManager_[{0}]_queue_to_clear.", params)); //$NON-NLS-1$
-            this.connectorMgr.clearPool(false);
-        }
     }
 
     /**
@@ -379,7 +366,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
             try {
                 Object[] params = new Object[]{connectorMgrName};
                 LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("ConnectorService.Killing_connectorMgr", params)); //$NON-NLS-1$
-                this.connectorMgr.clearPool(true);
                 connectorMgr.stop();
             } catch (ApplicationLifecycleException e) {
                 Object[] params = new Object[]{connectorMgrName, e.getMessage()};

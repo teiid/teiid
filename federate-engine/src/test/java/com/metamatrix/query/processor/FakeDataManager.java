@@ -96,7 +96,7 @@ public class FakeDataManager implements ProcessorDataManager {
 	public void closeRequest(Object requestID) {
     } 
 	
-	public TupleSource registerRequest(Object processorID, Command command, String modelName, int nodeID)
+	public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID)
 		throws MetaMatrixComponentException {
         
         LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", processorID, ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
