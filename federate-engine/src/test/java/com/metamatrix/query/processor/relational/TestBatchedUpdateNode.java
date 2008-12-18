@@ -28,11 +28,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.mockito.Mockito;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.FakeBufferManager;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -56,7 +58,7 @@ public class TestBatchedUpdateNode extends TestCase {
         BatchedUpdateNode node = new BatchedUpdateNode(1, TestBatchedUpdatePlanner.helpGetCommands(sql, md), "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
         context.setProcessorID("myProcessorID"); //$NON-NLS-1$
-        node.initialize(context, new FakeBufferManager(), pdm); 
+        node.initialize(context, Mockito.mock(BufferManager.class), pdm); 
         return node;
     }
     

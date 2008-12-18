@@ -33,6 +33,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -40,7 +42,7 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.common.buffer.FakeBufferManager;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
@@ -191,7 +193,7 @@ public class TestRequest extends TestCase {
         } else {
         	request = new Request();
         }
-        request.initialize(message, environment, new FakeBufferManager(),
+        request.initialize(message, environment, Mockito.mock(BufferManager.class),
 				new FakeDataManager(), new HashMap(), null, false, null,
 				workContext);
         
