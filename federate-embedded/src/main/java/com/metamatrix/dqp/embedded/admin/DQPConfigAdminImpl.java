@@ -111,7 +111,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // the Configuration Service. Since we do not have dynamic properties on
             // DQP this should be OK for now.
             getConfigurationService().updateSystemProperties(properties);            
-        }catch(Exception e) {
+        }catch(MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }
     }
@@ -295,11 +295,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // now that all of the input parameters validated, add the connector binding
             binding = addConnectorBinding(deployName, binding, ctype, true);
             
-        } catch (AdminException e) {
-            throw e;
-        } catch (Exception e) {
+        } catch (MetaMatrixProcessingException e) {
+        	throw new AdminProcessingException(e);
+        } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
-        }                
+        }
         return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
     }
 
@@ -396,15 +396,17 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             if (binding.getComponentTypeID().getName().equals(type.getName())) {
                 try {
                     
-                    // First add the conenctor type if one is not alredy in here.
+                    // First add the connector type if one is not already in here.
                     if (getConfigurationService().getConnectorType(type.getName()) == null || replace) {
                         saveConnectorType(type);
                     }
                     // Now add the connector binding.
                     binding = getConfigurationService().addConnectorBinding(deployName, binding, replace);
                     return binding;
-                } catch (Exception e) {
+                } catch (MetaMatrixComponentException e) {
                 	throw new AdminComponentException(e);
+                } catch (MetaMatrixProcessingException e) {
+                	throw new AdminProcessingException(e);
                 }
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.connector_load_failed_wrong_type", deployName));  //$NON-NLS-1$                    
@@ -423,7 +425,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_cb_name")); //$NON-NLS-1$
             }
             getConfigurationService().deleteConnectorBinding(identifier);
-        } catch (Exception e) {
+        } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }          
     }
@@ -473,18 +475,20 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
               	  (deployedVDB.getStatus() == VDBStatus.ACTIVE_DEFAULT) ) {
                 try {
                     startVDBConnectorBindings(deployedVDB);
-                }catch(Exception e) {
+                } catch (MetaMatrixComponentException e) {
+                } catch (MetaMatrixProcessingException e) {
+                } catch (ApplicationLifecycleException e) {
                     // we can safely ignore these because the cause of the not starting is already recorded
                     // and more likely VDB deployment succeeded.
                 }
             }
             
             return (VDB) convertToAdminObjects(deployedVDB);
-        } catch (AdminException e) {
-            throw e;               
-        } catch (Exception e) {
+        } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
-        } 
+        } catch (MetaMatrixProcessingException e) {
+        	throw new AdminProcessingException(e);
+        }
     }
 
     /** 
@@ -567,8 +571,8 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                     decryptProperty(props.getProperty(name));
                 }
             }
-        } catch (MetaMatrixComponentException e) {
-            return new MMAdminStatus(AdminStatus.CODE_DECRYPTION_FAILED, "AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName()); //$NON-NLS-1$            
+        } catch (CryptoException e) {
+        	return new MMAdminStatus(AdminStatus.CODE_DECRYPTION_FAILED, "AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName()); //$NON-NLS-1$
         }
         return new MMAdminStatus(AdminStatus.CODE_SUCCESS, "AdminStatus.CODE_SUCCESS"); //$NON-NLS-1$
     }
@@ -594,14 +598,9 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
      * @param value
      * @return decrypted property.
      */
-    String decryptProperty(String value) 
-        throws MetaMatrixComponentException{
+    String decryptProperty(String value) throws CryptoException{
         if (value != null && value.length() > 0) {
-            try {
-                return CryptoUtil.stringDecrypt(value);
-            } catch ( CryptoException e ) {
-                throw new MetaMatrixComponentException(e);
-            }
+           return CryptoUtil.stringDecrypt(value);
         }
         return value;
     }     

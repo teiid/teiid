@@ -101,8 +101,8 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
                 }
             }                        
             return (List)convertToAdminObjects(matchedVdbs);
-        } catch (MetaMatrixComponentException err) {
-        	throw new AdminComponentException(err);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -307,8 +307,6 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
         return super.getSystem();
     }
     
-    
-    
     /** 
      * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
      * @since 4.3
@@ -354,7 +352,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
                         
             }
             
-        } catch (Exception e) {
+        } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }
     }
