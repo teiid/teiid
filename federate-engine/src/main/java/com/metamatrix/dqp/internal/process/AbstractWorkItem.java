@@ -55,7 +55,9 @@ public abstract class AbstractWorkItem implements Runnable {
     
     private synchronized void startProcessing() {
     	logTrace("start processing"); //$NON-NLS-1$
-		assert this.threadState == ThreadState.MORE_WORK : "Must be in MORE_WORK"; //$NON-NLS-1$
+		if (this.threadState != ThreadState.MORE_WORK) {
+			throw new IllegalStateException("Must be in MORE_WORK"); //$NON-NLS-1$
+		}
     	this.threadState = ThreadState.WORKING;
 	}
     
