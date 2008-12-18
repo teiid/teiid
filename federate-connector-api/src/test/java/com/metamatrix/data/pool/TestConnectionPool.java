@@ -60,7 +60,7 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.MAX_CONNECTIONS, "10"); //$NON-NLS-1$ 
         poolProperties.put(ConnectionPool.MAX_CONNECTIONS_FOR_EACH_ID, "5"); //$NON-NLS-1$ 
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "50"); //$NON-NLS-1$
+        poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "500"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
         poolProperties.put(SourceConnection.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
