@@ -25,7 +25,10 @@
 package com.metamatrix.admin.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +41,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Model;
 import com.metamatrix.admin.api.objects.Request;
@@ -61,6 +66,7 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
@@ -71,9 +77,12 @@ import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
+import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.pooling.api.PoolStatistic;
+import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.DateUtil;
@@ -81,6 +90,7 @@ import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.ZipFileUtil;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
@@ -89,6 +99,7 @@ import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.VMControllerID;
@@ -137,81 +148,86 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         }
         
         HashSet results = null;
-        Configuration nextStartupConfig = null;
-        Map configMap = new HashMap();
-        try {
-            nextStartupConfig = getConfigurationServiceProxy().getConfiguration(Configuration.NEXT_STARTUP);
-            Collection pools = nextStartupConfig.getResourcePools();
-            
-            if (pools != null) {
-                for (Iterator it = pools.iterator(); it.hasNext();) {
-                    ResourceDescriptor rd = (ResourceDescriptor)it.next();
-                    String name = rd.getName();
-                    
-                    Collection processes = nextStartupConfig.getVMComponentDefns();
-                    for (final Iterator iter = processes.iterator(); iter.hasNext();) {
-                        final VMComponentDefn vmDefn = (VMComponentDefn)iter.next();
-                        String[] identifierParts = new String[] { vmDefn.getHostID().getName(), vmDefn.getName(), name };
-                        if (identifierMatches(identifier, identifierParts)) {
+		Map configMap  = new HashMap();
+		try {
+			Configuration nextStartupConfig = getConfigurationServiceProxy().getConfiguration(Configuration.NEXT_STARTUP);
+			    Collection pools = nextStartupConfig.getResourcePools();
+			    
+			    if (pools != null) {
+			        for (Iterator it = pools.iterator(); it.hasNext();) {
+			            ResourceDescriptor rd = (ResourceDescriptor)it.next();
+			            String name = rd.getName();
+			            
+			            Collection processes = nextStartupConfig.getVMComponentDefns();
+			            for (final Iterator iter = processes.iterator(); iter.hasNext();) {
+			                final VMComponentDefn vmDefn = (VMComponentDefn)iter.next();
+			                String[] identifierParts = new String[] { vmDefn.getHostID().getName(), vmDefn.getName(), name };
+			                if (identifierMatches(identifier, identifierParts)) {
 
-                            MMConnectionPool pool = new MMConnectionPool(identifierParts);
-                            pool.setType(rd.getComponentTypeID().getName());
-                            pool.setCreated(rd.getCreatedDate());
-                            pool.setCreatedBy(rd.getCreatedBy());
-                            pool.setLastUpdated(rd.getLastChangedDate());
-                            pool.setLastUpdatedBy(rd.getLastChangedBy());
-                            Properties properties = PropertiesUtils.clone(rd.getProperties(), false);
-                            pool.setProperties(properties);
-                            String key = pool.getIdentifier().toUpperCase();
-                            configMap.put(key, pool);
-                        }
-                    } // for
-                }
-            }
+			                    MMConnectionPool pool = new MMConnectionPool(identifierParts);
+			                    pool.setType(rd.getComponentTypeID().getName());
+			                    pool.setCreated(rd.getCreatedDate());
+			                    pool.setCreatedBy(rd.getCreatedBy());
+			                    pool.setLastUpdated(rd.getLastChangedDate());
+			                    pool.setLastUpdatedBy(rd.getLastChangedBy());
+			                    Properties properties = PropertiesUtils.clone(rd.getProperties(), false);
+			                    pool.setProperties(properties);
+			                    String key = pool.getIdentifier().toUpperCase();
+			                    configMap.put(key, pool);
+			                }
+			            } // for
+			        }
+			    }
 
-            // get pools from RuntimeStateAdminAPIHelper
-            Collection statsCollection = getRuntimeStateAdminAPIHelper().getResourcePoolStatistics();
+			    // get pools from RuntimeStateAdminAPIHelper
+			    Collection statsCollection = getRuntimeStateAdminAPIHelper().getResourcePoolStatistics();
 
-            // convert results into MMConnectionPool objects
-            results = new HashSet(configMap.values().size());
-            for (Iterator iter = statsCollection.iterator(); iter.hasNext();) {
-                ResourcePoolStats stats = (ResourcePoolStats)iter.next();
-                String name = stats.getPoolName();
-                String[] identifierParts = new String[] {
-                    stats.getHostName(), stats.getProcessName(), name
-                };
+			    // convert results into MMConnectionPool objects
+			    results = new HashSet(configMap.values().size());
+			    for (Iterator iter = statsCollection.iterator(); iter.hasNext();) {
+			        ResourcePoolStats stats = (ResourcePoolStats)iter.next();
+			        String name = stats.getPoolName();
+			        String[] identifierParts = new String[] {
+			            stats.getHostName(), stats.getProcessName(), name
+			        };
 
-                    
-                if (identifierMatches(identifier, identifierParts)) {
-                    String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-                    if (configMap.containsKey(key)) {
-                        MMConnectionPool pool = (MMConnectionPool) configMap.get(key);
-                        Properties properties = pool.getProperties();
-                        properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
-                        pool.setActive(true);
-                        results.add(pool);
-                        configMap.remove(key);
-                    } else {
-                        ResourceDescriptor resourceDescriptor = nextStartupConfig.getResourcePool(name);
-                        
-                        MMConnectionPool pool = new MMConnectionPool(identifierParts);
-                        pool.setType(stats.getPoolType());
-                        pool.setCreated(resourceDescriptor.getCreatedDate());
-                        pool.setCreatedBy(resourceDescriptor.getCreatedBy());
-                        pool.setLastUpdated(resourceDescriptor.getLastChangedDate());
-                        pool.setLastUpdatedBy(resourceDescriptor.getLastChangedBy());
-                        Properties properties = PropertiesUtils.clone(resourceDescriptor.getProperties(), false);
-                        properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
-                        pool.setProperties(properties);
+			            
+			        if (identifierMatches(identifier, identifierParts)) {
+			            String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+			            if (configMap.containsKey(key)) {
+			                MMConnectionPool pool = (MMConnectionPool) configMap.get(key);
+			                Properties properties = pool.getProperties();
+			                properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
+			                pool.setActive(true);
+			                results.add(pool);
+			                configMap.remove(key);
+			            } else {
+			                ResourceDescriptor resourceDescriptor = nextStartupConfig.getResourcePool(name);
+			                
+			                MMConnectionPool pool = new MMConnectionPool(identifierParts);
+			                pool.setType(stats.getPoolType());
+			                pool.setCreated(resourceDescriptor.getCreatedDate());
+			                pool.setCreatedBy(resourceDescriptor.getCreatedBy());
+			                pool.setLastUpdated(resourceDescriptor.getLastChangedDate());
+			                pool.setLastUpdatedBy(resourceDescriptor.getLastChangedBy());
+			                Properties properties = PropertiesUtils.clone(resourceDescriptor.getProperties(), false);
+			                properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
+			                pool.setProperties(properties);
 
-                        pool.setActive(true);
-                        results.add(pool);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			                pool.setActive(true);
+			                results.add(pool);
+			            }
+			        }
+			    }
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ResourcePoolException e) {
+			throw new AdminComponentException(e);
+		}
         results.addAll(configMap.values());
         return results;
     }
@@ -249,86 +265,88 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         HashSet results = new HashSet();
         try {
-            //get config data from ConfigurationService
-            Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-            Collection components = config.getDeployedComponents();
-            
-            //convert config data to MMConnectorBinding objects, put in a hashmap by identifier
-            Map runtimeMap = new HashMap();
-            for (Iterator iter = components.iterator(); iter.hasNext();) {
-                BasicDeployedComponent component = (BasicDeployedComponent)iter.next();
-                String bindingName = component.getName();
+			//get config data from ConfigurationService
+			Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
+			Collection components = config.getDeployedComponents();
+			
+			//convert config data to MMConnectorBinding objects, put in a hashmap by identifier
+			Map runtimeMap = new HashMap();
+			for (Iterator iter = components.iterator(); iter.hasNext();) {
+			    BasicDeployedComponent component = (BasicDeployedComponent)iter.next();
+			    String bindingName = component.getName();
 
-                String[] identifierParts = new String[] {
-                    component.getHostID().getName(), component.getVMComponentDefnID().getName(), bindingName
-                };
+			    String[] identifierParts = new String[] {
+			        component.getHostID().getName(), component.getVMComponentDefnID().getName(), bindingName
+			    };
 
-                ConnectorBinding configBinding = config.getConnectorBinding(bindingName);
-                if (configBinding != null && identifierMatches(identifier, identifierParts)) {
+			    ConnectorBinding configBinding = config.getConnectorBinding(bindingName);
+			    if (configBinding != null && identifierMatches(identifier, identifierParts)) {
 
-                    MMConnectorBinding binding = new MMConnectorBinding(identifierParts);
-                    binding.setConnectorTypeName(configBinding.getComponentTypeID().getFullName());
-                    binding.setRoutingUUID(configBinding.getRoutingUUID());
-                    binding.setEnabled(configBinding.isEnabled());
-                    binding.setDeployed(true);
-                    binding.setRegistered(false);
-                    binding.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
-                    binding.setProperties(configBinding.getProperties());
-                    
-                    binding.setCreated(configBinding.getCreatedDate());
-                    binding.setCreatedBy(configBinding.getCreatedBy());
-                    binding.setLastUpdated(configBinding.getLastChangedDate());
-                    binding.setLastUpdatedBy(configBinding.getLastChangedBy());
+			        MMConnectorBinding binding = new MMConnectorBinding(identifierParts);
+			        binding.setConnectorTypeName(configBinding.getComponentTypeID().getFullName());
+			        binding.setRoutingUUID(configBinding.getRoutingUUID());
+			        binding.setEnabled(configBinding.isEnabled());
+			        binding.setDeployed(true);
+			        binding.setRegistered(false);
+			        binding.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
+			        binding.setProperties(configBinding.getProperties());
+			        
+			        binding.setCreated(configBinding.getCreatedDate());
+			        binding.setCreatedBy(configBinding.getCreatedBy());
+			        binding.setLastUpdated(configBinding.getLastChangedDate());
+			        binding.setLastUpdatedBy(configBinding.getLastChangedBy());
 
-                    String key = binding.getIdentifier().toUpperCase();
-                    runtimeMap.put(key, binding);
-                    results.add(binding);
-                }
+			        String key = binding.getIdentifier().toUpperCase();
+			        runtimeMap.put(key, binding);
+			        results.add(binding);
+			    }
 
-            }
-            
-            // get runtime data from RuntimeStateAdminAPIHelper
-            Collection serviceBindings = this.registry.getServiceBindings(null, null);
-            
-            //convert runtime data into MMConnectorBinding objects
-            for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
-                ServiceRegistryBinding serviceBinding = (ServiceRegistryBinding) iter.next();
-                DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
+			}
+			
+			// get runtime data from RuntimeStateAdminAPIHelper
+			Collection serviceBindings = this.registry.getServiceBindings(null, null);
+			
+			//convert runtime data into MMConnectorBinding objects
+			for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
+			    ServiceRegistryBinding serviceBinding = (ServiceRegistryBinding) iter.next();
+			    DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
 
-                if (deployedComponent!= null && deployedComponent.isDeployedConnector()) {
-                    String name = serviceBinding.getDeployedName();
-                    
-                    MMConnectorBinding binding;
-                    String[] identifierParts = 
-                        new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
-                    String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-                    if (runtimeMap.containsKey(key)) {
-                        //reuse MMConnectorBinding from config
-                        binding = (MMConnectorBinding) runtimeMap.get(key);
-                    } else {
-                        //not in config - create new MMConnectorBinding
-                        binding = new MMConnectorBinding(identifierParts);
-                        binding.setDeployed(false);
-                        binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
-                    }
-                        
-                    if (identifierMatches(identifier, identifierParts)) {
-                        binding.setConnectorTypeName(deployedComponent.getComponentTypeID().getFullName());
-                        binding.setDescription(deployedComponent.getDescription());
-                        binding.setState(serviceBinding.getCurrentState());
-                        binding.setStateChangedTime(serviceBinding.getStateChangeTime());
-                        binding.setRegistered(true);
-                        binding.setServiceID(serviceBinding.getServiceID().getID());
-                        binding.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
+			    if (deployedComponent!= null && deployedComponent.isDeployedConnector()) {
+			        String name = serviceBinding.getDeployedName();
+			        
+			        MMConnectorBinding binding;
+			        String[] identifierParts = 
+			            new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
+			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+			        if (runtimeMap.containsKey(key)) {
+			            //reuse MMConnectorBinding from config
+			            binding = (MMConnectorBinding) runtimeMap.get(key);
+			        } else {
+			            //not in config - create new MMConnectorBinding
+			            binding = new MMConnectorBinding(identifierParts);
+			            binding.setDeployed(false);
+			            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
+			        }
+			            
+			        if (identifierMatches(identifier, identifierParts)) {
+			            binding.setConnectorTypeName(deployedComponent.getComponentTypeID().getFullName());
+			            binding.setDescription(deployedComponent.getDescription());
+			            binding.setState(serviceBinding.getCurrentState());
+			            binding.setStateChangedTime(serviceBinding.getStateChangeTime());
+			            binding.setRegistered(true);
+			            binding.setServiceID(serviceBinding.getServiceID().getID());
+			            binding.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
 
-                        
-                        results.add(binding);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			            
+			            results.add(binding);
+			        }
+			    }
+			}
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -389,34 +407,35 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         ArrayList results = null;
         try {
-            //get types from ConfigurationService
-            Collection types = getConfigurationServiceProxy().getAllComponentTypes(false);
-            
-            //convert results into MMConnectorType objects
-            results = new ArrayList(types.size());
-            for (Iterator iter = types.iterator(); iter.hasNext();) {
-                ComponentType componentType = (ComponentType) iter.next();
-                if (componentType.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
-                    
-                    String name = componentType.getName();
-                    String[] identifierParts = new String[] {name};                
-                    if (identifierMatches(identifier, identifierParts)) {
-                        MMConnectorType type = new MMConnectorType(identifierParts);
-                        
-                        type.setCreated(componentType.getCreatedDate());
-                        type.setCreatedBy(componentType.getCreatedBy());
-                        type.setLastUpdated(componentType.getLastChangedDate());
-                        type.setLastUpdatedBy(componentType.getLastChangedBy());
-                            
-                        results.add(type);
-                    }
-                }
-            }
-            return results;
-        } catch (Exception e) {
-            convertException(e);
-        }
-        return results;
+			//get types from ConfigurationService
+			Collection types = getConfigurationServiceProxy().getAllComponentTypes(false);
+			
+			//convert results into MMConnectorType objects
+			results = new ArrayList(types.size());
+			for (Iterator iter = types.iterator(); iter.hasNext();) {
+			    ComponentType componentType = (ComponentType) iter.next();
+			    if (componentType.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
+			        
+			        String name = componentType.getName();
+			        String[] identifierParts = new String[] {name};                
+			        if (identifierMatches(identifier, identifierParts)) {
+			            MMConnectorType type = new MMConnectorType(identifierParts);
+			            
+			            type.setCreated(componentType.getCreatedDate());
+			            type.setCreatedBy(componentType.getCreatedBy());
+			            type.setLastUpdated(componentType.getLastChangedDate());
+			            type.setLastUpdatedBy(componentType.getLastChangedBy());
+			                
+			            results.add(type);
+			        }
+			    }
+			}
+			return results;
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -436,86 +455,88 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         HashSet results = new HashSet();
         try {
-            //get config data from ConfigurationService
-            
-            Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-            Collection components = config.getDeployedComponents();
-            
-            //convert config data to MMConnectorBinding objects, put in a hashmap by identifier
-            Map runtimeMap = new HashMap();
-            for (Iterator iter = components.iterator(); iter.hasNext();) {
-                BasicDeployedComponent component = (BasicDeployedComponent) iter.next();
-                
-                String dqpName = component.getName();
-                String[] identifierParts = 
-                    new String[] {component.getHostID().getName(), component.getVMComponentDefnID().getName(), dqpName};
-                if (QUERY_SERVICE.equals(component.getComponentTypeID().getName()) 
-                                && identifierMatches(identifier, identifierParts)) {
+			//get config data from ConfigurationService
+			
+			Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
+			Collection components = config.getDeployedComponents();
+			
+			//convert config data to MMConnectorBinding objects, put in a hashmap by identifier
+			Map runtimeMap = new HashMap();
+			for (Iterator iter = components.iterator(); iter.hasNext();) {
+			    BasicDeployedComponent component = (BasicDeployedComponent) iter.next();
+			    
+			    String dqpName = component.getName();
+			    String[] identifierParts = 
+			        new String[] {component.getHostID().getName(), component.getVMComponentDefnID().getName(), dqpName};
+			    if (QUERY_SERVICE.equals(component.getComponentTypeID().getName()) 
+			                    && identifierMatches(identifier, identifierParts)) {
 
-                    MMDQP dqp = new MMDQP(identifierParts);
-                    
-                    dqp.setDeployed(true);
-                    dqp.setRegistered(false);
-                    dqp.setState(MMDQP.STATE_NOT_REGISTERED);
-                    
-                    ServiceComponentDefn defn = config.getServiceComponentDefn(dqpName);                    
-                    if (defn != null) {
-                        dqp.setProperties(defn.getProperties());
-                    }
-                    
-                    String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-                    runtimeMap.put(key, dqp);
-                    results.add(dqp);
-                }
-            }
-            
-            
-            
-            //get runtime data from RuntimeStateAdminAPIHelper
-            Collection serviceBindings = this.registry.getServiceBindings(null, null);
-            
-            //convert runtime data into MMDQP objects
-            for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
-                ServiceRegistryBinding serviceBinding = (ServiceRegistryBinding) iter.next();
-                DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
+			        MMDQP dqp = new MMDQP(identifierParts);
+			        
+			        dqp.setDeployed(true);
+			        dqp.setRegistered(false);
+			        dqp.setState(MMDQP.STATE_NOT_REGISTERED);
+			        
+			        ServiceComponentDefn defn = config.getServiceComponentDefn(dqpName);                    
+			        if (defn != null) {
+			            dqp.setProperties(defn.getProperties());
+			        }
+			        
+			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+			        runtimeMap.put(key, dqp);
+			        results.add(dqp);
+			    }
+			}
+			
+			
+			
+			//get runtime data from RuntimeStateAdminAPIHelper
+			Collection serviceBindings = this.registry.getServiceBindings(null, null);
+			
+			//convert runtime data into MMDQP objects
+			for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
+			    ServiceRegistryBinding serviceBinding = (ServiceRegistryBinding) iter.next();
+			    DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
 
-                if (QUERY_SERVICE.equals(serviceBinding.getServiceType())) {
-                    String name = serviceBinding.getDeployedName();
-                    
-                    MMDQP dqp;
-                    String[] identifierParts = 
-                        new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
-                    String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-                    if (runtimeMap.containsKey(key)) {
-                        //reuse MMDQP from config
-                        dqp = (MMDQP) runtimeMap.get(key);
-                    } else {
-                        //not in config - create new MMDQP
-                        dqp = new MMDQP(identifierParts);
-                        dqp.setDeployed(false);
-                        dqp.setState(MMDQP.STATE_NOT_DEPLOYED);
-                    }
-                        
-                    if (identifierMatches(identifier, identifierParts)) {
-                                                
-                        dqp.setCreated(deployedComponent.getCreatedDate());
-                        dqp.setCreatedBy(deployedComponent.getCreatedBy());
-                        dqp.setLastUpdated(deployedComponent.getLastChangedDate());
-                        dqp.setLastUpdatedBy(deployedComponent.getLastChangedBy());
-                        dqp.setDescription(deployedComponent.getDescription());
-                        dqp.setState(serviceBinding.getCurrentState());
-                        dqp.setStateChangedTime(serviceBinding.getStateChangeTime());
-                        dqp.setRegistered(true);
-                        dqp.setServiceID(serviceBinding.getServiceID().getID());
-                        dqp.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
-                        
-                        results.add(dqp);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			    if (QUERY_SERVICE.equals(serviceBinding.getServiceType())) {
+			        String name = serviceBinding.getDeployedName();
+			        
+			        MMDQP dqp;
+			        String[] identifierParts = 
+			            new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
+			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+			        if (runtimeMap.containsKey(key)) {
+			            //reuse MMDQP from config
+			            dqp = (MMDQP) runtimeMap.get(key);
+			        } else {
+			            //not in config - create new MMDQP
+			            dqp = new MMDQP(identifierParts);
+			            dqp.setDeployed(false);
+			            dqp.setState(MMDQP.STATE_NOT_DEPLOYED);
+			        }
+			            
+			        if (identifierMatches(identifier, identifierParts)) {
+			                                    
+			            dqp.setCreated(deployedComponent.getCreatedDate());
+			            dqp.setCreatedBy(deployedComponent.getCreatedBy());
+			            dqp.setLastUpdated(deployedComponent.getLastChangedDate());
+			            dqp.setLastUpdatedBy(deployedComponent.getLastChangedBy());
+			            dqp.setDescription(deployedComponent.getDescription());
+			            dqp.setState(serviceBinding.getCurrentState());
+			            dqp.setStateChangedTime(serviceBinding.getStateChangeTime());
+			            dqp.setRegistered(true);
+			            dqp.setServiceID(serviceBinding.getServiceID().getID());
+			            dqp.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
+			            
+			            results.add(dqp);
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -538,35 +559,39 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         ArrayList results = null;
         try {
-            //get modules from ExtensionSourceManager
-            Collection modules = getExtensionSourceManager().getSourceDescriptors();
-            
-            //convert modules into MMExtensionModule objects
-            results = new ArrayList(modules.size());
-            for (Iterator iter = modules.iterator(); iter.hasNext();) {
-                ExtensionModuleDescriptor descriptor = (ExtensionModuleDescriptor) iter.next();
-                String sourceName = descriptor.getName();
-                
-                String[] identifierParts = new String[] {sourceName};                
-                if (identifierMatches(identifier, identifierParts)) {
-                    MMExtensionModule module = new MMExtensionModule(identifierParts);
-                    
-                    module.setModuleType(descriptor.getType());
-                    module.setDescription(descriptor.getDescription());
-                    module.setEnabled(descriptor.isEnabled());
-                    byte[] contents = getExtensionSourceManager().getSource(sourceName);
-                    module.setFileContents(contents);
-                    module.setCreated(DateUtil.convertStringToDate(descriptor.getCreationDate()));
-                    module.setCreatedBy(descriptor.getCreatedBy());
-                    module.setLastUpdated(DateUtil.convertStringToDate(descriptor.getLastUpdatedDate()));
-                    module.setLastUpdatedBy(descriptor.getLastUpdatedBy());
-                            
-                    results.add(module);
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			//get modules from ExtensionSourceManager
+			Collection modules = getExtensionSourceManager().getSourceDescriptors();
+			
+			//convert modules into MMExtensionModule objects
+			results = new ArrayList(modules.size());
+			for (Iterator iter = modules.iterator(); iter.hasNext();) {
+			    ExtensionModuleDescriptor descriptor = (ExtensionModuleDescriptor) iter.next();
+			    String sourceName = descriptor.getName();
+			    
+			    String[] identifierParts = new String[] {sourceName};                
+			    if (identifierMatches(identifier, identifierParts)) {
+			        MMExtensionModule module = new MMExtensionModule(identifierParts);
+			        
+			        module.setModuleType(descriptor.getType());
+			        module.setDescription(descriptor.getDescription());
+			        module.setEnabled(descriptor.isEnabled());
+			        byte[] contents = getExtensionSourceManager().getSource(sourceName);
+			        module.setFileContents(contents);
+			        module.setCreated(DateUtil.convertStringToDate(descriptor.getCreationDate()));
+			        module.setCreatedBy(descriptor.getCreatedBy());
+			        module.setLastUpdated(DateUtil.convertStringToDate(descriptor.getLastUpdatedDate()));
+			        module.setLastUpdatedBy(descriptor.getLastUpdatedBy());
+			                
+			        results.add(module);
+			    }
+			}
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new AdminProcessingException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ParseException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -586,70 +611,74 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         HashSet results = new HashSet();               
         try {
-            //get runtime data from RuntimeStateAdminAPIHelper
-            SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
-            Collection hostDatas = systemState.getHosts();
-            
-            //convert runtime data to MMHost objects, put in a hashmap by hostName
-            Map runtimeMap = new HashMap();
-            for (Iterator iter = hostDatas.iterator(); iter.hasNext();) {
-                HostData hostData = (HostData) iter.next();
-                
-                String hostName = hostData.getName();
-                String[] identifierParts = new String[] {hostName};                
-                if (identifierMatches(identifier, identifierParts)) {
-                    MMHost host = new MMHost(identifierParts);
-                    
-                    host.setRunning(hostData.isRegistered());
-                    host.setRegistered(hostData.isRegistered());
-                    host.setDeployed(false);
+			//get runtime data from RuntimeStateAdminAPIHelper
+			SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
+			Collection hostDatas = systemState.getHosts();
+			
+			//convert runtime data to MMHost objects, put in a hashmap by hostName
+			Map runtimeMap = new HashMap();
+			for (Iterator iter = hostDatas.iterator(); iter.hasNext();) {
+			    HostData hostData = (HostData) iter.next();
+			    
+			    String hostName = hostData.getName();
+			    String[] identifierParts = new String[] {hostName};                
+			    if (identifierMatches(identifier, identifierParts)) {
+			        MMHost host = new MMHost(identifierParts);
+			        
+			        host.setRunning(hostData.isRegistered());
+			        host.setRegistered(hostData.isRegistered());
+			        host.setDeployed(false);
 
-                    runtimeMap.put(hostName.toUpperCase(), host);
-                    results.add(host);
-                }
-            }
-            
+			        runtimeMap.put(hostName.toUpperCase(), host);
+			        results.add(host);
+			    }
+			}
+			
 
-            
-            //get config data from ConfigurationServiceProxy
-            Collection hosts = getConfigurationServiceProxy().getHosts();
-                
-            //convert config data to MMHost objects, merge with runtime data, 
-            for (Iterator iter = hosts.iterator(); iter.hasNext();) {
-                Host hostObject = (Host) iter.next();
-                String hostName = hostObject.getName();
-                
-                MMHost host;
-                if (runtimeMap.containsKey(hostName.toUpperCase())) {
-                    //reuse MMHost from runtime
-                    host = (MMHost) runtimeMap.get(hostName.toUpperCase());                    
-                } else {
-                    //not in runtime: create new MMHost
-                    String[] identifierParts = new String[] {hostName};                
-                    host = new MMHost(identifierParts);
-                    host.setRunning(false);
-                    host.setRegistered(false);
-                }
-                
-                
-                if (identifierMatches(identifier, host.getIdentifierArray())) {
-                    host.setCreated(hostObject.getCreatedDate());
-                    host.setCreatedBy(hostObject.getCreatedBy());
-                    host.setLastUpdated(hostObject.getLastChangedDate());
-                    host.setLastUpdatedBy(hostObject.getLastChangedBy());
-                    host.setEnabled(hostObject.isEnabled());
-                    
-                    Properties properties = hostObject.getProperties();
+			
+			//get config data from ConfigurationServiceProxy
+			Collection hosts = getConfigurationServiceProxy().getHosts();
+			    
+			//convert config data to MMHost objects, merge with runtime data, 
+			for (Iterator iter = hosts.iterator(); iter.hasNext();) {
+			    Host hostObject = (Host) iter.next();
+			    String hostName = hostObject.getName();
+			    
+			    MMHost host;
+			    if (runtimeMap.containsKey(hostName.toUpperCase())) {
+			        //reuse MMHost from runtime
+			        host = (MMHost) runtimeMap.get(hostName.toUpperCase());                    
+			    } else {
+			        //not in runtime: create new MMHost
+			        String[] identifierParts = new String[] {hostName};                
+			        host = new MMHost(identifierParts);
+			        host.setRunning(false);
+			        host.setRegistered(false);
+			    }
+			    
+			    
+			    if (identifierMatches(identifier, host.getIdentifierArray())) {
+			        host.setCreated(hostObject.getCreatedDate());
+			        host.setCreatedBy(hostObject.getCreatedBy());
+			        host.setLastUpdated(hostObject.getLastChangedDate());
+			        host.setLastUpdatedBy(hostObject.getLastChangedBy());
+			        host.setEnabled(hostObject.isEnabled());
+			        
+			        Properties properties = hostObject.getProperties();
 
-                    host.setProperties(properties);
-                    host.setDeployed(true);
-                    
-                    results.add(host);
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			        host.setProperties(properties);
+			        host.setDeployed(true);
+			        
+			        results.add(host);
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -670,125 +699,126 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
        
        HashSet results = new HashSet();
        try {
-           //get runtime data from RuntimeStateAdminAPIHelper
-           SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
-           Collection hostDatas = systemState.getHosts();
-           
-           //convert runtime data to MMProcess objects, put in hashmap by identifier
-           Map runtimeMap = new HashMap();
-           for (Iterator iter = hostDatas.iterator(); iter.hasNext();) {
-               HostData hostData = (HostData) iter.next();
-               Collection processDatas = hostData.getProcesses();
-               for (Iterator iter2= processDatas.iterator(); iter2.hasNext();) {
-                   ProcessData processData = (ProcessData) iter2.next();
-                   String processName = processData.getName();
-                   String hostName = hostData.getName();
-                   
-                   String[] identifierParts = new String[] {hostName, processName};                
-                   if (identifierMatches(identifier, identifierParts)) {
-                       MMProcess process = new MMProcess(identifierParts);
-                       VMControllerID processID = processData.getProcessID();
-                       process.setRunning(processData.isRegistered());
+		//get runtime data from RuntimeStateAdminAPIHelper
+		   SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
+		   Collection hostDatas = systemState.getHosts();
+		   
+		   //convert runtime data to MMProcess objects, put in hashmap by identifier
+		   Map runtimeMap = new HashMap();
+		   for (Iterator iter = hostDatas.iterator(); iter.hasNext();) {
+		       HostData hostData = (HostData) iter.next();
+		       Collection processDatas = hostData.getProcesses();
+		       for (Iterator iter2= processDatas.iterator(); iter2.hasNext();) {
+		           ProcessData processData = (ProcessData) iter2.next();
+		           String processName = processData.getName();
+		           String hostName = hostData.getName();
+		           
+		           String[] identifierParts = new String[] {hostName, processName};                
+		           if (identifierMatches(identifier, identifierParts)) {
+		               MMProcess process = new MMProcess(identifierParts);
+		               VMControllerID processID = processData.getProcessID();
+		               process.setRunning(processData.isRegistered());
 
-                       if (processData.isRegistered()) {
-                           process.setProcessID(processID.getID());
+		               if (processData.isRegistered()) {
+		                   process.setProcessID(processID.getID());
 
-                           try {
-                               VMStatistics statistics = getRuntimeStateAdminAPIHelper().getVMStatistics(processID);
-                               if (statistics != null) {
-                                   process.setFreeMemory(statistics.freeMemory);
-                                   process.setTotalMemory(statistics.totalMemory);
-                                   process.setThreadCount(statistics.threadCount);
-                                       
-                                   SocketListenerStats socketStats = statistics.socketListenerStats;
-                                   if (socketStats != null) {
-                                       process.setSockets(socketStats.sockets);
-                                       process.setMaxSockets(socketStats.maxSockets);
-                                       process.setObjectsRead(socketStats.objectsRead);
-                                       process.setObjectsWritten(socketStats.objectsWritten);
-                                   }
-                                       
-                                   WorkerPoolStats workerStats = statistics.processPoolStats;
-                                   if (workerStats != null) {
-                                       String[] workerPoolIdentifierParts = new String[] {hostName, processName, workerStats.name};
-                                       MMQueueWorkerPool workerPool = new MMQueueWorkerPool(workerPoolIdentifierParts);                          
-                                       workerPool.setDequeues(0);
-                                       workerPool.setEnqueues(0);
-                                       workerPool.setHighwaterMark(0);
-                                       workerPool.setThreads(workerStats.threads);
-                                       workerPool.setQueued(workerStats.queued);
-                                       workerPool.setTotalDequeues(workerStats.totalCompleted);
-                                       workerPool.setTotalEnqueues(workerStats.totalSubmitted);
-                                       workerPool.setTotalHighwaterMark(0);
-                                       
-                                       process.setQueueWorkerPool(workerPool);
-                                   }
-                               }
-                           } catch (MetaMatrixComponentException e) {
-                               //do nothing: sometimes when the process is just starting the RMI stub
-                               //for SocketVMController is not initialized yet
-                           }
-                       }
-                       
-                       process.setDeployed(false);  
-                       String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-                       runtimeMap.put(key, process);
-                       results.add(process);
-                   }
-               }                   
-           }
-           
-           
-           
-           //get config data from ConfigurationServiceProxy
-           Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-           
-           Collection defns = config.getVMComponentDefns();
-           //convert config data to MMProcess objects, merge with runtime data
-           for (Iterator iter = defns.iterator(); iter.hasNext();) {
-               VMComponentDefn defn = (VMComponentDefn) iter.next();               
-               String processName = defn.getName();
-               Host h = config.getHost(defn.getHostID().getName());
-               
-               String[] identifierParts = new String[] {h.getName(), processName};
-               String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-               
-               MMProcess process;               
-               if (runtimeMap.containsKey(key)) {
-                   //reuse MMProcess from runtime
-                   process = (MMProcess) runtimeMap.get(key);                    
-               } else {
-                   //not in runtime: create new MMProcess
-                   process = new MMProcess(identifierParts);
-                   process.setRunning(false);
-               }
-               
-               
-               if (identifierMatches(identifier, process.getIdentifierArray())) {
-                   process.setCreated(defn.getCreatedDate());
-                   process.setCreatedBy(defn.getCreatedBy());
-                   process.setLastUpdated(defn.getLastChangedDate());
-                   process.setLastUpdatedBy(defn.getLastChangedBy());
-                   process.setProperties(defn.getProperties());
-                   process.setEnabled(defn.isEnabled());
-                   process.setDeployed(true);
-                   
-                   String portString = defn.getPort();
-                   if( portString != null ) {
-                       process.setPort(Integer.parseInt(portString));
-                   }
-                   try {
-                    process.setInetAddress(InetAddress.getByName(h.getHostAddress()));
-                } catch (final Exception err) {
-                    convertException(err);
-                }
-                   
-                   results.add(process);
-               }
-           }
-       } catch (Exception e) {
-           convertException(e);
-       }
+		                   try {
+		                       VMStatistics statistics = getRuntimeStateAdminAPIHelper().getVMStatistics(processID);
+		                       if (statistics != null) {
+		                           process.setFreeMemory(statistics.freeMemory);
+		                           process.setTotalMemory(statistics.totalMemory);
+		                           process.setThreadCount(statistics.threadCount);
+		                               
+		                           SocketListenerStats socketStats = statistics.socketListenerStats;
+		                           if (socketStats != null) {
+		                               process.setSockets(socketStats.sockets);
+		                               process.setMaxSockets(socketStats.maxSockets);
+		                               process.setObjectsRead(socketStats.objectsRead);
+		                               process.setObjectsWritten(socketStats.objectsWritten);
+		                           }
+		                               
+		                           WorkerPoolStats workerStats = statistics.processPoolStats;
+		                           if (workerStats != null) {
+		                               String[] workerPoolIdentifierParts = new String[] {hostName, processName, workerStats.name};
+		                               MMQueueWorkerPool workerPool = new MMQueueWorkerPool(workerPoolIdentifierParts);                          
+		                               workerPool.setDequeues(0);
+		                               workerPool.setEnqueues(0);
+		                               workerPool.setHighwaterMark(0);
+		                               workerPool.setThreads(workerStats.threads);
+		                               workerPool.setQueued(workerStats.queued);
+		                               workerPool.setTotalDequeues(workerStats.totalCompleted);
+		                               workerPool.setTotalEnqueues(workerStats.totalSubmitted);
+		                               workerPool.setTotalHighwaterMark(0);
+		                               
+		                               process.setQueueWorkerPool(workerPool);
+		                           }
+		                       }
+		                   } catch (MetaMatrixComponentException e) {
+		                       //do nothing: sometimes when the process is just starting the RMI stub
+		                       //for SocketVMController is not initialized yet
+		                   }
+		               }
+		               
+		               process.setDeployed(false);  
+		               String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+		               runtimeMap.put(key, process);
+		               results.add(process);
+		           }
+		       }                   
+		   }
+		   
+		   //get config data from ConfigurationServiceProxy
+		   Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
+		   
+		   Collection defns = config.getVMComponentDefns();
+		   //convert config data to MMProcess objects, merge with runtime data
+		   for (Iterator iter = defns.iterator(); iter.hasNext();) {
+		       VMComponentDefn defn = (VMComponentDefn) iter.next();               
+		       String processName = defn.getName();
+		       Host h = config.getHost(defn.getHostID().getName());
+		       
+		       String[] identifierParts = new String[] {h.getName(), processName};
+		       String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+		       
+		       MMProcess process;               
+		       if (runtimeMap.containsKey(key)) {
+		           //reuse MMProcess from runtime
+		           process = (MMProcess) runtimeMap.get(key);                    
+		       } else {
+		           //not in runtime: create new MMProcess
+		           process = new MMProcess(identifierParts);
+		           process.setRunning(false);
+		       }
+		       
+		       
+		       if (identifierMatches(identifier, process.getIdentifierArray())) {
+		           process.setCreated(defn.getCreatedDate());
+		           process.setCreatedBy(defn.getCreatedBy());
+		           process.setLastUpdated(defn.getLastChangedDate());
+		           process.setLastUpdatedBy(defn.getLastChangedBy());
+		           process.setProperties(defn.getProperties());
+		           process.setEnabled(defn.isEnabled());
+		           process.setDeployed(true);
+		           
+		           String portString = defn.getPort();
+		           if( portString != null ) {
+		               process.setPort(Integer.parseInt(portString));
+		           }
+		           try {
+						process.setInetAddress(InetAddress.getByName(h.getHostAddress()));
+				   } catch (UnknownHostException e) {
+						throw new AdminComponentException(e);
+				   }
+		           results.add(process);
+		       }
+		   }
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
        return results;
     }
 
@@ -814,48 +844,50 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         ArrayList results = null;
         try {
-            //get pools from RuntimeStateAdminAPIHelper
-            Collection serviceBindings = this.registry.getServiceBindings(null, null);
+			//get pools from RuntimeStateAdminAPIHelper
+			Collection serviceBindings = this.registry.getServiceBindings(null, null);
 
-            //convert runtime data into MMQueueStatistics objects
-            results = new ArrayList(serviceBindings.size());
-            for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
-                ServiceRegistryBinding binding = (ServiceRegistryBinding) iter.next();
-                DeployedComponent component = binding.getDeployedComponent();
-                
-                if (component.isDeployedConnector() ||
-                    QUERY_SERVICE.equals(component.getComponentTypeID().getName())) {
-                            
-                    Collection statsCollection = getRuntimeStateAdminAPIHelper().getServiceQueueStatistics(binding);
-                    
-                    for (Iterator iter2 = statsCollection.iterator(); iter2.hasNext();) {
-                        WorkerPoolStats stats = (WorkerPoolStats) iter2.next();
-                        String name = stats.name;
-                        String[] identifierParts = new String[] {binding.getHostName(), 
-                            component.getVMComponentDefnID().getName(), 
-                            binding.getDeployedName(),
-                            name};                
-                        if (identifierMatches(identifier, identifierParts)) {
-                            MMQueueWorkerPool pool = new MMQueueWorkerPool(identifierParts);
-                            pool.setDeployed(true);
-                            pool.setRegistered(true);
-                            pool.setDequeues(0);
-                            pool.setEnqueues(0);
-                            pool.setHighwaterMark(0);
-                            pool.setQueued(stats.queued);
-                            pool.setThreads(stats.threads);
-                            pool.setTotalDequeues(stats.totalCompleted);
-                            pool.setTotalEnqueues(stats.totalSubmitted);
-                            pool.setTotalHighwaterMark(0);
-                            
-                            results.add(pool);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			//convert runtime data into MMQueueStatistics objects
+			results = new ArrayList(serviceBindings.size());
+			for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
+			    ServiceRegistryBinding binding = (ServiceRegistryBinding) iter.next();
+			    DeployedComponent component = binding.getDeployedComponent();
+			    
+			    if (component.isDeployedConnector() ||
+			        QUERY_SERVICE.equals(component.getComponentTypeID().getName())) {
+			                
+			        Collection statsCollection = getRuntimeStateAdminAPIHelper().getServiceQueueStatistics(binding);
+			        
+			        for (Iterator iter2 = statsCollection.iterator(); iter2.hasNext();) {
+			            WorkerPoolStats stats = (WorkerPoolStats) iter2.next();
+			            String name = stats.name;
+			            String[] identifierParts = new String[] {binding.getHostName(), 
+			                component.getVMComponentDefnID().getName(), 
+			                binding.getDeployedName(),
+			                name};                
+			            if (identifierMatches(identifier, identifierParts)) {
+			                MMQueueWorkerPool pool = new MMQueueWorkerPool(identifierParts);
+			                pool.setDeployed(true);
+			                pool.setRegistered(true);
+			                pool.setDequeues(0);
+			                pool.setEnqueues(0);
+			                pool.setHighwaterMark(0);
+			                pool.setQueued(stats.queued);
+			                pool.setThreads(stats.threads);
+			                pool.setTotalDequeues(stats.totalCompleted);
+			                pool.setTotalEnqueues(stats.totalSubmitted);
+			                pool.setTotalHighwaterMark(0);
+			                
+			                results.add(pool);
+			            }
+			        }
+			    }
+			}
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -882,60 +914,62 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         ArrayList results = null;
         try {
-            Collection requests = null;
-            requests = getQueryServiceProxy().getAllQueries();
-            
-            // get the connectorbinding names all at once, its faster than one at a time
-            Set uuids = new HashSet(requests.size());
-            for (Iterator iter = requests.iterator(); iter.hasNext();) {
-                RequestInfo info = (RequestInfo)iter.next();
-                uuids.add(info.getConnectorBindingUUID());
-            }            
-            
-            Map uuidToBindingNameMap = getConnectorBindingNamesMapFromUUIDs(uuids);
-            //convert results into MMRequest objects
-            results = new ArrayList(requests.size());
-            for (Iterator iter = requests.iterator(); iter.hasNext();) {
-                RequestInfo info = (RequestInfo)iter.next();
-                SessionToken st = info.getSessionToken();
+			Collection requests = null;
+			requests = getQueryServiceProxy().getAllQueries();
+			
+			// get the connectorbinding names all at once, its faster than one at a time
+			Set uuids = new HashSet(requests.size());
+			for (Iterator iter = requests.iterator(); iter.hasNext();) {
+			    RequestInfo info = (RequestInfo)iter.next();
+			    uuids.add(info.getConnectorBindingUUID());
+			}            
+			
+			Map uuidToBindingNameMap = getConnectorBindingNamesMapFromUUIDs(uuids);
+			//convert results into MMRequest objects
+			results = new ArrayList(requests.size());
+			for (Iterator iter = requests.iterator(); iter.hasNext();) {
+			    RequestInfo info = (RequestInfo)iter.next();
+			    SessionToken st = info.getSessionToken();
 
-                
-                String[] identifierParts = new String[2];
-                identifierParts[0] = info.getRequestID().getConnectionID();
+			    
+			    String[] identifierParts = new String[2];
+			    identifierParts[0] = info.getRequestID().getConnectionID();
 
-                MMRequest request;
-                boolean correctType;
-                if (source) {
-                    identifierParts[1] = info.getRequestID().getExecutionID() + Request.DELIMITER + info.getNodeID();
-                    request = new MMSourceRequest(identifierParts);
-                    
-                    correctType = info.isAtomicQuery();
-                } else {
-                    identifierParts[1] = Long.toString(info.getRequestID().getExecutionID());
-                    request = new MMRequest(identifierParts);
-                    
-                    correctType = (! info.isAtomicQuery());
-                }
-                
-                if (correctType && identifierMatches(identifier, identifierParts)) {
-                    Object bindingName = uuidToBindingNameMap.get(info.getConnectorBindingUUID());
-                    request.setConnectorBindingName(bindingName!=null?(String)bindingName:null);
-                    request.setCreated(info.getSubmittedTimestamp()); 
-                    request.setSqlCommand(info.getCommand()); 
-                    request.setProcessingDate(info.getProcessingTimestamp());
-                    if (info.getTransactionId() != null) {
-                        request.setTransactionID(info.getTransactionId());
-                    }
-                    if (st != null && st.getSessionID() != null) { 
-                        request.setUserName(st.getUsername());
-                    }
-                    
-                    results.add(request);
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			    MMRequest request;
+			    boolean correctType;
+			    if (source) {
+			        identifierParts[1] = info.getRequestID().getExecutionID() + Request.DELIMITER + info.getNodeID();
+			        request = new MMSourceRequest(identifierParts);
+			        
+			        correctType = info.isAtomicQuery();
+			    } else {
+			        identifierParts[1] = Long.toString(info.getRequestID().getExecutionID());
+			        request = new MMRequest(identifierParts);
+			        
+			        correctType = (! info.isAtomicQuery());
+			    }
+			    
+			    if (correctType && identifierMatches(identifier, identifierParts)) {
+			        Object bindingName = uuidToBindingNameMap.get(info.getConnectorBindingUUID());
+			        request.setConnectorBindingName(bindingName!=null?(String)bindingName:null);
+			        request.setCreated(info.getSubmittedTimestamp()); 
+			        request.setSqlCommand(info.getCommand()); 
+			        request.setProcessingDate(info.getProcessingTimestamp());
+			        if (info.getTransactionId() != null) {
+			            request.setTransactionID(info.getTransactionId());
+			        }
+			        if (st != null && st.getSessionID() != null) { 
+			            request.setUserName(st.getUsername());
+			        }
+			        
+			        results.add(request);
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
     
@@ -954,33 +988,35 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         Collection resources = null;
 
         try {
-            resources = getConfigurationServiceProxy().getResources();
-            if (resources != null) {
-                results = new ArrayList(resources.size());
+			resources = getConfigurationServiceProxy().getResources();
+			if (resources != null) {
+			    results = new ArrayList(resources.size());
 
-                for (Iterator itr = resources.iterator(); itr.hasNext();) {
-                    SharedResource sr = (SharedResource)itr.next();
-                    String name = sr.getName();
-                    String[] identifierParts = new String[] {
-                        name
-                    };
-                    if (identifierMatches(identifier, identifierParts)) {
-                        MMResource resource = new MMResource(identifierParts);
-                        resource.setResourceType(sr.getComponentTypeID().getName());
-                        resource.setCreated(sr.getCreatedDate());
-                        resource.setCreatedBy(sr.getCreatedBy());
-                        resource.setLastUpdated(sr.getLastChangedDate());
-                        resource.setLastUpdatedBy(sr.getLastChangedBy());
-                        resource.setProperties(sr.getProperties());
-                        resource.setConnectionPoolIdentifier(sr.getProperty(Resource.RESOURCE_POOL));
-                        results.add(resource);
-                    }
-                }
-            }
+			    for (Iterator itr = resources.iterator(); itr.hasNext();) {
+			        SharedResource sr = (SharedResource)itr.next();
+			        String name = sr.getName();
+			        String[] identifierParts = new String[] {
+			            name
+			        };
+			        if (identifierMatches(identifier, identifierParts)) {
+			            MMResource resource = new MMResource(identifierParts);
+			            resource.setResourceType(sr.getComponentTypeID().getName());
+			            resource.setCreated(sr.getCreatedDate());
+			            resource.setCreatedBy(sr.getCreatedBy());
+			            resource.setLastUpdated(sr.getLastChangedDate());
+			            resource.setLastUpdatedBy(sr.getLastChangedBy());
+			            resource.setProperties(sr.getProperties());
+			            resource.setConnectionPoolIdentifier(sr.getProperty(Resource.RESOURCE_POOL));
+			            results.add(resource);
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
 
-        } catch (Exception e) {
-            convertException(e);
-        }
         return results;
     }
 
@@ -1002,41 +1038,43 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         ArrayList results = null;
         try {
-            Collection sessions = null;
-            sessions = getSessionServiceProxy().getActiveSessions();
-            
-            //convert results into MMSession objects
-            results = new ArrayList(sessions.size());
-            for (Iterator iter = sessions.iterator(); iter.hasNext();) {
-                MetaMatrixSessionInfo info = (MetaMatrixSessionInfo)iter.next();
+			Collection sessions = null;
+			sessions = getSessionServiceProxy().getActiveSessions();
+			
+			//convert results into MMSession objects
+			results = new ArrayList(sessions.size());
+			for (Iterator iter = sessions.iterator(); iter.hasNext();) {
+			    MetaMatrixSessionInfo info = (MetaMatrixSessionInfo)iter.next();
 
-                String sessionID = info.getSessionID().toString();
-                String[] identifierParts = new String[] {sessionID};
-                if (identifierMatches(identifier, identifierParts)) {
-                    MMSession session = new MMSession(identifierParts);
+			    String sessionID = info.getSessionID().toString();
+			    String[] identifierParts = new String[] {sessionID};
+			    if (identifierMatches(identifier, identifierParts)) {
+			        MMSession session = new MMSession(identifierParts);
 
-                    SessionToken st = info.getSessionToken();
-                    String vdbName = trimString(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
-                    String vdbVersionString = trimString(info.getProductInfo(ProductInfoConstants.VDB_VERSION));
+			        SessionToken st = info.getSessionToken();
+			        String vdbName = trimString(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
+			        String vdbVersionString = trimString(info.getProductInfo(ProductInfoConstants.VDB_VERSION));
 
-                    session.setUserName(info.getUserName());
-                    session.setCreatedBy(info.getUserName());
-                    session.setApplicationName(info.getApplicationName()); 
-                    session.setCreated(new Date(info.getTimeCreated())); 
-                    session.setLastUpdated(new Date(info.getTimeCreated())); 
-                    session.setVDBName(vdbName); 
-                    session.setVDBVersion(vdbVersionString); 
-                    session.setProductName(info.getProductName()); 
-                    session.setLastPingTime(info.getLastPingTime());
-                    session.setSessionState(info.getState());
-                    session.setIPAddress(info.getClientIp());
-                    session.setHostName(info.getClientHostname());
-                    results.add(session);
-                }
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			        session.setUserName(info.getUserName());
+			        session.setCreatedBy(info.getUserName());
+			        session.setApplicationName(info.getApplicationName()); 
+			        session.setCreated(new Date(info.getTimeCreated())); 
+			        session.setLastUpdated(new Date(info.getTimeCreated())); 
+			        session.setVDBName(vdbName); 
+			        session.setVDBVersion(vdbVersionString); 
+			        session.setProductName(info.getProductName()); 
+			        session.setLastPingTime(info.getLastPingTime());
+			        session.setSessionState(info.getState());
+			        session.setIPAddress(info.getClientIp());
+			        session.setHostName(info.getClientHostname());
+			        results.add(session);
+			    }
+			}
+		} catch (SessionServiceException e) {
+			throw new AdminProcessingException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return results;
     }
 
@@ -1066,25 +1104,28 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
      */
     public SystemObject getSystem() throws AdminException  {
         MMSystem system = null;
+        //get state from RuntimeStateAdminAPIHelper, etc.
         try {
-            //get state from RuntimeStateAdminAPIHelper, etc.
-            boolean isStarted = getRuntimeStateAdminAPIHelper().isSystemStarted();
-            Date startTime = getConfigurationServiceProxy().getServerStartupTime();
-            Configuration currentConfiguration = getConfigurationServiceProxy().getCurrentConfiguration(); 
-            
-            system = new MMSystem();
-            system.setStartTime(startTime);
-            system.setStarted(isStarted);
-            
-            system.setProperties(currentConfiguration.getProperties());            
-            system.setCreated(currentConfiguration.getCreatedDate());
-            system.setCreatedBy(currentConfiguration.getCreatedBy());
-            system.setLastUpdated(currentConfiguration.getLastChangedDate());
-            system.setLastUpdatedBy(currentConfiguration.getLastChangedBy());
-      
-        } catch (Exception e) {
-            convertException(e);
-        }
+			boolean isStarted = getRuntimeStateAdminAPIHelper().isSystemStarted();
+			Date startTime = getConfigurationServiceProxy().getServerStartupTime();
+			Configuration currentConfiguration = getConfigurationServiceProxy().getCurrentConfiguration(); 
+			
+			system = new MMSystem();
+			system.setStartTime(startTime);
+			system.setStarted(isStarted);
+			
+			system.setProperties(currentConfiguration.getProperties());            
+			system.setCreated(currentConfiguration.getCreatedDate());
+			system.setCreatedBy(currentConfiguration.getCreatedBy());
+			system.setLastUpdated(currentConfiguration.getLastChangedDate());
+			system.setLastUpdatedBy(currentConfiguration.getLastChangedBy());
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
         return system;
     }
 
@@ -1104,14 +1145,14 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         
         List results = null;
         try {
-            //get vdbs from ConfigurationService
-            Collection virtualDatabases = RuntimeMetadataCatalog.getVirtualDatabases();
-            
-            //convert results into MMVDB objects
-            results = getVDBs(identifier, virtualDatabases);
-        } catch (Exception e) {
-            convertException(e);
-        }
+			//get vdbs from ConfigurationService
+			Collection virtualDatabases = RuntimeMetadataCatalog.getVirtualDatabases();
+			
+			//convert results into MMVDB objects
+			results = getVDBs(identifier, virtualDatabases);
+		} catch (VirtualDatabaseException e) {
+			throw new AdminProcessingException(e);
+		}
         return results;
     }
     
@@ -1134,55 +1175,55 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         }
         AdminObject adminObject = (AdminObject) adminObjects.iterator().next();
         
-        
         try {
-        
-            ComponentObject component = null;
-            String objectIdentifier = adminObject.getIdentifier();
-            Configuration config;
-            
-            int type = MMAdminObject.getObjectType(className);
-            switch (type) {
-                case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                    return convertPropertyDefinitions(getConfigurationServiceProxy().getCurrentConfiguration());
-                
-                case MMAdminObject.OBJECT_TYPE_HOST:
-                    return convertPropertyDefinitions(getHostComponent(objectIdentifier));
-                
-                case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
-                    return convertPropertyDefinitions(getProcessComponent(objectIdentifier));
-                    
-                case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
-                    config = getConfigurationServiceProxy().getCurrentConfiguration();
-                    ConnectorBinding configBinding = config.getConnectorBinding(MMAdminObject.getNameFromIdentifier(objectIdentifier));
-                    
-                    component = getConnectorBindingComponent(objectIdentifier);
-                    
-                    return convertPropertyDefinitions(component, configBinding.getProperties());
-                    
-                case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
-                    ComponentType componentType = getConnectorTypeComponentType(objectIdentifier);
-                    return convertPropertyDefinitions(componentType, new Properties());                
-                    
-                case MMAdminObject.OBJECT_TYPE_DQP:
-                    config = getConfigurationServiceProxy().getCurrentConfiguration();
-                    ServiceComponentDefn defn = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));  
-                    
-                    return convertPropertyDefinitions(getDQPComponent(objectIdentifier), defn.getProperties());
-                    
-                case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
-                    config = getConfigurationServiceProxy().getCurrentConfiguration();
-                    return convertPropertyDefinitions(config.getResourcePool(adminObject.getName()));
-                    
-                case MMAdminObject.OBJECT_TYPE_RESOURCE:
-                    return convertPropertyDefinitions(getResourceComponent(objectIdentifier));
-                
-                default:
-                    throwProcessingException("ServerMonitoringAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			ComponentObject component = null;
+			String objectIdentifier = adminObject.getIdentifier();
+			Configuration config;
+			
+			int type = MMAdminObject.getObjectType(className);
+			switch (type) {
+			    case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
+			        return convertPropertyDefinitions(getConfigurationServiceProxy().getCurrentConfiguration());
+			    
+			    case MMAdminObject.OBJECT_TYPE_HOST:
+			        return convertPropertyDefinitions(getHostComponent(objectIdentifier));
+			    
+			    case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
+			        return convertPropertyDefinitions(getProcessComponent(objectIdentifier));
+			        
+			    case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
+			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+			        ConnectorBinding configBinding = config.getConnectorBinding(MMAdminObject.getNameFromIdentifier(objectIdentifier));
+			        
+			        component = getConnectorBindingComponent(objectIdentifier);
+			        
+			        return convertPropertyDefinitions(component, configBinding.getProperties());
+			        
+			    case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
+			        ComponentType componentType = getConnectorTypeComponentType(objectIdentifier);
+			        return convertPropertyDefinitions(componentType, new Properties());                
+			        
+			    case MMAdminObject.OBJECT_TYPE_DQP:
+			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+			        ServiceComponentDefn defn = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));  
+			        
+			        return convertPropertyDefinitions(getDQPComponent(objectIdentifier), defn.getProperties());
+			        
+			    case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
+			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+			        return convertPropertyDefinitions(config.getResourcePool(adminObject.getName()));
+			        
+			    case MMAdminObject.OBJECT_TYPE_RESOURCE:
+			        return convertPropertyDefinitions(getResourceComponent(objectIdentifier));
+			    
+			    default:
+			        throwProcessingException("ServerMonitoringAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} 
         return Collections.EMPTY_LIST;
     }
 
@@ -1235,18 +1276,13 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
             
             
             return new FileUtil(resultFile.getAbsolutePath()).readBytes();
-        } catch (Exception e) {
-            convertException(e);
-            return null;
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        } catch(IOException e) { 		
+        	throw new AdminComponentException(e);
         } finally {
-            try {
-                resultFile.delete();
-            } catch (Exception e) {
-            }
-            try {
-                FileUtils.removeDirectoryAndChildren(new File(tempDirName));
-            } catch (Exception e) {
-            }
+            resultFile.delete();
+            FileUtils.removeDirectoryAndChildren(new File(tempDirName));
         }
     }
 
@@ -1263,7 +1299,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
     
     
-    private ComponentObject getHostComponent(String identifier) throws Exception {
+    private ComponentObject getHostComponent(String identifier) throws ConfigurationException {
         Collection hosts = getConfigurationServiceProxy().getHosts();
         for (Iterator iter = hosts.iterator(); iter.hasNext(); ) {
             Host host = (Host)iter.next();
@@ -1274,7 +1310,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return null;
     }
 
-    private ComponentObject getProcessComponent(String identifier) throws Exception {
+    private ComponentObject getProcessComponent(String identifier) throws ConfigurationException {
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection defns = config.getVMComponentDefns();
         for (Iterator iter = defns.iterator(); iter.hasNext(); ) {
@@ -1289,7 +1325,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
     
     
-    private ComponentObject getConnectorBindingComponent(String identifier) throws Exception {
+    private ComponentObject getConnectorBindingComponent(String identifier) throws ConfigurationException {
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
         for (Iterator iter = components.iterator(); iter.hasNext(); ) {
@@ -1305,7 +1341,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return null;
     }
     
-    private ComponentType getConnectorTypeComponentType(String identifier) throws Exception {
+    private ComponentType getConnectorTypeComponentType(String identifier) throws ConfigurationException {
         Collection types = getConfigurationServiceProxy().getAllComponentTypes(false);
         for (Iterator iter = types.iterator(); iter.hasNext();) {
             ComponentType componentType = (ComponentType) iter.next();
@@ -1319,7 +1355,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return null;
     }
     
-    private ComponentObject getDQPComponent(String identifier) throws Exception {
+    private ComponentObject getDQPComponent(String identifier) throws ConfigurationException {
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
         for (Iterator iter = components.iterator(); iter.hasNext(); ) {
@@ -1336,7 +1372,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return null;
     }
     
-    private ComponentObject getResourceComponent(String identifier) throws Exception {
+    private ComponentObject getResourceComponent(String identifier) throws ConfigurationException {
         Collection resources = getConfigurationServiceProxy().getResources();
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             

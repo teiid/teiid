@@ -162,7 +162,7 @@ public final class FileUtils {
      * @throws Exception
      * @since 4.3
      */
-    public static void copy(String fromFileName, String toFileName) throws Exception {
+    public static void copy(String fromFileName, String toFileName) throws IOException {
 		copy(fromFileName, toFileName, true);
     }
     
@@ -174,7 +174,7 @@ public final class FileUtils {
      * @throws MetaMatrixCoreException
      * @since 4.3
      */
-    public static void copy(String fromFileName, String toFileName, boolean overwrite) throws Exception {
+    public static void copy(String fromFileName, String toFileName, boolean overwrite) throws IOException {
         File toFile = new File(toFileName);
         
         if (toFile.exists()) {
@@ -182,7 +182,7 @@ public final class FileUtils {
                 toFile.delete();
             } else {
                 final String msg = CorePlugin.Util.getString("FileUtils.File_already_exists", toFileName); //$NON-NLS-1$            
-                throw new MetaMatrixCoreException(msg);
+                throw new IOException(msg);
             }
         }
         
@@ -564,7 +564,7 @@ public final class FileUtils {
     }
     
     public static String getBaseFileNameWithoutExtension(String path) {
-    	return StringUtil.getFirstToken(StringUtil.getLastToken(path, "/"), ".");
+    	return StringUtil.getFirstToken(StringUtil.getLastToken(path, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -839,7 +839,7 @@ public final class FileUtils {
      * @throws MetaMatrixCoreException
      * @since 4.3
      */
-    public static void rename(String oldFilePath, String newFilePath, boolean overwrite) throws Exception {
+    public static void rename(String oldFilePath, String newFilePath, boolean overwrite) throws IOException {
         File oldFile = new File(oldFilePath);
         File newFile = new File(newFilePath);
 
@@ -848,17 +848,11 @@ public final class FileUtils {
                 newFile.delete();
             } else {
                 final String msg = CorePlugin.Util.getString("FileUtils.File_already_exists", newFilePath); //$NON-NLS-1$            
-                throw new MetaMatrixCoreException(msg);
+                throw new IOException(msg);
             }
         }
 
-        boolean renamed = false;
-        try {
-            renamed = oldFile.renameTo(newFile);
-        } catch (Exception e) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_rename", new Object[] {oldFilePath, newFilePath}); //$NON-NLS-1$            
-            throw new MetaMatrixCoreException(e, msg);
-        }
+        boolean renamed = oldFile.renameTo(newFile);
 
         //Sometimes file.renameTo will silently fail, for example attempting to rename from different UNIX partitions.
         //Try to copy instead.

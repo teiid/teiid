@@ -26,6 +26,7 @@ package com.metamatrix.admin.server;
 
 import java.util.Collection;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
@@ -110,11 +111,11 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
         return frsaa;
     }  
     
-    protected void waitForServicesToStart(Collection expectedServiceNames) throws Exception {
+    protected void waitForServicesToStart(Collection expectedServiceNames) throws MetaMatrixComponentException {
         //overridden to not wait
     }
 
-    protected void waitForServicesToStop(Collection expectedServiceNames) throws Exception {
+    protected void waitForServicesToStop(Collection expectedServiceNames) throws MetaMatrixComponentException {
         //overridden to not wait
     }  
     

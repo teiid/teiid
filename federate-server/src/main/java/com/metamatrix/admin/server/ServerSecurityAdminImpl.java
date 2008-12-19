@@ -82,14 +82,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
         try {
             role = getAuthorizationServiceProxy().getPolicy(adminToken,
                     new AuthorizationPolicyID(roleIdentifier, null, RolePermissionFactory.getRealm()));
-        } catch (InvalidSessionException err) {
-            convertException(err);
-        } catch (AuthorizationMgmtException err) {
-            convertException(err);
-        } catch (AuthorizationException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (InvalidSessionException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationMgmtException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+        	throw new AdminComponentException(e);
         } 
         role = aoe.addPrincipal(role, new MetaMatrixPrincipalName(groupIdentifier, Principal.TYPE_GROUP));
 
@@ -117,14 +115,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
         try {
             role = getAuthorizationServiceProxy().getPolicy(adminToken,
                     new AuthorizationPolicyID(roleIdentifier, null, RolePermissionFactory.getRealm()));
-        } catch (InvalidSessionException err) {
-            convertException(err);
-        } catch (AuthorizationMgmtException err) {
-            convertException(err);
-        } catch (AuthorizationException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (InvalidSessionException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationMgmtException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+        	throw new AdminComponentException(e);
         } 
         role = aoe.removePrincipal(role, new MetaMatrixPrincipalName(groupIdentifier, Principal.TYPE_GROUP));
 
@@ -144,12 +140,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
             try {
                 getAuthorizationServiceProxy().executeTransaction(validateSession(), 
                                                                maq.popActions());
-            } catch (InvalidSessionException err) {
-                convertException(err);
-            } catch (AuthorizationMgmtException err) {
-                convertException(err);
-            } catch (AuthorizationException err) {
-                convertException(err);
+            } catch (InvalidSessionException e) {
+            	throw new AdminComponentException(e);
+            } catch (AuthorizationMgmtException e) {
+            	throw new AdminComponentException(e);
+            } catch (AuthorizationException e) {
+                throw new AdminComponentException(e);
             } 
     }
 
@@ -166,14 +162,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
             roleNames = getAuthorizationServiceProxy().getRoleNamesForPrincipal(
                                                     validateSession(),
                                                     new MetaMatrixPrincipalName(userIdentifier, Principal.TYPE_USER));
-        } catch (InvalidSessionException err) {
-            convertException(err);
-        } catch (AuthorizationMgmtException err) {
-            convertException(err);
-        } catch (AuthorizationException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (InvalidSessionException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationMgmtException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+            throw new AdminComponentException(e);
         }
         
         Collection roles = new ArrayList();
@@ -203,10 +197,8 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
         Set allMemberships = null;
         try {
             allMemberships = getMembershipServiceProxy().getGroupsForUser(userIdentifier);
-        } catch (MetaMatrixSecurityException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (MetaMatrixSecurityException e) {
+            throw new AdminComponentException(e);
         }
         Iterator allMembershipsItr = allMemberships.iterator();
         while ( allMembershipsItr.hasNext() ) {
@@ -229,10 +221,8 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
         // Add all groups from internal membership domain
         try {
             allGroups = getMembershipServiceProxy().getGroupNames();
-        } catch (MetaMatrixSecurityException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (MetaMatrixSecurityException e) {
+        	throw new AdminComponentException(e);
         }
 
         Iterator groupItr = allGroups.iterator();
@@ -266,14 +256,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
             roleNames = getAuthorizationServiceProxy().getRoleNamesForPrincipal(
                                                     validateSession(),
                                                     new MetaMatrixPrincipalName(groupIdentifier, Principal.TYPE_GROUP));
-        } catch (InvalidSessionException err) {
-            convertException(err);
-        } catch (AuthorizationMgmtException err) {
-            convertException(err);
-        } catch (AuthorizationException err) {
-            convertException(err);
-        } catch (Exception err) {
-            convertException(err);
+        } catch (InvalidSessionException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationMgmtException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+        	throw new AdminComponentException(e);
         }
         Collection roles = new ArrayList();
         Iterator roleNameItr = roleNames.iterator();

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 
 /**
@@ -44,19 +45,19 @@ public class FakeServerConfigAdminImpl extends ServerConfigAdminImpl {
     	super(parent, registry);
     }
     
-    protected Collection getVirtualDatabases( ) throws Exception {
+    protected Collection getVirtualDatabases( ) throws VirtualDatabaseException {
         return FakeRuntimeMetadataCatalog.getVirtualDatabases();
     }
 
-    protected Collection getModels(VirtualDatabaseID vdbId) throws Exception {
+    protected Collection getModels(VirtualDatabaseID vdbId) throws VirtualDatabaseException {
         return FakeRuntimeMetadataCatalog.getModels(vdbId);
     }
 
-    protected void setConnectorBindingNames(VirtualDatabaseID vdbId, Map mapModelsToConnBinds) throws Exception {
+    protected void setConnectorBindingNames(VirtualDatabaseID vdbId, Map mapModelsToConnBinds) throws VirtualDatabaseException {
     	FakeRuntimeMetadataCatalog.setConnectorBindingNames(vdbId, mapModelsToConnBinds, getUserName());
 	}
 	
-	protected void setVDBState(VirtualDatabaseID vdbID, int siState) throws Exception {
+	protected void setVDBState(VirtualDatabaseID vdbID, int siState) throws VirtualDatabaseException {
 		FakeRuntimeMetadataCatalog.setVDBStatus(vdbID, (short)siState, getUserName());
 	}
 

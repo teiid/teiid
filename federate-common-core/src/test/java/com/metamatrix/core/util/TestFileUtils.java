@@ -26,6 +26,7 @@ package com.metamatrix.core.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 
 import junit.framework.TestCase;
 
@@ -164,7 +165,7 @@ public final class TestFileUtils extends TestCase {
         try {
             FileUtils.copy(FILE_NAME, TEMP_FILE_NAME, false);
             fail("Expected MetaMatrixException"); //$NON-NLS-1$
-        } catch (MetaMatrixCoreException e) {
+        } catch (IOException e) {
         }    
         
         
@@ -199,7 +200,7 @@ public final class TestFileUtils extends TestCase {
         try {
             FileUtils.rename(FILE_NAME, TEMP_FILE_NAME2, false);
             fail("Expected MetaMatrixException"); //$NON-NLS-1$
-        } catch (MetaMatrixCoreException e) {
+        } catch (IOException e) {
         }
         
         

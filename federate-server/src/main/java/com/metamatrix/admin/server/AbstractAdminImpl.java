@@ -54,6 +54,7 @@ import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
@@ -70,6 +71,7 @@ import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabaseID;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
@@ -158,44 +160,6 @@ public class AbstractAdminImpl {
         return DQPWorkContext.getWorkContext().getSessionToken();
     }
 
-    /**
-     * Convert an exception to an appropriate AdminException.
-     * 
-     * @param e the exception to handle
-     * @throws AdminComponentException
-     * @since 4.3
-     */
-    public static void convertException(Exception e) throws AdminException {
-        convertException(e, null);
-    }
-
-    /**
-     * Convert an exception to an appropriate AdminException.
-     * 
-     * @param e the exception to handle
-     * @throws AdminComponentException
-     * @since 4.3
-     */
-    public static void convertException(Exception e, String msg) throws AdminException {
-        if (e instanceof AdminException) {
-        	if (msg == null) {
-        		throw (AdminException)e;
-        	}
-        	if (e instanceof AdminProcessingException) {
-        		throw new AdminProcessingException(msg, e);
-        	}
-        } 
-        String systemMsg = AdminServerPlugin.Util.getString("AbstractAdminImpl.System_Exception"); //$NON-NLS-1$
-        if (msg != null && msg.length() > 0) {
-        	systemMsg = systemMsg + msg;
-        }
-        if (e instanceof MetaMatrixComponentException) {
-        	throw new AdminComponentException(systemMsg, e);
-        } else if (e instanceof MetaMatrixProcessingException) {
-        	throw new AdminProcessingException(msg, e);
-        }
-        throw new AdminComponentException(systemMsg, e);
-    }
 
     /**
      * Throw a processing exception with a localized message.
@@ -206,8 +170,7 @@ public class AbstractAdminImpl {
      *            Objects to substitute into message.
      * @since 4.3
      */
-    protected void throwProcessingException(String key,
-                                            Object[] objects) throws AdminException {
+    protected void throwProcessingException(String key, Object[] objects) throws AdminException {
         throw new AdminProcessingException(AdminServerPlugin.Util.getString(key, objects));
     }
 
@@ -302,8 +265,6 @@ public class AbstractAdminImpl {
             // No WILDCARD in query - compare directly.
             matches = identifier.equals(query);
         }
-        // DEBUG:
-//        System.out.println("XXX [" + query + "] " + (matches == true ? "MATCHES" : "DOES NOT MATCH") + " [" + identifier + "]");
         return matches;
     }
 
@@ -319,49 +280,51 @@ public class AbstractAdminImpl {
         String vdbName = virtualDatabase.getName();
         String vdbVersion = virtualDatabase.getVirtualDatabaseID().getVersion();
         String[] identifierParts = new String[] {vdbName, vdbVersion};
-        try {
             
-            ConfigurationModelContainer cmc = getConfigurationModel();
-            vdb = new MMVDB(identifierParts);
-            vdb.setCreated(virtualDatabase.getCreationDate());
-            vdb.setCreatedBy(virtualDatabase.getCreatedBy());
-            vdb.setLastUpdated(virtualDatabase.getUpdateDate());
-            vdb.setLastUpdatedBy(virtualDatabase.getUpdatedBy());
-            vdb.setProperties(virtualDatabase.getProperties());
-            vdb.setStatus(virtualDatabase.getStatus());
-            vdb.setUID(((BasicVirtualDatabaseID)virtualDatabase.getVirtualDatabaseID()).getUID());
+        try {
+			ConfigurationModelContainer cmc = getConfigurationModel();
+			vdb = new MMVDB(identifierParts);
+			vdb.setCreated(virtualDatabase.getCreationDate());
+			vdb.setCreatedBy(virtualDatabase.getCreatedBy());
+			vdb.setLastUpdated(virtualDatabase.getUpdateDate());
+			vdb.setLastUpdatedBy(virtualDatabase.getUpdatedBy());
+			vdb.setProperties(virtualDatabase.getProperties());
+			vdb.setStatus(virtualDatabase.getStatus());
+			vdb.setUID(((BasicVirtualDatabaseID)virtualDatabase.getVirtualDatabaseID()).getUID());
 
-            vdb.setVersionedBy(virtualDatabase.getVersionBy());
-            vdb.setVersionedDate(virtualDatabase.getVersionDate());
-            vdb.setHasWSDL(virtualDatabase.hasWSDLDefined());
+			vdb.setVersionedBy(virtualDatabase.getVersionBy());
+			vdb.setVersionedDate(virtualDatabase.getVersionDate());
+			vdb.setHasWSDL(virtualDatabase.hasWSDLDefined());
 
-            //get the models and convert to MMModel objects
-            Collection modelObjects = RuntimeMetadataCatalog.getModels(virtualDatabase.getVirtualDatabaseID());
-            for (Iterator iter2 = modelObjects.iterator(); iter2.hasNext();) {
-                Model modelObject = (Model)iter2.next();
+			//get the models and convert to MMModel objects
+			Collection modelObjects = RuntimeMetadataCatalog.getModels(virtualDatabase.getVirtualDatabaseID());
+			for (Iterator iter2 = modelObjects.iterator(); iter2.hasNext();) {
+			    Model modelObject = (Model)iter2.next();
 
-                String modelName = modelObject.getName();
-                String[] modelIdentifierParts = new String[] {
-                    vdbName, modelName
-                };
-                MMModel model = new MMModel(modelIdentifierParts);
-                model.setConnectorBindingNames(getConnectorBindingNamesFromUUIDs(modelObject.getConnectorBindingNames(), cmc));
-                model.setMaterialization(modelObject.isMaterialization());
-                if (modelObject.isMaterialization()) {
-                    vdb.setMaterializedViews(true);
-                }
-                model.setModelType(modelObject.getModelTypeName());
-                model.setModelURI(modelObject.getModelURI());
-                model.setPhysical(modelObject.isPhysical());
-                model.setProperties(modelObject.getProperties());
-                model.setSupportsMultiSourceBindings(modelObject.supportsMultiSourceBindings());
-                model.setVisible(modelObject.isVisible());
+			    String modelName = modelObject.getName();
+			    String[] modelIdentifierParts = new String[] {
+			        vdbName, modelName
+			    };
+			    MMModel model = new MMModel(modelIdentifierParts);
+			    model.setConnectorBindingNames(getConnectorBindingNamesFromUUIDs(modelObject.getConnectorBindingNames(), cmc));
+			    model.setMaterialization(modelObject.isMaterialization());
+			    if (modelObject.isMaterialization()) {
+			        vdb.setMaterializedViews(true);
+			    }
+			    model.setModelType(modelObject.getModelTypeName());
+			    model.setModelURI(modelObject.getModelURI());
+			    model.setPhysical(modelObject.isPhysical());
+			    model.setProperties(modelObject.getProperties());
+			    model.setSupportsMultiSourceBindings(modelObject.supportsMultiSourceBindings());
+			    model.setVisible(modelObject.isVisible());
 
-                vdb.addModel(model);
-            }
-        } catch (final Exception err) {
-            convertException(err);
-        }
+			    vdb.addModel(model);
+			}
+		} catch (VirtualDatabaseException e) {
+			throw new AdminProcessingException(e);
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		}
         return vdb;
     }
 
@@ -456,15 +419,15 @@ public class AbstractAdminImpl {
         ServiceID serviceID = new ServiceID(binding.getServiceID(), vmControllerID);
         
         try {
-            VMControllerInterface vmController = getVMControllerInterface(serviceID.getVMControllerID());
-            if (stopNow) {
-                vmController.shutdownServiceNow(serviceID);
-            } else {
-                vmController.shutdownService(serviceID);
-            }
-        } catch (final Exception err) {
-            convertException(err);
-        }
+			VMControllerInterface vmController = getVMControllerInterface(serviceID.getVMControllerID());
+			if (stopNow) {
+			    vmController.shutdownServiceNow(serviceID);
+			} else {
+			    vmController.shutdownService(serviceID);
+			}
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     private VMControllerInterface getVMControllerInterface(VMControllerID id) throws MetaMatrixComponentException {
@@ -477,20 +440,20 @@ public class AbstractAdminImpl {
      * @return
      * @since 4.3
      */
-    protected Collection convertPropertyDefinitions(ComponentObject component) throws Exception {
+    protected Collection convertPropertyDefinitions(ComponentObject component) throws ConfigurationException {
         ComponentType ctype = getConfigurationServiceProxy().getComponentType(component.getComponentTypeID());
         Properties properties = component.getProperties();
         
         return convertPropertyDefinitions(ctype, properties);
     }
     
-    protected Collection convertPropertyDefinitions(ComponentObject component, Properties properties) throws Exception {
+    protected Collection convertPropertyDefinitions(ComponentObject component, Properties properties) throws ConfigurationException {
         ComponentType ctype = getConfigurationServiceProxy().getComponentType(component.getComponentTypeID());
         
         return convertPropertyDefinitions(ctype, properties);
     }
     
-    protected Collection convertPropertyDefinitions(ComponentType ctype, Properties properties) throws Exception {
+    protected Collection convertPropertyDefinitions(ComponentType ctype, Properties properties) {
         ArrayList results = new ArrayList();
         
         for (Iterator iter = ctype.getComponentTypeDefinitions().iterator(); iter.hasNext(); ) {
@@ -612,31 +575,36 @@ public class AbstractAdminImpl {
 
             return rpt.toString();
         } catch (InvalidSessionException e) {
-        	convertException(e);
+        	throw new AdminProcessingException(e);
 		} catch (AuthorizationException e) {
-			convertException(e);
+			throw new AdminProcessingException(e);
 		} catch (MetaMatrixComponentException e) {
-			convertException(e);
+			throw new AdminComponentException(e);
 		} catch (SAXException e) {
-			convertException(e);
+			throw new AdminComponentException(e);
 		} catch (IOException e) {
-			convertException(e);
+			throw new AdminComponentException(e);
 		} catch (ParserConfigurationException e) {
-			convertException(e);
+			throw new AdminComponentException(e);
         }
-        return null;
     }    
     
     char[] exportDataRoles(String vdbName, String vdbVersion) throws AdminException {
         Collection roles = null;
         try {
-            roles = getAuthorizationServiceProxy().getPoliciesInRealm(validateSession(), new AuthorizationRealm(vdbName, vdbVersion));
-            if (roles != null && !roles.isEmpty()) {
-                return AuthorizationPolicyFactory.exportPolicies(roles);
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
-        return null;
+			roles = getAuthorizationServiceProxy().getPoliciesInRealm(validateSession(), new AuthorizationRealm(vdbName, vdbVersion));
+			if (roles != null && !roles.isEmpty()) {
+			    return AuthorizationPolicyFactory.exportPolicies(roles);
+			}
+			return null;
+		} catch (AuthorizationMgmtException e) {
+			throw new AdminProcessingException(e);
+		} catch (AuthorizationException e) {
+			throw new AdminProcessingException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (IOException e) {
+			throw new AdminComponentException(e);
+		}
     }    
 }

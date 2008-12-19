@@ -416,9 +416,6 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         
         assertTrue(FakeServerSessionService.terminatedSessions.contains("00000000-0000-0001-0000-000000000001")); //$NON-NLS-1$
         
-        
-        
-        
         //failure case: invalid session ID
         boolean failed = false;
         try {

@@ -84,6 +84,8 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
+import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorArchive;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
@@ -94,6 +96,9 @@ import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
+import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
+import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
+import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.net.SocketHelper;
 import com.metamatrix.common.util.LogContextsUtil;
@@ -108,6 +113,7 @@ import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnFactory;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnImport;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -189,10 +195,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                     this.throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null", new Object[] {connectorBindingName}); //$NON-NLS-1$
                 }
                             
-            } catch (ConfigurationException configException) {
-                convertException(configException);
-            } catch (ServiceException err) {
-                convertException(err);
+            } catch (ConfigurationException e) {
+                throw new AdminComponentException(e);
+            } catch (ServiceException e) {
+            	throw new AdminComponentException(e);
             }
         
             Collection newBindings = 
@@ -239,12 +245,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             try {
                 binding = ciu.importConnectorBinding(is, new BasicConfigurationObjectEditor(false), connectorBindingName);
                 is.close();
-            } catch (ConfigObjectsNotResolvableException err1) {
-                convertException(err1);
-            } catch (InvalidConfigurationElementException err1) {
-                convertException(err1);
-            } catch (IOException err1) {
-                convertException(err1);
+            } catch (ConfigObjectsNotResolvableException e) {
+            	throw new AdminComponentException(e);
+            } catch (InvalidConfigurationElementException e) {
+            	throw new AdminComponentException(e);
+            } catch (IOException e) {
+            	throw new AdminComponentException(e);
             }
             // Check that binding password is decryptable
             AdminStatus status = checkDecryption(binding);
@@ -259,10 +265,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 if (binding == null) {
                     throwProcessingException("ServerConfigAdminImpl.Connector_Type_was_null", new Object[] {connectorBindingName}); //$NON-NLS-1$
                 }
-            } catch (ConfigurationException configException) {
-                convertException(configException);
-            } catch (ServiceException err) {
-                convertException(err);
+            } catch (ConfigurationException e) {
+            	throw new AdminComponentException(e);
+            } catch (ServiceException e) {
+            	throw new AdminComponentException(e);
             }
         
             //return the new binding
@@ -302,10 +308,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             if (connectorType == null) {
                 throwProcessingException("ServerConfigAdminImpl.Connector_Type_was_null", new Object[] {name}); //$NON-NLS-1$
             }
-        } catch (ConfigurationException configException) {
-            convertException(configException);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         } 
     }
 
@@ -325,62 +331,67 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         XMLConfigurationImportExportUtility util = new XMLConfigurationImportExportUtility();
         InputStream in = ObjectConverterUtil.convertToInputStream(contents);
                 
-        try {            
-            // Load the connector Archive from the file            
-            HashSet previouslyAddedModules = new HashSet();
-            HashSet typesToAdd = new HashSet();
-            ConnectorArchive archive = util.importConnectorArchive(in, new BasicConfigurationObjectEditor());
-            ConnectorBindingType[] connectorTypes = archive.getConnectorTypes();
-                           
-            // Loop through each type and add all of them based on the option.
-            for (int typeIndex = 0; typeIndex < connectorTypes.length; typeIndex++) {
-                
-                // first make sure we do not already have this connector type
-                String connectorName = connectorTypes[typeIndex].getName();
-                ConnectorBindingType type = (ConnectorBindingType)this.getComponentType(connectorName);
-                                
-                // if exists and option is to throw exception then throw exception
-                if (type != null && options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                    throwProcessingException("ServerConfigAdminImpl.Connector_Type_already_exists", new Object[] {connectorName}); //$NON-NLS-1$
-                }               
-                else if (type != null && options.containsOption(AdminOptions.OnConflict.IGNORE)) {
-                    continue;
-                }
-                else if (type != null && options.containsOption(AdminOptions.OnConflict.OVERWRITE)){
-                    deleteConnectorType(connectorName);
-                }
-                
-                // Now that we know we need to add this to configuration; let's get on with it
-                type = connectorTypes[typeIndex];
-                ExtensionModule[] extModules = archive.getExtensionModules(type);
-                checkAddingConnectorType(type, extModules, options, previouslyAddedModules);
-                typesToAdd.add(type);
-            }
-            
-            // Now that we over the admin options crap, now go ahead and add the types
-            // and modules.
-            for (Iterator i = typesToAdd.iterator(); i.hasNext();) {
-                ConnectorBindingType type = (ConnectorBindingType)i.next();
-                // Now add/overwrite the connector type to the system
-                // first add the connector type, here it is little odd that we export and
-                // import, however the configurationProxy is written based on streams not
-                // on the objects that is way.             
-                ByteArrayOutputStream baos = new ByteArrayOutputStream(10*1024);
-                util.exportComponentType(baos, type, getPropertiesForExporting());                                    
-                addConnectorType(type.getName(), ObjectConverterUtil.bytesToChar(baos.toByteArray(), null));
-                baos.close();
-            }
-            
-            // Now add the extension modules
-            for (Iterator i = previouslyAddedModules.iterator(); i.hasNext();) {
-                ExtensionModule extModule = (ExtensionModule)i.next();
-                addExtensionModule(extModule.getModuleType(), extModule.getFullName(), extModule.getFileContents(), extModule.getDescription());
-            }        
-                        
-        } catch (Exception e) {
-            convertException(e);
-        } finally {
-            try{in.close();}catch(Exception e) {}
+        try {
+			// Load the connector Archive from the file            
+			HashSet previouslyAddedModules = new HashSet();
+			HashSet typesToAdd = new HashSet();
+			ConnectorArchive archive = util.importConnectorArchive(in, new BasicConfigurationObjectEditor());
+			ConnectorBindingType[] connectorTypes = archive.getConnectorTypes();
+			               
+			// Loop through each type and add all of them based on the option.
+			for (int typeIndex = 0; typeIndex < connectorTypes.length; typeIndex++) {
+			    
+			    // first make sure we do not already have this connector type
+			    String connectorName = connectorTypes[typeIndex].getName();
+			    ConnectorBindingType type = (ConnectorBindingType)this.getComponentType(connectorName);
+			                    
+			    // if exists and option is to throw exception then throw exception
+			    if (type != null && options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
+			        throwProcessingException("ServerConfigAdminImpl.Connector_Type_already_exists", new Object[] {connectorName}); //$NON-NLS-1$
+			    }               
+			    else if (type != null && options.containsOption(AdminOptions.OnConflict.IGNORE)) {
+			        continue;
+			    }
+			    else if (type != null && options.containsOption(AdminOptions.OnConflict.OVERWRITE)){
+			        deleteConnectorType(connectorName);
+			    }
+			    
+			    // Now that we know we need to add this to configuration; let's get on with it
+			    type = connectorTypes[typeIndex];
+			    ExtensionModule[] extModules = archive.getExtensionModules(type);
+			    checkAddingConnectorType(type, extModules, options, previouslyAddedModules);
+			    typesToAdd.add(type);
+			}
+			
+			// Now that we over the admin options crap, now go ahead and add the types
+			// and modules.
+			for (Iterator i = typesToAdd.iterator(); i.hasNext();) {
+			    ConnectorBindingType type = (ConnectorBindingType)i.next();
+			    // Now add/overwrite the connector type to the system
+			    // first add the connector type, here it is little odd that we export and
+			    // import, however the configurationProxy is written based on streams not
+			    // on the objects that is way.             
+			    ByteArrayOutputStream baos = new ByteArrayOutputStream(10*1024);
+			    util.exportComponentType(baos, type, getPropertiesForExporting());                                    
+			    addConnectorType(type.getName(), ObjectConverterUtil.bytesToChar(baos.toByteArray(), null));
+			    baos.close();
+			}
+			
+			// Now add the extension modules
+			for (Iterator i = previouslyAddedModules.iterator(); i.hasNext();) {
+			    ExtensionModule extModule = (ExtensionModule)i.next();
+			    addExtensionModule(extModule.getModuleType(), extModule.getFullName(), extModule.getFileContents(), extModule.getDescription());
+			}
+		} catch (InvalidConfigurationElementException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		} catch (IOException e) {
+			throw new AdminComponentException(e);
+		} catch(MetaMatrixProcessingException e){
+			throw new AdminProcessingException(e);
+		}	finally {
+            try{in.close();}catch(IOException e) {}
         }                            
     }    
 	
@@ -401,38 +412,46 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.ProviderType_name_can_not_be_null")); //$NON-NLS-1$
         }        
 
+            
         try {
-            
-            ConfigurationObjectEditor coe = getConfigurationServiceProxy().createEditor();
-            
-            ConfigurationModelContainer cmc = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
-            
-            if (cmc.getConfiguration().getAuthenticationProvider(domainprovidername) != null)  {
-                throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Provider_already_exist")); //$NON-NLS-1$
-                
-            }
-            ComponentType providertype = cmc.getComponentType(providertypename);
-            
-            if (providertype == null)  {
-                throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.ProviderType_does_not_exist")); //$NON-NLS-1$
-                
-            }            
-            AuthenticationProvider provider = coe.createAuthenticationProviderComponent(Configuration.NEXT_STARTUP_ID,
-                                                                            (ComponentTypeID)providertype.getID(),
-                                                                            domainprovidername);
-            
-             
-             Properties props = providertype.getDefaultPropertyValues();
-             props.putAll(properties);
-             
-             provider = (AuthenticationProvider) coe.modifyProperties(provider, props, ConfigurationObjectEditor.SET);
+			ConfigurationObjectEditor coe = getConfigurationServiceProxy().createEditor();
+			
+			ConfigurationModelContainer cmc = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
+			
+			if (cmc.getConfiguration().getAuthenticationProvider(domainprovidername) != null)  {
+			    throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Provider_already_exist")); //$NON-NLS-1$
+			    
+			}
+			ComponentType providertype = cmc.getComponentType(providertypename);
+			
+			if (providertype == null)  {
+			    throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.ProviderType_does_not_exist")); //$NON-NLS-1$
+			    
+			}            
+			AuthenticationProvider provider = coe.createAuthenticationProviderComponent(Configuration.NEXT_STARTUP_ID,
+			                                                                (ComponentTypeID)providertype.getID(),
+			                                                                domainprovidername);
+			
+			 
+			 Properties props = providertype.getDefaultPropertyValues();
+			 props.putAll(properties);
+			 
+			 provider = (AuthenticationProvider) coe.modifyProperties(provider, props, ConfigurationObjectEditor.SET);
 
 
-             getConfigurationServiceProxy().executeTransaction(coe.getDestination().popActions(), getUserName());
+			 getConfigurationServiceProxy().executeTransaction(coe.getDestination().popActions(), getUserName());
+		} catch (InvalidConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ConfigurationLockException e) {
+			throw new AdminComponentException(e);
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
             
-        } catch (Exception e) {
-            convertException(e);
-        } 
     }
     	
     
@@ -499,18 +518,22 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
         
         try {
-            ExtensionModuleDescriptor desc = getExtensionSourceManager().addSource(getUserName(),
-                                                                                   type,
-                                                                                   sourceName,
-                                                                                   source,
-                                                                                   description,
-                                                                                   true);
-            if (desc == null) {
-                throwProcessingException("ServerConfigAdminImpl.Extension_Module_Descriptor_was_null", new Object[] {sourceName}); //$NON-NLS-1$
-            }
-        } catch (Exception e) {
-            convertException(e);
-        }
+			ExtensionModuleDescriptor desc = getExtensionSourceManager().addSource(getUserName(),
+			                                                                       type,
+			                                                                       sourceName,
+			                                                                       source,
+			                                                                       description,
+			                                                                       true);
+			if (desc == null) {
+			    throwProcessingException("ServerConfigAdminImpl.Extension_Module_Descriptor_was_null", new Object[] {sourceName}); //$NON-NLS-1$
+			}
+		} catch (DuplicateExtensionModuleException e) {
+			throw new AdminProcessingException(e);
+		} catch (InvalidExtensionModuleTypeException e) {
+			throw new AdminProcessingException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -518,11 +541,13 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @since 4.3
      */
     public void deleteExtensionModule(String sourceName) throws AdminException {
-        try {
-            getExtensionSourceManager().removeSource(getUserName(), sourceName);
-        } catch (Exception e) {
-            convertException(e);
-        }
+    	try {
+			getExtensionSourceManager().removeSource(getUserName(), sourceName);
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new AdminProcessingException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -545,15 +570,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Properties_can_not_be_null")); //$NON-NLS-1$
         }
         try {
-            host = getConfigurationServiceProxy().addHost(hostName, getUserName(), properties);
+			host = getConfigurationServiceProxy().addHost(hostName, getUserName(), properties);
 
-            if (host == null) {
-                throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
+			if (host == null) {
+			    throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
 
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -579,36 +606,40 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Properties_can_not_be_null")); //$NON-NLS-1$
         }
 
+
         try {
+			com.metamatrix.common.config.api.VMComponentDefn processDefn = null;
 
-            com.metamatrix.common.config.api.VMComponentDefn processDefn = null;
+			processDefn = getConfigurationServiceProxy().addProcess(processName, hostName, getUserName(), properties);
 
-            processDefn = getConfigurationServiceProxy().addProcess(processName, hostName, getUserName(), properties);
+			if (processDefn != null) {
+			    Collection pscs = this.getConfigurationModel().getConfiguration().getPSCs();
+			    if (pscs != null && ! pscs.isEmpty()) {
+			        ProductServiceConfig psc = null;
+			        for (Iterator it=pscs.iterator(); it.hasNext();) {
+			             psc =(ProductServiceConfig) it.next();
+			         // only if the MMProcessPSC is defined can this automatically deploy it.
+			            if (psc.getName().equalsIgnoreCase(METAMATRIXPROCESS_PSC)) {
+			                getConfigurationServiceProxy().deployPSC(theHost, processDefn, METAMATRIXPROCESS_PSC, getUserName());                          
+			            } 
+			        }
+			    }
+			    getConfigurationServiceProxy().deployPSC(theHost, processDefn, PLATFORM_STANDARD_PSC, getUserName());
+			    getConfigurationServiceProxy().deployPSC(theHost, processDefn, QUERY_ENGINE_PSC, getUserName());
 
-            if (processDefn != null) {
-                Collection pscs = this.getConfigurationModel().getConfiguration().getPSCs();
-                if (pscs != null && ! pscs.isEmpty()) {
-                    ProductServiceConfig psc = null;
-                    for (Iterator it=pscs.iterator(); it.hasNext();) {
-                         psc =(ProductServiceConfig) it.next();
-                     // only if the MMProcessPSC is defined can this automatically deploy it.
-                        if (psc.getName().equalsIgnoreCase(METAMATRIXPROCESS_PSC)) {
-                            getConfigurationServiceProxy().deployPSC(theHost, processDefn, METAMATRIXPROCESS_PSC, getUserName());                          
-                        } 
-                    }
-                }
-                getConfigurationServiceProxy().deployPSC(theHost, processDefn, PLATFORM_STANDARD_PSC, getUserName());
-                getConfigurationServiceProxy().deployPSC(theHost, processDefn, QUERY_ENGINE_PSC, getUserName());
-
-            } else {
-                final Object[] params = new Object[] {
-                    processIdentifier, hostName
-                };
-                throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			} else {
+			    final Object[] params = new Object[] {
+			        processIdentifier, hostName
+			    };
+			    throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -618,12 +649,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     public VDB addVDB(String name, byte[] vdbFile, AdminOptions options) throws AdminException {
         VDBArchive vdb = null;
         try {
-            vdb = new VDBArchive(new ByteArrayInputStream(vdbFile));
-            vdb.setName(name);
-        } catch (Exception err) {
-            convertException(err);
-        }
-        
+			vdb = new VDBArchive(new ByteArrayInputStream(vdbFile));
+			vdb.setName(name);
+		} catch (IOException e) {
+			throw new AdminComponentException(e);
+		}
         return addVDB(vdb, options);
     }
 
@@ -656,11 +686,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         boolean updateBindings = (options.containsOption(AdminOptions.OnConflict.OVERWRITE));
 
         VirtualDatabase newVDB = null;
-        try {
-        	newVDB = VDBDefnImport.importVDBDefn(vdb, getUserName(), updateBindings);
-        } catch (Exception err) {
-            convertException(err);
-        }
+    	try {
+			newVDB = VDBDefnImport.importVDBDefn(vdb, getUserName(), updateBindings);
+		} catch (Exception e) {
+			// TODO: remove the generalization of exception
+			throw new AdminComponentException(e);
+		}
         if (newVDB == null) {
             throwProcessingException("ServerConfigAdminImpl.VDB_created_was_null", new Object[] {def.getName()}); //$NON-NLS-1$
         }
@@ -696,9 +727,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         			break;
         		}
         	}
-        	
-        } catch (Exception err) {
-        	convertException(err);
+        } catch(Exception e){
+        	// TODO: generalization of the exception should be removed
+        	throw new AdminComponentException(e);
         } finally {
         	if (vdbArchive != null) {
         		vdbArchive.close();
@@ -718,11 +749,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
         try {
             materializationConnector = getConnectorBindingByName(materializationConnectorName);
-        } catch (Exception err) {
-            Object[] params = new Object[] {materializationModel.getName()};
-            convertException(err, AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_get_binding_name", params)); //$NON-NLS-1$
+        } catch (ServiceException e) {
+            throw new AdminComponentException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_get_binding_name", new Object[] {materializationModel.getName()}), e); //$NON-NLS-1$
+        } catch(ConfigurationException e) {
+        	throw new AdminComponentException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_get_binding_name", new Object[] {materializationModel.getName()}), e); //$NON-NLS-1$
         }
-        
         
         // Scrape materialization info from materialization connector binding
         Properties materializationConnectorProps = materializationConnector.getProperties();
@@ -738,17 +769,16 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             // Already done if getting from materialization connector
             try {
                 materializationUserPwd = PropertiesUtils.saveConvert(CryptoUtil.stringEncrypt(materializationUserPwd), false);
-            } catch (CryptoException err) {
-                Object[] params = new Object[] {materializationUserName};
-                convertException(err, AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_encrypt_mat_db_user", params)); //$NON-NLS-1$
+            } catch (CryptoException e) {
+                throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_encrypt_mat_db_user", new Object[] {materializationUserName}), e); //$NON-NLS-1$
             }
         }
         // Encrypt metamatrix user password - will allways need to be done
         try {
             metamatrixUserPwd = PropertiesUtils.saveConvert(CryptoUtil.stringEncrypt(metamatrixUserPwd), false);
-        } catch (CryptoException err) {
-            Object[] params = new Object[] {metamatrixUserName};
-            convertException(err, AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_encrypt_MM_user", params)); //$NON-NLS-1$
+        } catch (CryptoException e) {
+            throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Unable_to_encrypt_MM_user", new Object[] {metamatrixUserName}), e); //$NON-NLS-1$
+
         }
         
         String materializationDriver = materializationConnectorProps.getProperty(CONNECTION_PROPERTY_DRIVER);
@@ -765,14 +795,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
         boolean useSSL = false;
         
-        try {
-            useSSL = SocketHelper.isServerSSLEnabled();
+        useSSL = SocketHelper.isServerSSLEnabled();
             
-        } catch (Exception err) {
-            convertException(err);
-        } 
-        
-        
         String mmDriver = "com.metamatrix.jdbc.MMDriver"; //$NON-NLS-1$
         
         // Generate connection props and insert into scripts.
@@ -782,15 +806,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                                                    mmDriver, useSSL, metamatrixUserName, metamatrixUserPwd, vdbName, vdbVersion);
         
         MMScriptsContainer scripts = new MMScriptsContainer();
-        try {
-            scripts.addFile(binaryScripts.getCreateScriptFileName(), binaryScripts.getCreateFileContents());
-            scripts.addFile(binaryScripts.getConnectionPropsFileName(), binaryScripts.getConPropsFileContents());
-            scripts.addFile(binaryScripts.getTruncateScriptFileName(), binaryScripts.getTruncateFileContents());
-            scripts.addFile(binaryScripts.getLoadScriptFileName(), binaryScripts.getLoadFileContents());
-            scripts.addFile(binaryScripts.getSwapScriptFileName(), binaryScripts.getSwapFileContents());
-        } catch (final AdminComponentException err) {
-            convertException(err, AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Script_gen_failed")); //$NON-NLS-1$
-        }
+        scripts.addFile(binaryScripts.getCreateScriptFileName(), binaryScripts.getCreateFileContents());
+        scripts.addFile(binaryScripts.getConnectionPropsFileName(), binaryScripts.getConPropsFileContents());
+        scripts.addFile(binaryScripts.getTruncateScriptFileName(), binaryScripts.getTruncateFileContents());
+        scripts.addFile(binaryScripts.getLoadScriptFileName(), binaryScripts.getLoadFileContents());
+        scripts.addFile(binaryScripts.getSwapScriptFileName(), binaryScripts.getSwapFileContents());
                 
         return scripts;
     }
@@ -803,21 +823,25 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     public void disableHost(String identifier) throws AdminException {
 
         try {
-            Collection hosts = getConfigurationServiceProxy().getHosts();
+			Collection hosts = getConfigurationServiceProxy().getHosts();
 
-            for (Iterator iter = hosts.iterator(); iter.hasNext();) {
-                Host hostObject = (Host)iter.next();
-                String hostName = hostObject.getName();
-                if (identifierMatches(identifier, new String[] {hostName})) {
-                    Host updatedHost = updateHost(hostObject, false);
-                    if (updatedHost == null) {
-                        throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
-                    }
-                }
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			for (Iterator iter = hosts.iterator(); iter.hasNext();) {
+			    Host hostObject = (Host)iter.next();
+			    String hostName = hostObject.getName();
+			    if (identifierMatches(identifier, new String[] {hostName})) {
+			        Host updatedHost = updateHost(hostObject, false);
+			        if (updatedHost == null) {
+			            throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -845,34 +869,36 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Collection defns = new ArrayList();
         try {
             defns = getConfigurationServiceProxy().getCurrentConfiguration().getVMComponentDefns();
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         } 
         
         try {
-            for (Iterator iter = defns.iterator(); iter.hasNext();) {
-                VMComponentDefn defn = (VMComponentDefn)iter.next();
-                String processName = defn.getName();
-                String hostName = defn.getHostID().getName();
+			for (Iterator iter = defns.iterator(); iter.hasNext();) {
+			    VMComponentDefn defn = (VMComponentDefn)iter.next();
+			    String processName = defn.getName();
+			    String hostName = defn.getHostID().getName();
 
-                String[] identifierParts = new String[] {
-                    hostName, processName
-                };
-                if (identifierMatches(identifier, identifierParts)) {
-                    VMComponentDefn updatedProcess = updateProcess(defn, false);
-                    if (updatedProcess == null) {
-                        final Object[] params = new Object[] {
-                            identifier, hostName
-                        };
-                        throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
-                    }
-                }
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			    String[] identifierParts = new String[] {
+			        hostName, processName
+			    };
+			    if (identifierMatches(identifier, identifierParts)) {
+			        VMComponentDefn updatedProcess = updateProcess(defn, false);
+			        if (updatedProcess == null) {
+			            final Object[] params = new Object[] {
+			                identifier, hostName
+			            };
+			            throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
 
     }
 
@@ -896,21 +922,25 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     public void enableHost(String identifier) throws AdminException {
 
         try {
-            Collection hosts = getConfigurationServiceProxy().getHosts();
+			Collection hosts = getConfigurationServiceProxy().getHosts();
 
-            for (Iterator iter = hosts.iterator(); iter.hasNext();) {
-                Host hostObject = (Host)iter.next();
-                String hostName = hostObject.getName();
-                if (identifierMatches(identifier, new String[] {hostName})) {
-                    Host updatedHost = updateHost(hostObject, true);
-                    if (updatedHost == null) {
-                        throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
-                    }
-                }
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			for (Iterator iter = hosts.iterator(); iter.hasNext();) {
+			    Host hostObject = (Host)iter.next();
+			    String hostName = hostObject.getName();
+			    if (identifierMatches(identifier, new String[] {hostName})) {
+			        Host updatedHost = updateHost(hostObject, true);
+			        if (updatedHost == null) {
+			            throwProcessingException("ServerConfigAdminImpl.Host_was_null", new Object[] {hostName}); //$NON-NLS-1$
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /**
@@ -920,29 +950,33 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     public void enableProcess(String identifier) throws AdminException {
 
         try {
-            Collection defns = getConfigurationServiceProxy().getCurrentConfiguration().getVMComponentDefns();
+			Collection defns = getConfigurationServiceProxy().getCurrentConfiguration().getVMComponentDefns();
 
-            for (Iterator iter = defns.iterator(); iter.hasNext();) {
-                VMComponentDefn defn = (VMComponentDefn)iter.next();
-                String processName = defn.getName();
-                String hostName = defn.getHostID().getName();
+			for (Iterator iter = defns.iterator(); iter.hasNext();) {
+			    VMComponentDefn defn = (VMComponentDefn)iter.next();
+			    String processName = defn.getName();
+			    String hostName = defn.getHostID().getName();
 
-                String[] identifierParts = new String[] {
-                    hostName, processName
-                };
-                if (identifierMatches(identifier, identifierParts)) {
-                    VMComponentDefn updatedProcess = updateProcess(defn, true);
-                    if (updatedProcess == null) {
-                        final Object[] params = new Object[] {
-                            identifier, hostName
-                        };
-                        throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
-                    }
-                }
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			    String[] identifierParts = new String[] {
+			        hostName, processName
+			    };
+			    if (identifierMatches(identifier, identifierParts)) {
+			        VMComponentDefn updatedProcess = updateProcess(defn, true);
+			        if (updatedProcess == null) {
+			            final Object[] params = new Object[] {
+			                identifier, hostName
+			            };
+			            throwProcessingException("ServerConfigAdminImpl.Process_was_null", params); //$NON-NLS-1$
+			        }
+			    }
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     /** 
@@ -958,13 +992,16 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
         try {
 
-            ConfigurationModelContainer container = getConfigurationServiceProxy()
-                                                                                  .getConfigurationModel(Configuration.NEXT_STARTUP);
+            ConfigurationModelContainer container = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
             ConfigurationModelContainerAdapter adapter = new ConfigurationModelContainerAdapter();
             adapter.writeConfigurationModel(os, container, getUserName());
             results = ObjectConverterUtil.bytesToChar(baos.toByteArray(), null);
-        } catch (Exception theException) {
-            convertException(theException);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
+        } catch(ConfigurationException e){
+        	throw new AdminComponentException(e);
+        } catch(IOException e) {
+        	throw new AdminComponentException(e);
         } finally {
             if (os != null) {
                 try {
@@ -1006,15 +1043,22 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             writeEditor.createConfiguration(Configuration.NEXT_STARTUP_ID, objects);            
             getConfigurationServiceProxy().executeTransaction(writeEditor.getDestination().getActions(), getUserName());
             
-            
-            
-        } catch (Exception e) {
-            convertException(e);
-        
+        } catch(ConfigObjectsNotResolvableException e) {
+        	throw new AdminComponentException(e);
+        } catch(InvalidConfigurationElementException e) {
+        	throw new AdminComponentException(e);
+        } catch(ModificationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ConfigurationException e) {  
+        	throw new AdminComponentException(e); 
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
+        } catch(IOException e){
+        	throw new AdminComponentException(e);
         } finally {
             try {
                 is.close();
-            } catch (Exception e) {                
+            } catch (IOException e) {                
             }
         }
         
@@ -1039,11 +1083,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
         XMLConfigurationImportExportUtility util = new XMLConfigurationImportExportUtility();
         try {
-
             // get config data from ConfigurationService
             Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-            ConfigurationModelContainer container = getConfigurationServiceProxy()
-                                                                                  .getConfigurationModel(Configuration.NEXT_STARTUP);
+            ConfigurationModelContainer container = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
 
             Collection components = config.getDeployedComponents();
 
@@ -1082,8 +1124,15 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             Properties properties = getPropertiesForExporting();
             util.exportConnectorBindings(os, bindingArray, typeArray, properties);
             results = ObjectConverterUtil.bytesToChar(baos.toByteArray(), null);
-        } catch (Exception theException) {
-            convertException(theException);
+            
+        } catch(ConfigObjectsNotResolvableException e) {
+        	throw new AdminComponentException(e);
+        } catch(ConfigurationException e) {
+        	throw new AdminComponentException(e); 
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
+        } catch(IOException e) {
+        	throw new AdminComponentException(e); 
         } finally {
             if (os != null) {
                 try {
@@ -1125,8 +1174,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             Properties properties = getPropertiesForExporting();
             util.exportComponentTypes(os, typeArray, properties);
             results = ObjectConverterUtil.bytesToChar(baos.toByteArray(), null);
-        } catch (Exception theException) {
-            convertException(theException);
+            
+        } catch(ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (IOException e) {
+        	throw new AdminComponentException(e);
         } finally {
             if (os != null) {
                 try {
@@ -1194,17 +1246,13 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 String[] modules = type.getExtensionModules();
                 for (int m = 0; m < modules.length; m++) {
                     String extModuleName = modules[m];
-                    try {
-                        // ignore the patch jar..
-                        if (!"connector_patch.jar".equals(extModuleName)) { // //$NON-NLS-1$                           
-                            ExtensionModuleDescriptor emd = getExtensionSourceManager().getSourceDescriptor(extModuleName);
-                            byte[] source = getExtensionSourceManager().getSource(extModuleName);                
-                            ExtensionModule extModule = new BasicExtensionModule(extModuleName, emd.getType(), emd.getDescription(), source);
-                            archive.addExtensionModule(type, extModule);
-                        }
-                    } catch (Exception e) {
-                        convertException(e);
-                    }                
+                    // ignore the patch jar..
+                    if (!"connector_patch.jar".equals(extModuleName)) { // //$NON-NLS-1$                           
+                        ExtensionModuleDescriptor emd = getExtensionSourceManager().getSourceDescriptor(extModuleName);
+                        byte[] source = getExtensionSourceManager().getSource(extModuleName);                
+                        ExtensionModule extModule = new BasicExtensionModule(extModuleName, emd.getType(), emd.getDescription(), source);
+                        archive.addExtensionModule(type, extModule);
+                    }
                 }
             }
                     
@@ -1213,12 +1261,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             util.exportConnectorArchive(baos, archive, getPropertiesForExporting());
             return baos.toByteArray();
             
-        } catch (Exception e) {
-            convertException(e);
+        } catch(ConfigObjectsNotResolvableException e) {
+        	throw new AdminComponentException(e);
+        } catch(ExtensionModuleNotFoundException e) {
+        	throw new AdminComponentException(e);
+        } catch(MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        } catch (IOException e) {
+        	throw new AdminComponentException(e);
         } finally {
             try {baos.close();} catch (IOException e) {}            
         }         
-        return null;
     }
     
     
@@ -1229,24 +1282,25 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     public byte[] exportExtensionModule(String identifier) throws AdminException {
         byte[] data = null;
                 
-        try {
-        //get modules from ExtensionSourceManager
-            Collection modules = getExtensionSourceManager().getSourceDescriptors();
-        
-            for (Iterator iter = modules.iterator(); iter.hasNext();) {
-                ExtensionModuleDescriptor descriptor = (ExtensionModuleDescriptor) iter.next();
-                String sourceName = descriptor.getName();
+    	try {
+			//get modules from ExtensionSourceManager
+			Collection modules = getExtensionSourceManager().getSourceDescriptors();
+   
+			for (Iterator iter = modules.iterator(); iter.hasNext();) {
+			    ExtensionModuleDescriptor descriptor = (ExtensionModuleDescriptor) iter.next();
+			    String sourceName = descriptor.getName();
 
-                String[] identifierParts = new String[] {sourceName};                
-                if (identifierMatches(identifier, identifierParts)) {
-                    data = getExtensionSourceManager().getSource(sourceName);
-                    break;
-                }
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
-
+			    String[] identifierParts = new String[] {sourceName};                
+			    if (identifierMatches(identifier, identifierParts)) {
+			        data = getExtensionSourceManager().getSource(sourceName);
+			        break;
+			    }
+			}
+		} catch (ExtensionModuleNotFoundException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
         return data;
     }
 
@@ -1261,14 +1315,14 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             archive.updateRoles(exportDataRoles(name, version));
             return VDBArchive.writeToByteArray(archive);
             
-        } catch (Exception theException) {
-            convertException(theException);
+        } catch (Exception e) {
+        	//TODO: remove the generalization of Exception
+        	throw new AdminComponentException(e);
         } finally {
         	if (archive != null) {
         		archive.close();
         	}
         }
-        return null;
     }
 
       
@@ -1293,10 +1347,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         com.metamatrix.common.log.LogConfiguration logConfig = null;
         try {
             logConfig = getConfigurationServiceProxy().getNextStartupConfiguration().getLogConfiguration();
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         MMLogConfiguration result = new MMLogConfiguration();
@@ -1323,10 +1377,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Configuration config = null;
         try {
             config = getConfigurationServiceProxy().getNextStartupConfiguration();
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         if (config != null) {
@@ -1356,14 +1410,20 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
             ConfigurationObjectEditor coe = null;
             try {
-                coe = getConfigurationServiceProxy().createEditor();
-                coe.setLogConfiguration(config, logConfig);
-                ModificationActionQueue maq = coe.getDestination();
-                java.util.List actions = maq.popActions();
-                getRuntimeStateAdminAPIHelper().setLogConfiguration(config, logConfig, actions, getUserName());
-            } catch (Exception theException) {
-                convertException(theException);
-            }
+				coe = getConfigurationServiceProxy().createEditor();
+				coe.setLogConfiguration(config, logConfig);
+				ModificationActionQueue maq = coe.getDestination();
+				java.util.List actions = maq.popActions();
+				getRuntimeStateAdminAPIHelper().setLogConfiguration(config, logConfig, actions, getUserName());
+			} catch (ConfigurationLockException e) {
+				throw new AdminComponentException(e);
+			} catch (ConfigurationException e) {
+				throw new AdminComponentException(e);
+			} catch (ServiceException e) {
+				throw new AdminComponentException(e);
+			} catch (MetaMatrixComponentException e) {
+				throw new AdminComponentException(e);
+			}
         } // if
 
     }
@@ -1378,10 +1438,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             throw new IllegalArgumentException(AdminPlugin.Util.getString("ServerConfigAdminImpl.Property_name_can_not_be_null")); //$NON-NLS-1$
         }
         try {
-            getConfigurationServiceProxy().setSystemPropertyValue(propertyName, propertyValue, getUserName());
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			getConfigurationServiceProxy().setSystemPropertyValue(propertyName, propertyValue, getUserName());
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
     }
     
     /** 
@@ -1389,11 +1451,13 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @since 4.3
      */
     public void updateSystemProperties(Properties properties) throws AdminException {
-        try {
-            getConfigurationServiceProxy().updateSystemPropertyValues(properties, getUserName());
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+    	try {
+			getConfigurationServiceProxy().updateSystemPropertyValues(properties, getUserName());
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
     }
     
 
@@ -1447,13 +1511,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 hostProperties.putAll(properties);
                 
                 try {
-                    Host updatedHost = (Host)getConfigurationServiceProxy().modify(host, hostProperties, getUserName());
+					Host updatedHost = (Host)getConfigurationServiceProxy().modify(host, hostProperties, getUserName());
                     if (updatedHost == null) {
                         throwProcessingException("ServerConfigAdminImpl.Host_was_null_when_updating_properties", new Object[] {hostName}); //$NON-NLS-1$
                     }
-                } catch (Exception theException) {
-                    convertException(theException);
-                }
+				} catch (ConfigurationException e) {
+					throw new AdminComponentException(e);
+				} catch (ModificationException e) {
+					throw new AdminComponentException(e);
+				} catch (ServiceException e) {
+					throw new AdminComponentException(e);
+				}
                 break;
 
             case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
@@ -1461,41 +1529,50 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 String processName = adminObject.getName();
                 hostName = process.getHostIdentifier();
                 try {
-                    VMComponentDefn vmDefn = getVMByName(hostName, processName);
-                    Properties processProperties = vmDefn.getProperties();
-                    processProperties.putAll(properties);
+					VMComponentDefn vmDefn = getVMByName(hostName, processName);
+					Properties processProperties = vmDefn.getProperties();
+					processProperties.putAll(properties);
+					
+					VMComponentDefn updatedProcess = (VMComponentDefn)getConfigurationServiceProxy().modify(vmDefn,
+					                                                                                        processProperties,
+					                                                                                        getUserName());
+					if (updatedProcess == null) {
+					    throwProcessingException("ServerConfigAdminImpl.Process_was_null_when_updating_properties", new Object[] {processName}); //$NON-NLS-1$
+					}
+				} catch (ConfigurationException e) {
+					throw new AdminComponentException(e);
+				} catch (ServiceException e) {
+					throw new AdminComponentException(e);
+				} catch (MetaMatrixProcessingException e) {
+					throw new AdminProcessingException(e);
+				} catch (ModificationException e) {
+					throw new AdminComponentException(e);
+				}
                     
-                    VMComponentDefn updatedProcess = (VMComponentDefn)getConfigurationServiceProxy().modify(vmDefn,
-                                                                                                            processProperties,
-                                                                                                            getUserName());
-                    if (updatedProcess == null) {
-                        throwProcessingException("ServerConfigAdminImpl.Process_was_null_when_updating_properties", new Object[] {processName}); //$NON-NLS-1$
-                    }
-                    
-                } catch (Exception theException) {
-                    convertException(theException);
-                }
                 break;
                 
             case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
                 String connectorBindingName = adminObject.getName();
                 try {
-                    ConnectorBinding connectorBinding = this.getConnectorBindingByName(connectorBindingName);
-                    Properties bindingProperties = connectorBinding.getProperties();
-                    bindingProperties.putAll(properties);
-                    
-                    ConnectorBinding updatedConnectorBinding = 
-                        (ConnectorBinding)getConfigurationServiceProxy().modify(connectorBinding,
-                                                                                bindingProperties,
-                                                                                getUserName());
-                    
-                    if (updatedConnectorBinding == null) {
-                        throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null_when_updating_properties", new Object[] {connectorBindingName}); //$NON-NLS-1$
-                    }
-                    
-                } catch (Exception theException) {
-                    convertException(theException);
-                }
+					ConnectorBinding connectorBinding = this.getConnectorBindingByName(connectorBindingName);
+					Properties bindingProperties = connectorBinding.getProperties();
+					bindingProperties.putAll(properties);
+					
+					ConnectorBinding updatedConnectorBinding = 
+					    (ConnectorBinding)getConfigurationServiceProxy().modify(connectorBinding,
+					                                                            bindingProperties,
+					                                                            getUserName());
+					
+					if (updatedConnectorBinding == null) {
+					    throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null_when_updating_properties", new Object[] {connectorBindingName}); //$NON-NLS-1$
+					}
+				} catch (ConfigurationException e) {
+					throw new AdminComponentException(e);
+				} catch (ServiceException e) {
+					throw new AdminComponentException(e);
+				} catch (ModificationException e) {
+					throw new AdminComponentException(e);
+				}
                 break;
                 
             default:
@@ -1624,11 +1701,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             } else {
                 throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration")); //$NON-NLS-1$
             }
-        } catch (Exception theException) {
-            convertException(theException);
+        } catch (VirtualDatabaseException e) {
+        	throw new AdminComponentException(e);
+        } catch(ConfigurationException e) {
+        	throw new AdminComponentException(e);
         }
-        
-        
     }
     
     /** 
@@ -1697,28 +1774,30 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             } else {
                 throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration")); //$NON-NLS-1$
             }
-        } catch (Exception theException) {
-            convertException(theException);
+        } catch (VirtualDatabaseException e) {
+        	throw new AdminComponentException(e);
+        } catch(ConfigurationException e) {
+        	throw new AdminComponentException(e);
         }
         
         
     }
 
-    protected Collection getVirtualDatabases( ) throws Exception {
+    protected Collection getVirtualDatabases( ) throws VirtualDatabaseException {
         return RuntimeMetadataCatalog.getVirtualDatabases();
     }
 
-    protected Collection getModels(VirtualDatabaseID vdbId) throws Exception {
+    protected Collection getModels(VirtualDatabaseID vdbId) throws VirtualDatabaseException {
         return RuntimeMetadataCatalog.getModels(vdbId);
     }
     
     protected void setConnectorBindingNames(VirtualDatabaseID vdbId,
-                                          Map mapModelsToConnBinds) throws Exception {
+                                          Map mapModelsToConnBinds) throws VirtualDatabaseException  {
         RuntimeMetadataCatalog.setConnectorBindingNames(vdbId, mapModelsToConnBinds, getUserName());
     }
     
     protected void setVDBState(VirtualDatabaseID vdbID,
-                             int siState) throws Exception {
+                             int siState) throws VirtualDatabaseException {
         RuntimeMetadataCatalog.setVDBStatus(vdbID, (short)siState, getUserName());
     }
 
@@ -1748,10 +1827,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Configuration nextStartupConfig = null;
         try {
             nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         if ( nextStartupConfig == null ) {
@@ -1761,25 +1840,29 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         ServiceComponentDefn service = null;
         try {
             service = this.getServiceByName(connectorBindingName);
-        } catch (InvalidSessionException err) {
-            convertException(err);
-        } catch (AuthorizationException err) {
-            convertException(err);
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (MetaMatrixComponentException err) {
-            convertException(err);
+        } catch (InvalidSessionException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
 
         if (service == null) {
             //Some Bindings may not have a Service 
             //throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration",new Object[] {connectorBindingName}); //$NON-NLS-1$
         } else {
-            try {
-                getConfigurationServiceProxy().delete(service, false, getUserName());
-            } catch (Exception theException) {
-                convertException(theException);
-            }
+        	try {
+				getConfigurationServiceProxy().delete(service, false, getUserName());
+			} catch (ConfigurationException e) {
+				throw new AdminComponentException(e);
+			} catch (ModificationException e) {
+				throw new AdminComponentException(e);
+			} catch (ServiceException e) {
+				throw new AdminComponentException(e);
+			}
         }
 
         ConnectorBinding cb = nextStartupConfig.getConnectorBinding(connectorBindingName);
@@ -1787,13 +1870,16 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         if (cb == null) {
             throwProcessingException("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration", new Object[] {connectorBindingName}); //$NON-NLS-1$
         } else {
-            try {
-                getConfigurationServiceProxy().delete(cb, false, getUserName());
-            } catch (Exception theException) {
-                convertException(theException);
-            }
+        	try {
+				getConfigurationServiceProxy().delete(cb, false, getUserName());
+			} catch (ConfigurationException e) {
+				throw new AdminComponentException(e);
+			} catch (ModificationException e) {
+				throw new AdminComponentException(e);
+			} catch (ServiceException e) {
+				throw new AdminComponentException(e);
+			}
         }
-
     }
 
     
@@ -1807,11 +1893,15 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         if (ct == null) {
             throwProcessingException("ServerConfigAdminImpl.Connector_Type_not_found_in_Configuration", new Object[] {name}); //$NON-NLS-1$
         } else {
-            try {
-                getConfigurationServiceProxy().delete(ct, getUserName());
-            } catch (Exception theException) {
-                convertException(theException);
-            }
+	        try {
+				getConfigurationServiceProxy().delete(ct, getUserName());
+			} catch (ConfigurationException e) {
+				throw new AdminComponentException(e);
+			} catch (ModificationException e) {
+				throw new AdminComponentException(e);
+			} catch (ServiceException e) {
+				throw new AdminComponentException(e);
+			}
         }
 
     }
@@ -1821,10 +1911,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Collection types = null;
         try {
             types = getConfigurationServiceProxy().getAllComponentTypes(true);
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         ComponentType result = null;
@@ -1848,14 +1938,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         String hostName = getName(identifier);
 
         try {
-            Host host = getHostByName(hostName);
-
-            if (host != null) {
-                getConfigurationServiceProxy().delete(host, false, getUserName());
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			Host host = getHostByName(hostName);
+			if (host != null) {
+			    getConfigurationServiceProxy().delete(host, false, getUserName());
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
 
     }
 
@@ -1866,10 +1959,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Host theHost = null;
         try {
             theHost = getConfigurationServiceProxy().getHost(new HostID(hostName));
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         } 
         if (theHost == null) {
             throwProcessingException("ServerConfigAdminImpl.Host_not_found_in_Configuration", new Object[] {hostName}); //$NON-NLS-1$
@@ -1919,13 +2012,19 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             throw new AdminProcessingException(AdminPlugin.Util.getString("ServerConfigAdminImpl.Host_name_can_not_be_null")); //$NON-NLS-1$
         }
         try {
-            VMComponentDefn vmDefn = getVMByName(hostName, processName);
-            if (vmDefn != null) {
-                getConfigurationServiceProxy().delete(vmDefn, false, getUserName());
-            }
-        } catch (Exception theException) {
-            convertException(theException);
-        }
+			VMComponentDefn vmDefn = getVMByName(hostName, processName);
+			if (vmDefn != null) {
+			    getConfigurationServiceProxy().delete(vmDefn, false, getUserName());
+			}
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixProcessingException e) {
+			throw new AdminComponentException(e);
+		} catch (ModificationException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     protected ServiceComponentDefn getServiceByName(String serviceName) throws ConfigurationException,
@@ -1976,10 +2075,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         List decryptables = new ArrayList();
         try {
             decryptables = getConfigurationServiceProxy().checkPropertiesDecryptable(bindings);
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         boolean decryptable = ((Boolean) decryptables.get(0)).booleanValue();
@@ -2003,10 +2102,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         List decryptables = new ArrayList();
         try {
             decryptables = getConfigurationServiceProxy().checkPropertiesDecryptable(bindings);
-        } catch (ConfigurationException err) {
-            convertException(err);
-        } catch (ServiceException err) {
-            convertException(err);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
         }
         
         List nonDecryptableBindings = new ArrayList();

@@ -80,7 +80,7 @@ public final class ZipFileUtil {
      * @since 4.3
      */
     public static boolean add(final String zipFileName,
-                              final String fileName) throws Exception {
+                              final String fileName)  throws IOException {
         ArgCheck.isNotEmpty(zipFileName);
         ArgCheck.isNotEmpty(fileName);
         
@@ -106,7 +106,7 @@ public final class ZipFileUtil {
      */
     public static boolean add(final String zipFileName,
                               final String entryName,
-                              final String fileName) throws Exception {
+                              final String fileName) throws IOException {
         ArgCheck.isNotEmpty(zipFileName);
         ArgCheck.isNotEmpty(entryName);
         ArgCheck.isNotEmpty(fileName);
@@ -132,7 +132,7 @@ public final class ZipFileUtil {
      * @since 4.3
      */
     public static boolean add(final File zipFile,
-                              final String fileName) throws Exception {
+                              final String fileName)  throws IOException {
         ArgCheck.isNotNull(zipFile);
         ArgCheck.isNotEmpty(fileName);
         
@@ -156,7 +156,7 @@ public final class ZipFileUtil {
      * @since 4.3
      */
     public static boolean addAll(final File zipFile,
-                              final String dirName) throws Exception {
+                              final String dirName) throws IOException {
         return addAll(zipFile, dirName, ""); //$NON-NLS-1$
     }
     
@@ -176,7 +176,7 @@ public final class ZipFileUtil {
      */
     public static boolean addAll(final File zipFile,
                               final String dirName,
-                              String pathInZip) throws Exception {
+                              String pathInZip) throws IOException {
         ArgCheck.isNotNull(zipFile);
         ArgCheck.isNotEmpty(dirName);
         
@@ -249,7 +249,7 @@ public final class ZipFileUtil {
      */
     private static boolean addAll(final File zipFile,
                               final List entryNames,
-                              final List fileNames) throws Exception {
+                              final List fileNames) throws IOException {
         FileOutputStream fos = null;
         ZipOutputStream out = null;
         File tmpFile = File.createTempFile(TMP_PFX, TMP_SFX);
@@ -399,7 +399,7 @@ public final class ZipFileUtil {
      */
     public static boolean remove(final String zipFileName,
                                  final String fileName,
-                                 boolean ignoreCase) throws Exception {
+                                 boolean ignoreCase) throws IOException {
         ArgCheck.isNotEmpty(zipFileName);
         return remove(new File(zipFileName), fileName, ignoreCase);
     }
@@ -418,7 +418,7 @@ public final class ZipFileUtil {
      * @since 4.3
      */
     public static boolean remove(final String zipFileName,
-                                 final String fileName) throws Exception {
+                                 final String fileName) throws IOException {
         ArgCheck.isNotEmpty(zipFileName);
         return remove(new File(zipFileName), fileName, false);
     }
@@ -437,7 +437,7 @@ public final class ZipFileUtil {
      * @since 4.3
      */
     public static boolean remove(final File zipFile,
-                                 final String fileName) throws Exception {
+                                 final String fileName)  throws IOException {
         ArgCheck.isNotNull(zipFile);
         ArgCheck.isNotEmpty(fileName);
         
@@ -461,7 +461,7 @@ public final class ZipFileUtil {
      */
     public static boolean remove(final File zipFile,
                                  final String fileName,
-                                 boolean ignoreCase) throws Exception {
+                                 boolean ignoreCase)  throws IOException {
         ArgCheck.isNotNull(zipFile);
         ArgCheck.isNotEmpty(fileName);   
         FileOutputStream fos = null;
@@ -606,7 +606,7 @@ public final class ZipFileUtil {
      */
     public static InputStream get(final File zipFile,
                                  final String fileName,
-                                 boolean ignoreCase) throws Exception {
+                                 boolean ignoreCase) throws IOException {
         ArgCheck.isNotNull(zipFile);
         ArgCheck.isNotEmpty(fileName);   
         ByteArrayOutputStream out = null;

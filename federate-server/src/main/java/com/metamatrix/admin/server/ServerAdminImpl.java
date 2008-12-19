@@ -824,21 +824,27 @@ public class ServerAdminImpl implements ServerAdmin {
     
     
 
-    protected void waitForServicesToStart(Collection expectedServiceNames) throws Exception { 
+    protected void waitForServicesToStart(Collection expectedServiceNames) throws MetaMatrixComponentException { 
         //wait until runtime matches the configuration
         boolean done = false;
         while(! done) {
             done = areServicesAttempted(expectedServiceNames); 
-            Thread.sleep(SERVICE_WAIT_INTERVAL);
+            try {
+				Thread.sleep(SERVICE_WAIT_INTERVAL);
+			} catch (InterruptedException e) {
+			}
         }
     }
     
-    protected void waitForServicesToStop(Collection expectedServiceNames) throws Exception { 
+    protected void waitForServicesToStop(Collection expectedServiceNames) throws MetaMatrixComponentException { 
         //wait until runtime matches the configuration
         boolean done = false;
         while(! done) {
             done = areServicesStopped(expectedServiceNames); 
-            Thread.sleep(SERVICE_WAIT_INTERVAL);
+            try {
+				Thread.sleep(SERVICE_WAIT_INTERVAL);
+			} catch (InterruptedException e) {
+			}
         }
     }
     
@@ -847,10 +853,9 @@ public class ServerAdminImpl implements ServerAdmin {
      * are either stopped, or unknown to the runtime state 
      * @param expectedServiceNames Full-names of expected services.
      * @return
-     * @throws Exception
      * @since 4.3
      */
-    private boolean areServicesStopped(Collection expectedServiceNames) throws Exception {
+    private boolean areServicesStopped(Collection expectedServiceNames) throws MetaMatrixComponentException {
         Collection<ServiceRegistryBinding> services = getRuntimeStateAdminAPIHelper().getServices();            
         for (ServiceRegistryBinding serviceBinding:services) {
             DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
@@ -871,10 +876,9 @@ public class ServerAdminImpl implements ServerAdmin {
      * and that it does not contain any services that have not attempted to start. 
      * @param expectedServiceNames Full-names of expected services.
      * @return
-     * @throws Exception
      * @since 4.3
      */
-    private boolean areServicesAttempted(Collection expectedServiceNames) throws Exception {
+    private boolean areServicesAttempted(Collection expectedServiceNames) throws MetaMatrixComponentException {
         
         Collection attemptedServiceNames = new ArrayList();
         Collection notAttemptedServiceNames = new ArrayList();

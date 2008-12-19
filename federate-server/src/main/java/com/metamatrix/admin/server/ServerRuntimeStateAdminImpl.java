@@ -31,7 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.Cache;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.ProcessObject;
@@ -42,7 +44,13 @@ import com.metamatrix.admin.objects.MMProcess;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MultipleException;
+import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.api.exception.security.InvalidSessionException;
+import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.api.exception.server.InvalidRequestIDException;
 import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.message.RequestID;
@@ -60,6 +68,7 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
 /**
@@ -85,10 +94,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         String sessionID = null; 
         long requestIDLong = -1;
         try {
-            String[] identifierParts = MMRequest.buildIdentifierArray(identifier);
-            sessionID = identifierParts[0];
-            requestIDLong = Long.parseLong(identifierParts[1]);
-        } catch (Exception e) {
+            String[] identifierParts = null;
+			try {
+				identifierParts = MMRequest.buildIdentifierArray(identifier);
+	            sessionID = identifierParts[0];
+	            requestIDLong = Long.parseLong(identifierParts[1]);
+			} catch (ArrayIndexOutOfBoundsException e) {
+				throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
+			}
+
+        } catch (NumberFormatException e) {
             throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
         }
             
@@ -96,8 +111,10 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             RequestID requestID = new RequestID(sessionID, requestIDLong);
             
             getQueryServiceProxy().cancelQuery(requestID, true);
-        } catch (Exception e) {
-            convertException(e);
+        } catch(InvalidRequestIDException e) {
+        	throw new AdminProcessingException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -119,17 +136,20 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             sessionID = identifierParts[0];
             requestIDLong = Long.parseLong(identifierParts[1]);
             nodeID = Integer.parseInt(identifierParts[2]);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Source_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
+        } catch (ArrayIndexOutOfBoundsException e) {
+        	throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
         }
         
             
         try {
             RequestID requestID = new RequestID(sessionID, requestIDLong);
-            
             getQueryServiceProxy().cancelQuery(requestID, nodeID);
-        } catch (Exception e) {
-            convertException(e);
+        }  catch(InvalidRequestIDException e) {
+        	throw new AdminProcessingException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -173,8 +193,10 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             
             parent.waitForServicesToStart(expectedServiceNames);
             
-        } catch (Exception e) {
-            convertException(e);
+        } catch (ConfigurationException e) {
+        	throw new AdminComponentException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -198,8 +220,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 Collection expectedServiceNames = getServiceNamesFromConfiguration(hostName);            	
                 parent.waitForServicesToStart(expectedServiceNames);
             }
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
         
@@ -213,17 +235,17 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
-        String[] identifierParts = new String[] {};
-        try {
-            identifierParts = MMProcess.buildIdentifierArray(identifier);
-        } catch (Exception e) {
-            //ignore: will cause ProcessingException below
-        }
-        
-        if (identifierParts.length != 2) {
-            throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Process_Identifier", new Object[] {identifier, ProcessObject.DELIMITER});  //$NON-NLS-1$
-        } 
-        
+        String[] identifierParts = null;
+		try {
+			identifierParts = MMProcess.buildIdentifierArray(identifier);
+	        if (identifierParts.length != 2) {
+	            throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Process_Identifier", new Object[] {identifier, ProcessObject.DELIMITER});  //$NON-NLS-1$
+	        } 			
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
+		} catch(StringIndexOutOfBoundsException e) {
+			throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
+		}
         
         String hostName = identifierParts[0];
         String processName = identifierParts[1];
@@ -239,8 +261,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             	
                 parent.waitForServicesToStart(expectedServiceNames);
             }        
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
     
@@ -280,8 +302,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             
             //wait until runtime matches the configuration
             parent.waitForServicesToStop(expectedServiceNames); 
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
     
@@ -304,11 +326,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 boolean done = false;
                 while (! done) {
                     done = isHostStopped(hostName);  
-                    Thread.sleep(ServerAdminImpl.SERVICE_WAIT_INTERVAL);
+                    try {
+						Thread.sleep(ServerAdminImpl.SERVICE_WAIT_INTERVAL);
+					} catch (InterruptedException e) {
+					}
                 }
-            }            
-        } catch (Exception e) {
-            convertException(e);
+            }      
+        } catch (MultipleException e) {
+        	throw new AdminProcessingException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
 
@@ -339,12 +366,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 boolean done = false;
                 while (! done) {
                     done = isProcessStopped(process.getName(), process.getHostName());
-                    
-                    Thread.sleep(ServerAdminImpl.SERVICE_WAIT_INTERVAL);
+                    try {
+						Thread.sleep(ServerAdminImpl.SERVICE_WAIT_INTERVAL);
+					} catch (InterruptedException e) {
+					}
                 }
             }   
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        } catch (AuthorizationException e) {
+        	throw new AdminProcessingException(e);
         }
      }
     
@@ -357,8 +388,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     public void stopSystem() throws AdminException {
         try {
             getRuntimeStateAdminAPIHelper().shutdownServer();
-        } catch (Exception e) {
-        	convertException(e);            
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);            
         }
     }
 
@@ -371,8 +402,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     public void bounceSystem(boolean waitUntilDone) throws AdminException {   
         try {
             getRuntimeStateAdminAPIHelper().bounceServer();
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
         }
     }
     
@@ -395,8 +426,10 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 parent.waitForServicesToStart(expectedServiceNames);
             }
            
-        } catch (Exception e) {
-            convertException(e);
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        } catch (MultipleException e) {
+        	throw new AdminProcessingException(e);
         }
     }
     
@@ -438,8 +471,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        convertException(e);
+                    } catch (MetaMatrixComponentException e) {
+                    	throw new AdminComponentException(e);
                     }
                }
         } else {
@@ -456,18 +489,20 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
-        MetaMatrixSessionID sessionID = null;
         try {
-        	sessionID = new MetaMatrixSessionID(identifier);
-        } catch (Exception e) {
-            throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Session_Identifier", new Object[] {identifier});  //$NON-NLS-1$
-        } 
-        
-        try {            
-            getSessionServiceProxy().terminateSession(sessionID, null);
-        } catch (Exception e) {
-            convertException(e);
-        }
+        	MetaMatrixSessionID sessionID = new MetaMatrixSessionID(identifier);
+			getSessionServiceProxy().terminateSession(sessionID, null);
+        } catch(IllegalArgumentException e) {
+        	throw new AdminProcessingException(e);
+		} catch (InvalidSessionException e) {
+			throw new AdminProcessingException(e);
+		} catch (AuthorizationException e) {
+			throw new AdminProcessingException(e);
+		} catch (SessionServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		}
     }
     
     /** 
@@ -514,15 +549,15 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                     try {
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.INACTIVE, getUserName());
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
-                    } catch (VirtualDatabaseException err) {
-                        convertException(err);
+                    } catch (VirtualDatabaseException e) {
+                    	throw new AdminProcessingException(e);
                     }
                 } else if ( currentStatus != VDBStatus.DELETED ) {
                     // don't delete if already marked for delete
                     try {
                         RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
-                    } catch (VirtualDatabaseException err) {
-                        convertException(err);
+                    } catch (VirtualDatabaseException e) {
+                    	throw new AdminProcessingException(e);
                     }
                 }
             } finally {
@@ -530,10 +565,10 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                 RuntimeVDBDeleteUtility vdbDeleter = new RuntimeVDBDeleteUtility();
                 try {
                     vdbDeleter.deleteVDBMarkedForDelete(vdbID);
-                } catch (VirtualDatabaseException err) {
-                    convertException(err);
-                } catch (MetaMatrixComponentException err) {
-                    convertException(err);
+                } catch (VirtualDatabaseException e) {
+                	throw new AdminProcessingException(e);
+                } catch (MetaMatrixComponentException e) {
+                	throw new AdminComponentException(e);
                 }
             }
         } else {
@@ -542,8 +577,8 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             //------------------
             try {
                 RuntimeMetadataCatalog.setVDBStatus(vdbID, (short) newStatus, getUserName());
-            } catch (VirtualDatabaseException err) {
-                convertException(err);
+            } catch (VirtualDatabaseException e) {
+            	throw new AdminProcessingException(e);
             }
         }
         
@@ -556,10 +591,9 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     
     /**
      * @return Collection<String> The full-names of services known to the configuration.
-     * @throws Exception
      * @since 4.3
      */
-    private Collection getServiceNamesFromConfiguration() throws Exception {
+    private Collection getServiceNamesFromConfiguration() throws MetaMatrixComponentException {
         Collection expectedServiceNames = new ArrayList();            
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
@@ -573,10 +607,9 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     /**
      * @param hostName Host to look for the specified process on.
      * @return Collection<String> The full-names of services known to the configuration for the specified host.
-     * @throws Exception
      * @since 4.3
      */
-    private Collection getServiceNamesFromConfiguration(String hostName) throws Exception {
+    private Collection getServiceNamesFromConfiguration(String hostName) throws MetaMatrixComponentException {
         Collection expectedServiceNames = new ArrayList();            
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
@@ -595,10 +628,9 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
      * @param processName Process name to return services for.
      * @return Collection<String> The full-names of services known to the configuration for the specified process
      * on the specified host.
-     * @throws Exception
      * @since 4.3
      */
-    private Collection getServiceNamesFromConfiguration(String hostName, String processName) throws Exception {
+    private Collection getServiceNamesFromConfiguration(String hostName, String processName) throws MetaMatrixComponentException {
         Collection expectedServiceNames = new ArrayList();            
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
@@ -619,10 +651,9 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
      * @param serviceName Service name to return services for.
      * @return Collection<String> The full-names of services known to the configuration for the specified serviceName,
      * on the specified process and host.
-     * @throws Exception
      * @since 4.3
      */
-    private Collection getServiceNamesFromConfiguration(String hostName, String processName, String serviceName) throws Exception {
+    private Collection getServiceNamesFromConfiguration(String hostName, String processName, String serviceName) throws ConfigurationException {
         Collection expectedServiceNames = new ArrayList();            
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
@@ -649,7 +680,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
      * @return true if the host is unknown to the registry, or if it is in the "unregistered" state.
      * @since 4.3
      */
-    private boolean isProcessStopped(String hostName, String processName) throws Exception {    
+    private boolean isProcessStopped(String hostName, String processName) throws MetaMatrixComponentException {    
         SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
         Collection hostDatas = systemState.getHosts();
         
@@ -678,7 +709,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
      * @return true if the host is unknown to the registry, or if it is in the "unregistered" state.
      * @since 4.3
      */
-    private boolean isHostStopped(String hostName) throws Exception {    
+    private boolean isHostStopped(String hostName) throws MetaMatrixComponentException {    
         SystemState systemState = getRuntimeStateAdminAPIHelper().getSystemState();
         Collection hostDatas = systemState.getHosts();
         
