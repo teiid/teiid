@@ -58,7 +58,7 @@ import com.metamatrix.platform.service.api.ServiceInterface;
  * </p>
  */
 public interface SessionServiceInterface extends ServiceInterface {
-    public static String NAME = ResourceNames.SESSION_SERVICE;
+    public static String NAME = "SessionService";
 
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.

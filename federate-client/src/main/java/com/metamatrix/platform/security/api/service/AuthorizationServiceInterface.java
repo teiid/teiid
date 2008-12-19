@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
 import com.metamatrix.platform.security.api.AuthorizationModel;
@@ -49,13 +48,14 @@ import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.exception.ServiceStateException;
 
 /**
  * This interface represents the API to the Authorization Service
  * and it defines the functionality that is accessible to clients.
  */
 public interface AuthorizationServiceInterface extends ServiceInterface {
-    public static String NAME = ResourceNames.AUTH_SERVICE;
+    public static String NAME = "AuthorizationService";
     
     
     /**
