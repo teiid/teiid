@@ -5022,7 +5022,7 @@ public class TestProcessor extends TestCase {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { "a", "a"}), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            Arrays.asList(new Object[] { "a", "a"}), //$NON-NLS-1$ //$NON-NLS-2$ 
         };    
     
         // Construct data manager with data
@@ -8157,6 +8157,31 @@ public class TestProcessor extends TestCase {
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT (5 + 1)"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         helpProcess(plan, dataManager, expected);          
+    }
+    
+    public void testNonCorrelatedSubQueryExecution() throws Exception {
+        String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
+
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List[] { //$NON-NLS-1$
+        		Arrays.asList(Integer.valueOf(1), "a"), //$NON-NLS-1$
+        		Arrays.asList(Integer.valueOf(2), "b") //$NON-NLS-1$
+        });
+        dataManager.addData("SELECT pm2.g1.e2 FROM pm2.g1", new List[] { //$NON-NLS-1$
+        		Arrays.asList(Integer.valueOf(2))
+        });
+        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
+        List[] expected = new List[] {
+                Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            };
+
+        doProcess(plan, dataManager, expected, createCommandContext());
+        
+        //we expect 2 queries, 1 for the outer and 1 for the subquery
+        assertEquals(2, dataManager.getCommandHistory().size());
     }
     
     private static final boolean DEBUG = false;

@@ -127,7 +127,9 @@ class SubqueryProcessorUtility {
      * @param correlatedReferences List<Reference> correlated reference to outer query
      */
     void setCorrelatedReferences(List correlatedReferences){
-        this.correlatedReferences = correlatedReferences;
+    	if (correlatedReferences != null && correlatedReferences.size() > 0) {
+    		this.correlatedReferences = correlatedReferences;
+    	}
     }
 
 	List getSubqueryPlans(){
@@ -160,9 +162,7 @@ class SubqueryProcessorUtility {
 	void open(CommandContext processorContext,
                     int batchSize,
                     ProcessorDataManager dataManager,
-                    BufferManager bufferManager)
-		throws MetaMatrixComponentException {
-
+                    BufferManager bufferManager) {
 		// Open subquery processor plans
 		Iterator plans = this.processorPlans.iterator();
 		while (plans.hasNext()) {
