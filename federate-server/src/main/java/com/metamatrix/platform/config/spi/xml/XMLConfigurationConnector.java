@@ -199,9 +199,10 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
         return getConfigurationReader().getComponentDefinitions(configurationID);
     }
 
-
+/**
+ * @deprecated 5.5.4
+ */
     public Collection getConnectionPools(ConfigurationID configurationID) throws ConfigurationException {
-//        System.out.println("GetConnectionPools for " + configurationID);
         return getConfigurationReader().getConnectionPools(configurationID);
 
     }
