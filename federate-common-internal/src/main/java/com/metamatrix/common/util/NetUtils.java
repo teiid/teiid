@@ -24,7 +24,6 @@
 
 package com.metamatrix.common.util;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -37,8 +36,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import com.metamatrix.common.net.SocketHelper;
 
 
 public class NetUtils {
@@ -55,8 +52,6 @@ public class NetUtils {
 
     public static final String STANDALONE = CommonPropertyNames.STANDALONE_PLATFORM;
     public static final String APPSERVER_PROPERTY = CommonPropertyNames.SERVER_PLATFORM;
-    
-    private static final String PING = "Ping"; //$NON-NLS-1$
     
     private static String hostName = null;
     private static String hostAddress = null;
@@ -227,40 +222,6 @@ public class NetUtils {
         return ""; //$NON-NLS-1$
 
     }
-    
-    /**
-     * Call to determine if a port is open for communication. 
-     * If the port is open, then
-     * a socket can be connected. 
-     * @param host
-     * @param port
-     * @return true if the port is not opened.
-     * @since 4.3
-     */
-    public static boolean ping(String host, int port) throws UnknownHostException {
-        InetAddress inet;
-
-        inet = InetAddress.getByName(host);
-        
-        try {
-
-            Socket ss =  SocketHelper.getInternalClientSocket(inet, port);
-            DataOutputStream out = new DataOutputStream(ss.getOutputStream());
-            out.write(PING.getBytes());
-
-            try {
-                ss.close();
-            } catch (Exception ce) {
-                // it was open and can be communicated to, then dont worry about the close error
-            }
-            return true;
-        } catch (Exception ce) {
-            // do nothing
-        }
-        return false;
-    }
-    
-   
     
     /**
      * Call to determine if a port is available to be opened.  

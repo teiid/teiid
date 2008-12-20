@@ -682,14 +682,7 @@ public class HostController extends Thread {
     }
        
    private static boolean isAHostRunning(Host host) {
-	    try {
-			if (NetUtils.ping(host.getHostAddress(), Integer.parseInt(host.getPort()))) {                            
-			    return true;
-			}
-		} catch (Exception e) {
-			// ignore.
-		} 
-        return false;
+        return MetaMatrixController.pingHost(host);
     }      
     
    

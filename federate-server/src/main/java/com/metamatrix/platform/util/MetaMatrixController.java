@@ -26,6 +26,7 @@ package com.metamatrix.platform.util;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -163,8 +164,7 @@ public class MetaMatrixController {
             Host host = (Host) hostIter.next();
 
             try {
-                Integer port = new Integer(host.getPort());
-                if (NetUtils.ping(host.getHostAddress(), port.intValue() )) {
+                if (pingHost(host)) {
 
                     log("Killing all processes on " + host.getHostAddress()); //$NON-NLS-1$
                 
@@ -289,10 +289,9 @@ public class MetaMatrixController {
         int cnt =0;
         do {
             // Verify the host is running, must be able to ping it
-            Integer port = new Integer(host.getPort());
 			boolean isAlive;
 			try {
-				isAlive = NetUtils.ping(host.getHostAddress(), port.intValue());
+				isAlive = pingHostController(host.getFullName());
 			} catch (UnknownHostException e) {
 				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, "Unable to ping bindaddress: " + host.getHostAddress()); //$NON-NLS-1$
 				continue;
@@ -355,26 +354,25 @@ public class MetaMatrixController {
      * Ping host controller. Return false if ping fails.
      */
     public synchronized static boolean pingHostController(String host) throws Exception {
-
-        boolean hostAlive = true;
         // get updated ino.
         refreshConfiguration();
         
         Host h = getHost(host); 
-       
 
-        String command = HostController.PING + "\n"; //$NON-NLS-1$
-        log("Pinging " + host); //$NON-NLS-1$
-        try {
-            sendCommand(h, command);
-            log(host + " is alive at address " + h.getHostAddress()); //$NON-NLS-1$
-
-        } catch (Exception e) {
-            System.out.println(host + " is not listening at address " + h.getHostAddress()); //$NON-NLS-1$           
-            hostAlive = false;
-        }
-        return hostAlive;
+        return pingHost(h);
     }
+
+	public static boolean pingHost(Host h) {
+        log("Pinging " + h.getFullName()); //$NON-NLS-1$
+		try {
+            sendCommand(h, HostController.PING + "\n"); //$NON-NLS-1$
+            log(h.getFullName() + " is alive at address " + h.getHostAddress()); //$NON-NLS-1$
+            return true;
+        } catch (Exception e) {
+        	log(h.getFullName() + " is not listening at address " + h.getHostAddress()); //$NON-NLS-1$
+            return false;
+        }
+	}
 
     /**
      * Cleans the session table of zombie entries.  A zombie entry is one that's marked ACTIVE when
@@ -436,7 +434,7 @@ public class MetaMatrixController {
     }
 
     
-    private static void sendCommand(Host host, String command) throws Exception {
+    private static void sendCommand(Host host, String command) throws IOException {
 
         log("Sending command to " + host.getHostAddress() + " command: " + command); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -450,10 +448,6 @@ public class MetaMatrixController {
             socket = SocketHelper.getInternalClientSocket(inetAddress, port);
             out = new DataOutputStream(socket.getOutputStream());
             out.write(command.getBytes());
-
-        } catch (Exception e) {
-            log(e, "Error communicating with host controller on " + host); //$NON-NLS-1$
-            throw e;
         } finally {
             try {
                 if (out != null) {
