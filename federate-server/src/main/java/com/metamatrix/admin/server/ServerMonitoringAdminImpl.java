@@ -140,6 +140,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
      * <p>If identifier is "*", this method returns information about all connection pools in the system.
      * @return a <code>Collection</code> of <code>com.metamatrix.admin.api.ConnectionPool</code>
      * @since 4.3
+     * @deprecated 5.5.4
      */
     public Collection getConnectionPools(String identifier) throws AdminException {
         
