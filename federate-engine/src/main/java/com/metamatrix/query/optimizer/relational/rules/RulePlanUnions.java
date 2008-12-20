@@ -129,14 +129,8 @@ public class RulePlanUnions implements OptimizerRule {
             
             PlanNode tempRoot = buildUnionTree(unionNode, sourceUnions);
             
-            unionNode.getChildren().clear();
-            unionNode.getChildren().addAll(tempRoot.getChildren());
-            
-            for (Iterator j = unionNode.getChildren().iterator(); j.hasNext();) {
-                PlanNode child = (PlanNode)j.next();
-                
-                child.setParent(unionNode);
-            }
+            unionNode.removeAllChildren();
+            unionNode.addChildren(tempRoot.removeAllChildren());
         }
     }
 
@@ -154,8 +148,8 @@ public class RulePlanUnions implements OptimizerRule {
                 PlanNode union = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
                 union.setProperty(NodeConstants.Info.SET_OPERATION, rootUnionNode.getProperty(NodeConstants.Info.SET_OPERATION));
                 union.setProperty(NodeConstants.Info.USE_ALL, rootUnionNode.getProperty(NodeConstants.Info.USE_ALL));
-                NodeEditor.attachLast(union, root);
-                NodeEditor.attachLast(union, source);
+                union.addLastChild(root);
+                union.addLastChild(source);
                 union.addGroups(root.getGroups());
                 union.addGroups(source.getGroups());
                 root = union;

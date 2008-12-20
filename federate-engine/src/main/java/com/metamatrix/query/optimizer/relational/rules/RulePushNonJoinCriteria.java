@@ -160,7 +160,7 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                     //create a new copy since the old one has been used
                     newCritNode = GenerateCanonical.createSelectNode(tgtCrit, false);
                 }
-                NodeEditor.insertNode(joinNode, innerJoinNodes[i], newCritNode);
+                innerJoinNodes[i].addAsParent(newCritNode);
                 pushed = true;
             }
         }

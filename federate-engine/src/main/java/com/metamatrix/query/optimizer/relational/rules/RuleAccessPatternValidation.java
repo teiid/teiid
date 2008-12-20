@@ -77,14 +77,9 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
      
         validateAccessPatterns(node);
         
-        if(node.getChildCount() > 0) {
-            List children = node.getChildren();
-            Iterator iter = children.iterator();
-            while(iter.hasNext()) {
-                PlanNode child = (PlanNode) iter.next();
-                validateAccessPatterns(child, metadata, capFinder);
-            }
-        }
+        for (PlanNode child : node.getChildren()) {
+            validateAccessPatterns(child, metadata, capFinder);
+		}
     }
 
     /** 

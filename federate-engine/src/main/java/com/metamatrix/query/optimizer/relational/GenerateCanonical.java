@@ -35,7 +35,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
-import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.Command;
@@ -122,7 +121,7 @@ public final class GenerateCanonical {
         }
         sourceNode.addGroups(groups);
 
-        NodeEditor.attachLast(projectNode, sourceNode);
+        GenerateCanonical.attachLast(projectNode, sourceNode);
 
         return projectNode;
 	}
@@ -150,7 +149,7 @@ public final class GenerateCanonical {
         // Set group on source node
         sourceNode.addGroup(storedProc.getGroup());
 
-        NodeEditor.attachLast(projectNode, sourceNode);
+        GenerateCanonical.attachLast(projectNode, sourceNode);
 
         return projectNode;
     }
@@ -189,8 +188,8 @@ public final class GenerateCanonical {
         plan.setProperty(NodeConstants.Info.SET_OPERATION, query.getOperation());
         plan.setProperty(NodeConstants.Info.USE_ALL, query.isAll());
         
-        NodeEditor.attachLast(plan, leftPlan);
-        NodeEditor.attachLast(plan, rightPlan);
+        GenerateCanonical.attachLast(plan, leftPlan);
+        GenerateCanonical.attachLast(plan, rightPlan);
 
 		// Attach sorting on top of union
 		if(query.getOrderBy() != null) {
@@ -276,7 +275,7 @@ public final class GenerateCanonical {
             List groups = null;
             PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
                 
-            NodeEditor.attachLast(sourceNode, plan);
+            GenerateCanonical.attachLast(sourceNode, plan);
             plan = sourceNode;
 
             if (query.getFrom() != null){
@@ -292,7 +291,7 @@ public final class GenerateCanonical {
             if (groups != null){
                 projectNode.addGroups(groups);
             }
-            NodeEditor.attachLast(projectNode, plan);
+            GenerateCanonical.attachLast(projectNode, plan);
             plan = projectNode;
         }
 
@@ -342,7 +341,6 @@ public final class GenerateCanonical {
             node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
 
             parent.addLastChild(node);
-            node.setParent(parent);
         } else if(clause instanceof JoinPredicate) {
             JoinPredicate jp = (JoinPredicate) clause;
 
@@ -358,7 +356,6 @@ public final class GenerateCanonical {
          
             // Attach join node to parent
             parent.addLastChild(node);
-            node.setParent(parent);
 
             // Handle each child
             FromClause[] clauses = new FromClause[] {jp.getLeftClause(), jp.getRightClause()};
@@ -379,7 +376,6 @@ public final class GenerateCanonical {
             node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
             
             parent.addLastChild(node);
-            node.setParent(parent);
         }
         
         if (clause.isOptional()) {
@@ -403,13 +399,13 @@ public final class GenerateCanonical {
 	 * @param criteria Criteria from query
 	 * @return Updated tree
 	 */
-	private static PlanNode attachCriteria(PlanNode plan, Criteria criteria, boolean isHaving) throws QueryPlannerException {
+	private static PlanNode attachCriteria(PlanNode plan, Criteria criteria, boolean isHaving) {
 	    List crits = Criteria.separateCriteriaByAnd(criteria);
 	    
 	    for (final Iterator iterator = crits.iterator(); iterator.hasNext();) {
             final Criteria crit = (Criteria)iterator.next();
             PlanNode critNode = createSelectNode(crit, isHaving);
-            NodeEditor.attachLast(critNode, plan);
+            GenerateCanonical.attachLast(critNode, plan);
             plan = critNode;
         } 
 	    
@@ -442,7 +438,7 @@ public final class GenerateCanonical {
             groupNode.addGroups(GroupsUsedByElementsVisitor.getGroups(groupBy));
 		}
 
-		NodeEditor.attachLast(groupNode, plan);
+		GenerateCanonical.attachLast(groupNode, plan);
         
         // Mark in hints
         hints.hasAggregates = true;
@@ -465,7 +461,7 @@ public final class GenerateCanonical {
 
 		sortNode.addGroups(GroupsUsedByElementsVisitor.getGroups(orderBy));
 
-		NodeEditor.attachLast(sortNode, plan);
+		GenerateCanonical.attachLast(sortNode, plan);
 		return sortNode;
 	}
     
@@ -483,7 +479,7 @@ public final class GenerateCanonical {
             attach = true;
         }
         if (attach) {
-            NodeEditor.attachLast(limitNode, plan);
+            GenerateCanonical.attachLast(limitNode, plan);
             plan = limitNode;
         }
         return plan;
@@ -497,7 +493,7 @@ public final class GenerateCanonical {
 	 */
 	private static PlanNode attachDupRemoval(PlanNode plan) {
 		PlanNode dupNode = NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE);
-		NodeEditor.attachLast(dupNode, plan);
+		GenerateCanonical.attachLast(dupNode, plan);
 		return dupNode;
 	}
 
@@ -508,8 +504,14 @@ public final class GenerateCanonical {
 		// Set groups
 		projectNode.addGroups(GroupsUsedByElementsVisitor.getGroups(select));
 
-		NodeEditor.attachLast(projectNode, plan);
+		GenerateCanonical.attachLast(projectNode, plan);
 		return projectNode;
+	}
+
+	static final void attachLast(PlanNode parent, PlanNode child) {
+		if(child != null) {
+			parent.addLastChild(child);
+		}
 	}
 
 }

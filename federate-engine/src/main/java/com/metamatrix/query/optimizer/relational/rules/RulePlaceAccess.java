@@ -131,7 +131,7 @@ public final class RulePlaceAccess implements
             }
 
             // Insert
-            NodeEditor.insertNode(sourceNode.getParent(), sourceNode, accessNode);
+            sourceNode.addAsParent(accessNode);
 
             apNode = accessNode;
         }

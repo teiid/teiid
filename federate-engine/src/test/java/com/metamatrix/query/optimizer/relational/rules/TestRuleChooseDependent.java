@@ -101,8 +101,8 @@ public class TestRuleChooseDependent extends TestCase {
         List crits = new ArrayList();
         crits.add(new CompareCriteria(getElementSymbol(1,1), CompareCriteria.EQ, getElementSymbol(2,1)));
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, crits);                
-        NodeEditor.attachFirst(joinNode, accessNode);        
-        NodeEditor.attachFirst(accessNode, sourceNode); 
+        joinNode.addFirstChild(accessNode);
+        accessNode.addFirstChild(sourceNode);
         Iterator i = groupSymbols.iterator();
         while (i.hasNext()) {
             GroupSymbol gs = (GroupSymbol)i.next();
@@ -287,11 +287,11 @@ public class TestRuleChooseDependent extends TestCase {
         joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_INNER);
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
         joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_LOOP);
-        NodeEditor.attachLast(joinNode, accessNode1);       
-        NodeEditor.attachLast(joinNode, accessNode2);       
+        joinNode.addLastChild(accessNode1);       
+        joinNode.addLastChild(accessNode2);       
 
         PlanNode bogusParentNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);       
-        NodeEditor.attachFirst(bogusParentNode, joinNode);       
+        bogusParentNode.addLastChild(joinNode);       
 
         //FIRST (LEFT) BRANCH OF TREE
         PlanNode sourceNode1 = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);       
@@ -300,7 +300,7 @@ public class TestRuleChooseDependent extends TestCase {
             PlanNode selectNode1 = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
             selectNode1.setProperty(NodeConstants.Info.SELECT_CRITERIA, atomicRequestCrit1);       
             selectNode1.addGroup(atomicRequestGroup1);
-            NodeEditor.attachFirst(selectNode1, sourceNode1);        
+            selectNode1.addFirstChild(sourceNode1);        
             if (atomicRequestGroup1a != null){
                 PlanNode atomicJoinNode1 = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
                 if (atomicJoinCriteria1.isEmpty()){
@@ -311,7 +311,7 @@ public class TestRuleChooseDependent extends TestCase {
                 }
                 atomicJoinNode1.addGroup(atomicRequestGroup1);
                 atomicJoinNode1.addGroup(atomicRequestGroup1a);
-                NodeEditor.attachLast(atomicJoinNode1, selectNode1);        
+                atomicJoinNode1.addLastChild(selectNode1);        
 
                 PlanNode sourceNode1a = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);       
                 sourceNode1a.addGroup(atomicRequestGroup1a);
@@ -319,17 +319,17 @@ public class TestRuleChooseDependent extends TestCase {
                     PlanNode selectNode1a = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
                     selectNode1a.setProperty(NodeConstants.Info.SELECT_CRITERIA, atomicRequestCrit1a);       
                     selectNode1a.addGroup(atomicRequestGroup1a);
-                    NodeEditor.attachFirst(selectNode1a, sourceNode1a);        
-                    NodeEditor.attachLast(atomicJoinNode1, selectNode1a);        
+                    selectNode1a.addFirstChild(sourceNode1a);        
+                    atomicJoinNode1.addLastChild(selectNode1a);        
                 } else {
-                    NodeEditor.attachLast(atomicJoinNode1, sourceNode1a);        
+                	atomicJoinNode1.addLastChild(sourceNode1a);        
                 }
-                NodeEditor.attachLast(accessNode1, atomicJoinNode1);        
+                accessNode1.addLastChild(atomicJoinNode1);        
             } else {
-                NodeEditor.attachFirst(accessNode1, selectNode1);        
+                accessNode1.addFirstChild(selectNode1);        
             }
         } else {
-            NodeEditor.attachFirst(accessNode1, sourceNode1);        
+            accessNode1.addFirstChild(sourceNode1);        
         }
 
         //SECOND (RIGHT) BRANCH OF TREE
@@ -339,7 +339,7 @@ public class TestRuleChooseDependent extends TestCase {
             PlanNode selectNode2 = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
             selectNode2.setProperty(NodeConstants.Info.SELECT_CRITERIA, atomicRequestCrit2);       
             selectNode2.addGroup(atomicRequestGroup2);
-            NodeEditor.attachFirst(selectNode2, sourceNode2);        
+            selectNode2.addFirstChild(sourceNode2);        
             if (atomicRequestGroup2a != null){
                 PlanNode atomicJoinNode2 = NodeFactory.getNewNode(NodeConstants.Types.JOIN);       
                 if (atomicJoinCriteria2.isEmpty()){
@@ -350,7 +350,7 @@ public class TestRuleChooseDependent extends TestCase {
                 }
                 atomicJoinNode2.addGroup(atomicRequestGroup2);
                 atomicJoinNode2.addGroup(atomicRequestGroup2a);
-                NodeEditor.attachLast(atomicJoinNode2, selectNode2);        
+                atomicJoinNode2.addLastChild(selectNode2);        
 
                 PlanNode sourceNode2a = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);       
                 sourceNode2a.addGroup(atomicRequestGroup2a);
@@ -358,17 +358,17 @@ public class TestRuleChooseDependent extends TestCase {
                     PlanNode selectNode2a = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
                     selectNode2a.setProperty(NodeConstants.Info.SELECT_CRITERIA, atomicRequestCrit2a);       
                     selectNode2a.addGroup(atomicRequestGroup2a);
-                    NodeEditor.attachFirst(selectNode2a, sourceNode2a);        
-                    NodeEditor.attachLast(atomicJoinNode2, selectNode2a);        
+                    selectNode2a.addFirstChild(sourceNode2a);        
+                    atomicJoinNode2.addLastChild(selectNode2a);        
                 } else {
-                    NodeEditor.attachLast(atomicJoinNode2, sourceNode2a);        
+                	atomicJoinNode2.addLastChild(sourceNode2a);        
                 }
-                NodeEditor.attachLast(accessNode2, atomicJoinNode2);        
+                accessNode2.addLastChild(atomicJoinNode2);        
             } else {
-                NodeEditor.attachFirst(accessNode2, selectNode2);        
+                accessNode2.addFirstChild(selectNode2);        
             }
         } else {
-            NodeEditor.attachFirst(accessNode2, sourceNode2);        
+            accessNode2.addFirstChild(sourceNode2);        
         }
 
         //Add access pattern(s)
@@ -423,7 +423,7 @@ public class TestRuleChooseDependent extends TestCase {
                         
         PlanNode joinNode = NodeFactory.getNewNode(NodeConstants.Types.JOIN);       
         joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
-        NodeEditor.attachFirst(joinNode, accessNode);       
+        joinNode.addFirstChild(accessNode);       
 
         helpTestValidJoin(joinNode, accessNode, false);
     }
@@ -435,7 +435,7 @@ public class TestRuleChooseDependent extends TestCase {
         PlanNode joinNode = NodeFactory.getNewNode(NodeConstants.Types.JOIN);       
         joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_FULL_OUTER);
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, Arrays.asList(QueryRewriter.FALSE_CRITERIA));
-        NodeEditor.attachFirst(joinNode, accessNode);       
+        joinNode.addFirstChild(accessNode);       
 
         helpTestValidJoin(joinNode, accessNode, false);
     }
@@ -451,8 +451,8 @@ public class TestRuleChooseDependent extends TestCase {
         List crits = new ArrayList();
         crits.add(new CompareCriteria(getElementSymbol(1,1), CompareCriteria.EQ, getElementSymbol(2,1)));
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, crits);              
-        NodeEditor.attachLast(joinNode, accessNode1);       
-        NodeEditor.attachLast(joinNode, accessNode2);       
+        joinNode.addLastChild(accessNode1);       
+        joinNode.addLastChild(accessNode2);       
 
         helpTestValidJoin(joinNode, accessNode1, true);
     }
@@ -466,8 +466,8 @@ public class TestRuleChooseDependent extends TestCase {
         List crits = new ArrayList();
         crits.add(new CompareCriteria(getElementSymbol(1,1), CompareCriteria.EQ, getElementSymbol(2,1)));
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, crits);              
-        NodeEditor.attachLast(joinNode, accessNode1);       
-        NodeEditor.attachLast(joinNode, accessNode2);       
+        joinNode.addLastChild(accessNode1);       
+        joinNode.addLastChild(accessNode2);       
 
         helpTestValidJoin(joinNode, accessNode2, false);
     }
@@ -481,8 +481,8 @@ public class TestRuleChooseDependent extends TestCase {
         List crits = new ArrayList();
         crits.add(new CompareCriteria(getElementSymbol(1,1), CompareCriteria.EQ, getElementSymbol(2,1)));
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, crits);              
-        NodeEditor.attachLast(joinNode, accessNode1);       
-        NodeEditor.attachLast(joinNode, accessNode2);       
+        joinNode.addLastChild(accessNode1);       
+        joinNode.addLastChild(accessNode2);       
 
         helpTestValidJoin(joinNode, accessNode1, false);
     }
@@ -498,8 +498,8 @@ public class TestRuleChooseDependent extends TestCase {
         List crits = new ArrayList();
         crits.add(new CompareCriteria(getElementSymbol(1,1), CompareCriteria.EQ, getElementSymbol(2,1)));
         joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, crits);              
-        NodeEditor.attachLast(joinNode, accessNode1);       
-        NodeEditor.attachLast(joinNode, accessNode2);       
+        joinNode.addLastChild(accessNode1);       
+        joinNode.addLastChild(accessNode2);       
 
         helpTestValidJoin(joinNode, accessNode2, true);
     }

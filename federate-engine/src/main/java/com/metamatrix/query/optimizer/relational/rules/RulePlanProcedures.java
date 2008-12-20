@@ -200,7 +200,6 @@ public class RulePlanProcedures implements OptimizerRule {
                     params.add(param.getExpression());
                     conjuncts.add(crit);
                     NodeEditor.removeChildNode(currentNode.getParent(), currentNode);
-                    currentNode.setParent(null);
                     setAbort(true);
                 }
                 

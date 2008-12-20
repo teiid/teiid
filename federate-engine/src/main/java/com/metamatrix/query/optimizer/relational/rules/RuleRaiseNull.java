@@ -178,7 +178,6 @@ public final class RuleRaiseNull implements OptimizerRule {
                 }
                 
                 NodeEditor.removeChildNode(parentNode, nullNode);
-                nullNode.setParent(null);
 
                 PlanNode grandParent = parentNode.getParent();
                 
@@ -187,13 +186,13 @@ public final class RuleRaiseNull implements OptimizerRule {
                 	if (nestedSetOp != null) {
                 		nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
                 	} else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
-                		NodeEditor.insertNode(parentNode, parentNode.getFirstChild(), NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
+                		parentNode.getFirstChild().addAsParent(NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
                 	}
                 }
                 
                 if (grandParent == null) {
                     PlanNode newRoot = parentNode.getFirstChild();
-                    newRoot.setParent(null);
+                    parentNode.removeChild(newRoot);
                     return newRoot;
                 }
 
@@ -243,14 +242,11 @@ public final class RuleRaiseNull implements OptimizerRule {
         nullNode.addGroups(parentNode.getGroups());
         parentNode.removeChild(nullNode);
         nodes.removeAll(NodeEditor.findAllNodes(parentNode, NodeConstants.Types.NULL));
-        parentNode.getChildren().clear();
-        nullNode.setParent(parentNode.getParent());
         if (parentNode.getParent() != null) {
-            NodeEditor.replaceNode(parentNode, nullNode);
+            parentNode.getParent().replaceChild(parentNode, nullNode);
         } else {
             rootNode = nullNode;
         }
-        parentNode.setParent(null);
         return rootNode;
     }
 
@@ -274,15 +270,16 @@ public final class RuleRaiseNull implements OptimizerRule {
         Assertion.assertTrue(nullNode.getType() == NodeConstants.Types.NULL);
         Assertion.assertTrue(nullNode.getParent() == joinNode);
         
+        PlanNode frameStart = joinNode.getParent();
+        
         NodeEditor.removeChildNode(joinNode, nullNode);
         NodeEditor.removeChildNode(joinNode.getParent(), joinNode);
         
         for (GroupSymbol group : nullNode.getGroups()) {
             Map nullSymbolMap = FrameUtil.buildSymbolMap(group, null, metadata);
-            FrameUtil.convertFrame(nullNode, group, null, nullSymbolMap, metadata);
+            FrameUtil.convertFrame(frameStart, group, null, nullSymbolMap, metadata);
         }
         
-        nullNode.setParent(null);
     }    
     
     public String toString() {

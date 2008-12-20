@@ -192,7 +192,7 @@ public class RulePushAggregates implements
             //TODO: if aggregates is empty, then could insert a dup remove node instead
             
             PlanNode stageGroup = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
-            NodeEditor.insertNode(planNode.getParent(), planNode, stageGroup);
+            planNode.addAsParent(stageGroup);
 
             if (!stagedGroupingSymbols.isEmpty()) {
                 stageGroup.setProperty(NodeConstants.Info.GROUP_COLS, new ArrayList<SingleElementSymbol>(stagedGroupingSymbols));
@@ -205,7 +205,7 @@ public class RulePushAggregates implements
                 selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
                                                                                                new Constant(new Integer(0))));
                 selectNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
-                NodeEditor.insertNode(stageGroup.getParent(), stageGroup, selectNode);
+                stageGroup.addAsParent(selectNode);
             }
 
             //check for push down

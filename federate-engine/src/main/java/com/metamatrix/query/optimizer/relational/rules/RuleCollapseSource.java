@@ -92,19 +92,17 @@ public final class RuleCollapseSource implements OptimizerRule {
         		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
             }
     				
-    		// Cut access node sub plan
-    		NodeEditor.cutLast(accessNode);
+    		accessNode.removeAllChildren();
         }
        				
 		return plan;
 	}
 
     private void removeUnnecessaryInlineView(PlanNode accessNode) {
-        PlanNode child = accessNode.getFirstChild();
+    	PlanNode child = accessNode.getFirstChild();
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
-            child.setProperty(NodeConstants.Info.INLINE_VIEW, null);
-            RuleRaiseAccess.performRaise(accessNode, child, accessNode);
+        	NodeEditor.removeChildNode(accessNode, child);
             //add the groups from the lower project
             accessNode.getGroups().clear();
             PlanNode sourceNode = FrameUtil.findJoinSourceNode(accessNode.getFirstChild());
@@ -218,7 +216,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SOURCE:
             {
             	if (Boolean.TRUE.equals(node.getProperty(NodeConstants.Info.INLINE_VIEW))) {
-                    PlanNode child = NodeEditor.cutLast(node);
+                    PlanNode child = node.getFirstChild();
                     QueryCommand newQuery = createQuery(metadata, capFinder, accessRoot, child);
                     
                     //ensure that the group is consistent

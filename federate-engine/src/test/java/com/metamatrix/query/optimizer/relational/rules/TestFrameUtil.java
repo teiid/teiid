@@ -128,32 +128,27 @@ public class TestFrameUtil extends TestCase {
         PlanNode nullNode = NodeFactory.getNewNode(NodeConstants.Types.NULL);
         
         nullNode.addGroup(getGroup(1)); 
-        nullNode.setParent(joinNode);
         joinNode.addFirstChild(nullNode);
         
         PlanNode childCriteria = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
 
         childCriteria.addGroup(getGroup(2));
-        childCriteria.setParent(joinNode);
         joinNode.addLastChild(childCriteria);
         
         PlanNode childJoinNode = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
         childJoinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
         childJoinNode.addGroup(getGroup(2)); 
         childJoinNode.addGroup(getGroup(3)); 
-        childJoinNode.setParent(childCriteria);
         childCriteria.addFirstChild(childJoinNode);
         
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         
         accessNode.addGroup(getGroup(2)); 
-        accessNode.setParent(childJoinNode);
         childJoinNode.addFirstChild(accessNode);
         
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         
         sourceNode.addGroup(getGroup(3)); 
-        sourceNode.setParent(childJoinNode);
         childJoinNode.addFirstChild(sourceNode);
         
         return joinNode;

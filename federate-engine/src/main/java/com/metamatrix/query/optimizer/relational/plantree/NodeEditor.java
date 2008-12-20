@@ -24,113 +24,31 @@
 
 package com.metamatrix.query.optimizer.relational.plantree;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.util.ErrorMessageKeys;
-
+/**
+ * This class is no longer really an editor.  Those methods have been moved over to PlanNode.
+ * TODO: rename NodeFinder or merge completely with PlanNode
+ */
 public final class NodeEditor {
 
 	// Can't construct
 	private NodeEditor() {
 	}
 
-	public static final void attachFirst(PlanNode parent, PlanNode child) {
-		if(child != null) {
-			parent.addFirstChild(child);
-			child.setParent(parent);
-		}
-	}
-
-	public static final void attachLast(PlanNode parent, PlanNode child) {
-		if(child != null) {
-			parent.addLastChild(child);
-			child.setParent(parent);
-		}
-	}
-
-	public static final PlanNode cutFirst(PlanNode node) {
-		if(node.getChildCount() == 0) {
-			return null;
-		}
-		PlanNode temp = node.getFirstChild();
-		Assertion.isNotNull(temp);
-		node.removeChild(temp);
-		temp.setParent(null);
-		return temp;
-	}
-
-	public static final PlanNode cutLast(PlanNode node) {
-		if(node.getChildCount() == 0) {
-			return null;
-		}
-		PlanNode temp = node.getLastChild();
-		Assertion.isNotNull(temp);
-		node.removeChild(temp);
-		temp.setParent(null);
-		return temp;
-	}
-
-	// Replace child with insert and make child one of insert's children.
-	public static final void insertNode(PlanNode parent, PlanNode child, PlanNode insert) {
-		// Replace child with insert in parent
-		List children = parent.getChildren();
-		int index = children.indexOf(child);
-		Assertion.isNonNegative(index);
-		children.set(index, insert);
-		insert.setParent(parent);
-
-		// Now attach insert to child properly
-		child.setParent(insert);
-		insert.addLastChild(child);
-	}
-
-	// all of child's children become children of parent
+	/**
+	 * all of child's children become children of parent
+	 */
 	public static final void removeChildNode(PlanNode parent, PlanNode child) {
-        // Get all existing children from parent
-        List newChildren = new LinkedList(parent.getChildren());
-
-        // get child's children
-        List orphans = child.getChildren();
-
-        // Find the child being removed and replace with the child's children
-        ListIterator childIter = newChildren.listIterator();
-        while(childIter.hasNext()) {
-            PlanNode possibleChild = (PlanNode) childIter.next();
-            if(possibleChild == child) {
-                childIter.remove();
-                Iterator orphanIter = orphans.iterator();
-                while(orphanIter.hasNext()) {
-                    PlanNode orphan = (PlanNode) orphanIter.next();
-                    childIter.add(orphan);
-                }
-            }
-        }
-
-        // Remove all children from parent and re-add from newChildren
-        Iterator removeIter = new LinkedList(parent.getChildren()).iterator();
-        while(removeIter.hasNext()) {
-            PlanNode removeNode = (PlanNode) removeIter.next();
-            parent.removeChild(removeNode);
-        }
-        parent.addChildren(newChildren);
-
-		// set new children's parent to new parent
-		Iterator iter = newChildren.iterator();
-		while(iter.hasNext()) {
-			PlanNode newChild = (PlanNode) iter.next();
-			newChild.setParent(parent);
+		if (child.getChildCount() == 0) {
+			parent.removeChild(child);
+		} else if (child.getChildCount() == 1){
+			PlanNode grandChild = child.getFirstChild();
+			parent.replaceChild(child, grandChild);
+		} else {
+			throw new AssertionError("Cannot promote a multinode child"); //$NON-NLS-1$
 		}
-
-        // Remove old children from child
-        removeIter = new LinkedList(child.getChildren()).iterator();
-        while(removeIter.hasNext()) {
-            child.removeChild((PlanNode)removeIter.next());
-        }
 	}
 	
     public static final PlanNode findNodePreOrder(PlanNode root, int type) {
@@ -215,104 +133,4 @@ public final class NodeEditor {
 		}
 	}
 
-	/**
-	 * Replace a single node with a another node.  Any children of the original
-	 * node become children of the replacement node.
-	 * @param originalNode Node to replace
-	 * @param replacementNode The replacement node
-	 */
-	public static final void replaceNode(PlanNode originalNode, PlanNode replacementNode) {
-		// Get everything around the original node
-		PlanNode parent = originalNode.getParent();
-        List children = new LinkedList(parent.getChildren());
-
-        // Detach all children from parent
-        Iterator childIter = children.iterator();
-        while(childIter.hasNext()) {
-            PlanNode child = (PlanNode) childIter.next();
-            parent.removeChild(child);
-        }
-
-		// Re-attach children, replacing replacementNode for originalNode
-        childIter = children.iterator();
-        while(childIter.hasNext()) {
-            PlanNode child = (PlanNode) childIter.next();
-            if(child == originalNode) {
-                parent.addLastChild(replacementNode);
-            } else {
-                parent.addLastChild(child);
-            }
-        }
-
-		// Attach children to replacement node
-		Iterator orphanIter = originalNode.getChildren().iterator();
-		while(orphanIter.hasNext()) {
-			NodeEditor.attachLast(replacementNode, (PlanNode) orphanIter.next());
-		}
-	}
-
-	/**
-	 * Replace a single node with a left-linear tree of nodes.  Any children of the original
-	 * node become children of the last in the tree of replacement nodes.
-	 * @param originalNode Node to replace
-	 * @param replacementNodes The replacement nodes
-	 */
-	public static final void replaceNode(PlanNode originalNode, List replacementNodes) {
-		Assertion.isPositive(replacementNodes.size());
-
-		// Get everything around the original node
-		PlanNode parent = originalNode.getParent();
-		List children = new LinkedList(originalNode.getChildren());
-
-		// Disconnect originalNode
-		while(originalNode.getChildren().size() > 0) {
-			NodeEditor.cutLast(originalNode);
-		}
-		NodeEditor.removeChildNode(parent, originalNode);
-
-		// Reconstruct plan
-		PlanNode top = parent;
-		Iterator replacementIter = replacementNodes.iterator();
-		while(replacementIter.hasNext()) {
-			PlanNode bottom = (PlanNode) replacementIter.next();
-			NodeEditor.attachLast(top, bottom);
-
-			// Walk down the tree
-			top = bottom;
-		}
-
-		// Attach children to last top
-		Iterator childIter = children.iterator();
-		while(childIter.hasNext()) {
-			NodeEditor.attachLast(top, (PlanNode) childIter.next());
-		}
-	}
-
-    /**
-     * Find the sibling of this node.  This assumes that this node has a
-     * parent and that the parent has no more than two children.  If the
-     * parent has only one child, null is returned.
-     * @param Node original node
-     * @return Sibling node or null if node has no sibling
-     */
-    public static final PlanNode getSibling(PlanNode node) {
-        // Get parent and check stuff
-        PlanNode parentNode = node.getParent();
-        Assertion.isNotNull(parentNode);
-        if(parentNode.getChildCount() >= 3){
-            Assertion.assertTrue(parentNode.getChildCount() < 3, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0057));
-        }
-
-        // Singleton child case
-        if(parentNode.getChildCount() == 1) {
-            return null;
-        }
-
-        // Find sibling
-        PlanNode siblingNode = parentNode.getLastChild();
-        if(siblingNode == node) {
-            siblingNode = parentNode.getFirstChild();
-        }
-        return siblingNode;
-    }
 }

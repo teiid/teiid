@@ -35,7 +35,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
-import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.parser.QueryParser;
@@ -80,9 +79,9 @@ public class TestCalculateCostUtil extends TestCase {
         PlanNode child1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         PlanNode child2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         
-        NodeEditor.attachFirst(joinNode, child1);
-        NodeEditor.attachFirst(joinNode, child2);
-
+        joinNode.addLastChild(child1);
+        joinNode.addLastChild(child2);
+        
         child1.setProperty(NodeConstants.Info.EST_CARDINALITY, new Float(childCost1));
         child2.setProperty(NodeConstants.Info.EST_CARDINALITY, new Float(childCost2));
 

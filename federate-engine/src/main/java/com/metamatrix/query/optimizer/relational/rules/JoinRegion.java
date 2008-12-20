@@ -188,12 +188,10 @@ class JoinRegion {
                     PlanNode parentJoin = RulePlanJoins.createJoinNode();
                     parentJoin.addFirstChild(root);
                     parentJoin.addGroups(root.getGroups());
-                    root.setParent(parentJoin);
                     root = parentJoin;
                 }
                 root.addLastChild(joinSourceRoot);
                 root.addGroups(((PlanNode)entry.getKey()).getGroups());
-                joinSourceRoot.setParent(root);
             }
         }
         LinkedList criteria = new LinkedList(dependentCritieraNodes);
@@ -208,10 +206,9 @@ class JoinRegion {
         for (Iterator i = criteria.iterator(); i.hasNext();) {
             PlanNode critNode = (PlanNode)i.next();
             
-            critNode.setParent(null);
-            critNode.getChildren().clear();
+            critNode.removeFromParent();
+            critNode.removeAllChildren();
             critNode.addFirstChild(root);
-            root.setParent(critNode);
             root = critNode;
             critNode.removeProperty(NodeConstants.Info.IS_COPIED);
             critNode.removeProperty(NodeConstants.Info.EST_CARDINALITY);
@@ -222,7 +219,6 @@ class JoinRegion {
         } else {
             parent.addLastChild(root);
         }
-        root.setParent(parent);
         this.joinRoot = root;
     }
     

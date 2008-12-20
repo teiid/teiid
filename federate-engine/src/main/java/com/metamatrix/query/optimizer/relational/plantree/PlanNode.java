@@ -41,6 +41,8 @@ public class PlanNode {
     /** Child nodes, usually just 1 or 2, but occasionally more */
     private LinkedList<PlanNode> children = new LinkedList<PlanNode>();
     
+    private List<PlanNode> childrenView = Collections.unmodifiableList(children);
+    
     /** Type-specific node properties, as defined in NodeConstants.Info. */
     private Map<NodeConstants.Info, Object> nodeProperties;
 
@@ -72,12 +74,25 @@ public class PlanNode {
         return parent;
     }
 
-    public void setParent(PlanNode parent) {
-        this.parent = parent;
+    private void setParent(PlanNode parent) {
+    	if (this.parent != null) {
+    		this.parent.children.remove(this);
+    	}
+    	this.parent = parent;
     }
 
     public List<PlanNode> getChildren() {
-        return this.children;
+        return this.childrenView;
+    }
+    
+    public List<PlanNode> removeAllChildren() {
+    	ArrayList<PlanNode> childrenCopy = new ArrayList<PlanNode>(children);
+    	for (Iterator<PlanNode> childIter = this.children.iterator(); childIter.hasNext();) {
+    		PlanNode child = childIter.next();
+    		childIter.remove();
+    		child.parent = null;
+    	}
+    	return childrenCopy;
     }
     
     public int getChildCount() {
@@ -100,18 +115,34 @@ public class PlanNode {
         
     public void addFirstChild(PlanNode child) {
         this.children.addFirst(child);
+        child.setParent(this);
     }
     
     public void addLastChild(PlanNode child) {
         this.children.addLast(child);
+        child.setParent(this);
     }
     
-    public void addChildren(List<PlanNode> otherChildren) {
-        this.children.addAll(otherChildren);
+    public void addChildren(Collection<PlanNode> otherChildren) {
+        for (PlanNode planNode : otherChildren) {
+			this.addLastChild(planNode);
+		}
+    }
+    
+    public PlanNode removeFromParent() {
+    	PlanNode result = this.parent;
+    	if (result != null) {
+    		result.removeChild(this);
+    	}
+    	return result;
     }
     
     public boolean removeChild(PlanNode child) {
-        return this.children.remove(child);
+        boolean result = this.children.remove(child);
+        if (result) {
+        	child.parent = null;
+        } 
+        return result;
     }    
                         
     public Object getProperty(NodeConstants.Info propertyID) {
@@ -227,7 +258,23 @@ public class PlanNode {
     public boolean hasBooleanProperty(NodeConstants.Info propertyKey) {
         return Boolean.TRUE.equals(getProperty(propertyKey));
     }
+    
+    public void replaceChild(PlanNode child, PlanNode replacement) {
+    	int i = this.children.indexOf(child);
+    	this.children.set(i, replacement);
+    	child.setParent(null);
+    	replacement.setParent(this);
+    }
+    
+    /**
+     * Add the node as this node's parent.  NOTE: This node 
+     * must already have a parent.
+     * @param node
+     */
+    public void addAsParent(PlanNode node) {
+    	this.parent.replaceChild(this, node);
+    	assert node.getChildCount() == 0;
+		node.addLastChild(this);
+    }
         
-} // END CLASS
-
-
+}

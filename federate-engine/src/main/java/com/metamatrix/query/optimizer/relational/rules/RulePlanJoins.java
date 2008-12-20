@@ -48,7 +48,6 @@ import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
-import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.AccessPattern;
@@ -288,8 +287,6 @@ public class RulePlanJoins implements OptimizerRule {
                     PlanNode joinNode = createJoinNode();
                     joinNode.getGroups().addAll(accessNode1.getGroups());
                     joinNode.getGroups().addAll(accessNode2.getGroups());
-                    accessNode1.setParent(joinNode);
-                    accessNode2.setParent(joinNode);
                     joinNode.addFirstChild(accessNode2);
                     joinNode.addLastChild(accessNode1);
 
@@ -299,7 +296,7 @@ public class RulePlanJoins implements OptimizerRule {
                         PlanNode critNode = (PlanNode)joinCriteriaIter.next();
                         critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.FALSE);
                         critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.FALSE);
-                        NodeEditor.insertNode(newAccess, newAccess.getFirstChild(), critNode);
+                        newAccess.getFirstChild().addAsParent(critNode);
                     }
                                     
                     //update with the new source

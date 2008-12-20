@@ -165,9 +165,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
             			continue;
             		}
         			NodeEditor.removeChildNode(parentNode, node);
-                    // removeChildNode doesn't set the child's parent to null, but we want to orphan the child
-                    // here since we check that if we return to this block.
-                    node.setParent(null);
             	}
                 rootNode = performRaise(rootNode, accessNode, parentNode);
             	
@@ -489,15 +486,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static PlanNode performRaise(PlanNode rootNode, PlanNode accessNode, PlanNode parentNode) {
         // Remove ACCESS node from tree
         NodeEditor.removeChildNode(parentNode, accessNode);
-        accessNode.setParent(null);
         
         // Splice ACCESS node back into tree above the rootnode
         PlanNode grandparentNode = parentNode.getParent();
         if(grandparentNode != null) {
-            NodeEditor.insertNode(parentNode.getParent(), parentNode, accessNode);
+            parentNode.addAsParent(accessNode);
             return rootNode;
         }
-        NodeEditor.attachLast(accessNode, parentNode);
+        accessNode.addFirstChild(parentNode);
         return accessNode;
     }
 
@@ -684,15 +680,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
         RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
         RulePlaceAccess.copyDependentHints(joinNode, newAccess);
         
-        leftAccess.setParent(null);
-        rightAccess.setParent(null);
-        
         if (insert) {
-            PlanNode parent = joinNode.getParent();     
-            NodeEditor.insertNode(parent, joinNode, newAccess);
+            joinNode.addAsParent(newAccess);
         } else {
             newAccess.addFirstChild(joinNode);
-            joinNode.setParent(newAccess);
         }
         
         return newAccess;

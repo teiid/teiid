@@ -54,7 +54,6 @@ public class TestJoinRegion extends TestCase {
         PlanNode source = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         
         source.addFirstChild(outerJoin);
-        outerJoin.setParent(source);
         
         RulePlanJoins.findJoinRegions(source, null, regions);
         
@@ -75,7 +74,6 @@ public class TestJoinRegion extends TestCase {
         PlanNode source = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         
         source.addFirstChild(joinRoot);
-        joinRoot.setParent(source);
         
         RulePlanJoins.findJoinRegions(source, null, regions);
         
@@ -108,7 +106,6 @@ public class TestJoinRegion extends TestCase {
         
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         
-        accessNode.setParent(source);
         source.addFirstChild(accessNode);
         
         JoinRegion region = new JoinRegion();

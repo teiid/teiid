@@ -178,7 +178,7 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
 			if (metadata.isVirtualGroup(sourceGroup.getMetadataID())){
                 // Attach nodes
                 PlanNode childPlan = (PlanNode) child.getCanonicalPlan();
-				NodeEditor.attachFirst(sourceNode, childPlan);
+				sourceNode.addFirstChild(childPlan);
                 
                 // Create symbol map from virtual group to child plan
                 List projectCols = child.getCommand().getProjectedSymbols();

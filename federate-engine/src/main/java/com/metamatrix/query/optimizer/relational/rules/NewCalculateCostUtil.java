@@ -392,7 +392,7 @@ public class NewCalculateCostUtil {
     private static void estimateNodeCost(PlanNode node, List expressions, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
         
-        PlanNode child = node.getChildren().iterator().next();
+        PlanNode child = node.getFirstChild();
         float childCost = ((Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY)).floatValue();
         
         if(childCost == UNKNOWN_VALUE) {

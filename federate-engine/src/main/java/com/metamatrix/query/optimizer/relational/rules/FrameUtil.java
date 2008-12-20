@@ -496,9 +496,7 @@ public class FrameUtil {
         if (source != null) {
             nullNode.addGroups(source.getGroups());
         }
-        node.getChildren().clear();
-        NodeEditor.replaceNode(node, nullNode);
-        nullNode.setParent(node.getParent());
+        node.getParent().replaceChild(node, nullNode);
     }
 
     /**

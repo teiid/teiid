@@ -164,7 +164,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      */
     List<CandidateJoin> findCandidate(PlanNode root, QueryMetadataInterface metadata) {
 
-        List<CandidateJoin> candidates = new ArrayList();
+        List<CandidateJoin> candidates = new ArrayList<CandidateJoin>();
         
         for (PlanNode joinNode : NodeEditor.findAllNodes(root, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
             CandidateJoin candidate = null;
@@ -317,8 +317,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         
         for (Iterator i = crits.iterator(); i.hasNext();) {
             PlanNode crit = (PlanNode)i.next();
-            
-            NodeEditor.insertNode(joinNode, newRoot, crit);
+            newRoot.addAsParent(crit);
             newRoot = crit;
         }
               

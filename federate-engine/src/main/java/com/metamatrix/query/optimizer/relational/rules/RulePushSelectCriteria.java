@@ -272,7 +272,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		// See how far we can move it towards the SOURCE node
 		PlanNode destination = examinePath(critNode, sourceNode, metadata, capFinder);
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
-        NodeEditor.insertNode(destination.getParent(), destination, critNode);
+        destination.addAsParent(critNode);
 	}
     
     static Set<GroupSymbol> getCorrelatedReferenceGroups(PlanNode critNode) {
@@ -682,7 +682,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         copyNode.addGroups(GroupsUsedByElementsVisitor.getGroups(crit));
                 
 		// Insert new node
-		NodeEditor.insertNode(projectNode, projectNode.getFirstChild(), copyNode);
+		projectNode.getFirstChild().addAsParent(copyNode);
 		
 		return true;
     }

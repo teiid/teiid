@@ -237,7 +237,7 @@ public final class RuleMergeVirtual implements
                 if (parentProject.getParent().getParent() != null) {
                     NodeEditor.removeChildNode(parentProject.getParent().getParent(), parentProject.getParent());
                 } else {
-                    parentProject.setParent(null);
+                    parentProject.removeFromParent();
                     root = parentProject;
                 }
             }
@@ -262,7 +262,7 @@ public final class RuleMergeVirtual implements
         NodeEditor.removeChildNode(parentProject, frame);
         if (parentProject.getParent() == null) {
             root = parentProject.getFirstChild();
-            root.setParent(null);
+            parentProject.removeChild(root);
             return root;
         } 
         NodeEditor.removeChildNode(parentProject.getParent(), parentProject);

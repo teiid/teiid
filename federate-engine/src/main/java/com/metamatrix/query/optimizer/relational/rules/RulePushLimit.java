@@ -85,7 +85,7 @@ public class RulePushLimit implements OptimizerRule {
                     FrameUtil.replaceWithNullNode(limitNode.getFirstChild());
                     PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
                     projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, childProject.getProperty(NodeConstants.Info.PROJECT_COLS));
-                    NodeEditor.insertNode(limitNode, limitNode.getFirstChild(), projectNode);
+                    limitNode.getFirstChild().addAsParent(projectNode);
                     pushRaiseNull = true;
                     limitNodes.remove(limitNode);
                     continue;
@@ -145,7 +145,7 @@ public class RulePushLimit implements OptimizerRule {
                     Expression limit = (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
                     Expression offset = (Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset));
-                    NodeEditor.insertNode(child, grandChild, newLimit);
+                    grandChild.addAsParent(newLimit);
                     limitNodes.add(newLimit);
                 }
                 
@@ -212,7 +212,7 @@ public class RulePushLimit implements OptimizerRule {
                 if (accessNode.getChildCount() == 0) {
                     accessNode.addFirstChild(pushedLimit);
                 } else {
-                    NodeEditor.insertNode(accessNode, accessNode.getFirstChild(), pushedLimit);
+                    accessNode.getFirstChild().addAsParent(pushedLimit);
                 }
             }
             

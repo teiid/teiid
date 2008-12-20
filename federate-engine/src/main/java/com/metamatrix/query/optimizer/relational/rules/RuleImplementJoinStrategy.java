@@ -105,7 +105,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         if (sourceNode.getType() == NodeConstants.Types.ACCESS 
                         && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode)) {
-            NodeEditor.insertNode(sourceNode, sourceNode.getFirstChild(), sortNode);
+            sourceNode.getFirstChild().addAsParent(sortNode);
             
             if (needsCorrection) {
                 correctOutputElements(joinNode, outputSymbols, sortNode);
@@ -118,7 +118,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         if (needsCorrection) {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, new ArrayList(outputSymbols));
-            NodeEditor.insertNode(childNode.getParent(), childNode, projectNode);
+            childNode.addAsParent(projectNode);
             correctOutputElements(joinNode, outputSymbols, projectNode);
         }        
     }
