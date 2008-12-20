@@ -77,6 +77,10 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         this.symbolMap = symbolMap;
     }
     
+    protected boolean createAliases() {
+    	return true;
+    }
+    
     public void visit(Select obj) {
         replaceSymbols(obj.getSymbols(), true);
     }
@@ -102,7 +106,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
                     replacmentSymbol = new ExpressionSymbol(ses.getName(), replacement);
                 }
                 
-                if (alias && !replacmentSymbol.getShortName().equals(ses.getShortName())) {
+                if (alias && createAliases() && !replacmentSymbol.getShortName().equals(ses.getShortName())) {
                     replacmentSymbol = new AliasSymbol(ses.getShortName(), replacmentSymbol);
                 }
                 
