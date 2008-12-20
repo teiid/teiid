@@ -72,6 +72,7 @@ public interface ServerMonitoringAdmin extends CoreMonitoringAdmin {
      * @return Collection of {@link com.metamatrix.admin.api.objects.ConnectionPool ConnectionPool}s
      * @throws AdminException if there's a system error.
      * @since 4.3
+     * @deprecated 5.5.4
      */
     Collection getConnectionPools(String poolIdentifier) throws AdminException;
 
