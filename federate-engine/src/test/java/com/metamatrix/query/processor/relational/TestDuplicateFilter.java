@@ -24,18 +24,13 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.List;
-
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.StorageManager;
-import com.metamatrix.common.buffer.impl.TestBufferManagerImpl;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.function.aggregate.AggregateFunction;
+import com.metamatrix.query.function.aggregate.Count;
 
 /**
  */
@@ -49,23 +44,10 @@ public class TestDuplicateFilter extends TestCase {
         super(arg0);
     }
     
-    private StorageManager createMemoryStorageManager() {
-        return new MemoryStorageManager();
-    }
-    
-    private StorageManager createFakeDatabaseStorageManager() {
-        return new MemoryStorageManager() {
-            public int getStorageType() { 
-                return StorageManager.TYPE_DATABASE;    
-            }  
-        };        
-    }    
-
-    public void helpTestDuplicateFilter(Object[] input, Class dataType, Object[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        BufferManager mgr = TestBufferManagerImpl.getTestBufferManager(1000000, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+    public void helpTestDuplicateFilter(Object[] input, Class dataType, int expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        BufferManager mgr = NodeTestUtil.getTestBufferManager(100000);
         
-        AggregateFunction collector = new AggregateFunctionCollector();                           
-        DuplicateFilter filter = new DuplicateFilter(collector, mgr, "test", mgr.getProcessorBatchSize()); //$NON-NLS-1$
+        DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test", mgr.getProcessorBatchSize()); //$NON-NLS-1$
         filter.initialize(dataType);
         filter.reset();
         
@@ -74,25 +56,18 @@ public class TestDuplicateFilter extends TestCase {
             filter.addInput(input[i]);    
         }        
         
-        // Get outputs that made it to collector and compare
-        List actual = (List) filter.getResult();
-        //System.out.println("Actual values = " + actual);
-        assertEquals("Did not get expected number of results", expected.length, actual.size()); //$NON-NLS-1$
-
-        for(int i=0; i<expected.length; i++) {
-            assertEquals("Did not getexpected value for " + i, expected[i], actual.get(i)); //$NON-NLS-1$
-        }                
+        Integer actual = (Integer) filter.getResult();
+        assertEquals("Did not get expected number of results", expected, actual.intValue()); //$NON-NLS-1$
     }
 
     public void testNoInputs() throws Exception {
-        helpTestDuplicateFilter(new Object[0], DataTypeManager.DefaultDataClasses.STRING, new Object[0]);           
+        helpTestDuplicateFilter(new Object[0], DataTypeManager.DefaultDataClasses.STRING, 0);           
     }
     
     public void testSmall()  throws Exception {
         Object[] input = new Object[] { "a", "b", "a", "c", "a", "c", "c", "f" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-        Object[] expected = new Object[] { "a", "b", "c", "f" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.STRING, expected);        
+        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.STRING, 4);        
     }
     
     public void testBig() throws Exception {
@@ -104,12 +79,7 @@ public class TestDuplicateFilter extends TestCase {
             input[i] = new Integer(i % NUM_OUTPUT);
         }
 
-        Object[] expected = new Object[NUM_OUTPUT];
-        for(int i=0; i<NUM_OUTPUT; i++) { 
-            expected[i] = new Integer(i);    
-        }
-        
-        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.INTEGER, expected);        
+        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.INTEGER, NUM_OUTPUT);        
     }
     
 }
