@@ -107,6 +107,7 @@ public class ServerAdminImpl implements ServerAdmin {
     /**
      * @see com.metamatrix.admin.api.server.ServerMonitoringAdmin#getConnectionPools(java.lang.String)
      * @since 4.3
+     * @deprecated 5.5.4
      */
     public Collection getConnectionPools(String identifier) throws AdminException {
         return getMonitoringAdmin().getConnectionPools(identifier);
