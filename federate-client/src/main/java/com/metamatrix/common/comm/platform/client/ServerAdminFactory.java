@@ -82,7 +82,7 @@ public class ServerAdminFactory {
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
-			if (method.getName().equals("close")) {
+			if (method.getName().equals("close")) { //$NON-NLS-1$
 				close();
 				return null;
 			}
@@ -96,7 +96,7 @@ public class ServerAdminFactory {
 					t = e;
 				}
 			}
-			if (method.getName().endsWith("bounceSystem")) {
+			if (method.getName().endsWith("bounceSystem")) { //$NON-NLS-1$
 				bounceSystem(((Boolean)args[1]).booleanValue());
 				return null;
 			}
@@ -113,7 +113,7 @@ public class ServerAdminFactory {
 			}
 		}
 		
-		public void bounceSystem(boolean waitUntilDone) throws AdminException {
+		public void bounceSystem(boolean waitUntilDone) {
 	        if (waitUntilDone) {
 	        	//we'll wait 2 seconds for the server to go down
 	        	try {

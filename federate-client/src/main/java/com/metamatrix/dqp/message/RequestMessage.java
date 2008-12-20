@@ -250,7 +250,7 @@ public class RequestMessage implements Serializable {
     			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_ON)
     			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_OPTIMISTIC)
     			|| txnAutoWrapMode.equals(ExecutionProperties.AUTO_WRAP_PESSIMISTIC))) {
-    			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode));
+    			throw new MetaMatrixProcessingException(CommonCommPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 
         this.txnAutoWrapMode = txnAutoWrapMode;
