@@ -48,6 +48,7 @@ public class TestStaticProperties extends TestCase {
     }
     
     public void setUp() throws Exception {
+    	System.setProperty("metamatrix.config.none", "none");
         file = File.createTempFile("test-static", "properties");
         
         
