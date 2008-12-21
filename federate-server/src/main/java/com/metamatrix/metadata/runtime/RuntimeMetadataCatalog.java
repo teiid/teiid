@@ -818,18 +818,17 @@ public class RuntimeMetadataCatalog  {
         //String messageBusURL = null;
         try{
             // obtain the resource connection properties
-            Properties resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.RUNTIME_METADATA);
-
+ 
             Properties runtimeProps = CurrentConfiguration.getProperties();
             String value = runtimeProps.getProperty(RuntimeMetadataPropertyNames.PERSIST);
             if(value != null) {
                 persist = Boolean.valueOf(value).booleanValue();
             }
-            //messageBusURL = runtimeProps.getProperty(ServicePropertyNames.SERVER_URL);
-            //if(messageBusURL == null)
-            //    throw new ConfigurationException("Server url not found.");
-            prop.putAll(runtimeProps);
-            prop.putAll(resourceProps);
+            
+            if (value == null || persist) {
+            	prop.setProperty(TransactionMgr.FACTORY, "com.metamatrix.metadata.runtime.spi.jdbc.JDBCConnectorFactory");
+            }
+             prop.putAll(runtimeProps);
         }catch(ConfigurationException ice){
             throw new VirtualDatabaseException(ErrorMessageKeys.GEN_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0003) );
         }
