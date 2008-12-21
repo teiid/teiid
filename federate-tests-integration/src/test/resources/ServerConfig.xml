@@ -270,11 +270,6 @@
       <Service Name="RuntimeMetadataService" IsEnabled="true"/>
       <Service Name="ODBCService" IsEnabled="false"/>
     </PSC>
-    <PSC Name="MetaBaseServerStandard" ComponentType="MetaBase Server" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties/>
-      <Service Name="IndexingService" IsEnabled="true"/>
-      <Service Name="DirectoryService" IsEnabled="true"/>
-    </PSC>
     <PSC Name="ODBCService" ComponentType="MetaMatrix Server" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
       <Properties/>
       <Service Name="ODBCService" IsEnabled="false"/>
