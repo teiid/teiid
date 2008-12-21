@@ -75,10 +75,8 @@ public class PersistentIDController implements DBIDController {
             // get the resource connection properties, if system properties where set
             // prior to this being called they will override.
 
-            Properties cfgProps = CurrentConfiguration.getResourceProperties(ResourceNames.ID_GENERATOR);
-
-
-            Properties props = PropertiesUtils.clone(cfgProps, false);
+            Properties props = new Properties(); 
+            	//PropertiesUtils.clone(cfgProps, false);
             props.setProperty(TransactionMgr.FACTORY, FACTORY);
 
             transMgr = new TransactionMgr(props, PRINCIPAL);
