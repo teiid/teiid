@@ -38,6 +38,7 @@ import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.AuthorizationServicePropertyNames;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceTransaction;
 
@@ -84,9 +85,12 @@ public class StartupVDBDeleteUtility extends AbstractVDBDeleteUtility {
         
         //Get JDBCSessionTransaction connection properties
         Properties transactionProps = CurrentConfiguration.getProperties();
-        transactionProps.setProperty(TransactionMgr.FACTORY, 
-                                     transactionProps.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY));
-
+        if (transactionProps.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY) == null) {
+        	transactionProps.setProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY, AuthorizationServicePropertyNames.DEFAULT_FACTORY_CLASS);
+        }       
+        
+         transactionProps.setProperty(TransactionMgr.FACTORY, 
+                     transactionProps.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY));
 
         // Get a write transaction and delete old authorizations
         AuthorizationSourceTransaction transaction = null;
