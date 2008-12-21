@@ -417,18 +417,9 @@ public final class CurrentConfiguration {
      * @see com.metamatrix.common.api.ComponentType
      */
     public static Collection getResourceDescriptors() throws ConfigurationException {
-
-        Configuration config = getConfiguration();
-
-        Collection rd = new ArrayList(10);
-
-        Iterator compDefns = config.getResourcePools().iterator();
-        ComponentDefn aDefn = null;
-
-        while (compDefns.hasNext()){
-            aDefn = (ComponentDefn)compDefns.next();
-            rd.add(aDefn);
-        }
+        Collection<ResourceDescriptor> rd = new ArrayList(1);
+        
+        rd.add(getResourceDescriptor(ResourcePool.JDBC_SHARED_CONNECTION_POOL));
 
         return rd;
 
