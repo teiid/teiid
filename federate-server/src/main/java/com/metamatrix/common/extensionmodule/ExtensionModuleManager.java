@@ -853,10 +853,7 @@ public class ExtensionModuleManager {
      */
     public void init(){
 
-        Properties resourceProps = null;
-        try{
-            resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.EXTENSION_SOURCE_MANAGER);
-            resourceProps = PropertiesUtils.clone(resourceProps, false);
+        Properties resourceProps = new Properties();
 
 			//If this is being used by a tool such as the CDK, then resource properties
 			//are not supported by CurrentConfiguration; these two essential properties
@@ -867,11 +864,7 @@ public class ExtensionModuleManager {
                 if (value != null){
                  	resourceProps.setProperty(key, value);
                 }
-            }
-        } catch (ConfigurationException e) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0001));
-        }
-
+            }	
         init(resourceProps);
     }
 

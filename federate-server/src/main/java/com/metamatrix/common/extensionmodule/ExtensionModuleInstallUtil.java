@@ -126,17 +126,6 @@ public final class ExtensionModuleInstallUtil {
         if (props == null){
             props = new Properties();
         }
-        Properties resourceProps = null;
-        try{
-            resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.EXTENSION_SOURCE_MANAGER);
-        } catch (ConfigurationException e) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0001));
-        }
-		if (resourceProps!=null){
-            boolean deepClone = true;
-            boolean makeUnmodifiable = false;
-			props = PropertiesUtils.clone(props, resourceProps, deepClone, makeUnmodifiable);
-		}
 
 		manager = ExtensionModuleManager.getInstance(props);
 
