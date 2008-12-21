@@ -106,7 +106,7 @@ public class TestFilePasswordConverter extends TestCase {
         
         //check that properties were converted
         assertEquals(4, converter.converted.size());
-        assertTrue(converter.converted.contains("metamatrix.common.pooling.jdbc.Password")); //$NON-NLS-1$
+        assertTrue(converter.converted.contains("Password")); //$NON-NLS-1$
         assertEquals(0, converter.failedDecrypt.size());
         assertEquals(0, converter.failedEncrypt.size());
         
@@ -126,7 +126,7 @@ public class TestFilePasswordConverter extends TestCase {
         //check that properties were converted
         converter.convert();        
         assertEquals(4, converter.converted.size());
-        assertTrue(converter.converted.contains("metamatrix.common.pooling.jdbc.Password")); //$NON-NLS-1$
+        assertTrue(converter.converted.contains("Password")); //$NON-NLS-1$
         assertEquals(0, converter.failedDecrypt.size());
         assertEquals(0, converter.failedEncrypt.size());
         
