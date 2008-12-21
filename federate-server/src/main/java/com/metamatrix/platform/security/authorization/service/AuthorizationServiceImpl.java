@@ -105,6 +105,7 @@ import com.metamatrix.platform.util.PlatformProxyHelper;
  * </p>
  */
 public class AuthorizationServiceImpl extends AbstractService implements AuthorizationServiceInterface {
+	
     protected AuthorizationCache authorizationCache;
     private Properties environment;
     private int retries = 1;
@@ -151,6 +152,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 }
             }
 
+            if (env.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY) == null) {
+            	env.setProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY, AuthorizationServicePropertyNames.DEFAULT_FACTORY_CLASS);
+            }
             env.setProperty(TransactionMgr.FACTORY, env.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY));
 
             transMgr = new TransactionMgr(env, this.getInstanceName());
