@@ -125,11 +125,6 @@ public class TestXMLConfigReader extends BaseTest {
 
         HelperTestConfiguration.validateComponentDefns(defns.values());
 
-        printMsg("Validate Connection Pools"); //$NON-NLS-1$
-        Collection pools = reader.getConnectionPools(Configuration.NEXT_STARTUP_ID);
-
-        HelperTestConfiguration.validateConnectionPools(pools);
-
         printMsg("Validate Deployed Components"); //$NON-NLS-1$
 
         Collection dc = reader.getDeployedComponents(Configuration.NEXT_STARTUP_ID);
