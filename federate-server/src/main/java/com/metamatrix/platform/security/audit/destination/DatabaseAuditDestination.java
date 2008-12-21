@@ -122,8 +122,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 
 
     private String tableName;
-    private String poolName;
-    private String resourceDelim    = DEFAULT_RESOURCE_DELIMITER;
+     private String resourceDelim    = DEFAULT_RESOURCE_DELIMITER;
 	private int maxResourceLength   = DEFAULT_MAX_RESOURCE_LENGTH;
 	private int maxGeneralLength    = DEFAULT_MAX_GENERAL_LENGTH;
     private JDBCPlatform jdbcPlatform;
@@ -142,7 +141,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 	 * @return Description
 	 */
 	public String getDescription() {
-        return "JDBC Pool: " + poolName; //$NON-NLS-1$
+        return "JDBC Pool: " + ResourcePool.JDBC_SHARED_CONNECTION_POOL; //$NON-NLS-1$
 	}
 
 	/**
@@ -154,8 +153,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 	public void initialize(Properties props) throws AuditDestinationInitFailedException {
         super.initialize(props);
         connProps = props;
-        poolName = props.getProperty(ResourcePool.RESOURCE_POOL);
-
+ 
         tableName = props.getProperty(TABLE_PROPERTY_NAME, DEFAULT_TABLE_NAME);
         resourceDelim = props.getProperty(RESOURCE_DELIM_PROPERTY_NAME, DEFAULT_RESOURCE_DELIMITER);
 
@@ -210,7 +208,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 
         // Establish connection and prepare statement
 
-          Connection connection = JDBCConnectionPoolHelper.getConnection(connProps, "AUDITING"); //$NON-NLS-1$
+          Connection connection = JDBCConnectionPoolHelper.getConnection(this.connProps, "AUDITING"); //$NON-NLS-1$
 
           stmt = connection.prepareStatement(insertStr.toString());
 
