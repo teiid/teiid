@@ -90,6 +90,11 @@ public class ExtensionModulePropertyNames {
      */
     public static final String CONNECTION_POOL_MAXIMUM_CONCURRENT_USERS = "metamatrix.extensionsource.connection.MaximumConcurrentReaders"; //$NON-NLS-1$
 
+    /**
+     * The default connection factory class to use when one is not specified.
+     */
+    public static final String DEFAULT_CONNECTION_FACTORY_CLASS="com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleTransactionFactory";
+
     //===================================================================
     //MESSAGING PROPERTIES
     //===================================================================

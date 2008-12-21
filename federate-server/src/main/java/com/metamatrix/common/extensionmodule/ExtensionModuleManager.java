@@ -861,8 +861,8 @@ public class ExtensionModuleManager {
             String key = ExtensionModulePropertyNames.CONNECTION_FACTORY;
             if (resourceProps.getProperty(key) == null){
                 String value = CurrentConfiguration.getProperty(key);
-                if (value != null){
-                 	resourceProps.setProperty(key, value);
+                if (value != null) {
+                	resourceProps.setProperty(key, value);
                 }
             }	
         init(resourceProps);
@@ -879,6 +879,9 @@ public class ExtensionModuleManager {
         isInitialized = true;
 
         try {
+        	if (env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY) == null) {
+        		env.setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY, ExtensionModulePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS);
+        	}
             env.setProperty(TransactionMgr.FACTORY, env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY));
             transMgr = new TransactionMgr(env, "ExtensionModuleManager"); //$NON-NLS-1$
         } catch ( ManagedConnectionException e ) {
