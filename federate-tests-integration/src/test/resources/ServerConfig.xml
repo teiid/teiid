@@ -120,10 +120,6 @@
           <Property Name="vm.enabled">true</Property>  
 	      <Property Name="vm.forced.shutdown.time">30</Property>                            
        </Properties>
-        <PSC Name="MetaBaseServerStandard" ComponentType="MetaBase Server" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
-          <Service Name="DirectoryService" ComponentType="DirectoryService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
-          <Service Name="IndexingService" ComponentType="IndexingService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
-        </PSC>
         <PSC Name="PlatformStandard" ComponentType="Platform" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
           <Service Name="MembershipService" ComponentType="MembershipService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
           <Service Name="SessionService" ComponentType="SessionService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
@@ -181,12 +177,6 @@
         <Property Name="WaitForProcessEnd">5000</Property>
       </Properties>
     </Service>
-    <Service Name="DirectoryService" ComponentType="DirectoryService" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.service.essentialservice">true</Property>
-        <Property Name="ServiceClassName">com.metamatrix.metabase.internal.platform.DirectoryServiceImpl</Property>
-      </Properties>
-    </Service>
     <Service Name="ConfigurationService" ComponentType="ConfigurationService" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
       <Properties>
         <Property Name="metamatrix.service.essentialservice">true</Property>
@@ -198,12 +188,6 @@
         <Property Name="metamatrix.service.essentialservice">true</Property>
         <Property Name="security.authorization.connection.Retries">4</Property>
         <Property Name="ServiceClassName">com.metamatrix.platform.security.authorization.service.AuthorizationServiceImpl</Property>
-      </Properties>
-    </Service>
-    <Service Name="IndexingService" ComponentType="IndexingService" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.service.essentialservice">true</Property>
-        <Property Name="ServiceClassName">com.metamatrix.metamodels.db.model.service.IndexingService</Property>
       </Properties>
     </Service>
     <Service Name="SessionService" ComponentType="SessionService" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
@@ -247,10 +231,6 @@
       <ComponentTypeID Name="ConfigurationService"/>
       <ComponentTypeID Name="SessionService"/>
     </ProductType>
-    <ProductType Name="MetaBase Server" ComponentTypeCode="3" Deployable="false" Deprecated="false" Monitorable="false" SuperComponentType="Product" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <ComponentTypeID Name="DirectoryService"/>
-      <ComponentTypeID Name="IndexingService"/>
-    </ProductType>
     <ProductType Name="Connectors" ComponentTypeCode="3" Deployable="false" Deprecated="false" Monitorable="false" SuperComponentType="Product" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
       <ComponentTypeID Name="Oracle ANSI JDBC Connector"/>
       <ComponentTypeID Name="Oracle ANSI JDBC XA Connector"/>
@@ -271,50 +251,6 @@
       <ComponentTypeID Name="Text File Connector"/>
     </ProductType>
   </ProductTypes>
-  <ConnectionPools>
-    <ConnectionPool Name="DesignTimeCatalog Pool" ComponentType="JDBC Resource Type" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.jdbc.Database">(target.database)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Password">(target.password)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Driver">(target.driver)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Protocol">(target.protocol)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.User">(target.user)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.autocommit">false</Property>
-        <Property Name="pooling.resource.pool.minimum.size">1</Property>
-        <Property Name="pooling.resource.pool.maximum.size">10</Property>
-        <Property Name="pooling.resource.pool.shrink.period">300000</Property>
-        <Property Name="pooling.resource.pool.allow.shrinking">true</Property>
-        <Property Name="pooling.resource.pool.shrink.increment">0</Property>
-        <Property Name="pooling.resource.pool.liveandused.time">600000</Property>
-        <Property Name="pooling.resource.pool.wait.time">30000</Property>
-        <Property Name="pooling.resource.extend.maximum.pool.size.mode">true</Property>
-        <Property Name="pooling.resource.extend.maximum.pool.size.percent">100</Property>
-        <Property Name="pooling.resource.pool.class.name">com.metamatrix.common.pooling.impl.BasicResourcePool</Property>
-        <Property Name="pooling.resource.adapter.class.name">com.metamatrix.common.pooling.jdbc.JDBCConnectionResourceAdapter</Property>
-      </Properties>
-    </ConnectionPool>
-    <ConnectionPool Name="JDBC Shared Connection Pool" ComponentType="JDBC Resource Type" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.jdbc.Database">(target.database)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Password">(target.password)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Driver">(target.driver)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.Protocol">(target.protocol)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.User">(target.user)</Property>
-        <Property Name="metamatrix.common.pooling.jdbc.autocommit">false</Property>
-        <Property Name="pooling.resource.pool.minimum.size">1</Property>
-        <Property Name="pooling.resource.pool.maximum.size">15</Property>
-        <Property Name="pooling.resource.pool.shrink.period">300000</Property>
-        <Property Name="pooling.resource.pool.allow.shrinking">true</Property>
-        <Property Name="pooling.resource.pool.shrink.increment">0</Property>
-        <Property Name="pooling.resource.pool.liveandused.time">600000</Property>
-        <Property Name="pooling.resource.pool.wait.time">30000</Property>
-        <Property Name="pooling.resource.extend.maximum.pool.size.mode">true</Property>
-        <Property Name="pooling.resource.extend.maximum.pool.size.percent">100</Property>
-        <Property Name="pooling.resource.pool.class.name">com.metamatrix.common.pooling.impl.BasicResourcePool</Property>
-        <Property Name="pooling.resource.adapter.class.name">com.metamatrix.common.pooling.jdbc.JDBCConnectionResourceAdapter</Property>
-      </Properties>
-    </ConnectionPool>
-  </ConnectionPools>
   <ProductServiceConfigs>
     <PSC Name="PlatformStandard" ComponentType="Platform" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
       <Properties/>
@@ -2395,73 +2331,6 @@
 		<ComponentType Name="DeployedComponent" ComponentTypeCode="0" Deployable="false" Deprecated="false" Monitorable="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup"  />
 	</ComponentTypes>
   <SharedResources>
-    <Resource Name="IndexingService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">DesignTimeCatalog Pool</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="Logging" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="TransactionLogging" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="ExtensionSourceManager" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="metamatrix.extensionsource.connection.Factory">com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleTransactionFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="RuntimeMetadata" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="metamatrix.metadata.runtime.connection.Factory">com.metamatrix.metadata.runtime.spi.jdbc.JDBCConnectorFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="Audit" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="AuthorizationService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="security.authorization.connection.Factory">com.metamatrix.platform.security.authorization.spi.jdbc.JDBCAuthorizationTransactionFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="SessionService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="security.session.connection.Factory">com.metamatrix.platform.security.session.spi.jdbc.JDBCServiceSessionFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="MembershipService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="security.membership.connection.JDBCInternalDomain.Factory">com.metamatrix.platform.security.membership.spi.jdbc.JDBCMembershipSourceFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="ConfigurationService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.config.connection.Factory">com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory</Property>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="DirectoryService" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-        <Property Name="metamatrix.metadata.directory.connection.Factory">com.metamatrix.metadata.server.directory.spi.jdbc.JDBCDirectoryTransactionFactory</Property>
-      </Properties>
-    </Resource>
-    <Resource Name="IDGenerator" ComponentType="JDBC Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
-      <Properties>
-        <Property Name="metamatrix.common.pooling.resource.name">JDBC Shared Connection Pool</Property>
-      </Properties>
-    </Resource>
      <Resource Name="WebServices" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
       <Properties>
         <Property Name="metamatrix.webserver.host">(webhost.name)</Property>
