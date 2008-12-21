@@ -199,11 +199,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
                     return null;
                 }
                 
-                // raise only if there is no limit/offset in the inline view
-                if (!NodeEditor.findAllNodes(accessNode, NodeConstants.Types.TUPLE_LIMIT).isEmpty()) {
-                    return null;
-                }
-                
                 //switch to inline view and change the group on the access to that of the source
             	parentNode.setProperty(NodeConstants.Info.INLINE_VIEW, Boolean.TRUE);
             	accessNode.getGroups().clear();

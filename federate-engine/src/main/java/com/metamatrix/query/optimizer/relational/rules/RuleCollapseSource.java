@@ -41,6 +41,7 @@ import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
@@ -109,6 +110,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             if (sourceNode != null) {
                 accessNode.addGroups(sourceNode.getGroups());                
             }
+            accessNode.setProperty(Info.OUTPUT_COLS, accessNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
         }
     }
 

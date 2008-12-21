@@ -668,39 +668,24 @@ public class TestLimit extends TestCase {
      * 
      * @since 4.3
      */
-    public void testInlineViewAboveLimitNotPushed() {
+    public void testInlineViewAboveLimitNotMerged() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         // pm3 model supports order by
         capFinder.addCapabilities("pm3", caps); //$NON-NLS-1$
 
         String sql = "SELECT * FROM (SELECT * FROM pm3.g1 limit 100) as v1 order by e1";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm3.g1.e1, pm3.g1.e2, pm3.g1.e3, pm3.g1.e4 FROM pm3.g1 LIMIT 100" //$NON-NLS-1$
+            "SELECT v_0.c_0, v_0.c_1, v_0.c_2, v_0.c_3 FROM (SELECT pm3.g1.e1 AS c_0, pm3.g1.e2 AS c_1, pm3.g1.e3 AS c_2, pm3.g1.e4 AS c_3 FROM pm3.g1 LIMIT 100) AS v_0 ORDER BY c_0" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // Limit
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        }, NODE_TYPES);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
     /**

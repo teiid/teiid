@@ -627,6 +627,17 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 output);        
     }
     
+    public void testLimitWithNestedInlineView() throws Exception {
+        String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by intkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.stringkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.stringkey, ROWNUM AS MM_ROWNUM FROM (SELECT SmallA.IntKey AS intkey, SmallA.StringKey AS stringkey FROM SmallA ORDER BY intkey) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 100) x GROUP BY x.intkey"; //$NON-NLS-1$
+               
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
+                input, 
+                MODIFIERS, EMPTY_CONTEXT, null,
+                TranslatedCommand.EXEC_TYPE_QUERY,
+                output);        
+    }
+    
     public void testExceptAsMinus() throws Exception {
         String input = "select intkey, intnum from bqt1.smalla except select intnum, intkey from bqt1.smallb"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA MINUS SELECT SmallB.IntNum, SmallB.IntKey FROM SmallB"; //$NON-NLS-1$
