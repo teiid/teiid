@@ -137,28 +137,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
         try {
 
-   /*
-            // Create the properties for the connections ...
-            Properties props = new Properties();
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_DRIVER,   props, ManagedConnection.DRIVER );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_PROTOCOL, props, ManagedConnection.PROTOCOL );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_DATABASE, props, ManagedConnection.DATABASE );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_USERNAME, props, ManagedConnection.USERNAME );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_PASSWORD, props, ManagedConnection.PASSWORD );
-            spiConnectionProperties = new UnmodifiableProperties( props );
-
-            // Create the properties for the connection pool ...
-            props = new Properties();
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_FACTORY,                       props, ManagedConnectionPool.FACTORY );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_POOL_MAXIMUM_AGE,              props, ManagedConnectionPool.MAXIMUM_AGE );
-            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_POOL_MAXIMUM_CONCURRENT_USERS, props, ManagedConnectionPool.MAXIMUM_CONCURRENT_USERS );
-            Properties poolEnvironment = new UnmodifiableProperties( props );
-
-            // Create the connection pool instance
-            this.connectionPool = new ManagedConnectionPool(poolEnvironment,spiConnectionProperties);
-*/
+        	if (env.getProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY) == null) {
+                env.setProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY, ConfigurationServicePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS);		
+        	}
             env.setProperty(TransactionMgr.FACTORY, env.getProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY));
-//            this.addProperty(env, ConfigurationServicePropertyNames.CONNECTION_FACTORY, env, TransactionMgr.FACTORY );
 
             transMgr = new TransactionMgr(env, this.getInstanceName());
 
