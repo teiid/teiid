@@ -39,6 +39,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.connection.ManagedConnectionException;
@@ -79,7 +80,7 @@ public class DBLogReader implements LogReader {
 
    
 	
-    private Properties connectionProperties;
+    private Properties properties;
 
     protected String tableName;
 
@@ -94,29 +95,24 @@ public class DBLogReader implements LogReader {
         
         // Read the necessary properties
         Properties globalProperties = CurrentConfiguration.getProperties();
-        Properties resourceProperties = CurrentConfiguration.getResourceProperties(ResourceNames.LOGGING);
-
+ 
         Properties props = new Properties();
         props.putAll(globalProperties);
-        props.putAll(resourceProperties);
-                
-        Properties systemProperties = PropertiesUtils.clone(props,System.getProperties(),true,false);
+                 
+        properties = PropertiesUtils.clone(props,System.getProperties(),true,false);
         
 
-        this.connectionProperties = createLogViewerConnectionProperties(systemProperties);
-        if ( !(this.connectionProperties instanceof UnmodifiableProperties) ) {
-            this.connectionProperties = new UnmodifiableProperties(this.connectionProperties);
-        }
-
         // Get the table name
-        this.tableName = systemProperties.getProperty(TABLE_PROPERTY_NAME, DEFAULT_TABLE_NAME );
+        this.tableName = properties.getProperty(TABLE_PROPERTY_NAME, DEFAULT_TABLE_NAME );
      }
 
 
    
     protected Connection getConnection() throws ManagedConnectionException {
         try {
-            Connection connection = JDBCUtil.createJDBCConnection(this.connectionProperties);
+        	
+        	Connection connection = JDBCConnectionPoolHelper.getConnection(this.properties, "DBLogReader");
+         //   Connection connection = JDBCUtil.createJDBCConnection(this.connectionProperties);
 
             return connection;
         } catch (Exception e) {
@@ -151,71 +147,38 @@ public class DBLogReader implements LogReader {
      * However, the DirectLogViewer used the original method to obtain its connection properties.  
      * Therefore, the original method was split into two methods to satisfy both needs.
      */
-
-    private static Properties createLogViewerConnectionProperties( Properties props ) throws MetaMatrixException {
-        Properties jdbcProps = new Properties();
-        // Decrypt connection password
-        
-        // get the logging connection properties from configuration based on the resource pool defined 
-        // for the logging resource.
-        ResourceDescriptor rd = null;
-        
-       
-        Properties resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.LOGGING);
-        
-        if (resourceProps == null || resourceProps.isEmpty()) {
-            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0019);
-            throw new MetaMatrixException(msg);                
-        }
-        
-        String poolName = resourceProps.getProperty(ResourcePool.RESOURCE_POOL, null);
-        
-        if (poolName == null) {
-            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0020);
-            throw new MetaMatrixException(msg);                
-        }
-        
-        rd = CurrentConfiguration.getResourceDescriptor(poolName);
-        if (rd == null) {
-            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0021);
-            throw new MetaMatrixException(msg);
-
-        }
-            
-        
-               
-        String pwd = null;
-        try {
-            String password = (rd.getProperty(JDBCConnectionResource.PASSWORD));
-            if (password == null) {
-                String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0023);
-                throw new MetaMatrixException(msg);                
-            }
-            if (CryptoUtil.isValueEncrypted(password)) {
-            	pwd = CryptoUtil.stringDecrypt(password);
-            }
-            else {
-            	pwd = password;
-            }
-        } catch (CryptoException e) {
-            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0024);
-            throw new MetaMatrixException(msg);                
-        }
-        jdbcProps.put(JDBCUtil.PASSWORD, pwd);
-        jdbcProps.put(JDBCUtil.DRIVER, rd.getProperty(JDBCConnectionResource.DRIVER));
-        jdbcProps.put(JDBCUtil.USERNAME, rd.getProperty(JDBCConnectionResource.USERNAME));
-        if (rd.getProperty(JDBCConnectionResource.PROTOCOL) != null && rd.getProperty(JDBCConnectionResource.PROTOCOL).trim().length() > 0)  {
-        	jdbcProps.put(JDBCUtil.PROTOCOL, rd.getProperty(JDBCConnectionResource.PROTOCOL));
-        }
-        jdbcProps.put(JDBCUtil.DATABASE, rd.getProperty(JDBCConnectionResource.DATABASE));  
-       
-        return jdbcProps;
-    }
-    
-    
-    
-    
-    
+//
+//    private static Properties createLogViewerConnectionProperties( Properties props ) throws MetaMatrixException {
+//                
+//        String pwd = null;
+//        try {
+//            String password = (rd.getProperty(JDBCConnectionResource.PASSWORD));
+//            if (password == null) {
+//                String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0023);
+//                throw new MetaMatrixException(msg);                
+//            }
+//            if (CryptoUtil.isValueEncrypted(password)) {
+//            	pwd = CryptoUtil.stringDecrypt(password);
+//            }
+//            else {
+//            	pwd = password;
+//            }
+//        } catch (CryptoException e) {
+//            String msg = CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0024);
+//            throw new MetaMatrixException(msg);                
+//        }
+//        jdbcProps.put(JDBCUtil.PASSWORD, pwd);
+//        jdbcProps.put(JDBCUtil.DRIVER, rd.getProperty(JDBCConnectionResource.DRIVER));
+//        jdbcProps.put(JDBCUtil.USERNAME, rd.getProperty(JDBCConnectionResource.USERNAME));
+//        if (rd.getProperty(JDBCConnectionResource.PROTOCOL) != null && rd.getProperty(JDBCConnectionResource.PROTOCOL).trim().length() > 0)  {
+//        	jdbcProps.put(JDBCUtil.PROTOCOL, rd.getProperty(JDBCConnectionResource.PROTOCOL));
+//        }
+//        jdbcProps.put(JDBCUtil.DATABASE, rd.getProperty(JDBCConnectionResource.DATABASE));  
+//       
+//        return jdbcProps;
+//    }
+//    
+//      
     
     /** 
      * @see com.metamatrix.platform.admin.api.RuntimeStateAdminAPI#getLogEntries(java.util.Date, java.util.Date, java.util.List, java.util.List, int)
