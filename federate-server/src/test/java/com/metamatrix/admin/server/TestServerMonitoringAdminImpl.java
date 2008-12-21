@@ -101,57 +101,6 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
     
     
     /**
-     * Tests <code>ServerMonitoringImpl.getConnectionPools()</code> 
-     * Fake data is set up in FakeRuntimeStateAdminAPIHelper.getResourcePoolStatistics,
-     * FakeConfiguration.getResourcePools(), FakeConfiguration.getResourcePools().    
-     * @since 4.3
-     */
-    public void testGetConnectionPools() throws AdminException {
-        Collection results = admin.getConnectionPools(AdminObject.WILDCARD);  
-        
-        assertEquals(4, results.size());
-        
-        for (Iterator iter = results.iterator(); iter.hasNext();) {
-            ConnectionPool pool = (ConnectionPool) iter.next();
-        
-            if (HOST_1_1_1_1_PROCESS1_POOL1.equals(pool.getIdentifier())) { 
-                assertEquals(ResourceDescriptor.JDBC_RESOURCE_TYPE_NAME, pool.getType());
-                assertEquals(true, pool.isActive());
-                
-                Properties properties1 = pool.getProperties();
-                assertEquals("value1", properties1.getProperty("prop1")); //$NON-NLS-1$ //$NON-NLS-2$
-                assertEquals("value2", properties1.getProperty("prop2")); //$NON-NLS-1$ //$NON-NLS-2$
-                assertEquals("0", properties1.getProperty("stat1")); //$NON-NLS-1$ //$NON-NLS-2$
-                assertEquals("0", properties1.getProperty("stat2")); //$NON-NLS-1$ //$NON-NLS-2$
-            } else if (HOST_2_2_2_2_PROCESS2_POOL2.equals(pool.getIdentifier())) { 
-                assertEquals(true, pool.isActive());
-                
-            } else if (HOST_1_1_1_1_PROCESS1_POOL2.equals(pool.getIdentifier())) { 
-                assertEquals(false, pool.isActive());
-                
-            } else if (HOST_2_2_2_2_PROCESS2_POOL1.equals(pool.getIdentifier())) { 
-                assertEquals(false, pool.isActive());
-            } else {
-                fail("Unexpected pool "+pool.getIdentifier()); //$NON-NLS-1$
-                
-            }   
-        }
-        
-        
-           
-        results = admin.getConnectionPools(HOST_1_1_1_1_WILDCARD);  
-        assertEquals(2, results.size());
-        
-        results = admin.getConnectionPools(HOST_1_1_1_1_PROCESS1_WILDCARD);  
-        assertEquals(2, results.size());
-
-        results = admin.getConnectionPools(HOST_1_1_1_1_PROCESS1_POOL1);  
-        assertEquals(1, results.size());
-        
-    }
-    
-    
-    /**
      * Tests <code>ServerMonitoringImpl.getConnectorBindings()</code>.
      * 
      * Fake data is set up in FakeConfiguration.getDeployedComponents(), FakeConfiguration.getConnectorBindings(),
