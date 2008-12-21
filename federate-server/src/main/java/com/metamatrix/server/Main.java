@@ -164,9 +164,8 @@ public class Main {
 	}   
 	
     private static DbLogListener startDbLogging() throws Exception, DbWriterException {
-        Properties resourceProps = CurrentConfiguration.getResourceProperties(ResourceNames.LOGGING);
         Properties currentProps = CurrentConfiguration.getProperties();
-        Properties resultsProps = PropertiesUtils.clone(currentProps, resourceProps, true, false);
+        Properties resultsProps = PropertiesUtils.clone(currentProps, null, true, false);
         
         // write a db log listener
         DbLogListener dll = new DbLogListener(resultsProps);
