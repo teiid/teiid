@@ -66,10 +66,9 @@ public final class JDBCConnectionPoolHelper {
      * @throws ResourcePoolException if an error occurs obtaining the connection
      */
     public static Connection getConnection(Properties properties, String userName) throws ResourcePoolException {
-        String poolName = properties.getProperty(ResourcePool.RESOURCE_POOL);
-        if (poolName == null) {
-            throw new ResourcePoolException(ErrorMessageKeys.CONFIG_ERR_0026, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0026, userName));
-        }
+
+        String poolName=ResourcePool.JDBC_SHARED_CONNECTION_POOL;
+
 
         // 1st find the descriptor for the given pool name
         ResourceDescriptor descriptor = getDescriptor(poolName);
@@ -154,9 +153,8 @@ public final class JDBCConnectionPoolHelper {
 
         // set the pool name to the name of the descriptor
 			Properties def = new Properties();
-            if (!properties.containsKey(ResourcePool.RESOURCE_POOL)) {
-                def.setProperty(ResourcePool.RESOURCE_POOL, poolName);
-            }
+          	def.setProperty(ResourcePool.RESOURCE_POOL, ResourcePool.JDBC_SHARED_CONNECTION_POOL);
+
             if (!properties.containsKey(ResourcePoolPropertyNames.RESOURCE_ADAPTER_CLASS_NAME)) {
                 def.setProperty(ResourcePoolPropertyNames.RESOURCE_ADAPTER_CLASS_NAME, DEFAULT_ADAPTER);
             }
