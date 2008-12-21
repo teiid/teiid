@@ -95,5 +95,11 @@ public class AuthorizationServicePropertyNames {
      * This property is optional.
      */
     public static final String CONNECTION_POOL_MAXIMUM_CONCURRENT_USERS = "security.authorization.connection.MaximumConcurrentReaders"; //$NON-NLS-1$
+
+    /**
+     * The default authorization factory class when no class is specified.
+     */
+	public static final String DEFAULT_FACTORY_CLASS="com.metamatrix.platform.security.authorization.spi.jdbc.JDBCAuthorizationTransactionFactory";
+
 }
 
