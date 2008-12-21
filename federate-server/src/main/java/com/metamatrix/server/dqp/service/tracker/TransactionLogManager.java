@@ -118,7 +118,6 @@ public final class TransactionLogManager {
             Properties globalProperties = CurrentConfiguration.getProperties();
 
             currentConfigProperties.putAll(globalProperties);
-            currentConfigProperties.putAll(CurrentConfiguration.getResourceProperties(ResourceNames.TRANSACTION_LOGGING));
         } catch ( ConfigurationException e ) {
             LogManager.logWarning(LogCommonConstants.CTX_TXN_LOG, e, ServerPlugin.Util.getString("ERR.003.001.0027")); //$NON-NLS-1$
             currentConfigProperties.putAll(System.getProperties());
