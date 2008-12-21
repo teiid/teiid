@@ -419,7 +419,10 @@ public final class CurrentConfiguration {
     public static Collection getResourceDescriptors() throws ConfigurationException {
         Collection<ResourceDescriptor> rd = new ArrayList(1);
         
-        rd.add(getResourceDescriptor(ResourcePool.JDBC_SHARED_CONNECTION_POOL));
+        ResourceDescriptor connpool = getResourceDescriptor(ResourcePool.JDBC_SHARED_CONNECTION_POOL);
+        if (connpool != null) {
+        	rd.add(connpool);
+        }
 
         return rd;
 
