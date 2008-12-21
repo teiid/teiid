@@ -34,7 +34,6 @@ import java.util.Properties;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.pooling.api.ResourceContainer;
-import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.pooling.impl.BaseResource;
 import com.metamatrix.common.util.ErrorMessageKeys;
@@ -57,11 +56,6 @@ public class DbLogWriter implements DbWriter {
      * Static String to use as the user name when checking out connections from the pool
      */
     static final String LOGGING = "LOGGING";//$NON-NLS-1$
-
-	/**
-	 * The environment property that indicates the name of the pool.
-	 */
-	public static final String RESOURCE_POOL  = ResourcePool.RESOURCE_POOL;
 
 	/**
 	 * The name of the System property that contains the name of the LogMessageFormat
@@ -175,7 +169,6 @@ public class DbLogWriter implements DbWriter {
     
 	private short sequenceNumber;
 	private long lastSequenceStart;
-	private String poolName;
 	private int maxMsgLength        = DEFAULT_MAX_MSG_LENGTH;
 	private int maxGeneralLength    = DEFAULT_MAX_GENERAL_LENGTH;
 	private int maxExceptionLength  = DEFAULT_MAX_EXCEPTION_LENGTH;
@@ -304,11 +297,7 @@ public class DbLogWriter implements DbWriter {
 	 * @throws LogDestinationInitFailedException if there was an error during initialization.
 	 */
 	public void initialize() throws DbWriterException {
-        
-		poolName = connProps.getProperty(ResourcePool.RESOURCE_POOL);
-		if (poolName == null) {
-			throw new DbWriterException(ErrorMessageKeys.CONFIG_ERR_0026, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0026, "LOGGING")); //$NON-NLS-1$
-		}
+
 
 		sequenceNumber = 0;
 		lastSequenceStart = 0;
