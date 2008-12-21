@@ -86,18 +86,14 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
     }
     
     public String getSystemName()  {
-        String systemName = ConfigurationModelContainer.DEFAULT_SYSTEM_NAME; 
+        String systemName = null;
         try {           
-
-          //  Properties props = 
-            SharedResource sr = getResource(ResourceNames.JGROUPS);
-            if (sr != null) {
-                systemName = sr.getProperty(SYSTEM_NAME_PROPERTY);
-                if (systemName == null) {
-                    systemName= ConfigurationModelContainer.DEFAULT_SYSTEM_NAME;
-                }
-            }
+        	systemName = this.getConfiguration().getProperty(SYSTEM_NAME_PROPERTY);
         } catch (Exception e) {     
+        } finally {
+	 		if (systemName == null) {
+        		systemName= ConfigurationModelContainer.DEFAULT_SYSTEM_NAME;
+  			}
         }
         return systemName;
     }    
