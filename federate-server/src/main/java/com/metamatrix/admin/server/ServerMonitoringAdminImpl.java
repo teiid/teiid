@@ -67,6 +67,7 @@ import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
@@ -151,8 +152,8 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         HashSet results = null;
 		Map configMap  = new HashMap();
 		try {
-			Configuration nextStartupConfig = getConfigurationServiceProxy().getConfiguration(Configuration.NEXT_STARTUP);
-			    Collection pools = nextStartupConfig.getResourcePools();
+   			Configuration nextStartupConfig = getConfigurationServiceProxy().getConfiguration(Configuration.NEXT_STARTUP);
+			    Collection pools = CurrentConfiguration.getResourceDescriptors();
 			    
 			    if (pools != null) {
 			        for (Iterator it = pools.iterator(); it.hasNext();) {
@@ -167,10 +168,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 
 			                    MMConnectionPool pool = new MMConnectionPool(identifierParts);
 			                    pool.setType(rd.getComponentTypeID().getName());
-			                    pool.setCreated(rd.getCreatedDate());
-			                    pool.setCreatedBy(rd.getCreatedBy());
-			                    pool.setLastUpdated(rd.getLastChangedDate());
-			                    pool.setLastUpdatedBy(rd.getLastChangedBy());
 			                    Properties properties = PropertiesUtils.clone(rd.getProperties(), false);
 			                    pool.setProperties(properties);
 			                    String key = pool.getIdentifier().toUpperCase();
@@ -203,14 +200,10 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			                results.add(pool);
 			                configMap.remove(key);
 			            } else {
-			                ResourceDescriptor resourceDescriptor = nextStartupConfig.getResourcePool(name);
+			                ResourceDescriptor resourceDescriptor =CurrentConfiguration.getResourceDescriptor(name);
 			                
 			                MMConnectionPool pool = new MMConnectionPool(identifierParts);
 			                pool.setType(stats.getPoolType());
-			                pool.setCreated(resourceDescriptor.getCreatedDate());
-			                pool.setCreatedBy(resourceDescriptor.getCreatedBy());
-			                pool.setLastUpdated(resourceDescriptor.getLastChangedDate());
-			                pool.setLastUpdatedBy(resourceDescriptor.getLastChangedBy());
 			                Properties properties = PropertiesUtils.clone(resourceDescriptor.getProperties(), false);
 			                properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
 			                pool.setProperties(properties);
