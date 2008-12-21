@@ -126,6 +126,11 @@
                     <Service Name="MembershipService" ComponentType="MembershipService" LastChangedDate="2005-07-27T15:30:54.907-06:00" CreationDate="2005-07-27T15:30:54.907-06:00" />
                     <Service Name="SessionService" ComponentType="SessionService" LastChangedDate="2005-07-27T15:30:54.907-06:00" CreationDate="2005-07-27T15:30:54.907-06:00" />
                 </PSC>
+                <PSC Name="MetaBaseServerStandard" ComponentType="MetaBase Server" LastChangedBy="ConfigurationStartup" LastChangedDate="2005-07-27T14:35:44.104-06:00" CreatedBy="ConfigurationStartup" CreationDate="2005-07-27T14:35:44.104-06:00">
+                    <Properties />
+                    <Service Name="IndexingService" ComponentType="IndexingService" LastChangedDate="2005-07-27T15:30:54.907-06:00" CreationDate="2005-07-27T15:30:54.907-06:00" />
+                    <Service Name="DirectoryService" ComponentType="DirectoryService" LastChangedDate="2005-07-27T15:30:54.907-06:00" CreationDate="2005-07-27T15:30:54.907-06:00" />
+                </PSC>
                 <PSC Name="MMProcessPSC" ComponentType="Connectors" LastChangedBy="ImportConfiguration" LastChangedDate="2005-07-27T14:35:49.057-06:00" CreatedBy="ImportConfiguration" CreationDate="2005-07-27T14:35:49.057-06:00">
                     <Properties />
                     <Service Name="DesignTimeCatalog Connector" ComponentType="DesignTimeCatalog JDBC Connector" LastChangedDate="2005-07-27T15:30:54.907-06:00" CreationDate="2005-07-27T15:30:54.907-06:00" />
@@ -151,6 +156,11 @@
             <Service Name="QueryService" IsEnabled="true" />
             <Service Name="ODBCService" IsEnabled="false" />
             <Service Name="RuntimeMetadataService" IsEnabled="true" />
+        </PSC>
+        <PSC Name="MetaBaseServerStandard" ComponentType="MetaBase Server" LastChangedBy="ConfigurationStartup" LastChangedDate="2005-07-27T14:35:44.104-06:00" CreatedBy="ConfigurationStartup" CreationDate="2005-07-27T14:35:44.104-06:00">
+            <Properties />
+            <Service Name="DirectoryService" IsEnabled="true" />
+            <Service Name="IndexingService" IsEnabled="true" />
         </PSC>
         <PSC Name="MMProcessPSC" ComponentType="Connectors" LastChangedBy="ImportConfiguration" LastChangedDate="2005-07-27T14:35:49.057-06:00" CreatedBy="ImportConfiguration" CreationDate="2005-07-27T14:35:49.057-06:00">
             <Properties />
@@ -202,6 +212,64 @@
                 <Property Name="ExtensionResultsTranslationClass">com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator</Property>
             </Properties>
         </Connector>
+         <Connector Name="Test Connector" ComponentType="SQL Server JDBC Connector" LastChangedBy="ImportConfiguration" LastChangedDate="2005-07-27T14:35:49.057-06:00" CreatedBy="ImportConfiguration" CreationDate="2005-07-27T14:35:49.057-06:00" QueuedService="false" routingUUID="mmuuid:c35566c0-f5c2-1f93-b001-feecf7e54680">
+            <Properties>
+                <Property Name="metamatrix.service.essentialservice">false</Property>
+                <Property Name="TransactionIsolationLevel" />
+                <Property Name="com.metamatrix.data.pool.max_connections">20</Property>
+                <Property Name="Password">{mm-encrypt}epFnv265KN0flBn+I8/r2A==</Property>
+                <Property Name="com.metamatrix.data.pool.cleaning_interval">60</Property>
+                <Property Name="com.metamatrix.data.pool.live_and_unused_time">60</Property>
+                <Property Name="User">mm42_ddifranco</Property>
+                <Property Name="com.metamatrix.data.pool.enable_shrinking">true</Property>
+                <Property Name="TrimStrings">false</Property>
+                <Property Name="ExtensionCapabilityClass">com.metamatrix.connector.jdbc.oracle.OracleCapabilities</Property>
+                <Property Name="MaxSQLLength">16384</Property>
+                <Property Name="ConnectorClass">com.metamatrix.connector.jdbc.JDBCConnector</Property>
+                <Property Name="MaxResultRows">0</Property>
+                <Property Name="URL">jdbc:mmx:oracle://slntds04:1521;SID=ds04</Property>
+                <Property Name="ExtensionConnectionFactoryClass">com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory</Property>
+                <Property Name="ConnectorThreadTTL">120000</Property>
+                <Property Name="ServiceClassName">com.metamatrix.server.connector.service.ConnectorService</Property>
+                <Property Name="SetCriteriaBatchSize">0</Property>
+                <Property Name="com.metamatrix.data.pool.max_connections_for_each_id">20</Property>
+                <Property Name="ConnectorMaxThreads">20</Property>
+                <Property Name="ExtensionSQLTranslationClass">com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator</Property>
+                <Property Name="ConnectorClassPath">extensionjar:jdbcconn.jar</Property>
+                <Property Name="com.metamatrix.data.pool.wait_for_source_time">120000</Property>
+                <Property Name="Driver">com.metamatrix.jdbc.oracle.OracleDriver</Property>
+                <Property Name="ExtensionResultsTranslationClass">com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator</Property>
+            </Properties>
+        </Connector>     
+         <Connector Name="Test Connector 2" ComponentType="SQL Server JDBC Connector" LastChangedBy="ImportConfiguration" LastChangedDate="2005-07-27T14:35:49.057-06:00" CreatedBy="ImportConfiguration" CreationDate="2005-07-27T14:35:49.057-06:00" QueuedService="false" routingUUID="mmuuid:c35566c0-f5c2-1f93-b001-feecf7e54680">
+            <Properties>
+                <Property Name="metamatrix.service.essentialservice">false</Property>
+                <Property Name="TransactionIsolationLevel" />
+                <Property Name="com.metamatrix.data.pool.max_connections">20</Property>
+                <Property Name="Password">{mm-encrypt}epFnv265KN0flBn+I8/r2A==</Property>
+                <Property Name="com.metamatrix.data.pool.cleaning_interval">60</Property>
+                <Property Name="com.metamatrix.data.pool.live_and_unused_time">60</Property>
+                <Property Name="User">mm42_ddifranco</Property>
+                <Property Name="com.metamatrix.data.pool.enable_shrinking">true</Property>
+                <Property Name="TrimStrings">false</Property>
+                <Property Name="ExtensionCapabilityClass">com.metamatrix.connector.jdbc.oracle.OracleCapabilities</Property>
+                <Property Name="MaxSQLLength">16384</Property>
+                <Property Name="ConnectorClass">com.metamatrix.connector.jdbc.JDBCConnector</Property>
+                <Property Name="MaxResultRows">0</Property>
+                <Property Name="URL">jdbc:mmx:oracle://slntds04:1521;SID=ds04</Property>
+                <Property Name="ExtensionConnectionFactoryClass">com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory</Property>
+                <Property Name="ConnectorThreadTTL">120000</Property>
+                <Property Name="ServiceClassName">com.metamatrix.server.connector.service.ConnectorService</Property>
+                <Property Name="SetCriteriaBatchSize">0</Property>
+                <Property Name="com.metamatrix.data.pool.max_connections_for_each_id">20</Property>
+                <Property Name="ConnectorMaxThreads">20</Property>
+                <Property Name="ExtensionSQLTranslationClass">com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator</Property>
+                <Property Name="ConnectorClassPath">extensionjar:jdbcconn.jar</Property>
+                <Property Name="com.metamatrix.data.pool.wait_for_source_time">120000</Property>
+                <Property Name="Driver">com.metamatrix.jdbc.oracle.OracleDriver</Property>
+                <Property Name="ExtensionResultsTranslationClass">com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator</Property>
+            </Properties>
+        </Connector>       
     </ConnectorBindings>
     <Services>
         <Service Name="SessionService" ComponentType="SessionService" LastChangedBy="ConfigurationStartup" LastChangedDate="2005-07-27T14:35:44.120-06:00" CreatedBy="ConfigurationStartup" CreationDate="2005-07-27T14:35:44.120-06:00" QueuedService="false" routingUUID="mmuuid:a0c2ce06-f5c1-1f93-b001-feecf7e54680">
