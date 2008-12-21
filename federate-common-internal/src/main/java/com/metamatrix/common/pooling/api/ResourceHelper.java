@@ -62,13 +62,8 @@ public final class ResourceHelper {
      */
     public static Resource getResource(Properties properties, String userName) throws ResourcePoolException {
 
-        String poolName = properties.getProperty(ResourcePool.RESOURCE_POOL);
-        if (poolName == null) {
-            throw new ResourcePoolException(ErrorMessageKeys.POOLING_ERR_0001);
-        }
-
         // 1st find the descriptor for the given pool name
-        return getResource(poolName, userName);
+        return getResource(ResourcePool.JDBC_SHARED_CONNECTION_POOL, userName);
 
     }
 
@@ -94,7 +89,7 @@ public final class ResourceHelper {
         ResourceDescriptor descriptor = null;
         try {
 
-             descriptor = CurrentConfiguration.getResourceDescriptor(poolName);
+             descriptor = CurrentConfiguration.getResourceDescriptor(ResourcePool.JDBC_SHARED_CONNECTION_POOL);
 
              if (descriptor == null) {
              	throw new ResourcePoolException(ErrorMessageKeys.POOLING_ERR_0002);
