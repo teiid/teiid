@@ -60,17 +60,7 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  * <table>
  * </p>
  */
-public class MMDataSource extends BaseDataSource implements javax.sql.XADataSource {
-
-    
-    static{
-        try {
-            Class.forName("com.metamatrix.jdbc.MMDriver"); //$NON-NLS-1$
-        } catch(ClassNotFoundException e) {
-            String msg = JDBCPlugin.Util.getString("MMDataSource.Cant_load_driver"); //$NON-NLS-1$
-            DriverManager.println(msg);
-        }
-    }
+public class MMDataSource extends BaseDataSource {
 
     /**
      * The port number where a MetaMatrix Server is listening for requests.

@@ -61,7 +61,9 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	}
 	
 	public SocketServerInstance createServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
-		return new SocketServerInstanceImpl(info, ssl, this.log, this.channelFactory, Handshake.HANDSHAKE_TIMEOUT, SocketConstants.getSynchronousTTL());
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, ssl, this.log, SocketConstants.getSynchronousTTL());
+		ssii.connect(this.channelFactory, Handshake.HANDSHAKE_TIMEOUT);
+		return ssii;
 	}
 	
 	/**

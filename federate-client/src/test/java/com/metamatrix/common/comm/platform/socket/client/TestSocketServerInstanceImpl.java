@@ -75,15 +75,17 @@ public class TestSocketServerInstanceImpl extends TestCase {
 		ObjectChannelFactory channelFactory = Mockito.mock(ObjectChannelFactory.class);
 		try {
 			createInstance(channelFactory);
-			fail("Exception expected");
+			fail("Exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("Handshake timeout", e.getMessage());
+			assertEquals("Handshake timeout", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 
 	private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
 			throws CommunicationException, IOException {
-		return new SocketServerInstanceImpl(new HostInfo("foo", 1), false, Mockito.mock(SocketLog.class), channelFactory, 1, 1);
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(new HostInfo("foo", 1), false, Mockito.mock(SocketLog.class), 1); //$NON-NLS-1$
+		ssii.connect(channelFactory, 1);
+		return ssii;
 	}
 	
 	public void testSuccessfulHandshake() throws Exception {
@@ -100,13 +102,38 @@ public class TestSocketServerInstanceImpl extends TestCase {
 			}
 		};
 		SocketServerInstanceImpl instance = createInstance(channelFactory);
+		
+		//no remote server is hooked up, so this will timeout
 		ILogon logon = instance.getService(ILogon.class);
 		try {
 			logon.logon(new Properties());
-			fail("Exception expected");
+			fail("Exception expected"); //$NON-NLS-1$
 		} catch (MetaMatrixComponentException e) {
 			assertTrue(e.getCause() instanceof TimeoutException);
 		}
 	}
+	
+	public void testVersionMismatch() throws Exception {
+		final FakeObjectChannel channel = new FakeObjectChannel();
+		ObjectChannelFactory channelFactory = new ObjectChannelFactory() {
+			@Override
+			public void createObjectChannel(SocketAddress address,
+					SSLEngine engine, ChannelListenerFactory listenerFactory)
+					throws IOException, CommunicationException {
+				assertNull(engine);
+				ChannelListener listener = listenerFactory.createChannelListener(channel);
+				Handshake h = new Handshake();
+				h.setVersion("foo"); //$NON-NLS-1$
+				listener.receivedMessage(h);
+			}
+		};
+		try {
+			createInstance(channelFactory);
+			fail("exception expected"); //$NON-NLS-1$
+		} catch (CommunicationException e) {
+			assertEquals("Handshake failed due to version mismatch -- Client Version: 6.0, Server Version: foo", e.getMessage()); //$NON-NLS-1$
+		}
+	}
+
 
 }

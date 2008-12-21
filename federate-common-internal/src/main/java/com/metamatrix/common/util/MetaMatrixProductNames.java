@@ -73,13 +73,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
         }
     }
 
-    public static class MetaDataServer {
-        public static final String PRODUCT_NAME = METADATA_SERVER_TYPE_NAME;
-        public static class SubSystemNames {
-            public static final String METADATA_DIRECTORY = "MetaData Directory"; //$NON-NLS-1$
-        }
-    }
-
     public static class ConnectorProduct {
         public static final String PRODUCT_NAME = CONNECTOR_PRODUCT_TYPE_NAME;
         public static final String JDBC = "Connector/JDBC"; //$NON-NLS-1$
@@ -148,12 +141,6 @@ public final class MetaMatrixProductNames extends MetaMatrixProductVersion {
         aList.add(MetaMatrixServer.SubSystemNames.RUNTIME_METADATA);
         aList.add(MetaMatrixServer.SubSystemNames.TRANSACTION);
         productsToSubsystems.put(MetaMatrixServer.PRODUCT_NAME, aList);
-
-        //MetaData server
-        subsystemCount = 1;
-        aList = new ArrayList(subsystemCount);
-        aList.add(MetaDataServer.SubSystemNames.METADATA_DIRECTORY);
-        productsToSubsystems.put(MetaDataServer.PRODUCT_NAME, aList);
 
         productsToSubsystems.put(ConnectorProduct.PRODUCT_NAME, Collections.EMPTY_LIST);
     }

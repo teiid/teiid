@@ -267,9 +267,7 @@ public class PanelsTree
     			String secondNodeName = secondNode.getName();
     			if (secondNodeName.equals(PanelsTreeModel.MM_SERVER)) {
     				icons.add(MM_SERVER_ICON);
-    			} else if (secondNodeName.equals(PanelsTreeModel.MB_SERVER)) {
-    				icons.add(MB_SERVER_ICON);
-    			}
+    			} 
     		}
     		Icon[] iconsArray = new Icon[icons.size()];
     		Iterator it = icons.iterator();
@@ -361,8 +359,6 @@ public class PanelsTree
             if (hdrTxt != null) {
                 if (node.getName().equals(PanelsTreeModel.MM_SERVER)) {
                     setIcon(MM_SERVER_ICON);
-                } else if (node.getName().equals(PanelsTreeModel.MB_SERVER)) {
-                	setIcon(MB_SERVER_ICON);
                 } else if (hdrTxt.equals(PanelsTreeModel.RUNTIME)) {
                     setIcon((node.getName().equals(PanelsTreeModel.RUNTIME))
                         ? RUNTIME_HDR_ICON

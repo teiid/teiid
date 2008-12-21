@@ -142,9 +142,6 @@ public final class ConfigurationTreeCellRenderer
                 MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME)) {
                 setIcon(METAMATRIX_SERVER_ICON);
             } else if (product.getName().equals(
-                MetaMatrixProductNames.MetaDataServer.PRODUCT_NAME)) {
-                setIcon(METADATA_SERVER_ICON);
-            } else if (product.getName().equals(
                 MetaMatrixProductNames.ConnectorProduct.PRODUCT_NAME)) {
                 setIcon(CONNECTOR_ICON);
             }

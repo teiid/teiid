@@ -53,7 +53,6 @@ public class PanelsTreeModel extends DefaultTreeModel {
     public static final Class SYSTEM_LOG_PANEL_CLASS =
         	com.metamatrix.console.ui.views.syslog.SysLogPanel.class;
     public static final String MM_SERVER = MetaMatrixProductVersion.METAMATRIX_SERVER_TYPE_NAME;  
-    public static final String MB_SERVER = MetaMatrixProductVersion.METADATA_SERVER_TYPE_NAME;  
     public static final String QUERIES = "Queries"; //$NON-NLS-1$
     public static final Class QUERIES_PANEL_CLASS =
         	com.metamatrix.console.ui.views.queries.QueryPanel.class;
@@ -109,7 +108,7 @@ public class PanelsTreeModel extends DefaultTreeModel {
             com.metamatrix.console.ui.views.logsetup.SystemLogSetUpPanel.class;
 
 	public static final Object[] BLOCKED_ITEMS = new Object[] {RUNTIME, 
-	    	MM_SERVER, MB_SERVER, CONFIGURATION, AUTHORIZATION};
+	    	MM_SERVER, CONFIGURATION, AUTHORIZATION};
 	    	
     private static final String MM_SERV_TIP =
             "The " + MM_SERVER + " product provides integrated information " + //$NON-NLS-1$ //$NON-NLS-2$

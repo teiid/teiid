@@ -59,7 +59,6 @@ import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
@@ -75,8 +74,6 @@ import com.metamatrix.dqp.client.ResultsFuture;
  */
 public class SocketServerInstanceImpl implements ChannelListener, SocketServerInstance {
 	
-    static String RELEASE_NUMBER;
-
 	private AtomicInteger MESSAGE_ID = new AtomicInteger();
 
 	private HostInfo hostInfo;
@@ -96,14 +93,14 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	
     }
 
-    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, SocketLog log, ObjectChannelFactory channelFactory, long handShakeTimeout, long synchTimeout)
-        throws CommunicationException, IOException {
-
+    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, SocketLog log, long synchTimeout) {
         this.hostInfo = host;
         this.log = log;
         this.ssl = ssl;
         this.synchTimeout = synchTimeout;
-
+    }
+    
+    public void connect(ObjectChannelFactory channelFactory, long handShakeTimeout) throws CommunicationException, IOException {
         InetSocketAddress address = null;
         if (hostInfo.getInetAddress() != null) {
             address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
@@ -124,7 +121,12 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 
 			public ChannelListener createChannelListener(
 					ObjectChannel channel) {
-				SocketServerInstanceImpl.this.socketChannel = channel;
+				synchronized (SocketServerInstanceImpl.this) {
+					if (SocketServerInstanceImpl.this.handshakeError != null) {
+						channel.close();
+					}
+					SocketServerInstanceImpl.this.socketChannel = channel;
+				}
 				return SocketServerInstanceImpl.this;
 			}
 			
@@ -139,17 +141,17 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 				try {
 					this.wait(remainingTimeout);
 				} catch (InterruptedException e) {
-					throw new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error")); //$NON-NLS-1$
+					break;
 				}
 			}
-			if (this.handshakeError != null) {
-				throw this.handshakeError;
-			}
-			if (!this.handshakeCompleted) {
+			if (!this.handshakeCompleted || this.handshakeError != null) {
 				if (this.socketChannel != null) {
 					this.socketChannel.close();
 				}
-				throw new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_timeout")); //$NON-NLS-1$
+				if (this.handshakeError == null) {
+					this.handshakeError = new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_timeout")); //$NON-NLS-1$
+				}	
+				throw this.handshakeError;
 			}
 		}
     }
@@ -162,26 +164,15 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     }
     
     static String getVersionInfo() {
-        if (RELEASE_NUMBER == null) {
-        	RELEASE_NUMBER = MetaMatrixProductVersion.VERSION_NUMBER;
-            try {
-                ApplicationInfo info = ApplicationInfo.getInstance();
-                ApplicationInfo.Component component = info.getMainComponent();
-                if (component != null) {
-                	RELEASE_NUMBER = component.getReleaseNumber();
-                } 
-            } catch (Throwable t) {
-                //Ignore default to Unknown
-            }
-        }
-        return RELEASE_NUMBER;
+        return MetaMatrixProductVersion.VERSION_NUMBER;
     }
     
     private synchronized void receivedHahdshake(Handshake handshake) {
         try {
-            /*if (handshake.getVersion().indexOf(getVersionInfo()) == -1) {
-                throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
-            }*/
+            if (!getVersionInfo().equals(handshake.getVersion())) {
+                this.handshakeError = new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
+                return;
+            }
             
             handshake.setVersion(getVersionInfo());
             
@@ -344,9 +335,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 							}
 							if (result instanceof Throwable) {
 								throw new ExecutionException((Throwable)result);
-							} else {
-								return result;
 							}
+							return result;
 						} catch (CryptoException e) {
 							throw new ExecutionException(e);
 						}

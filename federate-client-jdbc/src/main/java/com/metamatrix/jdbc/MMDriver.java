@@ -38,17 +38,15 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.util.ApplicationInfo;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.jdbc.api.ConnectionProperties;
-import com.metamatrix.jdbc.transport.MultiTransportFactory;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -80,22 +78,10 @@ public final class MMDriver extends BaseDriver {
     static final String URL_PATTERN = "jdbc:metamatrix:(\\w+)@((mm[s]?://"+HOST_PORT_PATTERN+"(,"+HOST_PORT_PATTERN+")*)[;]?){1}((.*)*)"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
     
-    static MultiTransportFactory CONNECTION_FACTORY = new MultiTransportFactory();
-
     private static MMDriver INSTANCE = new MMDriver();
         
     // Static initializer
     static {
-
-        try {
-            ApplicationInfo info = ApplicationInfo.getInstance();
-            info.setMainComponent("metamatrix-jdbc.jar"); //$NON-NLS-1$
-            info.markUnmodifiable();
-        } catch (Exception e) {
-            String logMsg = JDBCPlugin.Util.getString("MMDriver.Err_init_appinfo", e.getMessage()); //$NON-NLS-1$
-            DriverManager.println(logMsg);
-        }
-        
         try {
             DriverManager.registerDriver(INSTANCE);
         } catch(SQLException e) {
@@ -157,19 +143,13 @@ public final class MMDriver extends BaseDriver {
     }
 
     MMServerConnection createMMConnection(String url, Properties info)
-        throws ConnectionException, CommunicationException, LogonException {
+        throws ConnectionException, CommunicationException {
 
-        String transport = setupTransport(info);
-        ServerConnection serverConn = CONNECTION_FACTORY.establishConnection(transport, info);
+        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
 
         // construct a MMConnection object.
         MMServerConnection connection = MMServerConnection.newInstance(serverConn, info, url);
         return connection;
-    }
-
-    static String setupTransport(Properties info) {
-        // create a connection using the transport factory
-        return MultiTransportFactory.SOCKET_TRANSPORT; 
     }
 
     /**

@@ -49,7 +49,6 @@ import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerF
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
@@ -61,7 +60,6 @@ public class SocketListener implements ChannelListenerFactory {
     private ClientServiceRegistry server;
     private WorkerPool workerPool;
     private String bindAddress;
-    private static String RELEASE_NUMBER;
     private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
     
@@ -119,18 +117,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
     
     static String getVersionInfo() {
-        if (RELEASE_NUMBER == null) {
-        	RELEASE_NUMBER = MetaMatrixProductVersion.VERSION_NUMBER;
-            try {
-                ApplicationInfo info = ApplicationInfo.getInstance();
-                info.setMainComponent("metamatrix-server.jar"); //$NON-NLS-1$
-                ApplicationInfo.Component component = info.getMainComponent();
-                RELEASE_NUMBER = component.getReleaseNumber();
-            } catch (Throwable t) {
-                //Ignore default to Unknown
-            }
-        }
-        return RELEASE_NUMBER;
+        return MetaMatrixProductVersion.VERSION_NUMBER;
     }
     
     public void stop() {
