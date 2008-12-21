@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -51,7 +52,6 @@ public class DistributedVMTransactionLockFactory extends  ConfigTransactionLockF
 //	private Connection connection;
 	private String hostName = "NotAssigned"; //$NON-NLS-1$
 
-	private Properties resourceProps = null;
 	private Properties allProps = null;
 
 	public DistributedVMTransactionLockFactory(Properties props)  {
@@ -318,20 +318,7 @@ public class DistributedVMTransactionLockFactory extends  ConfigTransactionLockF
 
 
 	private Connection getConnection() throws ConfigurationException, ResourcePoolException {
-
-			if (resourceProps == null) {
-			// this is done at this point so that XMLConfiguarationMgr can
-			// complete the init method and not cause recursive behavior
-				SharedResource r = CurrentConfiguration.getConfigurationModel().getResource(ResourceNames.CONFIGURATION_SERVICE);
-				resourceProps = r.getProperties();
-
-				allProps = PropertiesUtils.clone(getProperties(), false);
-				allProps.putAll(resourceProps);
-			}
-
-//				System.out.println("CONFIG SVC PROPS: " + PropertiesUtils.prettyPrint(resourceProps));
-
-		return (Connection) ResourceHelper.getResource(resourceProps, "ConfigurationLockTransaction"); //$NON-NLS-1$
+		return JDBCConnectionPoolHelper.getConnection(getProperties(), "ConfigurationLockTransaction");
 
 	}
 
