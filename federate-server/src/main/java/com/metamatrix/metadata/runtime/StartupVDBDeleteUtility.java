@@ -83,15 +83,7 @@ public class StartupVDBDeleteUtility extends AbstractVDBDeleteUtility {
         throws MetaMatrixComponentException {
         
         //Get JDBCSessionTransaction connection properties
-        Properties transactionProps = null;
-        try {
-            transactionProps = CurrentConfiguration.getResourceProperties(ResourceNames.AUTH_SERVICE);
-        } catch (ConfigurationException e) {
-            // Not a whole lot can be done now...
-            I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.VDBDU_0004, e,new Object[]{VDBName, VDBVersion});
-            return;
-        }        
-        transactionProps = PropertiesUtils.clone(transactionProps, false);
+        Properties transactionProps = CurrentConfiguration.getProperties();
         transactionProps.setProperty(TransactionMgr.FACTORY, 
                                      transactionProps.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY));
 
