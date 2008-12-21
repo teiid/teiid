@@ -176,11 +176,9 @@ public final class AuditManager {
         try {
 
             Properties globalProperties = CurrentConfiguration.getProperties();
-            Properties resourceProperties = CurrentConfiguration.getResourceProperties(ResourceNames.AUDITING);
-
+ 
             currentConfigProperties.putAll(globalProperties);
-            currentConfigProperties.putAll(resourceProperties);
-
+ 
             AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
         } catch ( ConfigurationException e ) {
             I18nLogManager.logWarning(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0003, e,
@@ -262,10 +260,8 @@ public final class AuditManager {
             try {
 
                 Properties globalProperties = CurrentConfiguration.getProperties();
-                Properties resourceProperties = CurrentConfiguration.getResourceProperties(ResourceNames.AUDITING);
 
                 currentConfigProperties.putAll(globalProperties);
-                currentConfigProperties.putAll(resourceProperties);
 
                 AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
             } catch ( ConfigurationException e ) {
