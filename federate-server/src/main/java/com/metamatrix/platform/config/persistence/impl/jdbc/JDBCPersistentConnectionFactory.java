@@ -137,15 +137,8 @@ public class JDBCPersistentConnectionFactory
         DriverManager.setLoginTimeout(480);
         Connection connection = null;
         if (usePooling) {
-            String poolname = null;
-            if (props.containsKey(ResourcePool.RESOURCE_POOL)) {
-                poolname = props.getProperty(ResourcePool.RESOURCE_POOL);
-            } else {
-                poolname = ResourcePool.JDBC_SHARED_CONNECTION_POOL;
-            }
-            
             try {
-                connection = JDBCConnectionPoolHelper.getConnection(poolname, USER);
+                connection = JDBCConnectionPoolHelper.getConnection(ResourcePool.JDBC_SHARED_CONNECTION_POOL, USER);
             } catch (ResourcePoolException e) {
                 throw new ConfigurationException(e);
 
