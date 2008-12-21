@@ -35,24 +35,10 @@ package com.metamatrix.common.config;
 */
 public interface ResourceNames {
 
-//    public static final String INSTALLATION_DIR = "InstallationDir"; //$NON-NLS-1$
 
     public static final String RUNTIME_METADATA_SERVICE = "RuntimeMetadataService"; //$NON-NLS-1$
-	public static final String RUNTIME_METADATA = "RuntimeMetadata"; //$NON-NLS-1$
-    public static final String LOGGING  = "Logging"; //$NON-NLS-1$
-    public static final String TRANSACTION_LOGGING  = "TransactionLogging"; //$NON-NLS-1$
-    public static final String ID_GENERATOR = "IDGenerator"; //$NON-NLS-1$
-//  removed - no longer used  public static final String SERVICE_MESSAGING_JMS = "ServiceMessagingJMS"; //$NON-NLS-1$
     public static final String DIRECTORY_SERVICE = "DirectoryService"; //$NON-NLS-1$
-    public static final String AUDITING = "Audit"; //$NON-NLS-1$
-
-
-    public static final String AUTH_SERVICE = "AuthorizationService"; //$NON-NLS-1$
     public static final String MEMBERSHIP_SERVICE = "MembershipService"; //$NON-NLS-1$
-    public static final String SESSION_SERVICE = "SessionService"; //$NON-NLS-1$
-    public static final String CONFIGURATION_SERVICE = "ConfigurationService"; //$NON-NLS-1$
-
-    public static final String EXTENSION_SOURCE_MANAGER = "ExtensionSourceManager"; //$NON-NLS-1$
     // Txn Mgr properties for Transactional Server product
     public static final String XA_TRANSACTION_MANAGER = "XATransactionManager"; //$NON-NLS-1$
     public static final String INDEXING_SERVICE = "IndexingService"; //$NON-NLS-1$
