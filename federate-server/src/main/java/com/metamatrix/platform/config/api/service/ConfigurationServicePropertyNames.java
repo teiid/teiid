@@ -74,6 +74,10 @@ public class ConfigurationServicePropertyNames {
      * This property is optional.
      */
     public static final String CONNECTION_POOL_MAXIMUM_CONCURRENT_USERS = "metamatrix.config.connection.MaximumConcurrentReaders"; //$NON-NLS-1$
-
+   
+    /**
+     * The default connection factory class to use when one is not specified.
+     */
+    public static final String DEFAULT_CONNECTION_FACTORY_CLASS="com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory";
 }
 
