@@ -143,22 +143,6 @@ public class TestXMLConfigReader extends BaseTest {
         HelperTestConfiguration.validateHosts(hosts);
     }
 
-    public void testFindResourcePool() throws Exception {
-
-        SharedResource sr = CurrentConfiguration.getConfigurationModel().getResource(ResourceNames.CONFIGURATION_SERVICE);
-
-        String poolName = sr.getProperty(ResourcePool.RESOURCE_POOL);
-
-        if (poolName == null || poolName.length() == 0) {
-            fail(ResourcePool.RESOURCE_POOL + " property was not found for resource " + ResourceNames.CONFIGURATION_SERVICE); //$NON-NLS-1$
-        }
-
-        ResourceDescriptor descriptor = CurrentConfiguration.getResourceDescriptor(poolName);
-
-        if (descriptor == null) {
-            fail("ResouceDescriptor was not found for pool " + poolName); //$NON-NLS-1$
-        }
-    }
 
     public void testComponentTypeDefn() throws Exception {
         ConfigurationModelContainer cmc = CurrentConfiguration.getConfigurationModel();
