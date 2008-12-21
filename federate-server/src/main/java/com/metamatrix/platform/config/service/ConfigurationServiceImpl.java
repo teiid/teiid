@@ -45,6 +45,7 @@ import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.AddObject;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -1104,25 +1105,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             return Collections.EMPTY_LIST;
         }
 
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
-
-                return transaction.getConnectionPools(configurationID);
-
-        } catch ( ManagedConnectionException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
-            }
-        }
-
+        Collection pools = new ArrayList(1);
+        pools.add(CurrentConfiguration.getResourceDescriptors());
+        return pools;
+       
     }
 
    /**
@@ -1147,36 +1133,18 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
         Collection result = null;
 
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
+        Collection pools = getResourcePools(configurationID);
+        result = new ArrayList(pools.size());
 
-                Collection pools = transaction.getConnectionPools(configurationID);
-                result = new ArrayList(pools.size());
-
-                for (Iterator it=pools.iterator(); it.hasNext(); ) {
-                    ResourceDescriptor rd =(ResourceDescriptor) it.next();
-                    if (rd.getComponentTypeID().equals(componentTypeID)) {
-                        result.add(rd);
-                    }
-
-                }
-
-                return result;
-
-        } catch ( ManagedConnectionException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
+        for (Iterator it=pools.iterator(); it.hasNext(); ) {
+            ResourceDescriptor rd =(ResourceDescriptor) it.next();
+            if (rd.getComponentTypeID().equals(componentTypeID)) {
+                result.add(rd);
             }
+
         }
 
+        return result;
     }
 
 
