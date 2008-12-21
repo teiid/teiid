@@ -27,5 +27,5 @@ package com.metamatrix.platform.config.service;
 import com.metamatrix.common.config.ResourceNames;
 
 public interface ConfigurationServiceConstants {
-  public static final String NAME = ResourceNames.CONFIGURATION_SERVICE;
+  public static final String NAME = "ConfigurationService";
 }
