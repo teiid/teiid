@@ -94,18 +94,7 @@ public class TestCurrentConfiguration extends BaseTest {
     		CurrentConfiguration.performSystemInitialization(true); 
 
             validConfigurationModel();
-//    		Configuration config = CurrentConfiguration.getConfiguration();
-//    		
-//    		if (config == null) {
-//    			fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
-//    		}
-//    		
-//    		HelperTestConfiguration.validateConfigContents(config);
-    		
-    		Properties props = CurrentConfiguration.getResourceProperties(ResourceNames.CONFIGURATION_SERVICE);
-    		if (props == null || props.isEmpty()) {
-    			fail("No Resource Properties were found for " + ResourceNames.CONFIGURATION_SERVICE); //$NON-NLS-1$
-    		}
+
     		
     		Properties configProps = CurrentConfiguration.getProperties();	
     		if (configProps == null || configProps.isEmpty()) {
@@ -291,10 +280,6 @@ public class TestCurrentConfiguration extends BaseTest {
             
             HelperTestConfiguration.validateConfigContents(config);
             
-            Properties props = CurrentConfiguration.getResourceProperties(ResourceNames.CONFIGURATION_SERVICE);
-            if (props == null || props.isEmpty()) {
-                fail("No Resource Properties were found for " + ResourceNames.CONFIGURATION_SERVICE); //$NON-NLS-1$
-            }
             
             Properties configProps = CurrentConfiguration.getProperties();  
             if (configProps == null || configProps.isEmpty()) {
