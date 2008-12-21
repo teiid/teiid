@@ -89,9 +89,6 @@ public class HelperTestConfiguration {
     	validateHosts(hosts);
     		
     	
-    	Collection pools = config.getResourcePools();
-    	validateConnectionPools(pools);
-    		
     	
     }
     
@@ -147,32 +144,7 @@ public class HelperTestConfiguration {
     	
     }    
     
-    public static void validateConnectionPools(Collection defns) throws ConfigurationException {
-    	
-    	if (defns == null ||
-    		defns.isEmpty()) {
-    			throw new ConfigurationException("No connection pool definitions exist"); //$NON-NLS-1$
-    			
-    	}
-    	// this will throw a class cast exception if not the right type
-   	
-    	for (Iterator it=defns.iterator(); it.hasNext(); ) {
-    		ResourceDescriptor t = (ResourceDescriptor) it.next();
-    		validateConnectionPool(t);    				
-    	}
-    	
-    }
-    
-    public static void validateConnectionPool(ResourceDescriptor pool) throws ConfigurationException {
-    
-    	ArgCheck.isNotNull(pool, "Connection Pool is null"); //$NON-NLS-1$
-    	
-		validateComponentObject(pool);
-		
-    	ArgCheck.isNotNull(pool.getProperties(), "Connection Pool does not have any properties"); //$NON-NLS-1$
-    
-    }
-    
+
 
     public static void validateComponentDefns(Collection defns) throws ConfigurationException {
     	
