@@ -230,7 +230,7 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
         if (loadMetadata) {
             includeMetadata = true;
             try {
-				RuntimeMetadataCatalog.getQueryMetadataCache().lookupMetadata(vdb.getVirtualDatabaseID().getFullName(), vdb.getVirtualDatabaseID().getVersion(), vdbcontents);
+				RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().lookupMetadata(vdb.getVirtualDatabaseID().getFullName(), vdb.getVirtualDatabaseID().getVersion(), vdbcontents);
 			} catch (MetaMatrixComponentException e) {
 				throw new VirtualDatabaseException(e);
 			}
@@ -262,7 +262,7 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
     
     protected ObjectQueryProcessor getObjectQueryProcessor() throws VirtualDatabaseException {
     	final VirtualDatabaseID vdbID = vdb.getVirtualDatabaseID();
-    	IndexSelector selector = RuntimeMetadataCatalog.getQueryMetadataCache().getCompositeSelector(vdbID.getName(), vdbID.getVersion());        
+    	IndexSelector selector = RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().getCompositeSelector(vdbID.getName(), vdbID.getVersion());        
         
         // this is less than ideal, put since we are being called statically and we haven't bothered changing all the methods
     	// we don't have a reference to the actual vdbservice.  we can however just make direct calls.

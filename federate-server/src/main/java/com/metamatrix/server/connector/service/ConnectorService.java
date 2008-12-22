@@ -323,7 +323,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // Create and install a metadata service on the connector manager
         QueryMetadataCache sharedCache = null;        
         try {
-            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(RuntimeMetadataCatalog.getSystemVDBArchive());            
+            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(RuntimeMetadataCatalog.getInstance().getSystemVDBArchive());            
         } catch(Exception e) {
             throw new ApplicationInitializationException(e, ServerPlugin.Util.getString("ConnectorService.0")); //$NON-NLS-1$
         }

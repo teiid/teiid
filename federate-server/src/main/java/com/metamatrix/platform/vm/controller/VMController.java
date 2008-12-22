@@ -76,6 +76,8 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.ZipFileUtil;
+import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
@@ -221,6 +223,8 @@ public abstract class VMController implements VMControllerInterface {
 
         this.clientServices = new ClientServiceRegistry(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
 
+        RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
+        
         this.registerILogonAPI();
         this.registerAdmin();
         

@@ -241,7 +241,7 @@ public class SessionServiceImpl extends AbstractService implements
             String vdbVersion = (String)properties.get(ProductInfoConstants.VDB_VERSION);
             VirtualDatabaseID vdbID = null;
             try {
-                vdbID = RuntimeMetadataCatalog.getActiveVirtualDatabaseID(vdbName, vdbVersion);
+                vdbID = RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
             } catch (VirtualDatabaseDoesNotExistException e) {
                 // Propagate message, don't care about stack trace
                 throw new MetaMatrixAuthenticationException(e.getMessage());

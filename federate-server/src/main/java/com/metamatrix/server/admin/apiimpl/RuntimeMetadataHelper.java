@@ -152,8 +152,8 @@ public class RuntimeMetadataHelper {
         VirtualDatabaseID previousID = null;
         VirtualDatabase previousVDB = null;
         try {
-            previousID = RuntimeMetadataCatalog.getVirtualDatabaseID(vdbName, String.valueOf(vers));
-            previousVDB = RuntimeMetadataCatalog.getVirtualDatabase(previousID);
+            previousID = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, String.valueOf(vers));
+            previousVDB = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(previousID);
         } catch (VirtualDatabaseDoesNotExistException e) {
             // This version doesn't exist, skip it.
 // DEBUG:
@@ -193,7 +193,7 @@ public class RuntimeMetadataHelper {
         VirtualDatabaseMetadata vdbMeta = null;
 
         try {
-            vdbMeta = RuntimeMetadataCatalog.getVirtualDatabaseMetadata(vdbID);
+            vdbMeta = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseMetadata(vdbID);
         } catch (VirtualDatabaseException e) {
             String msg = RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.admin_0051, new Object[]{vdbID});
             throw  new MetaMatrixComponentException(e, ErrorMessageKeys.admin_0051, msg);
@@ -342,9 +342,9 @@ public class RuntimeMetadataHelper {
      */
     private static synchronized void buildVDBTree(String vdbName, String vdbVersion, BasicTreeNode rootNode,ObjectIDFactory idFactory) throws VirtualDatabaseException {
 
-        VirtualDatabaseID vdbID = RuntimeMetadataCatalog.getVirtualDatabaseID(vdbName, vdbVersion);
+        VirtualDatabaseID vdbID = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, vdbVersion);
 
-        VirtualDatabaseMetadata vDBMetadata = RuntimeMetadataCatalog.getVirtualDatabaseMetadata(vdbID);
+        VirtualDatabaseMetadata vDBMetadata = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseMetadata(vdbID);
         
         VDBTreeUtility.buildDataNodeTree(rootNode, idFactory, vDBMetadata);
     } 
@@ -450,7 +450,7 @@ public class RuntimeMetadataHelper {
 
         VirtualDatabaseID vdbID = null;
         try {
-            vdbID = RuntimeMetadataCatalog.getVirtualDatabaseID(vdbName, vdbVersion);
+            vdbID = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, vdbVersion);
         } catch (VirtualDatabaseException e) {
             String msg = RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.admin_0054, new Object[]{vdbName, vdbVersion});
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.admin_0054,msg);
@@ -474,7 +474,7 @@ public class RuntimeMetadataHelper {
         VirtualDatabaseID svdbID = null;           
 
         try {
-            svdbID = RuntimeMetadataCatalog.getVirtualDatabaseID(tvdbID.getFullName(), prevV);
+            svdbID = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(tvdbID.getFullName(), prevV);
         } catch (VirtualDatabaseException e) {
         }    
         // if the vdb isn't found then no migration can be done        
@@ -486,14 +486,14 @@ public class RuntimeMetadataHelper {
         VirtualDatabase svdb = null;
 
         try {
-             svdb = RuntimeMetadataCatalog.getVirtualDatabase(svdbID);
+             svdb = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(svdbID);
         } catch (VirtualDatabaseException e) {
             String msg = RuntimeMetadataPlugin.Util.getString("RuntimeMetadataHelper.VDB_is_not_found", new Object[]{svdbID.toString()});//$NON-NLS-1$
             throw new MetaMatrixComponentException(e, msg);
         }
         
         try {
-             tvdb = RuntimeMetadataCatalog.getVirtualDatabase(tvdbID);
+             tvdb = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(tvdbID);
         } catch (VirtualDatabaseException e) {
             String msg = RuntimeMetadataPlugin.Util.getString("RuntimeMetadataHelper.VDB_is_not_found", new Object[]{svdbID.toString()});//$NON-NLS-1$
             throw new MetaMatrixComponentException(e, msg);
@@ -794,7 +794,7 @@ public class RuntimeMetadataHelper {
             // null passed in - version was unknown.  Query runtime catalog
             VirtualDatabaseID vdbID = null;
             try {
-                vdbID = RuntimeMetadataCatalog.getActiveVirtualDatabaseID(vdbName, vdbVersion);
+                vdbID = RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
             } catch (VirtualDatabaseDoesNotExistException err) {
                 // VDB is new
             } catch (VirtualDatabaseException err) {

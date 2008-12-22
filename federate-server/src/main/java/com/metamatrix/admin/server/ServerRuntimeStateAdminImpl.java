@@ -547,15 +547,15 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
                     currentStatus != VDBStatus.INCOMPLETE) {
                     // Go to INACTIVE status first
                     try {
-                        RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.INACTIVE, getUserName());
-                        RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
+                        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, VDBStatus.INACTIVE, getUserName());
+                        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
                     } catch (VirtualDatabaseException e) {
                     	throw new AdminProcessingException(e);
                     }
                 } else if ( currentStatus != VDBStatus.DELETED ) {
                     // don't delete if already marked for delete
                     try {
-                        RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
+                        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, VDBStatus.DELETED, getUserName());
                     } catch (VirtualDatabaseException e) {
                     	throw new AdminProcessingException(e);
                     }
@@ -576,7 +576,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             // Other TRANSITION
             //------------------
             try {
-                RuntimeMetadataCatalog.setVDBStatus(vdbID, (short) newStatus, getUserName());
+                RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, (short) newStatus, getUserName());
             } catch (VirtualDatabaseException e) {
             	throw new AdminProcessingException(e);
             }

@@ -1140,7 +1140,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         List results = null;
         try {
 			//get vdbs from ConfigurationService
-			Collection virtualDatabases = RuntimeMetadataCatalog.getVirtualDatabases();
+			Collection virtualDatabases = RuntimeMetadataCatalog.getInstance().getVirtualDatabases();
 			
 			//convert results into MMVDB objects
 			results = getVDBs(identifier, virtualDatabases);

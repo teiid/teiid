@@ -36,13 +36,19 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
+import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.ModelType;
+import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.server.admin.api.MaterializationLoadScripts;
 import com.metamatrix.vdb.materialization.DatabaseDialect;
 import com.metamatrix.vdb.materialization.ScriptType;
@@ -65,6 +71,11 @@ public class TestRuntimeMetadataHelper extends TestCase {
         // it will be obtained from metamatrix.properties and
         // will trigger the same result
         System.getProperties().remove(CoreConstants.NO_CONFIGURATION);
+        try {
+        	RuntimeMetadataCatalog.getInstance().init(new Properties(), Mockito.mock(MessageBus.class), new FakeCache.FakeCacheFactory());
+        } catch (VirtualDatabaseException e) {
+        	//ignore, this should be related to the extension model manager
+        }
     }
 
     //=================================================================================
@@ -110,26 +121,6 @@ public class TestRuntimeMetadataHelper extends TestCase {
         assertEquals(expected, actual);
         assertCannonicalStringsMatch(expected, actual);
     }
-
-//    public void defer_testParseDatabaseType_OracleUsingSequelink() {
-//        System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-//        try {
-//            CurrentConfiguration.getConfiguration();
-//        } catch (ConfigurationException err) {
-//            fail("unable to read configuration"); //$NON-NLS-1$
-//        }
-//        CryptoUtil.initJCEProvider();
-//        String oraURL = "jdbc:sequelink://slntdb08:9500;NETWORKPROTOCOL=ssl;CipherSuites=SSL_DH_anon_WITH_3DES_EDE_CBC_SHA,SSL_DH_anon_WITH_DES_CBC_SHA,SSL_DH_anon_WITH_RC4_128_MD5"; //$NON-NLS-1$
-//        String expected = "oracle"; //$NON-NLS-1$
-//        String pwd="ff9146DFRT/CvhR4UKuu+UQ4rRWqDad1hKjgYvvheY7SWGbqbQoqLiWmIxiYi35mukpevMsPkeaj0mnYOSI3b9tnkNoL6iHkmrlDN8WzmWQD8jgdKHJ4yLGbZ8akYkjfGO1VsuFr5KwBjYv2R5AjEWT/9/AC+kMHLtz1r51P8q4="; //$NON-NLS-1$
-//        String actual=null;
-//        try {
-//            actual = RuntimeMetadataHelper.parseDatabaseType(oraURL, "com.metamatrix.jdbc.sequelink.SequeLinkDriver", "dv_vhalbert", pwd); //$NON-NLS-1$ //$NON-NLS-2$
-//        } catch (Throwable err) {
-//        }
-//        assertStringsMatch(expected, actual);
-//        assertCannonicalStringsMatch(expected, actual);
-//    }
 
     public void testCreateMaterializedViewLoadPropertiesOracle() throws Exception {
         Map ddlFiles = setupMaterializationModelDDLFiles();

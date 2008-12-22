@@ -52,7 +52,6 @@ import com.metamatrix.admin.objects.MMModel;
 import com.metamatrix.admin.objects.MMPropertyDefinition;
 import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
@@ -297,7 +296,7 @@ public class AbstractAdminImpl {
 			vdb.setHasWSDL(virtualDatabase.hasWSDLDefined());
 
 			//get the models and convert to MMModel objects
-			Collection modelObjects = RuntimeMetadataCatalog.getModels(virtualDatabase.getVirtualDatabaseID());
+			Collection modelObjects = RuntimeMetadataCatalog.getInstance().getModels(virtualDatabase.getVirtualDatabaseID());
 			for (Iterator iter2 = modelObjects.iterator(); iter2.hasNext();) {
 			    Model modelObject = (Model)iter2.next();
 

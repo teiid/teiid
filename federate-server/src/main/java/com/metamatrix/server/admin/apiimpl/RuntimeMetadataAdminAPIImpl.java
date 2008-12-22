@@ -116,7 +116,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.updateVirtualDatabase(" + vdb.getID() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 
-        RuntimeMetadataCatalog.updateVirtualDatabase(vdb, callerToken.getUsername());
+        RuntimeMetadataCatalog.getInstance().updateVirtualDatabase(vdb, callerToken.getUsername());
     }
 
     /**
@@ -139,7 +139,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.markVDBForDelete(" + vdbID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 
         // Get VDB's current state
-        VirtualDatabase theVDB = RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+        VirtualDatabase theVDB = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
         short vdbStatus = theVDB.getStatus();
 
         // If it's already marked for delete, do nothing
@@ -152,7 +152,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
             || vdbStatus == VDBStatus.INCOMPLETE) {
 
             // Setting status to deleted marks it as a candidate for deletion.
-            RuntimeMetadataCatalog.setVDBStatus(vdbID, VDBStatus.DELETED, callerToken.getUsername());
+            RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, VDBStatus.DELETED, callerToken.getUsername());
 
             // Attempt to delete it if no one is using it.
             RuntimeVDBDeleteUtility vdbDeleter = new RuntimeVDBDeleteUtility();
@@ -209,7 +209,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         VirtualDatabaseID currentVDBID = sourceVDB.getVirtualDatabaseID();
         do {
             // Check all currentVDB's models for connector bindings
-            Iterator currentModels = RuntimeMetadataCatalog.getModels(currentVDB.getVirtualDatabaseID()).iterator();
+            Iterator currentModels = RuntimeMetadataCatalog.getInstance().getModels(currentVDB.getVirtualDatabaseID()).iterator();
             while (currentModels.hasNext()) {
                 Model model = (Model) currentModels.next();
                 String modelName = model.getName();
@@ -254,7 +254,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.setConnectorBindingNames(" + vdbID + ", " + modelAndCBNames + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        RuntimeMetadataCatalog.setConnectorBindingNames(vdbID, modelAndCBNames, callerToken.getUsername());
+        RuntimeMetadataCatalog.getInstance().setConnectorBindingNames(vdbID, modelAndCBNames, callerToken.getUsername());
     }
 
     /**
@@ -274,7 +274,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        Collection models = RuntimeMetadataCatalog.getModels(vdbID);
+        Collection models = RuntimeMetadataCatalog.getInstance().getModels(vdbID);
         Map modelIDsCBNames = new HashMap();
         Iterator iter = models.iterator();
         while (iter.hasNext()) {
@@ -311,13 +311,13 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         // Any administrator may call this read-only method - no need to validate role
 
         Collection VDBs = new HashSet();
-        Iterator allVDBItr = RuntimeMetadataCatalog.getVirtualDatabases().iterator();
+        Iterator allVDBItr = RuntimeMetadataCatalog.getInstance().getVirtualDatabases().iterator();
         // Search all VDBs in system
         boolean found =false;
         while (allVDBItr.hasNext()) {
             found = false;
             VirtualDatabase aVDB = (VirtualDatabase) allVDBItr.next();
-            Iterator modelItr = RuntimeMetadataCatalog.getModels(aVDB.getVirtualDatabaseID()).iterator();
+            Iterator modelItr = RuntimeMetadataCatalog.getInstance().getModels(aVDB.getVirtualDatabaseID()).iterator();
             // Search all models in VDB for connector binding name of interest
             while (!found && modelItr.hasNext()) {
                 Model model = (Model) modelItr.next();
@@ -353,7 +353,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        return RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+        return RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
     }
     
     /**
@@ -374,9 +374,9 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
 	    AdminAPIHelper.validateSession(getSessionID());
 	    // Any administrator may call this read-only method - no need to validate role
 	
-	    VirtualDatabaseID vdbId = RuntimeMetadataCatalog.getVirtualDatabaseID(vdbName, null);
+	    VirtualDatabaseID vdbId = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, null);
 	    if (vdbId != null) {
-	        return RuntimeMetadataCatalog.getVirtualDatabase(vdbId);
+	        return RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbId);
 	    }
 	    return null;
 	}
@@ -397,7 +397,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        return RuntimeMetadataCatalog.getVirtualDatabases();
+        return RuntimeMetadataCatalog.getInstance().getVirtualDatabases();
        
         
 //        return filterVirtualDatabases(HIDDEN_VDBS);
@@ -420,7 +420,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        ArrayList models = new ArrayList(RuntimeMetadataCatalog.getModels(vdbID));
+        ArrayList models = new ArrayList(RuntimeMetadataCatalog.getInstance().getModels(vdbID));
 
         // Remove "SystemPhysical" model
         int sysModelIndex = -1;
@@ -480,7 +480,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.setVDBState(" + vdbID + ", " + state + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Get VDB's current state
-        VirtualDatabase theVDB = RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+        VirtualDatabase theVDB = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
         short vdbStatus = theVDB.getStatus();
 
         // If it's marked for delete or already in given state, do nothing
@@ -491,13 +491,13 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         // Determine if the requested state change is valid
         if(isValidStateChange(theVDB, state)) {
             // Set status
-            RuntimeMetadataCatalog.setVDBStatus(vdbID, state, callerToken.getUsername());
+            RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, state, callerToken.getUsername());
         } else {
             // If it's in another state, thow exception
             String msg = RuntimeMetadataPlugin.Util.getString("RuntimeMetadataAdminAPIImpl.Can__t_set_VDB_state_from_{0}_to_{1}",new Object[] {VDBStatus.VDB_STATUS_NAMES[vdbStatus],VDBStatus.VDB_STATUS_NAMES[state] }); //$NON-NLS-1$
             throw new VirtualDatabaseException(msg);
         }
-        RuntimeMetadataCatalog.setVDBStatus(vdbID, state, callerToken.getUsername());
+        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, state, callerToken.getUsername());
     }
 
     /**
@@ -525,7 +525,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
     	if(    (currentState == VDBStatus.INACTIVE && newState == VDBStatus.ACTIVE_DEFAULT)
             	|| (currentState == VDBStatus.ACTIVE && newState == VDBStatus.ACTIVE_DEFAULT) ) {
         		
-            Collection allVDBs = RuntimeMetadataCatalog.getVirtualDatabases();
+            Collection allVDBs = RuntimeMetadataCatalog.getInstance().getVirtualDatabases();
 
             // Change is valid if VDB does not already have Active-Default
     		isValid = !namedVdbHasActiveDefault(theVDB.getName(),allVDBs);
@@ -767,7 +767,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
 
-        Collection models = RuntimeMetadataCatalog.getModels(vdbID);
+        Collection models = RuntimeMetadataCatalog.getInstance().getModels(vdbID);
         Map modelIDsVLevels = new HashMap();
         Iterator iter = models.iterator();
         while (iter.hasNext()) {

@@ -220,7 +220,7 @@ public class UpdateController {
        MetaBaseConnector conn = null;
 
         boolean isCompleteSet = true;
-        Collection models = RuntimeMetadataCatalog.getModels(vdbID);
+        Collection models = RuntimeMetadataCatalog.getInstance().getModels(vdbID);
         Collection modelIDs = modelAndCBNames.keySet(); // BasicModelIDs
         Collection cbNames = modelAndCBNames.values();
         
@@ -351,7 +351,7 @@ public class UpdateController {
             vdbID = (BasicVirtualDatabaseID) this.getReadTransaction().getVirtualDatabaseID(vdbInfo.getName(), null);
             if (vdbID != null) {
                 vdbVersion = Integer.toString(Integer.parseInt(vdbID.getVersion()) + 1);
-                VirtualDatabase latestVdb = RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+                VirtualDatabase latestVdb = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
                 createdBy = latestVdb.getCreatedBy();
                 creationDate = latestVdb.getCreationDate();
             }

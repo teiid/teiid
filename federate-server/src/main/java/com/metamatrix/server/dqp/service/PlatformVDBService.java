@@ -76,7 +76,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     public boolean isActiveVDB(final String vdbName, final String vdbVersion)  throws MetaMatrixComponentException{
         try {
-            RuntimeMetadataCatalog.getActiveVirtualDatabaseID(vdbName, vdbVersion);
+            RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
         } catch (VirtualDatabaseDoesNotExistException e) {
             return false;
         } catch (VirtualDatabaseException e) {
@@ -99,7 +99,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         
         try{
             VirtualDatabaseID vdbID = getVirtualDatabaseID(vdbName, vdbVersion);
-            Model model = RuntimeMetadataCatalog.getModel(modelName, vdbID);
+            Model model = RuntimeMetadataCatalog.getInstance().getModel(modelName, vdbID);
             if (model == null) {
                 throw new MetaMatrixComponentException(ServerPlugin.Util.getString("PlatformVDBService.Model_not_found_in_vdb", new Object[] {modelName, vdbName})); //$NON-NLS-1$
             }
@@ -129,7 +129,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         
         try{
             VirtualDatabaseID vdbID = getVirtualDatabaseID(vdbName, vdbVersion);
-            Model model = RuntimeMetadataCatalog.getModel(modelName, vdbID);
+            Model model = RuntimeMetadataCatalog.getInstance().getModel(modelName, vdbID);
             if(model == null){
                 //could be system models that are private such as
                 //SimpleDataType. If the model name is wrong, it should
@@ -165,7 +165,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         
         try {
             VirtualDatabaseID vdbID = getVirtualDatabaseID(vdbName, vdbVersion);        
-            boolean isVisible = RuntimeMetadataCatalog.isVisible(pathInVDB, vdbID);
+            boolean isVisible = RuntimeMetadataCatalog.getInstance().isVisible(pathInVDB, vdbID);
             if(isVisible) {
                 return ModelInfo.PUBLIC;            
             }
@@ -218,7 +218,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         VDBKey vdbKey = new VDBKey(vdbName, vdbVersion);
         VirtualDatabaseID vdbID = null;
         if((vdbID = (VirtualDatabaseID)this.vdbIDs.get(vdbKey)) == null){
-            vdbID = RuntimeMetadataCatalog.getActiveVirtualDatabaseID(vdbName, vdbVersion);
+            vdbID = RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
             this.vdbIDs.put(vdbKey, vdbID);
         }
         return vdbID;
@@ -265,7 +265,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     private void registerVdbListner() {
         try{
-            listener = RuntimeMetadataCatalog.registerRuntimeMetadataListener(this);
+            listener = RuntimeMetadataCatalog.getInstance().registerRuntimeMetadataListener(this);
         }catch(Exception e){
         	LogManager.logError(LogCommonConstants.CTX_SERVICE, e, ServerPlugin.Util.getString("PlatformVDBService.0")); //$NON-NLS-1$
         }        
@@ -279,7 +279,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
     private void removeVdbListner() {
         try{
             if (listener != null) {
-                RuntimeMetadataCatalog.removeRuntimeMetadataListener(listener);
+                RuntimeMetadataCatalog.getInstance().removeRuntimeMetadataListener(listener);
             }
         }catch(Exception e){
         	LogManager.logError(LogCommonConstants.CTX_SERVICE, e, ServerPlugin.Util.getString("PlatformVDBService.1")); //$NON-NLS-1$
@@ -298,7 +298,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         // as this method will be called to determine whether to do a bunch of extra processing. 
         try {
             VirtualDatabaseID vdbID = getVirtualDatabaseID(vdbName, vdbVersion);
-            return RuntimeMetadataCatalog.getMutiSourcedModels(vdbID);
+            return RuntimeMetadataCatalog.getInstance().getMutiSourcedModels(vdbID);
         } catch (VirtualDatabaseException e) {
             throw new MetaMatrixComponentException(e);
         }
@@ -313,7 +313,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
         throws MetaMatrixComponentException {        
         try {
             VirtualDatabaseID vdbID = getVirtualDatabaseID(vdbName, vdbVersion);
-            final byte[] bytes = RuntimeMetadataCatalog.getVDBArchive(vdbID);
+            final byte[] bytes = RuntimeMetadataCatalog.getInstance().getVDBArchive(vdbID);
             return new ByteArrayInputStream(bytes);
         } catch (VirtualDatabaseDoesNotExistException e) {
             throw new MetaMatrixComponentException(e);

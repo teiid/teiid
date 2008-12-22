@@ -157,10 +157,10 @@ public class VDBCreation  {
             throw e;    
         }
         
-        VirtualDatabase vdb = RuntimeMetadataCatalog.createVirtualDatabase(vdbArchive, principal);
+        VirtualDatabase vdb = RuntimeMetadataCatalog.getInstance().createVirtualDatabase(vdbArchive, principal);
         VirtualDatabaseID vdbID = (VirtualDatabaseID)vdb.getID();
         // is this call necessary??
-        RuntimeMetadataCatalog.setVDBStatus(vdbID, vdbArchive.getStatus(), principal);
+        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, vdbArchive.getStatus(), principal);
         return vdb;
     }
 

@@ -66,7 +66,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "deleteVDBMarkedForDelete(): checking " + vdbID + //$NON-NLS-1$
                                                                               " to see if marked for deletion."); //$NON-NLS-1$
         // Get all VDBIDs marked for delete
-        Collection vdbs = RuntimeMetadataCatalog.getDeletedVirtualDatabaseIDs();
+        Collection vdbs = RuntimeMetadataCatalog.getInstance().getDeletedVirtualDatabaseIDs();
         // If none marked for delete or this one is not in list, nothing to do.
         if (vdbs.size() == 0 || !vdbs.contains(vdbID)) {
             return;
@@ -81,7 +81,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
             deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
             // Finally, delete VDB
-            RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
+            RuntimeMetadataCatalog.getInstance().deleteVirtualDatabase(vdbID);
             
             LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,  RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
             
@@ -96,7 +96,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
      */
     public void deleteVDBsMarkedForDelete() throws VirtualDatabaseException, MetaMatrixComponentException {
         // Get all VDBIDs marked for delete
-        Collection vdbs = RuntimeMetadataCatalog.getDeletedVirtualDatabaseIDs();
+        Collection vdbs = RuntimeMetadataCatalog.getInstance().getDeletedVirtualDatabaseIDs();
         // If none marked for delete, nothing to do.
         if (vdbs.size() == 0) {
             return;
@@ -117,7 +117,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
                 deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
                 // Finally, delete VDB
-                RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
+                RuntimeMetadataCatalog.getInstance().deleteVirtualDatabase(vdbID);
                 LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
                 
             } else {
@@ -134,7 +134,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
     public void deleteVDBsMarkedForDelete(MetaMatrixSessionID id) throws MetaMatrixProcessingException,
                                                                  MetaMatrixComponentException {
         // Get all VDBIDs marked for delete
-        Collection vdbs = RuntimeMetadataCatalog.getDeletedVirtualDatabaseIDs();
+        Collection vdbs = RuntimeMetadataCatalog.getInstance().getDeletedVirtualDatabaseIDs();
         // If none marked for delete, nothing to do.
         if (vdbs.size() == 0) {
             return;
@@ -155,7 +155,7 @@ public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
                 deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
 
                 // Finally, delete VDB
-                RuntimeMetadataCatalog.deleteVirtualDatabase(vdbID);
+                RuntimeMetadataCatalog.getInstance().deleteVirtualDatabase(vdbID);
                 LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
             } 
         }

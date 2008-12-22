@@ -88,7 +88,7 @@ public class VDBDefnFactory {
 
         VirtualDatabase vdb = getVirtualDatabase(vdbID);
         Collection models = getModels(vdbID);
-        byte[] vdbContents = RuntimeMetadataCatalog.getVDBArchive(vdbID); 
+        byte[] vdbContents = RuntimeMetadataCatalog.getInstance().getVDBArchive(vdbID); 
         
         BasicVDBDefn defn = createDEF(vdb, vdbContents);
         
@@ -102,14 +102,14 @@ public class VDBDefnFactory {
         
     
     private static VirtualDatabaseID getVirtualDatabaseID(String vdbName, String vdbVersion) throws Exception {
-        return RuntimeMetadataCatalog.getVirtualDatabaseID(vdbName, vdbVersion);
+        return RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, vdbVersion);
     }
     private static VirtualDatabase getVirtualDatabase(VirtualDatabaseID vdbID) throws Exception {
-       return RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+       return RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
     }
     
     protected static Collection getModels(VirtualDatabaseID vdbID) throws Exception {
-        return RuntimeMetadataCatalog.getModels(vdbID);
+        return RuntimeMetadataCatalog.getInstance().getModels(vdbID);
         
     }
 

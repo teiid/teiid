@@ -1784,21 +1784,21 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     protected Collection getVirtualDatabases( ) throws VirtualDatabaseException {
-        return RuntimeMetadataCatalog.getVirtualDatabases();
+        return RuntimeMetadataCatalog.getInstance().getVirtualDatabases();
     }
 
     protected Collection getModels(VirtualDatabaseID vdbId) throws VirtualDatabaseException {
-        return RuntimeMetadataCatalog.getModels(vdbId);
+        return RuntimeMetadataCatalog.getInstance().getModels(vdbId);
     }
     
     protected void setConnectorBindingNames(VirtualDatabaseID vdbId,
                                           Map mapModelsToConnBinds) throws VirtualDatabaseException  {
-        RuntimeMetadataCatalog.setConnectorBindingNames(vdbId, mapModelsToConnBinds, getUserName());
+        RuntimeMetadataCatalog.getInstance().setConnectorBindingNames(vdbId, mapModelsToConnBinds, getUserName());
     }
     
     protected void setVDBState(VirtualDatabaseID vdbID,
                              int siState) throws VirtualDatabaseException {
-        RuntimeMetadataCatalog.setVDBStatus(vdbID, (short)siState, getUserName());
+        RuntimeMetadataCatalog.getInstance().setVDBStatus(vdbID, (short)siState, getUserName());
     }
 
     /**

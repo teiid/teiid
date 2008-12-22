@@ -40,18 +40,16 @@ import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.messaging.NoOpMessageBus;
+import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.vdb.VDBStatus;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
 import com.metamatrix.metadata.runtime.api.MetadataSourceAPI;
@@ -70,6 +68,7 @@ import com.metamatrix.metadata.runtime.model.BasicVirtualDatabaseMetadata;
 import com.metamatrix.metadata.runtime.model.MetadataCache;
 import com.metamatrix.metadata.runtime.model.UpdateController;
 import com.metamatrix.metadata.runtime.spi.MetaBaseConnector;
+import com.metamatrix.metadata.runtime.spi.jdbc.JDBCConnectorFactory;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.metadata.util.LogMessageKeys;
@@ -87,63 +86,53 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
  */
 public class RuntimeMetadataCatalog  {
 
-    //############################################################################################################################
-	//# Static Variables                                                                                                         #
-	//############################################################################################################################
+	private static RuntimeMetadataCatalog instance = new RuntimeMetadataCatalog();
 
     /*
      * Contains cache of models for a given VdbID from the database
      * This cache is primarily for the query service.
      */
 
-    private static Cache vdbModelsCache = null;
+    private Cache vdbModelsCache = null;
 
     /*
      * Used for update of the virtual database.
      */
-    private static UpdateController controller = null;
-    
-    /*
-     * A flag to indicate whether init has been called. Only want to init once.
-     */
-    private static boolean isInit = false;
+    private UpdateController controller = null;
     
     /*
      * Contains cache of vdb metadata.  This information
      * is used by the console, not by the query service.
      */
-    private static Cache vdbMetadataCache = null;
+    private Cache vdbMetadataCache = null;
        
     /**
      * Manages the obtaining of transactions
      */
-    private static TransactionMgr transMgr = null;
+    private TransactionMgr transMgr = null;
 
     /*
      * Cache properties.
      */
-    private static Properties allProps;
+    private Properties allProps;
 
     /*
      * JMS
      */
-    private static MessageBus messageBus;
+    private MessageBus messageBus;
 
     /*
      * Whether to persist runtime metadata. Defaults to true.
      */
-    private static boolean persist = true;
+    private boolean persist = true;
     
-    private static MetadataCache systemModels = null;
+    private MetadataCache systemModels = null;
     
-
-    //############################################################################################################################
-	//# Static Methods                                                                                                           #
-	//############################################################################################################################
+    public static RuntimeMetadataCatalog getInstance() {
+    	return instance;
+    }
     
-    public static EventObjectListener registerRuntimeMetadataListener(RuntimeMetadataListener listener) throws VirtualDatabaseException {
-        init();
-        
+    public EventObjectListener registerRuntimeMetadataListener(RuntimeMetadataListener listener) throws VirtualDatabaseException {
         try{
             EventObjectListener elistener = new VDBListener(listener);
             messageBus.addListener(RuntimeMetadataEvent.class, elistener);
@@ -154,9 +143,7 @@ public class RuntimeMetadataCatalog  {
         }
     }
     
-    public static void removeRuntimeMetadataListener(EventObjectListener listener) throws VirtualDatabaseException {
-        init();
-        
+    public void removeRuntimeMetadataListener(EventObjectListener listener) throws VirtualDatabaseException {
         try{
             messageBus.removeListener(RuntimeMetadataEvent.class, listener);
         }catch(Exception e){
@@ -167,7 +154,7 @@ public class RuntimeMetadataCatalog  {
     }    
 
 
-    private static class VDBListener implements EventObjectListener{
+    private class VDBListener implements EventObjectListener{
         private final RuntimeMetadataListener vdblistener;
         
         public VDBListener(final RuntimeMetadataListener listener) {
@@ -183,7 +170,7 @@ public class RuntimeMetadataCatalog  {
                 if (vdblistener != null) {
                     vdblistener.processEvent((RuntimeMetadataEvent)obj);
                 } else {
-                    RuntimeMetadataCatalog.processEvent((RuntimeMetadataEvent)obj);
+                    RuntimeMetadataCatalog.this.processEvent((RuntimeMetadataEvent)obj);
                 }
             }
         }
@@ -199,9 +186,7 @@ public class RuntimeMetadataCatalog  {
      * @return VirtualDatabaseID for the created VirtualDatabase
      * @exception VirtualDatabaseException is thrown if a problem occurs during the creation process.
      */
-    public static VirtualDatabase createVirtualDatabase(VDBArchive vdbArchive, String userName) throws VirtualDatabaseException {
-        init();
-        
+    public VirtualDatabase createVirtualDatabase(VDBArchive vdbArchive, String userName) throws VirtualDatabaseException {
         VirtualDatabase vdb = getUpdateController().createVirtualDatabase(vdbArchive, userName);
                 
         fireEvent(vdb.getVirtualDatabaseID(), RuntimeMetadataEvent.ADD_VDB);
@@ -216,8 +201,8 @@ public class RuntimeMetadataCatalog  {
      * @return VirtualDatabaseMetadata
      * @exception VirtualDatabaseException is thrown if a problem occurs during retrieval process.
      */
-    public static VirtualDatabaseMetadata getVirtualDatabaseMetadata(VirtualDatabaseID vdbID ) throws VirtualDatabaseException  {
-        return RuntimeMetadataCatalog.getVirtualDatabaseMetadata(vdbID, true);
+    public VirtualDatabaseMetadata getVirtualDatabaseMetadata(VirtualDatabaseID vdbID ) throws VirtualDatabaseException  {
+        return getVirtualDatabaseMetadata(vdbID, true);
     }
 
     /**
@@ -232,8 +217,7 @@ public class RuntimeMetadataCatalog  {
      * @return VirtualDatabaseMetadata
      * @exception VirtualDatabaseException is thrown if a problem occurs during retrieval process.
      */
-    private static VirtualDatabaseMetadata getVirtualDatabaseMetadata(VirtualDatabaseID vdbID, boolean includeMetadata ) throws VirtualDatabaseException  {
-        init();
+    private VirtualDatabaseMetadata getVirtualDatabaseMetadata(VirtualDatabaseID vdbID, boolean includeMetadata ) throws VirtualDatabaseException  {
         
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,"Creating new BasicVirtualDatabaseMetadata instance for VDB ID \""+vdbID+")\""); //$NON-NLS-1$ //$NON-NLS-2$         
         VirtualDatabaseMetadata vDBMetadata = new BasicVirtualDatabaseMetadata(loadVDB(vdbID, includeMetadata), vdbID);
@@ -250,12 +234,10 @@ public class RuntimeMetadataCatalog  {
      * @exception VirtualDatabaseDoesNotExistException is thrown if the VirtualDatabase is not found in an active state
      * @exception VirtualDatabaseException is thrown if a problem occurs during retrieval process.
      */
-    public static VirtualDatabaseID getActiveVirtualDatabaseID(String vdbName, String vdbVersion) throws VirtualDatabaseDoesNotExistException, VirtualDatabaseException {
+    public VirtualDatabaseID getActiveVirtualDatabaseID(String vdbName, String vdbVersion) throws VirtualDatabaseDoesNotExistException, VirtualDatabaseException {
         if(vdbName == null){
             throw new IllegalArgumentException(RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0001) );
         }
-
-        init();
 
         MetaBaseConnector conn= null;
         VirtualDatabaseID vdbID = null;
@@ -289,12 +271,10 @@ public class RuntimeMetadataCatalog  {
      * @exception VirtualDatabaseDoesNotExistException is thrown if the VirtualDatabase is not found in an active state
      * @exception VirtualDatabaseException is thrown if a problem occurs during retrieval process.
      */
-    public static VirtualDatabaseID getVirtualDatabaseID(String vdbName, String vdbVersion) throws VirtualDatabaseDoesNotExistException, VirtualDatabaseException {
+    public VirtualDatabaseID getVirtualDatabaseID(String vdbName, String vdbVersion) throws VirtualDatabaseDoesNotExistException, VirtualDatabaseException {
         if(vdbName == null){
             throw new IllegalArgumentException(RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0001) );
         }
-
-        init();
 
         MetaBaseConnector conn= null;
         VirtualDatabaseID vdbID = null;
@@ -333,12 +313,11 @@ public class RuntimeMetadataCatalog  {
      * @param status is the state the VirtualDatabase should be set to
      * @exception VirtualDatabaseException if unable to perform update.
      */
-    public static void setVDBStatus(VirtualDatabaseID virtualDBID, short status, String userName) throws VirtualDatabaseException{
+    public void setVDBStatus(VirtualDatabaseID virtualDBID, short status, String userName) throws VirtualDatabaseException{
         if(!persist){
         	return;
         }
         try{
-            init();
             getUpdateController().setVBDStatus(virtualDBID, status, userName);
             
             // changed to remove from the cache when the state becomes unusabe
@@ -346,7 +325,7 @@ public class RuntimeMetadataCatalog  {
                 case VDBStatus.INACTIVE:
                 case VDBStatus.INCOMPLETE:                    
                 {
-                    RuntimeMetadataCatalog.removeFromMetadataCache(virtualDBID);
+                    removeFromMetadataCache(virtualDBID);
                     fireEvent(virtualDBID, RuntimeMetadataEvent.CLEAR_CACHE_FOR_VDB);
                     break;
                 }
@@ -361,8 +340,7 @@ public class RuntimeMetadataCatalog  {
      * @return Collection
      * @throws VirtualDatabaseException is thrown if a problem occurs during the retrieval process.
      */
-    public static Collection getVirtualDatabases() throws VirtualDatabaseException  {
-        init();
+    public Collection getVirtualDatabases() throws VirtualDatabaseException  {
         Collection vdbs;
 
         MetaBaseConnector conn= null;
@@ -390,10 +368,10 @@ public class RuntimeMetadataCatalog  {
      * @return byte[] VDB Archive
      * @throws VirtualDatabaseException is thrown if a problem occurs during the retrieval process.
      */
-     public static byte[] getVDBArchive(VirtualDatabaseID vdbID) throws VirtualDatabaseException  {
+     public byte[] getVDBArchive(VirtualDatabaseID vdbID) throws VirtualDatabaseException  {
          byte[] archive = null;
  
-         VirtualDatabase vdb = RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+         VirtualDatabase vdb = getVirtualDatabase(vdbID);
          archive = getUpdateController().getVDBArchive(vdb.getFileName());
          return archive;
      }
@@ -403,7 +381,7 @@ public class RuntimeMetadataCatalog  {
      * @return byte[] VDB Archive
      * @throws VirtualDatabaseException is thrown if a problem occurs during the retrieval process.
      */
-     public static byte[] getSystemVDBArchive() throws VirtualDatabaseException  {
+     public byte[] getSystemVDBArchive() throws VirtualDatabaseException  {
           
          return getUpdateController().getVDBArchive(CoreConstants.SYSTEM_VDB);
      }
@@ -413,8 +391,7 @@ public class RuntimeMetadataCatalog  {
      * @return VirtualDatabase
      * @throws VirtualDatabaseException is thrown if a problem occurs during the retrieval process.
      */
-    public static VirtualDatabase getVirtualDatabase(VirtualDatabaseID vdbID) throws VirtualDatabaseException  {
-        init();
+    public VirtualDatabase getVirtualDatabase(VirtualDatabaseID vdbID) throws VirtualDatabaseException  {
         VirtualDatabase vdb;
         MetaBaseConnector conn= null;
 
@@ -442,8 +419,7 @@ public class RuntimeMetadataCatalog  {
      * @return Collection of type VirtualDatabaseID
      * @throws VirtualDatabaseException is thrown if a problem occurs during retrieval process.
      */
-    public static Collection getDeletedVirtualDatabaseIDs() throws VirtualDatabaseException {
-        init();
+    public Collection getDeletedVirtualDatabaseIDs() throws VirtualDatabaseException {
         Collection vdbs;
         MetaBaseConnector conn = null;
 
@@ -470,8 +446,7 @@ public class RuntimeMetadataCatalog  {
      * @param vdbID is the VirtualDatabase to be deleted
      * @throws VirtualDatabaseException is thrown if a problem occurs during the deletion process.
      */
-    public static void deleteVirtualDatabase(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
-        init();
+    public void deleteVirtualDatabase(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
         if(persist){
         	getUpdateController().deleteVirtualDatabase(vdbID);
             fireEvent(vdbID, RuntimeMetadataEvent.DELETE_VDB);
@@ -483,7 +458,6 @@ public class RuntimeMetadataCatalog  {
      * call to refresh the runtime metadata properties.
      */
     public static void refreshProperties() throws VirtualDatabaseException {
-        init();
     }
 
     /**
@@ -494,9 +468,9 @@ public class RuntimeMetadataCatalog  {
      * @return Collection of type Model
      * @throws VirtualDatabaseException an error occurs while trying to read the data.
      */
-    public static Collection getModels(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
+    public Collection getModels(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
  
-        Map modelMap = RuntimeMetadataCatalog.getModelMap(vdbID);
+        Map modelMap = getModelMap(vdbID);
         Collection models = new ArrayList(modelMap.size());
         models.addAll(modelMap.values());
         return models;
@@ -510,10 +484,10 @@ public class RuntimeMetadataCatalog  {
      * @return Collection of type String (model full name)
      * @throws VirtualDatabaseException an error occurs while trying to read the data.
      */
-    public static List getMutiSourcedModels(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
+    public List getMutiSourcedModels(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
         List models=null;
  
-        Map modelMap = RuntimeMetadataCatalog.getModelMap(vdbID);
+        Map modelMap = getModelMap(vdbID);
         if(modelMap != null && modelMap.size() > 0) {
             models = new ArrayList(modelMap.size());
             for (Iterator it=modelMap.keySet().iterator(); it.hasNext();) {
@@ -541,8 +515,7 @@ public class RuntimeMetadataCatalog  {
      * @return Map of Models, key = model name
      * @throws VirtualDatabaseException an error occurs while trying to read the data.
      */
-    private static Map getModelMap(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
-        init();
+    private Map getModelMap(VirtualDatabaseID vdbID) throws VirtualDatabaseException {
         Map modelMap=null;
         MetaBaseConnector conn= null;
         
@@ -587,8 +560,8 @@ public class RuntimeMetadataCatalog  {
      * @return <code>true</code> if the resource is visible.
      * @since 4.2
      */
-    public static boolean isVisible(String resourcePath, VirtualDatabaseID vdbID) throws VirtualDatabaseException {
-        VirtualDatabaseMetadata vdbm = RuntimeMetadataCatalog.getVirtualDatabaseMetadata(vdbID, false);
+    public boolean isVisible(String resourcePath, VirtualDatabaseID vdbID) throws VirtualDatabaseException {
+        VirtualDatabaseMetadata vdbm = getVirtualDatabaseMetadata(vdbID, false);
         return vdbm.isVisible(resourcePath);
     }
 
@@ -600,16 +573,16 @@ public class RuntimeMetadataCatalog  {
      * @return Collection of type Model
      * @throws VirtualDatabaseException an error occurs while trying to read the data.
      */
-    public static Model getModel(String modelName, VirtualDatabaseID vdbID) throws VirtualDatabaseException {
+    public Model getModel(String modelName, VirtualDatabaseID vdbID) throws VirtualDatabaseException {
  
-        Map modelMap = RuntimeMetadataCatalog.getModelMap(vdbID);
+        Map modelMap = getModelMap(vdbID);
         if (modelMap.containsKey(modelName)) {
             Model m = (Model) modelMap.get(modelName);
             return m;
         }
         //only if needed, asked for the model from the VirtualDatabaseMetadata
         //so that the VDB Caching is performed unless necessary
-        VirtualDatabaseMetadata vdbm = RuntimeMetadataCatalog.getVirtualDatabaseMetadata(vdbID, false);
+        VirtualDatabaseMetadata vdbm = getVirtualDatabaseMetadata(vdbID, false);
         if (vdbm != null) {
             return vdbm.getModel(modelName);
         }
@@ -625,8 +598,7 @@ public class RuntimeMetadataCatalog  {
      * @param userName of the person setting the connection binding names for the virtual database.
      * @throws VirtualDatabaseException an error occurs while trying to read the data.
      */
-    public static void setConnectorBindingNames(VirtualDatabaseID vdbID, Map modelAndCBNames, String userName)throws VirtualDatabaseException{
-        init();
+    public void setConnectorBindingNames(VirtualDatabaseID vdbID, Map modelAndCBNames, String userName)throws VirtualDatabaseException{
         Collection models = getModels(vdbID);
         Map cNamesByIDs = new HashMap();
         Iterator iter = modelAndCBNames.keySet().iterator();
@@ -674,61 +646,40 @@ public class RuntimeMetadataCatalog  {
      * @param vdb VDB to be updated.
      * @param userName of the person updating the virtual database.
      */
-    public static void updateVirtualDatabase(VirtualDatabase vdb, String userName) throws VirtualDatabaseException{
-        init();
+    public void updateVirtualDatabase(VirtualDatabase vdb, String userName) throws VirtualDatabaseException{
         getUpdateController().updateVirtualDatabase(vdb, userName);
     }
 
     /**
      * The init method needs to be called prior to executing any other methods.
      * @exception VirtualDatabaseException if the RuntimeMetadataCatalog cannot be initialized.
+     * @throws MessagingException 
      */
-    private static void init() throws VirtualDatabaseException {
+    public void init(Properties runtimeProperties, MessageBus messageBus, CacheFactory factory) throws VirtualDatabaseException, MessagingException {
+        allProps = getProperties(runtimeProperties);
+        LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.GEN_0001) );
 
-        synchronized(RuntimeMetadataCatalog.class){
-            if (isInit) {
-		        return;
-		    }
-            allProps = getProperties();
-            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.GEN_0001) );
+        transMgr = getTransactionMgr(allProps);
+        LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0001));
+        
+        this.messageBus = messageBus;
+        VDBListener l = new VDBListener();
 
-            transMgr = getTransactionMgr(allProps);
-            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0001));
+        messageBus.addListener(RuntimeMetadataEvent.class, l);
+        LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0002));
 
-            
-            messageBus = ResourceFinder.getMessageBus();
-            try{
-                VDBListener l = new VDBListener();
+        CacheConfiguration config = new CacheConfiguration(Policy.MRU, 0, 0); // MRU with no limit on time and nodes
+        vdbMetadataCache = factory.get(Type.VDBMETADATA, config); 
+        vdbModelsCache = factory.get(Type.VDBMODELS, config);
 
-                messageBus.addListener(RuntimeMetadataEvent.class, l);
-            }catch(Exception e){
-                LogManager.logCritical(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.RTMDC_0013));
-
-                //If we can't add the listeners... create the default NoOpMessageBus.
-                //Done for defect 4228 2/19/02 LLP
-				messageBus= new NoOpMessageBus();
-//                    throw new VirtualDatabaseException(me, "Error adding listener.");
-            }
-            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0002));
-
-            final CacheFactory factory = ResourceFinder.getCacheFactory();
-            CacheConfiguration config = new CacheConfiguration(Policy.MRU, 0, 0); // MRU with no limit on time and nodes
-            vdbMetadataCache = factory.get(Type.VDBMETADATA, config); 
-            vdbModelsCache = factory.get(Type.VDBMODELS, config);
-
-            controller = new UpdateController(transMgr);
-            
-            loadSystemMetadataCache();
-            
-            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0003));
-
-            //finally, if everything goes well, set init flag to true.
-            isInit = true;
-        }
+        controller = new UpdateController(transMgr);
+        
+        loadSystemMetadataCache();
+        
+        LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString(LogMessageKeys.RTMDC_0003));
     }
 
-    public static QueryMetadataInterface getQueryMetadata(final VirtualDatabaseID vdbID) throws VirtualDatabaseException {
-        init();
+    public QueryMetadataInterface getQueryMetadata(final VirtualDatabaseID vdbID) throws VirtualDatabaseException {
         QueryMetadataInterface qmi = getQueryMetadataCache().lookupMetadata(vdbID.getName(), vdbID.getVersion());
         if(qmi == null) {
 	        try {
@@ -740,7 +691,7 @@ public class RuntimeMetadataCatalog  {
         return qmi;
     }
 
-    public static QueryMetadataCache getQueryMetadataCache() throws VirtualDatabaseException {
+    public QueryMetadataCache getQueryMetadataCache() throws VirtualDatabaseException {
         try {
 	        QueryMetadataCache sharedCache = null;
 	        if(SingletonMetadataCacheHolder.hasCache()) {
@@ -754,7 +705,7 @@ public class RuntimeMetadataCatalog  {
 	    }
     }
 
-    private synchronized static void refreshCache(VirtualDatabaseID vdbID) {
+    private synchronized void refreshCache(VirtualDatabaseID vdbID) {
         try {
             // clean up caches
             removeFromCache(vdbID);
@@ -771,7 +722,7 @@ public class RuntimeMetadataCatalog  {
      * remove the VirtualDatabaseMetadata from cache, This should be called when
      * the vdb is actually deleted not when an even is fired.
      */
-    private synchronized static void removeFromCache(VirtualDatabaseID vdbID) {
+    private synchronized void removeFromCache(VirtualDatabaseID vdbID) {
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "VDB " + vdbID + " is being removed from cache"); //$NON-NLS-1$ //$NON-NLS-2$
         try {
             // clear all cached query metadata instances and indexes for the given vdb
@@ -787,7 +738,7 @@ public class RuntimeMetadataCatalog  {
     /**
      * remove the VirtualDatabaseMetadata from cache
      */
-    private synchronized static void removeFromMetadataCache(VirtualDatabaseID vdbID) {
+    private synchronized void removeFromMetadataCache(VirtualDatabaseID vdbID) {
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "VDB " + vdbID + " is being removed from cache"); //$NON-NLS-1$ //$NON-NLS-2$
 
         vdbMetadataCache.remove(vdbID);
@@ -799,9 +750,8 @@ public class RuntimeMetadataCatalog  {
      * clear the cache. This should be called only from the installer, results in
      * removing the temp files for all vdbs.
      */
-    public synchronized static void clearCache() throws VirtualDatabaseException{
+    public synchronized void clearCache() throws VirtualDatabaseException{
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "VDB cache is being cleared"); //$NON-NLS-1$
-        init();
         vdbMetadataCache.clear();
 
         vdbModelsCache.clear();
@@ -813,27 +763,24 @@ public class RuntimeMetadataCatalog  {
     /**
      * obtain the properties from the CurrentConfiguration.
      */
-    private static Properties getProperties() throws VirtualDatabaseException{
+    private Properties getProperties(Properties runtimeProps) {
         Properties prop = new Properties();
         //String messageBusURL = null;
-        try{
-            // obtain the resource connection properties
  
-            Properties runtimeProps = CurrentConfiguration.getProperties();
-            String value = runtimeProps.getProperty(RuntimeMetadataPropertyNames.PERSIST);
-            if(value != null) {
-                persist = Boolean.valueOf(value).booleanValue();
-            }
-            
-            if (value == null || persist) {
-            	prop.setProperty(TransactionMgr.FACTORY, "com.metamatrix.metadata.runtime.spi.jdbc.JDBCConnectorFactory");
-            }
-             prop.putAll(runtimeProps);
-        }catch(ConfigurationException ice){
-            throw new VirtualDatabaseException(ErrorMessageKeys.GEN_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0003) );
+        String value = runtimeProps.getProperty(RuntimeMetadataPropertyNames.PERSIST);
+        if(value != null) {
+            persist = Boolean.valueOf(value).booleanValue();
         }
-
-        addProperty(prop, RuntimeMetadataPropertyNames.CONNECTION_FACTORY, prop, TransactionMgr.FACTORY );
+        
+        if (value == null || persist) {
+        	prop.setProperty(TransactionMgr.FACTORY, JDBCConnectorFactory.class.getName());
+        }
+        prop.putAll(runtimeProps);
+        
+        value = prop.getProperty(RuntimeMetadataPropertyNames.CONNECTION_FACTORY);
+        if (value != null) {
+            prop.setProperty(TransactionMgr.FACTORY, value);
+        }
         return prop;
     }
 
@@ -850,22 +797,15 @@ public class RuntimeMetadataCatalog  {
 
     }
 
-    protected static void setTransactionManager( final TransactionMgr transactionMgr ) {
+    protected void setTransactionManager( final TransactionMgr transactionMgr ) {
         transMgr = transactionMgr;
     }
 
-    private static UpdateController getUpdateController() {
+    private UpdateController getUpdateController() {
         return controller;
     }
 
-    private static void addProperty(Properties source, String sourceName, Properties props, String propName) {
-        String value = source.getProperty(sourceName);
-        if (value != null) {
-            props.setProperty(propName, value);
-        }
-    }
-    
-    private static void fireEvent(VirtualDatabaseID vdbID, int type) {
+    private void fireEvent(VirtualDatabaseID vdbID, int type) {
         if(messageBus != null){
            try{
                messageBus.processEvent(new RuntimeMetadataEvent(new RuntimeMetadataSource(), vdbID, type));
@@ -875,7 +815,7 @@ public class RuntimeMetadataCatalog  {
         }
     }
 
-    private static MetaBaseConnector getReadTransaction() throws ManagedConnectionException {
+    private MetaBaseConnector getReadTransaction() throws ManagedConnectionException {
         return (MetaBaseConnector) transMgr.getReadTransaction();
     }
 
@@ -883,7 +823,7 @@ public class RuntimeMetadataCatalog  {
     //          R U N T I M E   M E T A D A T A   A D M I N   A P I
     // ==================================================================================
 
-    private static MetadataSourceAPI loadVDB(VirtualDatabaseID vdbID, boolean includeMetadata) throws VirtualDatabaseException{
+    private MetadataSourceAPI loadVDB(VirtualDatabaseID vdbID, boolean includeMetadata) throws VirtualDatabaseException{
         MetadataCache mc = null;
         Object v = vdbMetadataCache.get(vdbID);
        
@@ -895,9 +835,9 @@ public class RuntimeMetadataCatalog  {
                 }
             }
         } else {
-            final VirtualDatabase vdb = RuntimeMetadataCatalog.getVirtualDatabase(vdbID);
+            final VirtualDatabase vdb = getVirtualDatabase(vdbID);
             final Collection models = getModels(vdbID);
-            final byte[] vdbcontents = RuntimeMetadataCatalog.getVDBArchive(vdbID);
+            final byte[] vdbcontents = getVDBArchive(vdbID);
             mc = new MetadataCache();
             mc.init(vdb, models, includeMetadata, vdbcontents, systemModels.getModelMap());
             
@@ -909,9 +849,9 @@ public class RuntimeMetadataCatalog  {
         return mc;
     }    
 
-     private static void loadSystemMetadataCache() throws VirtualDatabaseException{   
+     private void loadSystemMetadataCache() throws VirtualDatabaseException{   
         
-        byte[] systemvdb = RuntimeMetadataCatalog.getSystemVDBArchive();                   
+        byte[] systemvdb = getSystemVDBArchive();                   
 
         // don't load metadata, only models
         MetadataCache mc = new MetadataCache();
@@ -923,7 +863,7 @@ public class RuntimeMetadataCatalog  {
         LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,"Creating MetadataCache for systemVDB"); //$NON-NLS-1$
     }
 
-     private static void processEvent(RuntimeMetadataEvent event) {
+     private void processEvent(RuntimeMetadataEvent event) {
          if (event.getSource() == null) {            
              if(event.refreshModels()){
                  VirtualDatabaseID vdbID= event.getVirtualDatabaseID();                            

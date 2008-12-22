@@ -46,7 +46,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     public TestVirtualDocWithVirtualProc() {
     	// this is needed because the result files are generated 
     	// with another tool which uses tab as delimiter 
-    	super.DELIMITER = "\t";
+    	super.DELIMITER = "\t"; //$NON-NLS-1$
     }
     
     public static Test suite() {
@@ -56,45 +56,45 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 
 			public com.metamatrix.jdbc.api.Connection createSingleConnection()
 					throws Exception {
-				return createConnection(VDB, DQP_PROP_FILE, "");
+				return createConnection(VDB, DQP_PROP_FILE, ""); //$NON-NLS-1$
 			}});
 	}    
         
     public void testDefect15241() {
 
-    	String sql = "SELECT ModelName, Name, Description FROM System.Groups WHERE Name = 'yyyTestDocument'";
+    	String sql = "SELECT ModelName, Name, Description FROM System.Groups WHERE Name = 'yyyTestDocument'"; //$NON-NLS-1$
 
     	String[] expected ={
-			"ModelName[string]	Name[string]	Description[string]",	
-			"test13326Doc	yyyTestDocument	null",
-			"testDoc	yyyTestDocument	This is a test description of virtual doc yyyTestDocument"
+			"ModelName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
+			"test13326Doc	yyyTestDocument	null", //$NON-NLS-1$
+			"testDoc	yyyTestDocument	This is a test description of virtual doc yyyTestDocument" //$NON-NLS-1$
     	};
     	executeAndAssertResults(sql, expected);
     }
 
     public void testDefect15241a() {
-    	String sql = "SELECT GroupName, Name, Description FROM System.Elements WHERE Name = 'IntKey'";
+    	String sql = "SELECT GroupName, Name, Description FROM System.Elements WHERE Name = 'IntKey'"; //$NON-NLS-1$
     	String[] expected ={
-		    "GroupName[string]	Name[string]	Description[string]",	
-		    "HugeA	IntKey	null",
-		    "HugeB	IntKey	null",
-		    "LargeA	IntKey	null",
-		    "LargeB	IntKey	null",
-		    "MediumA	IntKey	null",
-		    "MediumB	IntKey	null",
-		    "SmallA	IntKey	This is a test description of SmallA.IntKey element",
-		    "SmallB	IntKey	null"
+		    "GroupName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
+		    "HugeA	IntKey	null", //$NON-NLS-1$
+		    "HugeB	IntKey	null", //$NON-NLS-1$
+		    "LargeA	IntKey	null", //$NON-NLS-1$
+		    "LargeB	IntKey	null", //$NON-NLS-1$
+		    "MediumA	IntKey	null", //$NON-NLS-1$
+		    "MediumB	IntKey	null", //$NON-NLS-1$
+		    "SmallA	IntKey	This is a test description of SmallA.IntKey element", //$NON-NLS-1$
+		    "SmallB	IntKey	null" //$NON-NLS-1$
     	};
     	executeAndAssertResults(sql, expected);
     }
 
     public void testDefect15241b() {
     	
-    	String sql = "SELECT GroupName, Name, Value, UID FROM System.GroupProperties WHERE ModelName = 'testDoc'";
+    	String sql = "SELECT GroupName, Name, Value, UID FROM System.GroupProperties WHERE ModelName = 'testDoc'"; //$NON-NLS-1$
     	String[] expected ={
-	    "GroupName[string]	Name[string]	Value[string]	UID[string]",	
-	    "yyyTestDocument	NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1",
-	    "yyyTestDocument	NugentYAttribute	Nuuuuuge44444	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1"
+	    "GroupName[string]	Name[string]	Value[string]	UID[string]",	 //$NON-NLS-1$
+	    "yyyTestDocument	NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1", //$NON-NLS-1$
+	    "yyyTestDocument	NugentYAttribute	Nuuuuuge44444	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1" //$NON-NLS-1$
     	};
     	executeAndAssertResults(sql, expected);
     }
