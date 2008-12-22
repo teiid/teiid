@@ -112,7 +112,7 @@
 				<PropertyDefinition Name="com.metamatrix.ssl.keystore.filename" DisplayName="Keystore Filename" ShortDescription="Name and location of keystore file." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
 			</ComponentTypeDefn>
 			<ComponentTypeDefn Deprecated="false">
-				<PropertyDefinition Name="com.metamatrix.ssl.keystore.Password" DisplayName="Password" ShortDescription="Keystore Password" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="true" IsModifiable="true" IsPreferred="true"/>
+				<PropertyDefinition Name="com.metamatrix.ssl.keystore.Password" DisplayName="Keystore Password" ShortDescription="Keystore Password" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="true" IsModifiable="true" IsPreferred="true"/>
 			</ComponentTypeDefn>			
 			<ComponentTypeDefn Deprecated="false">
 				<PropertyDefinition Name="com.metamatrix.ssl.keystoretype" DisplayName="KeyStore Type" ShortDescription="Keystore Type" DefaultValue="JKS" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
