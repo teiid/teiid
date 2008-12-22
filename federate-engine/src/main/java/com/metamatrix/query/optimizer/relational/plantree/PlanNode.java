@@ -272,7 +272,9 @@ public class PlanNode {
      * @param node
      */
     public void addAsParent(PlanNode node) {
-    	this.parent.replaceChild(this, node);
+    	if (this.parent != null) {
+        	this.parent.replaceChild(this, node);
+    	}
     	assert node.getChildCount() == 0;
 		node.addLastChild(this);
     }

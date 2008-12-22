@@ -87,7 +87,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         		Command command = FrameUtil.getNonQueryCommand(accessNode);
         		
                 if(command == null) {
-                    removeUnnecessaryInlineView(accessNode);
+                    plan = removeUnnecessaryInlineView(plan, accessNode);
                     command = createQuery(metadata, capFinder, accessNode, accessNode);
                 } 
         		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
@@ -99,13 +99,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 		return plan;
 	}
 
-    private void removeUnnecessaryInlineView(PlanNode accessNode) {
+    private PlanNode removeUnnecessaryInlineView(PlanNode root, PlanNode accessNode) {
     	PlanNode child = accessNode.getFirstChild();
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
-        	NodeEditor.removeChildNode(accessNode, child);
-        	accessNode.addAsParent(child);
+        	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
             accessNode.getGroups().clear();
             PlanNode sourceNode = FrameUtil.findJoinSourceNode(accessNode.getFirstChild());
@@ -114,6 +113,8 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             accessNode.setProperty(Info.OUTPUT_COLS, accessNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
         }
+        
+        return root;
     }
 
 	private QueryCommand createQuery(QueryMetadataInterface metadata, CapabilitiesFinder capFinder, PlanNode accessRoot, PlanNode node) throws QueryMetadataException, MetaMatrixComponentException, QueryPlannerException {
