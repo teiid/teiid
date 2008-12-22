@@ -103,7 +103,9 @@ public final class RuleCollapseSource implements OptimizerRule {
     	PlanNode child = accessNode.getFirstChild();
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
+        	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	NodeEditor.removeChildNode(accessNode, child);
+        	accessNode.addAsParent(child);
             //add the groups from the lower project
             accessNode.getGroups().clear();
             PlanNode sourceNode = FrameUtil.findJoinSourceNode(accessNode.getFirstChild());

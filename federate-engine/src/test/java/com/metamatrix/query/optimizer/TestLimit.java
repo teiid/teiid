@@ -24,6 +24,7 @@
 
 package com.metamatrix.query.optimizer;
 
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -33,7 +34,9 @@ import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
+import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.DependentProjectNode;
@@ -720,7 +723,7 @@ public class TestLimit extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        String sql = "SELECT x FROM ((SELECT e1 as x FROM pm1.g1 LIMIT 700) c INNER JOIN (SELECT e1 FROM pm1.g2) d ON d.e1 = c.x) LIMIT 100";//$NON-NLS-1$
+        String sql = "SELECT x FROM ((SELECT e1 as x FROM pm1.g1 LIMIT 700) c INNER JOIN (SELECT e1 FROM pm1.g2) d ON d.e1 = c.x) order by x LIMIT 5";//$NON-NLS-1$
         String[] expectedSql = new String[] {"SELECT e1 FROM pm1.g1 LIMIT 700", "SELECT e1 FROM pm1.g2"};//$NON-NLS-1$ //$NON-NLS-2$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
@@ -740,9 +743,20 @@ public class TestLimit extends TestCase {
                                         0,      // PlanExecution
                                         1,      // Project
                                         0,      // Select
-                                        0,      // Sort
+                                        1,      // Sort
                                         0       // UnionAll
         }, NODE_TYPES);
+        
+        //test to ensure that the unnecessary inline view removal is done properly
+        FakeDataManager fdm = new FakeDataManager();
+        TestProcessor.sampleData1(fdm);
+        TestProcessor.helpProcess(plan, fdm, new List[] {
+        		Arrays.asList("a"), //$NON-NLS-1$
+        		Arrays.asList("a"), //$NON-NLS-1$
+        		Arrays.asList("a"), //$NON-NLS-1$
+        		Arrays.asList("a"), //$NON-NLS-1$
+        		Arrays.asList("a"), //$NON-NLS-1$
+        });
     }
     
     public void testDontPushSelectWithOrderedLimit() {

@@ -479,16 +479,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
     }
     
     static PlanNode performRaise(PlanNode rootNode, PlanNode accessNode, PlanNode parentNode) {
-        // Remove ACCESS node from tree
         NodeEditor.removeChildNode(parentNode, accessNode);
-        
-        // Splice ACCESS node back into tree above the rootnode
+        parentNode.addAsParent(accessNode);
         PlanNode grandparentNode = parentNode.getParent();
         if(grandparentNode != null) {
-            parentNode.addAsParent(accessNode);
             return rootNode;
         }
-        accessNode.addFirstChild(parentNode);
         return accessNode;
     }
 
