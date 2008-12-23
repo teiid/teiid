@@ -127,10 +127,14 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
         this.batchResults = new BatchResults(this, resultsMsg.getFetchSize(), getCurrentBatch(resultsMsg));
         setResultsData(resultsMsg);
         cursorType = statement.getResultSetType();
+        
         TimeZone timezone = statement.getServerTimeZone();
         
-        if (timezone != null && !timezone.hasSameRules(statement.getDefaultCalendar().getTimeZone())) {
+        if (timezone != null) {
             setServerTimeZone(timezone);
+        }
+        else {
+        	 setServerTimeZone(statement.getDefaultCalendar().getTimeZone());
         }
 
 		if (metadata == null) {
