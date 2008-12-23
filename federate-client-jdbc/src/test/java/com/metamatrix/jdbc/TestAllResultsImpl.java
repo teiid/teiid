@@ -33,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -67,6 +68,7 @@ public class TestAllResultsImpl extends TestCase {
 		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
 		stub(statement.getResultSetType()).toReturn(
 				ResultSet.TYPE_SCROLL_INSENSITIVE);
+		stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance());
 	}
 	
 	/** test hasNext(), actual result set should return FALSE. */
