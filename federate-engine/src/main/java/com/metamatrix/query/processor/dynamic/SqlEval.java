@@ -37,25 +37,12 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.QueryOptimizer;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.Symbol;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 import com.metamatrix.query.xquery.XQuerySQLEvaluator;
 
 
@@ -65,21 +52,15 @@ import com.metamatrix.query.xquery.XQuerySQLEvaluator;
  */
 public class SqlEval implements XQuerySQLEvaluator {
 
-    private QueryMetadataInterface metadata;
-    private CommandContext context;
-    private CapabilitiesFinder finder;
-    private IDGenerator idGenerator;
     private BufferManager bufferMgr;
-    private ProcessorDataManager dataMgr;
-    private ArrayList openTupleList;
+    private CommandContext context;
+    private ArrayList<TupleSourceID> openTupleList;
+    private String parentGroup;
     
-    public SqlEval(QueryMetadataInterface metadata, CommandContext context, CapabilitiesFinder finder, IDGenerator idGenerator, BufferManager bufferMgr, ProcessorDataManager dataMgr) {
-        this.metadata = metadata;
-        this.context = context;
-        this.finder = finder;
-        this.idGenerator = idGenerator;
+    public SqlEval(BufferManager bufferMgr, CommandContext context, String parentGroup) {
         this.bufferMgr = bufferMgr;
-        this.dataMgr = dataMgr;
+        this.context = context;
+        this.parentGroup = parentGroup;
     }
 
     /** 
@@ -88,25 +69,15 @@ public class SqlEval implements XQuerySQLEvaluator {
      */
     public Source executeSQL(String sql) 
         throws QueryParserException, MetaMatrixProcessingException, MetaMatrixComponentException {
-               
-        Command command = QueryParser.getQueryParser().parseCommand(sql);
-        QueryResolver.resolveCommand(command, metadata);            
-        QueryRewriter.rewrite(command, null, metadata, context);
-        ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, AnalysisRecord.createNonRecordingRecord(), context);
-        
-        List elements = plan.getOutputElements();
-        CommandContext copy = (CommandContext) context.clone();
-        TupleSourceID resultsId = bufferMgr.createTupleSource(elements, TypeRetrievalUtil.getTypeNames(elements), context.getConnectionID(), TupleSourceType.PROCESSOR);
-        copy.setTupleSourceID(resultsId);
-        
+
+    	QueryProcessor processor = context.getQueryProcessorFactory().createQueryProcessor(sql, parentGroup, context);
         // keep track of all the tuple sources opened during the 
         // xquery process; 
         if (openTupleList == null) {
-            openTupleList = new ArrayList();
+            openTupleList = new ArrayList<TupleSourceID>();
         }
-        openTupleList.add(resultsId);
+        openTupleList.add(processor.getResultsID());
         
-        QueryProcessor processor = new QueryProcessor(plan, copy, bufferMgr, dataMgr);
         try {
             processor.process();
         } catch(MetaMatrixComponentException e) {
@@ -119,13 +90,13 @@ public class SqlEval implements XQuerySQLEvaluator {
         
         TupleSourceID tsID = processor.getResultsID();
         TupleSource src = this.bufferMgr.getTupleSource(tsID);
-        String[] columns = elementNames(elements);
-        Class[] types= elementTypes(elements);
+        String[] columns = elementNames(src.getSchema());
+        Class[] types= elementTypes(src.getSchema());
         boolean xml = false;
         
         // check to see if we have XML results
-        if (elements.size() > 0) {
-            xml = ((SingleElementSymbol)elements.get(0)).getType().equals(DataTypeManager.DefaultDataClasses.XML);
+        if (src.getSchema().size() > 0) {
+            xml = ((SingleElementSymbol)src.getSchema().get(0)).getType().equals(DataTypeManager.DefaultDataClasses.XML);
         }            
         
         if (xml) {

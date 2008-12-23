@@ -46,6 +46,7 @@ import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
+import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -65,7 +66,32 @@ import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class ResolverVisitorUtil {
-
+	
+	public static class ResolvedLookup {
+		private GroupSymbol group;
+		private ElementSymbol keyElement;
+		private ElementSymbol returnElement;
+		
+		void setGroup(GroupSymbol group) {
+			this.group = group;
+		}
+		public GroupSymbol getGroup() {
+			return group;
+		}
+		void setKeyElement(ElementSymbol keyElement) {
+			this.keyElement = keyElement;
+		}
+		public ElementSymbol getKeyElement() {
+			return keyElement;
+		}
+		void setReturnElement(ElementSymbol returnElement) {
+			this.returnElement = returnElement;
+		}
+		public ElementSymbol getReturnElement() {
+			return returnElement;
+		}
+	}
+	
     /**
      * Resolves criteria "a BETWEEN b AND c". If type conversions are necessary,
      * this method attempts the following implicit conversions:
@@ -591,37 +617,8 @@ public class ResolverVisitorUtil {
                 throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0037, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0037, new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType}));
             }
         } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
-    
-            // Special code to handle setting return type of the lookup function to match the type of the return element
-            if( args[0] instanceof Constant && args[1] instanceof Constant && args[2] instanceof Constant) {
-                String returnElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[1]).getValue(); //$NON-NLS-1$
-    
-                try {
-                    Object metadataID = metadata.getElementID(returnElementName);
-                    ElementSymbol symbol = new ElementSymbol(returnElementName);
-                    symbol.setMetadataID(metadataID);
-                    String dataType = metadata.getElementType(symbol.getMetadataID());
-                    Class dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
-                    fd = library.copyFunctionChangeReturnType(fd, dataTypeClass);
-    
-                } catch(QueryMetadataException e) {
-                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
-                }
-    
-                // If code table name in lookup function refers to virtual group, throws exception
-    			GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
-    			try {
-    				groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
-    				if (metadata.isVirtualGroup(groupSym.getMetadataID())) {
-    					throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
-    				}
-    			} catch(QueryMetadataException e) {
-    				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
-    			}
-    
-            } else {
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
-            }
+			ResolvedLookup lookup = resolveLookup(function, metadata);
+			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
         } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.XPATHVALUE)) {
             // Validate the xpath value is valid
             if(args[1] != null && args[1] instanceof Constant) {
@@ -644,6 +641,47 @@ public class ResolverVisitorUtil {
         // Resolve the function
         function.setFunctionDescriptor(fd);
         function.setType(fd.getReturnType());
+    }
+    
+    public static ResolvedLookup resolveLookup(Function lookup, QueryMetadataInterface metadata) throws QueryResolverException, MetaMatrixComponentException {
+    	Expression[] args = lookup.getArgs();
+    	ResolvedLookup result = new ResolvedLookup();
+        // Special code to handle setting return type of the lookup function to match the type of the return element
+        if( args[0] instanceof Constant && args[1] instanceof Constant && args[2] instanceof Constant) {
+            // If code table name in lookup function refers to virtual group, throws exception
+			GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
+			try {
+				groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
+				if (groupSym.getMetadataID() instanceof TempMetadataID) {
+					throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
+				}
+			} catch(QueryMetadataException e) {
+				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
+			}
+			result.setGroup(groupSym);
+			
+			List<GroupSymbol> groups = Arrays.asList(groupSym);
+			
+			String returnElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[1]).getValue(); //$NON-NLS-1$
+			ElementSymbol returnElement = new ElementSymbol(returnElementName);
+            try {
+                ResolverVisitor.resolveLanguageObject(returnElement, groups, metadata);
+            } catch(QueryMetadataException e) {
+                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
+            }
+			result.setReturnElement(returnElement);
+            
+            String keyElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[2]).getValue(); //$NON-NLS-1$
+            ElementSymbol keyElement = new ElementSymbol(keyElementName);
+            try {
+                ResolverVisitor.resolveLanguageObject(keyElement, groups, metadata);
+            } catch(QueryMetadataException e) {
+                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
+            }
+			result.setKeyElement(keyElement);
+			return result;
+        } 
+        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
     }
 
     /**

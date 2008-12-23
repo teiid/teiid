@@ -25,19 +25,18 @@
 package com.metamatrix.query.processor.dynamic;
 
 import java.io.BufferedReader;
-import java.util.Properties;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
+
+import junit.framework.TestCase;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
@@ -47,6 +46,8 @@ import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.FakeDataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.processor.xml.TestXMLProcessor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -58,25 +59,18 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class TestSqlEval extends TestCase {
 
-    private CommandContext createCommandContext() {
-        Properties props = new Properties();
-        props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
-        props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext("0", "test", null, 5, "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        context.setProcessorBatchSize(2000);
-        context.setConnectorBatchSize(2000);
-        return context;
-    } 
-    
     String helpProcess(String sql, QueryMetadataInterface metadata, ProcessorDataManager dataMgr) 
         throws Exception {
-        
-        CommandContext context = createCommandContext();
         
         CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         
-        SqlEval sqlEval = new SqlEval(metadata, context, capFinder, null, bufferMgr, dataMgr);
+        QueryProcessor.ProcessorFactory factory = new SimpleQueryProcessorFactory(bufferMgr, dataMgr, capFinder, null, metadata);
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(factory);
+        
+        SqlEval sqlEval = new SqlEval(bufferMgr, cc, null);
         Source results =  sqlEval.executeSQL(sql);        
         String result = toXMLString(results);
         sqlEval.close();

@@ -27,17 +27,15 @@ package com.metamatrix.dqp.internal.process;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
-import com.metamatrix.api.exception.ComponentNotAvailableException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -51,14 +49,9 @@ import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.resolver.QueryResolver;
+import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.From;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.Select;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 public class DataTierManagerImpl implements DataTierManager {
@@ -66,7 +59,6 @@ public class DataTierManagerImpl implements DataTierManager {
 	// Resources
 	private DQPCore requestMgr;
     private DataService dataService;
-    private MetadataService metadataService;
     private VDBService vdbService;
     private BufferService bufferService;
 
@@ -76,13 +68,6 @@ public class DataTierManagerImpl implements DataTierManager {
 	// Processor state
     private CodeTableCache codeTableCache;
     
-    private static class CodeTableFailure {
-    	long time = System.currentTimeMillis();
-    	Throwable exception;
-    }
-    
-    private ConcurrentHashMap<String, CodeTableFailure> codeTableCacheFailures = new ConcurrentHashMap<String, CodeTableFailure>();
-    
     public DataTierManagerImpl(DQPCore requestMgr,
         DataService dataService, MetadataService metadataService, VDBService vdbService, 
         BufferService bufferService, int maxCodeTables,
@@ -90,7 +75,6 @@ public class DataTierManagerImpl implements DataTierManager {
 
 		this.requestMgr = requestMgr;
         this.dataService = dataService;
-        this.metadataService = metadataService;
         this.vdbService = vdbService;
         this.maxCodeTableRecords = maxCodeTableRecords;
         this.bufferService = bufferService;
@@ -144,7 +128,7 @@ public class DataTierManagerImpl implements DataTierManager {
 	String getConnectorName(String connectorBindingID) {
         try {
             return vdbService.getConnectorName(connectorBindingID);
-        } catch (Throwable t) {
+        } catch (MetaMatrixComponentException t) {
             // OK
         }
         return connectorBindingID;
@@ -195,122 +179,73 @@ public class DataTierManagerImpl implements DataTierManager {
         Object keyValue)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        int existsCode = this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context);
-        if(existsCode == CodeTableCache.CACHE_EXISTS ) {
-            return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
-        } else if(existsCode == CodeTableCache.CACHE_NOT_EXIST ) {
-        	String failureKey = codeTableName.toLowerCase();
-        	CodeTableFailure failure = codeTableCacheFailures.get(failureKey);
-        	//retry rate of 5 seconds
-        	if (failure != null && System.currentTimeMillis() - failure.time < 5000) {
-    			throw new MetaMatrixProcessingException(failure.exception);
-        	} 
-			registerCodeTableRequest(context, codeTableName, returnElementName, keyElementName);
-        } else if(existsCode == CodeTableCache.CACHE_OVERLOAD) {
-			throw new MetaMatrixProcessingException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
-
-        } // else, CACHE_LOADING - do nothing other than block
-
-        throw BlockedException.INSTANCE;
+        switch (this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context)) {
+        	case CACHE_NOT_EXIST:
+	        	registerCodeTableRequest(context, codeTableName, returnElementName, keyElementName);
+        	case CACHE_EXISTS:
+	        	return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
+	        case CACHE_OVERLOAD:
+	        	throw new MetaMatrixProcessingException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
+	        default:
+	            throw BlockedException.INSTANCE;
+        }
     }
 
     void registerCodeTableRequest(
-        CommandContext context,
+        final CommandContext context,
         final String codeTableName,
         String returnElementName,
         String keyElementName)
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        // Look up request information based on processor ID (which is really RequestID)
-        RequestID requestID = (RequestID) context.getProcessorID();
-        RequestWorkItem workItem = this.requestMgr.getRequestWorkItem(requestID, true);
+        String query = ReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + ReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
         
-        Query query = null;
-        String modelName = null;
+        final Integer codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
 
-        // Look up metadata for this request
-        QueryMetadataInterface metadata = null;
+        boolean success = false;
+        QueryProcessor processor = null;
         try {
-            metadata = metadataService.lookupMetadata(workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion());
+            processor = context.getQueryProcessorFactory().createQueryProcessor(query, codeTableName.toUpperCase(), context);
 
-            // Construct the command objects
-            query = new Query();
-            Select select = new Select();
-            select.addSymbol(new ElementSymbol(keyElementName));
-            select.addSymbol(new ElementSymbol(returnElementName));
-            query.setSelect(select);
-            From from = new From();
-            from.addGroup(new GroupSymbol(codeTableName));
-            query.setFrom(from);
+            processor.setBatchHandler(new QueryProcessor.BatchHandler() {
+            	@Override
+            	public void batchProduced(TupleBatch batch)
+            			throws MetaMatrixCoreException {
+    				// Determine whether the results should be added to code table cache
+                	// Depends on size of results and available memory and system parameters
 
-            // Resolve the command
-            QueryResolver.resolveCommand(query, metadata);
+                	if (batch.getEndRow() > maxCodeTableRecords) {
+                        throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", context.getProcessorID(), codeRequestId)); //$NON-NLS-1$ //$NON-NLS-2$                    
+                	}
+               		codeTableCache.loadTable(codeRequestId, batch.getAllTuples());
+            	}
+            });
 
-            // Get the routing name and modelID from the group
-            GroupSymbol group = (GroupSymbol) query.getFrom().getGroups().get(0);
-            Object modelID = metadata.getModelID(group.getMetadataID());
-            modelName = metadata.getFullName(modelID);
-        } catch(QueryMetadataException e) {
-            String msg = DQPPlugin.Util.getString("DataTierManager.Unable_to_get_metadata."); //$NON-NLS-1$
-            throw new ComponentNotAvailableException(e, msg);
-        } catch(QueryResolverException e) {
-            String msg = DQPPlugin.Util.getString("DataTierManager.Unable_to_resolve_query."); //$NON-NLS-1$
-            throw new ComponentNotAvailableException(e, msg);
+        	//process lookup as fully blocking
+        	processor.process();
+        	success = true;
+        } catch (MetaMatrixProcessingException e) {
+        	throw e;
+        } catch (MetaMatrixComponentException e) {
+        	throw e;
+        } catch (MetaMatrixCoreException e) {
+	        throw new MetaMatrixComponentException(e);
+        } finally {
+        	Collection requests = null;
+        	if (success) {
+                requests = codeTableCache.markCacheLoaded(codeRequestId);
+        	} else {
+        		requests = codeTableCache.errorLoadingCache(codeRequestId);        		
+        	}
+        	notifyWaitingCodeTableRequests(requests);
+        	if (processor != null) {
+	            try {
+	            	this.bufferService.getBufferManager().removeTupleSource(processor.getResultsID());
+	    		} catch (MetaMatrixComponentException e1) {
+	    			LogManager.logDetail(LogConstants.CTX_DQP, "Exception closing code table request"); //$NON-NLS-1$
+	    		}
+        	}
         }
-
-        int nodeId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, requestID, context);
-        final AtomicRequestMessage aqr = createRequest(context.getProcessorID(), query, modelName, null, nodeId);
-        this.executeRequest(aqr, aqr.getConnectorID(), new ResultsReceiver<AtomicResultsMessage>() {
-
-			public void exceptionOccurred(Throwable e) {
-		        // Notify code table and waiting requests that this lookup failed.
-		        Collection requests = codeTableCache.errorLoadingCache(aqr.getRequestID(), aqr.getAtomicRequestID().getNodeID());
-		        CodeTableFailure failure = new CodeTableFailure();
-		        failure.exception = e;
-		        codeTableCacheFailures.put(codeTableName.toLowerCase(), failure);
-		        try {
-					closeRequest(aqr.getAtomicRequestID(), aqr.getConnectorID());
-				} catch (MetaMatrixComponentException e1) {
-					LogManager.logDetail(LogConstants.CTX_DQP, e1, "Exception closing code table request"); //$NON-NLS-1$
-				}
-		        notifyWaitingCodeTableRequests(requests);
-			}
-
-			public void receiveResults(AtomicResultsMessage response) {
-				if (response.isRequestClosed()) {
-					return;
-				}
-				// Determine whether the results should be added to code table cache
-            	// Depends on size of results and available memory and system parameters
-            	boolean codeTableLoadable = response.getLastRow() < maxCodeTableRecords;
-
-            	if (!codeTableLoadable) {
-                    LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DataTierManager.Unable_to_load_code_table_for_requestID_{0}_of_and_nodeID_of_{1}_because_result_sizes_exceeds_the_allowed_parameter_-_MaxCodeTableRecords.", new Object[]{aqr.getRequestID(), new Integer(aqr.getAtomicRequestID().getNodeID())})); //$NON-NLS-1$                    
-                    MetaMatrixComponentException me = new MetaMatrixComponentException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", aqr.getRequestID(), new Integer(aqr.getAtomicRequestID().getNodeID()))); //$NON-NLS-1$ //$NON-NLS-2$                    
-                    exceptionOccurred(me);
-            	} else {
-					// Add value to codeTableCache
-               		codeTableCache.loadTable(aqr.getRequestID(), aqr.getAtomicRequestID().getNodeID(), response.getResults());
-                    if(response.getFinalRow() < 0) {
-                        try {
-                        	requestBatch(aqr.getAtomicRequestID(), aqr.getConnectorID());
-                        } catch(MetaMatrixComponentException e) {
-                            LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
-                        	exceptionOccurred(e);
-                        }
-                    } else {
-                        // Set the loading complete
-                        Collection requests = codeTableCache.markCacheLoaded(aqr.getRequestID(), aqr.getAtomicRequestID().getNodeID());
-                        notifyWaitingCodeTableRequests(requests);
-        		        try {
-        					closeRequest(aqr.getAtomicRequestID(), aqr.getConnectorID());
-        				} catch (MetaMatrixComponentException e1) {
-        					LogManager.logDetail(LogConstants.CTX_DQP, "Exception closing code table request"); //$NON-NLS-1$
-        				}
-                    }
-                }
-			}
-        });
     }
 
     /* (non-Javadoc)

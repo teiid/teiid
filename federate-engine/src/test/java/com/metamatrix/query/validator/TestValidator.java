@@ -1755,18 +1755,16 @@ public class TestValidator extends TestCase {
         }catch(QueryResolverException e){
         	//expected
         }
-    	
-        sql = "SELECT lookup('pm1.g1', 'e1', 'x', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
-        command = new QueryParser().parseCommand(sql);
-        QueryResolver.resolveCommand(command, metadata);
+    }
+    
+    public void testLookupKeyElementComparable() throws Exception {
+    	QueryMetadataInterface metadata = exampleMetadata2();
+        String sql = "SELECT lookup('test.group', 'e2', 'e3', e2) AS x FROM test.group"; //$NON-NLS-1$
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+    	QueryResolver.resolveCommand(command, metadata); 
         
-        // Validate
-        try{
-        	Validator.validate(command, metadata); 
-        	fail("Did not get exception"); //$NON-NLS-1$
-        }catch(MetaMatrixComponentException e){
-        	//expected
-        }
+        ValidatorReport report = Validator.validate(command, metadata);
+        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
     }
     
     public void testDefect12107() throws Exception{

@@ -29,11 +29,21 @@ import java.util.Iterator;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.sql.lang.*;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
+import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.Delete;
+import com.metamatrix.query.sql.lang.Insert;
+import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.lang.Update;
+import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.validator.AbstractValidationVisitor;
@@ -78,7 +88,20 @@ public class ModelVisibilityValidationVisitor extends AbstractValidationVisitor 
     public void visit(StoredProcedure obj) {
         validateModelVisibility(obj);
     }
-
+    
+    public void visit(Function obj) {
+    	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
+			try {
+	    		ResolvedLookup resolvedLookup = ResolverVisitorUtil.resolveLookup(obj, getMetadata());
+	    		validateModelVisibility(getMetadata().getModelID(resolvedLookup.getGroup().getMetadataID()), resolvedLookup.getGroup());
+			} catch (QueryResolverException e) {
+				handleException(e, obj);
+			} catch (MetaMatrixComponentException e) {
+				handleException(e, obj);
+			}
+    	}
+    }
+    
     // ######################### Validation methods #########################
 
     protected void validateModelVisibility(Command obj) {
@@ -99,11 +122,7 @@ public class ModelVisibilityValidationVisitor extends AbstractValidationVisitor 
                 if(modelID instanceof TempMetadataID){
                 	return;
                 }
-                String modelName = getMetadata().getFullName(modelID);
-                int visibility = this.vdbService.getModelVisibility(this.vdbName, this.vdbVersion, modelName);
-                if(visibility != ModelInfo.PUBLIC) {
-                    handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
-                }
+                validateModelVisibility(modelID, group);
             }
         } catch(QueryMetadataException e) {
             handleException(e, obj);
@@ -112,4 +131,11 @@ public class ModelVisibilityValidationVisitor extends AbstractValidationVisitor 
         }
     }
 
+    protected void validateModelVisibility(Object modelID, GroupSymbol group) throws QueryMetadataException, MetaMatrixComponentException {
+	    String modelName = getMetadata().getFullName(modelID);
+	    int visibility = this.vdbService.getModelVisibility(this.vdbName, this.vdbVersion, modelName);
+	    if(visibility != ModelInfo.PUBLIC) {
+	        handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
+	    }
+    }
 }

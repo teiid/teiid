@@ -459,13 +459,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 		// do a recursion check
 		// Add group to recursion stack
 		CommandContext context = procEnv.getContext();
-		if (context.pushCall(parentProcCommand.getVirtualGroup()
-				.getCanonicalName())) {
-			Object[] params = new Object[] { parentProcCommand
-					.getVirtualGroup().getCanonicalName() };
-			throw new QueryProcessingException(QueryExecPlugin.Util.getString(
-					"ExecDynamicSqlInstruction.3", params)); //$NON-NLS-1$
-		}
+		context.pushCall(parentProcCommand.getVirtualGroup().getCanonicalName());
 	}
 
 	/**

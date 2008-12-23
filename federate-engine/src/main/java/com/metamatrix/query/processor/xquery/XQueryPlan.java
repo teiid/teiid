@@ -44,9 +44,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.core.id.IDGenerator;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -64,16 +61,11 @@ import com.metamatrix.query.xquery.XQueryExpression;
 public class XQueryPlan extends BaseProcessorPlan {        
     private XQuery xQuery;
     private BufferManager bufferMgr;
-    private ProcessorDataManager dataMgr;
     private String xmlFormat;
+    private String parentGroup;
 
-    // External resources for sql eval 
-    private QueryMetadataInterface metadata;
-    private CapabilitiesFinder finder;
-    private IDGenerator generator;
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     private TupleSourceID resultsTupleSourceId;
-    
 
     /**
      * Constructor
@@ -81,19 +73,10 @@ public class XQueryPlan extends BaseProcessorPlan {
      * @param xmlPlans Map of XQuery doc() args to XMLPlan for
      * that virtual doc
      */
-    public XQueryPlan(XQuery xQuery, QueryMetadataInterface metadata, CapabilitiesFinder finder, IDGenerator generator) {
+    public XQueryPlan(XQuery xQuery, String parentGroup) {
         super();
         this.xQuery = xQuery;
-        this.metadata = metadata;
-        this.finder = finder;
-        this.generator = generator;
-    }
-
-    /**
-     * @see com.metamatrix.query.processor.ProcessorPlan#reset()
-     */
-    public void reset(){
-        super.reset();
+        this.parentGroup = parentGroup;
     }
 
     /**
@@ -101,7 +84,7 @@ public class XQueryPlan extends BaseProcessorPlan {
      */
     public Object clone() {
         XQuery clonedQuery = (XQuery)this.xQuery.clone();
-        return new XQueryPlan(clonedQuery, metadata, finder, generator);
+        return new XQueryPlan(clonedQuery, parentGroup);
     }
 
     /**
@@ -109,7 +92,6 @@ public class XQueryPlan extends BaseProcessorPlan {
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         setContext(context);
-        this.dataMgr = dataMgr;
         this.bufferMgr = bufferMgr;        
         if(context.getStreamingBatchSize() != 0){
             this.chunkSize = (context.getStreamingBatchSize()*1024); // it is configured in terms of KB
@@ -142,24 +124,18 @@ public class XQueryPlan extends BaseProcessorPlan {
      */
     public TupleBatch nextBatch()
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        return evaluateXQuery();
-    }
-    
-    /**
-     * Input docs are available in memory, so evaluate XQuery
-     */
-    private TupleBatch evaluateXQuery() 
-        throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        XQueryExpression expr = this.xQuery.getCompiledXQuery();    
-        expr.setXMLFormat(xmlFormat);    
         
-        SqlEval sqlEval = new SqlEval(metadata, getContext(), finder, generator, bufferMgr, dataMgr);
-        SQLXML xml = expr.evaluateXQuery(sqlEval);
-        sqlEval.close();
+    	XQueryExpression expr = this.xQuery.getCompiledXQuery();    
+        expr.setXMLFormat(xmlFormat);
         
-        TupleBatch batch = packResultsIntoBatch(xml);        
-        return batch;
+        SqlEval sqlEval = new SqlEval(bufferMgr, getContext(), this.parentGroup);
+        try {
+        	SQLXML xml = expr.evaluateXQuery(sqlEval);
+            TupleBatch batch = packResultsIntoBatch(xml);        
+            return batch;
+        } finally {
+        	sqlEval.close();
+        }
     }
 
     Properties getFormatProperties() {

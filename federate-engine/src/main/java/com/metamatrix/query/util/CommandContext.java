@@ -31,11 +31,14 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.TimeZone;
 
+import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
+import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
+import com.metamatrix.query.processor.QueryProcessor;
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -83,7 +86,7 @@ public class CommandContext implements Cloneable {
     
     private Random random = null;
     
-    private Stack recursionStack = null;
+    private Stack<String> recursionStack = null;
     
     private boolean optimisticTransaction = false;
     
@@ -96,6 +99,8 @@ public class CommandContext implements Cloneable {
     private TimeZone timezone = TimeZone.getDefault();
     
     private PlanToProcessConverter planToProcessConverter;
+    
+    private QueryProcessor.ProcessorFactory queryProcessorFactory;
     
     /**
      * Construct a new context.
@@ -156,6 +161,7 @@ public class CommandContext implements Cloneable {
         this.setSecurityFunctionEvaluator(context.getSecurityFunctionEvaluator());
         this.preparedBatchUpdateValues = context.preparedBatchUpdateValues;
         this.planToProcessConverter = context.planToProcessConverter;
+        this.queryProcessorFactory = context.queryProcessorFactory;
     }
         
     public CommandContext() {        
@@ -227,8 +233,7 @@ public class CommandContext implements Cloneable {
     }
     
     public Object clone() {
-    	CommandContext clonedContext = new CommandContext(this);
-        return clonedContext;
+    	return new CommandContext(this);
     }
     
     public String toString() {
@@ -384,14 +389,21 @@ public class CommandContext implements Cloneable {
         this.random = random;
     }
 
-    public boolean pushCall(String value) {
+    public void pushCall(String value) throws QueryProcessingException {
         if (recursionStack == null) {
-            recursionStack = new Stack();
+            recursionStack = new Stack<String>();
+        } else if (recursionStack.contains(value)) {
+			throw new QueryProcessingException(QueryExecPlugin.Util.getString("ExecDynamicSqlInstruction.3", value)); //$NON-NLS-1$
         }
-        boolean result = recursionStack.contains(value);
         
         recursionStack.push(value);
-        return result;
+    }
+    
+    public int getCallStackDepth() {
+    	if (this.recursionStack == null) {
+    		return 0;
+    	}
+    	return this.recursionStack.size();
     }
     
     public void popCall() {
@@ -454,5 +466,13 @@ public class CommandContext implements Cloneable {
 
 	public PlanToProcessConverter getPlanToProcessConverter() {
 		return planToProcessConverter;
+	}
+	
+	public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
+		return this.queryProcessorFactory;
+	}
+
+	public void setQueryProcessorFactory(QueryProcessor.ProcessorFactory queryProcessorFactory) {
+		this.queryProcessorFactory = queryProcessorFactory;
 	}
 }

@@ -24,13 +24,14 @@
 
 package com.metamatrix.dqp.internal.process;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.dqp.internal.process.CodeTableCache.CacheState;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -44,14 +45,9 @@ public class TestCodeTableCache extends TestCase {
 		super(name);
 	}
 	
-	private static List[] exampleResultObject() { 
-		List record1 = new ArrayList();
-		record1.add("US"); //$NON-NLS-1$
-		record1.add("USA"); //$NON-NLS-1$
-	
-		List record2 = new ArrayList();
-		record2.add("Germany"); //$NON-NLS-1$
-		record2.add("GM"); //$NON-NLS-1$
+	private static List[] exampleResultObject() {
+		List record1 = Arrays.asList("US", "USA"); //$NON-NLS-1$ //$NON-NLS-2$
+		List record2 = Arrays.asList("Germany", "GM"); //$NON-NLS-1$ //$NON-NLS-2$
 
         List[] records = new List[] { 
             record1, record2
@@ -64,17 +60,20 @@ public class TestCodeTableCache extends TestCase {
 		CodeTableCache ctc = new CodeTableCache(10);
 		
 		// must set the requestToCacheKeyMap first 
-		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", new RequestID(0), TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		List[] results = exampleResultObject();
 		
 		//  table/countrycode (keyElem/country, returnElem/code);
 		//   r1--> 'US', 'USA'
 		//   r2--> 'Germany', 'GM'
 		
-        RequestID rID = new RequestID(0);
-		ctc.loadTable(rID, nodeId, results);
+		try {
+			ctc.loadTable(nodeId, results);
+		} catch (MetaMatrixProcessingException e) {
+			throw new RuntimeException(e);
+		}
 		if(setDone) {
-			ctc.markCacheLoaded(rID, nodeId);
+			ctc.markCacheLoaded(nodeId);
 		}
 		return ctc;	
 	}
@@ -84,25 +83,22 @@ public class TestCodeTableCache extends TestCase {
 		CodeTableCache ctc = new CodeTableCache(1);
 		
 		// must set the requestToCacheKeyMap first 
-		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", new RequestID(0), TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         List[] results = exampleResultObject();
 		
 		//  table/countrycode (keyElem/country, returnElem/code);
 		//   r1--> 'US', 'USA'
 		//   r2--> 'Germany', 'GM'
 		
-        RequestID rID = new RequestID(0);
-		ctc.loadTable(rID, nodeId, results);
-		ctc.markCacheLoaded(rID, nodeId);
+		try {
+			ctc.loadTable(nodeId, results);
+		} catch (MetaMatrixProcessingException e) {
+			throw new RuntimeException(e);
+		}
+		ctc.markCacheLoaded(nodeId);
 		return ctc;	
 	}
 
-    public void testIsCodeTableResponse() {
-        CodeTableCache ctc = setUpSampleCodeTable(false);
-        boolean isCTR = ctc.isCodeTableResponse(new RequestID(0), -1);
-        assertTrue("Actual isCodeTableResponse value doesn't match with expected: ", isCTR); //$NON-NLS-1$
-    }
-    
     public void testLookupValue() throws Exception {
 		CodeTableCache ctc = setUpSampleCodeTable(false);
 		String code = (String) ctc.lookupValue("countrycode", "code", "country", "Germany", TEST_CONTEXT);	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -114,8 +110,8 @@ public class TestCodeTableCache extends TestCase {
 		// load code table
 		CodeTableCache ctc = setUpSampleCodeTable(true);
 
-		int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_EXISTS, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_EXISTS, actualState);	 //$NON-NLS-1$
 	}
 
 	/** state = 1; loading state */
@@ -123,32 +119,32 @@ public class TestCodeTableCache extends TestCase {
 		CodeTableCache ctc = new CodeTableCache(10);
 		
 		ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_LOADING, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_LOADING, actualState);	 //$NON-NLS-1$
 	}	
 
 	/** state = 2; not exist */
 	public void testCacheExists3() {
 		CodeTableCache ctc = setUpSampleCodeTable(true);
 		
-		int actualState = ctc.cacheExists("countrycode1", "code1", "country1", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode1", "code1", "country1", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
 	}	
 		
 	/** state = 2; not exist */
 	public void testCacheExists3a() {
 		CodeTableCache ctc = setUpSampleCodeTable(false);
 		
-		int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
 	}	
 
 	/** state = 4; overload */
 	public void testCacheOverload1() {
 		CodeTableCache ctc = setUpSampleCodeTable2();
 		
-		int actualState = ctc.cacheExists("countrycode", "something", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_OVERLOAD, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode", "something", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_OVERLOAD, actualState);	 //$NON-NLS-1$
 	}	
 
     /** test load, then clearAll, then cacheExists */
@@ -160,8 +156,8 @@ public class TestCodeTableCache extends TestCase {
         ctc.clearAll();
 
         // check state
-        int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_NOT_EXIST, actualState);   //$NON-NLS-1$
+        CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_NOT_EXIST, actualState);   //$NON-NLS-1$
     }
 
     /** load table, cacheExists, clearAll, then lookupValue - this should throw an exception */
@@ -170,8 +166,8 @@ public class TestCodeTableCache extends TestCase {
         CodeTableCache ctc = setUpSampleCodeTable(true);
         
         // check state
-        int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_EXISTS, actualState);  //$NON-NLS-1$
+        CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_EXISTS, actualState);  //$NON-NLS-1$
 
         // clear all code tables before it can be read
         ctc.clearAll();
@@ -189,8 +185,26 @@ public class TestCodeTableCache extends TestCase {
 		// load code table
 		CodeTableCache ctc = setUpSampleCodeTable(true);
 
-		int actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT_1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("Actual cache state doesn't match with expected: ", CodeTableCache.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
+		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT_1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("Actual cache state doesn't match with expected: ", CacheState.CACHE_NOT_EXIST, actualState);	 //$NON-NLS-1$
+    }
+    
+    public void testDuplicateKeyException() {
+    	CodeTableCache ctc = new CodeTableCache(1);
+		
+		// must set the requestToCacheKeyMap first 
+		int nodeId = ctc.createCacheRequest("table", "key", "value", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        List[] results = new List[] {
+        		Arrays.asList(1, 2),
+        		Arrays.asList(1, 3),
+        }; 
+		
+		try {
+			ctc.loadTable(nodeId, results);
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (MetaMatrixProcessingException e) {
+			assertEquals("Duplicate code table 'table' key 'value' value '1'", e.getMessage()); //$NON-NLS-1$
+		}
     }
 
 }

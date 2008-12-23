@@ -37,6 +37,7 @@ import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -201,11 +202,9 @@ public class CriteriaEvaluator {
 	}
 
     private static final int compareValues(Object leftValue, Object rightValue) {
-
-        if(leftValue instanceof Comparable && rightValue instanceof Comparable) {
-            return ((Comparable)leftValue).compareTo(rightValue);
-        }
-        return leftValue.toString().compareTo(rightValue.toString());
+    	ArgCheck.isInstanceOf(Comparable.class, leftValue);
+    	ArgCheck.isInstanceOf(Comparable.class, rightValue);
+        return ((Comparable)leftValue).compareTo(rightValue);
     }
 
 	public static Boolean evaluate(MatchCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)

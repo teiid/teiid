@@ -36,6 +36,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.application.basic.BasicEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeTransactionService;
 import com.metamatrix.dqp.internal.process.DQPCore.ConnectorCapabilitiesCache;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -59,20 +60,24 @@ public class TestDQPCore extends TestCase {
     }
 
     private DQPCore exampleDQPCore() throws ApplicationLifecycleException {
-        BasicEnvironment env = new BasicEnvironment();
+        String vdbName = "bqt"; //$NON-NLS-1$
+		String vdbVersion = "1"; //$NON-NLS-1$
+    	
+    	BasicEnvironment env = new BasicEnvironment();
         Properties props = new Properties();
         env.setApplicationProperties(props);
 
         env.bindService(DQPServiceNames.BUFFER_SERVICE, new FakeBufferService());
         FakeMetadataService mdSvc = new FakeMetadataService();
-        mdSvc.addVdb("bqt", "1", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ //$NON-NLS-2$
+		mdSvc.addVdb(vdbName, vdbVersion, FakeMetadataFactory.exampleBQTCached()); 
         env.bindService(DQPServiceNames.METADATA_SERVICE, mdSvc);
         env.bindService(DQPServiceNames.DATA_SERVICE, new AutoGenDataService());
         env.bindService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
         FakeVDBService vdbService = new FakeVDBService();
-        vdbService.addBinding("bqt", "1", "BQT1", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        vdbService.addBinding("bqt", "1", "BQT2", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        vdbService.addBinding("bqt", "1", "BQT3", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        vdbService.addBinding(vdbName, vdbVersion, "BQT1", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        vdbService.addBinding(vdbName, vdbVersion, "BQT2", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        vdbService.addBinding(vdbName, vdbVersion, "BQT3", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        vdbService.addModel(vdbName, vdbVersion, "BQT3", ModelInfo.PRIVATE, false); //$NON-NLS-1$
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
 
         DQPCore core = new DQPCore(env);
@@ -106,7 +111,7 @@ public class TestDQPCore extends TestCase {
     }
 
     public void testRequest1() throws Exception {
-    	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$
+    	helpExecute("SELECT IntKey FROM BQT1.SmallA", "a"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testUser1() throws Exception {
@@ -194,17 +199,42 @@ public class TestDQPCore extends TestCase {
     public void testCapabilitesCache() {
     	ConnectorCapabilitiesCache cache = new ConnectorCapabilitiesCache();
     	DQPWorkContext workContext = new DQPWorkContext();
-    	workContext.setVdbName("foo");
-    	workContext.setVdbVersion("1");
+    	workContext.setVdbName("foo"); //$NON-NLS-1$
+    	workContext.setVdbVersion("1"); //$NON-NLS-1$
     	Map<String, SourceCapabilities> vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNull(vdbCapabilites.get("model1"));
-    	vdbCapabilites.put("model1", new BasicSourceCapabilities());
+    	assertNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
+    	vdbCapabilites.put("model1", new BasicSourceCapabilities()); //$NON-NLS-1$
     	vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNotNull(vdbCapabilites.get("model1"));
-    	workContext.setVdbName("bar");
+    	assertNotNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
+    	workContext.setVdbName("bar"); //$NON-NLS-1$
     	vdbCapabilites = cache.getVDBConnectorCapabilities(workContext);
-    	assertNull(vdbCapabilites.get("model1"));
+    	assertNull(vdbCapabilites.get("model1")); //$NON-NLS-1$
     }
+    
+	public void testLookupVisibility() throws Exception {
+		helpTestVisibilityFails("select lookup('bqt3.smalla', 'intkey', 'stringkey', '?')"); //$NON-NLS-1$
+	}
+    
+	public void helpTestVisibilityFails(String sql) throws Exception {
+		DQPCore core = exampleDQPCore();
+        RequestMessage reqMsg = exampleRequestMessage(sql); 
+        reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_OFF);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage results = message.get(50000, TimeUnit.MILLISECONDS);
+        assertEquals("[QueryValidatorException]Group does not exist: BQT3.SmallA", results.getException().toString()); //$NON-NLS-1$
+	}
+
+	public void testXQueryVisibility() throws Exception {
+        String xquery = "<Items>\r\n" + //$NON-NLS-1$
+				"{\r\n" + //$NON-NLS-1$
+				"for $x in doc(\"select * from bqt3.smalla\")//Item\r\n" + //$NON-NLS-1$
+				"return  <Item>{$x/intkey/text()}</Item>\r\n" + //$NON-NLS-1$
+				"}\r\n" + //$NON-NLS-1$
+				"</Items>\r\n"; //$NON-NLS-1$
+		
+		helpTestVisibilityFails(xquery);
+	}
+    
 
     ///////////////////////////Helper method///////////////////////////////////
     private void helpExecute(String sql, String userName) throws Exception {

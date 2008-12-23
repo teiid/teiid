@@ -92,15 +92,6 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
         List bindingUUIDs = new ArrayList();    // mapped to names
     }
     
-        
-    public FakeVDBService() {
-        super();    
-    }
-   
-    public FakeVDBService(DQPServiceRegistry svcRegistry) {
-    
-    }
-    
     /**
      * Method for testing - add a model with the specified properties.  The vdb will be created 
      * automatically under the hood. 

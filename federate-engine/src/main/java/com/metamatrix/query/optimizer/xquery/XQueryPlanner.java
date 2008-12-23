@@ -37,6 +37,7 @@ import com.metamatrix.query.optimizer.xml.XMLPlannerEnvironment;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.xml.XMLProcessorEnvironment;
 import com.metamatrix.query.processor.xquery.XQueryPlan;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.util.CommandContext;
 
@@ -61,7 +62,12 @@ public class XQueryPlanner implements CommandPlanner {
     public ProcessorPlan optimize(CommandTreeNode node, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
-      return new XQueryPlan((XQuery)node.getCommand(), metadata, capFinder, idGenerator);        
+    	String parentGroup = null;
+    	if (node.getParent() != null && node.getParent().getCommand() instanceof ProcedureContainer) {
+    		parentGroup = ((ProcedureContainer)node.getParent().getCommand()).getGroup().getCanonicalName();
+    	}
+    	
+    	return new XQueryPlan((XQuery)node.getCommand(), parentGroup);        
     }
 
 }

@@ -45,25 +45,35 @@ import com.metamatrix.common.util.PropertiesUtils;
  */
 public class BufferManagerFactory {
 
+	private static BufferManager INSTANCE;
+	
     /**
      * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
      * typically used for testing or when memory is not an issue.
      * @return BufferManager ready for use
      */
     public static BufferManager getStandaloneBufferManager() throws MetaMatrixComponentException {
-        BufferManager bufferMgr = new BufferManagerImpl();
-        Properties props = new Properties();
-        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + Long.MAX_VALUE); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, "100"); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, "0"); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
-        bufferMgr.initialize("local", props); //$NON-NLS-1$
+    	if (INSTANCE == null) {
+	        BufferManager bufferMgr = new BufferManagerImpl();
+	        Properties props = new Properties();
+	        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(Long.MAX_VALUE));
+	        props.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, "100"); //$NON-NLS-1$
+	        props.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, "0"); //$NON-NLS-1$
+	        props.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
+	        bufferMgr.initialize("local", props); //$NON-NLS-1$
+	
+	        // Add unmanaged memory storage manager
+	        bufferMgr.addStorageManager(new MemoryStorageManager());
+	        bufferMgr.addStorageManager(new MemoryStorageManager() {
+	        	@Override
+	        	public int getStorageType() {
+	        		return StorageManager.TYPE_FILE;
+	        	}
+	        });
+	        INSTANCE = bufferMgr;
+    	}
 
-        // Add unmanaged memory storage manager
-        bufferMgr.addStorageManager(new MemoryStorageManager());
-        bufferMgr.addStorageManager(new FileStorageManager());
-
-        return bufferMgr;
+        return INSTANCE;
     }
 
     /**

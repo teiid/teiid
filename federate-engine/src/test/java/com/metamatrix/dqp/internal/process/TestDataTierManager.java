@@ -57,11 +57,13 @@ import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.processor.dynamic.SimpleQueryProcessorFactory;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -131,6 +133,7 @@ public class TestDataTierManager extends TestCase {
         context.setTupleSourceID(new TupleSourceID("fakeid")); //$NON-NLS-1$
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion("1"); //$NON-NLS-1$
+        context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         processor = new QueryProcessor(new FakeProcessorPlan(), context, bs.getBufferManager(), dtm);
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, processor, null, null, null, workContext);
         
@@ -296,13 +299,7 @@ public class TestDataTierManager extends TestCase {
     
     public void testCodeTableResponseException() throws Exception {
     	helpSetup(3);
-        try {
-            dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            fail("Should have thrown BlockedException"); //$NON-NLS-1$
-        } catch (BlockedException e) {
-            // Expected
-        }
-        this.dataService.currentReceiver.exceptionOccurred(new RuntimeException("Connector Exception")); //$NON-NLS-1$
+    	this.dataService.throwExceptionOnExecute = true;
         
         try {
             dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -315,16 +312,9 @@ public class TestDataTierManager extends TestCase {
     public void testCodeTableResponse_MoreRequestFails() throws Exception {
         executeRequestFailOnCall = 1;
         
-        AtomicResultsMessage results = helpSetup("SELECT * FROM BQT1.SmallA", true, false, -1);
+        AtomicResultsMessage results = helpSetup("SELECT * FROM BQT1.SmallA", true, false, -1); //$NON-NLS-1$
         
-        try {
-            dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            fail("Should have thrown BlockedException"); //$NON-NLS-1$
-        } catch (BlockedException e) {
-            // Expected
-        }
-      
-        dataService.currentReceiver.receiveResults(results); //$NON-NLS-1$
+        this.dataService.results = results;
         
         try {
             dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -357,7 +347,8 @@ public class TestDataTierManager extends TestCase {
         private int failOnCall = 10000;
         private int calls = 0;
         private boolean closed = false;
-        ResultsReceiver<AtomicResultsMessage> currentReceiver;
+        boolean throwExceptionOnExecute;
+        AtomicResultsMessage results;
         
         private FakeDataService(int failOnCallNumber) {
             this.failOnCall = failOnCallNumber;
@@ -369,7 +360,11 @@ public class TestDataTierManager extends TestCase {
             if (closed) {
                 throw new MetaMatrixComponentException("Already closed"); //$NON-NLS-1$
             }
-            currentReceiver = resultListener;
+            if (throwExceptionOnExecute) {
+            	resultListener.exceptionOccurred(new RuntimeException("Connector Exception")); //$NON-NLS-1$
+            } else {
+            	resultListener.receiveResults(results);
+            }
         }
         public ConnectorID selectConnector(String connectorBindingID) {
             if (connectorBindingID.equals("mmuuid:binding")) { //$NON-NLS-1$

@@ -24,38 +24,20 @@
 
 package com.metamatrix.query.processor.xquery;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.XMLType;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.optimizer.QueryOptimizer;
-import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.FakeDataStore;
-import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.processor.dynamic.SqlEval;
+import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.TestProcessor;
+import com.metamatrix.query.processor.dynamic.SimpleQueryProcessorFactory;
 import com.metamatrix.query.processor.xml.TestXMLProcessor;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.util.CommandContext;
@@ -64,166 +46,31 @@ import com.metamatrix.query.util.CommandContext;
  * Tests processing XQueries
  */
 public class TestXQueryProcessor extends TestCase {
-	private static final boolean DEBUG = false;
+	
     public TestXQueryProcessor(String name) {
         super(name);
     }
 
-// =========================================================================
-// HELPERS
-// =========================================================================
-
-    /**
-     * help test processing XQuery
-     * @param xquery XQuery to process
-     * @param expectedResult expected result String
-     * @param expectedXMLPlans expected number of child XML plans to be planned for input XML docs 
-     * @param metadata QueryMetadataInterface
-     * @param dataMgr FakeDataManager
-     * @throws Exception
-     */
-    private static void helpTestProcess(String xquery, String expectedResult, int expectedXMLPlans, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
-
-//    System.out.println(xquery);
-//    System.out.println(expectedResult);
-        helpTestProcess(xquery, expectedResult, expectedXMLPlans, metadata, dataMgr, true, MetaMatrixComponentException.class, null);
+    private void helpTestProcess(String xquery, String expectedResult, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
+    	helpProcess(xquery, new List[] {Arrays.asList(expectedResult)}, dataMgr, metadata);
     }
-
-    private static void helpTestProcess(String xquery, String expectedResult, int expectedXMLPlans, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg) throws Exception{
-        Command command = helpGetCommand(xquery, metadata);
-       
-        if (shouldSucceed){
-            
-            AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-            XQueryPlan plan = (XQueryPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-            //System.out.println("Plan w/ criteria\n" + plan);        
-            if(DEBUG) {
-                System.out.println(analysisRecord.getDebugLog());
-            }           
-            
-            //assertTrue(plan.getXmlPlans().size() == expectedXMLPlans);
-            
-            BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            List schema = plan.getOutputElements();
-            ArrayList typeNames = new ArrayList();
-            for(Iterator s = schema.iterator(); s.hasNext();) {
-                SingleElementSymbol es = (SingleElementSymbol)s.next();            
-                typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-            }
-            String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);              
-            TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, null, TupleSourceType.FINAL);
-            CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null);                                            //$NON-NLS-1$
-            QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
     
-            while(true) {
-                try {
-                    processor.process();
-                    break;
-                } catch(BlockedException e) {
-                    // retry
-                }
-            }
-        
-    
-            int count = bufferMgr.getFinalRowCount(tsID);
-            assertEquals("Incorrect number of records: ", 1, count); //$NON-NLS-1$
-            
-            TupleSource ts = bufferMgr.getTupleSource(tsID);
-            List row = ts.nextTuple();
-            assertEquals("Incorrect number of columns: ", 1, row.size()); //$NON-NLS-1$
-            
-            XMLType id =  (XMLType)row.get(0); 
-            String actualDoc = id.getString(); 
+	private void helpTest(String sql, List[] expected) throws MetaMatrixComponentException {
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleXQueryTransformations();
 
-            bufferMgr.removeTupleSource(tsID);
+        helpProcess(sql, expected, dataManager, metadata);
+	}
 
-//           System.out.println("expectedDoc = \n" + expectedDoc);
-//           System.out.println("actualDoc = \n" + actualDoc);
-            
-//           for (int i=0,j=0; i<expectedDoc.length(); i++, j++) {
-//               if (expectedDoc.charAt(i) == actualDoc.charAt(j)) {
-//               } else {
-//                   System.out.println(" i = " + i + " expected = " + expectedDoc.charAt(i) + " actual = " + actualDoc.charAt(i));
-//               }
-//           }
-            assertEquals("XML doc mismatch: ", expectedResult, actualDoc); //$NON-NLS-1$
-        } else {
-            
-            Exception expected = null;
-            try{
-                AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-                XQueryPlan plan = (XQueryPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-//System.out.println("Plan w/ criteria\n" + plan);        
-                if(DEBUG) {
-                    System.out.println(analysisRecord.getDebugLog());
-                }           
-        
-                BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-                TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), null, null, TupleSourceType.FINAL);
-                CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null);                                                                 //$NON-NLS-1$
-                QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-                processor.process();
-            } catch (Exception e){
-              
-                if (expectedException.isInstance(e)){
-                    expected = e;
-                   
-                }
-            }
-            
-            assertNotNull(shouldFailMsg, expected);
-        }
-    }
-
-    private static Command helpGetCommand(String sql, FakeMetadataFacade metadata) { 
-        Command command = null;
-        
-        // parse
-        try { 
-            QueryParser parser = new QueryParser();
-            command = parser.parseCommand(sql);
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }    
-        
-        // resolve
-        try { 
-            QueryResolver.resolveCommand(command, metadata);
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        } 
-
-        // rewrite
-        try { 
-            command = QueryRewriter.rewrite(command, null, metadata, null);
-        } catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception during rewriting (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        } 
-        
-        return command;
-    }
-
-    private CommandContext createCommandContext() {
-        Properties props = new Properties();
-        CommandContext context = new CommandContext("0", "test", null, 5, "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        context.setProcessorBatchSize(2000);
-        context.setConnectorBatchSize(2000);
-        return context;
-    } 
-    
-    SqlEval helpGetSQLEval(QueryMetadataInterface metadata, ProcessorDataManager dataMgr) 
-        throws Exception {    
-        CommandContext context = createCommandContext();       
-        CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
-        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();        
-        return new SqlEval(metadata, context, capFinder, null, bufferMgr, dataMgr);
-    }    
-// =========================================================================
-// TESTS
-// =========================================================================
+	private void helpProcess(String sql, List[] expected,
+			FakeDataManager dataManager, FakeMetadataFacade metadata)
+			throws MetaMatrixComponentException {
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new SimpleQueryProcessorFactory(BufferManagerFactory.getStandaloneBufferManager(), dataManager, new DefaultCapabilitiesFinder(), null, metadata));
+        TestProcessor.helpProcess(plan, cc, dataManager, expected);
+	}
 
     /** simple test */
     public void testSingleInputDoc() throws Exception {
@@ -255,8 +102,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
         
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);         
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);         
     }
 
     public void testInputDocProducingMultipleResults() throws Exception {
@@ -276,7 +122,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        helpTestProcess(xquery, expected, -1, metadata, dataMgr, true, MetaMatrixComponentException.class, "");         //$NON-NLS-1$
+        helpTestProcess(xquery, expected, metadata, dataMgr);
     }
 
     public void testInputDocProducingZeroResults() throws Exception {
@@ -290,7 +136,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        helpTestProcess(xquery, expected, -1, metadata, dataMgr, true, MetaMatrixComponentException.class, "");         //$NON-NLS-1$
+        helpTestProcess(xquery, expected, metadata, dataMgr);        
     }
 
     public void testInputDocFullQuery() throws Exception {
@@ -332,8 +178,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr); 
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr); 
     }
 
     public void testInputDocFullQuery2() throws Exception {
@@ -353,8 +198,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr); 
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr); 
     }
 
     public void testTwoInputDocs() throws Exception {
@@ -383,8 +227,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        int expectedXMLPlans = 2;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);
     }
 
     public void testSameInputDocTwice() throws Exception {
@@ -413,8 +256,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);
     }
     
     public void testSameInputDocTwice2() throws Exception {
@@ -443,8 +285,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
 
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);
     }    
     
     /** 
@@ -479,8 +320,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
         
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);         
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);         
     }    
 
     /** defect 12405 */
@@ -511,8 +351,7 @@ public class TestXQueryProcessor extends TestCase {
                         "}\r\n" + //$NON-NLS-1$
                         "</Items>\r\n"; //$NON-NLS-1$
         
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expectedDoc, expectedXMLPlans, metadata, dataMgr);         
+        helpTestProcess(xquery, expectedDoc, metadata, dataMgr);         
     }  
 
     public void testExecutingSQLQuery() throws Exception {
@@ -539,8 +378,7 @@ public class TestXQueryProcessor extends TestCase {
         FakeDataStore.sampleData1(dataMgr);
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expected, expectedXMLPlans, metadata, dataMgr);         
+        helpTestProcess(xquery, expected, metadata, dataMgr);         
     }     
 
     public void testExecutingXMLQuery() throws Exception {
@@ -585,7 +423,131 @@ public class TestXQueryProcessor extends TestCase {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManager(metadata);
         
-        int expectedXMLPlans = 1;
-        helpTestProcess(xquery, expected, expectedXMLPlans, metadata, dataMgr);         
+        helpTestProcess(xquery, expected, metadata, dataMgr);         
     }     
+    
+    public void testXQueryView1() throws Exception {
+        // Create query 
+        String sql = "exec m.xproc1()"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><test/>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+    
+    public void testXQueryView2() throws Exception {
+        // Create query 
+        String sql = "exec m.xproc2()"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><test/>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryViewWithXMLInput() throws Exception {
+        // Create query 
+        String sql = "exec m.xproc3('<test/>')"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><wrap><test/></wrap>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryViewWithScalarInputs() throws Exception {
+        // Create query 
+        String sql = "exec m.xproc4('abc', 10)"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><wrap><a>abc</a><b>10</b></wrap>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryViewWithScalarInputCallingDocWithBuiltSQL() throws Exception {
+        // Create query - this query calls the specified proc and wraps the data 
+        String sql = "exec m.xproc5('m.xproc1')"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><wrap><test/></wrap>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryViewCallingMultipleDocs() throws Exception {
+        // Create query - this query calls the specified proc and wraps the data 
+        String sql = "exec m.combinetags('xyz', 't1', 'a', 't2', 'b')"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><xyz><t1>a</t1><t2>b</t2></xyz>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryViewWithXMLInAndOut() throws Exception {
+        // Create query - this query calls the specified proc and wraps the data 
+        String sql = "exec m.svc8('<in><tag>mytag</tag><value>myvalue</value></in>')"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><mytag>myvalue</mytag>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testNestedXQueryViews() throws Exception {
+        // Create query - this query calls the specified proc and wraps the data 
+        String sql = "exec m.svc9('<in><tag>animal</tag><values><value>zebra</value><value>newt</value><value>lemur</value></values></in>')"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><results><animal>zebra</animal><animal>newt</animal><animal>lemur</animal></results>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
+    public void testXQueryWithFunctionDefinition() throws Exception {
+        // Create query - this query calls the specified proc and wraps the data 
+        String sql = "declare namespace mm = \"http://www.metamatrix.com\";\n" + //$NON-NLS-1$
+                     "declare function mm:square($x as xs:integer) as xs:integer {\n" + //$NON-NLS-1$
+                     "  $x * $x\n" + //$NON-NLS-1$
+                     "};\n" + //$NON-NLS-1$
+                     "<out>{ mm:square(5) }</out>"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><out>25</out>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+    
+    public void testXQueryView10() throws Exception {
+        // Create query 
+        String sql = "exec m.xproc10()"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><test/>"}), //$NON-NLS-1$
+        };    
+    
+        helpTest(sql, expected);
+    }
+
 }

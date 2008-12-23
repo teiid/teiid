@@ -2576,22 +2576,28 @@ public class TestResolver extends TestCase {
         helpResolveException(sql);
     }
  
-	public void testLookupFunctionFailVirtualGroup() {     
+	public void testLookupFunctionVirtualGroup() throws Exception {     
 		String sql = "SELECT lookup('vm1.g1', 'e1', 'e2', e2)  FROM vm1.g1 "; //$NON-NLS-1$
-		helpResolveException(sql);       		
+		Query command = (Query) helpParse(sql);
+		QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());  		
 	}
 	
-	public void testLookupFunctionFailPhysicalGroup() {     
+	public void testLookupFunctionPhysicalGroup() throws Exception {     
 		String sql = "SELECT lookup('pm1.g1', 'e1', 'e2', e2)  FROM pm1.g1 "; //$NON-NLS-1$
 		Query command = (Query) helpParse(sql);
-       
-		// resolve
-		try { 
-			QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
-		} catch(MetaMatrixException e) {
-			fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-		}         		
+		QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
 	}
+	
+    public void testLookupFunctionFailBadKeyElement() throws Exception {
+    	String sql = "SELECT lookup('pm1.g1', 'e1', 'x', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
+    	Command command = QueryParser.getQueryParser().parseCommand(sql);
+    	try {
+    		QueryResolver.resolveCommand(command, metadata);
+    		fail("exception expected"); //$NON-NLS-1$
+    	} catch (QueryResolverException e) {
+    		
+    	}
+    }
     
     // special test for both sides are String
     public void testSetCriteriaCastFromExpression_9657() {

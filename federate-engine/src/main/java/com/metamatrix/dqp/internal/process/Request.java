@@ -36,6 +36,7 @@ import java.util.Set;
 import javax.transaction.SystemException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -94,6 +95,7 @@ import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
@@ -111,7 +113,7 @@ import com.metamatrix.query.validator.ValueValidationVisitor;
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
  */
-public class Request {
+public class Request implements QueryProcessor.ProcessorFactory {
     
 	// init state
     protected RequestMessage requestMsg;
@@ -278,6 +280,7 @@ public class Request {
         	context.setPreparedBatchUpdateValues(requestMsg.getParameterValues());
         }
         context.setTempTableStore(tempTableStore);
+        context.setQueryProcessorFactory(this);
     }
 
     /**
@@ -311,7 +314,7 @@ public class Request {
         
         createCommandContext(command);
         
-        validateQuery(command);
+        validateQuery(command, true);
         
         validateQueryValues(command);
         
@@ -336,6 +339,10 @@ public class Request {
     }
     
     protected void checkReferences(List references) throws QueryValidatorException {
+    	referenceCheck(references);
+    }
+    
+    static void referenceCheck(List references) throws QueryValidatorException {
     	if (references != null && !references.isEmpty()) {
     		throw new QueryValidatorException(DQPPlugin.Util.getString("Request.Invalid_character_in_query")); //$NON-NLS-1$
     	}
@@ -349,7 +356,7 @@ public class Request {
     	QueryResolver.resolveCommand(command, metadata, analysisRecord);
     }
         
-    private void validateQuery(Command command)
+    private void validateQuery(Command command, boolean validateVisibility)
         throws QueryValidatorException, MetaMatrixComponentException {
                 
         // Create generic sql validation visitor
@@ -360,9 +367,11 @@ public class Request {
         visitor = new ValidateCriteriaVisitor();
         validateWithVisitor(visitor, metadata, command, true);
         
-        // Create model visibility validation visitor
-        visitor = new ModelVisibilityValidationVisitor(this.vdbService, this.vdbName, this.vdbVersion);
-        validateWithVisitor(visitor, metadata, command, true);
+        if (validateVisibility) {
+	        // Create model visibility validation visitor
+	        visitor = new ModelVisibilityValidationVisitor(this.vdbService, this.vdbName, this.vdbVersion);
+	        validateWithVisitor(visitor, metadata, command, true);
+        }
     }
     
     protected void validateQueryValues(Command command) 
@@ -390,7 +399,7 @@ public class Request {
         return new BatchedUpdateCommand(parsedCommands);
     }
 
-    private void validateWithVisitor(
+    public static void validateWithVisitor(
         AbstractValidationVisitor visitor,
         QueryMetadataInterface metadata,
         Command command,
@@ -453,7 +462,12 @@ public class Request {
         } 
         
         this.transactionContext = tc;
-        this.context.setTupleSourceID(getTupleSourceID(this.workContext.getConnectionID()));
+        List outputElements = processPlan.getOutputElements();
+        this.context.setTupleSourceID(this.bufferManager.createTupleSource(
+                outputElements,
+                TypeRetrievalUtil.getTypeNames(outputElements),
+                this.workContext.getConnectionID(),
+                TupleSourceType.FINAL));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager, tempTableStore));
     }
 
@@ -476,16 +490,6 @@ public class Request {
             return (option.getDebug() || option.getShowPlan());
         }
         return false;
-    }
-
-    private TupleSourceID getTupleSourceID(String groupName) throws MetaMatrixComponentException {
-        List outputElements = processPlan.getOutputElements();
-        return
-            this.bufferManager.createTupleSource(
-                outputElements,
-                TypeRetrievalUtil.getTypeNames(outputElements),
-                groupName,
-                TupleSourceType.FINAL);
     }
 
     /**
@@ -612,6 +616,41 @@ public class Request {
         
         createProcessor();
     }
+    
+	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && this.requestMsg.getCommand() instanceof XQuery;
+		
+		ParseInfo parseInfo = new ParseInfo();
+		if (isRootXQuery && requestMsg.isDoubleQuotedVariableAllowed()) {
+			parseInfo.allowDoubleQuotedVariable = true;
+		}
+		Command command = QueryParser.getQueryParser().parseCommand(query, parseInfo);
+        QueryResolver.resolveCommand(command, metadata);            
+        
+        List references = ReferenceCollectorVisitor.getReferences(command);
+        
+        referenceCheck(references);
+        
+        validateQuery(command, isRootXQuery);
+        
+        validateQueryValues(command);
+        
+        if (isRootXQuery) {
+        	validateEntitlement(command);
+        }
+        
+        CommandContext copy = (CommandContext) commandContext.clone();
+        if (recursionGroup != null) {
+        	copy.pushCall(recursionGroup);
+        }
+        
+        QueryRewriter.rewrite(command, null, metadata, copy);
+        ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
+
+        TupleSourceID resultsId = bufferManager.createTupleSource(command.getProjectedSymbols(), TypeRetrievalUtil.getTypeNames(command.getProjectedSymbols()), copy.getConnectionID(), TupleSourceType.PROCESSOR);
+        copy.setTupleSourceID(resultsId);
+        return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
+	}
 
 	protected void validateEntitlement(Command command)
 			throws QueryValidatorException, MetaMatrixComponentException {

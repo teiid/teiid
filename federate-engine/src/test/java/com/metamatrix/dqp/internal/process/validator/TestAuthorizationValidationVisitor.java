@@ -146,9 +146,17 @@ public class TestAuthorizationValidationVisitor extends TestCase {
     public void testEverythingAccessible1() throws Exception {
         helpTest(exampleAuthSvc1(), "SELECT e1 FROM (select e1 from pm1.g1) x", FakeMetadataFactory.example1Cached(), new String[] {}); //$NON-NLS-1$
     }
+    
+    public void testEverythingAccessible2() throws Exception {
+        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e1', '1'), e1 FROM (select e1 from pm1.g1) x", FakeMetadataFactory.example1Cached(), new String[] {}); //$NON-NLS-1$
+    }
 
     public void testInaccesibleElement() throws Exception {        
         helpTest(exampleAuthSvc1(), "SELECT e2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testInaccesibleElement2() throws Exception {        
+        helpTest(exampleAuthSvc1(), "SELECT lookup('pm1.g1', 'e1', 'e2', '1')", FakeMetadataFactory.example1Cached(), new String[] {"pm1.g1.e2"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testInaccesibleGroup() throws Exception {        

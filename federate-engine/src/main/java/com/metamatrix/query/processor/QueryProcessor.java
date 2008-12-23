@@ -47,6 +47,10 @@ import com.metamatrix.query.util.CommandContext;
  */
 public class QueryProcessor {
 	
+	public interface ProcessorFactory {
+		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException;
+	}
+	
 	public interface BatchHandler {
 		void batchProduced(TupleBatch batch) throws MetaMatrixCoreException;
 	}

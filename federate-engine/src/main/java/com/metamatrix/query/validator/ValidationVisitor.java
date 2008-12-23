@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
@@ -42,6 +43,8 @@ import com.metamatrix.query.eval.ExpressionEvaluator;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.resolver.util.ResolverUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ProcedureReservedWords;
@@ -276,12 +279,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     public void visit(Function obj) {
-    	if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
-    		Expression[] args = obj.getArgs();
-    		String elementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[2]).getValue(); //$NON-NLS-1$
+    	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
-				getMetadata().getElementID(elementName);
+				ResolvedLookup resolvedLookup = ResolverVisitorUtil.resolveLookup(obj, getMetadata());
+				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {
+		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement()), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
+		        }
 			} catch (MetaMatrixComponentException e) {
+				handleException(e, obj);
+			} catch (MetaMatrixProcessingException e) {
 				handleException(e, obj);
 			}
         } else if (obj.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {

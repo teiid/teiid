@@ -188,6 +188,9 @@ public class SaxonXQueryExpression implements XQueryExpression {
             } else if(cause instanceof MetaMatrixComponentException) {
                 throw (MetaMatrixComponentException) cause;
             }
+            if (cause instanceof RuntimeException) {
+            	throw new MetaMatrixComponentException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
+            }
         	throw new MetaMatrixProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
         }       
         

@@ -29,17 +29,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.process.multisource.MultiSourceElement;
 import com.metamatrix.dqp.service.AuthorizationService;
+import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Into;
@@ -47,7 +52,9 @@ import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Symbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.validator.AbstractValidationVisitor;
@@ -103,6 +110,23 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(StoredProcedure obj) {
         validateEntitlements(obj);
+    }
+    
+    public void visit(Function obj) {
+    	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
+    		try {
+    			List<Symbol> symbols = new LinkedList<Symbol>();
+				ResolvedLookup lookup = ResolverVisitorUtil.resolveLookup(obj, this.getMetadata());
+				symbols.add(lookup.getGroup());
+				symbols.add(lookup.getKeyElement());
+				symbols.add(lookup.getReturnElement());
+				validateEntitlements(symbols, AuthorizationService.ACTION_READ, AuthorizationService.CONTEXT_QUERY);
+			} catch (MetaMatrixComponentException e) {
+				handleException(e, obj);
+			} catch (MetaMatrixProcessingException e) {
+				handleException(e, obj);
+			}
+    	}
     }
 
     // ######################### Validation methods #########################

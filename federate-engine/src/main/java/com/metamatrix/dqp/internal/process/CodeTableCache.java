@@ -24,14 +24,20 @@
 
 package com.metamatrix.dqp.internal.process;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.util.CommandContext;
 
@@ -55,13 +61,14 @@ class CodeTableCache {
     // Cache keys for stuff already in the cache  
     private Set cacheKeyDone = new HashSet();
 
-	// Three states of cache
-    public static final int CACHE_EXISTS = 0;
-    public static final int CACHE_LOADING = 1;
-    public static final int CACHE_NOT_EXIST = 2;
-    public static final int CACHE_OVERLOAD = 3;
+    public enum CacheState {
+		CACHE_EXISTS,
+		CACHE_LOADING,
+		CACHE_NOT_EXIST,
+		CACHE_OVERLOAD
+    }
     
-    private AtomicInteger requestSequence = new AtomicInteger(-1);
+	private AtomicInteger requestSequence = new AtomicInteger();
 
     /**
      * Construct a code table cache 
@@ -79,7 +86,7 @@ class CodeTableCache {
      * @param keyValye key value cached in data map
      * @return int of cache states
      */  
-    public synchronized int cacheExists(String codeTable, String returnElement, String keyElement, CommandContext context) {
+    public synchronized CacheState cacheExists(String codeTable, String returnElement, String keyElement, CommandContext context) {
         // Check whether CacheKey exist in cacheKeyDone:
         // If yes, return CACHE_EXISTS         
         // If no, does it exist in loadingCaches?
@@ -92,7 +99,7 @@ class CodeTableCache {
         CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
         
 		if (cacheKeyDone.contains(cacheKey)) { // CacheKey exists in codeTableCache
-			return CodeTableCache.CACHE_EXISTS;
+			return CacheState.CACHE_EXISTS;
 			
 		}
 		if (loadingCaches.containsKey(cacheKey)) { // CacheKey exists in loadingCache
@@ -100,19 +107,19 @@ class CodeTableCache {
 			WaitingRequests wqr = (WaitingRequests) loadingCaches.get(cacheKey);
 			wqr.addRequestID(context.getProcessorID());	
 			loadingCaches.put(cacheKey, wqr);
-			return CodeTableCache.CACHE_LOADING;
+			return CacheState.CACHE_LOADING;
 			
 		} else if(codeTableCache.size() + loadingCaches.size() >= maxCodeTables) { 
 			// In this case we already have some number of existing + loading caches
 			// that are >= the max number we are allowed to have.  Thus, we cannot load
 			// another cache.
-			return CodeTableCache.CACHE_OVERLOAD;
+			return CacheState.CACHE_OVERLOAD;
 				
 		} else { // CacheKey not exists in loadingCache
 			// Add to loadingCaches as primary context
 			WaitingRequests wqr = new WaitingRequests(context.getProcessorID());
 			loadingCaches.put(cacheKey, wqr);
-			return CodeTableCache.CACHE_NOT_EXIST;
+			return CacheState.CACHE_NOT_EXIST;
 		} 
     }
 
@@ -125,27 +132,14 @@ class CodeTableCache {
      * @param requestID Request ID
      * @param nodeID Plan Node ID
      */
-    public int createCacheRequest(String codeTable, String returnElement, String keyElement, RequestID requestID, CommandContext context) {
+    public Integer createCacheRequest(String codeTable, String returnElement, String keyElement, CommandContext context) {
         // Create a cache key
 		CacheKey cacheKey = new CacheKey(codeTable, returnElement, keyElement, context.getVdbName(), context.getVdbVersion());
-		int result = this.requestSequence.getAndDecrement();
-		RequestKey requestKey = new RequestKey(requestID, result);
+		Integer result = this.requestSequence.getAndIncrement();
 		
 		// Add requestID/nodeID pair to map for later lookup
-		requestToCacheKeyMap.put(requestKey, cacheKey);
+		requestToCacheKeyMap.put(result, cacheKey);
 		return result;
-    }
-    
-    /**
-     * Determine whether the response with requestID/nodeID is for code table or not.
-     * @param requestID Input requestID
-     * @param nodeID Input nodeID
-     * @return boolean of whether the response is for code table or not
-     */
-    public boolean isCodeTableResponse(RequestID requestID, int nodeID) {
-    	RequestKey requestKey = new RequestKey(requestID, nodeID);
-
-		return requestToCacheKeyMap.containsKey(requestKey);
     }
     
     /**
@@ -153,10 +147,10 @@ class CodeTableCache {
      * @param requestID Part of RequestKey
      * @param nodeID Part of RequestKey
      * @param results QueryResults of <List<List<keyValue, returnValue>>
+     * @throws MetaMatrixProcessingException 
      */
-    public synchronized void loadTable(RequestID requestID, int nodeID, List[] records) {
+    public synchronized void loadTable(Integer requestKey, List[] records) throws MetaMatrixProcessingException {
         // Look up cache key by requestID/nodeID pair
-        RequestKey requestKey = new RequestKey(requestID, nodeID);
   		CacheKey cacheKey = (CacheKey) requestToCacheKeyMap.get(requestKey);
 
 		// Lookup the existing data  
@@ -173,7 +167,10 @@ class CodeTableCache {
       		List record = records[i];
       		Object keyValue = record.get(0);
       		Object returnValue = record.get(1);
-      		existingMap.put(keyValue, returnValue);	
+      		Object existing = existingMap.put(keyValue, returnValue);
+      		if (existing != null) {
+      			throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("CodeTableCache.duplicate_key", cacheKey.getCodeTable(), cacheKey.getKeyElement(), keyValue)); //$NON-NLS-1$
+      		}
       	}      	 
     }
     
@@ -208,8 +205,8 @@ class CodeTableCache {
     * @return the set of waiting requests
     * @since 4.2
     */
-    public Set markCacheLoaded(RequestID requestID, int nodeID) {
-        return markCacheDone(requestID, nodeID, false);
+    public Set markCacheLoaded(Integer requestKey) {
+        return markCacheDone(requestKey, false);
     }
        
    /**
@@ -220,13 +217,11 @@ class CodeTableCache {
     * @return the set of waiting requests
     * @since 4.2
     */
-    public Set errorLoadingCache(RequestID requestID, int nodeID) {
-        return markCacheDone(requestID, nodeID, true);
+    public Set errorLoadingCache(Integer requestKey) {
+        return markCacheDone(requestKey, true);
     }
    
-    private synchronized Set markCacheDone(RequestID requestID, int nodeID, boolean errorOccurred) {
-        RequestKey requestKey = new RequestKey(requestID, nodeID);
-       
+    private synchronized Set markCacheDone(Integer requestKey, boolean errorOccurred) {
         // Remove request from requestToCacheKeyMap
         CacheKey cacheKey = (CacheKey) requestToCacheKeyMap.remove(requestKey);
         if (errorOccurred) {
@@ -372,51 +367,4 @@ class CodeTableCache {
        
     }
     
-    /**
-     * Request Key consists: requestID and nodeID.
-     */
-	private static class RequestKey {
-		private RequestID requestID;
-		private int nodeID;
-      
-		private int hashCode;
-        
-		public RequestKey(RequestID requestID, int nodeID) {
-			this.requestID = requestID;
-			this.nodeID = nodeID;
-		
-			// Compute hash code and cache it
-			hashCode = HashCodeUtil.hashCode(0, requestID);
-			hashCode = HashCodeUtil.hashCode(hashCode, nodeID);                                 
-		}
-		
-		public RequestID getRequestID() {
-			return this.requestID;
-		}
-        
-        public int getNodeID() {
-        	return this.nodeID;	
-        }
-        
-		public int hashCode() {
-			return hashCode;
-		}
-        
-		public boolean equals(Object obj) {
-			if(this == obj) {
-				return true;                
-			}
-			if(obj instanceof RequestKey) {
-				RequestKey other = (RequestKey) obj;
-				
-				return (other.hashCode() == hashCode() &&
-					this.requestID.equals(other.requestID) &&
-					this.nodeID == other.nodeID);
-                                        
-			}
-			return false;
-		}
-	}
-	
-
 }

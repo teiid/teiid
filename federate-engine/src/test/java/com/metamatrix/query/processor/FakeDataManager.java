@@ -40,13 +40,10 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.eval.CriteriaEvaluator;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.From;
-import com.metamatrix.query.sql.lang.Insert;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;
-import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -113,14 +110,8 @@ public class FakeDataManager implements ProcessorDataManager {
         }else if(command instanceof SetQuery) {
             SetQuery union = (SetQuery) command;            
             group = getQueryGroup(union.getProjectedQuery());
-		}else if(command instanceof StoredProcedure){
-			group = ((StoredProcedure)command).getGroup();
-		}else if(command instanceof Insert){
-			group = ((Insert)command).getGroup();
-		}else if(command instanceof Delete){
-			group = ((Delete)command).getGroup();
-		}else if(command instanceof Update){
-			group = ((Update)command).getGroup();
+		}else if(command instanceof ProcedureContainer){
+			group = ((ProcedureContainer)command).getGroup();
 		}
 		
 		Object groupID = group.getMetadataID();
