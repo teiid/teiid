@@ -1,15 +1,3 @@
-package com.metamatrix.jdbc;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import javax.transaction.xa.XAResource;
-
-import com.metamatrix.common.xa.MMXid;
-
-import junit.framework.TestCase;
-
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright (C) 2008 Red Hat, Inc.
@@ -33,6 +21,19 @@ import junit.framework.TestCase;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
+package com.metamatrix.jdbc;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.transaction.xa.XAResource;
+
+import junit.framework.TestCase;
+
+import com.metamatrix.common.xa.MMXid;
+
 
 public class TestMMXAConnection extends TestCase {
 	
