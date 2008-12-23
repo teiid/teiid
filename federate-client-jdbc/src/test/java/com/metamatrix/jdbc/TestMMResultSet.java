@@ -34,6 +34,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
 import junit.framework.TestCase;
@@ -617,13 +618,9 @@ public class TestMMResultSet extends TestCase {
     }
     
     public void testGetStatement() throws SQLException {
-        try {
-            MMResultSet cs =  helpExecuteQuery();     
-            assertNotNull(cs.getStatement());
-            cs.close();
-        } catch (SQLException se) {
-            fail(se.getMessage());
-        }        
+        MMResultSet cs =  helpExecuteQuery();     
+        assertNotNull(cs.getStatement());
+        cs.close();
     }
         
     public void testGetPlanDescription() throws SQLException {
@@ -691,12 +688,7 @@ public class TestMMResultSet extends TestCase {
     }
     
     private MMResultSet helpExecuteQuery(int fetchSize, int totalResults) throws SQLException {
-        MMStatement statement = mock(MMStatement.class);
-		stub(statement.getLogger()).toReturn(mock(Logger.class));
-		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
-		stub(statement.getResultSetType()).toReturn(
-				ResultSet.TYPE_SCROLL_INSENSITIVE);
-		stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance());
+        MMStatement statement = createMockStatement();
         try {
 			return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
 		} catch (MetaMatrixProcessingException e) {
@@ -707,6 +699,19 @@ public class TestMMResultSet extends TestCase {
 			throw new SQLException(e);
 		}
     }
+
+	static MMStatement createMockStatement() throws SQLException {
+		MMStatement statement = mock(MMStatement.class);
+		stub(statement.getLogger()).toReturn(mock(Logger.class));
+		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
+		stub(statement.getResultSetType()).toReturn(
+				ResultSet.TYPE_SCROLL_INSENSITIVE);
+		TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
+		TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$
+		stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance(tz));
+		stub(statement.getServerTimeZone()).toReturn(serverTz);
+		return statement;
+	}
 
     ////////////////////////Expected Results////////////////
     /** column name */

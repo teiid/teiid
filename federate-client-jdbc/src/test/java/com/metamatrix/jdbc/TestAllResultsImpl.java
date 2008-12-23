@@ -32,17 +32,19 @@ import static org.mockito.Mockito.verify;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
-import com.metamatrix.core.log.Logger;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -63,12 +65,7 @@ public class TestAllResultsImpl extends TestCase {
 
 	@Override
 	protected void setUp() throws Exception {
-		statement = mock(MMStatement.class);
-		stub(statement.getLogger()).toReturn(mock(Logger.class));
-		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
-		stub(statement.getResultSetType()).toReturn(
-				ResultSet.TYPE_SCROLL_INSENSITIVE);
-		stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance());
+		statement = TestMMResultSet.createMockStatement();
 	}
 	
 	/** test hasNext(), actual result set should return FALSE. */
@@ -967,6 +964,31 @@ public class TestAllResultsImpl extends TestCase {
 		} catch (SQLException e) {
 			assertEquals("The cursor is not on a valid row.", e.getMessage()); //$NON-NLS-1$
 		}
+	}
+	
+	public void testDateType() throws SQLException {
+		RequestMessage request = new RequestMessage();
+		request.setProcessingTimestamp(new Date(1L));
+		request.setExecutionId(REQUEST_ID);
+		ResultsMessage resultsMsg = new ResultsMessage(request);
+		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
+		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
+		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.TIMESTAMP }); 
+		resultsMsg.setPartialResults(false);
+		resultsMsg.setFirstRow(1);
+		resultsMsg.setFinalRow(1);
+		resultsMsg.setLastRow(1);
+		resultsMsg.setFetchSize(1);
+		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
+		MMResultSet rs = new MMResultSet(resultsMsg, statement);
+		assertTrue(rs.next());
+		//assumes the mock statement is setup with GMT-5 server and GMT-6 client
+		
+		//will adjust ahead one hour
+		assertEquals(new Timestamp(3600000), rs.getObject(1));
+		
+		//will be the same as the original
+		assertEquals(new Timestamp(0), rs.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("GMT-05:00")))); //$NON-NLS-1$
 	}
 
 }

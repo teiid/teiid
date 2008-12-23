@@ -127,15 +127,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
         this.batchResults = new BatchResults(this, resultsMsg.getFetchSize(), getCurrentBatch(resultsMsg));
         setResultsData(resultsMsg);
         cursorType = statement.getResultSetType();
-        
-        TimeZone timezone = statement.getServerTimeZone();
-        
-        if (timezone != null) {
-            setServerTimeZone(timezone);
-        }
-        else {
-        	 setServerTimeZone(statement.getDefaultCalendar().getTimeZone());
-        }
+        this.serverTimeZone = statement.getServerTimeZone();
 
 		if (metadata == null) {
 			ResultsMetadataProvider provider = DeferredMetadataProvider
@@ -370,10 +362,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		boolean isLast = currentResultMsg.getResults().length == 0 || currentResultMsg.getFinalRow() == currentResultMsg.getLastRow();
 		return new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
 	}
-    
-    void setServerTimeZone(TimeZone serverTimeZone) {
-        this.serverTimeZone = serverTimeZone;
-    }
     
 	protected int getFinalRowNumber() {
     	return Math.max(-1, batchResults.getFinalRowNumber() - getOffset());
