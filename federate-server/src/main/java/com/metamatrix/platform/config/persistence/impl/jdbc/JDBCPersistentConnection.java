@@ -34,8 +34,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -74,12 +72,8 @@ public class JDBCPersistentConnection implements PersistentConnection {
     private JDBCPlatform platform;
 
     public JDBCPersistentConnection(Connection conn, ConfigurationModelAdapter adapter, Properties props)  {
-        if(conn == null){
-    	   Assertion.isNotNull(conn, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0146));
-        }
-        if(adapter == null){
-    	   Assertion.isNotNull(adapter, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0147));
-        }
+	   Assertion.isNotNull(conn, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0146));
+	   Assertion.isNotNull(adapter, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0147));
 
  		this.connection = conn;
         this.adapter = adapter;
@@ -210,10 +204,7 @@ public class JDBCPersistentConnection implements PersistentConnection {
             } else {
                 throw new ConfigurationException(ErrorMessageKeys.CONFIG_0149, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0149));
             }
-            if( results != null ) {
-                results.close();
-            }
-
+            results.close();
         } catch ( SQLException e ) {
             throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0150, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0150, sql));
         } catch ( Exception e ) {
@@ -225,7 +216,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
             if ( statement != null ) {
                 try {
                     statement.close();
-                    statement=null;
                 } catch ( SQLException e ) {
                     e.printStackTrace();
                     System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -269,7 +259,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
             if ( statement != null ) {
                 try {
                     statement.close();
-                    statement=null;
                 } catch ( SQLException e ) {
                     e.printStackTrace();
                     System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -294,54 +283,70 @@ public class JDBCPersistentConnection implements PersistentConnection {
     }
 
     /**
-     * Returns a Collection of ConfigurationModelContainers based on how the implementation will utilize
-     * the argument to read configuation information
-     * @param configIDs indicates to read a collection of models
-     * @return ConfigurationModel
-     * @throws ConfigurationException if an error occurs
-     */
-    public synchronized Collection read(Collection configIDs) throws ConfigurationException {
-    	Collection configs = new ArrayList(configIDs.size());
-    	for (Iterator it=configIDs.iterator(); it.hasNext(); ) {
-    		ConfigurationID configID = (ConfigurationID) it.next();
-			configs.add( readExtensionConfiguration(configID, true) );
-
-    	}
-
-    	return configs;
-
-    }
-
-
-    /**
      * Writes the model to its persistent store based on the implementation of
      * the persistent connection.
      * @param model to be writen to output
      * @param principal is the user executing the write
      * @throws ConfigurationException if an error occurs
      */
-    public synchronized void write(ConfigurationModelContainer model, String principal) throws ConfigurationException {
+    public synchronized void write(ConfigurationModelContainer config, String principalName) throws ConfigurationException {
+        try {
+        	ByteArrayOutputStream out = new ByteArrayOutputStream();
+        	BufferedOutputStream bos = new BufferedOutputStream(out);
 
-			writeExtensionConfiguration(model, principal, connection);
+            adapter.writeConfigurationModel(bos, config, principalName);
+
+			bos.close();
+			out.close();
+
+
+            byte[] data = out.toByteArray();
+
+            if (data == null || data.length == 0) {
+                throw new ConfigurationException(ErrorMessageKeys.CONFIG_0156, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0156));
+            }
+
+            boolean inUse = JDBCExtensionModuleReader.isNameInUse(config.getConfigurationID().getFullName(), connection);
+
+            if (inUse) {
+            	// update the source
+//                System.out.println("<EXPORT JDBC CONFIG> Update Configuration " + config.getConfigurationID());
+
+                JDBCExtensionModuleWriter.setSource(principalName, config.getConfigurationID().getFullName(), data, data.length, connection);
+            } else {
+//             System.out.println("<EXPORT JDBC CONFIG> Insert Configuration "+ config.getConfigurationID());
+   				// insert the source
+                JDBCExtensionModuleWriter.addSource(principalName, ExtensionModuleTypes.CONFIGURATION_MODEL_TYPE,
+                                    config.getConfigurationID().getFullName(),
+                                    data,
+                                    data.length,
+                                    config.getConfigurationID().getFullName() + " Configuration Model", //$NON-NLS-1$
+                                    true,
+                                    connection);
+//                 System.out.println("EXT DESC " + (ed == null ? " NULL " : ed.getName()) );
+
+            }
+             
+            // load the system properties table only when the Startup configuration is being saveed 
+            if (config.getConfigurationID().getFullName().equals(Configuration.STARTUP)) {
+                cleanSystemPropertiesTable();
+                
+                ComponentTypeID id = (ComponentTypeID) config.getComponentType(Configuration.COMPONENT_TYPE_NAME).getID();
+                               
+                Properties allprops = new Properties();
+                allprops.putAll(config.getDefaultPropertyValues(id));
+                allprops.putAll(config.getConfiguration().getProperties());
+                
+                insertSystemProperties(allprops);
+                
+            }
+
+
+        } catch (Exception e) {
+            throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0157, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0157, config.getConfigurationID()));
+
+        }
     }
-
-    /**
-     * Writes the collection of models to its persistent store based on the implementation of
-     * the persistent connection.
-     * @param models to be writen to output
-     * @param principal is the user executing the write
-     * @throws ConfigurationException if an error occurs
-     */
-
-    public synchronized void write(Collection models, String principal) throws ConfigurationException {
-    	for (Iterator it=models.iterator(); it.hasNext(); ) {
-    		ConfigurationModelContainer model = (ConfigurationModelContainer) it.next();
-    		write(model, principal);
-    	}
-
-
-    }
-
 
     /**
      * Writes the collection of models to its persistent store based on the implementation of
@@ -421,73 +426,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
     }
 
     /**
-     * Uses the ExtensionManager to export the configuration xml file to the database
-     * @param config is the configuration to export
-     * @param principalName is the principal requesting the export
-     * @param connection is the location the configuration is to be exported.
-     */
-    public synchronized void writeExtensionConfiguration(ConfigurationModelContainer config, String principalName, Connection connection) throws ConfigurationException {
-
-        try {
-        	ByteArrayOutputStream out = new ByteArrayOutputStream();
-        	BufferedOutputStream bos = new BufferedOutputStream(out);
-
-            adapter.writeConfigurationModel(bos, config, principalName);
-
-			bos.close();
-			out.close();
-
-
-            byte[] data = out.toByteArray();
-
-            if (data == null || data.length == 0) {
-                throw new ConfigurationException(ErrorMessageKeys.CONFIG_0156, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0156));
-            }
-
-            boolean inUse = JDBCExtensionModuleReader.isNameInUse(config.getConfigurationID().getFullName(), connection);
-
-            if (inUse) {
-            	// update the source
-//                System.out.println("<EXPORT JDBC CONFIG> Update Configuration " + config.getConfigurationID());
-
-                JDBCExtensionModuleWriter.setSource(principalName, config.getConfigurationID().getFullName(), data, data.length, connection);
-            } else {
-//             System.out.println("<EXPORT JDBC CONFIG> Insert Configuration "+ config.getConfigurationID());
-   				// insert the source
-                JDBCExtensionModuleWriter.addSource(principalName, ExtensionModuleTypes.CONFIGURATION_MODEL_TYPE,
-                                    config.getConfigurationID().getFullName(),
-                                    data,
-                                    data.length,
-                                    config.getConfigurationID().getFullName() + " Configuration Model", //$NON-NLS-1$
-                                    true,
-                                    connection);
-//                 System.out.println("EXT DESC " + (ed == null ? " NULL " : ed.getName()) );
-
-            }
-             
-            // load the system properties table only when the Startup configuration is being saveed 
-            if (config.getConfigurationID().getFullName().equals(Configuration.STARTUP)) {
-                cleanSystemPropertiesTable();
-                
-                ComponentTypeID id = (ComponentTypeID) config.getComponentType(Configuration.COMPONENT_TYPE_NAME).getID();
-                               
-                Properties allprops = new Properties();
-                allprops.putAll(config.getDefaultPropertyValues(id));
-                allprops.putAll(config.getConfiguration().getProperties());
-                
-                insertSystemProperties(allprops);
-                
-            }
-
-
-        } catch (Exception e) {
-            throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0157, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0157, config.getConfigurationID()));
-
-        }
-
-    }
-    
-    /**
      * Called to clean out the system properties table before reloading
      */
      void cleanSystemPropertiesTable() throws SQLException{
@@ -504,7 +442,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
             if ( statement != null ) {
                 try {
                     statement.close();
-                    statement=null;
                 } catch ( SQLException e ) {
                     e.printStackTrace();
                     System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -541,7 +478,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
              if ( statement != null ) {
                  try {
                      statement.close();
-                     statement=null;
                  } catch ( SQLException e ) {
                      e.printStackTrace();
                      System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -591,7 +527,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
             if ( statement != null ) {
                 try {
                     statement.close();
-                    statement=null;
                 } catch ( SQLException e ) {
                     e.printStackTrace();
                     System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -633,7 +568,6 @@ public class JDBCPersistentConnection implements PersistentConnection {
             if ( statement != null ) {
                 try {
                     statement.close();
-                    statement=null;
                 } catch ( SQLException e ) {
                     e.printStackTrace();
                     System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0151, sql));
@@ -642,15 +576,43 @@ public class JDBCPersistentConnection implements PersistentConnection {
         }
     }
 
-//
-//    private static void rollback(Connection jdbcConnection)  {
-//        try {
-//            jdbcConnection.rollback();
-//        } catch (SQLException sqle) {
-//
-//        }
-//    }
+	@Override
+	public void beginTransaction() throws ConfigurationException {
+		try {
+			this.connection.setAutoCommit(false);
+		} catch (SQLException e) {
+			throw new ConfigurationException(e);
+		}
+	}
 
 
+	@Override
+	public void commit() throws ConfigurationException {
+		try {
+			this.connection.commit();
+		} catch (SQLException e) {
+			throw new ConfigurationException(e);
+		} finally {
+			try {
+				this.connection.setAutoCommit(true);
+			} catch (SQLException e) {
+			}
+		}
+	}
+
+
+	@Override
+	public void rollback() throws ConfigurationException {
+		try {
+			this.connection.rollback();
+		} catch (SQLException e) {
+			throw new ConfigurationException(e);
+		} finally {
+			try {
+				this.connection.setAutoCommit(true);
+			} catch (SQLException e) {
+			}
+		}
+	}
 
 }

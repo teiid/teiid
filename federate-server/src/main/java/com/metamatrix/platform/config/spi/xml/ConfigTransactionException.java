@@ -22,7 +22,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.config.transaction;
+package com.metamatrix.platform.config.spi.xml;
 
 import java.io.IOException;
 import java.io.ObjectInput;

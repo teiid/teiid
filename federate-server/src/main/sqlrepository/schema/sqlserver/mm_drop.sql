@@ -66,10 +66,6 @@ if exists (select * from dbo.sysobjects where id = object_id(N'[AUTHREALMS]') an
 DROP TABLE [AUTHREALMS]
 GO
 
-if exists (select * from dbo.sysobjects where id = object_id(N'[CFG_LOCK]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)
-DROP TABLE [CFG_LOCK]
-GO
-
 if exists (select * from dbo.sysobjects where id = object_id(N'[CFG_STARTUP_STATE]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)
 DROP TABLE [CFG_STARTUP_STATE]
 GO

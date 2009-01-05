@@ -22,32 +22,21 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.config.transaction;
+package com.metamatrix.platform.config.spi.xml;
 
+import com.metamatrix.common.id.TransactionIDFactory;
 import com.metamatrix.common.transaction.TransactionException;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.platform.config.ConfigMessages;
-import com.metamatrix.platform.config.ConfigPlugin;
+import com.metamatrix.core.id.ObjectIDFactory;
 
 //implements UserTransactionFactory
 public class ConfigUserTransactionFactory  {
-    private ConfigTransactionManager mgr;
+    private ObjectIDFactory idFactory = new TransactionIDFactory();
 //	private ConfigTransactionLockFactory configLockFactory;
 
 	/**
 	 * Construct a factory that can be used to create read or write transactions.
 	 */
-    public ConfigUserTransactionFactory( ConfigTransactionFactory transFactory) {
-        if(transFactory == null){
-            Assertion.isNotNull(transFactory, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0045,"TransactionFactory")); //$NON-NLS-1$
-        }
-
-        this.mgr = new ConfigTransactionManager(transFactory);
-//        Assertion.isNotNull(configLockFactory, "The TransactionLockFactory reference may not be null");
-
-//        this.configLockFactory = transFactory.getTransactionLockFactory();
-
-
+    public ConfigUserTransactionFactory() {
     }
 
 
@@ -58,7 +47,7 @@ public class ConfigUserTransactionFactory  {
      * @return the new transaction object
      */
     public ConfigUserTransaction createReadTransaction(String principal) throws TransactionException {
-        return new ConfigUserTransaction( null, true, mgr, principal);
+        return new ConfigUserTransaction( true, idFactory, principal);
     }
 
 
@@ -70,7 +59,7 @@ public class ConfigUserTransactionFactory  {
      * @return the new transaction object
      */
     public ConfigUserTransaction createWriteTransaction(String principal) throws TransactionException {
-		return new ConfigUserTransaction( null, false, mgr, principal);
+		return new ConfigUserTransaction( false, idFactory, principal);
 /*
     	if (this.configLockFactory != null) {
 
@@ -79,22 +68,4 @@ public class ConfigUserTransactionFactory  {
  */
     }
 
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information. The source object will be used for all events that are
-     * fired as a result of or as a product of this transaction.
-     * @param source the object that is considered to be the source of the transaction;
-     * may be null
-     * @param principal the name to be associated with this transaction
-     * @return the new transaction object
-     */
-    public ConfigUserTransaction createWriteTransaction(Object source, String principal) throws TransactionException {
-		return new ConfigUserTransaction( source, false, mgr, principal);
-/*
-    	if (this.configLockFactory != null) {
-
-    	}
-    	throw new ConfigTransactionException("ConfigUserTransactionFactory was not instantiated to all the creation of write transactions.");
-*/
-    }
 }

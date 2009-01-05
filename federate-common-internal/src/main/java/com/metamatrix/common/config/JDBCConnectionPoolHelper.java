@@ -99,7 +99,7 @@ public final class JDBCConnectionPoolHelper {
 
     }
 
-    public static Connection getConnection(ResourceDescriptor descriptor, String userName) throws ResourcePoolException {
+    private static Connection getConnection(ResourceDescriptor descriptor, String userName) throws ResourcePoolException {
 
         try {
 
@@ -120,7 +120,7 @@ public final class JDBCConnectionPoolHelper {
 
     }
 
-    static ResourceDescriptor getDescriptor(String poolName) throws ResourcePoolException {
+    private static ResourceDescriptor getDescriptor(String poolName) throws ResourcePoolException {
         ResourceDescriptor descriptor = null;
         try {
 
@@ -168,27 +168,5 @@ public final class JDBCConnectionPoolHelper {
             return descriptor;
 
     }
-
-   public static ResourceDescriptor createDescriptor(ConfigurationID configID,
-                                String poolName,
-                                String driver,
-                                String protocol,
-                                String url,
-                                String userName,
-                                String password) throws ResourcePoolException {
-
-        Properties props = new Properties();
-        props.setProperty(JDBCConnectionResource.DRIVER, driver);
-        props.setProperty(JDBCConnectionResource.DATABASE, url);
-        if (protocol != null && protocol.trim().length() > 0) {
-        	props.setProperty(JDBCConnectionResource.PROTOCOL, protocol);
-        }
-        props.setProperty(JDBCConnectionResource.USERNAME, userName);
-        props.setProperty(JDBCConnectionResource.PASSWORD, password);
-
-        return createDescriptor(configID, poolName, props);
-
-    }
-
 
 }

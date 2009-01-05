@@ -27,7 +27,6 @@ package com.metamatrix.platform.config.spi.xml;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;

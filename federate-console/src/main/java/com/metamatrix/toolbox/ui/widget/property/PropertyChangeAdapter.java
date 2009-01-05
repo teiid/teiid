@@ -50,10 +50,6 @@ import com.metamatrix.common.object.PropertiedObjectEditor;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.common.transaction.UserTransaction;
-import com.metamatrix.common.transaction.manager.TransactionManager;
-
-//import com.metamatrix.metadata.toolkit.transaction.ToolkitTransactionManager;
-
 import com.metamatrix.toolbox.ui.widget.PasswordButton;
 
 /**
@@ -75,7 +71,6 @@ public class PropertyChangeAdapter extends KeyAdapter implements PropertyValidat
     private EventListenerList listenerList;
     private boolean matchedOrigVal;
     private boolean transactionPending = false;
-    private TransactionManager mgr;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
@@ -256,10 +251,8 @@ public class PropertyChangeAdapter extends KeyAdapter implements PropertyValidat
 	                    boolean wasErr = true;
 	                    // set the value on the PropertiedObject
 	                    try {
-                            if (mgr == null) {   //||  !((ToolkitTransactionManager)mgr).hasTransaction()) {
-    	                        txn = objectEditor.createWriteTransaction( transactionSource );
-    	                        txn.begin();
-                            }
+	                        txn = objectEditor.createWriteTransaction( transactionSource );
+	                        txn.begin();
 	                        if (value == null  ||  value.equals(def.getDefaultValue())) {
 	                            LogManager.logDetail(PropertiedObjectPanel.LOG_CONTEXT, "[PropertyChangeAdapter] nulling value");
 	                            objectEditor.setValue(entity, def, null);
@@ -540,9 +533,6 @@ public class PropertyChangeAdapter extends KeyAdapter implements PropertyValidat
         }
     }
     
-    public void setTransactionManager(final TransactionManager manager) {
-        mgr = manager;
-    }
 }
 
 

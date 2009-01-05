@@ -75,7 +75,6 @@ import com.metamatrix.common.object.PropertiedObjectEditor;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.common.transaction.UserTransaction;
-import com.metamatrix.common.transaction.manager.TransactionManager;
 import com.metamatrix.common.util.crypto.Encryptor;
 import com.metamatrix.toolbox.ui.UIConstants;
 import com.metamatrix.toolbox.ui.UIDefaults;
@@ -152,8 +151,6 @@ implements UIConstants {
     private int currentWth;
 
     private boolean isFocusCycleRoot;
-    
-    private TransactionManager mgr;
     
     //############################################################################################################################
     //# Constructors                                                                                                             #
@@ -1122,7 +1119,6 @@ implements UIConstants {
             this.editor = editor;
             factory.setPropertiedObjectEditor(editor);
             adapter = new PropertyChangeAdapter(editor, xActionSrc);
-            adapter.setTransactionManager(mgr);
             factory.setPropertyChangeAdapter(adapter);
         }
         if (adapter != null) {
@@ -1228,17 +1224,6 @@ implements UIConstants {
     */
     public void setShowToolTips(final boolean showToolTips) {
         this.showToolTips = showToolTips;
-    }
-
-    
-    /**
-	 * @since 3.0
-	 */
-    public void setTransactionManager(final TransactionManager manager) {
-        if (adapter != null) {
-            adapter.setTransactionManager(manager);
-        }
-        mgr = manager;
     }
 
     /**

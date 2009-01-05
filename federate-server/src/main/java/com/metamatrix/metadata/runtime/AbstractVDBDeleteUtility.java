@@ -41,12 +41,11 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.util.VDBDeleteUtility;
 
 /**
  * Utility class that deletes VDBs that were marked for deletion.
  */
-public abstract class AbstractVDBDeleteUtility implements VDBDeleteUtility {
+public abstract class AbstractVDBDeleteUtility {
 
 
     /**

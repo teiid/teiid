@@ -51,14 +51,19 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.CurrentConfigHelper;
+import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
+import com.metamatrix.platform.config.persistence.impl.file.FilePersistentUtil;
+import com.metamatrix.platform.util.ErrorMessageKeys;
 
 
 public class TestXMLConfigImportExport extends BaseTest {  
@@ -96,8 +101,6 @@ public class TestXMLConfigImportExport extends BaseTest {
                     
   		initializeConfig(CONFIG_FILE);
 
-     	File configFile = new File(UnitTestUtil.getTestScratchPath(), "config_future.xml");
-     	
   		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/config/config.xml", UnitTestUtil.getTestScratchPath()+"/config_future.xml");
   		
         Properties props = new Properties();
@@ -105,10 +108,38 @@ public class TestXMLConfigImportExport extends BaseTest {
         props.setProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY, FilePersistentConnection.NEXT_STARTUP_FILE_NAME);
         props.setProperty(PersistentConnectionFactory.PERSISTENT_FACTORY_NAME, PersistentConnectionFactory.FILE_FACTORY_NAME);
         
-        com.metamatrix.platform.config.util.ConfigUtil.importConfiguration("config_future.xml", props, PRINCIPAL);
+        importConfiguration("config_future.xml", props, PRINCIPAL);
 	    	
 		
     	printMsg("Completed testImportNewStartupConfiguration"); //$NON-NLS-1$
+    }
+	
+    /**
+     * Imports into next startup configuration
+     */
+    public static void importConfiguration(String fileName, Properties properties, String principal) throws ConfigurationException {
+		ConfigurationModelContainer nsModel = null;
+
+ 		try {
+        	 nsModel = FilePersistentUtil.readModel(fileName, properties.getProperty(FilePersistentConnection.CONFIG_FILE_PATH_PROPERTY), Configuration.NEXT_STARTUP_ID);
+ 		} catch (Exception e) {
+ 			throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0186, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0186, fileName));
+ 		}
+
+		Properties props = PropertiesUtils.clone(properties, false);
+
+        PersistentConnectionFactory pf = PersistentConnectionFactory.createPersistentConnectionFactory(props);
+
+//		PersistentConnectionFactory pf = new PersistentConnectionFactory();
+
+
+        PersistentConnection pc = pf.createPersistentConnection();
+
+ //       System.out.println("Props: " + PropertiesUtils.prettyPrint(resourcePoolProperties));
+
+        // write the models out
+        pc.delete(Configuration.NEXT_STARTUP_ID, principal);
+      	pc.write(nsModel, principal);
     }
 
     	

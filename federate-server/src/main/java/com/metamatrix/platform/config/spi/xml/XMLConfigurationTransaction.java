@@ -24,33 +24,19 @@
 
 package com.metamatrix.platform.config.spi.xml;
 
-
-
 import com.metamatrix.common.id.TransactionID;
 import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.common.transaction.TransactionStatus;
-import com.metamatrix.platform.config.transaction.ConfigTransaction;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLockFactory;
 
 public class XMLConfigurationTransaction extends ConfigTransaction {
-//	private static final String NON_TRANSACTION_ACQUIRED_BY = "ReadTransaction";
 
     private XMLConfigurationMgr configMgr;
-    
 
-    XMLConfigurationTransaction(ConfigTransactionLockFactory lockFactory, XMLConfigurationMgr mgr, TransactionID txnID, Object source, long defaultTimeoutSeconds) {
-		super(lockFactory, txnID, source, defaultTimeoutSeconds);
-		this.configMgr = mgr;
-				
-    }
-
-    XMLConfigurationTransaction(ConfigTransactionLockFactory lockFactory, XMLConfigurationMgr mgr, TransactionID txnID, long defaultTimeoutSeconds) {
-        super(lockFactory, txnID, defaultTimeoutSeconds);
+    public XMLConfigurationTransaction(XMLConfigurationMgr mgr, TransactionID txnID, long defaultTimeoutSeconds) {
+        super(txnID, defaultTimeoutSeconds);
         this.configMgr = mgr;
     }
 
-        
-     
     /**
      * Complete the transaction represented by this TransactionObject.
      * @throws TransactionException if the transaction is unable to commit.
@@ -65,8 +51,6 @@ public class XMLConfigurationTransaction extends ConfigTransaction {
       		configMgr.applyTransaction(this);
         }
         
-//		System.out.println("Committed Write ConfigTransaction for " + lock.getLockHolder());
-        
     }
     
     public void rollback() throws TransactionException{
@@ -76,7 +60,6 @@ public class XMLConfigurationTransaction extends ConfigTransaction {
             configMgr.rollbackTransaction();
         }
     }    
-
     
 }
 

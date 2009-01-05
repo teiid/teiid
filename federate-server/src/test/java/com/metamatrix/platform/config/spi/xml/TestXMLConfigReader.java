@@ -31,16 +31,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.connection.ManagedConnection;
-import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.CurrentConfigHelper;
 

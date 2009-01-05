@@ -383,7 +383,7 @@ public class MetaMatrixController {
         //Delete VDB versions marked for deletion if no sessions are logged in
         //using them, or if this is the last session.
         try {
-            VDBDeleteUtility vdbDeleter = new StartupVDBDeleteUtility();
+        	StartupVDBDeleteUtility vdbDeleter = new StartupVDBDeleteUtility();
             vdbDeleter.deleteVDBsMarkedForDelete();
         } catch (Exception e) {
             log(e, "Warning: failed to delete VDBs that were marked for deletion."); //$NON-NLS-1$

@@ -30,6 +30,7 @@ import java.util.Properties;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.jdbc.JDBCUtil;
 import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
@@ -146,7 +147,7 @@ public class JDBCPersistentConnectionFactory
 
         
         } else {
-            connection = JDBCPersistentUtil.getConnection(props);
+            connection = getConnection(props);
 
         }
         return connection;
@@ -211,6 +212,44 @@ public class JDBCPersistentConnectionFactory
 
 		return envClone;
 
+	}
+
+	/**
+	 * env properties are exprected to be that of {@see JDBCPersistentConnection}
+	 */
+	
+	static Connection getConnection(Properties env) throws ConfigurationConnectionException {
+	    // Get the JDBC properties ...
+	
+	 	String driverClassName = env.getProperty(DRIVER);
+	    String protocol        = env.getProperty(PROTOCOL);
+	    String database        = env.getProperty(DATABASE);
+	    String username        = env.getProperty(USERNAME);
+	    String password        = env.getProperty(PASSWORD);
+	    // Verify required items
+	    if (driverClassName == null || driverClassName.trim().length() == 0) {
+	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0030, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0030));
+	    }
+	
+	    if (database == null || database.trim().length() == 0) {
+	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0032, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0032));
+	    }
+	
+		Properties props = new Properties();
+		props.setProperty(JDBCUtil.DATABASE, database);
+		props.setProperty(JDBCUtil.DRIVER, driverClassName);
+	   	if (protocol != null && protocol.trim().length() > 0) {
+			props.setProperty(JDBCUtil.PROTOCOL, protocol);
+		}
+		props.setProperty(JDBCUtil.USERNAME, username);
+		props.setProperty(JDBCUtil.PASSWORD, password);
+	
+		try {
+			Connection connection = JDBCUtil.decryptAndCreateJDBCConnection(props);
+			return connection;
+		} catch (Exception e) {
+			throw new ConfigurationConnectionException(e, ErrorMessageKeys.CONFIG_0033, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0033));
+		}
 	}
 
 }

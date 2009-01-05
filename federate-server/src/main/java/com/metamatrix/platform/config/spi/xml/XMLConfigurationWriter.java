@@ -42,15 +42,10 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.connection.ManagedConnection;
+import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
-import com.metamatrix.platform.config.transaction.ConfigTransaction;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
-import com.metamatrix.platform.config.transaction.ConfigTransactionHelper;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLockException;
-import com.metamatrix.platform.config.transaction.ConfigUserTransaction;
-import com.metamatrix.platform.config.transaction.ConfigUserTransactionFactory;
 
 public class XMLConfigurationWriter  {
 
@@ -68,7 +63,7 @@ public class XMLConfigurationWriter  {
 		this.mgdConnection = mgdConnection;
 
 
-	    factory = new ConfigUserTransactionFactory(configMgr.getConfigTransactionFactory());
+	    factory = new ConfigUserTransactionFactory();
 
     }
 
@@ -316,8 +311,8 @@ public class XMLConfigurationWriter  {
     }
 
 
-    protected ConfigUserTransaction getTransaction(String principal) throws ConfigTransactionLockException, ConfigTransactionException, ConfigurationException {
-        ConfigUserTransaction trans = ConfigTransactionHelper.getWriteTransactionWithRetry(principal, factory);
+    protected ConfigUserTransaction getTransaction(String principal) throws ConfigTransactionException, ConfigurationException {
+        ConfigUserTransaction trans = XMLConfigurationWriter.getWriteTransactionWithRetry(principal, factory);
         ConfigTransaction transaction = trans.getTransaction();
 		ConfigurationID configID = getConfigurationReader().getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
         ConfigurationModelContainer transconfig = configMgr.getConfigurationModelForTransaction(configID);
@@ -344,14 +339,20 @@ public class XMLConfigurationWriter  {
      		throw new ConfigurationLockException(ConfigMessages.CONFIG_0123, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0123));
      	}
 
-
-     	if (transaction.getTransactionLock() == null) {
-     		throw new ConfigurationLockException(ConfigMessages.CONFIG_0124, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0124));
-     	}
-
     }
 
-
+	public static ConfigUserTransaction getWriteTransactionWithRetry(String principal, ConfigUserTransactionFactory factory ) throws ConfigTransactionException {
+	     try {
+	
+	    	ConfigUserTransaction userTrans =  factory.createWriteTransaction(principal);
+	
+	        userTrans.begin();
+	        return userTrans;
+	
+	     } catch (TransactionException te) {
+	        throw new ConfigTransactionException(te, ConfigMessages.CONFIG_0162, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0162, principal));
+	     }
+	}
 
 }
 

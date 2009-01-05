@@ -28,17 +28,13 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.I18nLogManager;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.AuthorizationServicePropertyNames;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceTransaction;
 

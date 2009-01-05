@@ -101,21 +101,12 @@ import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
-import com.metamatrix.platform.config.transaction.ConfigTransaction;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
 
 
 public class XMLActionUpdateStrategy  {
 
 
-    private static ConfigurationObjectEditorHelper editor;
-    
     public PropertyValidations validateProperty = new PropertyValidations();
-
-
-    static {
-        editor = new ConfigurationObjectEditorHelper();
-    }
 
 
     public XMLActionUpdateStrategy() {
@@ -420,7 +411,7 @@ public class XMLActionUpdateStrategy  {
                         throw e;
                     }
                     rd = (ResourceDescriptor) args[0];
-					rd = (ResourceDescriptor) setCreationDate(editor, rd, transaction.getLockAcquiredBy());
+					rd = (ResourceDescriptor) setCreationDate(rd, transaction.getLockAcquiredBy());
 
                     ComponentType type = getComponentType(config, rd.getComponentTypeID(), targetID); 
 
@@ -444,7 +435,7 @@ public class XMLActionUpdateStrategy  {
 //                    ComponentType type = config.getComponentType(rd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, rd.getComponentTypeID(), targetID); 
 
-                    rd = (ResourceDescriptor) setLastChangedDate(editor, rd, transaction.getLockAcquiredBy());
+                    rd = (ResourceDescriptor) setLastChangedDate(rd, transaction.getLockAcquiredBy());
 
         			processPropertyChanges(action,
     									rd,
@@ -459,7 +450,7 @@ public class XMLActionUpdateStrategy  {
 
                     if (rd != null) {
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
                     }
 
 
@@ -521,8 +512,7 @@ public class XMLActionUpdateStrategy  {
 						throw e;
 					}
 					rd = (AuthenticationProvider) args[0];
-					rd = (AuthenticationProvider) setCreationDate(editor, rd,
-							transaction.getLockAcquiredBy());
+					rd = (AuthenticationProvider) setCreationDate(rd, transaction.getLockAcquiredBy());
 
 					ComponentType type = getComponentType(config, rd
 							.getComponentTypeID(), targetID);
@@ -553,8 +543,7 @@ public class XMLActionUpdateStrategy  {
 					ComponentType type = getComponentType(config, rd
 							.getComponentTypeID(), targetID);
 
-					rd = (AuthenticationProvider) setLastChangedDate(editor, rd,
-							transaction.getLockAcquiredBy());
+					rd = (AuthenticationProvider) setLastChangedDate(rd, transaction.getLockAcquiredBy());
 
 					processPropertyChanges(action, rd, type, config,
 							transaction.getLockAcquiredBy());
@@ -563,8 +552,7 @@ public class XMLActionUpdateStrategy  {
 
 					if (rd != null) {
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(),
-								transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 					}
 
 				} else {
@@ -623,7 +611,7 @@ public class XMLActionUpdateStrategy  {
 
                     dc = (BasicDeployedComponent) args[0];
 
-					dc = (BasicDeployedComponent) setCreationDate(editor, dc, transaction.getLockAcquiredBy());
+					dc = (BasicDeployedComponent) setCreationDate(dc, transaction.getLockAcquiredBy());
 
                     ComponentType type = getComponentType(config, dc.getComponentTypeID(), targetID); 
 
@@ -646,7 +634,7 @@ public class XMLActionUpdateStrategy  {
                    //ComponentType type = config.getComponentType(dc.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, dc.getComponentTypeID(), targetID); 
 
-					dc = (BasicDeployedComponent) setLastChangedDate(editor, dc, transaction.getLockAcquiredBy());
+					dc = (BasicDeployedComponent) setLastChangedDate(dc, transaction.getLockAcquiredBy());
 
         			processPropertyChanges(action,
     									dc,
@@ -659,7 +647,7 @@ public class XMLActionUpdateStrategy  {
 
                     if (dc != null) {
 						ConfigurationObjectEditorHelper.delete(targetID, config.getConfiguration());
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -717,7 +705,7 @@ public class XMLActionUpdateStrategy  {
                     }
                     cd = (ComponentDefn) args[0];
 
-					cd = (ComponentDefn) setCreationDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setCreationDate(cd, transaction.getLockAcquiredBy());
 
 
 //		System.out.println("STRATEGY: Add PSC Target " + targetID);
@@ -733,7 +721,7 @@ public class XMLActionUpdateStrategy  {
 
                 //    ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-					cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
                                       
 
         			processPropertyChanges(action,
@@ -757,7 +745,7 @@ public class XMLActionUpdateStrategy  {
              		if (anAction.hasAttributeCode() &&
                        (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PROPERTY.getCode() ||
                         anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PROPERTIES.getCode() ) )  {
-							cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+							cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 		        			processPropertyChanges(action,
 		    									cd,
@@ -780,7 +768,7 @@ public class XMLActionUpdateStrategy  {
                              ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, id);
                              ConfigurationObjectEditorHelper.setEnabled( id, psc , enabled.booleanValue());                                                        
                          }
-                         setLastChangedDate(editor, psc, transaction.getLockAcquiredBy());                    
+                         setLastChangedDate(psc, transaction.getLockAcquiredBy());                    
                    
  
 
@@ -794,7 +782,7 @@ public class XMLActionUpdateStrategy  {
 
 	                		ConfigurationObjectEditorHelper.setEnabled( svcID, psc , enabled.booleanValue());
 
-					 		setLastChangedDate(editor, psc, transaction.getLockAcquiredBy());
+					 		setLastChangedDate(psc, transaction.getLockAcquiredBy());
 
 
 	                	} else {
@@ -814,7 +802,7 @@ public class XMLActionUpdateStrategy  {
 //		System.out.println("STRATEGY: Destroy ComponentDefn Target " + targetID);
 
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -875,7 +863,7 @@ public class XMLActionUpdateStrategy  {
                     }
                     cd = (ComponentDefn) args[0];
 
-					cd = (ComponentDefn) setCreationDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setCreationDate(cd, transaction.getLockAcquiredBy());
 
 
                   //  ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
@@ -897,7 +885,7 @@ public class XMLActionUpdateStrategy  {
 
                  //   ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-					cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
         			processPropertyChanges(action,
     									cd,
@@ -920,7 +908,7 @@ public class XMLActionUpdateStrategy  {
 
 		                 //   ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                             ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-							cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+							cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 		        			processPropertyChanges(action,
 		    									cd,
@@ -935,7 +923,7 @@ public class XMLActionUpdateStrategy  {
                     	ProductServiceConfigID pscID = (ProductServiceConfigID)anAction.getNewValue();
 						ProductServiceConfig psc = config.getConfiguration().getPSC(pscID);
 
-						 setLastChangedDate(editor, psc, transaction.getLockAcquiredBy());
+						 setLastChangedDate(psc, transaction.getLockAcquiredBy());
 
 
 						// add the service the PSC
@@ -949,7 +937,7 @@ public class XMLActionUpdateStrategy  {
 	                	if (cd instanceof ServiceComponentDefn) {
 	                		ConfigurationObjectEditorHelper.setRoutingUUID((ServiceComponentDefn) cd, (String) anAction.getNewValue());
 
-				 			setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+				 			setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 
 	                	} else {
@@ -970,7 +958,7 @@ public class XMLActionUpdateStrategy  {
                 	if (cd != null) {
 //		System.out.println("STRATEGY: Destroy ServiceDefn Target " + targetID);
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -1029,7 +1017,7 @@ public class XMLActionUpdateStrategy  {
                     cd = (ComponentDefn) args[0];
 //		System.out.println("STRATEGY: Add ComponentDefn Target " + targetID);
 
-					cd = (ComponentDefn) setCreationDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setCreationDate(cd, transaction.getLockAcquiredBy());
 
                     //ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
@@ -1049,7 +1037,7 @@ public class XMLActionUpdateStrategy  {
 
                    // ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-					cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+					cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 
  //		System.out.println("STRATEGY: Got type for " + targetID);
@@ -1078,7 +1066,7 @@ public class XMLActionUpdateStrategy  {
                             ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
 
  //		System.out.println("STRATEGY: Exchange Properties  " + targetID);
-							cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+							cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 		        			processPropertyChanges(action,
 		    									cd,
@@ -1112,7 +1100,7 @@ public class XMLActionUpdateStrategy  {
 //		System.out.println("STRATEGY: Destroy ComponentDefn Target " + targetID);
 
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -1175,7 +1163,7 @@ public class XMLActionUpdateStrategy  {
                     }
                     cd = (ComponentDefn) args[0];
 
-    				cd = (ComponentDefn) setCreationDate(editor, cd, transaction.getLockAcquiredBy());
+    				cd = (ComponentDefn) setCreationDate(cd, transaction.getLockAcquiredBy());
 
                 //    ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
@@ -1199,7 +1187,7 @@ public class XMLActionUpdateStrategy  {
                //     ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
 
-                    cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+                    cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
         			processPropertyChanges(action,
     									cd,
@@ -1225,7 +1213,7 @@ public class XMLActionUpdateStrategy  {
 		          //          ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
                             ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
 
-                            cd = (ComponentDefn) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+                            cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 		        			processPropertyChanges(action,
 		    									cd,
@@ -1248,7 +1236,7 @@ public class XMLActionUpdateStrategy  {
 	                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0095, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0095, pscID, config.getConfigurationID()));
 						}
 
-				 		 setLastChangedDate(editor, psc, transaction.getLockAcquiredBy());
+				 		 setLastChangedDate(psc, transaction.getLockAcquiredBy());
 
 						// add the service the PSC
 						  ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, targetID);
@@ -1262,7 +1250,7 @@ public class XMLActionUpdateStrategy  {
                     } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.ROUTING_UUID.getCode()) {
 // System.out.println("STRATEGY: Exchange ConnectorBinding RoutingUUID for Target " + dvt.getID() + " to config " + cfg.getID());
 
-				 		    cd = (ConnectorBinding) setLastChangedDate(editor, cd, transaction.getLockAcquiredBy());
+				 		    cd = (ConnectorBinding) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
 	                		ConfigurationObjectEditorHelper.setRoutingUUID((ConnectorBinding) cd, (String) anAction.getNewValue());
 
@@ -1276,7 +1264,7 @@ public class XMLActionUpdateStrategy  {
 //		System.out.println("STRATEGY: Destroy ConnectorBinding Target " + targetID);
 
 						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -1466,7 +1454,7 @@ public class XMLActionUpdateStrategy  {
 
                     BasicComponentType dvt = (BasicComponentType) args[0];
 
-					setCreationDate(editor, dvt, transaction.getLockAcquiredBy());
+					setCreationDate(dvt, transaction.getLockAcquiredBy());
 
                     config.addComponentType(dvt);
 
@@ -1496,7 +1484,7 @@ public class XMLActionUpdateStrategy  {
                     if (action.hasAttributeCode() && action.getAttributeCode().intValue() == ConfigurationModel.Attribute.UPDATE_COMPONENT_TYPE.getCode()) {
 
                         ComponentType newCt = (ComponentType)exchangeAction.getNewValue();
-                        setLastChangedDate(editor, newCt, transaction.getLockAcquiredBy());
+                        setLastChangedDate(newCt, transaction.getLockAcquiredBy());
                         
                         config.addComponentType((ComponentType)exchangeAction.getNewValue());
                     
@@ -1505,14 +1493,14 @@ public class XMLActionUpdateStrategy  {
 
 						bct.setParentComponentTypeID((ComponentTypeID)exchangeAction.getNewValue());
 
-				 		setLastChangedDate(editor, bct, transaction.getLockAcquiredBy());
+				 		setLastChangedDate(bct, transaction.getLockAcquiredBy());
 
 
                     } else if (action.hasAttributeCode() && action.getAttributeCode().intValue() == ConfigurationModel.Attribute.SUPER_COMPONENT_TYPEID.getCode()){
 
 						bct.setSuperComponentTypeID((ComponentTypeID)exchangeAction.getNewValue());
 
-				 		setLastChangedDate(editor, bct, transaction.getLockAcquiredBy());
+				 		setLastChangedDate(bct, transaction.getLockAcquiredBy());
 
                     } else {
                         throw new InvalidArgumentException(ConfigMessages.CONFIG_0101, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0101,action.getActionDescription()));
@@ -1535,7 +1523,7 @@ public class XMLActionUpdateStrategy  {
                         
 						config.remove(targetID);
 
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
 
 //						if (type instanceof ProductType) {
@@ -1730,7 +1718,7 @@ public class XMLActionUpdateStrategy  {
                     getComponentType(config, dvt.getComponentTypeID(), targetID); 
 
 
-				 	dvt = (BasicHost) setCreationDate(editor, dvt, transaction.getLockAcquiredBy());
+				 	dvt = (BasicHost) setCreationDate(dvt, transaction.getLockAcquiredBy());
 
                     ConfigurationObjectEditorHelper.addHostComponent(config.getConfiguration(), dvt);
 
@@ -1747,7 +1735,7 @@ public class XMLActionUpdateStrategy  {
                  //   ComponentType type = config.getComponentType(host.getComponentTypeID().getFullName());
                     ComponentType type = getComponentType(config, host.getComponentTypeID(), targetID); 
 
-                    host = (Host) setLastChangedDate(editor, host, transaction.getLockAcquiredBy());
+                    host = (Host) setLastChangedDate(host, transaction.getLockAcquiredBy());
 
         			processPropertyChanges(action,
     									host,
@@ -1762,7 +1750,7 @@ public class XMLActionUpdateStrategy  {
                     if (host != null) {
                     	// if the host is deleted, so must the dependent objects be deleted (if they exist)
 						ConfigurationObjectEditorHelper.delete(targetID, config.getConfiguration());
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
                     }
 
 
@@ -1828,7 +1816,7 @@ public class XMLActionUpdateStrategy  {
                     }
                     dvt = (BasicSharedResource) args[0];
 
-					dvt = (BasicSharedResource) setCreationDate(editor, dvt, transaction.getLockAcquiredBy());
+					dvt = (BasicSharedResource) setCreationDate(dvt, transaction.getLockAcquiredBy());
 
                     ComponentType type = ResourceModel.getComponentType(dvt.getName());
 
@@ -1854,7 +1842,7 @@ public class XMLActionUpdateStrategy  {
 
                //     ComponentType type = getComponentType(config, rd.getComponentTypeID(), targetID); 
                     
-                    rd = (SharedResource)setLastChangedDate(editor, rd, transaction.getLockAcquiredBy());
+                    rd = (SharedResource)setLastChangedDate(rd, transaction.getLockAcquiredBy());
 
     				processPropertyChanges(action,
 									rd,
@@ -1869,7 +1857,7 @@ public class XMLActionUpdateStrategy  {
 
                     if (rd != null) {
 						config.remove(targetID);
-						setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
 
@@ -1919,7 +1907,7 @@ public class XMLActionUpdateStrategy  {
 //
 //             }
 
-			sr = (SharedResource) setLastChangedDate(editor, sr, transaction.getLockAcquiredBy());
+			sr = (SharedResource) setLastChangedDate(sr, transaction.getLockAcquiredBy());
 
 
 
@@ -1965,7 +1953,7 @@ public class XMLActionUpdateStrategy  {
                     }
                     dvt = (BasicProductType) args[0];
 
-                    dvt = (BasicProductType) setCreationDate(editor, dvt, transaction.getLockAcquiredBy());
+                    dvt = (BasicProductType) setCreationDate(dvt, transaction.getLockAcquiredBy());
 
 
                     config.addProductType(dvt);
@@ -2299,14 +2287,14 @@ public class XMLActionUpdateStrategy  {
 
     }
 
-   private ComponentObject setLastChangedDate(ConfigurationObjectEditorHelper editor, ComponentObject defn, String principal) {
+   private ComponentObject setLastChangedDate(ComponentObject defn, String principal) {
 
    		String lastChangedDate = DateUtil.getCurrentDateAsString();
 
    		return ConfigurationObjectEditorHelper.setLastChangedHistory(defn, principal, lastChangedDate);
    }
 
-   private ComponentType setLastChangedDate(ConfigurationObjectEditorHelper editor, ComponentType defn, String principal) {
+   private ComponentType setLastChangedDate(ComponentType defn, String principal) {
 
    		String lastChangedDate = DateUtil.getCurrentDateAsString();
 
@@ -2314,7 +2302,7 @@ public class XMLActionUpdateStrategy  {
    }
 
 
-   private ComponentObject setCreationDate(ConfigurationObjectEditorHelper editor, ComponentObject defn, String principal) {
+   private ComponentObject setCreationDate(ComponentObject defn, String principal) {
 
    		String creationDate = DateUtil.getCurrentDateAsString();
 
@@ -2323,7 +2311,7 @@ public class XMLActionUpdateStrategy  {
    		return ConfigurationObjectEditorHelper.setCreationChangedHistory(defn, principal, creationDate);
    }
 
-   private ComponentType setCreationDate(ConfigurationObjectEditorHelper editor, ComponentType defn, String principal) {
+   private ComponentType setCreationDate(ComponentType defn, String principal) {
 
    		String creationDate = DateUtil.getCurrentDateAsString();
 

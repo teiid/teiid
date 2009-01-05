@@ -41,7 +41,6 @@ import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactor
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory;
-import com.metamatrix.platform.config.transaction.ConfigTransactionFactory;
 
 public abstract class BaseTest extends TestCase {
 
@@ -119,10 +118,6 @@ public abstract class BaseTest extends TestCase {
 			props.setProperty(
 					PersistentConnectionFactory.PERSISTENT_FACTORY_NAME,
 					PersistentConnectionFactory.FILE_FACTORY_NAME);
-			props.setProperty(
-					ConfigTransactionFactory.SINGLE_VM_TRANSACTION_LOCK_OPTION,
-					"true"); //$NON-NLS-1$
-
 		}
 
 		if (path != null) {

@@ -25,7 +25,6 @@
 package com.metamatrix.platform.config.spi.xml;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,11 +54,6 @@ import com.metamatrix.platform.config.ConfigPlugin;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
-import com.metamatrix.platform.config.transaction.ConfigTransaction;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
-import com.metamatrix.platform.config.transaction.ConfigTransactionFactory;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLock;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLockException;
 
 /**
  * Created on Aug 27, 2002
@@ -80,15 +74,12 @@ public class XMLConfigurationMgr {
     private PersistentConnection connection = null;
     private PersistentConnectionFactory connFactory = null;
     
-    private XMLConfigurationTransactionFactory transFactory;
-
-
     private Properties props = null;
 
     private MessageBus messageBus = null;
 
 
-    private Map configs = Collections.synchronizedMap(new HashMap(3));
+    private Map configs = new HashMap();
 
     // this map of config models are only used by the writer for transaction processing
     //
@@ -100,12 +91,10 @@ public class XMLConfigurationMgr {
     //			therefore, a change applied by the editor to the configuration object
     //			now exist in the model when the same reference is used to apply the
     //			actions created by the editor.
-    private Map transConfigs = Collections.synchronizedMap(new HashMap(3));
+    private Map transConfigs = new HashMap();
 
     private ConfigurationModelContainerAdapter adapter =  new ConfigurationModelContainerAdapter();
     private String hostName = null;
-    
-    private Object lock = new Object();
     
     private XMLConfigurationMgr(MessageBus bus)  {
     	this.messageBus = bus;
@@ -152,8 +141,6 @@ public class XMLConfigurationMgr {
         Properties factoryProps = new Properties();
         factoryProps.putAll(this.props);
 
-        this.transFactory = new XMLConfigurationTransactionFactory(factoryProps);
-
         connFactory = PersistentConnectionFactory.createPersistentConnectionFactory(props);
 //        createPersistentConnectionFactory(props);
 
@@ -181,19 +168,12 @@ public class XMLConfigurationMgr {
 		return this.props;
 	}
 
-
-    public synchronized ConfigTransactionFactory getConfigTransactionFactory() {
-
-    	return this.transFactory;
-    }
-
-
-    public java.util.Date getServerStartupTime() throws ConfigurationException {
+    public synchronized java.util.Date getServerStartupTime() throws ConfigurationException {
 		return getConnection().getStartupTime();
     }
 
 
-    public int getServerStartupState() throws ConfigurationException {
+    public synchronized int getServerStartupState() throws ConfigurationException {
     	return getConnection().getServerState();
 
     }
@@ -257,17 +237,11 @@ public class XMLConfigurationMgr {
         getConnection().setServerStarted();
     }
 
-    protected ConfigTransactionLock getCurrentLock() throws ConfigTransactionLockException {
-    	return transFactory.getTransactionLockFactory().getCurrentConfigTransactionLock();
-    }
-
-
-
     /**
      * Returns the configuration for the specified configID.
      * {@see Configuration}.
      */
-    public ConfigurationModelContainer getConfigurationModel(ConfigurationID configID) throws ConfigurationException {
+    public synchronized ConfigurationModelContainer getConfigurationModel(ConfigurationID configID) throws ConfigurationException {
         ConfigurationModelContainer cmc = null;
 
         if (configs.containsKey(configID.getFullName())) {
@@ -275,72 +249,50 @@ public class XMLConfigurationMgr {
         }
 
         if (cmc == null) {
-            synchronized (lock) {
+            cmc = readModel(configID);
 
-                cmc = readModel(configID);
+            if (cmc == null) {
+                throw new ConfigurationException(ConfigMessages.CONFIG_0114,
+                                                 ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));
+            }
 
-                if (cmc == null) {
-                    throw new ConfigurationException(ConfigMessages.CONFIG_0114,
-                                                     ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));
-                }
+            configs.put(cmc.getConfigurationID().getFullName(), cmc);
 
-                configs.put(cmc.getConfigurationID().getFullName(), cmc);
+            try {
+                ConfigurationModelContainer cmct = (ConfigurationModelContainer)cmc.clone();
 
-                try {
-                    ConfigurationModelContainer cmct = (ConfigurationModelContainer)cmc.clone();
-
-                    transConfigs.put(cmct.getConfigurationID().getFullName(), cmct);
-                } catch (Exception ce) {
-                    throw new ConfigurationException(ce, ConfigMessages.CONFIG_0116,
-                                                     ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0116, configID));
-                }
+                transConfigs.put(cmct.getConfigurationID().getFullName(), cmct);
+            } catch (Exception ce) {
+                throw new ConfigurationException(ce, ConfigMessages.CONFIG_0116,
+                                                 ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0116, configID));
             }
         }
         return cmc;
 
     } 
 
-    private ConfigurationModelContainer readModel(ConfigurationID configID) throws ConfigurationException {
+    private synchronized ConfigurationModelContainer readModel(ConfigurationID configID) throws ConfigurationException {
     	return getConnection().read(configID);
     }
-
-    private void writeModel(ConfigurationModelContainer model, String principal) throws ConfigurationException {
-        //validate the model before saving
-        try {
-             adapter.validateModel(model);
-        } catch (ConfigObjectsNotResolvableException nr) {
-            throw new ConfigurationException(nr);
-        }
-
-
-        getConnection().write(model, principal);
-    }
-
 
 	/**
 	 * This method is only used by the XMLConfigurationWriter so that is may obtain
 	 * a model specifically for transaction purposes.
 	 */
-    ConfigurationModelContainer getConfigurationModelForTransaction(ConfigurationID configID) throws ConfigurationException {
-
-        synchronized(lock) {
-            
-              if (transConfigs.containsKey(configID.getFullName())) {
-                  return (ConfigurationModelContainer) transConfigs.get(configID.getFullName());
-              }
-              
-              // call to refresh caches
-              getConfigurationModel(configID);
-              
-            if (transConfigs.containsKey(configID.getFullName())) {
-                return (ConfigurationModelContainer) transConfigs.get(configID.getFullName());
-            }
-              
-              
-            throw new ConfigurationException(ConfigMessages.CONFIG_0114, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));                    
-
-              
+    synchronized ConfigurationModelContainer getConfigurationModelForTransaction(ConfigurationID configID) throws ConfigurationException {
+          if (transConfigs.containsKey(configID.getFullName())) {
+              return (ConfigurationModelContainer) transConfigs.get(configID.getFullName());
+          }
+          
+          // call to refresh caches
+          getConfigurationModel(configID);
+          
+        if (transConfigs.containsKey(configID.getFullName())) {
+            return (ConfigurationModelContainer) transConfigs.get(configID.getFullName());
         }
+          
+          
+        throw new ConfigurationException(ConfigMessages.CONFIG_0114, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));                    
 
     }
 
@@ -362,17 +314,7 @@ public class XMLConfigurationMgr {
      * @throws ConfigurationException if a problem occurs setting the configuration.
      */
     public synchronized void applyTransaction(ConfigTransaction transaction) throws ConfigTransactionException {
-
-		try {
-			validateLock(transaction);
-		} catch (ConfigurationLockException cle) {
-			throw new ConfigTransactionException(cle, ConfigMessages.CONFIG_0117, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0117));
-		}
-        
-        if(transaction == null){
-            ArgCheck.isNotNull(transaction, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0118));
-        }
-
+        ArgCheck.isNotNull(transaction, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0118));
 
 //		System.out.println("MGR - APPLY TRANSACTION " + transaction.getAction());
 		// only for non-initialization or server startup actions will the configuration be written
@@ -382,53 +324,71 @@ public class XMLConfigurationMgr {
 			transaction.getAction() == ConfigTransaction.SERVER_FORCE_INITIALIZATION ||
 			transaction.getAction() == ConfigTransaction.SERVER_INITIALIZATION) {
 
-
 			if (transaction.getObjects() == null || transaction.getObjects().isEmpty()) {
 	              throw new ConfigTransactionException(ConfigMessages.CONFIG_0119, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0119));
 			}
 
 			Collection models = transaction.getObjects();
-
-			synchronized(lock) {
+			PersistentConnection pc = null;
+			boolean success = false;
+			try {
 				for (Iterator it=models.iterator(); it.hasNext(); ) {
-
+	
 					Object obj = it.next();
-					if (obj instanceof ConfigurationModelContainer) {
-						ConfigurationModelContainer config = (ConfigurationModelContainer) obj;
-
-						try {
-
-							writeModel(config, transaction.getLockAcquiredBy());
-//                            transConfigs.clear();  
-
-//							clearCache();
-		//					System.out.println("<CONFIGMGR> write configuration " + config.getConfigurationID().getFullName());
-
-/*
-							ConfigurationModelContainer checkM = readModel(config.getConfigurationID());
-							if (checkM == null) {
-								throw new ConfigTransactionException("Error persisting configuration " + config.getConfigurationID() + ", it was not saved properly");
-							}
-*/                            
-//                            
-							configs.put(config.getConfigurationID().getFullName(), config);
-
-                            try {
-                                ConfigurationModelContainer cmct = (ConfigurationModelContainer) config.clone();
-
-                                transConfigs.put(cmct.getConfigurationID().getFullName(), cmct);
-                            } catch (Exception ce) {
-                              throw new ConfigTransactionException(ce,ConfigMessages.CONFIG_0115, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0115,config.getConfigurationID()));
-                            }
-
-						} catch (ConfigurationException ce) {
-							throw new ConfigTransactionException(ce, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
-						}
-					} else {
+					if (!(obj instanceof ConfigurationModelContainer)) {
 		              	throw new ConfigTransactionException(ConfigMessages.CONFIG_0121, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0121, obj.getClass().getName()));
-
 					}
+					ConfigurationModelContainer config = (ConfigurationModelContainer) obj;
+	
+					try {
+						
+						//validate the model before saving
+			             adapter.validateModel(config);
+	
+						if (pc == null) {
+							pc = getConnection();
+							pc.beginTransaction();
+						}
 
+				        pc.write(config, transaction.getLockAcquiredBy());
+				        //                            transConfigs.clear();  
+	
+	//							clearCache();
+	//					System.out.println("<CONFIGMGR> write configuration " + config.getConfigurationID().getFullName());
+	
+	/*
+								ConfigurationModelContainer checkM = readModel(config.getConfigurationID());
+								if (checkM == null) {
+									throw new ConfigTransactionException("Error persisting configuration " + config.getConfigurationID() + ", it was not saved properly");
+								}
+	*/                            
+	//                            
+						configs.put(config.getConfigurationID().getFullName(), config);
+	
+                        ConfigurationModelContainer cmct = (ConfigurationModelContainer) config.clone();
+
+                        transConfigs.put(cmct.getConfigurationID().getFullName(), cmct);
+					} catch (ConfigurationException ce) {
+						throw new ConfigTransactionException(ce, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
+					} catch (CloneNotSupportedException e) {
+						throw new ConfigTransactionException(e,ConfigMessages.CONFIG_0115, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0115,config.getConfigurationID()));
+					} catch (ConfigObjectsNotResolvableException e) {
+						throw new ConfigTransactionException(e, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
+					} 
+				}
+				try {
+					pc.commit();
+				} catch (ConfigurationException e) {
+					throw new ConfigTransactionException(e, e.getMessage());
+				}
+				success = true;
+			} finally {
+				if (!success && pc != null) {
+					try {
+						pc.rollback();
+					} catch (ConfigurationException e) {
+						throw new ConfigTransactionException(e, e.getMessage());
+					}
 				}
 			}
 		}
@@ -459,8 +419,7 @@ public class XMLConfigurationMgr {
      * <li> When the ServerMgr starts it calls performSystemInitialization
      * <li> Bouncing server
      */
-    public synchronized void performSystemInitialization(ConfigTransaction transaction) throws ConfigurationException, StartupStateException, ConfigurationLockException {
-		validateLock(transaction);
+    void performSystemInitialization(ConfigTransaction transaction) throws ConfigurationException, StartupStateException, ConfigurationLockException {
 
 		if (!isServerStarting()) {
 	 		throw new StartupStateException(StartupStateController.STATE_STARTING, getServerStartupState());
@@ -482,7 +441,7 @@ public class XMLConfigurationMgr {
      * @throws ConfigurationConnectionException if there is an error establishing the connection.
      */
 
-    PersistentConnection getConnection(  ) throws ConfigurationConnectionException{
+    synchronized PersistentConnection getConnection(  ) throws ConfigurationConnectionException{
         if (connection==null) {
             try {
                 connection = connFactory.createPersistentConnection();
@@ -506,26 +465,9 @@ public class XMLConfigurationMgr {
 
 
 
-    protected void clearCache() {
-    	synchronized(lock) {
-        	configs.clear();
-            transConfigs.clear();  
-
-    	}
-    }
-
-
-     private void validateLock(ConfigTransaction transaction) throws ConfigurationLockException {
-
-    	if (transaction == null) {
-     		throw new ConfigurationLockException(ConfigMessages.CONFIG_0123, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0123));
-     	}
-
-
-     	if (transaction.getTransactionLock() == null) {
-     		throw new ConfigurationLockException(ConfigMessages.CONFIG_0124, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0124));
-     	}
-
+    protected synchronized void clearCache() {
+    	configs.clear();
+        transConfigs.clear();  
     }
 
     protected  ConfigurationChangeListener createChangeListener() {

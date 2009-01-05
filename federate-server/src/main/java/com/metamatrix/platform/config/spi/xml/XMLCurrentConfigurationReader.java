@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.common.config.StartupStateController;
 import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
@@ -49,11 +48,6 @@ import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
-import com.metamatrix.platform.config.transaction.ConfigTransaction;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLock;
-import com.metamatrix.platform.config.transaction.ConfigTransactionLockException;
-import com.metamatrix.platform.config.transaction.ConfigUserTransaction;
 
 public class XMLCurrentConfigurationReader implements CurrentConfigurationReader, CurrentConfigurationInitializer{
     /**
@@ -96,10 +90,6 @@ public class XMLCurrentConfigurationReader implements CurrentConfigurationReader
 
 
         try {
-            if(configMgr == null){
-                Assertion.isNotNull(configMgr.getConfigTransactionFactory(), ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0134));
-            }
-
          	XMLConfigurationConnectorFactory factory = new XMLConfigurationConnectorFactory();
          	ManagedConnection mc = factory.createConnection(env, PRINCIPAL);
             
@@ -354,87 +344,12 @@ if the process ends abrubtly and the state doesn't get changed, here's how it ca
 
     */
 
-    boolean force = false;
+    boolean force = !configMgr.isServerStopped();
+    
     ConfigUserTransaction inittrans = null;
-    ConfigTransactionLock lock = null;
-
-    try{
-
-		    lock = configMgr.getCurrentLock();
-
-		    boolean checkLock = false;
-
-
-
-        if (lock == null) {
-            try {
-                // if no current lock, then try to get a write transaction
-                inittrans = getWriteTransaction();
-
-            } catch (ConfigTransactionLockException ce) {
-                throw ce;
-            } catch (ConfigTransactionException cte) {
-
-                // if someone grabbed the lock before this request could obtain one
-                // then if its a valid exception for further checking, then
-                // get the lock info and continue on
-
-                if (cte.getTransactionState() == ConfigTransactionException.TRANS_PROCESSING_ERROR ||
-                    cte.getTransactionState() == ConfigTransactionException.TRANS_ALREADY_LOCKED) {
-                    throw cte;
-                }
-
-                lock = configMgr.getCurrentLock();
-                checkLock = true;
-            }
-
-        } else {
-		    	checkLock = true;
-		    }
-
-		    if (checkLock) {
-					inittrans = performLockCheck(configMgr.getServerStartupState(), lock);
-
-					// if not transaction is returned means theres no processing to be done
-					if (inittrans == null) {
-						return;
-					}
-					force = true;
-
-		    }
-
-    } catch (Throwable cte) {
-    		cte.printStackTrace();
-         	if (inittrans != null) {
-         		rollbackTransaction(inittrans);
-
-         	}
-
-         	try {
-	         	if (lock != null) {
-				 	configMgr.getConfigTransactionFactory().getTransactionLockFactory().releaseConfigTransactionLock(lock);
-        	 	}
-         	} catch (ConfigTransactionException e) {
-				throw new ConfigurationException(e, ConfigMessages.CONFIG_0141, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0141));
-
-         	}
-
-         	if (cte instanceof ConfigurationException) {
-         		throw (ConfigurationException) cte;
-         	}
-
-			throw new ConfigurationException(cte, ConfigMessages.CONFIG_0142, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0142));
-
-    }
-
-    // if the current state is not set to stopped, then force it
-    if (!force) {
-    	if (!configMgr.isServerStopped()) {
-    		force = true;
-    	}
-    }
-
         try {
+            inittrans = getWriteTransaction();
+        	
 			ConfigTransaction cfgt = inittrans.getTransaction();
 
 	  		getConfigurationWriter().beginSystemInitialization(force, cfgt);
@@ -454,130 +369,7 @@ if the process ends abrubtly and the state doesn't get changed, here's how it ca
 
          }
 
-
 	}
-
-	protected ConfigUserTransaction performLockCheck(int state, ConfigTransactionLock lock) throws StartupStateException, ConfigTransactionException, ConfigurationException {
-/*
-performLockCheck ROUTINE
-
-- Get Current Lock Information
-- Wait for the TIMEOUT of the lock (the expiration time can be obtained from the current lock)
-- If the lock is released within the TIMEOUT then:
-	state at the begining of process (above) was:
-	- STOPPED
-		-  if new state = STARTED then return - all started ok
-		-  if no state change then perform system initialization (SI)
-		-  if new state = STARTING then perform system initialization (SI)
-
-	- STARTING
-		- if new state = STOPPED then perform SI
-		- if no state change then perform SI
-		- if new state = STARTED then return - all started ok
-
-	- STARTED
-		- if new state = STOPPED, STARTING perform SI
-		- if no state change then return - all started ok
-
-
-- if the lock is not released and it expires:
-	- force removal of the lock
-	- obtain lock
-	- perform system initialization
-
-*/		ConfigUserTransaction trans = null;
-
-
-		// if lock is null - must have been released, otherwise theres an error
-		if (lock == null) {
-				trans = getWriteTransaction();
-				if (trans == null) {
-					throw new ConfigurationException(ConfigMessages.CONFIG_0144, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0144));
-				}
-
-
-				return trans;
-		}
-
-		long currentTime = System.currentTimeMillis();
-		long expireTime = lock.getTimeOfExpiration().getTime();
-		long dif = expireTime - currentTime;
-
-			// this is to keep a negative from accidentally being used, which
-			// an exception will be thrown by the sleep method
-		if (dif < 0) {
-			dif = 1000;
-		}
-		try {
-			Thread.sleep(dif + 1000); // sleep for difference plus 1 second
-		} catch(InterruptedException ie) {
-
-		}
-
-		// determine if the lock has been released
-		lock = configMgr.getCurrentLock();
-		long nextState = configMgr.getServerStartupState();
-
-//		while (currentTime <= expireTime ) {
-			// lock has expired
-//			 configMgr.getConfigTransactionFactory().getTransactionLockFactory().releaseConfigTransactionLock(lock);
-
-//		}
-
-		// everything started ok, no need to reinitialize
-		if (lock == null) {
-    		if (nextState == StartupStateController.STATE_STARTED) {
-    				return null;
-    		}
-
-    	} else {
-    		// force the release of the expired lock
-			 configMgr.getConfigTransactionFactory().getTransactionLockFactory().releaseConfigTransactionLock(lock);
-
-		}
-
-
-
-		// lock is not null
-    	switch(state) {
-
-    		case StartupStateController.STATE_STOPPED:
-    			if (nextState == StartupStateController.STATE_STARTED) {
-    				return null;
-    			}
-
-
-    			break;
-    		case StartupStateController.STATE_STARTING:
-    			if (nextState == StartupStateController.STATE_STARTED) {
-    				return null;
-    			}
-
-
-
-    			break;
-    		case StartupStateController.STATE_STARTED:
-    			if (nextState == StartupStateController.STATE_STARTED) {
-    				return null;
-
-    			}
-    			break;
-
-    	}
-
-
-		trans = getWriteTransaction();
-		if (trans == null) {
-			throw new ConfigurationException(ConfigMessages.CONFIG_0144, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0144));
-		}
-
-		return trans;
-
-	}
-
-
-
-
 
     /**
      * @see com.metamatrix.common.config.reader.CurrentConfigurationInitializer#indicateSystemShutdown
@@ -661,7 +453,7 @@ performLockCheck ROUTINE
 		return getConfigurationReader().getResource(resourceName);
     }
 
-    protected ConfigUserTransaction getWriteTransaction() throws ConfigTransactionLockException, ConfigTransactionException, ConfigurationException {
+    protected ConfigUserTransaction getWriteTransaction() throws ConfigTransactionException, ConfigurationException {
 
 		 return getConfigurationWriter().getTransaction(PRINCIPAL);
     }

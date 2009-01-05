@@ -32,7 +32,6 @@ import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.SessionTerminationHandler;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.util.VDBDeleteUtility;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
@@ -73,7 +72,7 @@ public class DataServerSessionTerminationHandler implements SessionTerminationHa
         // using them, or if this is the last session.
         try {
       		// Delete VDBs
-            VDBDeleteUtility vdbDeleter = new RuntimeVDBDeleteUtility();
+        	RuntimeVDBDeleteUtility vdbDeleter = new RuntimeVDBDeleteUtility();
             vdbDeleter.deleteVDBsMarkedForDelete(token.getSessionID());
         } catch (Exception e) {
             Object[] params = new Object[]{token.getSessionID()};

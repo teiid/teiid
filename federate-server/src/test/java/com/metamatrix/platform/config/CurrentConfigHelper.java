@@ -35,7 +35,6 @@ import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
-import com.metamatrix.platform.config.transaction.ConfigTransactionFactory;
 
 public class CurrentConfigHelper {
 
@@ -125,8 +124,6 @@ public class CurrentConfigHelper {
             if (fileName != null) {
             	props.setProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY,  fileName );
             	props.setProperty(PersistentConnectionFactory.PERSISTENT_FACTORY_NAME, PersistentConnectionFactory.FILE_FACTORY_NAME);
-            	props.setProperty(ConfigTransactionFactory.SINGLE_VM_TRANSACTION_LOCK_OPTION, "true"); //$NON-NLS-1$
-
             }
             
             if (path != null) {

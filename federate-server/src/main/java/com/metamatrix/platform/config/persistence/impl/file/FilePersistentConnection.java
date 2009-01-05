@@ -24,12 +24,21 @@
 
 package com.metamatrix.platform.config.persistence.impl.file;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Properties;
 
 import com.metamatrix.common.config.StartupStateController;
 import com.metamatrix.common.config.StartupStateException;
-import com.metamatrix.common.config.api.*;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.core.util.Assertion;
@@ -41,7 +50,7 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 
 
 public class FilePersistentConnection implements PersistentConnection {
-
+	
     /**
      * Defines the configuration file override to be used as NextStartup
      */
@@ -116,19 +125,6 @@ public class FilePersistentConnection implements PersistentConnection {
         return closed;
     }
     
-
-    public Collection read(Collection configIDs) throws ConfigurationException {
-
-    	Collection models = new ArrayList(5);
-		for (Iterator it=configIDs.iterator(); it.hasNext(); ) {
-			ConfigurationID id = (ConfigurationID) it.next();
-			models.add( read(id) );
-
-		}
-
-		return models;
-
-    }
 
     public synchronized ConfigurationModelContainer read(ConfigurationID configID) throws ConfigurationException {
         if(configID == null){
@@ -255,15 +251,6 @@ public class FilePersistentConnection implements PersistentConnection {
         return inputStream;
     }
 
-
-    public synchronized void write(Collection models, String principal) throws ConfigurationException {
-		for (Iterator it=models.iterator(); it.hasNext(); ) {
-			ConfigurationModelContainer model = (ConfigurationModelContainer) it.next();
-			write(model, principal);
-		}
-
-    }
-
     public synchronized void write(ConfigurationModelContainer model, String principal) throws ConfigurationException {
        if(model == null){
             Assertion.isNotNull(model, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0022));
@@ -385,5 +372,16 @@ public class FilePersistentConnection implements PersistentConnection {
        	return configFile.getPath();
     }
 
+	@Override
+	public void beginTransaction() throws ConfigurationException {
+	}
+
+	@Override
+	public void commit() throws ConfigurationException {
+	}
+
+	@Override
+	public void rollback() throws ConfigurationException {
+	}
 
 }
