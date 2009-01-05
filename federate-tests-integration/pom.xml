@@ -68,6 +68,12 @@
     
     <dependency>
       <groupId>org.federate</groupId>
+      <artifactId>federate-console</artifactId>
+      <type>test-jar</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.federate</groupId>
       <artifactId>federate-engine</artifactId>
       <type>test-jar</type>
     </dependency>
