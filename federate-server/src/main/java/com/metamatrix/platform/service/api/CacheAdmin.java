@@ -33,7 +33,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 /**
  * Interface for an object that allows the administration of caches.
  */
-public interface CacheAdmin extends Remote {
+public interface CacheAdmin {
 
     public static final String CODE_TABLE_CACHE = "CodeTableCache"; //$NON-NLS-1$
     public static final String PREPARED_PLAN_CACHE = "PreparedPlanCache"; //$NON-NLS-1$
