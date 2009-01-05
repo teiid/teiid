@@ -69,6 +69,7 @@
     <dependency>
       <groupId>org.federate</groupId>
       <artifactId>federate-console</artifactId>
+      <version>${project.version}</version>
       <type>test-jar</type>
     </dependency>
     
