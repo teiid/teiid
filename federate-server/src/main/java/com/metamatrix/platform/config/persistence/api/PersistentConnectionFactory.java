@@ -24,10 +24,7 @@
 
 package com.metamatrix.platform.config.persistence.api;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.Properties;
 
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -37,14 +34,16 @@ import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
+import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnectionFactory;
+import com.metamatrix.platform.config.persistence.impl.jdbc.JDBCPersistentConnectionFactory;
 
 public abstract class PersistentConnectionFactory {
 
 	public static final String PERSISTENT_FACTORY_NAME = "metamatrix.config.persistent.factory"; //$NON-NLS-1$
 
 
-	public static final String FILE_FACTORY_NAME = "com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnectionFactory"; //$NON-NLS-1$
-	public static final String JDBC_FACTORY_NAME = "com.metamatrix.platform.config.persistence.impl.jdbc.JDBCPersistentConnectionFactory"; //$NON-NLS-1$
+	public static final String FILE_FACTORY_NAME = FilePersistentConnectionFactory.class.getName();
+	public static final String JDBC_FACTORY_NAME = JDBCPersistentConnectionFactory.class.getName();
 
 	private Properties properties;
 
@@ -65,44 +64,31 @@ public abstract class PersistentConnectionFactory {
      */
     public static final PersistentConnectionFactory createPersistentConnectionFactory(Properties props) throws ConfigurationException {
 
-        Collection args = new ArrayList(1);
-
         Properties properties = PropertiesUtils.clone(props, false);
-        args.add(properties);
-        PersistentConnectionFactory factory = null;
-        String factoryName = properties.getProperty(PERSISTENT_FACTORY_NAME)    ;
+        String factoryName = properties.getProperty(PERSISTENT_FACTORY_NAME);
 
 //      System.out.println("Repository Persistence Factory: " + factoryName);
 
         if (factoryName == null || factoryName.trim().length() == 0) {
             // if no factory name, then check if this a file connection
             if (isFileFactory(properties)) {
-
-                factory = (PersistentConnectionFactory) create(FILE_FACTORY_NAME, args);
-
-                return factory;
+                return new FilePersistentConnectionFactory(properties);
             }
 
             if (isJDBCFactory(properties)) {
-                factory = (PersistentConnectionFactory) create(JDBC_FACTORY_NAME, args);
-                return factory;
+            	return new JDBCPersistentConnectionFactory(properties);
             }
 
             throw new ConfigurationException(ConfigMessages.CONFIG_0009, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0009, PERSISTENT_FACTORY_NAME));
 
         }
         try {
-            factory = (PersistentConnectionFactory) ReflectionHelper.create(factoryName, args, Thread.currentThread().getContextClassLoader()); 
+            return (PersistentConnectionFactory) ReflectionHelper.create(factoryName, Arrays.asList(properties), Thread.currentThread().getContextClassLoader()); 
             //create(factoryName, args);
         } catch (MetaMatrixCoreException err) {
             throw new ConfigurationException(err, ConfigMessages.CONFIG_0013, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0013, factoryName));
             
         }
-
-        return factory;
-
-    
-    
     }
 
 	/**
@@ -118,11 +104,7 @@ public abstract class PersistentConnectionFactory {
 	private static boolean isFileFactory(Properties props) {
 		String configFileName = props.getProperty("metamatrix.config.ns.filename");
 
-		if (configFileName != null && configFileName.length() > 0) {
-			return true;
-		}
-		return false;
-
+		return configFileName != null && configFileName.length() > 0;
 	}
 
 	private static boolean isJDBCFactory(Properties props) {
@@ -135,110 +117,7 @@ public abstract class PersistentConnectionFactory {
 		// this will allow the use of either the persistent connection properties
 		// or the pooling connection properties
     	driver = props.getProperty(JDBCConnectionResource.DRIVER);
-		if (driver != null && driver.length() > 0) {
-			return true;
-		}
-		return false;
-
+    	return driver != null && driver.length() > 0;
 	}
-
-        /**
-         * Helper method to create an instance of the class using the appropriate
-         * constructor based on the ctorObjs passed.
-         * @param className is the class to instantiate
-         * @param ctorObjs are the objects to pass to the constructor; optional, nullable
-         * @return Object is the instance of the class
-         * @throws ConfigurationException if an error occurrs instantiating the class
-         */
-
-    	private static final Object create(String className, Collection ctorObjs) throws ConfigurationException {
-        try {
-            int size = (ctorObjs == null ? 0 : ctorObjs.size());
-            Class[] names = new Class[size];
-            Object[] objArray = new Object[size];
-            int i = 0;
-
-            if (size > 0) {
-                for (Iterator it=ctorObjs.iterator(); it.hasNext(); ) {
-                    Object obj = it.next();
-//                    System.out.println("Argument to create class name: " + obj.getClass().getName());
-                    names[i] = Class.forName(obj.getClass().getName());
-                    objArray[i] = obj;
-                    i++;
-                }
-            }
-
-            Class cls = Class.forName(className.trim());
-
-            Constructor ctor = cls.getDeclaredConstructor(names);
-
-
-            return ctor.newInstance(objArray);
-
-        } catch(NullPointerException e) {
-            throw new ConfigurationException(e, ConfigMessages.CONFIG_0010, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0010));
-
-        } catch (ClassNotFoundException exp ) {
-               throw new ConfigurationException(exp, ConfigMessages.CONFIG_0011, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0011, className ));
-
-        } catch(LinkageError e) {
-            throw new ConfigurationException(e, ConfigMessages.CONFIG_0012, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0012, className));
-        } catch(InstantiationException e) {
-            throw new ConfigurationException(e, ConfigMessages.CONFIG_0013, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0013, className));
-        } catch(IllegalAccessException e) {
-            throw new ConfigurationException(e, ConfigMessages.CONFIG_0014, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0014, className));
-        }  catch (Exception exp) {
-        	if (exp instanceof ConfigurationException) {
-        		throw (ConfigurationException) exp;
-        	}
-               throw new ConfigurationException(exp, ConfigMessages.CONFIG_0015, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0015, className));
-        }
-
-
-    }
-
-
-
-/*
-
-		String configFileName = properties.getProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY);
-
-		PersistentConnection conn;
-		if (configFileName == null || configFileName.trim().length() == 0) {
-//conn = createFilePersistentConnection(properties);
-			conn = createJDBCPersistentConnection(properties);
-		} else {
-			conn = createFilePersistentConnection(properties);
-		}
-
-		conn.init();
-
-		return conn;
-	}
-
-	private PersistentConnection createFilePersistentConnection(Properties properties)
-		throws ConfigurationException {
-
-		ConfigurationModelAdapterImpl adapter =
-			new ConfigurationModelAdapterImpl();
-
-		FilePersistentConnection fps =
-			new FilePersistentConnection(properties, adapter);
-		return fps;
-
-	}
-
-	private PersistentConnection createJDBCPersistentConnection(Properties properties)
-		throws ConfigurationException {
-
-		ConfigurationModelAdapterImpl adapter =
-			new ConfigurationModelAdapterImpl();
-
-		JDBCPersistentConnection fps =
-			new JDBCPersistentConnection(properties, adapter);
-		return fps;
-
-	}
-*/
 
 }

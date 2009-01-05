@@ -24,15 +24,13 @@
 
 package com.metamatrix.platform.config.persistence.impl.jdbc;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Properties;
 
-import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.jdbc.JDBCUtil;
-import com.metamatrix.common.pooling.api.ResourcePool;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.PlatformPlugin;
@@ -78,9 +76,7 @@ public class JDBCPersistentConnectionFactory
      */
     public static final String PASSWORD = "metamatrix.config.jdbc.persistent.readerPassword"; //$NON-NLS-1$
 
-    private static final String USER="CONFIGURATION"; //$NON-NLS-1$
 	private Properties connProps;
-    private boolean usePooling;
 
 	/**
 	 * Constructor for JDBCPersistentConnectionFactory.
@@ -88,23 +84,7 @@ public class JDBCPersistentConnectionFactory
 	 */
 	public JDBCPersistentConnectionFactory(Properties factoryProperties) {
 		super(factoryProperties);
-//		System.out.println("JDBC Persistence is being used for the Repository");
-
-
 	}
-
-    /**
-     * Constructor for JDBCPersistentConnectionFactory.
-     * @param factoryProperties
-     */
-    public JDBCPersistentConnectionFactory(Properties factoryProperties, Boolean useResourcePooling) {
-        super(factoryProperties);
-        this.usePooling = useResourcePooling.booleanValue();
-        
-//      System.out.println("JDBC Persistence is being used for the Repository");
-
-
-    }
 
 	/**
 	 * Creates the the of {@link PersistentConnection} required to communicate
@@ -115,9 +95,12 @@ public class JDBCPersistentConnectionFactory
 	public PersistentConnection createPersistentConnection()
 		throws ConfigurationException {
 
-		connProps = validateProperties(getProperties());
+		if (connProps == null) {
+			connProps = validateProperties(getProperties());
+		}
 
-		Connection conn = createConnection(connProps);
+		DriverManager.setLoginTimeout(480);
+		Connection conn = getConnection(connProps);
 
 		ConfigurationModelAdapterImpl adapter =
 			new ConfigurationModelAdapterImpl();
@@ -129,31 +112,6 @@ public class JDBCPersistentConnectionFactory
 		return fps;
 
 	}
-
-	/**
-	 * Called allow the persistent connection to initialize itself prior to
-	 * its first use.
-	 */
-	public Connection createConnection(Properties props) throws ConfigurationException {
-        DriverManager.setLoginTimeout(480);
-        Connection connection = null;
-        if (usePooling) {
-            try {
-                connection = JDBCConnectionPoolHelper.getConnection(ResourcePool.JDBC_SHARED_CONNECTION_POOL, USER);
-            } catch (ResourcePoolException e) {
-                throw new ConfigurationException(e);
-
-            }
-
-        
-        } else {
-            connection = getConnection(props);
-
-        }
-        return connection;
-
-	}
-
 
 	protected Properties validateProperties(Properties props) throws ConfigurationException {
        Properties envClone = PropertiesUtils.clone(props, false);
