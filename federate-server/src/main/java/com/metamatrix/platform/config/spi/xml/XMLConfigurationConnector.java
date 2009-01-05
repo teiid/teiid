@@ -59,8 +59,6 @@ import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
 import com.metamatrix.platform.config.spi.ConfigurationTransaction;
 import com.metamatrix.platform.config.spi.SystemConfigurationNames;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
-import com.metamatrix.platform.config.transaction.ConfigUserTransaction;
 
 
 

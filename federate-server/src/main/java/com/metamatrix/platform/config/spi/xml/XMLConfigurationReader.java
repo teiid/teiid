@@ -48,9 +48,6 @@ import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
-import com.metamatrix.platform.config.transaction.ConfigTransactionException;
-import com.metamatrix.platform.config.transaction.ConfigUserTransaction;
-import com.metamatrix.platform.config.transaction.ConfigUserTransactionFactory;
 
 public class XMLConfigurationReader  {
 
@@ -68,7 +65,7 @@ public class XMLConfigurationReader  {
 
 //		editor = new BasicConfigurationObjectEditor(false);
 
-	    factory = new ConfigUserTransactionFactory(configMgr.getConfigTransactionFactory());
+	    factory = new ConfigUserTransactionFactory();
 
 
 	}
