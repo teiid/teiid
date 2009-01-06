@@ -91,9 +91,9 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
      */
     private static String determineSQLState(Throwable exception,
                                             String sqlState) {
-        if (exception instanceof InvalidSessionException) { //$NON-NLS-1$
+        if (exception instanceof InvalidSessionException) { 
 			sqlState = SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION;
-		} else if (exception instanceof LogonException) { //$NON-NLS-1$
+		} else if (exception instanceof LogonException) { 
 			sqlState = SQLStates.INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS;
 		} else if (exception instanceof ProcedureErrorInstructionException) {
 			sqlState = SQLStates.VIRTUAL_PROCEDURE_ERROR;
