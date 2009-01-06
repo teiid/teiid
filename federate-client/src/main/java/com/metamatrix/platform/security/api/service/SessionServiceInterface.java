@@ -32,7 +32,6 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
