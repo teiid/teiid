@@ -24,8 +24,6 @@
 
 package com.metamatrix.common.types;
 
-import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -44,20 +42,6 @@ public abstract class AbstractTransform implements Transform {
 	 * the transformation fails
 	 */
 	public abstract Object transform(Object value) throws TransformationException;
-
-	/**
-	 * Helpful method that checks the type of a value against the published
-	 * source type.
-	 * @param value Value to check
-	 * @throws TransformationException if value is not of source type
-     */
-    protected void checkType(Object value) throws TransformationException {
-    	if(! getSourceType().isInstance(value)) {
-			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0001, CommonPlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0001,
-				value.getClass().getName(),getSourceType().getName()));
-		}
-
-    }
 
 	/**
 	 * Type of the incoming value.
