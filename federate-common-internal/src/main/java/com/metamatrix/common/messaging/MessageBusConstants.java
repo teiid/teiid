@@ -26,16 +26,9 @@ package com.metamatrix.common.messaging;
 
 public interface MessageBusConstants {
 
-    public static final String JMS_TOPIC_FACTORY_LOOKUP       = "metamatrix.jms.connection.factory.lookup"; //$NON-NLS-1$
-    public static final String JMS_CONNECTION_URL             = "metamatrix.jms.connection.url"; //$NON-NLS-1$
-    public static final String JMS_CONNECTION_CONTEXT_FACTORY = "metamatrix.jms.connection.contextFactory"; //$NON-NLS-1$
-    public static final String JMS_CONNECTION_PASSWORD        = "metamatrix.jms.connection.password"; //$NON-NLS-1$
-    public static final String JMS_CONNECTION_USERNAME        = "metamatrix.jms.connection.username"; //$NON-NLS-1$
-        
     public static final String MESSAGE_BUS_TYPE = "metamatrix.message.bus.type"; //$NON-NLS-1$
     
     public static final String TYPE_NOOP = "noop.message.bus"; //$NON-NLS-1$
-    public static final String TYPE_RMI = "rmi.message.bus"; //$NON-NLS-1$
     public static final String TYPE_JGROUPS = "jgroups.message.bus"; //$NON-NLS-1$
 
 }
