@@ -39,9 +39,6 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
@@ -49,7 +46,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.FileUtils;
 
