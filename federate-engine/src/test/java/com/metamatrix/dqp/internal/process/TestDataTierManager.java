@@ -372,11 +372,9 @@ public class TestDataTierManager extends TestCase {
             }
             return null;
         }
-        public void bind() throws ApplicationLifecycleException {}
         public void initialize(Properties props) throws ApplicationInitializationException {}
         public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {}
         public void stop() throws ApplicationLifecycleException {}
-        public void unbind() throws ApplicationLifecycleException {}
         public void startConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public List getConnectorBindings() throws ComponentNotFoundException {return null;}

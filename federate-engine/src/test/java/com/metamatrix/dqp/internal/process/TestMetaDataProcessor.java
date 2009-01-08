@@ -31,7 +31,7 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.basic.BasicEnvironment;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.client.MetadataResult;
@@ -78,7 +78,7 @@ public class TestMetaDataProcessor extends TestCase {
         requestMsg.setCommand(sql);      
         TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null, null, AnalysisRecord.createNonRecordingRecord(), null, null); //$NON-NLS-1$
         
-        BasicEnvironment env = new BasicEnvironment();
+        ApplicationEnvironment env = new ApplicationEnvironment();
         FakeVDBService vdbService = new FakeVDBService();
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
         MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, requestMgr, prepPlanCache, env, null);
@@ -151,7 +151,7 @@ public class TestMetaDataProcessor extends TestCase {
         PreparedPlanCache prepPlanCache = new PreparedPlanCache();
         
         // Initialize components
-        BasicEnvironment env = new BasicEnvironment();
+        ApplicationEnvironment env = new ApplicationEnvironment();
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
         MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, null, prepPlanCache, env, null);
                      

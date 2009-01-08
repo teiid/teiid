@@ -325,12 +325,16 @@ public interface ConfigurationService extends ApplicationService {
      */
     public void register(VDBLifeCycleListener listener);
     
+    public void unregister(VDBLifeCycleListener listener);
+    
     /**
      * Register a listener for the connector binding life cycle events, and get notified for
      * when connector binding is loded and unloaded 
      * @param listener - lister object
      */
     public void register(ConnectorBindingLifeCycleListener listener);
+    
+    public void unregister(ConnectorBindingLifeCycleListener listener);
         
     /**
      * Get the URL to the "metamatrixpki.keystore" file 
@@ -427,4 +431,6 @@ public interface ConfigurationService extends ApplicationService {
      * @throws MetaMatrixComponentException
      */
     void loadUDF() throws MetaMatrixComponentException;    
+    
+    boolean isFullyConfiguredVDB(VDBArchive vdb) throws MetaMatrixComponentException;
 }

@@ -107,14 +107,6 @@ public class FakeMetadataService implements ApplicationService, MetadataService,
 
     }
 
-    public void bind() throws ApplicationLifecycleException {
-
-    }
-
-    public void unbind() throws ApplicationLifecycleException {
-
-    }
-
     public void stop() throws ApplicationLifecycleException {
 
     }

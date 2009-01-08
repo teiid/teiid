@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
@@ -55,73 +56,65 @@ public class TestCustomizableTrackingService extends TestCase {
     // tests
     // ========================================================================================================
     
-    public void testLogAll() {
-        FakeCommandLogger logger = new FakeCommandLogger();
-        TrackingService trackingService = getTrackingService(logger, true, true, true);
+    public void testLogAll() throws Exception {
+    	CustomizableTrackingService trackingService = getTrackingService(true, true, true);
         List expectedResults = new ArrayList();
         expectedResults.add(logExampleSourceCommandStart(trackingService));
         expectedResults.add(logExampleUserCommandStart(trackingService));
         expectedResults.add(logExampleUserCommandEnd(trackingService));
         expectedResults.add(logExampleSourceCommandCancelled(trackingService));
-        // Wait for worker thread to complete
-        sleep(500);
-        assertEquals(expectedResults, logger.logEntries);
+        trackingService.stop();
+        assertEquals(expectedResults, ((FakeCommandLogger)trackingService.getCommandLogger()).logEntries);
     }
 
-    public void testLogJustTransactions() {
-        FakeCommandLogger logger = new FakeCommandLogger();
-        TrackingService trackingService = getTrackingService(logger, true, false, false);
+    public void testLogJustTransactions() throws Exception {
+    	CustomizableTrackingService trackingService = getTrackingService(true, false, false);
         List expectedResults = new ArrayList();
         logExampleSourceCommandStart(trackingService);
         logExampleSourceCommandCancelled(trackingService);
         logExampleUserCommandStart(trackingService);
         logExampleUserCommandEnd(trackingService);
-        // Wait for worker thread to complete
-        sleep(500);
-        assertEquals(expectedResults, logger.logEntries);
+        trackingService.stop();
+        assertEquals(expectedResults, ((FakeCommandLogger)trackingService.getCommandLogger()).logEntries);
     }    
 
-    public void testLogJustCommands() {
-        FakeCommandLogger logger = new FakeCommandLogger();
-        TrackingService trackingService = getTrackingService(logger, false, true, true);
+    public void testLogJustCommands() throws Exception {
+    	CustomizableTrackingService trackingService = getTrackingService(false, true, true);
         List expectedResults = new ArrayList();
         expectedResults.add(logExampleSourceCommandStart(trackingService));
         expectedResults.add(logExampleUserCommandStart(trackingService));
         expectedResults.add(logExampleUserCommandEnd(trackingService));
         expectedResults.add(logExampleSourceCommandCancelled(trackingService));
-        // Wait for worker thread to complete
-        sleep(500);
-        assertEquals(expectedResults, logger.logEntries);
+        trackingService.stop();
+        assertEquals(expectedResults, ((FakeCommandLogger)trackingService.getCommandLogger()).logEntries);
     }     
 
-    public void testLogJustUserCommands() {
-        FakeCommandLogger logger = new FakeCommandLogger();
-        TrackingService trackingService = getTrackingService(logger, false, true, false);
+    public void testLogJustUserCommands() throws Exception {
+    	CustomizableTrackingService trackingService = getTrackingService(false, true, false);
         List expectedResults = new ArrayList();
         logExampleSourceCommandStart(trackingService);
         expectedResults.add(logExampleUserCommandStart(trackingService));
         expectedResults.add(logExampleUserCommandEnd(trackingService));
         logExampleSourceCommandCancelled(trackingService);
-        // Wait for worker thread to complete
-        sleep(500);
-        assertEquals(expectedResults, logger.logEntries);
+        trackingService.stop();
+        assertEquals(expectedResults, ((FakeCommandLogger)trackingService.getCommandLogger()).logEntries);
     }      
     
     // ========================================================================================================
     // test utilities
     // ========================================================================================================
 
-    private TrackingService getTrackingService(CommandLoggerSPI commandLogger, boolean willRecordTransactions, 
-                                               boolean willRecordUserCommands, boolean willRecordSourceCommands) {
+    private CustomizableTrackingService getTrackingService(boolean willRecordTransactions, 
+                                               boolean willRecordUserCommands, boolean willRecordSourceCommands) throws ApplicationInitializationException, ApplicationLifecycleException {
         
         CustomizableTrackingService service = new CustomizableTrackingService();
-        service.initialize(commandLogger, willRecordTransactions, willRecordUserCommands, willRecordSourceCommands);
-        try {
-            service.start(null);
-        } catch (ApplicationLifecycleException e) {
-            // shouldn't happen
-            throw new RuntimeException(e);
-        }
+        Properties p = new Properties();
+    	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_SRCCMD, String.valueOf(willRecordSourceCommands));
+    	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_MMCMD, String.valueOf(willRecordUserCommands));
+    	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_TXN, String.valueOf(willRecordTransactions));
+    	p.setProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME, FakeCommandLogger.class.getName());
+    	service.initialize(p);
+        service.start(null);
         return service;
     }
     
@@ -262,7 +255,7 @@ public class TestCustomizableTrackingService extends TestCase {
      * Logged entries are cached in memory in Lists for later comparison
      * with expected results. 
      */
-    private static class FakeCommandLogger implements CommandLoggerSPI {
+    public static class FakeCommandLogger implements CommandLoggerSPI {
 
         
         private List logEntries = new ArrayList();

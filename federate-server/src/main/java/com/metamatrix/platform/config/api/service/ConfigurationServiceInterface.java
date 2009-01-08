@@ -49,15 +49,15 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
-import com.metamatrix.platform.security.api.service.SecureService;
 import com.metamatrix.platform.service.api.ServiceInterface;
 
 
-public interface ConfigurationServiceInterface extends ServiceInterface, SecureService {
+public interface ConfigurationServiceInterface extends ServiceInterface {
 
     public static String NAME ="ConfigurationService"; //$NON-NLS-1$
 

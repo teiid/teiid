@@ -26,8 +26,7 @@
  */
 package com.metamatrix.connector.sysadmin;
 
-
-
+import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.connector.sysadmin.extension.ISysAdminConnectionFactory;
@@ -42,14 +41,8 @@ import com.metamatrix.dqp.service.DQPServiceNames;
  */
 public class SysAdminConnectionFactory implements ISysAdminConnectionFactory {
     
-    // this is the api class for which the MethodManager and the SourceTranslator uses to 
-    // narrow down what methods are exposed via reflections.
-     private static final String ADMIN_CLASS_NAME="com.metamatrix.admin.api.objects.AdminObject";//$NON-NLS-1$
-
-     private ConnectorEnvironment env = null;
-     private SysAdminSourceTranslator sourceTranslator = null;
-     
-     private Class clazz = null;
+     private ConnectorEnvironment env;
+     private SysAdminSourceTranslator sourceTranslator;
      
     /**
      *
@@ -62,15 +55,7 @@ public class SysAdminConnectionFactory implements ISysAdminConnectionFactory {
     public void init(final ConnectorEnvironment environment) throws ConnectorException {
         this.env = environment;
         
-        try {
-            clazz = Class.forName(ADMIN_CLASS_NAME);
-        } catch (ClassNotFoundException err) {
-            ConnectorException e = new ConnectorException(err.getMessage());
-            e.setStackTrace(err.getStackTrace());
-            throw e;
-        }   
-        
-        sourceTranslator = new SysAdminSourceTranslator(clazz);
+        sourceTranslator = new SysAdminSourceTranslator(AdminObject.class);
         sourceTranslator.initialize(env);
     }
     
@@ -80,15 +65,9 @@ public class SysAdminConnectionFactory implements ISysAdminConnectionFactory {
      * @since 4.3
      */
     public ISysAdminSource getObjectSource(final SecurityContext context) throws ConnectorException {
-        try {
-
-             ClientServiceRegistry registry = (ClientServiceRegistry)((ConnectorEnvironmentImpl)env).findResource(DQPServiceNames.REGISTRY_SERVICE);
-             ServerAdmin serverAdmin = registry.getClientService(ServerAdmin.class);
-             return new SysAdminObjectSource(serverAdmin, clazz, env, sourceTranslator);
-                     
-        } catch (Exception me) {
-            throw new ConnectorException(me, SysAdminPlugin.Util.getString("SysAdminConnectionFactory.Unable_to_connect_to_adminapi"));  //$NON-NLS-1$                     
-        }
+		 ClientServiceRegistry registry = (ClientServiceRegistry)((ConnectorEnvironmentImpl)env).findResource(DQPServiceNames.REGISTRY_SERVICE);
+		 ServerAdmin serverAdmin = registry.getClientService(ServerAdmin.class);
+		 return new SysAdminObjectSource(serverAdmin, env, sourceTranslator);
     }
 
 }

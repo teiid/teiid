@@ -31,10 +31,11 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.basic.BasicEnvironment;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.service.DQPServiceNames;
 
 
 /** 
@@ -52,10 +53,12 @@ public class TestEmbeddedDataService extends TestCase {
                 copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
             }
         }
-        EmbeddedDQPServiceRegistry registry = new EmbeddedDQPServiceRegistry();
-        configService = new EmbeddedConfigurationService(registry);        
-        dataService = new EmbeddedDataService(registry);
-        configService.start(new BasicEnvironment());
+        ApplicationEnvironment registry = new ApplicationEnvironment();
+        configService = new EmbeddedConfigurationService();
+        registry.bindService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
+        dataService = new EmbeddedDataService();
+        registry.bindService(DQPServiceNames.DATA_SERVICE, dataService);
+        configService.start(registry);
     }
 
     protected void tearDown() throws Exception {

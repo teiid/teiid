@@ -100,20 +100,6 @@ public class FakeAuthorizationService implements AuthorizationService {
     }
 
     /*
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-
-    }
-
-    /*
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {

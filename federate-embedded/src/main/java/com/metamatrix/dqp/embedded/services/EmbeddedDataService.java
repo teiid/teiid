@@ -63,15 +63,7 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.ServiceWrapper;
-import com.metamatrix.dqp.service.TrackingService;
-import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 
@@ -96,16 +88,26 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     // Connector List
     private Map loadedConnectorBindingsMap = new HashMap();
     
-    /**
-     * ctor 
-     * @param configSvc
-     * @throws MetaMatrixComponentException
-     * @since 4.3
-     */
-    public EmbeddedDataService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.DATA_SERVICE, svcRegistry);
-    }
+    private ApplicationEnvironment env;
+    
+    private ConnectorBindingLifeCycleListener listener = new ConnectorBindingLifeCycleListener() {
+
+        public void loaded(String bindingName) {
+            try {
+				startConnectorBinding(bindingName);
+			} catch (Exception e) {
+				DQPEmbeddedPlugin.logError(e, "DataService.FailedStart", new Object[] {bindingName}); //$NON-NLS-1$
+			} 
+        }
+
+        public void unloaded(String bindingName) {
+            try {
+                stopConnectorBinding(bindingName);
+            } catch (Exception e) {
+                DQPEmbeddedPlugin.logError(e, "DataService.FailedStop", new Object[] {bindingName}); //$NON-NLS-1$
+            }
+        }                
+    };
     
     /**
      * Select a connector to use for the given connector binding.
@@ -229,19 +231,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         if (binding != null) {
             ConnectorManager mgr = getConnectorManager(binding);
             if (mgr != null && !mgr.started()) {
-                // since the services get un installed during connector manager's stop, we need to install each time
-                // may be there is better way than this.
-                try {
-                    mgr.installService(DQPServiceNames.METADATA_SERVICE, ServiceWrapper.create(new Class[] {MetadataService.class, IndexSelectorSource.class}, lookupService(DQPServiceNames.METADATA_SERVICE)));
-                    mgr.installService(DQPServiceNames.VDB_SERVICE, ServiceWrapper.create(new Class[] {VDBService.class}, lookupService(DQPServiceNames.VDB_SERVICE)));
-                    mgr.installService(DQPServiceNames.TRACKING_SERVICE, ServiceWrapper.create(new Class[] {TrackingService.class}, lookupService(DQPServiceNames.TRACKING_SERVICE)));
-                    mgr.installService(DQPServiceNames.TRANSACTION_SERVICE, ServiceWrapper.create(new Class[] {TransactionService.class}, lookupService(DQPServiceNames.TRANSACTION_SERVICE)));
-                } catch (ApplicationInitializationException e) {
-                    throw new ApplicationLifecycleException(e);
-                }
-
                 // Start the manager
-                mgr.start();
+                mgr.start(env);
                 
                 // Add the references to the mgr as loaded.
                 ConnectorID connID = mgr.getConnectorID(); 
@@ -319,29 +310,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @throws com.metamatrix.common.application.exception.ApplicationInitializationException If an error occurs during initialization
      */
     public void initializeService(Properties props) throws ApplicationInitializationException {
-        
-        try {
-            getConfigurationService().register(new ConnectorBindingLifeCycleListener() {
-
-                public void loaded(String bindingName) {
-                    try {
-						startConnectorBinding(bindingName);
-					} catch (Exception e) {
-						DQPEmbeddedPlugin.logError(e, "DataService.FailedStart", new Object[] {bindingName}); //$NON-NLS-1$
-					} 
-                }
-
-                public void unloaded(String bindingName) {
-                    try {
-                        stopConnectorBinding(bindingName);
-                    } catch (Exception e) {
-                        DQPEmbeddedPlugin.logError(e, "DataService.FailedStop", new Object[] {bindingName}); //$NON-NLS-1$
-                    }
-                }                
-            });
-        } catch (MetaMatrixComponentException e) {
-            throw new ApplicationInitializationException(e);
-        }
     }
 
     /**
@@ -352,6 +320,9 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      */
     public void startService(ApplicationEnvironment environment) 
         throws ApplicationLifecycleException {
+    	this.env = environment;
+        getConfigurationService().register(this.listener);
+
         try {                
             // Start System Model connector Binding
             startConnectorBinding(SYSTEM_PHYSICAL_MODEL_NAME);
@@ -395,6 +366,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @throws ApplicationLifecycleException If an error occurs while starting
      */
     public void stopService() throws ApplicationLifecycleException {
+    	getConfigurationService().unregister(this.listener);
         // Avoid concurrent modification as stop binding also modifies the 
         // map.
         String[] connectorBindings = (String[])loadedConnectorBindingsMap.keySet().toArray(new String[loadedConnectorBindingsMap.keySet().size()]);        
@@ -575,20 +547,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         }
         return value;
     }    
-    
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#bindService()
-     * @since 4.3
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#unbindService()
-     * @since 4.3
-     */
-    public void unbindService() throws ApplicationLifecycleException {
-    } 
     
     /**
      * Create a Connector Binding for the System Model. 

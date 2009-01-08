@@ -152,20 +152,6 @@ public class FakeVDBService implements
     }
 
     /** 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     * @since 4.3
-     */
-    public void bind() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     * @since 4.3
-     */
-    public void unbind() throws ApplicationLifecycleException {
-    }
-
-    /** 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      * @since 4.3
      */

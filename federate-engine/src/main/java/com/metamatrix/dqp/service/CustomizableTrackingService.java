@@ -24,8 +24,11 @@
 
 package com.metamatrix.dqp.service;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -34,6 +37,8 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
@@ -74,7 +79,7 @@ public class CustomizableTrackingService implements TrackingService {
      */
     public static final String SYSTEM_LOG_THREAD_TTL            = "metamatrix.transaction.log.threadTTL"; //$NON-NLS-1$
     
-    protected static final String DEFAULT_LOG_THREAD_TTL           = "600000"; // 10 minute default //$NON-NLS-1$
+    protected static final long DEFAULT_LOG_THREAD_TTL           = 600000; // 10 minute default 
 
     private CommandLoggerSPI commandLogger;
     private boolean recordUserCommands;
@@ -180,14 +185,40 @@ public class CustomizableTrackingService implements TrackingService {
             recordSourceCommands = Boolean.valueOf(propvalue).booleanValue();
         }
         
-        try {
-            workerTTL = Long.parseLong(System.getProperty(SYSTEM_LOG_THREAD_TTL, DEFAULT_LOG_THREAD_TTL));
-        } catch (NumberFormatException e) {
-            throw new ApplicationInitializationException(e);
-        }
-        
-        String commandLoggerClassname = props.getProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME);
+        workerTTL = PropertiesUtils.getLongProperty(props, SYSTEM_LOG_THREAD_TTL, DEFAULT_LOG_THREAD_TTL);
 
+		String commandLoggerClassnameProperty = props.getProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME);
+
+		// Search for additional, implementation-specific properties stuff into
+		// this string.
+		// They should be delimited by semi-colon - TODO clean this up - sbale 5
+		// /3/05
+		//
+		// Possible examples of expected value of commandLoggerClassnameProperty
+		// String variable:
+		//
+		// com.metamatrix.dqp.spi.basic.FileCommandLogger;dqp.commandLogger.
+		// fileName=commandLogFile.txt
+		// com.myCode.MyCommandLoggerClass;myFirstCustomProperty=someValue;
+		// mySecondCustomProperty=otherValue
+
+		List tokens = StringUtil.getTokens(commandLoggerClassnameProperty, ";"); //$NON-NLS-1$
+
+		// 1st token is the classname property
+		String commandLoggerClassname = (String) tokens.remove(0);
+
+		// Additional tokens are name/value pairs, properties specific to
+		// service provider impl
+		props = new Properties(props);
+		Iterator i = tokens.iterator();
+		while (i.hasNext()) {
+			String nameValueString = (String) i.next();
+			List nameValuePair = StringUtil.getTokens(nameValueString, "="); //$NON-NLS-1$
+			String name = (String) nameValuePair.get(0);
+			String value = (String) nameValuePair.get(1);
+			props.setProperty(name, value);
+		}
+        
         ClassLoader loader = this.getClass().getClassLoader();
         try {
             CommandLoggerSPI logger = (CommandLoggerSPI)loader.loadClass(commandLoggerClassname).newInstance();
@@ -198,16 +229,6 @@ public class CustomizableTrackingService implements TrackingService {
         }
     }
     
-    // TODO This method is used strictly for testing. Probably remove
-    void initialize(CommandLoggerSPI commandLogger, boolean willRecordTransactions, 
-                    boolean willRecordUserCommands, boolean willRecordSourceCommands) {
-        
-        this.commandLogger = commandLogger;
-        this.recordUserCommands = willRecordUserCommands;
-        this.recordSourceCommands = willRecordSourceCommands;
-        this.workerTTL = Long.parseLong(DEFAULT_LOG_THREAD_TTL);
-    }
-
     /** 
      * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
      */
@@ -218,26 +239,20 @@ public class CustomizableTrackingService implements TrackingService {
     }
 
     /** 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-    }
-
-    /** 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {
         if (logQueue != null) {
             logQueue.shutdown();
+            try {
+				logQueue.awaitTermination(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+			}
             logQueue = null;
         }
-        this.commandLogger.close();
+        if (commandLogger != null) {
+        	this.commandLogger.close();
+        }
     }
     
     private void addWork(CustomizableTrackingMessage work) {
@@ -252,4 +267,8 @@ public class CustomizableTrackingService implements TrackingService {
             LogManager.logWarning(LogCommonConstants.CTX_TXN_LOG, e.getMessage());
         }
     }
+
+	public CommandLoggerSPI getCommandLogger() {
+		return commandLogger;
+	}
 }

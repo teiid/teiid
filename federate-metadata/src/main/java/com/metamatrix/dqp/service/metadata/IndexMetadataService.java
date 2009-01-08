@@ -24,10 +24,9 @@
 
 package com.metamatrix.dqp.service.metadata;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Properties;
 
+import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -40,7 +39,6 @@ import com.metamatrix.connector.metadata.PropertyFileObjectSource;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceProperties;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
@@ -67,6 +65,7 @@ public class IndexMetadataService implements MetadataService, IndexSelectorSourc
     /**
      * Construct the IndexMetadataService
      */
+    @Inject
     public IndexMetadataService(final QueryMetadataCache metadataCache) {
         this.metadataCache = metadataCache;
     }
@@ -75,9 +74,6 @@ public class IndexMetadataService implements MetadataService, IndexSelectorSourc
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
-        if(this.metadataCache == null) {
-            this.metadataCache = (QueryMetadataCache) props.get(DQPServiceProperties.MetadataService.QUERY_METADATA_CACHE);
-        }
     }
 
     /*
@@ -85,38 +81,21 @@ public class IndexMetadataService implements MetadataService, IndexSelectorSourc
      */
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
         if(!started) {
-	        if(this.vdbService == null){
-	            this.vdbService = (VDBService)environment.findService(DQPServiceNames.VDB_SERVICE);
-	            if(this.vdbService == null){
-	                throw new ApplicationLifecycleException(DQPPlugin.Util.getString("IndexMetadataService.VDB_Service_is_not_available._1"));  //$NON-NLS-1$
-	            }
-	        }
+            this.vdbService = (VDBService)environment.findService(DQPServiceNames.VDB_SERVICE);
+            if(this.vdbService == null){
+                throw new ApplicationLifecycleException(DQPPlugin.Util.getString("IndexMetadataService.VDB_Service_is_not_available._1"));  //$NON-NLS-1$
+            }
 	        // mark started
 	        started = true;
-	        // indicate to the cache that this service is using it
-	        this.metadataCache.shareIncrement();
         }
     }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {}
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {}
 
     /*
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {
-        if(started) {
-	        started = false;
-	        // indicate to the cache that this service no longer needs it
-	        this.metadataCache.shareDecrement();
-        }
+        started = false;
+        this.vdbService = null;
     }
 
 	public IObjectSource getMetadataObjectSource(String vdbName, String vdbVersion) throws MetaMatrixComponentException {
@@ -146,11 +125,4 @@ public class IndexMetadataService implements MetadataService, IndexSelectorSourc
         return qmi;
     }
     
-    public QueryMetadataInterface testLoadMetadata(final String vdbName, final String vdbVersion, final String filePath) throws MetaMatrixComponentException{
-        try {
-			return this.metadataCache.lookupMetadata(vdbName, vdbVersion, new FileInputStream(filePath));
-		} catch (FileNotFoundException e) {
-			throw new MetaMatrixComponentException(e);		
-		}        
-    }
 }

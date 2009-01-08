@@ -57,10 +57,6 @@ public class FakeTransactionService implements TransactionService {
 		return server;
 	}
 
-	public void bind() throws ApplicationLifecycleException {
-		
-	}
-
 	public void initialize(Properties props)
 			throws ApplicationInitializationException {
 	}
@@ -70,9 +66,6 @@ public class FakeTransactionService implements TransactionService {
 	}
 
 	public void stop() throws ApplicationLifecycleException {
-	}
-
-	public void unbind() throws ApplicationLifecycleException {
 	}
 
 }

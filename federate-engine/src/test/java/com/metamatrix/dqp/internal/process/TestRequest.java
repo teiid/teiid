@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -240,7 +239,7 @@ public class TestRequest extends TestCase {
     
     
     /**Fake ApplicationEnvironment that always returns the same metadata*/
-    public static final class FakeApplicationEnvironment implements ApplicationEnvironment {
+    public static final class FakeApplicationEnvironment extends ApplicationEnvironment {
         private QueryMetadataInterface metadata;
         
         private FakeVDBService fakeVDBService;
@@ -254,17 +253,6 @@ public class TestRequest extends TestCase {
             fakeVDBService.addBinding(vdbname, version, model, bindingID, bindingName);
         }
         
-        
-        public Properties getApplicationProperties() {
-            return null;
-        }
-
-        public void bindService(String type, ApplicationService service) {
-        }
-
-        public void unbindService(String type) {
-        }
-
         public ApplicationService findService(String type) {
             if (type == DQPServiceNames.METADATA_SERVICE) {
                 return new FakeMetadataService(metadata);

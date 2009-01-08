@@ -26,9 +26,10 @@
  */
 package com.metamatrix.server.dqp.service;
 
-import java.net.UnknownHostException;
 import java.util.Properties;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -46,6 +47,7 @@ import com.metamatrix.dqp.internal.transaction.TransactionServerImpl;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.transaction.XAServer;
+import com.metamatrix.server.Configuration;
 import com.metamatrix.xa.arjuna.ArjunaTransactionProvider;
 
 /**
@@ -54,21 +56,18 @@ public class PlatformTransactionService implements TransactionService{
 
     private TransactionServerImpl arjunaTs = new TransactionServerImpl();
     private TransactionServer ts;
+    private Host host;
+    
+    @Inject
+    public PlatformTransactionService(@Named(Configuration.HOST) Host host) {
+    	this.host = host;
+    }
     
     /*
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
         try {
-            Host host;
-            try {
-                host = CurrentConfiguration.getHost();
-            } catch (ConfigurationException e) {
-                throw new ApplicationInitializationException(e);
-            } catch (UnknownHostException e) {
-                throw new ApplicationInitializationException(e);
-            }
-            
             Properties env = null;
             try {
                 env = CurrentConfiguration.getResourceProperties(ResourceNames.XA_TRANSACTION_MANAGER);
@@ -101,20 +100,6 @@ public class PlatformTransactionService implements TransactionService{
      */
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
         
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-  
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-
     }
 
     /*

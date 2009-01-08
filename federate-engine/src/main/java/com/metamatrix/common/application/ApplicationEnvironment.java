@@ -24,6 +24,8 @@
 
 package com.metamatrix.common.application;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -31,32 +33,44 @@ import java.util.Properties;
  * of finding application services of a particular type or to retrieve
  * other information about the application itself.  
  */
-public interface ApplicationEnvironment {
+public class ApplicationEnvironment {
 
-    /**
-     * Get the properties used to initialize the application.
-     * @return Properties
-     */
-    public Properties getApplicationProperties();
+	private Properties props;
+    private Map<String, ApplicationService> services = new HashMap<String, ApplicationService>();
 
-    /**
-     * Bind a service for a particular service type.  If a service
-     * is already bound, the existing service is first unbound.
-     * @param type The type of service
-     * @param service The service instance
-     */
-    public void bindService(String type, ApplicationService service);
+    public void setApplicationProperties(Properties props) {
+        this.props = props;
+    }
     
-    /**
-     * Unbind the current service for a particular type.
-     * @param type The type of service
+    /* 
+     * @see com.metamatrix.common.application.ApplicationEnvironment#getApplicationProperties()
      */
-    public void unbindService(String type);
+    public Properties getApplicationProperties() {
+    	if (this.props == null) {
+    		return new Properties();
+    	}
+        return this.props;
+    }
+
+    /* 
+     * @see com.metamatrix.common.application.ApplicationEnvironment#bindService(java.lang.String, com.metamatrix.common.application.ApplicationService)
+     */
+    public void bindService(String type, ApplicationService service) {
+        this.services.put(type, service);
+    }
+
+    /* 
+     * @see com.metamatrix.common.application.ApplicationEnvironment#unbindService(java.lang.String)
+     */
+    public void unbindService(String type) {
+        this.services.remove(type);
+    }
+
+    /* 
+     * @see com.metamatrix.common.application.ApplicationEnvironment#findService(java.lang.String)
+     */
+    public ApplicationService findService(String type) {
+        return this.services.get(type);
+    }
     
-    /**
-     * Find a service of the specified type.  Return null if none exists.
-     * @param type Type of service
-     * @return Service if one exists, null otherwise
-     */
-    public ApplicationService findService(String type);
 }

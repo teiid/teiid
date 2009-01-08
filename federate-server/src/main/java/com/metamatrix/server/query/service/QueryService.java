@@ -39,24 +39,24 @@ import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
-import com.metamatrix.common.comm.ClientServiceRegistrant;
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.config.DQPConfigSource;
-import com.metamatrix.dqp.config.DQPLauncher;
 import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;
+import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
@@ -71,7 +71,7 @@ import com.metamatrix.server.util.LogConstants;
  * Buffers the QueryServiceEngine from dependencies on CurrentConfiguration.
  * These measures allow the QueryServiceEngine to be instantiated in a light-weight fashion without a full, running "server".
  */
-public class QueryService extends AbstractService implements ClientServiceRegistrant, QueryServiceInterface {
+public class QueryService extends AbstractService implements QueryServiceInterface {
     
 	private static final String UDF_CLASSPATH_PROPERTY = "metamatrix.server.UDFClasspath"; //$NON-NLS-1$
 	private static final String CLASSPATH_DELIMITER = ";"; //$NON-NLS-1$
@@ -97,8 +97,9 @@ public class QueryService extends AbstractService implements ClientServiceRegist
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
-        DQPConfigSource configSource = new PlatformConfigSource(props, ResourceFinder.getBufferManager(), new Long(getID().getID()));
-        dqp = new DQPLauncher(configSource).createDqp();
+        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getProperties(), new Long(getID().getID()), CurrentConfiguration.getHost(), VMNaming.getVMName());
+        dqp = new DQPCore();
+        dqp.start(configSource);
     }
     
     /**
@@ -263,12 +264,11 @@ public class QueryService extends AbstractService implements ClientServiceRegist
         }
     }
     
-    /** 
-     * @see com.metamatrix.common.comm.ClientServiceRegistrant#setClientServiceRegistry(com.metamatrix.common.comm.ClientServiceRegistry)
-     * @since 4.2
-     */
-    public void setClientServiceRegistry(ClientServiceRegistry registry) {
-        registry.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
+    @Override
+    public void init(ServiceID id, DeployedComponentID deployedComponentID,
+    		Properties props, ClientServiceRegistry listenerRegistry) {
+    	super.init(id, deployedComponentID, props, listenerRegistry);
+    	listenerRegistry.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
     }
 
 }

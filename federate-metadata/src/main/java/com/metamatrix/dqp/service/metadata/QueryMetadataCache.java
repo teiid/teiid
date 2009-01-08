@@ -70,9 +70,6 @@ public class QueryMetadataCache {
     // RuntimeIndexSelector for the system vdb    
     private final RuntimeIndexSelector systemVDBSelector;
 
-    // number of index metadata services that are sharing this cache
-    private int numberOfShares = 0;
-    
     // boolean for the cache being valid
     private boolean isCacheValid = true;
 
@@ -111,26 +108,6 @@ public class QueryMetadataCache {
         } catch(Exception e) {
             throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
         }        
-    }
-
-    /**
-     * Increment the number of services that are using the cache.
-     */
-    public synchronized void shareIncrement() {
-        this.numberOfShares++;
-    }
-    
-    /**
-     * Decrement the number of services that are using the cache.
-     * If there are no more service clean up the cache.
-     */
-    public synchronized void shareDecrement() {
-        if(this.numberOfShares > 0) {
-            this.numberOfShares--;
-    	}
-        if(this.numberOfShares == 0) {
-            clearCache();
-        }
     }
 
     /**

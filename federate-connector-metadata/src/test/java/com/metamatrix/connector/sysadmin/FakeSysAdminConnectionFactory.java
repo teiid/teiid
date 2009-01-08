@@ -63,7 +63,7 @@ public class FakeSysAdminConnectionFactory implements ISysAdminConnectionFactory
                 ISourceTranslator sourceTranslator = new FakeObjectSourceTranslator(clzz);
                 sourceTranslator.initialize(env);
                 
-                 return new SysAdminObjectSource(o, clzz, env, sourceTranslator);
+                 return new SysAdminObjectSource(o, env, sourceTranslator);
                          
             } catch (Exception err) {
                 throw new ConnectorException(err);                        

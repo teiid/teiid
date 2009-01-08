@@ -127,12 +127,6 @@ public class TestConnectorCapabilitiesFinder extends TestCase {
         public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
         }
 
-        public void bind() throws ApplicationLifecycleException {
-        }
-
-        public void unbind() throws ApplicationLifecycleException {
-        }
-
         public void stop() throws ApplicationLifecycleException {
         }     
         

@@ -159,20 +159,6 @@ public class PlatformDataService implements DataService {
     }
 
     /**
-     * Bind the service into the environment.
-     * @throws ApplicationLifecycleException If an error occurs while binding
-     */
-    public void bind() throws ApplicationLifecycleException {
-    }
-
-    /**
-     * Unbind the service from the environment.
-     * @throws ApplicationLifecycleException If an error occurs while unbinding
-     */
-    public void unbind() throws ApplicationLifecycleException {
-    }
-
-    /**
      * Stop the service.
      * @throws ApplicationLifecycleException If an error occurs while starting
      */
@@ -232,8 +218,7 @@ public class PlatformDataService implements DataService {
      * @see com.metamatrix.dqp.service.DataService#addConnectorType(java.lang.String, com.metamatrix.common.config.api.ConnectorBindingType)
      * @since 4.3
      */
-    public void addConnectorType(String name, ConnectorBindingType type) 
-        throws ApplicationLifecycleException, MetaMatrixComponentException {
+    public void addConnectorType(String name, ConnectorBindingType type) {
         throw new UnsupportedOperationException();
     }
 
@@ -241,8 +226,7 @@ public class PlatformDataService implements DataService {
      * @see com.metamatrix.dqp.service.DataService#deleteConnectorType(java.lang.String)
      * @since 4.3
      */
-    public void deleteConnectorType(String name) 
-        throws ApplicationLifecycleException,MetaMatrixComponentException {
+    public void deleteConnectorType(String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -250,7 +234,7 @@ public class PlatformDataService implements DataService {
      * @see com.metamatrix.dqp.service.DataService#getConnectorTypes()
      * @since 4.3
      */
-    public List getConnectorTypes() throws MetaMatrixComponentException {
+    public List getConnectorTypes() {
         throw new UnsupportedOperationException();
     }
 

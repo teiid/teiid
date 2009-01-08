@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
@@ -39,7 +40,7 @@ import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.platform.security.api.AuthorizationActions;
@@ -51,7 +52,6 @@ import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.AuthorizationServicePropertyNames;
-import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.server.ServerPlugin;
@@ -65,11 +65,12 @@ public class PlatformAuthorizationService implements AuthorizationService {
     private static final BasicAuthorizationPermissionFactory PERMISSION_FACTORY = new BasicAuthorizationPermissionFactory();
 
     // Flag for whether entitlements are checked or not
-    static boolean USE_ENTITLEMENTS = Boolean.valueOf(CurrentConfiguration.getProperty(AuthorizationServicePropertyNames.DATA_ACCESS_AUTHORIZATION_ENABLED)).booleanValue();
+    private boolean useEntitlements; 
 
     private AuthorizationServiceInterface authInterface;
 
-    public PlatformAuthorizationService(AuthorizationServiceInterface authInterface, SessionServiceInterface sessionInterface) {
+    @Inject
+    public PlatformAuthorizationService(AuthorizationServiceInterface authInterface) {
         this.authInterface = authInterface;
     }
 
@@ -77,24 +78,13 @@ public class PlatformAuthorizationService implements AuthorizationService {
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
+    	this.useEntitlements = PropertiesUtils.getBooleanProperty(props, AuthorizationServicePropertyNames.DATA_ACCESS_AUTHORIZATION_ENABLED, false);
     }
 
     /*
      * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
      */
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
     }
 
     /*
@@ -165,7 +155,7 @@ public class PlatformAuthorizationService implements AuthorizationService {
      * @return <code>true</code> iff server-side entitlements checking is enabled.
      */
     public boolean checkingEntitlements() {
-        return USE_ENTITLEMENTS;
+        return useEntitlements;
     }
 
     /**

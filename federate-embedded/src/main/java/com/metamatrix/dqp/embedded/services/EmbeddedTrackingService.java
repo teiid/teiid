@@ -26,23 +26,15 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.Properties;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.query.sql.lang.Command;
 
 public class EmbeddedTrackingService extends EmbeddedBaseDQPService implements TrackingService {
     //public static HashMap traceData = new HashMap();
-
-    public EmbeddedTrackingService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException {
-        super(DQPServiceNames.TRACKING_SERVICE, svcRegistry);
-    }
 
     /* 
      * @see com.metamatrix.dqp.service.TrackingService#log(java.lang.String, long, java.lang.String, short, java.lang.String, java.lang.String, short, java.lang.String, java.lang.String, java.lang.String, int)
@@ -117,20 +109,6 @@ public class EmbeddedTrackingService extends EmbeddedBaseDQPService implements T
      * @since 4.3
      */
     public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#bindService()
-     * @since 4.3
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#unbindService()
-     * @since 4.3
-     */
-    public void unbindService() throws ApplicationLifecycleException {
     }
 
     /** 

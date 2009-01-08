@@ -58,7 +58,7 @@ public class SysAdminObjectSource implements ISysAdminSource  {
      * @param env
      * @throws AdminException 
      */    
-    protected SysAdminObjectSource(Object sourceConnection, Class apiClass, ConnectorEnvironment environment, ISourceTranslator sourceTranslator) throws ConnectorException {
+    protected SysAdminObjectSource(Object sourceConnection, ConnectorEnvironment environment, ISourceTranslator sourceTranslator) throws ConnectorException {
         this.api = sourceConnection;
         this.mm = new SysAdminMethodManager(sourceConnection.getClass());
         this.sourceTranslator = sourceTranslator;

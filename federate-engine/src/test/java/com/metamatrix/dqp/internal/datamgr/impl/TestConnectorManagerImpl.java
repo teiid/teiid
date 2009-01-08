@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
@@ -69,14 +69,6 @@ public final class TestConnectorManagerImpl extends TestCase {
         return appProperties;
     }
 
-    private ConnectorManager helpInitConnectorManager() throws ApplicationInitializationException {
-        ConnectorManager cm = new ConnectorManager();
-        cm.initialize(helpGetAppProps());
-        cm.installService(DQPServiceNames.METADATA_SERVICE, new FakeMetadataService());
-        cm.installService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
-        return cm;
-    }
-
     // =========================================================================
     //                         T E S T   C A S E S
     // =========================================================================
@@ -86,11 +78,9 @@ public final class TestConnectorManagerImpl extends TestCase {
         Properties appProperties = helpGetAppProps();
         // Remove required property
         appProperties.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, ""); //$NON-NLS-1$
-        cm.initialize(appProperties);
-        cm.installService(DQPServiceNames.METADATA_SERVICE, new FakeMetadataService());
-        cm.installService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
+        
         try {
-            cm.start();
+            startConnectorManager(cm, appProperties);
     		cm.stop();
             fail("Able to start ConnectorManager with null required props."); //$NON-NLS-1$
         } catch (ApplicationLifecycleException e) {
@@ -99,8 +89,8 @@ public final class TestConnectorManagerImpl extends TestCase {
     }
 
     public void testReceive() throws Exception {
-        ConnectorManager cm = helpInitConnectorManager();
-        cm.start();
+    	ConnectorManager cm = new ConnectorManager();
+    	startConnectorManager(cm, helpGetAppProps());
         
         AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
         QueueResultsReceiver receiver = new QueueResultsReceiver();
@@ -108,6 +98,15 @@ public final class TestConnectorManagerImpl extends TestCase {
         assertNotNull(receiver.getResults().poll(1000, TimeUnit.MILLISECONDS));
         cm.stop();
     }
+
+	private void startConnectorManager(ConnectorManager cm, Properties props)
+			throws ApplicationLifecycleException {
+		cm.initialize(props);
+        ApplicationEnvironment env = new ApplicationEnvironment();
+        env.bindService(DQPServiceNames.METADATA_SERVICE, new FakeMetadataService());
+        env.bindService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
+        cm.start(env);
+	}
     
     //classloader problem for connector that uses getContextClassLoader()
     //to load class
@@ -124,10 +123,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, "test.fakeconnector.FakeConnector");//$NON-NLS-1$
         props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, loader);
-        cm.initialize(props);
-        cm.installService(DQPServiceNames.METADATA_SERVICE, new FakeMetadataService());
-        cm.installService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
-        cm.start();
+        startConnectorManager(cm, props);
         AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
         QueueResultsReceiver receiver = new QueueResultsReceiver();
         cm.executeRequest(receiver, request);

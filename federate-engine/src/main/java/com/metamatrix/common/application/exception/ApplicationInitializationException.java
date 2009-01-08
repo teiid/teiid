@@ -22,12 +22,49 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm;
+package com.metamatrix.common.application.exception;
 
+import com.metamatrix.core.MetaMatrixCoreException;
 
-/** 
- * @since 4.2
+/**
+ * This exception is thrown when an application cannot be initialized, typically
+ * due to an invalid initialization property value or the inability to 
+ * start some subsystem due to an external error.
  */
-public interface ClientServiceRegistrant {
-    void setClientServiceRegistry(ClientServiceRegistry registry);
-}
+public class ApplicationInitializationException extends MetaMatrixCoreException {
+
+    /**
+     * No-Arg Constructor
+     */
+    public ApplicationInitializationException(  ) {
+        super( );
+    }
+
+    /**
+     * Construct an exception
+     * @param message
+     */
+    public ApplicationInitializationException(String message) {
+        super(message);
+    }
+
+
+    /**
+     * Construct an exception
+     * @param e
+     */
+    public ApplicationInitializationException(Throwable e) {
+        super(e);
+    }
+
+    /**
+     * Construct an exception
+     * @param e
+     * @param message
+     */
+    public ApplicationInitializationException(Throwable e, String message) {
+        super(e, message);
+    }
+
+} // END CLASS
+

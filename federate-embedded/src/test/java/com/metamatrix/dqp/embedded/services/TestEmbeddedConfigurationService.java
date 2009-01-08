@@ -38,7 +38,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.basic.BasicEnvironment;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;
@@ -56,6 +56,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.ConfigurationService;
+import com.metamatrix.dqp.service.DQPServiceNames;
 
 
 /** 
@@ -73,8 +74,10 @@ public class TestEmbeddedConfigurationService extends TestCase {
                 copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
             }
         }
-        service = new EmbeddedConfigurationService(new EmbeddedDQPServiceRegistry());  
-        service.start(new BasicEnvironment());
+        service = new EmbeddedConfigurationService();  
+        ApplicationEnvironment env = new ApplicationEnvironment();
+        service.start(env);
+        env.bindService(DQPServiceNames.CONFIGURATION_SERVICE, service);
     }
 
     protected void tearDown() throws Exception {

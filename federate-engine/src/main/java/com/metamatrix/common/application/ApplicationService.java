@@ -35,8 +35,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
  * <ul>
  * <li>Initialize - configure the service</li>
  * <li>Start - performed by application prior to start the service running in an environment</li>
- * <li>Bind - performed by application when the service is bound into the environment</li>
- * <li>Unbind - performed by application prior to unbinding the service from the environment</li>
  * <li>Stop - performed by application after the service is unbound from the environment</li>
  * </ul>
  */
@@ -56,18 +54,6 @@ public interface ApplicationService {
      * @throws ApplicationLifecycleException If an error occurs while starting
      */    
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException;
-    
-    /**
-     * Bind the service into the environment.
-     * @throws ApplicationLifecycleException If an error occurs while binding
-     */    
-    public void bind() throws ApplicationLifecycleException;
-    
-    /**
-     * Unbind the service from the environment.
-     * @throws ApplicationLifecycleException If an error occurs while unbinding
-     */    
-    public void unbind() throws ApplicationLifecycleException;
     
     /**
      * Stop the service.

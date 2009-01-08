@@ -22,48 +22,43 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.dqp.config;
+package com.metamatrix.common.application.exception;
 
-import java.util.*;
-import java.util.HashMap;
-import java.util.Properties;
-
-import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.core.MetaMatrixCoreException;
 
 /**
+ * This exception is used when an error occurs in the lifecycle of an application
+ * or it's service.  
  */
-public class FakeConfigSource implements DQPConfigSource {
+public class ApplicationLifecycleException extends MetaMatrixCoreException {
 
-    private Map services = new HashMap();
-    private Properties props = new Properties();
-    
     /**
-     * 
+     * No-Arg Constructor
      */
-    public FakeConfigSource() {
-        super();
+    public ApplicationLifecycleException(  ) {
+        super( );
     }
 
-    public void addProperty(String prop, String value) {
-        props.setProperty(prop, value);
-    }
-
-    /* 
-     * @see com.metamatrix.dqp.config.DQPConfigSource#getProperties()
+    /**
+     * @param message
      */
-    public Properties getProperties() {
-        return new Properties();
-    }
-    
-    public void addService(String svcType, ApplicationService svc) {
-        this.services.put(svcType, svc);
+    public ApplicationLifecycleException(String message) {
+        super(message);
     }
 
-    /* 
-     * @see com.metamatrix.dqp.config.DQPConfigSource#getService(java.lang.String)
+
+    /**
+     * @param e
      */
-    public ApplicationService getService(String serviceName) {
-        return (ApplicationService) services.get(serviceName);
+    public ApplicationLifecycleException(Throwable e) {
+        super(e);
     }
 
+    /**
+     * @param e
+     * @param message
+     */
+    public ApplicationLifecycleException(Throwable e, String message) {
+        super(e, message);
+    }
 }

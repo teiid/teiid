@@ -67,10 +67,6 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
     private Map vdbIDs = Collections.synchronizedMap(new HashMap());
     private EventObjectListener listener = null;
 
-    public PlatformVDBService() {
-        super();
-    }
-
     /* 
      * @see com.metamatrix.dqp.service.VDBService#isActiveVDB(java.lang.String, java.lang.String)
      */
@@ -188,20 +184,6 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     public void start(final ApplicationEnvironment environment) throws ApplicationLifecycleException {
         registerVdbListner();
-
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
 
     }
 

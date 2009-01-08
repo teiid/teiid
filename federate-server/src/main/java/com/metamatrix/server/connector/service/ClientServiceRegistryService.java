@@ -22,54 +22,37 @@
  * 02110-1301 USA.
  */
 
-/*
- * Date: Jun 24, 2003
- * Time: 11:51:15 AM
- */
-package com.metamatrix.common.application;
+package com.metamatrix.server.connector.service;
 
 import java.util.Properties;
 
+import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.comm.ClientServiceRegistry;
 
-/**
- * Interface Application.
- *
- * <p>Contains application lifecycle methods.</p>
- *
- */
-public interface Application {
+public class ClientServiceRegistryService implements ApplicationService {
+	
+	private ClientServiceRegistry registry;
+	
+	public ClientServiceRegistryService(ClientServiceRegistry registry) {
+		this.registry = registry;
+	}
 
-    /* ########## Configuration ########## */
+	public void initialize(Properties props)
+			throws ApplicationInitializationException {
+	}
 
-    /**
-     * Initialize the application using the specified properties
-     * @param props Properties
-     * @throws ApplicationInitializationException when an error occurs durring
-     * initialization.
-     */
-    void initialize(Properties props) throws ApplicationInitializationException;
+	public void start(ApplicationEnvironment environment)
+			throws ApplicationLifecycleException {
+	}
 
-    /**
-     * Install an application service, which should have been already been configured
-     * by an ApplicationBootstrapper.
-     * @param service Service to install
-     * @throws ApplicationInitializationException If an error occurs during installation
-     */
-    void installService(String type, ApplicationService service) throws ApplicationInitializationException;
-    
+	public void stop() throws ApplicationLifecycleException {
+	}
 
-    /* ########## Lifecycle ########## */
-    
-    /**
-     * Start the application.
-     */
-    void start() throws ApplicationLifecycleException;
-
-    /**
-     * Stop the application.
-     */
-    void stop() throws ApplicationLifecycleException;
-    
+	public ClientServiceRegistry getRegistry() {
+		return registry;
+	}
+	
 }

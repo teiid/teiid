@@ -354,11 +354,12 @@ public final class PropertiesUtils {
 
     public static long getLongProperty(Properties props, String propName, long defaultValue) {
         long val = defaultValue;
-        if(props.containsKey(propName)) {
+        String stringVal = props.getProperty(propName);
+        if(stringVal != null && stringVal.trim().length() > 0) {
             try {
                 val = Long.parseLong(props.getProperty(propName));
             } catch(NumberFormatException e) {
-                // ignore
+            	throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
             }
         }
         return val;

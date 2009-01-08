@@ -38,7 +38,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.basic.BasicApplication;
+import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
@@ -86,7 +87,7 @@ import com.metamatrix.query.sql.lang.Command;
  * The <code>ConnectorManager</code> manages a {@link com.metamatrix.data.api.Connector Connector}
  * and its associated workers' state.
  */
-public class ConnectorManager extends BasicApplication {
+public class ConnectorManager implements ApplicationService {
 
     public static final int DEFAULT_MAX_PROCESSOR_THREADS = 15;
     public static final int DEFAULT_PROCESSOR_TREAD_TTL = 120000;
@@ -114,6 +115,12 @@ public class ConnectorManager extends BasicApplication {
 
     // Lazily created and used for asynch query execution
     private Timer timer;
+    
+    private Properties props;
+    
+    public void initialize(Properties props) {
+    	this.props = props;
+    }
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {
         Connection conn = null;
@@ -278,15 +285,13 @@ public class ConnectorManager extends BasicApplication {
     /**
      * initialize this <code>ConnectorManager</code>.
      */
-    public synchronized void start() throws ApplicationLifecycleException {
+    public synchronized void start(ApplicationEnvironment env) throws ApplicationLifecycleException {
     	if (this.started != null) {
     		throw new ApplicationLifecycleException("ConnectorManager.cannot_restart"); //$NON-NLS-1$
     	}
-        Properties appProps = getEnvironment().getApplicationProperties();
+        connectorName = props.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "Unknown_Binding_Name"); //$NON-NLS-1$
 
-        connectorName = appProps.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "Unknown_Binding_Name"); //$NON-NLS-1$
-
-        String connIDStr = appProps.getProperty(ConnectorPropertyNames.CONNECTOR_ID);
+        String connIDStr = props.getProperty(ConnectorPropertyNames.CONNECTOR_ID);
         connectorID = new ConnectorID(connIDStr);
         
         //connector Name - logical name<Unique Id>
@@ -294,37 +299,37 @@ public class ConnectorManager extends BasicApplication {
 
         LogManager.logInfo(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", connectorName)); //$NON-NLS-1$
 
-        this.setTransactionService((TransactionService) getEnvironment().findService(DQPServiceNames.TRANSACTION_SERVICE));
+        this.setTransactionService((TransactionService) env.findService(DQPServiceNames.TRANSACTION_SERVICE));
 
         // Set the class name for the connector class
-        String connectorClassString = appProps.getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
+        String connectorClassString = props.getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
         if ( connectorClassString == null || connectorClassString.trim().length() == 0 ) {             
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Missing_required_property", new Object[]{ConnectorPropertyNames.CONNECTOR_CLASS, connectorName})); //$NON-NLS-1$
         }
 
         // Create the Connector env
-        Properties clonedProps = PropertiesUtils.clone(appProps);
-        ConnectorEnvironment connectorEnv = new ConnectorEnvironmentImpl(clonedProps, new DefaultConnectorLogger(connectorID), this.getEnvironment());
+        Properties clonedProps = PropertiesUtils.clone(props);
+        ConnectorEnvironment connectorEnv = new ConnectorEnvironmentImpl(clonedProps, new DefaultConnectorLogger(connectorID), env);
 
         // Initialize and start the connector
         initStartConnector(connectorName, connectorEnv);
 
         // Get the metadata service
-        this.metadataService = (MetadataService) getEnvironment().findService(DQPServiceNames.METADATA_SERVICE);
+        this.metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
         if ( this.metadataService == null ) {
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Failed_to_find_service", new Object[]{DQPServiceNames.METADATA_SERVICE, connectorName})); //$NON-NLS-1$
         }
 
-        this.tracker = (TrackingService) getEnvironment().findService(DQPServiceNames.TRACKING_SERVICE);
+        this.tracker = (TrackingService) env.findService(DQPServiceNames.TRACKING_SERVICE);
 
-        int maxThreads = PropertiesUtils.getIntProperty(appProps, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
-        int threadTTL = PropertiesUtils.getIntProperty(appProps, ConnectorPropertyNames.THREAD_TTL, DEFAULT_PROCESSOR_TREAD_TTL);
+        int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
+        int threadTTL = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.THREAD_TTL, DEFAULT_PROCESSOR_TREAD_TTL);
 
         connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads, threadTTL);
         
-        this.maxResultRows = PropertiesUtils.getIntProperty(appProps, ConnectorPropertyNames.MAX_RESULT_ROWS, 0);
-        this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(appProps, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
-        this.pooledResource = PropertiesUtils.getBooleanProperty(appProps, ConnectorPropertyNames.POOLED_RESOURCE, true);
+        this.maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, 0);
+        this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
+        this.pooledResource = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.POOLED_RESOURCE, true);
 
         this.started = true;
     }
@@ -337,7 +342,7 @@ public class ConnectorManager extends BasicApplication {
     private void initStartConnector(String connectorName, ConnectorEnvironment env) throws ApplicationLifecycleException {
         String connectorClassName = env.getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
         // Create connector instance...
-        ClassLoader loader = (ClassLoader)this.getEnvironment().getApplicationProperties().get(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER);
+        ClassLoader loader = (ClassLoader)props.get(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER);
         if(loader == null){
             loader = getClass().getClassLoader();
         }
@@ -429,7 +434,6 @@ public class ConnectorManager extends BasicApplication {
      * Stop this connector.
      */
     public void stop() throws ApplicationLifecycleException {        
-        super.stop();
         synchronized (this) {
         	if (this.started == null || this.started == false) {
         		return;

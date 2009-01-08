@@ -45,8 +45,6 @@ import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
@@ -59,17 +57,6 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
 public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBService {   
     static final String[] VDB_STATUS = {"INCOMPLETE", "INACTIVE", "ACTIVE", "DELETED"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-    /**
-     * ctor 
-     * @param configSvc
-     * @throws MetaMatrixComponentException
-     * @since 4.3
-     */
-    public EmbeddedVDBService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.VDB_SERVICE, svcRegistry);
-    }
-    
     /**
      * Find the VDB in the list of VDBs available 
      * @param name
@@ -278,7 +265,7 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         	VDBArchive sameVdb = vdb;
             if (currentStatus != VDBStatus.ACTIVE
                     && (status == VDBStatus.ACTIVE || status == VDBStatus.ACTIVE_DEFAULT) ) {
-                if (!isValidVDB(sameVdb) || !isFullyConfiguredVDB(sameVdb)) {
+                if (!isValidVDB(sameVdb) || !getConfigurationService().isFullyConfiguredVDB(sameVdb)) {
                     throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("VDBService.vdb_missing_bindings", new Object[] {vdb.getName(), vdb.getVersion()})); //$NON-NLS-1$
                 }
             }
@@ -315,20 +302,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {        
         // deploying VDB at this stage created issues with data service prematurely
         // asking for unfinished VDB and starting it
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#bindService()
-     * @since 4.3
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#unbindService()
-     * @since 4.3
-     */
-    public void unbindService() throws ApplicationLifecycleException {
     }
 
     /** 

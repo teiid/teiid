@@ -33,7 +33,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
@@ -48,31 +47,19 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements MetadataService, IndexSelectorSource {
 
     private QueryMetadataCache metadataCache = null;    
+    private VDBLifeCycleListener listener = new VDBLifeCycleListener() {
+        public void loaded(String vdbName, String vdbVersion) {
+        }
+        public void unloaded(String vdbName, String vdbVersion) {
+           metadataCache.removeFromCache(vdbName, vdbVersion);
+        }            
+    };
 
-    public EmbeddedMetadataService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.METADATA_SERVICE, svcRegistry);        
-    }
-    
     /** 
      * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#initializeService(java.util.Properties)
      * @since 4.3
      */
     public void initializeService(Properties properties) throws ApplicationInitializationException {
-        try {
-            ConfigurationService configSvc = this.getConfigurationService();
-            this.metadataCache = new QueryMetadataCache(configSvc.getSystemVdb());            
-            
-            configSvc.register(new VDBLifeCycleListener() {
-                public void loaded(String vdbName, String vdbVersion) {
-                }
-                public void unloaded(String vdbName, String vdbVersion) {
-                   metadataCache.removeFromCache(vdbName, vdbVersion);
-                }            
-            });
-        } catch (MetaMatrixComponentException e) {
-            throw new ApplicationInitializationException(e);
-        }
     }
 
     /** 
@@ -80,22 +67,13 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
      * @since 4.3
      */
     public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-        // indicate to the cache that this service is using it
-        this.metadataCache.shareIncrement();        
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#bindService()
-     * @since 4.3
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#unbindService()
-     * @since 4.3
-     */
-    public void unbindService() throws ApplicationLifecycleException {
+        try {
+            ConfigurationService configSvc = this.getConfigurationService();
+            this.metadataCache = new QueryMetadataCache(configSvc.getSystemVdb());            
+            configSvc.register(listener);
+        } catch (MetaMatrixComponentException e) {
+            throw new ApplicationLifecycleException(e);
+        }
     }
 
     /** 
@@ -103,7 +81,7 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
      * @since 4.3
      */
     public void stopService() throws ApplicationLifecycleException {
-        this.metadataCache.shareDecrement();
+    	getConfigurationService().unregister(this.listener);
         this.metadataCache.clearCache();
     }
 

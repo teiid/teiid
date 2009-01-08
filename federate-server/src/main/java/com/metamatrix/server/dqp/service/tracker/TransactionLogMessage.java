@@ -57,7 +57,7 @@ public class TransactionLogMessage implements Serializable{
 	private short tableDest;
 	
 	public TransactionLogMessage(String txnUid, short txnPoint, short status,
-            String sessionUid, String principal, String vdbName, String vdbVersion){
+            String sessionUid, String principal, String vdbName, String vdbVersion, long timestamp){
 		
 		this.txnUid = txnUid;
 		this.point = txnPoint;
@@ -66,17 +66,17 @@ public class TransactionLogMessage implements Serializable{
 		this.principal = principal;
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
-		if(point == TrackerLogConstants.TXN_POINT.BEGIN){
-			beginTimeStamp = DateUtil.getCurrentDateAsString();
-		}else if(point == TrackerLogConstants.TXN_POINT.END){
-			endTimeStamp = DateUtil.getCurrentDateAsString();
+		if(point == TrackerLogConstants.CMD_POINT.BEGIN){
+			beginTimeStamp = DateUtil.getDateAsString(timestamp);
+		}else if(point == TrackerLogConstants.CMD_POINT.END){
+			endTimeStamp = DateUtil.getDateAsString(timestamp);
 		}
 		tableDest = DEST_TXNLOG;
 	}
 	
 	public TransactionLogMessage(String requestId, String txnUid, short cmdPoint, short status,
             String sessionUid, String applicationName, String principal, String vdbName,
-            String vdbVersion, String sql, int rowCount){
+            String vdbVersion, String sql, int rowCount, long timestamp){
 		
 		this.txnUid = txnUid;
 		this.point = cmdPoint;
@@ -90,16 +90,16 @@ public class TransactionLogMessage implements Serializable{
 		this.status = status;
         this.rowCount = rowCount;
 		if(point == TrackerLogConstants.CMD_POINT.BEGIN){
-			beginTimeStamp = DateUtil.getCurrentDateAsString();
+			beginTimeStamp = DateUtil.getDateAsString(timestamp);
 		}else if(point == TrackerLogConstants.CMD_POINT.END){
-			endTimeStamp = DateUtil.getCurrentDateAsString();
+			endTimeStamp = DateUtil.getDateAsString(timestamp);
 		}
 		tableDest = DEST_MMXCMDLOG;
 	}
 	
 	public TransactionLogMessage(String requestId, long nodeID, String subTxnUid, 
 			short status, String modelName, String cbName, short cmdPoint, 
-            String sessionUid, String principal, String sql, int rowCount){
+            String sessionUid, String principal, String sql, int rowCount, long timestamp){
 		
 		this.subTxnUid = subTxnUid;
 		this.point = cmdPoint;
@@ -113,9 +113,9 @@ public class TransactionLogMessage implements Serializable{
 		this.requestId = requestId;
 		this.sql = sql;
 		if(point == TrackerLogConstants.CMD_POINT.BEGIN){
-			beginTimeStamp = DateUtil.getCurrentDateAsString();
+			beginTimeStamp = DateUtil.getDateAsString(timestamp);
 		}else if(point == TrackerLogConstants.CMD_POINT.END){
-			endTimeStamp = DateUtil.getCurrentDateAsString();
+			endTimeStamp = DateUtil.getDateAsString(timestamp);
 		}
 		tableDest = DEST_SRCCMDLOG;
 	}

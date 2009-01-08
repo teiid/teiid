@@ -26,12 +26,18 @@
  */
 package com.metamatrix.dqp.service.metadata;
 
+import java.io.FileInputStream;
 import java.util.Collection;
 import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 
@@ -50,7 +56,12 @@ public class TestIndexMetadataService extends TestCase {
         String filePath = UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
         QueryMetadataCache sharedCache = new QueryMetadataCache(Thread.currentThread().getContextClassLoader().getResource("System.vdb")); //$NON-NLS-1$
         IndexMetadataService metadataService = new IndexMetadataService(sharedCache);
-        metadata = metadataService.testLoadMetadata("PartsSupplier", "1",  filePath); //$NON-NLS-1$ //$NON-NLS-2$ 
+        ApplicationEnvironment env = new ApplicationEnvironment();
+        VDBService vdbService = Mockito.mock(VDBService.class);
+        Mockito.stub(vdbService.getVDBResource("PartsSupplier", "1")).toReturn(new FileInputStream(filePath)); //$NON-NLS-1$ //$NON-NLS-2$ 
+        env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
+        metadataService.start(env);
+        metadata = metadataService.lookupMetadata("PartsSupplier", "1"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
 
     //tests

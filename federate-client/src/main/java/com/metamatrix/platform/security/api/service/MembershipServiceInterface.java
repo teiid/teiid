@@ -41,7 +41,7 @@ import com.metamatrix.platform.service.api.ServiceInterface;
  * This interface represents the API to the MemberShip Service,
  * and it defines the functionality that is accessible to clients.
  */
-public interface MembershipServiceInterface extends ServiceInterface, SecureService {
+public interface MembershipServiceInterface extends ServiceInterface {
     public static String NAME = ResourceNames.MEMBERSHIP_SERVICE;
     
     /**

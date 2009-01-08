@@ -30,9 +30,7 @@ import java.util.Properties;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.DbLogListener;
@@ -60,9 +58,6 @@ public class Main {
 
 	@Inject
 	MessageBus messageBus;
-	
-	@Inject 
-	BufferManager bufferManager;
 	
 	@Inject
 	VMControllerInterface vmController;
@@ -133,9 +128,6 @@ public class Main {
             configListener.shutdown();
             
             this.messageBus.shutdown();
-            
-            this.bufferManager.stop();
-            
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

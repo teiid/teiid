@@ -43,7 +43,7 @@ import com.metamatrix.server.ServerPlugin;
 /**
  *
  */
-public class TransactionLogWriter implements Runnable {
+public class TransactionLogWriter {
 
     public static final String TRANSACTION_LOG_STATEMENT = "INSERT INTO TX_TXNLOG (TXNUID,TXNPOINT,TXN_STATUS,SESSIONUID,PRINCIPAL_NA,VDBNAME,VDBVERSION,CREATED_TS,ENDED_TS) VALUES (?,?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
     public static final String MMX_COMMAND_LOG_STATEMENT = "INSERT INTO TX_MMXCMDLOG (REQUESTID,TXNUID,CMDPOINT,CMD_STATUS,SESSIONUID,APP_NAME,PRINCIPAL_NA,VDBNAME,VDBVERSION,CREATED_TS,ENDED_TS,FINL_ROWCNT,SQL_ID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
@@ -60,7 +60,6 @@ public class TransactionLogWriter implements Runnable {
     private static final int RESUME_LOGGING_AFTER_TIME =  180 * 1000; // 3 mins 
     
     private Properties connProps;
-    private TransactionLogMessage message;
     
     private static volatile boolean isLogSuspended=false;
     private static volatile long resumeTime=-1;
@@ -74,9 +73,8 @@ public class TransactionLogWriter implements Runnable {
      * @throws LogDestinationInitFailedException if there was an error during
      *             initialization.
      */
-    public TransactionLogWriter(Properties props, TransactionLogMessage message) {
+    public TransactionLogWriter(Properties props) {
         this.connProps = props;
-        this.message = message;
     }
 
     protected Connection getConnection() throws SQLException {
@@ -280,9 +278,5 @@ public class TransactionLogWriter implements Runnable {
             }
         }
     }
-
-	public void run() {
-		this.print(message);
-	}
 
 }

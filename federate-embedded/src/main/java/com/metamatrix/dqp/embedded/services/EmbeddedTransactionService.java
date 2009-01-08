@@ -26,7 +26,6 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.Properties;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -36,8 +35,6 @@ import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.internal.transaction.TransactionServerImpl;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.transaction.XAServer;
@@ -49,11 +46,6 @@ public class EmbeddedTransactionService extends EmbeddedBaseDQPService implement
     private TransactionServerImpl arjunaTs = new TransactionServerImpl();
     private TransactionServer ts;
     
-    public EmbeddedTransactionService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.TRANSACTION_SERVICE, svcRegistry);
-    }
-
     /**  
      * @param props
      * @throws ApplicationInitializationException
@@ -62,7 +54,6 @@ public class EmbeddedTransactionService extends EmbeddedBaseDQPService implement
         try {
             props.put(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.put(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
-            props.setProperty(TransactionService.TXN_STORE_DIR, props.getProperty(TransactionService.TXN_STORE_DIR, TransactionService.DEFAULT_TXN_STORE_DIR));
             
             arjunaTs.init(props, new ArjunaTransactionProvider());
             
@@ -81,18 +72,6 @@ public class EmbeddedTransactionService extends EmbeddedBaseDQPService implement
 
     }
    
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbindService() throws ApplicationLifecycleException {
-    }
-
     /* 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */

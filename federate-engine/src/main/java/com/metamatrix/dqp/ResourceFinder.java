@@ -34,13 +34,6 @@ import com.metamatrix.common.messaging.NoOpMessageBus;
 public class ResourceFinder {
 	private static Injector injector;
 	
-	public static BufferManager getBufferManager() {
-		if (injector == null) {
-			throw new IllegalStateException();
-		}
-		return injector.getInstance(BufferManager.class);
-	}
-	
 	public static MessageBus getMessageBus() {
 		if (injector == null) {
 			return new NoOpMessageBus();

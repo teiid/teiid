@@ -74,11 +74,6 @@ public interface DQPServiceProperties {
          * Property name used to reference a URL object.  The URL object is used to interpret the SYSTEM_VDB_URL string.
          */
         public static final String SYSTEM_VDB_CONTEXT_URL = METADATA_PREFIX + ".systemContextURL"; //$NON-NLS-1$
-        
-        /**
-         * Property name used to reference a QueryMetadtaCache object.
-         */
-        public static final String QUERY_METADATA_CACHE = METADATA_PREFIX + ".queryMetadataCache"; //$NON-NLS-1$        
     }    
         
     public interface AuthorizationService {

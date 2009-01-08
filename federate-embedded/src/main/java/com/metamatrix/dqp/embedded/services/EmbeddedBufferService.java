@@ -41,8 +41,6 @@ import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.ConfigurationService;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 
 /**
  * Implement the BufferService for the DQP Embedded component.  This implementation
@@ -61,26 +59,39 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
     
     // Instance
     private BufferManager bufferMgr;
-
-    /**
-     * 
-     */
-    public EmbeddedBufferService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.BUFFER_SERVICE, svcRegistry);
-    }
+	private File bufferDir;
 
     /**  
      * @param props
      * @throws ApplicationInitializationException
      */
     public void initializeService(Properties props) throws ApplicationInitializationException {
-        try {
+         
+    }
+
+    /**
+     * Clean the file storage directory on startup 
+     * @param dir
+     * @since 4.3
+     */
+    void cleanDirectory(File file) {
+        if (file.exists()) {
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                files[i].delete();                
+            }
+        }
+    }
+    /* 
+     * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
+     */
+    public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {
+    	try {
             
             ConfigurationService configurationSvc = this.getConfigurationService();
             
             boolean useDisk = configurationSvc.useDiskBuffering();
-            File bufferDir = configurationSvc.getDiskBufferDirectory();                 
+            bufferDir = configurationSvc.getDiskBufferDirectory();                 
             String memAvail = configurationSvc.getBufferMemorySize();
             String processorBatchSize = configurationSvc.getProcessorBatchSize();
             String connectorBatchSize = configurationSvc.getConnectorBatchSize();
@@ -122,60 +133,23 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
             this.bufferMgr.addStorageManager(new MemoryStorageManager());
                      
         } catch(MetaMatrixComponentException e) { 
-            throw new ApplicationInitializationException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
+            throw new ApplicationLifecycleException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
         } catch(IOException e) {
-            throw new ApplicationInitializationException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
-        } 
-    }
-
-    /**
-     * Clean the file storage directory on startup 
-     * @param dir
-     * @since 4.3
-     */
-    void cleanDirectory(File file) {
-        if (file.exists()) {
-            File[] files = file.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                files[i].delete();                
-            }
+            throw new ApplicationLifecycleException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$            
         }
     }
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
-     */
-    public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-
-    }
    
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbindService() throws ApplicationLifecycleException {
-    }
-
     /* 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stopService() throws ApplicationLifecycleException {
-        try {
-            bufferMgr.stop();
+        bufferMgr.stop();
 
-            // Delete the buffer directory
-            ConfigurationService configurationSvc = this.getConfigurationService();
-            File bufferDir = configurationSvc.getDiskBufferDirectory();
-            cleanDirectory(bufferDir);
-            bufferDir.delete();
-            
-        } catch (MetaMatrixComponentException e) {
-            throw new ApplicationLifecycleException(e);
-        }        
+        // Delete the buffer directory
+        if (bufferDir != null) {
+	        cleanDirectory(bufferDir);
+	        bufferDir.delete();
+        }
     }
 
     /* 

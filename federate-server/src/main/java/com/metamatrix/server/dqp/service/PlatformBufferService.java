@@ -26,21 +26,37 @@ package com.metamatrix.server.dqp.service;
 
 import java.util.Properties;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
+import com.metamatrix.common.buffer.BufferManagerPropertyNames;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.server.Configuration;
 
 
 /**
  */
 public class PlatformBufferService implements BufferService {
 
-
-    public static final String BUFFER_MGR = "platform.buffer.mgr"; //$NON-NLS-1$
-    
     private BufferManager bufferMgr;
+    private Properties props;
+    
+    private String vmName;
+    private Host host;
+    
+    @Inject
+    public PlatformBufferService(@Named(Configuration.HOST) Host host, @Named(Configuration.VMNAME) String vmName) {
+    	this.host = host;
+    	this.vmName = vmName;
+	}
 
     /* 
      * @see com.metamatrix.dqp.service.BufferService#getBufferManager()
@@ -50,38 +66,36 @@ public class PlatformBufferService implements BufferService {
     }
 
     /* 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-
-    }
-
-    /* 
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
-        this.bufferMgr = (BufferManager) props.get(BUFFER_MGR);
+    	this.props = PropertiesUtils.clone(props);
     }
 
     /* 
      * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
      */
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
+    	// Get the properties for BufferManager
+		// Create buffer manager
+		String dataDir = host.getDataDirectory();
+		String relativeLoc = props.getProperty("metamatrix.buffer.relative.storageDirectory"); //$NON-NLS-1$
+		
+		String dir = FileUtils.buildDirectoryPath(new String[] {dataDir, relativeLoc});
+		props.setProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, dir);
 
+		try {
+			bufferMgr = BufferManagerFactory.getServerBufferManager(host.getFullName()+"-"+vmName, props); //$NON-NLS-1$
+		} catch (MetaMatrixComponentException e) {
+			throw new ApplicationLifecycleException(e);
+		} 
     }
 
     /* 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {
-
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-
+    	bufferMgr.stop();
     }
 
 }

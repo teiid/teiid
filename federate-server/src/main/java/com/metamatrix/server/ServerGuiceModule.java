@@ -32,7 +32,6 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.jboss.JBossCacheFactory;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
@@ -87,7 +86,6 @@ class ServerGuiceModule extends AbstractModule {
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
 		bind(ProxyManager.class).in(Scopes.SINGLETON);
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
-		bind(BufferManager.class).toProvider(BufferManagerProvider.class).in(Scopes.SINGLETON);
 		bind(VMControllerInterface.class).to(SocketVMController.class).in(Scopes.SINGLETON);
 		bind(ServerEvents.class).to(VMMonitor.class).in(Scopes.SINGLETON);
 		

@@ -24,6 +24,7 @@
 
 package com.metamatrix.dqp.service;
 
+
 /**
  * Defines constants used for naming DQP services.
  */
@@ -67,5 +68,16 @@ public interface DQPServiceNames {
         VDB_SERVICE,
         METADATA_SERVICE,
         DATA_SERVICE,
+    };
+    
+    public static final Class[] ALL_SERVICE_CLASSES = new Class[] {
+    	ConfigurationService.class,
+        TrackingService.class,
+        BufferService.class,
+        AuthorizationService.class,
+        TransactionService.class,                                           
+        VDBService.class,
+        MetadataService.class,
+        DataService.class,
     };
 }

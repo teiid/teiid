@@ -51,7 +51,6 @@ import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
-import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
 import com.metamatrix.metadata.runtime.api.MetadataSourceAPI;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
@@ -127,6 +126,8 @@ public class RuntimeMetadataCatalog  {
     private boolean persist = true;
     
     private MetadataCache systemModels = null;
+    
+    private QueryMetadataCache cache;
     
     public static RuntimeMetadataCatalog getInstance() {
     	return instance;
@@ -691,15 +692,12 @@ public class RuntimeMetadataCatalog  {
         return qmi;
     }
 
-    public QueryMetadataCache getQueryMetadataCache() throws VirtualDatabaseException {
+    public synchronized QueryMetadataCache getQueryMetadataCache() throws VirtualDatabaseException {
         try {
-	        QueryMetadataCache sharedCache = null;
-	        if(SingletonMetadataCacheHolder.hasCache()) {
-	            sharedCache = SingletonMetadataCacheHolder.getMetadataCache();
-	        } else {
-	            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(getSystemVDBArchive());
-	        }
-	        return sharedCache;
+        	if (this.cache == null) {
+        		this.cache = new QueryMetadataCache(getSystemVDBArchive());
+        	}
+	        return this.cache;
 	    } catch(Exception e) {
 	        throw new VirtualDatabaseException(e);
 	    }

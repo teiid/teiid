@@ -51,7 +51,7 @@ public interface TransactionService extends ApplicationService {
     public static final String DEFAULT_LOGFILE_SIZE= "10"; //$NON-NLS-1$ 
     public static final String DEFAULT_MAX_ROLLOVER_FILES = "10"; //$NON-NLS-1$ 
     public static final String DEFAULT_SEPARATE_TXN_LOG = "false"; //$NON-NLS-1$ 
-    public static final String DEFAULT_TXN_STORE_DIR = (System.getProperty("metamatrix.xatxnmgr.txnstore_dir") != null) ? System.getProperty("metamatrix.xatxnmgr.txnstore_dir") : System.getProperty("user.dir"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    public static final String DEFAULT_TXN_STORE_DIR = System.getProperty("metamatrix.xatxnmgr.txnstore_dir", System.getProperty("user.dir")); //$NON-NLS-1$ //$NON-NLS-2$
     public static final String DEFAULT_TXN_STATUS_PORT = "0"; //$NON-NLS-1$
 
     TransactionServer getTransactionServer();

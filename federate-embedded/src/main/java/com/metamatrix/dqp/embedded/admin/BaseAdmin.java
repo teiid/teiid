@@ -53,9 +53,7 @@ import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.admin.objects.MMVDB;
-import com.metamatrix.api.exception.ComponentNotAvailableException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
@@ -67,7 +65,6 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.dqp.config.DQPConfigSource;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
@@ -145,32 +142,16 @@ abstract class BaseAdmin {
         return this.manager;
     }
     
-    public DQPConfigSource getDQPConfig() {
-        return this.manager.getDQPConfig();
-    }
-
-    VDBService getVDBService() throws ComponentNotAvailableException {
-        try {
-            return (VDBService)getDQPConfig().getService(DQPServiceNames.VDB_SERVICE);            
-        } catch (ApplicationInitializationException e) {
-            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
-        }
+    VDBService getVDBService() {
+        return (VDBService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.VDB_SERVICE);            
     }
     
-    DataService getDataService() throws ComponentNotAvailableException {
-        try {
-            return (DataService)getDQPConfig().getService(DQPServiceNames.DATA_SERVICE);
-        } catch (ApplicationInitializationException e) {
-            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
-        }
+    DataService getDataService() {
+        return (DataService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.DATA_SERVICE);
     }
     
-    ConfigurationService getConfigurationService() throws ComponentNotAvailableException {
-        try {
-            return (ConfigurationService)getDQPConfig().getService(DQPServiceNames.CONFIGURATION_SERVICE);
-        } catch (ApplicationInitializationException e) {
-            throw new ComponentNotAvailableException(e, DQPEmbeddedPlugin.Util.getString("Failed_To_Service")); //$NON-NLS-1$
-        }
+    ConfigurationService getConfigurationService() {
+        return (ConfigurationService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
     }
         
     protected Object convertToAdminObjects(Object src) {
@@ -460,17 +441,13 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    ServerConnection getClientConnection(String identifier) throws AdminException {
-        try {
-            Collection<ServerConnection> connections = getConfigurationService().getClientConnections();
-            for (Iterator i = connections.iterator(); i.hasNext();) {
-            	ServerConnection clientConnection = (ServerConnection)i.next();
-                if (clientConnection.getLogonResult().getSessionID().toString().equals(identifier)) {
-                    return clientConnection;
-                }
+    ServerConnection getClientConnection(String identifier) {
+        Collection<ServerConnection> connections = getConfigurationService().getClientConnections();
+        for (Iterator i = connections.iterator(); i.hasNext();) {
+        	ServerConnection clientConnection = (ServerConnection)i.next();
+            if (clientConnection.getLogonResult().getSessionID().toString().equals(identifier)) {
+                return clientConnection;
             }
-        } catch (MetaMatrixComponentException e) {
-            throw new AdminComponentException(e);
         }
         return null;
     }
@@ -481,11 +458,7 @@ abstract class BaseAdmin {
      * @throws AdminException
      */
     Set<ServerConnection> getClientConnections() throws AdminException{
-        try {
-            return getConfigurationService().getClientConnections();
-        } catch (MetaMatrixComponentException e) {
-            throw new AdminComponentException(e);
-        }
+        return getConfigurationService().getClientConnections();
     }
 
     boolean matches(String regEx, String value) {

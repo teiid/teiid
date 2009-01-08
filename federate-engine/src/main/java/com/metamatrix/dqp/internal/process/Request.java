@@ -43,6 +43,7 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
@@ -54,7 +55,6 @@ import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.config.DQPProperties;
 import com.metamatrix.dqp.internal.process.capabilities.ConnectorCapabilitiesFinder;
 import com.metamatrix.dqp.internal.process.capabilities.SharedCachedFinder;
 import com.metamatrix.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
@@ -262,7 +262,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         String streamingBatchSize = null;
         if(envProps != null) {
-            streamingBatchSize = envProps.getProperty(DQPProperties.STREAMING_BATCH_SIZE);
+            streamingBatchSize = envProps.getProperty(DQPConfigSource.STREAMING_BATCH_SIZE);
         }
         if(streamingBatchSize != null){
         	context.setStreamingBatchSize(Integer.parseInt(streamingBatchSize));

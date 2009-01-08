@@ -34,7 +34,6 @@ import com.metamatrix.cdk.CdkPlugin;
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.common.application.basic.BasicEnvironment;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.data.api.AsynchQueryCommandExecution;
 import com.metamatrix.data.api.AsynchQueryExecution;
@@ -115,7 +114,7 @@ public class ConnectorHost implements IConnectorHost {
         this.connector = connector;
         this.util = util;
 
-        applicationEnvironment = new BasicEnvironment();
+        applicationEnvironment = new ApplicationEnvironment();
         connectorEnvironment = new ConnectorEnvironmentImpl(connectorEnvironmentProperties, new SysLogger(showLog), applicationEnvironment);
         this.connectorEnvironmentProperties = PropertiesUtils.clone(connectorEnvironmentProperties);
     }

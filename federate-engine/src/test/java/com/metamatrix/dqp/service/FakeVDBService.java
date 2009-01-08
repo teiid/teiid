@@ -231,22 +231,6 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
     }
 
     /* (non-Javadoc)
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-        // TODO Auto-generated method stub
-
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-        // TODO Auto-generated method stub
-
-    }
-
-    /* (non-Javadoc)
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {

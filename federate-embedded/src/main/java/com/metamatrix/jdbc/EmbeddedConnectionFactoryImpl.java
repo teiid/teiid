@@ -36,14 +36,12 @@ import java.util.Properties;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.application.ClientConnectionListener;
-import com.metamatrix.dqp.config.DQPConfigSource;
 import com.metamatrix.dqp.embedded.DQPListener;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
@@ -183,8 +181,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION, EmbeddedDataSource.USE_LATEST_VDB_VERSION);
                         
         try {
-            DQPConfigSource configuration = handler.getManager().getDQPConfig();
-            VDBService service = (VDBService)configuration.getService(DQPServiceNames.VDB_SERVICE);
+            VDBService service = (VDBService)handler.getManager().getDQP().getEnvironment().findService(DQPServiceNames.VDB_SERVICE);
             List<VDBArchive> vdbs = service.getAvailableVDBs();
 
             // We are looking for the latest version find that now 
@@ -202,8 +199,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             }
         } catch (MetaMatrixComponentException e) {
             throw new EmbeddedSQLException(e, JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
-        } catch (ApplicationInitializationException e) {
-            throw new EmbeddedSQLException(e, JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$            
         }
     }
         

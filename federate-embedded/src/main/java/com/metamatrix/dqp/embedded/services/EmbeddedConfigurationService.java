@@ -56,6 +56,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -71,8 +72,6 @@ import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationWriter;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.util.ProductInfoConstants;
@@ -110,16 +109,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList();
     UDFSource udfSource = null;
     HashSet<ServerConnection> clientConnections = new HashSet();
-    
-    /**
-     * ctor 
-     * The contents of the "dqp.properties" are sent into "initialize method.
-     * @since 4.3
-     */
-    public EmbeddedConfigurationService(DQPServiceRegistry svcRegistry) 
-        throws MetaMatrixComponentException{
-        super(DQPServiceNames.CONFIGURATION_SERVICE, svcRegistry);
-    }
     
     boolean valid(String str) {
         if (str != null) {
@@ -1043,20 +1032,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
 
     /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#bindService()
-     * @since 4.3
-     */
-    public void bindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#unbindService()
-     * @since 4.3
-     */
-    public void unbindService() throws ApplicationLifecycleException {
-    }
-
-    /** 
      * @see com.metamatrix.dqp.embedded.services.EmbeddedBaseDQPService#stopService()
      * @since 4.3
      */
@@ -1401,6 +1376,32 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         }
     }
     
+    public boolean isFullyConfiguredVDB(VDBArchive vdb) throws MetaMatrixComponentException{
+    	VDBDefn def = vdb.getConfigurationDef();
+    	Collection models = def.getModels();
+    	
+        for (Iterator i = models.iterator(); i.hasNext();) {
+            ModelInfo model = (ModelInfo)i.next();
+            if (model.isPhysical()) {
+                if (model.getConnectorBindingNames().isEmpty()) {
+                    DQPEmbeddedPlugin.logWarning("VDBService.vdb_missing_bindings", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$
+                    return false;
+                }
+
+                // make sure we have connector binding in the 
+                // configuration service. 
+                String bindingName = (String)model.getConnectorBindingNames().get(0); 
+                ConnectorBinding binding = def.getConnectorBindingByName(bindingName);
+                if (binding == null || getConnectorBinding(binding.getDeployedName()) == null) {
+                    DQPEmbeddedPlugin.logWarning("VDBService.vdb_missing_bindings", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$
+                    return false;
+                }
+            }
+        }   
+        return true;
+    }
+
+    
     /**
      * Register a listener for the VDB life cycle events, and get notified for
      * when vdb is loded and unloaded 
@@ -1514,6 +1515,16 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     public String getConnectorBatchSize() {
         return userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
-    }    
+    }
+
+	@Override
+	public void unregister(VDBLifeCycleListener listener) {
+		this.vdbLifeCycleListeners.remove(listener);
+	}
+
+	@Override
+	public void unregister(ConnectorBindingLifeCycleListener listener) {
+		this.connectorBindingLifeCycleListeners.remove(listener);
+	}    
 }
 

@@ -39,7 +39,6 @@ import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.platform.security.api.service.SecureService;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
@@ -47,7 +46,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
  * Interface ConnectorServiceInterface.
  *
  */
-public interface ConnectorServiceInterface extends ServiceInterface, SecureService {
+public interface ConnectorServiceInterface extends ServiceInterface {
     static final String SERVICE_NAME = "ConnectorService"; //$NON-NLS-1$
 
     /**

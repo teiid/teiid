@@ -32,11 +32,9 @@ import java.net.URL;
 import java.util.Date;
 import java.util.Properties;
 
-import com.metamatrix.common.application.basic.BasicApplication;
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.dqp.config.DQPConfigSource;
-import com.metamatrix.dqp.config.DQPLauncher;
 import com.metamatrix.dqp.internal.process.DQPCore;
 
 /**
@@ -62,11 +60,6 @@ public class DQPEmbeddedManager {
         this.dqpListener = listener;
     }
 
-
-    public DQPConfigSource getDQPConfig() {
-        return this.configSource;
-    }
-    
     /**
      * Main access method to DQP.  Will either find the DQP or
      * start and initialize as necessary.
@@ -76,8 +69,8 @@ public class DQPEmbeddedManager {
      */
     public synchronized DQPCore createDQP() throws ApplicationInitializationException {        
         if ( dqpInstance == null ) {
-            DQPLauncher launcher = new DQPLauncher(this.configSource);
-            dqpInstance = launcher.createDqp();
+            dqpInstance = new DQPCore();
+            dqpInstance.start(configSource);
             dqpStarttime = System.currentTimeMillis();
             DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
             
@@ -148,7 +141,7 @@ public class DQPEmbeddedManager {
      */
     public Properties getDQPProperties() {
         if (isDQPAlive()) {
-            return ((BasicApplication)dqpInstance).getEnvironment().getApplicationProperties();
+            return dqpInstance.getEnvironment().getApplicationProperties();
         }
         return null;
     }       

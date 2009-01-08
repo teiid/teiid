@@ -33,7 +33,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.basic.BasicEnvironment;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.application.Application;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.protocol.URLHelper;
@@ -43,6 +44,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
+import com.metamatrix.dqp.service.DQPServiceNames;
 
 
 /** 
@@ -60,11 +62,11 @@ public class TestEmbeddedVDBService extends TestCase{
                 copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
             }
         }
-        EmbeddedDQPServiceRegistry registry = new EmbeddedDQPServiceRegistry();
-        configService = new EmbeddedConfigurationService(registry);        
-        vdbService = new EmbeddedVDBService(registry);
-        configService.start(new BasicEnvironment());
-        vdbService.start(new BasicEnvironment());
+        Application registry = new Application();
+        configService = new EmbeddedConfigurationService();
+        registry.installService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
+        vdbService = new EmbeddedVDBService();
+        registry.installService(DQPServiceNames.VDB_SERVICE, vdbService);
     }
 
     protected void tearDown() throws Exception {
@@ -131,7 +133,7 @@ public class TestEmbeddedVDBService extends TestCase{
         try {
             vdb = vdbService.getVDB("Foo", "1"); //$NON-NLS-1$ //$NON-NLS-2$
             fail("must have thrown a exception"); //$NON-NLS-1$
-        }catch(Exception e) {
+        }catch(MetaMatrixComponentException e) {
             
         }
     }
@@ -210,11 +212,13 @@ public class TestEmbeddedVDBService extends TestCase{
         vdbService.stopService();
         configService.stopService();
         
-        EmbeddedDQPServiceRegistry registry = new EmbeddedDQPServiceRegistry();
-        configService = new EmbeddedConfigurationService(registry);        
-        vdbService = new EmbeddedVDBService(registry);
+        Application registry = new Application();
+        configService = new EmbeddedConfigurationService();
         configService.userPreferences = p;
         configService.initializeService(p);
+        registry.installService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
+        vdbService = new EmbeddedVDBService();
+        registry.installService(DQPServiceNames.VDB_SERVICE, vdbService);
         names = vdbService.getConnectorBindingNames("QT_Ora9DS", "1", "BQT1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         assertEquals(1, names.size());
         assertEquals("Loopy", (String)names.get(0)); //$NON-NLS-1$

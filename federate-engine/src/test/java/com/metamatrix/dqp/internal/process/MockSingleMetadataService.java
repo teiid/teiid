@@ -57,14 +57,6 @@ public class MockSingleMetadataService implements MetadataService {
 
     }
 
-    public void bind() throws ApplicationLifecycleException {
-
-    }
-
-    public void unbind() throws ApplicationLifecycleException {
-
-    }
-
     public void stop() throws ApplicationLifecycleException {
 
     }

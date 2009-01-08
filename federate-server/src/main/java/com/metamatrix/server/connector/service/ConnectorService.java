@@ -40,12 +40,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.common.classloader.URLFilteringClassLoader;
-import com.metamatrix.common.comm.ClientServiceRegistrant;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -75,20 +74,17 @@ import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
 import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager;
+import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.service.metadata.IndexMetadataService;
-import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
-import com.metamatrix.dqp.service.metadata.SingletonMetadataCacheHolder;
-import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
@@ -96,20 +92,19 @@ import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.server.ServerPlugin;
-import com.metamatrix.server.dqp.config.PlatformConfigSource;
-import com.metamatrix.server.dqp.service.PlatformVDBService;
 import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * ConnectorService.
  */
-public class ConnectorService extends AbstractService implements ConnectorServiceInterface, CacheAdmin, ClientServiceRegistrant {
+public class ConnectorService extends AbstractService implements ConnectorServiceInterface, CacheAdmin {
     private static final String RESULT_SET_CACHE_NAME = "ConnectorResultSetCache"; //$NON-NLS-1$
-    private static final String CONNECTOR_MGR = "com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager"; //$NON-NLS-1$
     
     private ConnectorManager connectorMgr;
     private String connectorMgrName;
     private boolean monitoringEnabled = true;
+    
+    private ClientServiceRegistry registry;
     
     private static boolean cacheClassLoaders = true;
     
@@ -133,7 +128,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         initExtensionModuleListener();
     }
 
-
     private static void initExtensionModuleListener() {
         MessageBus vmb = ResourceFinder.getMessageBus();
         EventObjectListener listener = new EventObjectListener() {
@@ -155,17 +149,15 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         	LogManager.logError(LogCommonConstants.CTX_CONFIG, e, e.getMessage()); 
         }
     }
-
-    
-    
     
     /**
      * Initialize ConnectorService
      */
     public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) {
+    	//this assumes that the dqp has already been initialized and i
+    	this.registry = listenerRegistry;
         
         super.init(id, deployedComponentID, props, listenerRegistry);
-        
         //read value of monitoringEnabled
         String monitoringEnabledString = getProperties().getProperty(ServicePropertyNames.SERVICE_MONITORING_ENABLED);
         if (monitoringEnabledString != null) {
@@ -252,7 +244,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      */
     private ConnectorManager createConnectorManager(Properties deMaskedProps, ClassLoader loader) throws ApplicationLifecycleException {        
         try {
-            ConnectorManager connectorManager = (ConnectorManager) ReflectionHelper.create(CONNECTOR_MGR, null, loader);
+            ConnectorManager connectorManager = (ConnectorManager) ReflectionHelper.create(ConnectorManager.class.getName(), null, loader);
             
             // Create a stringified connector ID from the serviceID
             ServiceID id = this.getID();
@@ -284,52 +276,24 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // the service.
         this.connectorMgr = createConnectorManager(deMaskedProps, loader);
 
+        
+        ApplicationEnvironment env = new ApplicationEnvironment();
+        env.setApplicationProperties(deMaskedProps);
+        env.bindService(DQPServiceNames.REGISTRY_SERVICE, new ClientServiceRegistryService(this.registry));
+        //this assumes that the QueryService is local and has been started
+        DQPCore dqp = (DQPCore)this.registry.getClientService(ClientSideDQP.class);
+        for (int i = 0; i < DQPServiceNames.ALL_SERVICES.length; i++) {
+        	env.bindService(DQPServiceNames.ALL_SERVICES[i], dqp.getEnvironment().findService(DQPServiceNames.ALL_SERVICES[i]));
+        }
+
         try {
-            //create and install VDB service
-            VDBService vdbSerice = new PlatformVDBService();
-            vdbSerice.initialize(new Properties());
-            connectorMgr.installService(DQPServiceNames.VDB_SERVICE, vdbSerice);
-
-            IndexMetadataService metadataSvc = getIndexMetadataService();
-            connectorMgr.installService(DQPServiceNames.METADATA_SERVICE, metadataSvc);
-
-            // Create and install a tracking service
-            ApplicationService dts = PlatformConfigSource.getTrackingService(); 
-            connectorMgr.installService(DQPServiceNames.TRACKING_SERVICE, dts);
-
-            // Create and install a transaction service
-            connectorMgr.installService(DQPServiceNames.TRANSACTION_SERVICE, PlatformConfigSource.getTransactionService());
-
             // Start the connector manager
-            this.connectorMgr.start();
+            this.connectorMgr.start(env);
             this.connectorMgrName = connectorMgr.getName();
-            
-        } catch (ApplicationInitializationException e) { 
-            killService();
-            throw e;
         } catch (ApplicationLifecycleException e) {
             killService();
             throw e;
         }
-    }
-
-
-    /**
-     * Build sn return Index Metadata Service.
-     * @return
-     * @throws ApplicationInitializationException
-     */
-    private IndexMetadataService getIndexMetadataService() throws ApplicationInitializationException {
-        // Create and install a metadata service on the connector manager
-        QueryMetadataCache sharedCache = null;        
-        try {
-            sharedCache = SingletonMetadataCacheHolder.getMetadataCache(RuntimeMetadataCatalog.getInstance().getSystemVDBArchive());            
-        } catch(Exception e) {
-            throw new ApplicationInitializationException(e, ServerPlugin.Util.getString("ConnectorService.0")); //$NON-NLS-1$
-        }
-        IndexMetadataService metadataSvc = new IndexMetadataService(sharedCache);
-        metadataSvc.initialize(new Properties());
-        return metadataSvc;
     }
 
     /**
@@ -555,22 +519,14 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
     }
     
-    
     private synchronized static void clearClassLoaderCache() {
     	LogManager.logInfo(LogCommonConstants.CTX_CONFIG, "ConnectorService clearing ClassLoader cache"); //$NON-NLS-1$
         
         classLoaderCache.clear();
     }
 
-    
-
     private static void logOK(String messageProperty, Object value) {
-        Object[] params = new Object[]{value};
-        LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString(messageProperty, params)); 
+        LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString(messageProperty, value)); 
     }
-
-	public void setClientServiceRegistry(ClientServiceRegistry registry) {
-		this.connectorMgr.getEnvironment().bindService(DQPServiceNames.REGISTRY_SERVICE, new ServerListenerRegistryService(registry));
-	}
     
 }

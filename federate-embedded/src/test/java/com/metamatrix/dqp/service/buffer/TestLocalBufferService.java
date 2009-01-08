@@ -32,6 +32,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.application.Application;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
@@ -39,10 +40,8 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
-import com.metamatrix.dqp.embedded.services.EmbeddedDQPServiceRegistry;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.DQPServiceRegistry;
 
 public class TestLocalBufferService extends TestCase {
 
@@ -59,7 +58,7 @@ public class TestLocalBufferService extends TestCase {
             fis = new FileInputStream(f);
             bis = new BufferedInputStream(fis); 
             props.load(bis);
-            props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, f.toURL());
+            props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, f.toURI().toURL());
         } finally {
             if(bis != null) {   
                 try {             
@@ -75,19 +74,20 @@ public class TestLocalBufferService extends TestCase {
     
     public void testMissingRequiredProperties() throws Exception {        
         try {
-            System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1");
+            System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             
-            DQPServiceRegistry r = new EmbeddedDQPServiceRegistry();
-            ConfigurationService cs = new EmbeddedConfigurationService(r);
-            r.registerService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-            Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties");
-            p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir"));
-            cs.initialize(p);            
-            EmbeddedBufferService svc = new EmbeddedBufferService(r);
-            svc.initialize(null); //$NON-NLS-1$
+            Application r = new Application();
+            ConfigurationService cs = new EmbeddedConfigurationService();
+            Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
+            p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
+            cs.initialize(p);
+            r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
+            EmbeddedBufferService svc = new EmbeddedBufferService();
+            svc.initialize(null);
+            r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
 
             // These are defaults if none of the properties are set.
-            assertTrue("64".equals(cs.getBufferMemorySize()));
+            assertTrue("64".equals(cs.getBufferMemorySize())); //$NON-NLS-1$
             assertTrue(cs.getDiskBufferDirectory().isDirectory() && cs.getDiskBufferDirectory().exists());
             assertTrue(cs.useDiskBuffering());
             
@@ -99,20 +99,21 @@ public class TestLocalBufferService extends TestCase {
     public void testCheckMemPropertyGotSet() throws Exception {
         EmbeddedBufferService svc = null;
         ConfigurationService cs = null;
-        DQPServiceRegistry r = new EmbeddedDQPServiceRegistry();
-        cs = new EmbeddedConfigurationService(r);
-        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties");
+        Application r = new Application();
+        cs = new EmbeddedConfigurationService();
+        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
         cs.initialize(p);
-        r.registerService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-        svc = new EmbeddedBufferService(r);
-        svc.initialize(null); //$NON-NLS-1$
+        r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
+        svc = new EmbeddedBufferService();
+        svc.initialize(null);
+        r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
         
         // all the properties are set
-        assertTrue("96".equals(cs.getBufferMemorySize()));    
+        assertTrue("96".equals(cs.getBufferMemorySize()));     //$NON-NLS-1$
         cs.getDiskBufferDirectory();
-        assertTrue("Not Directory", cs.getDiskBufferDirectory().isDirectory());
-        assertTrue("does not exist", cs.getDiskBufferDirectory().exists());
-        assertTrue("does not end with one", cs.getDiskBufferDirectory().getName().endsWith("1"));
+        assertTrue("Not Directory", cs.getDiskBufferDirectory().isDirectory()); //$NON-NLS-1$
+        assertTrue("does not exist", cs.getDiskBufferDirectory().exists()); //$NON-NLS-1$
+        assertTrue("does not end with one", cs.getDiskBufferDirectory().getName().endsWith("1")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(cs.useDiskBuffering());
         
         BufferManagerImpl mgr = (BufferManagerImpl) svc.getBufferManager();
@@ -122,16 +123,17 @@ public class TestLocalBufferService extends TestCase {
     }
 
     public void testCheckMemPropertyGotSet2() throws Exception {
-        System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1");        
+        System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         EmbeddedBufferService svc = null;
-        DQPServiceRegistry r = new EmbeddedDQPServiceRegistry();
-        ConfigurationService cs = new EmbeddedConfigurationService(r);
-        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties");
-        p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir"));
+        Application r = new Application();
+        ConfigurationService cs = new EmbeddedConfigurationService();
+        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
+        p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
         cs.initialize(p);            
-        r.registerService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
-        svc = new EmbeddedBufferService(r);
-        svc.initialize(null); //$NON-NLS-1$
+        r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
+        svc = new EmbeddedBufferService();
+        svc.initialize(null);
+        r.installService(DQPServiceNames.BUFFER_SERVICE, svc);
         
         // all the properties are set
         assertFalse(cs.useDiskBuffering());

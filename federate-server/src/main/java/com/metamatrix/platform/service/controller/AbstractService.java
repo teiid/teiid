@@ -34,7 +34,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.common.comm.ClientServiceRegistrant;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.DeployedComponentID;
@@ -148,11 +147,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
             registerForEvents();
             logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0005, getServiceType()));
 
-            if (this instanceof ClientServiceRegistrant ) {
-                ClientServiceRegistrant registrant = (ClientServiceRegistrant) this;
-                registrant.setClientServiceRegistry(listenerRegistry);
-            }
-            
             startTime = new Date();
             markAsOpen();
             setInitException(null);

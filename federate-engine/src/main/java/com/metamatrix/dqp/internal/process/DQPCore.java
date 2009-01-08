@@ -25,6 +25,7 @@
 package com.metamatrix.dqp.internal.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,14 +42,17 @@ import javax.transaction.xa.Xid;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.application.Application;
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.basic.BasicApplication;
+import com.metamatrix.common.application.DQPConfigSource;
+import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
@@ -58,7 +62,6 @@ import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.config.DQPProperties;
 import com.metamatrix.dqp.internal.cache.CacheID;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
 import com.metamatrix.dqp.internal.cache.ResultSetCacheUtil;
@@ -85,7 +88,7 @@ import com.metamatrix.vdb.runtime.VDBKey;
 /**
  * Implements the core DQP processing.
  */
-public class DQPCore extends BasicApplication implements ClientSideDQP {
+public class DQPCore extends Application implements ClientSideDQP {
 	
 	static class ConnectorCapabilitiesCache  {
 		
@@ -147,25 +150,16 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
 		this.environment = environment;
 	}
 	
-    private int getInteger(Properties props, String propertyName, String errorMessageKey, int defaultValue) {
-        String propertyText = props.getProperty(propertyName);
-        if(propertyText != null) {
-            try {
-                return new Integer(propertyText).intValue();
-            } catch (NumberFormatException e) {
-            	LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString(errorMessageKey, propertyText));
-            }
-        }
-        return defaultValue;
-    }
-    
     /**
      * perform a graceful shutdown by allowing in process work to complete
      * TODO: this is not quite correct from a request perspective, since we need to re-queue in many instances,
      * which will now result in an exception
+     * @throws ApplicationLifecycleException 
      */
-    public void stop() {
-        processWorkerPool.shutdown();
+	@Override
+    public void stop() throws ApplicationLifecycleException {
+    	processWorkerPool.shutdown();
+    	super.stop();
     }
     
     /**
@@ -382,9 +376,7 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
             return Collections.EMPTY_LIST;
         }
 
-        Collection statList = new ArrayList(1);
-        statList.add(processWorkerPool.getStats());
-        return statList;
+        return Arrays.asList(processWorkerPool.getStats());
     }
 
     /**
@@ -414,7 +406,7 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
         List<RequestID> requestIds = requestsByClients.get(sessionId);
         if (requestIds != null) {
             synchronized (requestsByClients) {
-            	requestIds = new ArrayList(requestIds);
+            	requestIds = new ArrayList<RequestID>(requestIds);
     		}
 	        for (RequestID reqId : requestIds) {
 	            try {
@@ -512,20 +504,6 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
 		}
 	}
     
-    int getDefaultChunkSize() {
-        Properties envProps = getEnvironment().getApplicationProperties();
-        if(envProps != null) {
-            String streamingBatchSize = envProps.getProperty(DQPProperties.STREAMING_BATCH_SIZE);
-            if(streamingBatchSize != null){
-                int size = Integer.parseInt(streamingBatchSize) * 1024;
-                if(size > 0) {
-                    return size;
-                }
-            }
-        }
-        return 10*1024;
-    }
-	
     void logMMCommand(RequestMessage msg, boolean isBegin, boolean isCancel, int rowCount) {
         if(this.tracker == null || msg == null || !tracker.willRecordMMCmd()){
             return;
@@ -593,19 +571,25 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
 		return chunkSize;
 	}
 
-	public void start() throws ApplicationLifecycleException {
+	@Override
+	public void start(DQPConfigSource configSource)
+			throws ApplicationInitializationException {
+		super.start(configSource);
+		start();
+	}
+	
+	public void start() {
 		ApplicationEnvironment env = this.getEnvironment();
 		Properties props = env.getApplicationProperties();
         
-        this.chunkSize = getDefaultChunkSize();
+        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPConfigSource.STREAMING_BATCH_SIZE, 10) * 1024;
         
         //result set cache
-        Properties rsCacheProps = null;
-        if(Boolean.valueOf(props.getProperty(DQPProperties.USE_RESULTSET_CACHE, "false")).booleanValue()){ //$NON-NLS-1$
-        	rsCacheProps = new Properties();
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPProperties.MAX_RESULTSET_CACHE_SIZE, "0")); //$NON-NLS-1$
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPProperties.MAX_RESULTSET_CACHE_AGE, "0")); //$NON-NLS-1$
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPProperties.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
+        if(PropertiesUtils.getBooleanProperty(props, DQPConfigSource.USE_RESULTSET_CACHE, false)){ 
+        	Properties rsCacheProps = new Properties();
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPConfigSource.MAX_RESULTSET_CACHE_SIZE, "0")); //$NON-NLS-1$
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPConfigSource.MAX_RESULTSET_CACHE_AGE, "0")); //$NON-NLS-1$
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPConfigSource.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
         	try {
 				this.rsCache = new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
 			} catch (MetaMatrixComponentException e) {
@@ -616,16 +600,16 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
         }
 
         //prepared plan cache
-        int maxSizeTotal = Integer.parseInt(props.getProperty(DQPProperties.MAX_PLAN_CACHE_SIZE, String.valueOf(PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL)));
+        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPConfigSource.MAX_PLAN_CACHE_SIZE, PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL);
         prepPlanCache = new PreparedPlanCache(maxSizeTotal);
 		
         // Processor debug flag
-        this.processDebugAllowed = Boolean.valueOf(props.getProperty(DQPProperties.PROCESSOR_DEBUG_ALLOWED, "false")).booleanValue(); //$NON-NLS-1$
+        this.processDebugAllowed = PropertiesUtils.getBooleanProperty(props, DQPConfigSource.PROCESSOR_DEBUG_ALLOWED, false);
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", processDebugAllowed)); //$NON-NLS-1$
                         
-        this.maxCodeTables = getInteger(props, DQPProperties.MAX_CODE_TABLES, "DQPCore.Exception_trying_to_determine_maximum_number_of_code_tables.", DEFAULT_MAX_CODE_TABLES); //$NON-NLS-1$
-        this.maxCodeTableRecords = getInteger(props, DQPProperties.MAX_CODE_TABLE_RECORDS, "DQPCore.Exception_trying_to_determine_maximum_record_size_of_a_code_table.", DEFAULT_MAX_CODE_TABLE_RECORDS); //$NON-NLS-1$
-        this.processorTimeslice = getInteger(props, DQPProperties.PROCESSOR_TIMESLICE, "DQPCore.Exception_trying_to_determine_processor_timeslice_from_{0}.", DEFAULT_PROCESSOR_TIMESLICE); //$NON-NLS-1$
+        this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPConfigSource.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);
+        this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPConfigSource.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_TABLE_RECORDS);
+        this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPConfigSource.PROCESSOR_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
 
         //get buffer manager
         BufferService bufferService = (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE);
@@ -637,8 +621,8 @@ public class DQPCore extends BasicApplication implements ClientSideDQP {
         metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
 
         // Create the worker pools to tie the queues together
-        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, Integer.parseInt(props.getProperty(DQPProperties.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)), 
-                Integer.parseInt(props.getProperty(DQPProperties.PROCESS_POOL_THREAD_TTL, DEAFULT_PROCESS_WORKER_TIMEOUT))); 
+        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, Integer.parseInt(props.getProperty(DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)), 
+                Integer.parseInt(props.getProperty(DQPConfigSource.PROCESS_POOL_THREAD_TTL, DEAFULT_PROCESS_WORKER_TIMEOUT))); 
  
         tempTableStoresHolder = new TempTableStoresHolder(bufferManager);
         

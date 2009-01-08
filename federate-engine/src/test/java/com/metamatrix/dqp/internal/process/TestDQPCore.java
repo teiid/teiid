@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.common.application.basic.BasicEnvironment;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeTransactionService;
 import com.metamatrix.dqp.internal.process.DQPCore.ConnectorCapabilitiesCache;
@@ -59,11 +59,11 @@ public class TestDQPCore extends TestCase {
         super(name);
     }
 
-    private DQPCore exampleDQPCore() throws ApplicationLifecycleException {
+    private DQPCore exampleDQPCore() throws ApplicationInitializationException {
         String vdbName = "bqt"; //$NON-NLS-1$
 		String vdbVersion = "1"; //$NON-NLS-1$
     	
-    	BasicEnvironment env = new BasicEnvironment();
+    	ApplicationEnvironment env = new ApplicationEnvironment();
         Properties props = new Properties();
         env.setApplicationProperties(props);
 

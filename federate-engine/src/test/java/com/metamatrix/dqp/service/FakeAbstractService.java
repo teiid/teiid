@@ -37,8 +37,6 @@ public class FakeAbstractService implements ApplicationService {
 
     private int initializeCount = 0;
     private int startCount = 0;
-    private int bindCount = 0;
-    private int unbindCount = 0;
     private int stopCount = 0;
      
 
@@ -64,22 +62,6 @@ public class FakeAbstractService implements ApplicationService {
     }
 
     /* 
-     * @see com.metamatrix.common.application.ApplicationService#bind()
-     */
-    public void bind() throws ApplicationLifecycleException {
-        this.bindCount++;
-
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#unbind()
-     */
-    public void unbind() throws ApplicationLifecycleException {
-        this.unbindCount++;
-
-    }
-
-    /* 
      * @see com.metamatrix.common.application.ApplicationService#stop()
      */
     public void stop() throws ApplicationLifecycleException {
@@ -93,14 +75,6 @@ public class FakeAbstractService implements ApplicationService {
 
     public int getStartCount() {
         return this.startCount;
-    }
-
-    public int getBindCount() {
-        return this.bindCount;
-    }
-
-    public int getUnbindCount() {
-        return this.unbindCount;
     }
 
     public int getStopCount() {

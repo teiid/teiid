@@ -24,11 +24,16 @@
 
 package com.metamatrix.dqp.config;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
+import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.service.AutoGenDataService;
@@ -50,23 +55,18 @@ public class TestDQPLauncher extends TestCase {
         super(name);
     }
     
-    public void setup() {
-    }
-
     public void testLaunch() throws Exception {
-        FakeConfigSource configSource = new FakeConfigSource();
-        FakeAbstractService[] svcs = new FakeAbstractService[3];
-        svcs[0] = new FakeBufferService();
-        svcs[0].initialize(new Properties());
-        svcs[1] = new FakeMetadataService();
-        svcs[1].initialize(new Properties());
-        svcs[2] = new AutoGenDataService();
-        svcs[2].initialize(new Properties());
-        configSource.addService(DQPServiceNames.BUFFER_SERVICE, svcs[0]);
-        configSource.addService(DQPServiceNames.METADATA_SERVICE, svcs[1]);
-        configSource.addService(DQPServiceNames.DATA_SERVICE, svcs[2]);
+        DQPConfigSource configSource = Mockito.mock(DQPConfigSource.class);
+        Mockito.stub(configSource.getProperties()).toReturn(new Properties());
+        HashMap<String, Class<? extends ApplicationService>> defaults = new HashMap<String, Class<? extends ApplicationService>>();
+        Mockito.stub(configSource.getDefaultServiceClasses()).toReturn(defaults);
+        String[] services = new String[] {DQPServiceNames.BUFFER_SERVICE, DQPServiceNames.METADATA_SERVICE, DQPServiceNames.DATA_SERVICE};
+        defaults.put(DQPServiceNames.BUFFER_SERVICE, FakeBufferService.class);
+        defaults.put(DQPServiceNames.METADATA_SERVICE, FakeMetadataService.class);
+        defaults.put(DQPServiceNames.DATA_SERVICE, AutoGenDataService.class);
         
-        DQPLauncher launcher = new DQPLauncher(configSource);
+        DQPCore dqpCore = new DQPCore();
+        dqpCore.start(configSource);
     	
         PlatformLog log = PlatformLog.getInstance();
     	List<LogListener> list = log.getLogListeners();
@@ -74,16 +74,15 @@ public class TestDQPLauncher extends TestCase {
     		log.removeListener(l);
     	}
                 
-        DQPCore dqp = launcher.createDqp();
+        DQPCore dqp = new DQPCore();
+        dqp.start(configSource);
         assertNotNull("DQP should not be null", dqp); //$NON-NLS-1$
         
         // Check that bootstrapping occurred
-        for(int i=0; i<svcs.length; i++) {
-            FakeAbstractService svc = svcs[i];
+        for(int i=0; i<services.length; i++) {
+            FakeAbstractService svc = (FakeAbstractService)dqpCore.getEnvironment().findService(services[i]);
             assertEquals("service " + svc.getClass().getName() + " not init'ed correct # of times ", 1, svc.getInitializeCount()); //$NON-NLS-1$ //$NON-NLS-2$
-            assertEquals("service " + svc.getClass().getName() + " not bind'ed correct # of times ", 1, svc.getBindCount()); //$NON-NLS-1$ //$NON-NLS-2$
             assertEquals("service " + svc.getClass().getName() + " not start'ed correct # of times ", 1, svc.getStartCount()); //$NON-NLS-1$ //$NON-NLS-2$
-            assertEquals("service " + svc.getClass().getName() + " not unbind'ed correct # of times ", 0, svc.getUnbindCount()); //$NON-NLS-1$ //$NON-NLS-2$
             assertEquals("service " + svc.getClass().getName() + " not stop'ed correct # of times ", 0, svc.getStopCount()); //$NON-NLS-1$ //$NON-NLS-2$
         }
 

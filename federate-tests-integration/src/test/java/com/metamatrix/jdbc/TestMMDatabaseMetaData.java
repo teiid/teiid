@@ -88,7 +88,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         dbmd = new MMDatabaseMetaData((BaseDriver)DriverManager.getDriver(serverUrl), (MMConnection) conn);
     }
 
-    public void tearDown() {
+    public void tearDown() throws Exception {
         oneTimeTearDown();
     }    
     
@@ -110,27 +110,17 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
     
-    protected synchronized static void oneTimeTearDown() {
+    protected synchronized static void oneTimeTearDown() throws SQLException {
         tests--;
         if (tests == 0) {
             closeMMConnection();
         }
     }
     
-    private static void closeMMConnection() {
-        try{
-            if (conn != null) {
-                conn.close();
-            }
-
-        }catch(Exception ce){
-            fail("Unable to close MMConnection." + ce.getMessage()); //$NON-NLS-1$
-        }finally {
-            try {
-                conn.close();
-            } catch (Exception ex) {
-            }
-        }     
+    private static void closeMMConnection() throws SQLException {
+        if (conn != null) {
+            conn.close();
+        }
     }
 
     /** Test all the non-query methods */
