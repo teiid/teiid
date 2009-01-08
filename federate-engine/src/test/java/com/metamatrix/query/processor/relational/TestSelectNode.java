@@ -32,9 +32,12 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
@@ -61,8 +64,8 @@ public class TestSelectNode extends TestCase {
         super(arg0);
     }
     
-    public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+    public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
@@ -75,35 +78,30 @@ public class TestSelectNode extends TestCase {
         selectNode.addChild(dataNode);
         selectNode.initialize(context, mgr, dataMgr);
         
-        try {
-            selectNode.open();
-            
-            int currentRow = 1;
-            while(true) {
-                try {
-                    TupleBatch batch = selectNode.nextBatch();
-                    if(batch.getRowCount() > 0) {
-                        for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                            //System.out.println(batch.getTuple(row));
-                            assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
-                        }
+        selectNode.open();
+        
+        int currentRow = 1;
+        while(true) {
+            try {
+                TupleBatch batch = selectNode.nextBatch();
+                if(batch.getRowCount() > 0) {
+                    for(int row = currentRow; row <= batch.getEndRow(); row++) {
+                        //System.out.println(batch.getTuple(row));
+                        assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
                     }
-                    
-                    if(batch.getTerminationFlag()) {
-                        break;
-                    }
-                    currentRow += batch.getRowCount();    
-                } catch(BlockedException e) {
-                    // ignore and retry
                 }
+                
+                if(batch.getTerminationFlag()) {
+                    break;
+                }
+                currentRow += batch.getRowCount();    
+            } catch(BlockedException e) {
+                // ignore and retry
             }
-        } catch(MetaMatrixException e) {
-            e.printStackTrace();
-            fail("Unexpected exception: " + e.getMessage());     //$NON-NLS-1$
-        }                
+        }
     }
     
-    public void testNoRows() {
+    public void testNoRows() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -125,7 +123,7 @@ public class TestSelectNode extends TestCase {
         
     }
 
-    public void testSimpleSelect() {
+    public void testSimpleSelect() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -160,7 +158,7 @@ public class TestSelectNode extends TestCase {
 
     }
 
-    public void testSelectWithLookup() {
+    public void testSelectWithLookup() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 

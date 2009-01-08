@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -55,7 +56,7 @@ public class TestAccessNode extends TestCase {
         node.setCommand(command);
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$
-        BufferManager bm = NodeTestUtil.getTestBufferManager(100000, 100);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakePDM dataManager = new FakePDM(expectedCommand);
         
         node.initialize(context, bm, dataManager);
@@ -89,7 +90,7 @@ public class TestAccessNode extends TestCase {
         node.setCommand(query);
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$
-        BufferManager bm = NodeTestUtil.getTestBufferManager(100000, 100);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakePDM dataManager = new FakePDM("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"); //$NON-NLS-1$
         node.initialize(context, bm, dataManager);
         // Call open()

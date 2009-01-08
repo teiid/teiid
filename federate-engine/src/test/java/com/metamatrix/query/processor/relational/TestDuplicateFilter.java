@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.aggregate.Count;
 
@@ -45,7 +46,7 @@ public class TestDuplicateFilter extends TestCase {
     }
     
     public void helpTestDuplicateFilter(Object[] input, Class dataType, int expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(100000);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         
         DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test", mgr.getProcessorBatchSize()); //$NON-NLS-1$
         filter.initialize(dataType);

@@ -37,6 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
@@ -62,8 +63,8 @@ public class TestProjectNode extends TestCase {
         super(arg0);
     }
     
-    public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+    public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) throws MetaMatrixComponentException {
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);

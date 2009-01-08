@@ -29,6 +29,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -50,77 +53,63 @@ public class TestRelationalNodeStatistics extends TestCase {
     
     public void testBatchTimer() {
         RelationalNodeStatistics testnodeStatistics = new RelationalNodeStatistics();
-        try{
-            testnodeStatistics.startBatchTimer();
-            assertTrue("The batch timer did not yield a start time", testnodeStatistics.getBatchStartTime()!= 0); //$NON-NLS-1$
-            testnodeStatistics.stopBatchTimer();
-            assertTrue("The batch timer did not yield an end time", testnodeStatistics.getBatchEndTime()!= 0); //$NON-NLS-1$
-        }catch(Exception e) {
-            fail("Assertion Exception: " + e.getMessage()); //$NON-NLS-1$
-        }
+        testnodeStatistics.startBatchTimer();
+        assertTrue("The batch timer did not yield a start time", testnodeStatistics.getBatchStartTime()!= 0); //$NON-NLS-1$
+        testnodeStatistics.stopBatchTimer();
+        assertTrue("The batch timer did not yield an end time", testnodeStatistics.getBatchEndTime()!= 0); //$NON-NLS-1$
     }
 
-    public void testStatsCollection() {
+    public void testStatsCollection() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List[] data = createData(1000);
         FakeRelationalNode fakeNode = this.createFakeNode(data);
         
         // read from fake node
-        try {
-            while(true) {
-                TupleBatch batch = fakeNode.nextBatch();
-                if(batch.getTerminationFlag()) {
-                    break;
-                } 
-            }
-            
-            this.actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
-            this.actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
-            this.actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
+        while(true) {
+            TupleBatch batch = fakeNode.nextBatch();
+            if(batch.getTerminationFlag()) {
+                break;
+            } 
+        }
+        
+        this.actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
+        this.actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
+        this.actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
 //            this.actualNodeCumulativeNextBatchProcessingTime = fakeNode.getNodeStatistics().getNodeCumulativeNextBatchProcessingTime();
 //            this.actualNodeCumulativeProcessingTime = fakeNode.getNodeStatistics().getNodeCumulativeProcessingTime();
 //            this.actualNodeProcessingTime = fakeNode.getNodeStatistics().getNodeProcessingTime();
-            
-            //System.out.println("Actual NodeComulativeNextBatchProcessingTime: "+ this.actualNodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
-            //System.out.println("Actual NodeComulativeProcessingTime: "+ this.actualNodeCumulativeProcessingTime); //$NON-NLS-1$
-            //System.out.println("Actual NodeProcessingTime: "+ this.actualNodeProcessingTime); //$NON-NLS-1$
-            
-            assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ this.actualNodeOutputRows, 1000, this.actualNodeOutputRows); //$NON-NLS-1$
-            assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ this.actualNodeNextBatchCalls, 10, this.actualNodeNextBatchCalls); //$NON-NLS-1$
-            assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeBlocks, 0, this.actualNodeBlocks); //$NON-NLS-1$
-            assertEquals("The NodeComulativeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeCumulativeBlocks, 0, this.actualNodeCumulativeBlocks); //$NON-NLS-1$
-        } catch(Exception e) {
-            e.printStackTrace();
-            fail("Unexpected exception: " + e.getMessage()); //$NON-NLS-1$
-        }
+        
+        //System.out.println("Actual NodeComulativeNextBatchProcessingTime: "+ this.actualNodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
+        //System.out.println("Actual NodeComulativeProcessingTime: "+ this.actualNodeCumulativeProcessingTime); //$NON-NLS-1$
+        //System.out.println("Actual NodeProcessingTime: "+ this.actualNodeProcessingTime); //$NON-NLS-1$
+        
+        assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ this.actualNodeOutputRows, 1000, this.actualNodeOutputRows); //$NON-NLS-1$
+        assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ this.actualNodeNextBatchCalls, 10, this.actualNodeNextBatchCalls); //$NON-NLS-1$
+        assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeBlocks, 0, this.actualNodeBlocks); //$NON-NLS-1$
+        assertEquals("The NodeComulativeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeCumulativeBlocks, 0, this.actualNodeCumulativeBlocks); //$NON-NLS-1$
     }
 
-    public void testDescriptionProperties() {
+    public void testDescriptionProperties() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List[] data = createData(1000);
         FakeRelationalNode fakeNode = this.createFakeNode(data);
         
         // read from fake node
-        try {
-            while(true) {
-                TupleBatch batch = fakeNode.nextBatch();
-                if(batch.getTerminationFlag()) {
-                    break;
-                } 
-            }
-            List statsList = (List) fakeNode.getDescriptionProperties().get("nodeStatistics"); //$NON-NLS-1$
+        while(true) {
+            TupleBatch batch = fakeNode.nextBatch();
+            if(batch.getTerminationFlag()) {
+                break;
+            } 
+        }
+        List statsList = (List) fakeNode.getDescriptionProperties().get("nodeStatistics"); //$NON-NLS-1$
 //            Iterator statsIterator = statsList.iterator();
 //            while(statsIterator.hasNext()) {
 //                String stat = (String) statsIterator.next();
 //                System.out.println(stat);
 //            }
-            
-            assertEquals("The Number of Statistic was Inccorrect. Correct: 6 Actual: "+ statsList.size(), 6, statsList.size()); //$NON-NLS-1$
-        } catch(Exception e) {
-            e.printStackTrace();
-            fail("Unexpected exception: " + e.getMessage()); //$NON-NLS-1$
-        }
+        
+        assertEquals("The Number of Statistic was Inccorrect. Correct: 6 Actual: "+ statsList.size(), 6, statsList.size()); //$NON-NLS-1$
     }
     
-    private FakeRelationalNode createFakeNode(List[] data) {
+    private FakeRelationalNode createFakeNode(List[] data) throws MetaMatrixComponentException {
         // setup 
         ElementSymbol element = new ElementSymbol("a"); //$NON-NLS-1$
         element.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -130,7 +119,7 @@ public class TestRelationalNodeStatistics extends TestCase {
         FakeRelationalNode fakeNode = new FakeRelationalNode(1, data, 100);
         fakeNode.setElements(elements);
         CommandContext context = new CommandContext("pid", "group", null, 100, null, null, null, null, null, null, false, true); //$NON-NLS-1$ //$NON-NLS-2$
-        fakeNode.initialize(context, NodeTestUtil.getTestBufferManager(10000), null);
+        fakeNode.initialize(context, BufferManagerFactory.getStandaloneBufferManager(), null);
         return fakeNode;
     }
     

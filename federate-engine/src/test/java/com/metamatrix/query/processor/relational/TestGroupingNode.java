@@ -37,6 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
@@ -133,7 +134,7 @@ public class TestGroupingNode extends TestCase {
 	// ################################## ACTUAL TESTS ################################
 	
 	public void test1() throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         // Set up
 		GroupingNode node = new GroupingNode(1);
@@ -177,7 +178,7 @@ public class TestGroupingNode extends TestCase {
 	}
 
     public void test2() throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         // Set up
         GroupingNode node = new GroupingNode(1);
@@ -212,7 +213,7 @@ public class TestGroupingNode extends TestCase {
 
     // Same as test2, but uses processor batch size smaller than number of groups
     public void test3() throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         ((BufferManagerImpl)mgr).getConfig().setProcessorBatchSize(5);
 
         // Set up
@@ -247,7 +248,7 @@ public class TestGroupingNode extends TestCase {
     }
     
     public void testDefect5769() throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         ElementSymbol bigDecimal = new ElementSymbol("value"); //$NON-NLS-1$
         bigDecimal.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);        
@@ -283,7 +284,7 @@ public class TestGroupingNode extends TestCase {
     }
 
     public void testdefect9842() throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
         col1.setType(Integer.class);
@@ -326,7 +327,7 @@ public class TestGroupingNode extends TestCase {
     }
 
     private void helpTestLookupFunctionInAggregate(int batchSize) throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         ((BufferManagerImpl)mgr).getConfig().setProcessorBatchSize(batchSize);
 
         // Set up
@@ -380,7 +381,7 @@ public class TestGroupingNode extends TestCase {
     }
     
     public void helpTestEmptyGroup(boolean groupBy) throws Exception {
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1);
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
         col1.setType(Integer.class);

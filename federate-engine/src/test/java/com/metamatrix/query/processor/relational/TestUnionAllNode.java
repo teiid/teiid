@@ -30,7 +30,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -50,7 +51,7 @@ public class TestUnionAllNode extends TestCase {
         super(arg0);
     }
     
-    public void helpTestUnion(RelationalNode[] children, RelationalNode union, List[] expected) {
+    public void helpTestUnion(RelationalNode[] children, RelationalNode union, List[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(1, 2);
         CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -61,39 +62,34 @@ public class TestUnionAllNode extends TestCase {
         
         union.initialize(context, mgr, null);
         
-        try {
-            union.open();
-            
-            int currentRow = 1;
-            while(true) {
-                try {
-                    TupleBatch batch = union.nextBatch();
-                    for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                        List tuple = batch.getTuple(row);
-                        //System.out.println(tuple);
-                        assertEquals("Rows don't match at " + row, expected[row-1], tuple); //$NON-NLS-1$
-                    }
-                    
-                    currentRow += batch.getRowCount();    
-    
-                    if(batch.getTerminationFlag()) {
-                        break;
-                    }
-                } catch(BlockedException e) {
-                    // ignore and retry
+        union.open();
+        
+        int currentRow = 1;
+        while(true) {
+            try {
+                TupleBatch batch = union.nextBatch();
+                for(int row = currentRow; row <= batch.getEndRow(); row++) {
+                    List tuple = batch.getTuple(row);
+                    //System.out.println(tuple);
+                    assertEquals("Rows don't match at " + row, expected[row-1], tuple); //$NON-NLS-1$
                 }
+                
+                currentRow += batch.getRowCount();    
+
+                if(batch.getTerminationFlag()) {
+                    break;
+                }
+            } catch(BlockedException e) {
+                // ignore and retry
             }
-            
-            union.close();
-            
-            assertEquals("Didn't match expected counts", expected.length, currentRow-1); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            e.printStackTrace();
-            fail("Unexpected exception: " + e.getMessage());     //$NON-NLS-1$
-        }                
+        }
+        
+        union.close();
+        
+        assertEquals("Didn't match expected counts", expected.length, currentRow-1); //$NON-NLS-1$
     }
     
-    public void testNoRows() {
+    public void testNoRows() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -119,7 +115,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnion(new RelationalNode[] {leftNode, rightNode}, union, new List[0]);        
     }
 
-    public void helpTestUnionConfigs(int sources, int blockModIndex, int rowsPerSource, int batchSize, List[] expected) {
+    public void helpTestUnionConfigs(int sources, int blockModIndex, int rowsPerSource, int batchSize, List[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -154,7 +150,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnion(nodes, union, expected);           
     }
     
-    public void testBasicUnion() {
+    public void testBasicUnion() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -167,7 +163,7 @@ public class TestUnionAllNode extends TestCase {
         
     }
 
-    public void testBasicUnionMultipleSources() {
+    public void testBasicUnionMultipleSources() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -184,7 +180,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, -1, 2, 50, expected);
     }
 
-    public void testMultipleSourcesHalfBlockingNodes() {
+    public void testMultipleSourcesHalfBlockingNodes() throws MetaMatrixComponentException, MetaMatrixProcessingException  {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -196,7 +192,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, 2, 1, 50, expected);
     }
     
-    public void testMultipleSourcesAllBlockingNodes() {
+    public void testMultipleSourcesAllBlockingNodes() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(1) }),    
@@ -208,7 +204,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, 1, 1, 50, expected);       
     }    
     
-    public void testMultipleSourceMultiBatchAllBlocking() {
+    public void testMultipleSourceMultiBatchAllBlocking() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
