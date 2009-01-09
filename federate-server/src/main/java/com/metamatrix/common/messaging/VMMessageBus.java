@@ -28,7 +28,6 @@ import java.io.Serializable;
 import java.util.EventObject;
 import java.util.Properties;
 
-import org.jgroups.Channel;
 import org.jgroups.ChannelException;
 
 import com.google.inject.Inject;
@@ -43,18 +42,19 @@ import com.metamatrix.core.event.EventBroker;
 import com.metamatrix.core.event.EventBrokerException;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.event.EventSourceException;
+import com.metamatrix.server.ChannelProvider;
 
 @Singleton
 public class VMMessageBus implements MessageBus {
 
-    private MessageBus messageBus;
+    private Object messageBus;  
     private Object lock = new Object();
     private boolean closed = true;
 
     private EventBroker eventBroker = new AsynchEventBroker("VMMessageBus"); //$NON-NLS-1$
     
     @Inject
-    public VMMessageBus(Channel channel) throws MetaMatrixComponentException {
+    public VMMessageBus(ChannelProvider channelProvider) throws MetaMatrixComponentException {
         Properties env = null;
         // when the old messagebus Resource was replaced with the JGroups resource,
         // the MESSAGE_BUS_TYPE property was moved to the global properties section
@@ -73,7 +73,7 @@ public class VMMessageBus implements MessageBus {
             messageBus = new NoOpMessageBus();
         } else {
             try {
-				messageBus = new JGroupsMessageBus(channel, eventBroker);
+				messageBus = new JGroupsMessageBus(channelProvider, eventBroker);
 			} catch (ChannelException e) {
 				throw new MetaMatrixComponentException(e);
 			}
@@ -100,7 +100,7 @@ public class VMMessageBus implements MessageBus {
     			return;
     		}
     		closed = true;
-    		messageBus.shutdown();
+    		((MessageBus)messageBus).shutdown();
     		try {
     			eventBroker.shutdown();
     		} catch (EventBrokerException e) {
@@ -146,7 +146,7 @@ public class VMMessageBus implements MessageBus {
         	if (closed) {
         		return;
         	}
-        	messageBus.processEvent(obj);
+        	((MessageBus)messageBus).processEvent(obj);
         	eventBroker.processEvent(obj);
         }
     }
@@ -156,7 +156,7 @@ public class VMMessageBus implements MessageBus {
         	if (closed) {
         		return null;
         	}
-    		return messageBus.export(object, targetClasses);
+    		return ((MessageBus)messageBus).export(object, targetClasses);
         }
 	}
 
@@ -165,7 +165,7 @@ public class VMMessageBus implements MessageBus {
         	if (closed) {
         		return null;
         	}
-    		return messageBus.getRPCProxy(object);
+    		return ((MessageBus)messageBus).getRPCProxy(object);
         }
 	}
 
@@ -174,7 +174,7 @@ public class VMMessageBus implements MessageBus {
         	if (closed) {
         		return;
         	}
-        	messageBus.unExport(object);
+        	((MessageBus)messageBus).unExport(object);
         }
 	}
 }

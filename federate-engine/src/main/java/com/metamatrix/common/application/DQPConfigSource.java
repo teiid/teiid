@@ -48,6 +48,7 @@ public interface DQPConfigSource {
 	public static final String PROCESS_POOL_THREAD_TTL = "ProcessPoolThreadTTL"; //$NON-NLS-1$
 	public static final String PROCESS_POOL_MAX_THREADS = "ProcessPoolMaxThreads"; //$NON-NLS-1$
 	public static final String PROCESSOR_DEBUG_ALLOWED = "ProcessorDebugAllowed"; //$NON-NLS-1$
+    public static final String COMMAND_LOGGER_CLASSNAME = "metamatrix.server.commandLoggerClassname"; //$NON-NLS-1$
 
 	/**
      * Get the DQP properties, as described in {@link DQPProperties}.

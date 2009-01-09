@@ -57,7 +57,6 @@ import com.metamatrix.server.query.service.QueryServicePropertyNames;
 public class PlatformConfigSource implements DQPConfigSource {
 
     public static final String PROC_DEBUG_ALLOWED = "metamatrix.server.procDebug"; //$NON-NLS-1$
-    public static final String COMMAND_LOGGER_CLASSNAME = "metamatrix.server.commandLoggerClassname"; //$NON-NLS-1$
 
     private Properties dqpProps;
     
@@ -91,8 +90,8 @@ public class PlatformConfigSource implements DQPConfigSource {
             dqpProps.setProperty(DQPConfigSource.STREAMING_BATCH_SIZE, streamingBatchSize);
         }
         
-        if (dqpProps.getProperty(COMMAND_LOGGER_CLASSNAME) == null) {
-        	dqpProps.setProperty(COMMAND_LOGGER_CLASSNAME, DatabaseCommandLogger.class.getName());
+        if (dqpProps.getProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME) == null) {
+        	dqpProps.setProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME, DatabaseCommandLogger.class.getName());
         }
         
         this.host = host;

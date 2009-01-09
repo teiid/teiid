@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.data.api.ExecutionContext;
@@ -112,7 +113,7 @@ public class TestCustomizableTrackingService extends TestCase {
     	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_SRCCMD, String.valueOf(willRecordSourceCommands));
     	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_MMCMD, String.valueOf(willRecordUserCommands));
     	p.setProperty(CustomizableTrackingService.SYSTEM_TXN_STORE_TXN, String.valueOf(willRecordTransactions));
-    	p.setProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME, FakeCommandLogger.class.getName());
+    	p.setProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME, FakeCommandLogger.class.getName());
     	service.initialize(p);
         service.start(null);
         return service;
@@ -241,14 +242,7 @@ public class TestCustomizableTrackingService extends TestCase {
         return expectedLogEntry;
     }    
     
-    private static void sleep(long millis) {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // Shouldn't happen
-            throw new RuntimeException(e);
-        }
-    }
+
 
     /**
      * Fake implementation of CommandLoggerSPI to use for testing.  

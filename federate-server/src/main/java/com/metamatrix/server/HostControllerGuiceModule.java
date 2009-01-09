@@ -25,7 +25,7 @@
 package com.metamatrix.server;
 
 import org.jboss.cache.Cache;
-import org.jgroups.Channel;
+import org.jgroups.mux.Multiplexer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -38,22 +38,20 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.VMMessageBus;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.HostMonitor;
 
 class HostControllerGuiceModule extends AbstractModule {
 
 	Host host;
-	String vmName;
 
-	public HostControllerGuiceModule(Host host, String vmName) {
+	public HostControllerGuiceModule(Host host) {
 		this.host = host;
-		this.vmName = vmName;
 	}
 	
 	@Override
 	protected void configure() {
 	
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());
-		bindConstant().annotatedWith(Names.named(Configuration.VMNAME)).to(vmName);
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 				
 		try {
@@ -62,11 +60,13 @@ class HostControllerGuiceModule extends AbstractModule {
 			e.printStackTrace();
 		}
 		
-		bind(Channel.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
+		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
+		bind(ChannelProvider.class).in(Scopes.SINGLETON);
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
+		bind(HostMonitor.class).in(Scopes.SINGLETON);
 	}
 
 }

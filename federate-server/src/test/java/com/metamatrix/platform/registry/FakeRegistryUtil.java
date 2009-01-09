@@ -67,7 +67,11 @@ public class FakeRegistryUtil {
 		
 		registry = new ClusteredRegistryState(cache);
         
-
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("2.2.2.2"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("3.3.3.3"); //$NON-NLS-1$
+		registry.addHost(host1);
+		registry.addHost(host2);
+		
 		VMRegistryBinding vmBinding2  = buildVMRegistryBinding("2.2.2.2", 2, "process2");             //$NON-NLS-1$ //$NON-NLS-2$
         ServiceRegistryBinding serviceBinding2 = buildServiceRegistryBinding("connectorBinding2", 2, vmBinding2, "Cache","psc2");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
@@ -126,6 +130,10 @@ public class FakeRegistryUtil {
 		deployedComponent.setDescription(name); 
 		
 	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent, null, ServiceInterface.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
+	}
+	
+	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {
+		return new HostControllerRegistryBinding(name, null, new NoOpMessageBus());
 	}	
 }
 

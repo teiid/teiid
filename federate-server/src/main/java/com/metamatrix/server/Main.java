@@ -125,6 +125,10 @@ public class Main {
             // start the VM
             this.vmController.startVM();
             
+            while(!this.vmController.isShuttingDown()) {
+            	Thread.sleep(1000);
+            }
+            
             configListener.shutdown();
             
             this.messageBus.shutdown();

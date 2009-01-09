@@ -25,7 +25,7 @@
 package com.metamatrix.server;
 
 import org.jboss.cache.Cache;
-import org.jgroups.Channel;
+import org.jgroups.mux.Multiplexer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -80,7 +80,8 @@ class ServerGuiceModule extends AbstractModule {
 		}
 		
 		bind(VMControllerID.class).toInstance(new VMControllerID(vmID, host.getFullName()));
-		bind(Channel.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
+		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
+		bind(ChannelProvider.class).in(Scopes.SINGLETON);
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
@@ -88,6 +89,7 @@ class ServerGuiceModule extends AbstractModule {
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
 		bind(VMControllerInterface.class).to(SocketVMController.class).in(Scopes.SINGLETON);
 		bind(ServerEvents.class).to(VMMonitor.class).in(Scopes.SINGLETON);
+		bind(HostManagement.class).toProvider(HostManagementProvider.class).in(Scopes.SINGLETON);
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(PlatformProxyHelper.class);

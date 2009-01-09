@@ -41,12 +41,13 @@ import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
-import com.metamatrix.platform.util.MetaMatrixController;
+import com.metamatrix.server.HostManagement;
 
 /**
  * This class is a container for ServiceRegistryBinding objects for
@@ -57,6 +58,7 @@ public class SystemStateBuilder {
     private Collection deployedComponents;
     private Configuration config;
     ClusteredRegistryState registry;
+    HostManagement hostManagement;
     
     /**
      * Create a new instance of VMRegistryBinding.
@@ -65,8 +67,9 @@ public class SystemStateBuilder {
      * @param vmController VMController implementation
      * @param hostName Name of host VM is running on
      */
-    public SystemStateBuilder(ClusteredRegistryState registry) throws Exception {
+    public SystemStateBuilder(ClusteredRegistryState registry, HostManagement hostManagement) throws Exception {
     	this.registry = registry;
+    	this.hostManagement = hostManagement;
         config = CurrentConfiguration.getConfiguration(true);
         deployedComponents = config.getDeployedComponents();
         Collection vms = config.getVMComponentDefns();
@@ -75,14 +78,14 @@ public class SystemStateBuilder {
 
     public SystemState getSystemState() throws Exception {
 
-        List<String> hostNames = this.registry.getHosts();
+        List<HostControllerRegistryBinding> allHosts = this.registry.getHosts();
         List hosts = new ArrayList();
         List hostIDs = new ArrayList();
 
         // Create a new HostData object for each running host.
-        for (String hostName:hostNames) {
-            hosts.add(createHostData(hostName));
-            hostIDs.add(new HostID(hostName));
+        for (HostControllerRegistryBinding host:allHosts) {
+            hosts.add(createHostData(host.getHostName()));
+            hostIDs.add(new HostID(host.getHostName()));
         }
 
         // get a list of deployed hosts and remove all running hosts
@@ -132,7 +135,7 @@ public class SystemStateBuilder {
         HostID hostID =  new HostID(hostName);
         boolean deployed = config.getHostIDs().contains(hostID);
 
-        boolean running = MetaMatrixController.pingHostController(hostName);
+        boolean running = this.hostManagement.ping(hostName);
         return new HostData(hostName, processes, deployed, running);
 
     }
@@ -158,7 +161,7 @@ public class SystemStateBuilder {
             processes.add(createProcessData(deployedComponent));
         }
 
-        boolean running = MetaMatrixController.pingHostController(hostID.getFullName());
+        boolean running = this.hostManagement.ping(hostID.getFullName());
         return new HostData(hostID.getFullName(), processes, true, running);
     }
 

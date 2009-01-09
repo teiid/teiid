@@ -26,8 +26,6 @@ package com.metamatrix.common.comm.platform.socket;
 
 import java.util.Properties;
 
-import javax.xml.registry.RegistryException;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -51,6 +49,7 @@ import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.VMController;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.Configuration;
+import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.Main;
 
 /**
@@ -79,8 +78,8 @@ public class SocketVMController extends VMController {
     private WorkerPool workerPool;
         
     @Inject
-    public SocketVMController(@Named(Configuration.HOST) Host host, @Named(Configuration.VMNAME) String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus) throws Exception {
-        super(host, vmName, vmId, registry, serverEvents, bus);
+    public SocketVMController(@Named(Configuration.HOST) Host host, @Named(Configuration.VMNAME) String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
+        super(host, vmName, vmId, registry, serverEvents, bus, hostManagement);
     }
 
 	public void startVM() {

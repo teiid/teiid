@@ -33,6 +33,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.platform.registry.ClusteredRegistryState.NodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
@@ -132,7 +134,9 @@ public class VMMonitor implements ServerEvents {
 			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Resource Pool Added:"+binding.getID()); //$NON-NLS-1$
 		} catch (ResourceAlreadyBoundException e) {
 			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "Resource Pool exists:"+binding.getID()); //$NON-NLS-1$
-		}		
+		} catch(NodeNotFoundException e) {
+			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add Resource Pool:"+binding.getID()); //$NON-NLS-1$
+		}
 	}
 
 	public void resourcePoolManagerRemoved(ResourcePoolMgrID id) {
@@ -146,6 +150,8 @@ public class VMMonitor implements ServerEvents {
 			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Service Added:"+binding.getServiceID()); //$NON-NLS-1$
 		} catch (ResourceAlreadyBoundException e) {
 			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "Service already exists:"+binding.getServiceID()); //$NON-NLS-1$
+		} catch(NodeNotFoundException e) {
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add service:"+binding.getServiceID()); //$NON-NLS-1$
 		}
 	}
 
@@ -156,8 +162,14 @@ public class VMMonitor implements ServerEvents {
 
 	public void vmAdded(VMRegistryBinding binding) {
 		binding.setAlive(true);
-		this.registry.addVM(hostName, vmId.toString(), binding);
-		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding.getVMControllerID()); //$NON-NLS-1$
+		try {
+			this.registry.addVM(hostName, vmId.toString(), binding);
+			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding.getVMControllerID()); //$NON-NLS-1$
+		} catch (NodeNotFoundException e) {
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException("Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+		}
+		
 	}
 
 	public void vmRemoved(VMControllerID id) {

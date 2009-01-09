@@ -64,28 +64,24 @@ public class ClusteredRegistryState {
 	public ClusteredRegistryState(Cache cacheStore) {
 		this.cache = cacheStore;
 		Node rootNode = cacheStore.getRoot();
-		this.rootRegistryNode = rootNode.addChild(Fqn.fromString(REGISTRY));
+		this.rootRegistryNode = rootNode.getChild(Fqn.fromString(REGISTRY));
+		if (this.rootRegistryNode == null) {
+			this.rootRegistryNode = rootNode.addChild(Fqn.fromString(REGISTRY));
+		}
 		cache.addCacheListener(this);
-	}
-	
-	private Node addHost(String hostName) {
-		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
-		Node n = this.rootRegistryNode.addChild(fqn);
-		n.put(NAME, hostName);
-		return n;
 	}
 	
 	private Node getHostNode(String hostName) throws NodeNotFoundException {
 		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
 		Node node =  this.rootRegistryNode.getChild(fqn);
 		if (node == null) {
-			throw new NodeNotFoundException("Host Node not found");	 //$NON-NLS-1$
+			throw new NodeNotFoundException("Host Node not found="+hostName);	 //$NON-NLS-1$
 		}
 		return node;
 	}
 	
-	private Node addVMNode(String hostName, String vmName) {
-		Node hostNode = addHost(hostName);
+	private Node addVMNode(String hostName, String vmName) throws NodeNotFoundException {
+		Node hostNode = getHostNode(hostName);
 		Fqn fqn = Fqn.fromString(vmName.toUpperCase());
 		Node n =  hostNode.addChild(fqn);
 		n.put(NAME, vmName);
@@ -96,7 +92,7 @@ public class ClusteredRegistryState {
 		Node hostNode = getHostNode(hostName);
 		Node vmNode = hostNode.getChild(Fqn.fromString(vmName.toUpperCase()));
 		if (vmNode == null) {
-			throw new NodeNotFoundException("VM Node not found"); //$NON-NLS-1$
+			throw new NodeNotFoundException("VM Node not found="+vmName); //$NON-NLS-1$
 		}
 		
 		// only return the active vms
@@ -107,7 +103,20 @@ public class ClusteredRegistryState {
 		return vmNode;
 	}
 		
-	protected void addVM(String hostName, String vmName, VMRegistryBinding vmBinding) {
+	protected void addHost(HostControllerRegistryBinding binding) {
+		String hostName = binding.getHostName().toUpperCase();
+		Fqn fqn = Fqn.fromString(hostName);
+		Node n = this.rootRegistryNode.addChild(fqn);
+		n.put(NAME, hostName);
+		n.put(hostName, binding);
+	}
+	
+	protected void removeHost(String hostName) {
+		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
+		this.rootRegistryNode.removeChild(fqn);
+	}
+	
+	protected void addVM(String hostName, String vmName, VMRegistryBinding vmBinding) throws NodeNotFoundException {
 		Node vmNode = addVMNode(hostName, vmName);
 		vmNode.put(VM_CONTROLLER, vmBinding);
 	}
@@ -125,13 +134,23 @@ public class ClusteredRegistryState {
 	 * Returns the all the host that have been known to registry.
 	 * @return
 	 */
-	public List<String> getHosts(){
-		ArrayList<String> list = new ArrayList<String>();
+	public List<HostControllerRegistryBinding> getHosts(){
+		ArrayList<HostControllerRegistryBinding> list = new ArrayList<HostControllerRegistryBinding>();
 		Set<Node> hostNodes = rootRegistryNode.getChildren();
 		for(Node hostNode:hostNodes) {
-			list.add((String)hostNode.get(NAME));
+			String hostName = (String)hostNode.get(NAME);
+			list.add((HostControllerRegistryBinding)hostNode.get(hostName));
 		}
 		return list;
+	}
+	
+	public HostControllerRegistryBinding getHost(String hostName) {
+		try {
+			Node node = getHostNode(hostName);
+			return (HostControllerRegistryBinding)node.get(hostName.toUpperCase());
+		} catch (NodeNotFoundException e) {
+			return null;
+		}
 	}
 	
 	/**
@@ -180,7 +199,7 @@ public class ClusteredRegistryState {
 	}
 	
 	
-	protected void addServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException {
+	protected void addServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException, NodeNotFoundException {
 		Node vmNode = addVMNode(hostName, vmName);
 
 		// get/add the services node
@@ -280,7 +299,7 @@ public class ClusteredRegistryState {
 	}
 	
 	
-	protected void addResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrBinding binding) throws ResourceAlreadyBoundException {
+	protected void addResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrBinding binding) throws ResourceAlreadyBoundException, NodeNotFoundException {
 		Node vmNode = addVMNode(hostName, vmName);
         Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
 		ResourcePoolMgrBinding existing = (ResourcePoolMgrBinding)resources.get(binding.getID());

@@ -113,6 +113,7 @@ import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.util.VMResources;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
+import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.admin.api.QueryAdminAPI;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
 import com.metamatrix.server.admin.api.TransactionAdminAPI;
@@ -192,7 +193,7 @@ public abstract class VMController implements VMControllerInterface {
      * @param standalone If true indicates that VMController is running in its own vm.
      * @throws Exception if an error occurs initializing vmController
      */
-    public VMController(Host host, String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus) throws Exception {
+    public VMController(Host host, String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
     	this.host = host;
     	this.vmName = vmName;
     	
@@ -226,9 +227,9 @@ public abstract class VMController implements VMControllerInterface {
         RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
         
         this.registerILogonAPI();
-        this.registerAdmin();
+        this.registerAdmin(hostManagement);
         
-        this.registerSubSystemAdminAPIs();
+        this.registerSubSystemAdminAPIs(hostManagement);
         
         addShutdownHook();        
     }
@@ -238,9 +239,9 @@ public abstract class VMController implements VMControllerInterface {
      * Register the ServiceInterceptors for the SubSystemAdminAPIs 
      * @throws MetaMatrixComponentException
      */
-    private void registerSubSystemAdminAPIs() throws MetaMatrixComponentException {
+    private void registerSubSystemAdminAPIs(HostManagement hostManagement) throws MetaMatrixComponentException {
         this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
-        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
+        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
         this.clientServices.registerClientService(MembershipAdminAPI.class, MembershipAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(SessionAdminAPI.class, SessionAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
@@ -257,8 +258,8 @@ public abstract class VMController implements VMControllerInterface {
      * 
      * @throws MetaMatrixComponentException
      */
-    private void registerAdmin() throws AdminException {
-    	ServerAdminImpl serverAdminImpl = new ServerAdminImpl(this.registry);
+    private void registerAdmin(HostManagement hostManagement) throws AdminException {
+    	ServerAdminImpl serverAdminImpl = new ServerAdminImpl(this.registry, hostManagement);
     	AdminMethodRoleResolver adminMethodRoleResolver = new AdminMethodRoleResolver();
     	adminMethodRoleResolver.init();
     	ServerAdmin roleCheckedServerAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ServerAdmin.class}, new AdminAuthorizationInterceptor(new AdminHelper(), adminMethodRoleResolver, serverAdminImpl));

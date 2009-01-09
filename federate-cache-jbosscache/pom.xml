@@ -20,8 +20,8 @@
     </dependency>
 
     <dependency>
-		<groupId>jboss</groupId>
-   		<artifactId>jboss-cache</artifactId>    
+        <groupId>org.jboss.cache</groupId>
+        <artifactId>jbosscache-core</artifactId>
     </dependency>        
     
     <dependency>

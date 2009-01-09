@@ -80,6 +80,7 @@ import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.server.HostManagement;
 
 public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements RuntimeStateAdminAPI {
 
@@ -97,18 +98,19 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
     //singleton instance
     private static RuntimeStateAdminAPIImpl runtimeStateAdminAPI;
     
+    
     /**
      * ctor
      */
-    private RuntimeStateAdminAPIImpl(ClusteredRegistryState registry) throws MetaMatrixComponentException {
+    private RuntimeStateAdminAPIImpl(ClusteredRegistryState registry, HostManagement hostManagement) throws MetaMatrixComponentException {
     	this.registry = registry;
         configAdmin = PlatformProxyHelper.getConfigurationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);       
-        helper = RuntimeStateAdminAPIHelper.getInstance(registry);
+        helper = RuntimeStateAdminAPIHelper.getInstance(registry, hostManagement);
     }
 
-    public synchronized static RuntimeStateAdminAPIImpl getInstance(ClusteredRegistryState registry) throws MetaMatrixComponentException {
+    public synchronized static RuntimeStateAdminAPIImpl getInstance(ClusteredRegistryState registry, HostManagement hostManagement) throws MetaMatrixComponentException {
         if (runtimeStateAdminAPI == null) {
-            runtimeStateAdminAPI = new RuntimeStateAdminAPIImpl(registry);
+            runtimeStateAdminAPI = new RuntimeStateAdminAPIImpl(registry, hostManagement);
         }
         return runtimeStateAdminAPI;
     }

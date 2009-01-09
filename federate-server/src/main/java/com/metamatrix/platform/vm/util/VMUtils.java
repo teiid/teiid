@@ -26,10 +26,12 @@ package com.metamatrix.platform.vm.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.core.log.FileLimitSizeLogWriter;
 import com.metamatrix.internal.core.log.PlatformLog;
 
@@ -42,7 +44,7 @@ public class VMUtils {
      * @throws Exception
      * @since 4.2
      */
-   public static void startLogFile(String path, String logFile) throws Exception {
+   public static void startLogFile(String path, String logFile) throws ConfigurationException, IOException{
        File tmpFile = new File(path, logFile);
        tmpFile.getParentFile().mkdirs();
        

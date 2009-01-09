@@ -44,10 +44,12 @@ import com.google.inject.Singleton;
 class CacheProvider implements Provider<org.jboss.cache.Cache> {
 
 	@Inject
-	Channel channel;
+	ChannelProvider channelProvider;
 	
 	public Cache get() {
-		Cache cache = DefaultCacheFactory.getInstance().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
+		Channel channel = this.channelProvider.get(ChannelProvider.ChannelID.CACHE);
+		
+		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		Configuration config = cache.getConfiguration();
 		config.getRuntimeConfig().setChannel(channel);
 		config.setClusterName(channel.getClusterName());

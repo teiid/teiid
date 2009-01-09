@@ -44,6 +44,7 @@ import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.core.util.SimpleMock;
+import com.metamatrix.platform.registry.ClusteredRegistryState.NodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
@@ -67,14 +68,19 @@ public class TestClusteredRegistryState extends TestCase {
 		return Fqn.fromString(key.toUpperCase());
 	}
 	
-	public void testAddVM() {		
+	public void testAddVM() throws Exception {		
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
 		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
 		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
 		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
-		
+
 		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
 		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
 		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
@@ -84,13 +90,18 @@ public class TestClusteredRegistryState extends TestCase {
 		assertNotNull(rootNode.getChild(buildKey("host-2"))); //$NON-NLS-1$
 		assertNotNull(rootNode.getChild(buildKey("host-2")).getChild(buildKey("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-		assertEquals(rootNode.getChild(buildKey("host-1")).get("Name"), "host-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(rootNode.getChild(buildKey("host-1")).get("Name"), "HOST-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertEquals(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-1")).get("Name"), "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
-	public void testRemoveVM() {
+	public void testRemoveVM() throws Exception {
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
 		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
 		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
@@ -111,6 +122,12 @@ public class TestClusteredRegistryState extends TestCase {
 
 	public void testGetVMs() throws Exception {
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
+		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
 		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
@@ -127,8 +144,14 @@ public class TestClusteredRegistryState extends TestCase {
 		assertEquals(vm2, state.getVM("host-1", "vm-2")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testHosts() {
+	public void testHosts() throws Exception {
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
+		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
 		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
@@ -152,8 +175,14 @@ public class TestClusteredRegistryState extends TestCase {
 		assertEquals(3, rootNode.getChild(new Fqn(buildKey("host-2/vm-1"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	ClusteredRegistryState buildRegistry() throws ResourceAlreadyBoundException {
+	ClusteredRegistryState buildRegistry() throws ResourceAlreadyBoundException, NodeNotFoundException {
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
+		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
 		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
@@ -205,6 +234,12 @@ public class TestClusteredRegistryState extends TestCase {
 
 	public void testRemoveServiceBinding() throws Exception {
 		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		
+		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
+		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
+		state.addHost(host1);
+		state.addHost(host2);
+		
 		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
 		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
 		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
@@ -284,5 +319,9 @@ public class TestClusteredRegistryState extends TestCase {
 		ServiceID sid = new ServiceID(id, vmId);
 		//ServiceInterface si = SimpleMock.createSimpleMock(ServiceInterface.class);
 	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, vmId.getHostName(), null, null, ServiceInterface.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {
+		return new HostControllerRegistryBinding(name, null, new NoOpMessageBus());
 	}
 }

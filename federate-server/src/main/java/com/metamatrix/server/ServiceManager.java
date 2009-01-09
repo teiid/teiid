@@ -38,22 +38,29 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.messaging.MessageBus;
+import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.pooling.api.ResourcePoolMgr;
 import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
 import com.metamatrix.common.pooling.api.ResourceStatistics;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
@@ -62,7 +69,6 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
-import com.metamatrix.platform.util.MetaMatrixController;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMStatistics;
 
@@ -192,47 +198,43 @@ public class ServiceManager {
                                                   "Not_Registered",  //$NON-NLS-1$
                                                   "Data_Source_Unavailable"}; //$NON-NLS-1$
 
+    @Inject
+    private HostManagement hostManager;
+
+    @Inject
     private ClusteredRegistryState registry;
+    
+    @Inject
+	MessageBus messageBus;
+    
+    @Inject
+    @Named(com.metamatrix.server.Configuration.HOST)
+    private Host host;
+
     private Configuration currentConfig;
-    private BufferedReader in;
 
     private boolean expertMode = false;
+    
+    public ServiceManager() throws Exception {
+    	this.currentConfig = CurrentConfiguration.getConfiguration();
+    }
 
-    public ServiceManager(String command, boolean exit) {
+    public void run (String command, boolean exit) {
 
+    	if(!isHostRunning()) {
+    		System.out.println("HostController is not running; You can not run Service manager without HostController running!"); //$NON-NLS-1$
+    		System.out.println("Exiting.."); //$NON-NLS-1$
+    		command = "Exit"; //$NON-NLS-1$
+    	}
+    	
         try {
-            // called to initalize configuration
-            getCurrentConfiguration();
-            Host host = CurrentConfiguration.getHost();
-            
-            VMNaming.setLogicalHostName(host.getFullName());
-            VMNaming.setBindAddress(host.getBindAddress());
-            VMNaming.setHostAddress(host.getHostAddress());
-                            
-            String vmName =  CurrentConfiguration.getVM().getFullName();
-    		Injector injector = Guice.createInjector(new ServerGuiceModule(host, vmName));
-            
- 			this.registry = injector.getInstance(ClusteredRegistryState.class);
-
-            // add shutdown hook
-            try {
-                Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
-            } catch (Exception e) {
-                // If running as an NT service, we cannot add a shutdown hook.
-                // -Xrs flag is required in java command line.
-                // This prevents service from being terminated when user logs off.
-            }
-
-
             if (command != null && command.trim().length() > 0) {
-				Thread.sleep(5000); // allow registry to synch up.
-                System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0010, command));
+            	System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0010, command));
                 processCommand(command);
                 if (exit) {
 					processCommand("Exit"); //$NON-NLS-1$
                 }
             }
-
             this.printUsage();
             this.startInteractiveMode();
         } catch (Exception e) {
@@ -241,28 +243,24 @@ public class ServiceManager {
         }
     }
 
-	private Configuration getCurrentConfiguration() throws Exception {
-		if (currentConfig == null) {
-	        CurrentConfiguration.verifyBootstrapProperties();
-    	    currentConfig = CurrentConfiguration.getConfiguration();
-		} else {
-            currentConfig = CurrentConfiguration.getConfiguration(true);
-        }
-		return currentConfig;
-	}
-
-
+    private boolean isHostRunning() {
+    	List<HostControllerRegistryBinding> hosts = this.registry.getHosts();
+    	for(HostControllerRegistryBinding host:hosts) {
+    		if (host.getHostName().equalsIgnoreCase(this.host.getFullName())) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     private void startInteractiveMode() {
-
-        // Loop, getting and executing commands
-        in = new BufferedReader(new InputStreamReader(System.in));
-
+    	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while(true) {
-            processCommand( readCommandLine() );
+            processCommand( readCommandLine(in) );
         }
     }
 
-    private String readCommandLine() {
+    private String readCommandLine(BufferedReader in) {
         try {
             System.out.print(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0011) + " "); //$NON-NLS-1$
             String line = in.readLine();
@@ -603,9 +601,6 @@ public class ServiceManager {
         }
     }
 
-    /**
-	 * 
-	 */
 	private void doDumpJNDI() {
 		try {
 			Context ctx = new InitialContext();
@@ -644,7 +639,7 @@ public class ServiceManager {
 		            	System.out.println("Starting " + binding.getServiceID()); //$NON-NLS-1$
 		            }
 		            else {
-		            	System.out.println("VM not found in registry");
+		            	System.out.println("VM not found in registry"); //$NON-NLS-1$
 		            }
 					
 				} catch (Exception e) {
@@ -721,9 +716,9 @@ public class ServiceManager {
         }
     }
 
-    private void printExpertUsage() {
+    private static void printExpertUsage() {
 
-        System.out.println("Usage: svcmgr <Command> [options]"); //$NON-NLS-1$
+        System.out.println("Usage: svcmgr [-config hostname] <Command> [options]"); //$NON-NLS-1$
         System.out.println();
         System.out.println("BounceService <ServiceName>                 Stop and Start all services with name"); //$NON-NLS-1$
         System.out.println("ClearCodeTableCaches                        Clear code table caches"); //$NON-NLS-1$
@@ -761,9 +756,9 @@ public class ServiceManager {
         System.out.println("Help"); //$NON-NLS-1$
     }
 
-    private void printNoviceUsage() {
+    private static void printNoviceUsage() {
 
-        System.out.println("Usage: svcmgr <Command> [options]"); //$NON-NLS-1$
+        System.out.println("Usage: svcmgr [-config hostname] <Command> [options]"); //$NON-NLS-1$
         System.out.println();
         System.out.println("ClearCodeTableCaches                        Clear code table caches"); //$NON-NLS-1$
         System.out.println("ClearPreparedStatementCaches                Clear prepared statement caches"); //$NON-NLS-1$
@@ -782,6 +777,11 @@ public class ServiceManager {
     }
 
     private synchronized void doExit() {
+    	try {
+			this.messageBus.shutdown();
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}
     }
 
     private void doSynchronize() {
@@ -793,7 +793,7 @@ public class ServiceManager {
 		}
 
 		try {
-			RuntimeStateAdminAPIHelper.getInstance(this.registry).synchronizeServer();
+			RuntimeStateAdminAPIHelper.getInstance(this.registry, null).synchronizeServer();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -869,7 +869,7 @@ public class ServiceManager {
     private void doStartServer() {
 
         try {
-            MetaMatrixController.startServer(true);
+            this.hostManager.startServers(this.host.getFullName());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -878,7 +878,7 @@ public class ServiceManager {
     private void doKillAllVMs() {
 
         try {
-            MetaMatrixController.killServer();
+        	this.hostManager.killServers(this.host.getFullName(), false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -907,7 +907,7 @@ public class ServiceManager {
         }
 
         try {
-            MetaMatrixController.startProcess(host, vmName);
+        	this.hostManager.startServer(host, vmName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -949,7 +949,7 @@ public class ServiceManager {
 
     public void doListServiceProps(String serviceName) {
         try {
-            Iterator hostIter = this.getCurrentConfiguration().getHostIDs().iterator();
+            Iterator hostIter = this.currentConfig.getHostIDs().iterator();
             while (hostIter.hasNext()) {
                 HostID hostId = (HostID) hostIter.next();
                 Iterator vmIter = currentConfig.getVMsForHost(hostId).iterator();
@@ -989,7 +989,7 @@ public class ServiceManager {
                 vmBinding = (VMRegistryBinding) vmIter.next();
                 if (vmBinding.getVMController().getName().equalsIgnoreCase(vmName)) {
                     vmBinding.getVMController().stopVM();
-                    MetaMatrixController.killProcess(vmBinding.getHostName(),vmBinding.getVMName());
+                    this.hostManager.killServer(vmBinding.getHostName(),vmBinding.getVMName(), false);
                     break;
                 }
             }
@@ -1023,7 +1023,7 @@ public class ServiceManager {
         }
 
         try {
-            MetaMatrixController.killProcess(host, vmName);
+        	this.hostManager.killServer(host, vmName, false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1042,7 +1042,7 @@ public class ServiceManager {
                     } else {
                         vmBinding.getVMController().shutdown();
                     }
-                    MetaMatrixController.killProcess(vmBinding.getHostName(), vmName);
+                    this.hostManager.killServer(vmBinding.getHostName(), vmName, false);
                     return;
                 }
             }
@@ -1114,7 +1114,7 @@ public class ServiceManager {
 
     public void doListDeployedHosts() {
         try {
-            Iterator hostIter = this.getCurrentConfiguration().getHostIDs().iterator();
+            Iterator hostIter = this.currentConfig.getHostIDs().iterator();
             while (hostIter.hasNext()) {
                 HostID hostId = (HostID) hostIter.next();
                 System.out.println(hostId);
@@ -1142,7 +1142,7 @@ public class ServiceManager {
         List vms = new ArrayList();
 
         try {
-            Collection vmDefns = this.getCurrentConfiguration().getVMComponentDefns();
+            Collection vmDefns = this.currentConfig.getVMComponentDefns();
             
             vms.addAll( vmDefns );
             
@@ -1156,7 +1156,7 @@ public class ServiceManager {
 
     public void doListDeployedServices() {
         try {
-            Iterator hostIter = this.getCurrentConfiguration().getHostIDs().iterator();
+            Iterator hostIter = this.currentConfig.getHostIDs().iterator();
             while (hostIter.hasNext()) {
                 HostID hostId = (HostID) hostIter.next();
                 Iterator vmIter = currentConfig.getVMsForHost(hostId).iterator();
@@ -1189,7 +1189,7 @@ public class ServiceManager {
             	vmBinding.getVMController().stopService(id);
             }
             else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());
+            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString()); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0015, id));
@@ -1215,7 +1215,7 @@ public class ServiceManager {
                 }
             }
             else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());
+            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());//$NON-NLS-1$ //$NON-NLS-2$
             }
             
         } catch (Exception e) {
@@ -1225,30 +1225,19 @@ public class ServiceManager {
     }
 
     public void doShutdownAllHCs() {
-        Iterator hostIter = null;
-        try {
-            hostIter = this.getCurrentConfiguration().getHostIDs().iterator();
-        } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0033));
-            e.printStackTrace();
-        }
-        HostID hostId = null;
-        try {
-            while (hostIter.hasNext()) {
-                hostId = (HostID) hostIter.next();
-                System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0030, hostId.getName()));
-                MetaMatrixController.killHostController(hostId.getName());
-            }
-        } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0040, hostId.getName()));
-            e.printStackTrace();
-        }
+    	System.out.println("Cluster is being shutdown"); //$NON-NLS-1$
+    	try {
+			this.hostManager.shutdownCluster();
+		} catch (MetaMatrixComponentException e) {
+            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0043));
+            e.printStackTrace();			
+		}
     }
 
     public void doShutdownHC(String host) {
         try {
             System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0030, host));
-            MetaMatrixController.killHostController(host);
+            this.hostManager.shutdown(host);
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0040, host));
             e.printStackTrace();
@@ -1256,25 +1245,8 @@ public class ServiceManager {
     }
 
     public void doShutdownServer() {
-
-        List vms = registry.getVMs(null);
-        Iterator iter = vms.iterator();
-        while (iter.hasNext()) {
-
-            VMRegistryBinding vm = (VMRegistryBinding) iter.next();
-            try {
-                vm.getVMController().shutdown();
-            } catch (Exception e) {
-                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0041, vm.getVMName()));
-                e.printStackTrace();
-            }
-        }
-        try {
-            MetaMatrixController.killServer();
-        } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0042));
-            e.printStackTrace();
-        }
+	    System.out.println("All the servers in Cluster is being shutdown"); //$NON-NLS-1$
+    	this.hostManager.killAllServersInCluster();
     }
 
     private void doGetServiceStatus(ServiceID serviceID) {
@@ -1358,7 +1330,7 @@ public class ServiceManager {
             	vmBinding.getVMController().startService(id);
             }
             else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());            	
+            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());   //$NON-NLS-1$ //$NON-NLS-2$         	
             }            
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0047));
@@ -1394,39 +1366,53 @@ public class ServiceManager {
         return null;
     }
 
+    
+	private static ServiceManager loadServiceManager(Host host) {
+		Injector injector = Guice.createInjector(new ServiceManagerGuiceModule(host));
+		ResourceFinder.setInjector(injector); 
+		return injector.getInstance(ServiceManager.class);
+	}    
    
 
-    public static void main(String[] vars) {
+    public static void main(String[] args) throws Exception {
 
-        String command = ""; //$NON-NLS-1$
+        String command = ""; //$NON-NLS-1$ 
+        String hostName = null; 
 		boolean exit = false;
 
-        if (vars.length > 0) {
-        	exit = true;
-			for (int i = 0; i < vars.length; i++) {
-	            command = command + vars[i] + " "; //$NON-NLS-1$
-			}
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equalsIgnoreCase("-config") ) { //$NON-NLS-1$ 
+                if (++i == args.length) {
+                	printNoviceUsage();
+                    System.exit(-1);
+                } else {
+                    hostName = args[i];
+                }
+            } 
+            else {
+            	exit = true;
+            	command = command + args[i] + " "; //$NON-NLS-1$
+            }
         }
 
-        new ServiceManager(command,exit);
+        Host host = null;
+        if (hostName == null) {
+        	hostName = NetUtils.getHostname();
+        	host = CurrentConfiguration.findHost(hostName);
+        	if (host == null) {
+        		System.out.println("Failed to find the host name in the configuration; please use -config option to set the hostname"); //$NON-NLS-1$
+        		System.exit(-1);
+        	}
+        }
 
+        try {
+			ServiceManager manager = loadServiceManager(host);
+			manager.run(command,exit);
+		} catch (Exception e) {
+			System.out.println("Please make sure the HostController is running on this host"); //$NON-NLS-1$
+			System.exit(-1);
+		}
     }
-
-
-    private class ShutdownThread extends Thread {
-
-        ServiceManager serviceManager;
-
-        public ShutdownThread(ServiceManager sm) {
-
-            serviceManager = sm;
-        }
-
-        public void run() {
-            serviceManager.doExit();
-        }
-    }
-
 }
 
 

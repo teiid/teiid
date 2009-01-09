@@ -31,6 +31,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.log.LogManager;
@@ -176,7 +177,7 @@ public class CustomizableTrackingService implements TrackingService {
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
-        String commandLoggerClassnameProperty = props.getProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME);
+        String commandLoggerClassnameProperty = props.getProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME);
 
 		// Search for additional, implementation-specific properties stuff into
 		// this string.

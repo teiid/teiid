@@ -1,0 +1,64 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.messaging.jgroups;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.UUID;
+
+import com.metamatrix.common.messaging.RemoteMessagingException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+
+public class RemoteProxy {
+	private Map<UUID, RPCStruct> rpcStructs;
+
+	public RemoteProxy(Map<UUID, RPCStruct> remoteObjects) {
+		this.rpcStructs = remoteObjects;
+	}
+	
+	public Object invokeRemoteMethod(UUID classId, String methodName, Class[] parameterTypes, Object[] args) throws Throwable {
+		RPCStruct struct = rpcStructs.get(classId);
+		if (struct != null) {
+			try {
+				Method m = struct.actualObj.getClass().getMethod(methodName, parameterTypes);
+				return m.invoke(struct.actualObj, args);
+			} catch (NoSuchMethodException e) {
+				throw new RemoteMessagingException();
+			} catch (InvocationTargetException e) {
+				throw e.getTargetException();
+			}
+		}
+		throw new RemoteMessagingException();
+	}		
+	
+	public static Method getInvokeMethod() {
+		try {
+			return RemoteProxy.class.getMethod("invokeRemoteMethod", UUID.class, String.class, Class[].class, Object[].class); //$NON-NLS-1$		
+		} catch (NoSuchMethodException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}			
+	}
+}

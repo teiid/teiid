@@ -63,6 +63,7 @@ import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.admin.api.runtime.SystemStateBuilder;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
@@ -76,11 +77,11 @@ import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
-import com.metamatrix.platform.util.MetaMatrixController;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.server.HostManagement;
 
 
 /**
@@ -93,10 +94,12 @@ public class RuntimeStateAdminAPIHelper {
     private static RuntimeStateAdminAPIHelper instance;
 
     private ClusteredRegistryState registry;
+    HostManagement hostManagement;
     
     
-    protected RuntimeStateAdminAPIHelper(ClusteredRegistryState registry) {
+    protected RuntimeStateAdminAPIHelper(ClusteredRegistryState registry, HostManagement hostManagement) {
     	this.registry = registry;
+    	this.hostManagement = hostManagement;
     }
     
     /**
@@ -104,9 +107,9 @@ public class RuntimeStateAdminAPIHelper {
      * @return
      * @since 4.3
      */
-    public static synchronized RuntimeStateAdminAPIHelper getInstance(ClusteredRegistryState registry) {
+    public static synchronized RuntimeStateAdminAPIHelper getInstance(ClusteredRegistryState registry, HostManagement hostManagement) {
         if (instance == null) {
-            instance = new RuntimeStateAdminAPIHelper(registry);       
+            instance = new RuntimeStateAdminAPIHelper(registry, hostManagement);       
         }
         
         return instance;
@@ -122,7 +125,7 @@ public class RuntimeStateAdminAPIHelper {
      */
     public synchronized SystemState getSystemState() throws MetaMatrixComponentException {
         try {
-            SystemStateBuilder ssm = new SystemStateBuilder(this.registry);
+            SystemStateBuilder ssm = new SystemStateBuilder(this.registry, this.hostManagement);
             return ssm.getSystemState();
         } catch (Exception e) {
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0051,
@@ -165,7 +168,12 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
     public List<String> getHosts() throws MetaMatrixComponentException {
-        return this.registry.getHosts();
+    	List<String> list = new ArrayList<String>();
+    	List<HostControllerRegistryBinding> allHosts = this.registry.getHosts();
+    	for(HostControllerRegistryBinding host:allHosts) {
+    		list.add(host.getHostName());
+    	}
+        return list;
     }
 
     /**
@@ -280,53 +288,18 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
     public synchronized void shutdownServer() throws MetaMatrixComponentException {
-
-        List<VMRegistryBinding> vms = this.registry.getVMs(null);
-        Iterator iter = vms.iterator();
-        while (iter.hasNext()) {
-
-            VMRegistryBinding vm = (VMRegistryBinding)iter.next();
-            try {
-                vm.getVMController().shutdown();
-            } catch (Exception e) {
-                throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0052,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0052));
-            }
-        }
-        try {
-            MetaMatrixController.killServer();
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0052,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0052));
-        }
+    	this.hostManagement.killAllServersInCluster();
     }
     
     
     /**
      * Shutdown server and restart.
      * 
-     * @param registry
-     *            used by MetaMatrix to find the active VMs
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
     public synchronized void bounceServer() throws MetaMatrixComponentException {
-        try {
-            List vms = this.registry.getVMs(null);
-            Iterator iter = vms.iterator();
-            while (iter.hasNext()) {
-                VMRegistryBinding vm = (VMRegistryBinding)iter.next();
-                try {
-                    vm.getVMController().shutdownNow();
-                } catch (Exception e) {
-                    //Ignore, we tried to gracefully shutdown, vm will get killed during MetaMatrixController.startserver()
-                }
-            }
-
-            // remove old sessions for bounce. 
-            MetaMatrixController.startServer(true, true);
-
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e);
-        }
+    	this.hostManagement.bounceAllServersInCluster();
     }
     
     /**
@@ -357,7 +330,7 @@ public class RuntimeStateAdminAPIHelper {
 
             if (hData.isDeployed() && !hData.isRegistered()) {
                 try {
-                    MetaMatrixController.startHost(hData.getName());
+                	this.hostManagement.startServers(hData.getName());
                 } catch (Exception e) {
                     exceptions.add(e);
                     // errorMsg.append(e.getMessage());
@@ -409,18 +382,13 @@ public class RuntimeStateAdminAPIHelper {
                 // deployed/notRunning - start process via MetaMatrixController
                 if (pData.isDeployed() && !pData.isRegistered()) {
                     try {
-                        MetaMatrixController.startProcess(hostName, pData.getName());
+                    	this.hostManagement.startServer(hostName, pData.getName());
                     } catch (Exception e) {
                         exceptions.add(e);
                     }
                     // not deployed/Running - stopVM and then kill via MetaMatrixController
                 } else if (!pData.isDeployed() && pData.isRegistered()) {
-                    try {
-                        vmController.stopVM();
-                        MetaMatrixController.killProcess(hostName, pData.getName());
-                    } catch (Exception e) {
-                        exceptions.add(e);
-                    }
+                    this.hostManagement.killServer(hostName, pData.getName(), true);
                     // deployed/running - get list of services for this process
                     // loop thru and insure all deployed services are running
                     // kill all non-deployed running services.
@@ -693,19 +661,7 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
    public  void startHost(String host) throws MetaMatrixComponentException {
-
-        List<String> hostNames = this.registry.getHosts();
-        for(String hostName:hostNames) {
-            if (hostName.equalsIgnoreCase(host)) {
-                throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0067,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0067, host));
-            }
-        }
-
-        try {
-            MetaMatrixController.startHost(host);
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0068,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0068, host));
-        }
+	   this.hostManagement.startServers(host);
     }    
 
     /**
@@ -748,19 +704,10 @@ public class RuntimeStateAdminAPIHelper {
                        processFound = true;
                        // process is already running, cannot start
                        if (pData.isRegistered()) {
-                           throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0067,
-                                                                  PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0067,
-                                                                                                process));
-
+                           throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0067,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0067,process));
                        }
-                       try {
-                           MetaMatrixController.startProcess(host, process);
-                           return;
-                       } catch (Exception e) {
-                           throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0068,
-                                                                  PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0068,
-                                                                                                host));
-                       }
+                       
+                       this.hostManagement.startServer(host, process);
                    }
                }
 
@@ -788,32 +735,7 @@ public class RuntimeStateAdminAPIHelper {
      *             if an error occurred in communicating with a component.
      */
    public void stopHost(String host, boolean stopNow) throws MetaMatrixComponentException, MultipleException {
-
-       List exceptions = new ArrayList();
-
-       // loop thru vm's for host, shutdown each
-       // if an error occurs stopping then vm will not get killed with host controller
-       // error will occur if an attempt to kill the last instance of an essential service.        
-       List<VMRegistryBinding> bindings = this.registry.getVMs(host);
-       for (VMRegistryBinding vmBinding:bindings) {
-           String vmName = vmBinding.getVMName();
-           VMControllerInterface vm = vmBinding.getVMController();
-
-           try {
-               if (stopNow) {
-                   vm.stopVMNow();
-               } else {
-                   vm.stopVM();
-               }
-               MetaMatrixController.killProcess(host, vmName); // will not get killed if error stopping
-           }  catch (Exception se) {
-               exceptions.add(se);
-           }
-       }
-
-       if (!exceptions.isEmpty()) {
-           throw new MultipleException(exceptions, ErrorMessageKeys.ADMIN_0058,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0058));
-       }
+	   this.hostManagement.killServers(host, stopNow);
    }
 
     /**
@@ -830,22 +752,7 @@ public class RuntimeStateAdminAPIHelper {
      */
    public void stopProcess(VMControllerID vmID, boolean stopNow)
 			throws AuthorizationException, MetaMatrixComponentException {
-
-		VMRegistryBinding vmBinding = this.registry.getVM(vmID.getHostName(),vmID.toString());
-		VMControllerInterface vmController = vmBinding.getVMController();
-
-		try {
-			String host = vmID.getHostName();
-			String vmName = vmController.getName();
-			if (stopNow) {
-				vmController.stopVMNow();
-			} else {
-				vmController.stopVM();
-			}
-			MetaMatrixController.killProcess(host, vmName);
-		} catch (Exception se) {
-			throw new MetaMatrixComponentException(se);
-		}
+		this.hostManagement.killServer(vmID.getHostName(), vmID.toString(), stopNow);
 	} 
     
     

@@ -110,7 +110,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     
     
     public FakeRuntimeStateAdminAPIHelper(ClusteredRegistryState registry) {
-    	super(registry);
+    	super(registry,null);
     }
 
     public void bounceServer() throws MetaMatrixComponentException {

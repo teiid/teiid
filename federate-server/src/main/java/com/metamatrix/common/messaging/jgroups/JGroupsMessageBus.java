@@ -24,6 +24,9 @@
 
 package com.metamatrix.common.messaging.jgroups;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -33,101 +36,88 @@ import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jgroups.Address;
 import org.jgroups.Channel;
 import org.jgroups.ChannelException;
-import org.jgroups.ChannelListener;
+import org.jgroups.Header;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
+import org.jgroups.View;
 import org.jgroups.blocks.GroupRequest;
-import org.jgroups.blocks.PullPushAdapter;
+import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.RspList;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.messaging.RemoteMessagingException;
 import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.event.EventBroker;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.server.ChannelProvider;
 
-public class JGroupsMessageBus implements MessageBus, ChannelListener {
+public class JGroupsMessageBus implements MessageBus {
 	
-	public static class RPCStruct implements Serializable {
-		private static final long serialVersionUID = -7372264971977481565L;
-		
-		Class[] targetClasses;
-		Address address;
-		UUID objectId;
-		transient RpcDispatcher disp;
-		transient boolean shutdown;
-		
-		public RPCStruct(Address address, UUID objectId,
-				Class[] targetClasses) {
-			this.address = address;
-			this.objectId = objectId;
-			this.targetClasses = targetClasses;
-		}		
-		
-	}
-
 	public static final String MESSAGE_KEY = "MessageKey"; //$NON-NLS-1$
 	public static final int REMOTE_TIMEOUT = 30000; 
-		
+	static final FederateHeader MSG_HEADER = new FederateHeader(456188434); // with some random number	
+	
 	private Channel channel;
-	private PullPushAdapter adapter;
-	private EventBroker eventBroker;
 	private volatile boolean shutdown;
+
+	// these are original objects that implement
 	private ConcurrentHashMap<UUID, RPCStruct> rpcStructs = new ConcurrentHashMap<UUID, RPCStruct>();
 	
-	public JGroupsMessageBus(Channel channel, final EventBroker eventBroker) throws ChannelException {
-		this.eventBroker = eventBroker;
-		this.channel = channel;
-		initChannel();
-	}
-
-	private synchronized void initChannel() throws ChannelException {
-		if (channel == null || !channel.isOpen()) {
-			return;
+	private RpcDispatcher rpcDispatcher;
+	
+	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker) throws ChannelException {
+		Channel c = channelProvider.get(ChannelProvider.ChannelID.RPC);
+		
+		if (c == null || !c.isOpen()) {
+			throw new MetaMatrixRuntimeException("Channel is not open"); //$NON-NLS-1$
 		}
-		adapter = new PullPushAdapter(channel);
-		channel.addChannelListener(this);
-		adapter.registerListener(MESSAGE_KEY, new ReceiverAdapter() {
+		
+		this.channel = c;
+		
+		ReceiverAdapter receiver = new ReceiverAdapter(){
 			@Override
 			public void receive(Message msg) {
 				if (!msg.getSrc().equals(channel.getLocalAddress())) {
-					eventBroker.processEvent((EventObject) msg.getObject());
+					if (MSG_HEADER.equals(msg.getHeader(MESSAGE_KEY))) {
+						eventBroker.processEvent((EventObject) msg.getObject());
+					}
 		        }
 			}
-		});
+
+			@Override
+			public void viewAccepted(View view) {
+				super.viewAccepted(view);
+				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, view + "is added"); //$NON-NLS-1$
+			}
+		};
+		
+		this.rpcDispatcher = new RpcDispatcher(this.channel, receiver, receiver, new RemoteProxy(this.rpcStructs));
 	}
-	
+
 	public void unExport(Object object) {
 		if (object == null) {
 			return;
 		}
 		ArgCheck.isInstanceOf(RPCStruct.class, object);
 		RPCStruct struct = (RPCStruct)object;
-		rpcStructs.remove(struct.objectId);
-		synchronized (struct) {
-			struct.shutdown = true;
-			if (struct.disp != null) {
-				struct.disp.stop();
-				adapter.unregisterListener(struct.objectId);
-				struct.disp = null;
-			}
-		}
+		this.rpcStructs.remove(struct.objectId);
 	}
 	
 	public Serializable export(Object object, Class[] targetClasses) {
 		if (object == null || shutdown) {
 			return null;
 		}
-		RPCStruct struct = new RPCStruct(channel.getLocalAddress(), UUID.randomUUID(), targetClasses);
-		struct.disp = new RpcDispatcher(adapter, struct.objectId, null, null, object);
+		RPCStruct struct = new RPCStruct(channel.getLocalAddress(), UUID.randomUUID(), targetClasses, object);
+		this.rpcStructs.put(struct.objectId, struct);
 		return struct;
 	}
 	
@@ -136,41 +126,27 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 			return null;
 		}
 		ArgCheck.isInstanceOf(RPCStruct.class, object);
-		RPCStruct struct = (RPCStruct)object;
+		final RPCStruct struct = (RPCStruct)object;
 		final Vector dest = new Vector();
 		dest.add(struct.address);
-		RPCStruct existing = rpcStructs.putIfAbsent(struct.objectId, struct);
-		if (existing == null) {
-			existing = struct;
-		}
-		synchronized (existing) {
-			if (existing.shutdown) {
-				return null;
+
+		return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), struct.getTargetClasses(), new InvocationHandler() {
+
+			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
+				
+				Object[] invokeArgs = {struct.objectId, arg1.getName(), arg1.getParameterTypes(), arg2};
+				RspList rsp_list = rpcDispatcher.callRemoteMethods(dest, new MethodCall(RemoteProxy.getInvokeMethod(), invokeArgs), GroupRequest.GET_FIRST, REMOTE_TIMEOUT);
+				
+				if (rsp_list.isEmpty()) {
+					throw new RemoteMessagingException();
+				}
+	
+				return rsp_list.getFirst();
 			}
-			if (existing.disp == null) {
-				existing.disp = new RpcDispatcher(adapter, struct.objectId, null, null, null);
-			}
-		}	
-		final RpcDispatcher disp = existing.disp;
-		return Proxy.newProxyInstance(Thread.currentThread()
-				.getContextClassLoader(), struct.targetClasses,
-				new InvocationHandler() {
-
-					public Object invoke(Object arg0, Method arg1, Object[] arg2)
-							throws Throwable {
-
-						RspList rsp_list = disp.callRemoteMethods(dest, arg1
-								.getName(), arg2, arg1.getParameterTypes(),
-								GroupRequest.GET_FIRST, REMOTE_TIMEOUT);
-
-						if (rsp_list.isEmpty()) {
-							throw new RemoteMessagingException();
-						}
-
-						return rsp_list.getFirst();
-					}
-				});
+		});
 	}
+	
+
 
 	/**
 	 * @see com.metamatrix.common.messaging.MessageBus#processEvent(java.util.EventObject)
@@ -178,7 +154,9 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 	public void processEvent(EventObject obj) throws MessagingException {
 		if (obj != null) {
 			try {
-				adapter.send(MESSAGE_KEY, new Message(null, null, obj));
+				Message msg = new Message(null, null, obj);
+				msg.putHeader(MESSAGE_KEY, MSG_HEADER);
+				this.channel.send(msg);
 			} catch (Exception e) {
 				throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0004, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0004));
 			}
@@ -187,40 +165,9 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 
 	public synchronized void shutdown() throws MessagingException {
 		shutdown = true;
-		getChannel().close();
-		this.adapter.stop();
+		this.channel.close();
+		this.rpcDispatcher.stop();
 		this.rpcStructs.clear();
-	}
-    
-    /**
-     * Get the JGroups Channel used by this bus. 
-     * @return JGroups Channel used by this bus.
-     * @since 4.2
-     */
-    Channel getChannel() {
-        return channel;
-    }
-
-	public void channelClosed(Channel arg0) {
-		try {
-			if (!shutdown) {
-				initChannel();
-			}
-		} catch (ChannelException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
-	}
-
-	public void channelConnected(Channel arg0) {
-	}
-
-	public void channelDisconnected(Channel arg0) {
-	}
-
-	public void channelReconnected(Address arg0) {
-	}
-
-	public void channelShunned() {
 	}
 
 	public void addListener(Class eventClass, EventObjectListener listener)
@@ -237,6 +184,21 @@ public class JGroupsMessageBus implements MessageBus, ChannelListener {
 			throws MessagingException {
 		
 	}
+	
+    public static class FederateHeader extends Header {
+    	int type;
+        public FederateHeader(int type) {
+        	this.type = type;
+        }
+	
+        public void writeExternal(ObjectOutput out) throws IOException {
+            out.writeInt(type);
+        }
+	
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+            type=in.readInt();
+        }
+    }	    
 	
 }
 

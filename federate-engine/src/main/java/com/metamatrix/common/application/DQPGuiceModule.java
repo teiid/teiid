@@ -56,6 +56,9 @@ public class DQPGuiceModule extends AbstractModule {
 				bind(DQPServiceNames.ALL_SERVICE_CLASSES[i]).to(clazz);
 			}
 		}
+		
+		// inject the platform specific services.
+		configSource.updateBindings(this.binder());
 	}
 
 }

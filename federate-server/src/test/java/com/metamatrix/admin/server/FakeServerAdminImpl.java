@@ -61,7 +61,7 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
      * @since 4.3
      */
     public FakeServerAdminImpl(ClusteredRegistryState registry) {
-    	super(registry);
+    	super(registry,null);
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
     	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "fakeadminuser"));
     }

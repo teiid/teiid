@@ -50,6 +50,7 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
+import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
 /**
@@ -76,14 +77,16 @@ public class ServerAdminImpl implements ServerAdmin {
     protected final static int SERVICE_WAIT_INTERVAL = 500;
     
     ClusteredRegistryState registry;
+    HostManagement hostManagement;
     
     /**
      * xtor
      * 
      * @since 4.3
      */
-    public ServerAdminImpl(ClusteredRegistryState registry) {
+    public ServerAdminImpl(ClusteredRegistryState registry, HostManagement hostManagement) {
     	this.registry = registry;
+    	this.hostManagement = hostManagement;
     }
     
     /** 
@@ -644,7 +647,7 @@ public class ServerAdminImpl implements ServerAdmin {
     
     protected RuntimeStateAdminAPIHelper getRuntimeStateAdminAPIHelper(){
         if (runtimeStateAdminAPIHelper == null){
-            runtimeStateAdminAPIHelper = RuntimeStateAdminAPIHelper.getInstance(this.registry);
+            runtimeStateAdminAPIHelper = RuntimeStateAdminAPIHelper.getInstance(this.registry, this.hostManagement);
         }
         return runtimeStateAdminAPIHelper;
     }

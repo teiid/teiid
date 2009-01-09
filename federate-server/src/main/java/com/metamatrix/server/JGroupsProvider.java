@@ -26,16 +26,14 @@ package com.metamatrix.server;
 
 import java.util.Properties;
 
-import org.jgroups.Channel;
 import org.jgroups.ChannelException;
 import org.jgroups.JChannel;
+import org.jgroups.mux.Multiplexer;
 
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
-import com.metamatrix.common.config.api.ConfigurationModelContainer;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -45,7 +43,7 @@ import com.metamatrix.core.util.StringUtil;
  * This class contains a collection of utilities for managing JGroups objects.
  */
 @Singleton
-public class JGroupsProvider implements Provider<org.jgroups.Channel> {
+public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
 	private static String properties;
 
@@ -115,17 +113,11 @@ public class JGroupsProvider implements Provider<org.jgroups.Channel> {
 	 * @throws ChannelException if there is an error creating the JChannel
 	 */
     
-    public Channel get() {
+    public Multiplexer get() {
 		try {
 			JChannel channel=new JChannel(getChannelProperties(MESSAGE_BUS_CHANNEL));
-			String systemName = null;
-			try {
-			    systemName = CurrentConfiguration.getSystemName();
-			} catch (ConfigurationException err) {
-			    systemName = ConfigurationModelContainer.DEFAULT_SYSTEM_NAME;
-			}
-			channel.connect(systemName + "_" + MESSAGE_BUS_CHANNEL); //$NON-NLS-1$
-			return channel;
+			Multiplexer mux = new Multiplexer(channel);
+			return mux;
 		} catch (ChannelException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
@@ -217,5 +209,4 @@ public class JGroupsProvider implements Provider<org.jgroups.Channel> {
         return bindAddress;
 
     }
-	
 }
