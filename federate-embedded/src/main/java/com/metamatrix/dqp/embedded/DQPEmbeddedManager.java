@@ -36,6 +36,8 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.dqp.internal.process.DQPCore;
+import com.metamatrix.dqp.service.ConfigurationService;
+import com.metamatrix.dqp.service.DQPServiceNames;
 
 /**
  * Manages the life cycle of the embedded DQP. Like handling the creation and deletion
@@ -141,7 +143,7 @@ public class DQPEmbeddedManager {
      */
     public Properties getDQPProperties() {
         if (isDQPAlive()) {
-            return dqpInstance.getEnvironment().getApplicationProperties();
+            return ((ConfigurationService)dqpInstance.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE)).getSystemProperties();
         }
         return null;
     }       

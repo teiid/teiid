@@ -146,6 +146,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected List schemas;
     
     protected TransactionContext transactionContext;
+    
+    private int chunkSize;
 
     void initialize(RequestMessage requestMsg,
                               ApplicationEnvironment env,
@@ -155,7 +157,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               TransactionService transactionService,
                               boolean procDebugAllowed,
                               TempTableStore tempTableStore,
-                              DQPWorkContext workContext) {
+                              DQPWorkContext workContext,
+                              int chunckSize) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -171,6 +174,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
+        this.chunkSize = chunckSize;
     }
     
 	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
@@ -239,7 +243,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
         RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
         
-        Properties envProps = env.getApplicationProperties();
         Properties props = new Properties();
         props.setProperty(ContextProperties.SESSION_ID, workContext.getConnectionID());
         
@@ -259,14 +262,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 collectNodeStatistics(command));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
-        
-        String streamingBatchSize = null;
-        if(envProps != null) {
-            streamingBatchSize = envProps.getProperty(DQPConfigSource.STREAMING_BATCH_SIZE);
-        }
-        if(streamingBatchSize != null){
-        	context.setStreamingBatchSize(Integer.parseInt(streamingBatchSize));
-        }
+        this.context.setStreamingBatchSize(chunkSize);
         
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(

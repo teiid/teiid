@@ -49,8 +49,6 @@ public class Application {
      * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
      */
     public void start(DQPConfigSource configSource) throws ApplicationInitializationException {
-        this.environment.setApplicationProperties(configSource.getProperties());
-        
         DQPGuiceModule module = new DQPGuiceModule(configSource);
         
         Injector injector = Guice.createInjector(module);

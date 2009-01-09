@@ -94,7 +94,7 @@ public class XQueryPlan extends BaseProcessorPlan {
         setContext(context);
         this.bufferMgr = bufferMgr;        
         if(context.getStreamingBatchSize() != 0){
-            this.chunkSize = (context.getStreamingBatchSize()*1024); // it is configured in terms of KB
+            this.chunkSize = context.getStreamingBatchSize();
         }        
     }
 

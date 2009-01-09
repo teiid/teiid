@@ -58,11 +58,11 @@ public interface ConfigurationService extends ApplicationService {
     public URL getSystemVdb();
     
     /**
-     * Get properties for the System (Contents of ServerConfig.xml file)
+     * Get DQP properties
      * @return Properties - properties
      * @throws MetaMatrixComponentException
      */
-    public Properties getSystemProperties() throws MetaMatrixComponentException;
+    public Properties getSystemProperties();
     
     /**
      * Set System property (Contents of ServerConfig.xml file)

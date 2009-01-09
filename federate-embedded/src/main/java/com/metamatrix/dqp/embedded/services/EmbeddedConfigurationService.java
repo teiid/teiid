@@ -54,6 +54,7 @@ import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.ModelInfo;
@@ -96,19 +97,19 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private static final String VDB = ".vdb"; //$NON-NLS-1$
     private static final String DEF = ".def"; //$NON-NLS-1$
     
-    Properties userPreferences = null;
-    Map<String, VDBArchive> loadedVDBs = new HashMap();
-    Map<String, ConnectorBinding> loadedConnectorBindings = new HashMap();
-    Map<String, ComponentType> loadedConnectorTypes = new HashMap(); 
+    Properties userPreferences;
+    private Map<String, VDBArchive> loadedVDBs = new HashMap<String, VDBArchive>();
+    Map<String, ConnectorBinding> loadedConnectorBindings = new HashMap<String, ConnectorBinding>();
+    Map<String, ComponentType> loadedConnectorTypes = new HashMap<String, ComponentType>(); 
 
     // load time constructs
-    Map<String, URL> availableVDBFiles = new HashMap();
-    ConfigurationModelContainer configurationModel = null;
-    Map<String, Integer> inuseVDBs = new HashMap(); 
-    ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList();
-    ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList();
-    UDFSource udfSource = null;
-    HashSet<ServerConnection> clientConnections = new HashSet();
+    private Map<String, URL> availableVDBFiles = new HashMap<String, URL>();
+    ConfigurationModelContainer configurationModel;
+    private Map<String, Integer> inuseVDBs = new HashMap<String, Integer>(); 
+    private ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList<VDBLifeCycleListener>();
+    private ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList<ConnectorBindingLifeCycleListener>();
+    private UDFSource udfSource;
+    private HashSet<ServerConnection> clientConnections = new HashSet<ServerConnection>();
     
     boolean valid(String str) {
         if (str != null) {
@@ -134,7 +135,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getSystemProperties()
      * @since 4.3
      */
-    public Properties getSystemProperties() throws MetaMatrixComponentException {
+    public Properties getSystemProperties() {
         return userPreferences;
     }
 
@@ -291,7 +292,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public List<VDBArchive> getVDBs() throws MetaMatrixComponentException {
-        return new ArrayList(loadedVDBs.values());
+        return new ArrayList<VDBArchive>(loadedVDBs.values());
     }
 
     /** 
@@ -985,7 +986,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         throws ApplicationInitializationException {
         
         try {
-            userPreferences = properties;
+            userPreferences = PropertiesUtils.clone(properties);
                         
             DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getInstanceIdenifier()}); //$NON-NLS-1$
             

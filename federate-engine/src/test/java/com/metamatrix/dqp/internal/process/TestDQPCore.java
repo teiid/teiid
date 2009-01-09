@@ -64,9 +64,6 @@ public class TestDQPCore extends TestCase {
 		String vdbVersion = "1"; //$NON-NLS-1$
     	
     	ApplicationEnvironment env = new ApplicationEnvironment();
-        Properties props = new Properties();
-        env.setApplicationProperties(props);
-
         env.bindService(DQPServiceNames.BUFFER_SERVICE, new FakeBufferService());
         FakeMetadataService mdSvc = new FakeMetadataService();
 		mdSvc.addVdb(vdbName, vdbVersion, FakeMetadataFactory.exampleBQTCached()); 
@@ -81,7 +78,7 @@ public class TestDQPCore extends TestCase {
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
 
         DQPCore core = new DQPCore(env);
-        core.start();
+        core.start(new Properties());
         return core;
     }
     

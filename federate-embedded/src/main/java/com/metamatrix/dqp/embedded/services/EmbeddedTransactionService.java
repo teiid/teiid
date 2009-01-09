@@ -52,6 +52,7 @@ public class EmbeddedTransactionService extends EmbeddedBaseDQPService implement
      */
     public void initializeService(Properties props) throws ApplicationInitializationException {
         try {
+        	props = new Properties(props);
             props.put(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.put(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
             

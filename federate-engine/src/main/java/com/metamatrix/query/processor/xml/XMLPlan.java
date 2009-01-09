@@ -139,7 +139,7 @@ public class XMLPlan extends BaseProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         setContext(context);
         if(context.getStreamingBatchSize() != 0){
-        	this.chunkSize = (context.getStreamingBatchSize()*1024); // it is configured in terms of KB
+        	this.chunkSize = context.getStreamingBatchSize();
         }
         TempTableStore tempTableStore = new TempTableStoreImpl(bufferMgr, context.getConnectionID(), (TempTableStore)context.getTempTableStore());
         //this.dataMgr = new StagingTableDataManager(new TempTableDataManager(dataMgr, tempTableStore), env);

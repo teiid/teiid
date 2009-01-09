@@ -71,6 +71,7 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
@@ -115,7 +116,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     private static final String DEAFULT_PROCESS_WORKER_TIMEOUT = "120000"; //$NON-NLS-1$
-    private static final String DEFAULT_MAX_PROCESS_WORKERS = "15"; //$NON-NLS-1$
+    private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
 
     // System properties for Code Table
     private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
@@ -236,7 +237,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 				dataTierMgr, vdbCapabilties, transactionService,
 				processDebugAllowed, this.tempTableStoresHolder
 						.getTempTableStore(workContext.getConnectionID()),
-				workContext);
+				workContext, chunkSize);
 		
         RequestWorkItem workItem = null;
         
@@ -575,12 +576,16 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public void start(DQPConfigSource configSource)
 			throws ApplicationInitializationException {
 		super.start(configSource);
-		start();
+		ConfigurationService cs = (ConfigurationService)this.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
+		Properties p = configSource.getProperties();
+		if (cs != null) {
+			p = cs.getSystemProperties();
+		}
+		start(p);
 	}
 	
-	public void start() {
+	public void start(Properties props) {
 		ApplicationEnvironment env = this.getEnvironment();
-		Properties props = env.getApplicationProperties();
         
         this.chunkSize = PropertiesUtils.getIntProperty(props, DQPConfigSource.STREAMING_BATCH_SIZE, 10) * 1024;
         
@@ -621,7 +626,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
 
         // Create the worker pools to tie the queues together
-        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, Integer.parseInt(props.getProperty(DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)), 
+        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS), 
                 Integer.parseInt(props.getProperty(DQPConfigSource.PROCESS_POOL_THREAD_TTL, DEAFULT_PROCESS_WORKER_TIMEOUT))); 
  
         tempTableStoresHolder = new TempTableStoresHolder(bufferManager);

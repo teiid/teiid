@@ -126,7 +126,7 @@ public class TestRequest extends TestCase {
         FakeApplicationEnvironment environment = 
             new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         
-        request.initialize(message, environment, null, null, null, null, false, null, workContext);
+        request.initialize(message, environment, null, null, null, null, false, null, workContext, 101024);
         request.initMetadata();
         request.validateEntitlement(command);
     }
@@ -194,7 +194,7 @@ public class TestRequest extends TestCase {
         }
         request.initialize(message, environment, Mockito.mock(BufferManager.class),
 				new FakeDataManager(), new HashMap(), null, false, null,
-				workContext);
+				workContext, 101024);
         
         request.processRequest();
         return request;

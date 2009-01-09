@@ -115,16 +115,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     Properties getProperties() throws Exception{
         Properties p = new Properties();
         File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
-        try {            
-            p.load(new FileInputStream(f)); 
-        }catch(Exception e) {
-            p.setProperty("vdb.definition","./config"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.metadata.systemURL","../../../test.metamatrix/System.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.configFile","./config/ServerConfig.xml"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.classpath", "./lib"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.logLevel","3"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.extensions","./extensions");             //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        p.load(new FileInputStream(f)); 
         p.put("dqp.propertiesFile", URLHelper.buildURL(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties")); //$NON-NLS-1$ //$NON-NLS-2$
         return p;
     }

@@ -282,7 +282,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         this.connectorMgr = createConnectorManager(deMaskedProps, loader);
 
         ApplicationEnvironment env = new ApplicationEnvironment();
-        env.setApplicationProperties(deMaskedProps);
         env.bindService(DQPServiceNames.REGISTRY_SERVICE, new ClientServiceRegistryService(this.registry));
         //this assumes that the QueryService is local and has been started
         for (int i = 0; i < DQPServiceNames.ALL_SERVICES.length; i++) {

@@ -26,7 +26,6 @@ package com.metamatrix.common.application;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * The environment is available internally to the application as a means 
@@ -35,22 +34,7 @@ import java.util.Properties;
  */
 public class ApplicationEnvironment {
 
-	private Properties props;
     private Map<String, ApplicationService> services = new HashMap<String, ApplicationService>();
-
-    public void setApplicationProperties(Properties props) {
-        this.props = props;
-    }
-    
-    /* 
-     * @see com.metamatrix.common.application.ApplicationEnvironment#getApplicationProperties()
-     */
-    public Properties getApplicationProperties() {
-    	if (this.props == null) {
-    		return new Properties();
-    	}
-        return this.props;
-    }
 
     /* 
      * @see com.metamatrix.common.application.ApplicationEnvironment#bindService(java.lang.String, com.metamatrix.common.application.ApplicationService)

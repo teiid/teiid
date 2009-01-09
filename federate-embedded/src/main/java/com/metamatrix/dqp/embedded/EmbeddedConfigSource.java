@@ -90,10 +90,10 @@ public class EmbeddedConfigSource implements DQPConfigSource {
             props = PropertiesUtils.resolveNestedProperties(props);
             
             // create a unique identity number for this DQP
-            props.put(DQPEmbeddedProperties.DQP_IDENTITY, getDQPIdentity());
+            props.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, getDQPIdentity());
             
             // create a workspace directory for the DQP
-            props.put(DQPEmbeddedProperties.DQP_TMPDIR, getWorkspaceDirectory());
+            props.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, getWorkspaceDirectory());
             
             // This is context of where the dqp.properties loaded, VDB are defined relative to
             // this path.

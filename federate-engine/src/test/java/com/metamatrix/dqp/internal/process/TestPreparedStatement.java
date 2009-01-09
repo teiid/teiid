@@ -211,7 +211,7 @@ public class TestPreparedStatement extends TestCase{
         	}
         };
         FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING");
-        serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, new HashMap(), null, DEBUG, null, workContext);
+        serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, new HashMap(), null, DEBUG, null, workContext, 101024);
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();
         
