@@ -176,18 +176,7 @@ public class CustomizableTrackingService implements TrackingService {
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties props) throws ApplicationInitializationException {
-        String propvalue = props.getProperty(SYSTEM_TXN_STORE_MMCMD);
-        if(propvalue != null){
-            recordUserCommands = Boolean.valueOf(propvalue).booleanValue();
-        }
-        propvalue = props.getProperty(SYSTEM_TXN_STORE_SRCCMD);
-        if(propvalue != null){
-            recordSourceCommands = Boolean.valueOf(propvalue).booleanValue();
-        }
-        
-        workerTTL = PropertiesUtils.getLongProperty(props, SYSTEM_LOG_THREAD_TTL, DEFAULT_LOG_THREAD_TTL);
-
-		String commandLoggerClassnameProperty = props.getProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME);
+        String commandLoggerClassnameProperty = props.getProperty(DQPServiceProperties.TrackingService.COMMAND_LOGGER_CLASSNAME);
 
 		// Search for additional, implementation-specific properties stuff into
 		// this string.
@@ -227,6 +216,17 @@ public class CustomizableTrackingService implements TrackingService {
         } catch (Exception e) {
             throw new ApplicationInitializationException(e);
         }
+        
+        String propvalue = props.getProperty(SYSTEM_TXN_STORE_MMCMD);
+        if(propvalue != null){
+            recordUserCommands = Boolean.valueOf(propvalue).booleanValue();
+        }
+        propvalue = props.getProperty(SYSTEM_TXN_STORE_SRCCMD);
+        if(propvalue != null){
+            recordSourceCommands = Boolean.valueOf(propvalue).booleanValue();
+        }
+        
+        workerTTL = PropertiesUtils.getLongProperty(props, SYSTEM_LOG_THREAD_TTL, DEFAULT_LOG_THREAD_TTL);
     }
     
     /** 
