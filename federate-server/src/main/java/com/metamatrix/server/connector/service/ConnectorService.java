@@ -30,6 +30,10 @@ package com.metamatrix.server.connector.service;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +45,7 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
@@ -276,14 +281,31 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // the service.
         this.connectorMgr = createConnectorManager(deMaskedProps, loader);
 
-        
         ApplicationEnvironment env = new ApplicationEnvironment();
         env.setApplicationProperties(deMaskedProps);
         env.bindService(DQPServiceNames.REGISTRY_SERVICE, new ClientServiceRegistryService(this.registry));
         //this assumes that the QueryService is local and has been started
-        DQPCore dqp = (DQPCore)this.registry.getClientService(ClientSideDQP.class);
         for (int i = 0; i < DQPServiceNames.ALL_SERVICES.length; i++) {
-        	env.bindService(DQPServiceNames.ALL_SERVICES[i], dqp.getEnvironment().findService(DQPServiceNames.ALL_SERVICES[i]));
+        	final String serviceName = DQPServiceNames.ALL_SERVICES[i];
+        	env.bindService(serviceName, (ApplicationService)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {DQPServiceNames.ALL_SERVICE_CLASSES[i]}, new InvocationHandler() {
+        		@Override
+        		public Object invoke(Object proxy, Method method, Object[] args)
+        				throws Throwable {
+        	        DQPCore dqp = (DQPCore)registry.getClientService(ClientSideDQP.class);
+        	        if (dqp == null) {
+        	        	throw new IllegalStateException("A local QueryService is not available"); //$NON-NLS-1$
+        	        }
+        			ApplicationService instance = dqp.getEnvironment().findService(serviceName);
+        			if (instance == null) {
+        	        	throw new IllegalStateException(serviceName + " is not available"); //$NON-NLS-1$
+        	        }
+        			try {
+        				return method.invoke(instance, args);
+        			} catch (InvocationTargetException e) {
+        				throw e.getCause();
+        			}
+        		}
+        	}));
         }
 
         try {
