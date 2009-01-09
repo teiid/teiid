@@ -42,7 +42,6 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImpl;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
-import com.metamatrix.common.net.SocketHelper;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.platform.security.api.ILogon;
@@ -65,10 +64,10 @@ public class TestCommSockets extends TestCase {
 		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
-		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo");
+		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
 		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), null); //$NON-NLS-1$
+						"testIO", 1, 120000), null, true); //$NON-NLS-1$
 
 		try {
 			Properties p = new Properties();
@@ -100,34 +99,34 @@ public class TestCommSockets extends TestCase {
 	}
 
 	public void testConnectWithoutClientEncryption() throws Exception {
-		SocketHelper.setClientEncryptionEnabled(false);
-		try {
-			SocketServerConnection conn = helpEstablishConnection(false, null);
-			assertTrue(((SocketServerInstanceImpl) conn
-					.selectServerInstance()).getCryptor() instanceof NullCryptor);
-			conn.shutdown();
-		} finally {
-			SocketHelper.setClientEncryptionEnabled(true);
-		}
+		SocketServerConnection conn = helpEstablishConnection(false, null, false, new Properties());
+		assertTrue(((SocketServerInstanceImpl) conn
+				.selectServerInstance()).getCryptor() instanceof NullCryptor);
+		conn.shutdown();
 	}
 
 	private SocketServerConnection helpEstablishConnection(boolean secure,
-			SSLEngine serverSSL) throws CommunicationException,
+			SSLEngine serverSSL) throws CommunicationException, ConnectionException {
+		return helpEstablishConnection(secure, serverSSL, true, new Properties());
+	}
+
+	private SocketServerConnection helpEstablishConnection(boolean secure,
+			SSLEngine serverSSL, boolean isClientEncryptionEnabled, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
 		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
 		csr.registerClientService(ILogon.class, new LogonImpl(csr
-				.getSessionService(), "fakeCluster") {
+				.getSessionService(), "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)
 					throws LogonException, ComponentNotFoundException {
 				return new LogonResult();
 			}
-		}, "foo");
+		}, "foo"); //$NON-NLS-1$
 		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), serverSSL); //$NON-NLS-1$
+						"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled); //$NON-NLS-1$
 
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(0, stats.maxSockets);
@@ -139,7 +138,9 @@ public class TestCommSockets extends TestCase {
 		p.setProperty(MMURL.CONNECTION.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
 				secure).getAppServerURL()); 
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
-		return SocketServerConnectionFactory.getInstance().createConnection(p);
+		SocketServerConnectionFactory sscf = new SocketServerConnectionFactory();
+		sscf.init(socketConfig, false);
+		return sscf.createConnection(p);
 	}
 
 	public void testSSLConnectWithNonSSLServer() throws Exception {
@@ -152,16 +153,13 @@ public class TestCommSockets extends TestCase {
 	}
 
 	public void testAnonSSLConnect() throws Exception {
-		SSLEngine engine = SocketHelper.getAnonSSLContext().createSSLEngine();
+		SSLEngine engine = SocketUtil.getAnonSSLContext().createSSLEngine();
 		engine.setUseClientMode(false);
-		engine.setEnabledCipherSuites(new String[] { SocketHelper.ANON_CIPHER_SUITE });
-		System.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
-		try {
-			SocketServerConnection conn = helpEstablishConnection(true, engine);
-			conn.shutdown();
-		} finally {
-			System.setProperty(SocketUtil.TRUSTSTORE_FILENAME, ""); //$NON-NLS-1$
-		}
+		engine.setEnabledCipherSuites(new String[] { SocketUtil.ANON_CIPHER_SUITE });
+		Properties p = new Properties();
+		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
+		SocketServerConnection conn = helpEstablishConnection(true, engine, true, p);
+		conn.shutdown();
 	}
 
 }

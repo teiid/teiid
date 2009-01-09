@@ -62,6 +62,7 @@ public class SocketListener implements ChannelListenerFactory {
     private String bindAddress;
     private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
+    private boolean isClientEncryptionEnabled;
     
     /**
      * 
@@ -76,7 +77,8 @@ public class SocketListener implements ChannelListenerFactory {
      */
     public SocketListener(int port, String hostaddress, String bindaddress,
 			ClientServiceRegistry server, int inputBufferSize,
-			int outputBufferSize, WorkerPool workerPool, SSLEngine engine) {
+			int outputBufferSize, WorkerPool workerPool, SSLEngine engine, boolean isClientEncryptionEnabled) {
+    	this.isClientEncryptionEnabled = isClientEncryptionEnabled;
     	InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getByName(hostaddress);
@@ -134,7 +136,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
 
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new SocketClientInstance(channel, this.workerPool, this.server);
+		return new SocketClientInstance(channel, this.workerPool, this.server, this.isClientEncryptionEnabled);
 	}
 
 }

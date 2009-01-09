@@ -51,7 +51,7 @@ public class NioObjectChannelFactory implements ObjectChannelFactory {
 	private ClassLoader classLoader;
 	private ChannelFactory channlFactory;
 	
-	public NioObjectChannelFactory(boolean conserveBandwidth, int inputBufferSize, int outputBufferSize, ClassLoader classLoader) {
+	public NioObjectChannelFactory(boolean conserveBandwidth, int inputBufferSize, int outputBufferSize, ClassLoader classLoader, int workerCount) {
 		this.conserveBandwidth = conserveBandwidth;
 		this.inputBufferSize = inputBufferSize;
 		this.outputBufferSize = outputBufferSize;
@@ -60,7 +60,7 @@ public class NioObjectChannelFactory implements ObjectChannelFactory {
 				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 				new SynchronousQueue<Runnable>(),
 				new WorkerPoolFactory.DefaultThreadFactory("Nio")); //$NON-NLS-1$
-		this.channlFactory = new NioClientSocketChannelFactory(executor, executor);
+		this.channlFactory = new NioClientSocketChannelFactory(executor, executor, workerCount);
 	}
 
 	public void createObjectChannel(SocketAddress address, SSLEngine engine,

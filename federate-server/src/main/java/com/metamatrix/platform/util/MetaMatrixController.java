@@ -42,8 +42,9 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.util.FileUtils;
@@ -444,8 +445,13 @@ public class MetaMatrixController {
         try {
             InetAddress inetAddress = InetAddress.getByName(host.getHostAddress());
             int port = Integer.parseInt(host.getPort()); 
- 
-            socket = SocketHelper.getInternalClientSocket(inetAddress, port);
+            ServerSocketConfiguration helper = new ServerSocketConfiguration();
+			try {
+				helper.init();
+			} catch (ConfigurationException e) {
+				throw new IOException(e);
+			}
+            socket = helper.getInternalClientSocket(inetAddress, port);
             out = new DataOutputStream(socket.getOutputStream());
             out.write(command.getBytes());
         } finally {

@@ -34,21 +34,15 @@ import java.net.Socket;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestSocketHelper extends TestCase {
     
-    protected void setUp() throws Exception {
-        SocketHelper.initProperties();
-    }
-    
-    protected void tearDown() throws Exception {
-        SocketHelper.initialized = false;
-    }
-    
     public void testInternalHandshake() throws Exception {
     	InetAddress addr = new InetSocketAddress(0).getAddress();
-    	final ServerSocket serverSocket = SocketHelper.getInternalServerSocket(0, 50, addr);
+    	ServerSocketConfiguration helper = new ServerSocketConfiguration();
+    	final ServerSocket serverSocket = helper.getInternalServerSocket(0, 50, addr);
     	String hello = "hello"; //$NON-NLS-1$
     	final byte[] result = new byte[hello.getBytes().length]; 
     	Thread t = new Thread() {
@@ -68,7 +62,7 @@ public class TestSocketHelper extends TestCase {
     	};
     	t.start();
     	
-    	Socket clientSocket = SocketHelper.getInternalClientSocket(addr, serverSocket.getLocalPort());
+    	Socket clientSocket = helper.getInternalClientSocket(addr, serverSocket.getLocalPort());
     	OutputStream os = clientSocket.getOutputStream();
     	os.write(hello.getBytes());
     	os.flush();
@@ -78,18 +72,5 @@ public class TestSocketHelper extends TestCase {
     		}
 		}
     	assertEquals(hello, new String(result));
-    }
-    
-    public void testNoPassword() throws Exception {
-        SocketHelper.loadKeyStore(UnitTestUtil.getTestDataFile("metamatrix.keystore").getAbsolutePath(), null, SocketHelper.keyStoreType); //$NON-NLS-1$
-    }
-    
-    public void testMissingKeyStore() throws Exception {
-        try {
-            SocketHelper.loadKeyStore("metamatrix.keystorefoo", null, SocketHelper.keyStoreType); //$NON-NLS-1$
-            fail("expected exception"); //$NON-NLS-1$
-        } catch (IOException ex) {
-            assertEquals("Key store 'metamatrix.keystorefoo' was not found.", ex.getMessage()); //$NON-NLS-1$
-        }
     }
 }

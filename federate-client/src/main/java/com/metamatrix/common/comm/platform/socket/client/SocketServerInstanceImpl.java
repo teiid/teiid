@@ -32,7 +32,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +55,6 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketLog;
-import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -77,7 +75,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	private AtomicInteger MESSAGE_ID = new AtomicInteger();
 
 	private HostInfo hostInfo;
-	private boolean ssl;
+	private SSLEngine engine;
     private ObjectChannel socketChannel;
     private SocketLog log;
     private long synchTimeout;
@@ -93,10 +91,10 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	
     }
 
-    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, SocketLog log, long synchTimeout) {
+    public SocketServerInstanceImpl(final HostInfo host, SSLEngine engine, SocketLog log, long synchTimeout) {
         this.hostInfo = host;
         this.log = log;
-        this.ssl = ssl;
+        this.engine = engine;
         this.synchTimeout = synchTimeout;
     }
     
@@ -106,16 +104,6 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
             address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
         } else {
             address = new InetSocketAddress(hostInfo.getHostName(), hostInfo.getPortNumber());
-        }
-        SSLEngine engine = null;
-        if (ssl) {
-        	try {
-				engine = SocketUtil.getClientSSLEngine();
-			} catch (NoSuchAlgorithmException e) {
-				throw new CommunicationException(e);
-			} catch (IOException e) {
-				throw new CommunicationException(e);
-			}
         }
 		channelFactory.createObjectChannel(address, engine, new ChannelListenerFactory() {
 
@@ -239,7 +227,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	
 		synchronized (this) {
 			if (!handshakeCompleted) {
-				this.handshakeError = new SingleInstanceCommunicationException(e, CommPlatformPlugin.Util.getString(ssl?"SocketServerInstanceImpl.secure_error_during_handshake":"SocketServerInstanceImpl.error_during_handshake")); //$NON-NLS-1$ //$NON-NLS-2$  
+				this.handshakeError = new SingleInstanceCommunicationException(e, CommPlatformPlugin.Util.getString(engine!=null?"SocketServerInstanceImpl.secure_error_during_handshake":"SocketServerInstanceImpl.error_during_handshake")); //$NON-NLS-1$ //$NON-NLS-2$  
 				this.notify();
 			}
 		}

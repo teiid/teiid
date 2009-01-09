@@ -42,7 +42,7 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
@@ -880,7 +880,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         boolean useSSL = false;
         
         try {
-            useSSL = SocketHelper.isServerSSLEnabled();
+            useSSL = ServerSocketConfiguration.isSSLEnabled();
             
         } catch (Exception err) {
              throw new MetaMatrixRuntimeException(RuntimeMetadataPlugin.Util.getString("RuntimeMetadataAdminAPIImpl.Unable_to_determine_ssl_mode")); //$NON-NLS-1$

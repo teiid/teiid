@@ -48,7 +48,7 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
@@ -231,7 +231,9 @@ public class HostController extends Thread {
             // the listener should use the bindaddress
 			InetAddress inet = InetAddress.getByName(this.host.getBindAddress());
 			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.HOST_0012, Integer.toString(port), this.host.getBindAddress()));
-            serverSocket = SocketHelper.getInternalServerSocket(port, 50, inet);
+			ServerSocketConfiguration helper = new ServerSocketConfiguration();
+			helper.init();
+            serverSocket = helper.getInternalServerSocket(port, 50, inet);
         } catch (Exception e) {
             logCritical("ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0003,  port));//$NON-NLS-1$
             System.exit(1);

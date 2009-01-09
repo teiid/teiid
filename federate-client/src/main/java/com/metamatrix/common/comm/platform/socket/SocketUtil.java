@@ -24,14 +24,27 @@
 
 package com.metamatrix.common.comm.platform.socket;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
+import java.util.Properties;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.core.util.Assertion;
 
 
 /** 
@@ -40,7 +53,7 @@ import com.metamatrix.common.net.SocketHelper;
  * ssl connection
  * <p>
  * The search for the key stores is follows the path
- * MM defined properties ---> javax defined properties ---> default mm.keystore --> not use SSL
+ * MM defined properties ---> javax defined properties
  * <p/>
  * <ul>
  * <b>2-way SSL (MetaMatrix based)</b>
@@ -78,10 +91,6 @@ import com.metamatrix.common.net.SocketHelper;
  * <li>-Djavax.net.ssl.keyStoreType (optional)
  * </ul>
  * 
- * or it will look for the "metamatrix.keystore & metamatrix.truststore" in the classpath. The default password for these 
- * are "changeit", if user changes this password, they need to use one of the above password keys to supply the new one.
- * the same rules apply as to which passcode it looks at first.
- * 
  */
 public class SocketUtil {
     
@@ -93,111 +102,172 @@ public class SocketUtil {
     static final String KEYSTORE_PASSWORD = "com.metamatrix.ssl.keyStorePassword"; //$NON-NLS-1$
     static final String KEYSTORE_FILENAME = "com.metamatrix.ssl.keyStore"; //$NON-NLS-1$
     
-    static final String JAVAX_TRUSTSTORE_FILENAME = "javax.net.ssl.trustStore"; //$NON-NLS-1$
-    static final String JAVAX_KEYSTORE_FILENAME = "javax.net.ssl.keyStore"; //$NON-NLS-1$
-    static final String JAVAX_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword"; //$NON-NLS-1$
-    static final String JAVAX_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword"; //$NON-NLS-1$    
-    
     static final String DEFAULT_ALGORITHM = "SunX509"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
-    static final String DEFAULT_KEYSTORE = "metamatrix.keystore"; //$NON-NLS-1$
-    static final String DEFAULT_TRUSTSTORE = "metamatrix.truststore"; //$NON-NLS-1$
-    static final String DEFAULT_PASSWORD = "changeit"; //$NON-NLS-1$
     
     public static final String NONE = "none"; //$NON-NLS-1$
     
-    public static SSLEngine getClientSSLEngine() throws IOException, NoSuchAlgorithmException{
+    public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
+    public static final String ANON_PROTOCOL = "TLS"; //$NON-NLS-1$
+    
+    public static class SSLEngineFactory {
+    	private boolean isAnon;
+    	private SSLContext context;
+    	
+    	public SSLEngineFactory(SSLContext context, boolean isAnon) {
+			this.context = context;
+			this.isAnon = isAnon;
+		}
+
+		public SSLEngine getSSLEngine() {
+    		SSLEngine result = context.createSSLEngine();
+    		result.setUseClientMode(true);
+    		if (isAnon) {
+    			addCipherSuite(result, ANON_CIPHER_SUITE);
+    		}
+    		return result;
+    	}
+    }
+    
+    public static SSLEngineFactory getSSLEngineFactory(Properties props) throws IOException, NoSuchAlgorithmException{
     	// -Dcom.metamatrix.ssl.keyStore
-        String keystore = System.getProperty(KEYSTORE_FILENAME); 
+        String keystore = props.getProperty(KEYSTORE_FILENAME); 
         // -Dcom.metamatrix.ssl.keyStorePassword
-        String keystorePassword = System.getProperty(KEYSTORE_PASSWORD); 
+        String keystorePassword = props.getProperty(KEYSTORE_PASSWORD); 
         // -Dcom.metamatrix.ssl.keyStoreType (default JKS)
-        String keystoreType = System.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE); 
+        String keystoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE); 
         // -Dcom.metamatrix.ssl.protocol (default SSLv3)
-        String keystoreProtocol = System.getProperty(PROTOCOL, DEFAULT_KEYSTORE_PROTOCOL); 
+        String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_KEYSTORE_PROTOCOL); 
         // -Dcom.metamatrix.ssl.algorithm (default SunX509)
-        String keystoreAlgorithm = System.getProperty(KEYSTORE_ALGORITHM, DEFAULT_ALGORITHM); 
+        String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM, DEFAULT_ALGORITHM); 
         // -Dcom.metamatrix.ssl.trustStore (if null; keystore filename used)
-        String truststore = System.getProperty(TRUSTSTORE_FILENAME, keystore); 
+        String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
         // -Dcom.metamatrix.ssl.trustStorePassword (if null; keystore password used)
-        String truststorePassword = System.getProperty(TRUSTSTORE_PASSWORD, keystorePassword); 
+        String truststorePassword = props.getProperty(TRUSTSTORE_PASSWORD, keystorePassword); 
         
         boolean anon = NONE.equalsIgnoreCase(truststore);
         
-        if (anon) {
-        	SSLContext context = SocketHelper.getAnonSSLContext();
-        	SSLEngine result = context.createSSLEngine();
-        	result.setUseClientMode(true);
-            SocketHelper.addCipherSuite(result, SocketHelper.ANON_CIPHER_SUITE);
-            return result;
-        }
-                
+        SSLContext result = null;
+        // 0) anon
         // 1) keystore != null = 2 way SSL (can define a separate truststore too)
         // 2) truststore != null = 1 way SSL (here we can define custom properties for truststore; useful when 
         //    client like a appserver have to define multiple certs without importing 
         //    all the certificates into one single certificate
         // 3) else = javax properties; this is default way to define the SSL anywhere.
-        if (keystore != null) {
+        if (anon) {
+        	result = getAnonSSLContext();
+        } else if (keystore != null) {
             // 2 way SSL
-            return getClientSSLEngine(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
-        }
-        if(truststore != null) {
+            result = getClientSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
+        } else  if(truststore != null) {
             // One way SSL with custom properties defined
-            return getClientSSLEngine(null, null, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
+            result = getClientSSLContext(null, null, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
+        } else {
+        	result = SSLContext.getDefault();
         }
-        // default ssl connection if using one-way/two-way SSL depending upon the 
-        // system properties set.
-        // -Djavax.net.ssl.trustStore=mmdemotruststore
-        // -Djavax.net.ssl.trustStorePassword=metamatrix                                    
-        keystore = System.getProperty(JAVAX_KEYSTORE_FILENAME); 
-        truststore = System.getProperty(JAVAX_TRUSTSTORE_FILENAME); 
-        if (keystore != null || truststore != null) {
-            SSLEngine result = SSLContext.getDefault().createSSLEngine();
-            result.setUseClientMode(true);
-            return result;
-        }
-        // the default scheme only works by the classloader loading mechanism.
-        InputStream ksStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(DEFAULT_KEYSTORE);
-        InputStream tsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(DEFAULT_TRUSTSTORE);
-
-        // Now see if the customer changed the passwords in the system?
-        if (keystorePassword == null) {
-            keystorePassword = System.getProperty(JAVAX_KEYSTORE_PASSWORD, DEFAULT_PASSWORD);
-        }
-
-        if (truststorePassword == null) {
-            truststorePassword = System.getProperty(JAVAX_TRUSTSTORE_PASSWORD, DEFAULT_PASSWORD);
-        }
-        
-        if (ksStream != null && tsStream != null) {
-            return getClientSSLEngine(DEFAULT_KEYSTORE, keystorePassword, DEFAULT_TRUSTSTORE, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
-        }
-        if (ksStream == null && tsStream != null) {
-            return getClientSSLEngine(DEFAULT_TRUSTSTORE, truststorePassword, DEFAULT_TRUSTSTORE, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
-        }
-        if (ksStream != null && tsStream == null) {
-            return getClientSSLEngine(DEFAULT_KEYSTORE, keystorePassword, DEFAULT_KEYSTORE, keystorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
-        }
-        SSLEngine result = SSLContext.getDefault().createSSLEngine();
-        result.setUseClientMode(true);
-        return result;
+        return new SSLEngineFactory(result, anon);
     }
     
     /**
      * create socket factory for the client socket.  
      */
-    static SSLEngine getClientSSLEngine(String keystore,
+    static SSLContext getClientSSLContext(String keystore,
                                             String password,
                                             String truststore,
                                             String truststorePassword,
                                             String algorithm,
                                             String keystoreType,
                                             String protocol) throws IOException {
-        SSLContext context = SocketHelper.getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol);
-        SSLEngine result = context.createSSLEngine();
-        result.setUseClientMode(true);
-        return result;
+        return getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol);
+    }
+    
+    public static void addCipherSuite(SSLEngine engine, String cipherSuite) {
+        Assertion.assertTrue(Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite));
+
+        String[] suites = engine.getEnabledCipherSuites();
+
+        String[] newSuites = new String[suites.length + 1];
+        System.arraycopy(suites, 0, newSuites, 0, suites.length);
+        
+        newSuites[suites.length] = cipherSuite;
+        
+        engine.setEnabledCipherSuites(newSuites);
+    }
+
+    public static SSLContext getAnonSSLContext() throws IOException {
+        return getSSLContext(null, null, null, null, null, null, ANON_PROTOCOL);
+    }
+    
+    public static SSLContext getSSLContext(String keystore,
+                                            String password,
+                                            String truststore,
+                                            String truststorePassword,
+                                            String algorithm,
+                                            String keystoreType,
+                                            String protocol) throws IOException {
+        
+        try {
+            // Configure the Keystore Manager
+            KeyManager[] keyManagers = null;
+            if (keystore != null) {
+                KeyStore ks = loadKeyStore(keystore, password, keystoreType);
+                if (ks != null) {
+                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+                    kmf.init(ks, password.toCharArray());
+                    keyManagers = kmf.getKeyManagers();
+                }
+            }
+            
+            // Configure the Trust Store Manager
+            TrustManager[] trustManagers = null;
+            if (truststore != null) {
+                KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
+                if (ks != null) {
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+                    tmf.init(ks);
+                    trustManagers = tmf.getTrustManagers();
+                }
+            } 
+
+            // Configure the SSL
+            SSLContext sslc = SSLContext.getInstance(protocol);
+            sslc.init(keyManagers, trustManagers, null);
+            return sslc;
+        } catch (GeneralSecurityException err) {
+            IOException exception = new IOException(err.getMessage());
+            exception.initCause(err);
+            throw exception;
+        } 
+    }
+    
+    /**
+     * Load any defined keystore file, by first looking in the classpath
+     * then looking in the file system path.
+     *   
+     * @param name - name of the keystore
+     * @param password - password to load the keystore
+     * @param type - type of the keystore
+     * @return loaded keystore 
+     */
+    public static KeyStore loadKeyStore(String name, String password, String type) throws IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException {
+        
+        // Check in the classpath
+        InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
+        if (stream == null) {
+            try {
+                stream = new FileInputStream(name);
+            } catch (FileNotFoundException e) {
+                IOException exception = new IOException(CommonPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
+                exception.initCause(e);
+                throw exception;
+            }
+        }
+                
+        KeyStore ks = KeyStore.getInstance(type);        
+        
+        ks.load(stream, password != null ? password.toCharArray() : null);
+        return ks;
     }
 
 }

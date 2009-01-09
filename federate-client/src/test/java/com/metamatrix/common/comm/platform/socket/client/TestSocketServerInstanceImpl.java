@@ -83,7 +83,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 
 	private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
 			throws CommunicationException, IOException {
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(new HostInfo("foo", 1), false, Mockito.mock(SocketLog.class), 1); //$NON-NLS-1$
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(new HostInfo("foo", 1), null, Mockito.mock(SocketLog.class), 1); //$NON-NLS-1$
 		ssii.connect(channelFactory, 1);
 		return ssii;
 	}

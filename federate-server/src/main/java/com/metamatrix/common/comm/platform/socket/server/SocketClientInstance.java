@@ -36,7 +36,6 @@ import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.SocketHelper;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
@@ -59,14 +58,15 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     private final WorkerPool workerPool;
     private final ClientServiceRegistry server;
     private Cryptor cryptor;
-    private boolean usingEncryption = SocketHelper.isClientEncryptionEnabled(); 
+    private boolean usingEncryption; 
     private DhKeyGenerator keyGen;
     private DQPWorkContext workContext = new DQPWorkContext();
         
-    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server) {
+    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server, boolean isClientEncryptionEnabled) {
         this.objectSocket = objectSocket;
         this.workerPool = workerPool;
         this.server = server;
+        this.usingEncryption = isClientEncryptionEnabled;
     }
     
     public void send(Message message, Serializable messageKey) {

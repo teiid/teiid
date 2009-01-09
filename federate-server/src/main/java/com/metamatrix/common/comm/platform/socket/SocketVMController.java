@@ -24,7 +24,6 @@
 
 package com.metamatrix.common.comm.platform.socket;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import javax.xml.registry.RegistryException;
@@ -38,7 +37,7 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -142,9 +141,11 @@ public class SocketVMController extends VMController {
         
         logMessage(PlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
         workerPool = WorkerPoolFactory.newWorkerPool(SOCKET_WORKER_POOL_NAME, maxThreads, timeToLive);
+        ServerSocketConfiguration helper = new ServerSocketConfiguration();
         try {
-            listener = new SocketListener(socketPort, hostaddress, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, SocketHelper.getServerSSLEngine());
-        } catch (IOException e) {
+	        helper.init();
+	        listener = new SocketListener(socketPort, hostaddress, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled());
+        } catch (Exception e) {
         	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 
         }

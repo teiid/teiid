@@ -100,7 +100,7 @@ import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleE
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.SocketHelper;
+import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -793,9 +793,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         ProcessObject hostProcess = (ProcessObject) hostProcesses.iterator().next();
         mmPort = hostProcess.getPropertyValue(ProcessObject.SERVER_PORT);
         
-        boolean useSSL = false;
-        
-        useSSL = SocketHelper.isServerSSLEnabled();
+        boolean useSSL;
+		try {
+			useSSL = ServerSocketConfiguration.isSSLEnabled();
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		}
             
         String mmDriver = "com.metamatrix.jdbc.MMDriver"; //$NON-NLS-1$
         
