@@ -60,7 +60,8 @@ public class SqlServerSQLTranslator extends BasicSQLTranslator {
     private void initializeFunctionModifiers() {
         functionModifiers = new HashMap();
         functionModifiers.putAll(super.getFunctionModifiers());
-        functionModifiers.put("mod", new AliasModifier("%")); //$NON-NLS-1$ //$NON-NLS-2$
+        //FEDERATE-168 this is not necessary for SQL Server 2008
+        functionModifiers.put("mod", new SqlServerModModifier(languageFactory)); //$NON-NLS-1$
         functionModifiers.put("chr", new AliasModifier("char")); //$NON-NLS-1$ //$NON-NLS-2$
         functionModifiers.put("concat", new AliasModifier("+")); //$NON-NLS-1$ //$NON-NLS-2$
         functionModifiers.put("||", new AliasModifier("+")); //$NON-NLS-1$ //$NON-NLS-2$

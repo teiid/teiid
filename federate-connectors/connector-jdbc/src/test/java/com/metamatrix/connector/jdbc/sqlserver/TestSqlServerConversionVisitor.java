@@ -277,4 +277,14 @@ public class TestSqlServerConversionVisitor extends TestCase {
             MODIFIERS,
             TranslatedCommand.EXEC_TYPE_QUERY, output);        
     }
+    
+    public void testNonIntMod() throws Exception {
+    	String input = "select mod(intkey/1.5, 3) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT ((convert(float, SmallA.IntKey) / 1.5) - (floor(((convert(float, SmallA.IntKey) / 1.5) / 3.0)) * 3.0)) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            MODIFIERS,
+            TranslatedCommand.EXEC_TYPE_QUERY, output);
+    }
 }
