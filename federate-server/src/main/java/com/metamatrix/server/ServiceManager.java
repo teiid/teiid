@@ -793,7 +793,7 @@ public class ServiceManager {
 		}
 
 		try {
-			RuntimeStateAdminAPIHelper.getInstance(this.registry, null).synchronizeServer();
+			RuntimeStateAdminAPIHelper.getInstance(this.registry, this.hostManager).synchronizeServer();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
