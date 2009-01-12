@@ -348,9 +348,9 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
         } else if(type.equals(java.sql.Timestamp.class)) {
             return TIMESTAMP_VAL;
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-            return null;
+            return env.getTypeFacility().convertToRuntimeType(ALPHA.toCharArray());
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
-            return null;
+            return env.getTypeFacility().convertToRuntimeType(ALPHA.getBytes());
         } else {
             return getVariableString(10);
         }

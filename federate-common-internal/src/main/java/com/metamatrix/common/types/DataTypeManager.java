@@ -1070,6 +1070,9 @@ public class DataTypeManager {
 		if (value instanceof Clob) {
 			return new ClobType((Clob) value);
 		}
+		if (value instanceof char[]) {
+			return new ClobType(new ClobImpl((char[]) value));
+		}
 		if (value instanceof Blob) {
 			return new BlobType((Blob) value);
 		}
