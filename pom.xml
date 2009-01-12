@@ -411,7 +411,7 @@
     <module>federate-soap</module>
     <module>federate-embedded</module>
     <module>federate-tools</module>
-    <module>federate-tests-integration</module>
+    <module>federate-test-integration</module>
     <module>federate-connector-metadata</module>
     <module>federate-cache-jbosscache</module>
     <module>federate-server-installer</module>
