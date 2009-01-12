@@ -3,13 +3,11 @@
   <parent>
     <artifactId>federate</artifactId>
     <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
   <artifactId>federate-engine</artifactId>
   <name>Engine</name>
-  <version>0.0.1-SNAPSHOT</version>
   <description>Relational, procedural, and xml core engine.</description>
   
   <build>

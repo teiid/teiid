@@ -5,13 +5,11 @@
   <parent>
     <artifactId>federate</artifactId>
     <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
   <artifactId>federate-client</artifactId>
   <name>Client</name>
-  <version>0.0.1-SNAPSHOT</version>
   <description>Contains the packages related to communication, administrative api,
     sessioning and transport level messaging.</description>
   <dependencies>

@@ -3,7 +3,6 @@
   <parent>
     <artifactId>federate</artifactId>
     <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.federate</groupId>

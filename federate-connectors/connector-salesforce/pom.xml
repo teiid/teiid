@@ -4,14 +4,12 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <parent>
     <artifactId>federate-connectors</artifactId>
-    <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <groupId>org.federate.connectors</groupId>
+    <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
   <artifactId>connector-salesforce</artifactId>
   <name>Salesforce Connector</name>
-  <version>0.0.1-SNAPSHOT</version>
   <description>Integrates the federate engine with Salesforce.com.</description>
   <dependencies>
   	<dependency>
@@ -51,9 +49,9 @@
 		<scope>compile</scope>
 	</dependency>
 	<dependency>
-		<groupId>org.federate</groupId>
+		<groupId>org.federate.connectors</groupId>
 		<artifactId>salesforce-api</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>${project.version}</version>
 	</dependency>
   </dependencies>
 </project>

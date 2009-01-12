@@ -4,14 +4,12 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <parent>
     <artifactId>federate-connectors</artifactId>
-    <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <groupId>org.federate.connectors</groupId>
+    <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
   <artifactId>connector-xml</artifactId>
   <name>XML Connector</name>
-  <version>0.0.1-SNAPSHOT</version>
   <description>This connector produces the XML documents from Web
     service and transforms the document into a relational structure for
     consumption by the Federate engine</description>

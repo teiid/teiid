@@ -3,14 +3,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <artifactId>sandbox</artifactId>
-    <groupId>org.federate</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <groupId>org.federate.connectors.sandbox</groupId>
+    <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
   <artifactId>connector-object</artifactId>
   <name>Object Connector</name>
-  <version>0.0.1-SNAPSHOT</version>
   <description>This is generic connector that can be used to wrap
     any JAVA API, and turn it into connector</description>
   <dependencies>
