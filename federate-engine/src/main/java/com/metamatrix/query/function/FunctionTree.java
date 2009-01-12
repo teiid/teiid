@@ -41,6 +41,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -170,7 +171,12 @@ class FunctionTree {
      * @param method The function metadata for a particular method signature
      */
     private void addMetadata(FunctionMethod method) {
-        String categoryKey = method.getCategory().toUpperCase();
+    	String categoryKey = method.getCategory();
+    	if (categoryKey == null) {
+    		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
+    		categoryKey = FunctionCategoryConstants.MISCELLANEOUS;
+    	}
+    	categoryKey = categoryKey.toUpperCase();
         String nameKey = method.getName().toUpperCase();
 
         // Look up function map (create if necessary)

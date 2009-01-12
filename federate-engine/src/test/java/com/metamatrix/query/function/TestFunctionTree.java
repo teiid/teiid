@@ -27,15 +27,19 @@ package com.metamatrix.query.function;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.mockito.Mockito;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
 import com.metamatrix.query.function.source.SystemSource;
@@ -106,6 +110,17 @@ public class TestFunctionTree extends TestCase {
     	
     	FunctionLibraryManager.registerSource(dummySource);
     	FunctionLibraryManager.reloadSources();
+    }
+    
+    public void testNullCategory() {
+    	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
+    	Mockito.stub(fms.getFunctionMethods()).toReturn(Arrays.asList(new FunctionMethod(
+    			"dummy", null, null, FunctionMethod.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	 	    	new FunctionParameter[0], 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING) //$NON-NLS-1$
+    	)));
+    	FunctionTree ft = new FunctionTree(fms);
+    	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
     }
 	
 /*
