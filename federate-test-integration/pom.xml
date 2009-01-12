@@ -99,7 +99,7 @@
     </dependency>
     
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.federate.connectors</groupId>
       <artifactId>connector-loopback</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -112,13 +112,13 @@
     </dependency>
     
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.federate.connectors</groupId>
       <artifactId>connector-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
     
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.federate.connectors</groupId>
       <artifactId>connector-jdbc</artifactId>
       <type>test-jar</type>
       <version>${project.version}</version>
