@@ -6,9 +6,9 @@
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>federate-tools</artifactId>
-  <name>Tools</name>
-  <description>This project contains tools such as MMAdmin.</description>
+  <artifactId>federate-adminshell</artifactId>
+  <name>Adminshell</name>
+  <description>Adminshell for Federate</description>
   <dependencies>
     <dependency>
       <groupId>org.federate</groupId>
