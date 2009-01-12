@@ -46,7 +46,6 @@ import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.pooling.api.ResourcePoolMgr;
@@ -554,7 +553,7 @@ public class RuntimeStateAdminAPIHelper {
         
         VMControllerInterface vmController = vmBinding.getVMController();
         try {
-        	vmController.shutdownServiceNow(serviceID);
+        	vmController.stopService(serviceID);
         } catch (ServiceException se) {
         	LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, se, "Service exception stopping service during restart"); //$NON-NLS-1$
         }
@@ -605,10 +604,10 @@ public class RuntimeStateAdminAPIHelper {
         ConfigurationID operationalConfigID = configAdmin.getCurrentConfigurationID();
 
         if (currentConfigID.equals(operationalConfigID)) {
-            I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0028);
+            LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, PlatformPlugin.Util.getString(LogMessageKeys.ADMIN_0028));
 
             // Set in this (AppServer) VM since registry won't have a handle to it...
-            I18nLogManager.setLogConfiguration(logConfig);
+            LogManager.setLogConfiguration(logConfig);
 
             Iterator vmItr = registry.getVMs(null).iterator();
             while (vmItr.hasNext()) {
