@@ -2,10 +2,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <artifactId>federate</artifactId>
-    <groupId>org.federate</groupId>
+    <groupId>org.jboss.federate</groupId>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
+  <groupId>org.jboss.federate.documentation</groupId>
   <artifactId>federate-docs</artifactId>
   <packaging>pom</packaging>
   <name>Federate Documents</name>

@@ -3,11 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <artifactId>federate</artifactId>
-    <groupId>org.federate</groupId>
+    <groupId>org.jboss.federate</groupId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate.connectors</groupId>
+  <groupId>org.jboss.federate.connectors</groupId>
   <artifactId>federate-connectors</artifactId>
   <packaging>pom</packaging>
   <name>Connectors</name>
@@ -17,93 +17,93 @@
   
     <!-- Internal dependencies -->
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-connector-api</artifactId>
       <exclusions>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-common-internal</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-connector-api</artifactId>
       <type>test-jar</type>
       <exclusions>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-common-internal</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-connector-sdk</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-client-jdbc</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-engine</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-metadata</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-connector-sdk</artifactId>
       <type>test-jar</type>
       <exclusions>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-client-jdbc</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-engine</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.federate</groupId>
+          <groupId>org.jboss.federate</groupId>
           <artifactId>federate-metadata</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-common-core</artifactId>
       <type>test-jar</type>
     </dependency>
 
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-common-internal</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-engine</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-engine</artifactId>
       <type>test-jar</type>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-metadata</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.federate</groupId>
+      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-metadata</artifactId>
       <type>test-jar</type>
       <scope>runtime</scope>

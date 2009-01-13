@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.federate</groupId>
+  <groupId>org.jboss.federate</groupId>
   <artifactId>federate</artifactId>
   <packaging>pom</packaging>
   <name>Federate</name>
@@ -184,113 +184,113 @@
       
       <!-- Internal dependencies -->
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-common-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-common-core</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-common-internal</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-common-internal</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-connector-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-connector-api</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-client</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-client</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-client-jdbc</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-client-jdbc</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-engine</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-engine</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-metadata</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-metadata</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-txn-jbossts</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-cache-jbosscache</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-connector-sdk</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-connector-sdk</artifactId>
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.federate</groupId>
+        <groupId>org.jboss.federate</groupId>
         <artifactId>federate-connector-metadata</artifactId>
         <version>${project.version}</version>
       </dependency>
