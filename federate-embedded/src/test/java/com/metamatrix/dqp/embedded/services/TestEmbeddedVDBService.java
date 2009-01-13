@@ -25,8 +25,6 @@
 package com.metamatrix.dqp.embedded.services;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -37,11 +35,11 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.Application;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
-import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.VDBStatus;
+import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -56,12 +54,7 @@ public class TestEmbeddedVDBService extends TestCase{
     
     protected void setUp() throws Exception {
     	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-        File[] files = new File(UnitTestUtil.getTestDataPath()+"/dqp/data").listFiles(); //$NON-NLS-1$
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].isDirectory()) {
-                copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
-            }
-        }
+    	EmbeddedTestUtil.createTestDirectory();
         Application registry = new Application();
         configService = new EmbeddedConfigurationService();
         registry.installService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
@@ -72,57 +65,10 @@ public class TestEmbeddedVDBService extends TestCase{
     protected void tearDown() throws Exception {
     	vdbService.stop();
         configService.stop();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/config"); //$NON-NLS-1$
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-        
-        File[] files = f.listFiles(); 
-        for (int i = 0; i < files.length; i++) {
-            files[i].delete();
-        }        
     }
 
-    void copy(File src, File target) {
-        try {
-            FileInputStream in = new FileInputStream(src);
-            FileOutputStream out = new FileOutputStream(target);
-            
-            byte[] buf = new byte[1024];
-            int d = in.read(buf, 0, 1024);
-            while (d != -1) {
-                out.write(buf, 0, d);
-                d = in.read(buf, 0, 1024);            
-            }            
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            // skip..
-        } 
-    }
-    
-    Properties getProperties() throws Exception{
-        Properties p = new Properties();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
-        try {            
-            p.load(new FileInputStream(f)); 
-        }catch(Exception e) {
-            p.setProperty("vdb.definition","./config"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.metadata.systemURL","../../../test.metamatrix/System.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.configFile","./config/ServerConfig.xml"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.classpath", "./lib"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.logLevel","3"); //$NON-NLS-1$ //$NON-NLS-2$
-            p.setProperty("dqp.extensions","./extensions");             //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        p.put("dqp.propertiesFile", URLHelper.buildURL(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties")); //$NON-NLS-1$ //$NON-NLS-2$
-        return p;
-    }
-    
-    
-    
     public void testGetTestVDB() throws Exception {        
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);
         
@@ -139,7 +85,7 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testSystemModelConnectorBinding() throws Exception {        
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);
         
@@ -160,7 +106,7 @@ public class TestEmbeddedVDBService extends TestCase{
     // name     | trim stored   |   name    |
     //---------------------------------------
     public void testGetConnectorBindingNames() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);
         
@@ -171,7 +117,7 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testMapConnectorBinding() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);
         
@@ -227,14 +173,14 @@ public class TestEmbeddedVDBService extends TestCase{
     
     
     public void testVDBResource() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertNotNull(vdbService.getVDBResource("Admin", "1")); //$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testAvailableVDBs() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
@@ -246,7 +192,7 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testDeployNewVDB() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
@@ -269,7 +215,7 @@ public class TestEmbeddedVDBService extends TestCase{
     // when we deploy the already deployed VDB it should take on the next version
     // number.
     public void testDeploySameVDB() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
@@ -290,7 +236,7 @@ public class TestEmbeddedVDBService extends TestCase{
     
     
     public void changeVDBStatus_delete() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
@@ -301,7 +247,7 @@ public class TestEmbeddedVDBService extends TestCase{
     }
 
     public void changeVDBStatus_inactive() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 

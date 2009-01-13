@@ -24,17 +24,13 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 
 
@@ -47,13 +43,7 @@ public class TestEmbeddedDataService extends TestCase {
     
     protected void setUp() throws Exception {
     	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-        File[] files = new File(UnitTestUtil.getTestDataPath()+"/dqp/data").listFiles(); //$NON-NLS-1$
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].isDirectory()) {
-                copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
-            }
-        }
-        ApplicationEnvironment registry = new ApplicationEnvironment();
+    	ApplicationEnvironment registry = new ApplicationEnvironment();
         configService = new EmbeddedConfigurationService();
         registry.bindService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
         dataService = new EmbeddedDataService();
@@ -63,46 +53,10 @@ public class TestEmbeddedDataService extends TestCase {
 
     protected void tearDown() throws Exception {
         configService.stop();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/config"); //$NON-NLS-1$
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-        
-        File[] files = f.listFiles(); 
-        for (int i = 0; i < files.length; i++) {
-            files[i].delete();
-        }        
     }
 
-    void copy(File src, File target) {
-        try {
-            FileInputStream in = new FileInputStream(src);
-            FileOutputStream out = new FileOutputStream(target);
-            
-            byte[] buf = new byte[1024];
-            int d = in.read(buf, 0, 1024);
-            while (d != -1) {
-                out.write(buf, 0, d);
-                d = in.read(buf, 0, 1024);            
-            }            
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            // skip..
-        } 
-    }
-    
-    Properties getProperties() throws Exception{
-        Properties p = new Properties();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
-        p.load(new FileInputStream(f)); 
-        p.put("dqp.propertiesFile", URLHelper.buildURL(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties")); //$NON-NLS-1$ //$NON-NLS-2$
-        return p;
-    }
-    
     public void testSelectConnector() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$();        
         configService.userPreferences = p;
         configService.initializeService(p);
         

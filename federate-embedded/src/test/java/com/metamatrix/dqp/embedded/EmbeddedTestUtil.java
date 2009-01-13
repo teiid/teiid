@@ -24,34 +24,31 @@
 
 package com.metamatrix.dqp.embedded;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
-import junit.framework.TestCase;
-
-import com.metamatrix.common.application.Application;
 import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.FakeAbstractService;
-import com.metamatrix.dqp.service.FakeVDBService;
 
-public class TestEmbeddedConfigSource extends TestCase {
-    
-    public TestEmbeddedConfigSource(String name) {
-        super(name);
-    }
-
-    URL buildDQPUrl(String configFileName) throws MalformedURLException {
-        return URLHelper.buildURL(configFileName);
-    }    
-
-    public void testServiceLoading() throws Exception {
-        EmbeddedConfigSource source = new EmbeddedConfigSource(buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"), null);//$NON-NLS-1$        
-        Application application = new Application();
-        application.start(source);
-        assertTrue(application.getEnvironment().findService(DQPServiceNames.VDB_SERVICE) instanceof FakeVDBService);
-        assertTrue(application.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE) instanceof FakeAbstractService);
+public class EmbeddedTestUtil {
+	
+	public static Properties getProperties() throws IOException {
+		return getProperties(UnitTestUtil.getTestScratchPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
+	}
+	
+    public static Properties getProperties(String file) throws IOException {
+        Properties props = PropertiesUtils.load(file);        
+        props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, URLHelper.buildURL(file));
+        return props;
     }
     
+    public static void createTestDirectory() throws Exception {
+    	File scratchDQP = UnitTestUtil.getTestScratchFile("dqp"); //$NON-NLS-1$
+    	FileUtils.removeDirectoryAndChildren(scratchDQP);
+    	FileUtils.copyDirectoriesRecursively(UnitTestUtil.getTestDataFile("dqp"), new File(UnitTestUtil.getTestScratchPath())); //$NON-NLS-1$
+    }
+
 }

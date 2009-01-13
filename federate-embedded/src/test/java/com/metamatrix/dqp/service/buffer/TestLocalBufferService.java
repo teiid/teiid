@@ -24,10 +24,6 @@
 
 package com.metamatrix.dqp.service.buffer;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -37,7 +33,7 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 import com.metamatrix.dqp.service.ConfigurationService;
@@ -49,36 +45,13 @@ public class TestLocalBufferService extends TestCase {
         super(name);
     }
 
-    private Properties helpLoadProperties(String file) throws IOException {
-        Properties props = new Properties();        
-        FileInputStream fis = null;
-        BufferedInputStream bis = null;
-        try {
-            File f = new File(file);
-            fis = new FileInputStream(f);
-            bis = new BufferedInputStream(fis); 
-            props.load(bis);
-            props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, f.toURI().toURL());
-        } finally {
-            if(bis != null) {   
-                try {             
-                    bis.close();
-                } catch(IOException e) {
-                    // ignore - rather have original exception if there is one
-                }
-            }
-        }
-        
-        return props;       
-    }
-    
     public void testMissingRequiredProperties() throws Exception {        
         try {
             System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             
             Application r = new Application();
             ConfigurationService cs = new EmbeddedConfigurationService();
-            Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
+            Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
             p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
             cs.initialize(p);
             r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
@@ -101,7 +74,7 @@ public class TestLocalBufferService extends TestCase {
         ConfigurationService cs = null;
         Application r = new Application();
         cs = new EmbeddedConfigurationService();
-        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
+        Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
         cs.initialize(p);
         r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
         svc = new EmbeddedBufferService();
@@ -127,7 +100,7 @@ public class TestLocalBufferService extends TestCase {
         EmbeddedBufferService svc = null;
         Application r = new Application();
         ConfigurationService cs = new EmbeddedConfigurationService();
-        Properties p = helpLoadProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
+        Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
         p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
         cs.initialize(p);            
         r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);

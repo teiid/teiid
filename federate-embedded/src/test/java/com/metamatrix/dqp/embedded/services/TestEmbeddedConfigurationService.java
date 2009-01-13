@@ -24,9 +24,6 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,7 +43,6 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingID;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicConnectorBindingType;
-import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -54,6 +50,7 @@ import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -68,12 +65,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
        
     protected void setUp() throws Exception {
     	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-        File[] files = new File(UnitTestUtil.getTestDataPath()+"/dqp/data").listFiles(); //$NON-NLS-1$
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].isDirectory()) {
-                copy (files[i], new File(UnitTestUtil.getTestDataPath()+"/dqp/config/"+files[i].getName())); //$NON-NLS-1$
-            }
-        }
+    	EmbeddedTestUtil.createTestDirectory();
         service = new EmbeddedConfigurationService();  
         ApplicationEnvironment env = new ApplicationEnvironment();
         service.start(env);
@@ -82,58 +74,22 @@ public class TestEmbeddedConfigurationService extends TestCase {
 
     protected void tearDown() throws Exception {
         service.stop();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/config"); //$NON-NLS-1$
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-        
-        File[] files = f.listFiles(); 
-        for (int i = 0; i < files.length; i++) {
-            files[i].delete();
-        }        
     }
 
-    void copy(File src, File target) {	
-        try {
-            FileInputStream in = new FileInputStream(src);
-            FileOutputStream out = new FileOutputStream(target);
-            
-            byte[] buf = new byte[1024];
-            int d = in.read(buf, 0, 1024);
-            while (d != -1) {
-                out.write(buf, 0, d);
-                d = in.read(buf, 0, 1024);            
-            }            
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            // skip..
-        } 
-    }
-    
-    Properties getProperties() throws Exception{
-        Properties p = new Properties();
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
-        p.load(new FileInputStream(f)); 
-        p.put("dqp.propertiesFile", URLHelper.buildURL(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties")); //$NON-NLS-1$ //$NON-NLS-2$
-        return p;
-    }
-            
     public void testUseExtensionPath() throws Exception {
-        service.userPreferences = getProperties();
+        service.userPreferences = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         assertTrue(service.useExtensionClasspath());
     }
     
     public void testUseExtensionPathFalse()  throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.remove("dqp.extensions"); //$NON-NLS-1$        
         service.userPreferences = p;        
         assertFalse(service.useExtensionClasspath());
     }
     
     public void testGetAvailableVDBFiles() throws Exception {
-        service.userPreferences = getProperties();
+        service.userPreferences = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         HashMap vdbFiles = VDBConfigurationReader.loadVDBS(service.getVDBLocations());
         int count = vdbFiles.keySet().size();
         assertEquals(2, count);   
@@ -148,7 +104,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetConfigFileURL() throws Exception {
-        service.userPreferences = getProperties();
+        service.userPreferences = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         assertTrue(service.getConfigFile().toString().endsWith("dqp/config/ServerConfig.xml"));            //$NON-NLS-1$
     }
         
@@ -156,7 +112,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
         BasicConnectorBinding binding = new BasicConnectorBinding(new ConfigurationID("foo"), new ConnectorBindingID(new ConfigurationID("foo"), "foo"), new ComponentTypeID("foo type")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         BasicConnectorBinding alternatebinding = new BasicConnectorBinding(new ConfigurationID("foo"), new ConnectorBindingID(new ConfigurationID("foo"), "foo"), new ComponentTypeID("foo type")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.loadedConnectorBindings.put("foo", alternatebinding); //$NON-NLS-1$
                 
@@ -165,7 +121,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }    
     
     public void defer_testInitializeEncryption() throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.setProperty(DQPEmbeddedProperties.DQP_KEYSTORE, "Cluster.key"); //$NON-NLS-1$
         service.userPreferences = p;
         service.initializeEncryption();        
@@ -173,20 +129,20 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetDefaultExtensionPath()  throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.remove(DQPEmbeddedProperties.DQP_EXTENSIONS);
         service.userPreferences = p;        
         assertTrue(service.getDefaultExtensionPath().toString().endsWith("dqp/extensions/")); //$NON-NLS-1$
     }
     
     public void testGetDirectoryToStoreVDBS() throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;  
         assertTrue(service.getVDBSaveLocation().toString().endsWith("dqp/config/")); //$NON-NLS-1$
     }
 
     public void testGetDirectoryToStoreVDBSByVDBName() throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./config/QT_Ora9DS.vdb"); //$NON-NLS-1$
         service.userPreferences = p;  
         service.initializeService(p);
@@ -198,7 +154,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetFileToSaveNewFile() throws Exception{
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         p.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./config/QT_Ora9DS.vdb"); //$NON-NLS-1$
         service.initializeService(p);
@@ -211,7 +167,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetFileAlreadyExisting() throws Exception{
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -222,28 +178,27 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetFullyQualifiedPath() throws Exception{
-        Properties p = getProperties();
-        p.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, URLHelper.buildURL(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties")); //$NON-NLS-1$
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;       
         assertTrue(service.getFullyQualifiedPath("http://lib/foo.txt").toString().endsWith("http://lib/foo.txt")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(service.getFullyQualifiedPath("file:/c:/lib/foo.txt").toString().endsWith("file:/c:/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(service.getFullyQualifiedPath("/lib/foo.txt").toString().endsWith("mmfile:/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue(service.getFullyQualifiedPath("../lib/foo.txt").toString().endsWith("mmfile:src/test/resources/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue(service.getFullyQualifiedPath("lib/foo.txt").toString().endsWith("mmfile:src/test/resources/dqp/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue(service.getFullyQualifiedPath("./lib/foo.txt").toString().endsWith("mmfile:src/test/resources/dqp/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue(service.getFullyQualifiedPath("../lib/foo.txt").toString().endsWith("mmfile:"+UnitTestUtil.getTestScratchPath()+"/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertTrue(service.getFullyQualifiedPath("lib/foo.txt").toString().endsWith("mmfile:"+UnitTestUtil.getTestScratchPath()+"/dqp/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertTrue(service.getFullyQualifiedPath("./lib/foo.txt").toString().endsWith("mmfile:"+UnitTestUtil.getTestScratchPath()+"/dqp/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         assertTrue(service.getFullyQualifiedPath("c:\\lib\\foo.txt").toString().endsWith("mmfile:/c:/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(service.getFullyQualifiedPath("c:/lib/foo.txt").toString().endsWith("mmfile:/c:/lib/foo.txt"));//$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testGetNextVdbVersion() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);        
         assertEquals(2, service.getNextVdbVersion("QT_Ora9DS")); //$NON-NLS-1$
     }    
     
     public void testDeleteInUseConnectorBinding() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         try {
@@ -255,7 +210,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
 
     public void testDeleteNonExistingConnectorBinding() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         try {
@@ -267,7 +222,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }    
     
     public void testDeleteConnectorBinding() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         
@@ -283,7 +238,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     
     
     public void testDeleteConnectorType() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         
@@ -304,7 +259,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }     
     
     public void testDeleteConnectorTypeInUse() throws Exception{        
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         
@@ -319,7 +274,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }     
     
     public void testDeleteVDB() throws Exception{
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
         
@@ -332,7 +287,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetLogFile() throws Exception{
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.setProperty(DQPEmbeddedProperties.DQP_LOGFILE, "./log/dqp.log"); //$NON-NLS-1$ 
         p.setProperty(DQPEmbeddedProperties.DQP_LOGLEVEL, "1"); //$NON-NLS-1$ 
         service.userPreferences = p;
@@ -342,7 +297,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetSystemProperties() throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         service.userPreferences = p;
         service.initializeService(p);         
 
@@ -354,7 +309,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetResetSystemPrintStreams() throws Exception {
-        Properties p = getProperties();
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;
         p.setProperty(DQPEmbeddedProperties.DQP_CAPTURE_SYSTEM_PRINTSTREAMS, "true"); //$NON-NLS-1$ 
         service.userPreferences = p;
         service.initializeService(p);         
@@ -363,7 +318,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetSystemConfiguration() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;         
         assertNull(service.configurationModel);
         
@@ -372,28 +327,28 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetSystemVDB() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);  
         assertNotNull(service.getSystemVdb());
     }
     
     public void testGetUDFFileName() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         p.setProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS, "./lib/foo.txt"); //$NON-NLS-1$
         service.userPreferences = p;
-        assertTrue(service.getUDFFile().toString().endsWith(UnitTestUtil.getTestDataPath()+"/dqp/lib/foo.txt")); //$NON-NLS-1$
+        assertTrue(service.getUDFFile().toString().endsWith(UnitTestUtil.getTestScratchPath()+"/dqp/lib/foo.txt")); //$NON-NLS-1$
     }
     
     public void testGetVDBs() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         assertTrue(service.getVDBs().size() == 2); 
     }
     
     public void testSaveConnectorBinding() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -424,7 +379,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     
 
     public void testSaveConnectorType() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -449,7 +404,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
 
     
     public void testSaveVDB() throws Exception{
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -462,7 +417,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetProcessorBatchSize() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -470,7 +425,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetConnectorBatchSize() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -478,7 +433,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testLoadedConnectorBindings() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -500,7 +455,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }    
     
     public void testAddConnectorBinding() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
@@ -512,7 +467,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetConnectorTypes() throws Exception {
-        Properties p = getProperties();        
+        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$;        
         service.userPreferences = p;
         service.initializeService(p);
         
