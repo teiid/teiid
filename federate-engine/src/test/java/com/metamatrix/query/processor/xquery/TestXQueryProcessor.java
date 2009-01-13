@@ -293,7 +293,7 @@ public class TestXQueryProcessor extends TestCase {
      * <Item name="{$x/text()}" /> in line 4 of xquery seems
      * to cause Exception.
      */
-    public void DEFER_test_defect12405() throws Exception {
+    public void test_defect12405() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManager(metadata);
          
@@ -314,11 +314,11 @@ public class TestXQueryProcessor extends TestCase {
                 "</Items>"; //$NON-NLS-1$
 
         String xquery = "<Items>\r\n" + //$NON-NLS-1$
-                        "{\r\n" + //$NON-NLS-1$
-                        "for $x in doc(\"xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
-                        "return  <Item name=\"{$x}\" />\r\n" + //$NON-NLS-1$
-                        "}\r\n" + //$NON-NLS-1$
-                        "</Items>\r\n"; //$NON-NLS-1$
+				        "{\r\n" + //$NON-NLS-1$
+				        "for $x in doc(\"select * from xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
+				        "return  <Item name=\"{$x}\" />\r\n" + //$NON-NLS-1$
+				        "}\r\n" + //$NON-NLS-1$
+				        "</Items>\r\n"; //$NON-NLS-1$
         
         helpTestProcess(xquery, expectedDoc, metadata, dataMgr);         
     }    
