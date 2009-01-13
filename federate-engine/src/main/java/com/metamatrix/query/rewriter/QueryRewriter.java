@@ -1970,12 +1970,17 @@ public class QueryRewriter {
 	}
 
     private static Expression rewriteExpression(AggregateSymbol expression) {
-    	if(expression.getExpression() instanceof Constant) {
-    		AggregateSymbol aggr = expression;
-    		if(!aggr.getAggregateFunction().equals(ReservedWords.COUNT) && !aggr.getAggregateFunction().equals(ReservedWords.SUM)) {
-    			return new ExpressionSymbol(expression.getName(), expression.getExpression());
-    		}
-    	}
+    	if (!expression.getAggregateFunction().equals(ReservedWords.COUNT)
+				&& !expression.getAggregateFunction().equals(ReservedWords.SUM)
+				&& EvaluateExpressionVisitor.willBecomeConstant(expression.getExpression())) {
+			try {
+				return new ExpressionSymbol(expression.getName(), ResolverUtil
+						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType())));
+			} catch (QueryResolverException e) {
+				//should not happen, so throw as a runtime
+				throw new MetaMatrixRuntimeException(e);
+			}
+		}
 		return expression;
 	}
 

@@ -2617,6 +2617,7 @@ public class TestOptimizer extends TestCase {
     public void testPushAggregate8() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
@@ -2635,7 +2636,7 @@ public class TestOptimizer extends TestCase {
             "SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb " + //$NON-NLS-1$
             "WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT intkey FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey = '46') AND (sa.datevalue = (SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sb.stringkey = sa.stringkey)))"; //$NON-NLS-1$
+        String sqlOut = "SELECT intkey FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey = '46') AND (sa.datevalue = (SELECT sa.datevalue FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sb.stringkey = sa.stringkey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, 
             FakeMetadataFactory.exampleBQTCached(),
@@ -6017,11 +6018,8 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);        
     }
     
-    /**
-     * SELECT sa.intkey, sa.stringkey, sa.datevalue, sa.floatnum, sa.doublenum, sa.datevalue, sa.charvalue, sa.shortvalue, sa.objectvalue FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey IN (46)) AND (sa.datevalue = (SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))
-     */
     public void testDefect16848_groupAliasNotSupported_1() {
-        String sql = "SELECT sa.intkey, sa.stringkey, sa.datevalue, sa.floatnum, sa.doublenum, sa.datevalue, sa.charvalue, sa.shortvalue, sa.objectvalue FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey IN (46)) AND (sa.datevalue = (SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
+        String sql = "SELECT sa.intkey, sa.objectvalue FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey IN (46)) AND (sa.datevalue = (SELECT MAX(sb.datevalue) FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -6036,7 +6034,7 @@ public class TestOptimizer extends TestCase {
         ProcessorPlan plan = helpPlan(sql,  
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT bqt1.smalla.datevalue, bqt1.smalla.intkey, bqt1.smalla.stringkey, bqt1.smalla.floatnum, bqt1.smalla.doublenum, bqt1.smalla.charvalue, bqt1.smalla.shortvalue, bqt1.smalla.objectvalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = 46) AND (bqt1.smalla.stringkey = '46')"}, //$NON-NLS-1$
+                                      new String[] {"SELECT bqt1.smalla.datevalue, bqt1.smalla.intkey, bqt1.smalla.stringkey, bqt1.smalla.objectvalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = 46) AND (bqt1.smalla.stringkey = '46')"}, //$NON-NLS-1$
                                       SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
@@ -6064,7 +6062,7 @@ public class TestOptimizer extends TestCase {
         Set actualQueries = getAtomicQueries(subplan);
         
         // Compare atomic queries
-        HashSet expectedQueries = new HashSet(Arrays.asList(new String[] { "SELECT bqt1.smalla.IntKey FROM bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smalla.intkey) AND (bqt1.smalla.stringkey = bqt1.smalla.stringkey)"})); //$NON-NLS-1$
+        HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT bqt1.smalla.datevalue FROM bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smalla.intkey) AND (bqt1.smalla.stringkey = bqt1.smalla.stringkey)"})); //$NON-NLS-1$
         assertEquals("Did not get expected atomic queries for subplan: ", expectedQueries, actualQueries); //$NON-NLS-1$
 
         checkNodeTypes(subplan, new int[] {
