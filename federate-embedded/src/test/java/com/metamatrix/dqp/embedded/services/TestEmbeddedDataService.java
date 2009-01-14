@@ -30,6 +30,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 
@@ -56,7 +57,7 @@ public class TestEmbeddedDataService extends TestCase {
     }
 
     public void testSelectConnector() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$();        
+        Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$        
         configService.userPreferences = p;
         configService.initializeService(p);
         
