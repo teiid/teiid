@@ -37,7 +37,7 @@ import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.From;
@@ -141,7 +141,7 @@ public class FakeDataManager implements ProcessorDataManager {
 			    List filteredTuples = new ArrayList();
 			    for(int i=0; i<tuples.length; i++) {
 	                try {
-	    				if(new CriteriaEvaluator(lookupMap, null, null).evaluate(query.getCriteria(), tuples[i])) {
+	    				if(new Evaluator(lookupMap, null, null).evaluate(query.getCriteria(), tuples[i])) {
 	                        filteredTuples.add(tuples[i]);
 	                    }
 	                } catch(CriteriaEvaluationException e) {

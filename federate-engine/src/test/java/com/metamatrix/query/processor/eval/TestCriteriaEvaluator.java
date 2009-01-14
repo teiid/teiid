@@ -37,7 +37,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
@@ -62,7 +62,7 @@ public class TestCriteriaEvaluator extends TestCase {
     private void helpTestMatch(String value, String pattern, char escape, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
         MatchCriteria crit = new MatchCriteria(new Constant(value), new Constant(pattern), escape);
         crit.setNegated(negated);
-        boolean actualMatch = CriteriaEvaluator.evaluate(crit);
+        boolean actualMatch = Evaluator.evaluate(crit);
         // Compare actual and expected match
         assertEquals("Match criteria test failed for value=[" + value + "], pattern=[" + pattern + "], hasEscape=" + (escape != MatchCriteria.NULL_ESCAPE_CHAR) + ": ", expectedMatch, actualMatch); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
@@ -75,7 +75,7 @@ public class TestCriteriaEvaluator extends TestCase {
         IsNullCriteria criteria = new IsNullCriteria(new Constant(value));
         criteria.setNegated(negated);
         
-        boolean result = CriteriaEvaluator.evaluate(criteria);
+        boolean result = Evaluator.evaluate(criteria);
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
     
@@ -89,7 +89,7 @@ public class TestCriteriaEvaluator extends TestCase {
         constants.add(new Constant(new Integer(5000)));
         SetCriteria crit = new SetCriteria(new Constant(value), constants);
         crit.setNegated(negated);
-        boolean result = CriteriaEvaluator.evaluate(crit);
+        boolean result = Evaluator.evaluate(crit);
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
         
@@ -101,7 +101,7 @@ public class TestCriteriaEvaluator extends TestCase {
         
         List tuple = Arrays.asList(new String[]{"a"}); //$NON-NLS-1$
         
-        assertEquals(expectedResult, new CriteriaEvaluator(elementMap, null, null).evaluate(crit, tuple));
+        assertEquals(expectedResult, new Evaluator(elementMap, null, null).evaluate(crit, tuple));
     }
 
     private SubqueryCompareCriteria helpGetCompareSubqueryCriteria(int operator, int predicateQuantifier){
@@ -386,7 +386,7 @@ public class TestCriteriaEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         crit.setValueIterator(valueIter);
         
-        assertTrue( CriteriaEvaluator.evaluate(crit) );
+        assertTrue( Evaluator.evaluate(crit) );
     }
 
     public void testExistsCriteria2() throws Exception {
@@ -394,7 +394,7 @@ public class TestCriteriaEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         crit.setValueIterator(valueIter);
         
-        assertFalse( CriteriaEvaluator.evaluate(crit) );
+        assertFalse( Evaluator.evaluate(crit) );
     }
 
     /**
@@ -410,7 +410,7 @@ public class TestCriteriaEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         crit.setValueIterator(valueIter);
         
-        assertTrue( CriteriaEvaluator.evaluate(crit) );
+        assertTrue( Evaluator.evaluate(crit) );
     }
 
     /**

@@ -38,7 +38,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.Command;
@@ -218,7 +218,7 @@ public class PreparedStatementRequest extends Request {
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
                     Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName);
-                    value = ExpressionEvaluator.evaluate(expr, null, null);
+                    value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
                     String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
                     throw new QueryResolverException(msg);

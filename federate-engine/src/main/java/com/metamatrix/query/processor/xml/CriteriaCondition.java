@@ -33,7 +33,7 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 
@@ -80,7 +80,7 @@ public class CriteriaCondition extends Condition {
         } 
 
         try {
-			return new CriteriaEvaluator(elementMap, env.getDataManager(), env.getProcessorContext()).evaluate(this.criteria, data);
+			return new Evaluator(elementMap, env.getDataManager(), env.getProcessorContext()).evaluate(this.criteria, data);
 		} catch (CriteriaEvaluationException e) {
             throw new MetaMatrixComponentException(e);
 		}

@@ -35,7 +35,7 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.eval.LookupEvaluator;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -169,7 +169,7 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
 
 		Object value;
         try {
-            value = ExpressionEvaluator.evaluate(expr, Collections.EMPTY_MAP, Collections.EMPTY_LIST, dataMgr, context);
+            value = new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(expr, Collections.emptyList());
         } catch (MetaMatrixException err) {
             throw new MetaMatrixRuntimeException(err);
         }

@@ -34,7 +34,7 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
@@ -83,11 +83,9 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
     
             if (this.expression != null) {
                 //Evaluated the given expression - may throw BlockedException!
-                value = ExpressionEvaluator.evaluate(this.expression,
-                                                     Collections.EMPTY_MAP,
-                                                     Collections.EMPTY_LIST,
-                                                     procEnv.getDataManager(),
-                                                     procEnv.getContext());
+                value = new Evaluator(Collections.emptyMap(), procEnv
+						.getDataManager(), procEnv.getContext()).evaluate(
+						this.expression, Collections.EMPTY_LIST);
             } else if (processPlan != null) {
                 String rsName = "ASSIGNMENT_INSTRUCTION"; //$NON-NLS-1$
                 procEnv.executePlan(processPlan, rsName);

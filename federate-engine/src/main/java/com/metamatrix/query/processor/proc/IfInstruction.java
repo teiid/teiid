@@ -35,7 +35,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
@@ -98,7 +98,7 @@ public class IfInstruction extends ProgramInstruction {
 	 */
     static boolean evaluateCriteria(Criteria condition, ProcedureEnvironment env) throws BlockedException, MetaMatrixComponentException {
     	try {
-	    	return new CriteriaEvaluator(Collections.emptyMap(), env.getDataManager(), env.getContext()).evaluate(condition, Collections.EMPTY_LIST);
+	    	return new Evaluator(Collections.emptyMap(), env.getDataManager(), env.getContext()).evaluate(condition, Collections.EMPTY_LIST);
     	} catch(CriteriaEvaluationException e) {
             throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0020));
     	}

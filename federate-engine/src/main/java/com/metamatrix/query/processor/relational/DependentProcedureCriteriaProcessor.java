@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -108,7 +108,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
             }
 
             if (value instanceof Expression) {
-                value = ExpressionEvaluator.evaluate((Expression)value, null, null);
+                value = Evaluator.evaluate((Expression)value);
             }
 
             if (value == null && !nullAllowed) {

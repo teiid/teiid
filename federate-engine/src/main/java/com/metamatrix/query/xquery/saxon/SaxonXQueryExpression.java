@@ -26,7 +26,6 @@ package com.metamatrix.query.xquery.saxon;
 
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +48,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.util.XMLFormatConstants;
 import com.metamatrix.query.xquery.XQueryExpression;
@@ -142,7 +141,7 @@ public class SaxonXQueryExpression implements XQueryExpression {
                 paramName = StringUtil.getLastToken(paramName, "."); //$NON-NLS-1$
                 
                 Expression expr = (Expression)entry.getValue();
-                Object value = ExpressionEvaluator.evaluate(expr, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
+                Object value = Evaluator.evaluate(expr);
                 
                 if(! paramDeclarations.containsKey(paramName)) {
                     // Look for a different case match

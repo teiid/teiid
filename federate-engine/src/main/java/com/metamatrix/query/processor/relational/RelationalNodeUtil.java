@@ -29,7 +29,7 @@ import java.util.Collections;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Delete;
@@ -65,7 +65,7 @@ public class RelationalNodeUtil {
         if(criteria == null) {
             return true;
         }
-        return CriteriaEvaluator.evaluate(criteria);
+        return Evaluator.evaluate(criteria);
     }
 
     /**

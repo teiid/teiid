@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
@@ -82,7 +82,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
             }
             //if evaluatable
             try {
-                boolean eval = CriteriaEvaluator.evaluate(crit);
+                boolean eval = Evaluator.evaluate(crit);
                 if(eval) {
                     NodeEditor.removeChildNode(critNode.getParent(), critNode);
                 } else {

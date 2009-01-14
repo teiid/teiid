@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -89,10 +89,9 @@ public class TestResolvedFunctions extends TestCase {
                                               ExpressionEvaluationException,
                                               BlockedException,
                                               MetaMatrixComponentException, QueryResolverException {
-        QueryParser parser = new QueryParser();
-        Expression expr = parser.parseExpression(sql);
+        Expression expr = QueryParser.getQueryParser().parseExpression(sql);
         ResolverVisitor.resolveLanguageObject(expr, null);
-        return ExpressionEvaluator.evaluate(expr, null, null);
+        return Evaluator.evaluate(expr);
     }
     
 }

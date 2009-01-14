@@ -35,7 +35,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -284,7 +284,7 @@ public class JoinNode extends RelationalNode {
     }
     
     boolean matchesCriteria(List outputTuple) throws BlockedException, MetaMatrixComponentException, CriteriaEvaluationException {
-        return (this.joinCriteria == null || new CriteriaEvaluator(this.combinedElementMap, this.getDataManager(), this.getContext()).evaluate(this.joinCriteria, outputTuple));
+        return (this.joinCriteria == null || new Evaluator(this.combinedElementMap, this.getDataManager(), this.getContext()).evaluate(this.joinCriteria, outputTuple));
     }
 
     public List getLeftExpressions() {

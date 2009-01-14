@@ -40,7 +40,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.processor.FakeDataManager;
@@ -101,7 +101,7 @@ public class TestExpressionEvaluator extends TestCase {
                 tuple.add(valueList[i]);
             }
         }
-        return ExpressionEvaluator.evaluate(expr, elements, tuple, dataMgr, context);
+        return new Evaluator(elements, dataMgr, context).evaluate(expr, tuple);
     }
     
     public void testCaseExpression1() {
@@ -275,7 +275,7 @@ public class TestExpressionEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         expr.setValueIterator(valueIter);
         
-        assertEquals("a", ExpressionEvaluator.evaluate(expr, null, null) ); //$NON-NLS-1$
+        assertEquals("a", Evaluator.evaluate(expr) ); //$NON-NLS-1$
     }
 
     public void testScalarSubquery2() throws Exception{
@@ -285,7 +285,7 @@ public class TestExpressionEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         expr.setValueIterator(valueIter);
         
-        assertEquals(null, ExpressionEvaluator.evaluate(expr, null, null) );
+        assertEquals(null, Evaluator.evaluate(expr) );
     }
 
     public void testScalarSubquery3() throws Exception{
@@ -293,7 +293,7 @@ public class TestExpressionEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         expr.setValueIterator(valueIter);
         
-        assertEquals(null, ExpressionEvaluator.evaluate(expr, null, null) );
+        assertEquals(null, Evaluator.evaluate(expr) );
     }
 
     public void testScalarSubqueryFails() throws Exception{
@@ -305,7 +305,7 @@ public class TestExpressionEvaluator extends TestCase {
         expr.setValueIterator(valueIter);
         
         try {
-            ExpressionEvaluator.evaluate(expr, null, null);
+        	Evaluator.evaluate(expr);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
             assertEquals("Unable to evaluate (<undefined>): The command of this scalar subquery returned more than one value: <undefined>", e.getMessage()); //$NON-NLS-1$
@@ -320,7 +320,7 @@ public class TestExpressionEvaluator extends TestCase {
         FakeDataManager dataMgr = new FakeDataManager();
         CommandContext context = new CommandContext(new Long(1), null, null, -1, null, null, null, null);
         context.setUserName("logon");  //$NON-NLS-1$
-        assertEquals(context.getUserName(), ExpressionEvaluator.evaluate(func, null, null, dataMgr, context) );       
+        assertEquals(context.getUserName(), new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()) );       
     } 
     
     /*
@@ -342,10 +342,10 @@ public class TestExpressionEvaluator extends TestCase {
         CommandContext context = new CommandContext(new Long(1), null, null, -1, null, null, null, null, null, props, false, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
-        assertEquals("testHostName", ExpressionEvaluator.evaluate(func, null, null, dataMgr, context) ); //$NON-NLS-1$
+        assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
                
         func.setArgs(new Expression[] {new Constant("http_port")}); //$NON-NLS-1$
-        assertEquals("8000", ExpressionEvaluator.evaluate(func, null, null, dataMgr, context)); //$NON-NLS-1$
+        assertEquals("8000", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
     }
     
     public void helpTestCommandPayload(Serializable payload, String property, String expectedValue) throws Exception {
@@ -366,7 +366,7 @@ public class TestExpressionEvaluator extends TestCase {
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 
         }
-        String actual = (String) ExpressionEvaluator.evaluate(func, null, null, dataMgr, context); 
+        String actual = (String) new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()); 
         assertEquals(expectedValue, actual);
     }
     

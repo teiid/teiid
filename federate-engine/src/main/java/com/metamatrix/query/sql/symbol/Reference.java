@@ -31,7 +31,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.eval.LookupEvaluator;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
@@ -110,14 +110,8 @@ public class Reference implements Expression {
         return this.tuple;
     }
 
-    /**
-     */
-    public Object getValue() throws ExpressionEvaluationException, MetaMatrixComponentException {
-        return ExpressionEvaluator.evaluate(expression, elements, tuple);
-    }
-    
     public Object getValue(LookupEvaluator dataMgr, CommandContext context) throws ExpressionEvaluationException, MetaMatrixComponentException {
-        return ExpressionEvaluator.evaluate(expression, elements, tuple, dataMgr, context);
+        return new Evaluator(elements, dataMgr, context).evaluate(expression, tuple);
     }
     
     public void acceptVisitor(LanguageVisitor visitor) {

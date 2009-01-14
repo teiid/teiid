@@ -36,7 +36,7 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
@@ -270,7 +270,7 @@ public class ProjectNode extends RelationalNode {
 			tuple.add(values.get(index.intValue()));
         } else if(symbol instanceof ExpressionSymbol) {
             Expression expression = ((ExpressionSymbol)symbol).getExpression();
-            tuple.add(ExpressionEvaluator.evaluate(expression, elementMap, values, getDataManager(), getContext()));
+            tuple.add(new Evaluator(elementMap, getDataManager(), getContext()).evaluate(expression, values));
         } else {
             Assertion.failed(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0034, symbol.getClass().getName()));
 		}

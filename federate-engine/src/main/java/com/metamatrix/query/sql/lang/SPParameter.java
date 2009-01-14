@@ -34,7 +34,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -191,7 +191,7 @@ public class SPParameter implements Serializable, Cloneable {
             return null;
         }
         try {
-            return ExpressionEvaluator.evaluate(this.expression, null, null);
+            return Evaluator.evaluate(this.expression);
         } catch (MetaMatrixException err) {
             throw new MetaMatrixRuntimeException(err);
         }

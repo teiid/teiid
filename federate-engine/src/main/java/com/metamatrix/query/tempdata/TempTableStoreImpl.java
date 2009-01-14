@@ -44,7 +44,7 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -245,7 +245,7 @@ public class TempTableStoreImpl implements TempTableStore{
                     Object value = null;
                     if (index != -1) {
                     	Expression expr = (Expression)insert.getValues().get(index);
-                        value = ExpressionEvaluator.evaluate(expr, null, null);
+                        value = Evaluator.evaluate(expr);
                     }
                     tuple.add(value);
                 }

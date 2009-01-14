@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.eval.CriteriaEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
 
 public class SelectNode extends RelationalNode {
@@ -47,7 +47,7 @@ public class SelectNode extends RelationalNode {
     private boolean blockedOnPrepare = false;
     private TupleBatch blockedBatch = null;
     private int blockedRow = 0;
-    private CriteriaEvaluator criteriaEvaluator;
+    private Evaluator evaluator;
     
 	public SelectNode(int nodeID) {
 		super(nodeID);
@@ -79,7 +79,7 @@ public class SelectNode extends RelationalNode {
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
         }
-        this.criteriaEvaluator = new CriteriaEvaluator(elementMap, getDataManager(), getContext());
+        this.evaluator = new Evaluator(elementMap, getDataManager(), getContext());
 	}
     
     /**
@@ -127,7 +127,7 @@ public class SelectNode extends RelationalNode {
                         
             // Evaluate criteria with tuple
             try {
-                if(criteriaEvaluator.evaluate(this.criteria, tuple)) {
+                if(evaluator.evaluate(this.criteria, tuple)) {
                     addBatchRow( projectTuple(elementMap, tuple, getElements()) );
                 }
             } catch(BlockedException e) {

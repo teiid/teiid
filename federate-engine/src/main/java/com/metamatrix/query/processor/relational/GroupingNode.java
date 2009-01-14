@@ -40,7 +40,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.function.aggregate.Avg;
 import com.metamatrix.query.function.aggregate.ConstantFunction;
@@ -272,7 +272,7 @@ public class GroupingNode extends RelationalNode {
                     for(int col = 0; col<columns; col++) { 
                         // The following call may throw BlockedException, but all state to this point
                         // is saved in class variables so we can start over on building this tuple
-                        Object value = ExpressionEvaluator.evaluate((Expression) this.collectedExpressions.get(col), this.elementMap, tuple, getDataManager(), getContext());
+                        Object value = new Evaluator(this.elementMap, getDataManager(), getContext()).evaluate((Expression) this.collectedExpressions.get(col), tuple);
                         exprTuple.add(value);
                     }
                     

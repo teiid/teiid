@@ -42,7 +42,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -169,10 +169,9 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 		setReferenceValues(localContext);
         
 		try {
-			Object value = ExpressionEvaluator.evaluate(dynamicCommand
-					.getSql(), Collections.EMPTY_MAP,
-					Collections.EMPTY_LIST, procEnv.getDataManager(),
-					procEnv.getContext());
+			Object value = new Evaluator(Collections.emptyMap(), procEnv.getDataManager(),
+					procEnv.getContext()).evaluate(dynamicCommand
+					.getSql(), Collections.emptyList());
 
 			if (value == null) {
 				throw new QueryProcessingException(QueryExecPlugin.Util
@@ -266,10 +265,8 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 		if (dynamicCommand.getUsing() != null
 				&& !dynamicCommand.getUsing().isEmpty()) {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
-				Object assignment = ExpressionEvaluator.evaluate(
-						setClause.getValue(), Collections.EMPTY_MAP,
-						Collections.EMPTY_LIST, procEnv.getDataManager(),
-						procEnv.getContext());
+				Object assignment = new Evaluator(Collections.emptyMap(), procEnv.getDataManager(),
+						procEnv.getContext()).evaluate(setClause.getValue(), Collections.emptyList());
 
 				LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$

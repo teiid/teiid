@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.symbol.Expression;
 
 public class LimitNode extends RelationalNode {
@@ -111,12 +111,12 @@ public class LimitNode extends RelationalNode {
         super.open();
     	limit = -1;
     	if (limitExpr != null) {
-            Integer limitVal = (Integer)ExpressionEvaluator.evaluate(limitExpr, null, null);
+            Integer limitVal = (Integer)Evaluator.evaluate(limitExpr);
             limit = limitVal.intValue();
     	}
         
         if (offsetExpr != null) {
-            Integer offsetVal = (Integer)ExpressionEvaluator.evaluate(offsetExpr, null, null);
+            Integer offsetVal = (Integer)Evaluator.evaluate(offsetExpr);
             offset = offsetVal.intValue();
             Assertion.assertTrue(offset >= 0);
         } else {

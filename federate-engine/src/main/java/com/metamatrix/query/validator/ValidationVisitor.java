@@ -39,7 +39,7 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -779,7 +779,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 if (EvaluateExpressionVisitor.isFullyEvaluatable(nextValue, true)) {
                     try {
                         // If nextValue is an expression, evaluate it before checking for null
-                        Object evaluatedValue = ExpressionEvaluator.evaluate(nextValue, null, null);
+                        Object evaluatedValue = Evaluator.evaluate(nextValue);
                         if(evaluatedValue == null && ! getMetadata().elementSupports(nextVar.getMetadataID(), SupportConstants.Element.NULL)) {
                             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0055, SQLStringVisitor.getSQLString(nextVar)), nextVar);
                         }
@@ -826,7 +826,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 
                 if (EvaluateExpressionVisitor.isFullyEvaluatable(value, true)) {
                     try {
-                        value = new Constant(ExpressionEvaluator.evaluate(value, null, null));
+                        value = new Constant(Evaluator.evaluate(value));
                     } catch (ExpressionEvaluationException err) {
                     }
                 }

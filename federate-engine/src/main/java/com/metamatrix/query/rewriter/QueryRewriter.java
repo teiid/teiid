@@ -57,8 +57,7 @@ import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.CriteriaEvaluator;
-import com.metamatrix.query.eval.ExpressionEvaluator;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
@@ -1130,7 +1129,7 @@ public class QueryRewriter {
     private static Criteria evaluateCriteria(Criteria crit) throws QueryValidatorException {
         if(EvaluateExpressionVisitor.isFullyEvaluatable(crit, true)) {
             try {
-            	Boolean eval = new CriteriaEvaluator(Collections.emptyMap(), null, null).evaluateTVL(crit, Collections.emptyList());
+            	Boolean eval = new Evaluator(Collections.emptyMap(), null, null).evaluateTVL(crit, Collections.emptyList());
                 
                 if (eval == null) {
                     return UNKNOWN_CRITERIA;
@@ -2099,12 +2098,7 @@ public class QueryRewriter {
         
         if(EvaluateExpressionVisitor.isFullyEvaluatable(function, true)) {
             try {
-                Object result = null;
-                if (context == null) {
-                    result = ExpressionEvaluator.evaluate(function, null, null);
-                } else {
-                    result = ExpressionEvaluator.evaluate(function, null, null, null, context);
-                }
+                Object result = new Evaluator(Collections.emptyMap(), null, context).evaluate(function, Collections.emptyList());
 				Constant constant = new Constant(result, function.getType());
 				return constant;
 			} catch(ExpressionEvaluationException e) {
@@ -2174,7 +2168,7 @@ public class QueryRewriter {
             if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
                 CompareCriteria crit = new CompareCriteria(rewrittenExpr, CompareCriteria.EQ, rewrittenWhen);
                 try {
-                    boolean eval = CriteriaEvaluator.evaluate(crit);
+                    boolean eval = Evaluator.evaluate(crit);
                     if(eval) {
                         // This WHEN will always match, so return the THEN expression
                         return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
@@ -2257,7 +2251,7 @@ public class QueryRewriter {
             Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), procCommand, context, metadata);
             if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
                 try {
-                	boolean eval = CriteriaEvaluator.evaluate(rewrittenWhen);
+                	boolean eval = Evaluator.evaluate(rewrittenWhen);
                     if(eval) {
                         // WHEN is always true, so just return the THEN
                         return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
@@ -2451,10 +2445,10 @@ public class QueryRewriter {
     private static Limit rewriteLimitClause(Limit limit) {
         try {
             if (limit.getOffset() != null && EvaluateExpressionVisitor.isFullyEvaluatable(limit.getOffset(), true)) {
-                limit.setOffset(new Constant(ExpressionEvaluator.evaluate(limit.getOffset(), Collections.EMPTY_MAP, Collections.EMPTY_LIST)));
+                limit.setOffset(new Constant(Evaluator.evaluate(limit.getOffset())));
             }
             if (limit.getRowLimit() != null && EvaluateExpressionVisitor.isFullyEvaluatable(limit.getRowLimit(), true)) {
-                limit.setRowLimit(new Constant(ExpressionEvaluator.evaluate(limit.getRowLimit(), Collections.EMPTY_MAP, Collections.EMPTY_LIST)));
+                limit.setRowLimit(new Constant(Evaluator.evaluate(limit.getRowLimit())));
             }
         } catch (ExpressionEvaluationException e) {
             throw new MetaMatrixRuntimeException(e);

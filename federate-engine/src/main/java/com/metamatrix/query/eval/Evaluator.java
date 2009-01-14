@@ -33,13 +33,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.QueryPlugin;
+import com.metamatrix.query.function.FunctionDescriptor;
+import com.metamatrix.query.function.FunctionLibrary;
+import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -49,12 +57,21 @@ import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
+import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.CaseExpression;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.ExpressionSymbol;
+import com.metamatrix.query.sql.symbol.Function;
+import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.ScalarSubquery;
+import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
-public class CriteriaEvaluator {
+public class Evaluator {
 
     private final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
     private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(".*", ".", REGEX_RESERVED, '\\');  //$NON-NLS-1$ //$NON-NLS-2$
@@ -63,7 +80,15 @@ public class CriteriaEvaluator {
     private LookupEvaluator dataMgr;
     private CommandContext context;
     
-    public CriteriaEvaluator(Map elements, LookupEvaluator dataMgr, CommandContext context) {
+    public static boolean evaluate(Criteria criteria) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
+    	return new Evaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
+    }
+    
+    public static Object evaluate(Expression expression) throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException  {
+    	return new Evaluator(Collections.emptyMap(), null, null).evaluate(expression, Collections.emptyList());
+    }
+    
+    public Evaluator(Map elements, LookupEvaluator dataMgr, CommandContext context) {
 		this.context = context;
 		this.dataMgr = dataMgr;
 		this.elements = elements;
@@ -156,7 +181,7 @@ public class CriteriaEvaluator {
 		// Evaluate left expression
 		Object leftValue = null;
 		try {
-			leftValue = ExpressionEvaluator.evaluate(criteria.getLeftExpression(), elements, tuple, dataMgr, context);
+			leftValue = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[] {"left", criteria})); //$NON-NLS-1$
 		}
@@ -169,7 +194,7 @@ public class CriteriaEvaluator {
 		// Evaluate right expression
 		Object rightValue = null;
 		try {
-			rightValue = ExpressionEvaluator.evaluate(criteria.getRightExpression(), elements, tuple, dataMgr, context);
+			rightValue = evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
 		}
@@ -211,7 +236,7 @@ public class CriteriaEvaluator {
 		// Evaluate left expression
         Object value = null;
 		try {
-			value = ExpressionEvaluator.evaluate(criteria.getLeftExpression(), elements, tuple, dataMgr, context);
+			value = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"left", criteria})); //$NON-NLS-1$
 		}
@@ -236,7 +261,7 @@ public class CriteriaEvaluator {
 		// Evaluate right expression
 		String rightValue = null;
 		try {
-			rightValue = (String) ExpressionEvaluator.evaluate(criteria.getRightExpression(), elements, tuple, dataMgr, context);
+			rightValue = (String) evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
 		}
@@ -275,7 +300,7 @@ public class CriteriaEvaluator {
 		// Evaluate expression
 		Object leftValue = null;
 		try {
-			leftValue = ExpressionEvaluator.evaluate(criteria.getExpression(), elements, tuple, dataMgr, context);
+			leftValue = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
 		}
@@ -291,7 +316,7 @@ public class CriteriaEvaluator {
             Object value = null;
             if(possibleValue instanceof Expression) {
     			try {
-    				value = ExpressionEvaluator.evaluate((Expression) possibleValue, elements, tuple, dataMgr, context);
+    				value = evaluate((Expression) possibleValue, tuple);
     			} catch(ExpressionEvaluationException e) {
                     throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, possibleValue));
     			}
@@ -321,7 +346,7 @@ public class CriteriaEvaluator {
 		// Evaluate expression
 		Object value = null;
 		try {
-			value = ExpressionEvaluator.evaluate(criteria.getExpression(), elements, tuple, dataMgr, context);
+			value = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
 		}
@@ -335,7 +360,7 @@ public class CriteriaEvaluator {
         // Evaluate expression
         Object leftValue = null;
         try {
-            leftValue = ExpressionEvaluator.evaluate(criteria.getLeftExpression(), elements, tuple, dataMgr, context);
+            leftValue = evaluate(criteria.getLeftExpression(), tuple);
         } catch(ExpressionEvaluationException e) {
             throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
         }
@@ -445,8 +470,151 @@ public class CriteriaEvaluator {
         return false;
     }
     
-    public static boolean evaluate(Criteria criteria) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
-    	return new CriteriaEvaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
-    }
-
+	public Object evaluate(Expression expression, List tuple)
+		throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	
+	    try {
+			return internalEvaluate(expression, tuple);
+	    } catch (ExpressionEvaluationException e) {
+	        throw new ExpressionEvaluationException(e, QueryPlugin.Util.getString("ExpressionEvaluator.Eval_failed", new Object[] {expression, e.getMessage()})); //$NON-NLS-1$
+	    }
+	}
+	
+	private Object internalEvaluate(Expression expression, List tuple)
+	   throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	
+	   if(expression instanceof SingleElementSymbol) {
+	       // Case 5155: elements must be non-null
+	       Assertion.isNotNull( elements );
+	
+	       // Try to evaluate by lookup in the elements map (may work for both ElementSymbol and ExpressionSymbol
+	       Integer index = (Integer) elements.get(expression);
+	       if(index != null) {
+	           return tuple.get(index.intValue());
+	       }
+	       // Otherwise this should be an ExpressionSymbol and we just need to dive in and evaluate the expression itself
+	       if (expression instanceof ExpressionSymbol && !(expression instanceof AggregateSymbol)) {            
+	           ExpressionSymbol exprSyb = (ExpressionSymbol) expression;
+	           Expression expr = exprSyb.getExpression();
+	           return internalEvaluate(expr, tuple);
+	       } 
+	       // instead of assuming null, throw an exception.  a problem in planning has occurred
+	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+	   } 
+	   if(expression instanceof Constant) {
+	       return ((Constant) expression).getValue();
+	   } else if(expression instanceof Function) {
+	       return evaluate((Function) expression, tuple);
+	   } else if(expression instanceof CaseExpression) {
+	       return evaluate((CaseExpression) expression, tuple);
+	   } else if(expression instanceof SearchedCaseExpression) {
+	       return evaluate((SearchedCaseExpression) expression, tuple);
+	   } else if(expression instanceof Reference) {
+	       return ((Reference) expression).getValue(dataMgr, context);
+	   } else if(expression instanceof ScalarSubquery) {
+	       return evaluate((ScalarSubquery) expression, tuple);
+	   } else {
+	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
+	   }
+	}
+	
+	private Object evaluate(CaseExpression expr, List tuple)
+	throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	    Object exprVal = internalEvaluate(expr.getExpression(), tuple);
+	    for (int i = 0; i < expr.getWhenCount(); i++) {
+	        if (EquivalenceUtil.areEqual(exprVal, internalEvaluate(expr.getWhenExpression(i), tuple))) {
+	            return internalEvaluate(expr.getThenExpression(i), tuple);
+	        }
+	    }
+	    if (expr.getElseExpression() != null) {
+	        return internalEvaluate(expr.getElseExpression(), tuple);
+	    }
+	    return null;
+	}
+	
+	private Object evaluate(SearchedCaseExpression expr, List tuple)
+	throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	    for (int i = 0; i < expr.getWhenCount(); i++) {
+	        try {
+	            if (evaluate(expr.getWhenCriteria(i), tuple)) {
+	                return internalEvaluate(expr.getThenExpression(i), tuple);
+	            }
+	        } catch (CriteriaEvaluationException e) {
+	            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
+	        }
+	    }
+	    if (expr.getElseExpression() != null) {
+	        return internalEvaluate(expr.getElseExpression(), tuple);
+	    }
+	    return null;
+	}
+	
+	private Object evaluate(Function function, List tuple)
+		throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	
+	    // Get function based on resolved function info
+	    FunctionDescriptor fd = function.getFunctionDescriptor();
+	    
+		// Evaluate args
+		Expression[] args = function.getArgs();
+	    Object[] values = null;
+	    int start = 0;
+	    
+	    if (fd.requiresContext()) {
+			values = new Object[args.length+1];
+	        values[0] = context;
+	        start = 1;
+	    }
+	    else {
+	        values = new Object[args.length];
+	    }
+	    
+	    for(int i=0; i < args.length; i++) {
+	        values[i+start] = internalEvaluate(args[i], tuple);
+	    }            
+	    
+	    // Check for function we can't evaluate
+	    if(fd.getPushdown() == FunctionMethod.MUST_PUSHDOWN) {
+	        throw new MetaMatrixComponentException(QueryPlugin.Util.getString("ExpressionEvaluator.Must_push", fd.getName())); //$NON-NLS-1$
+	    }
+	
+	    // Check for special lookup function
+	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
+	        if(dataMgr == null) {
+	            throw new ComponentNotFoundException(ErrorMessageKeys.PROCESSOR_0055, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0055));
+	        }
+	
+	        String codeTableName = (String) values[0];
+	        String returnElementName = (String) values[1];
+	        String keyElementName = (String) values[2];
+	        
+	        try {
+				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
+			} catch (MetaMatrixProcessingException e) {
+				throw new ExpressionEvaluationException(e, e.getMessage());
+			}
+	    } 
+	    
+		// Execute function
+		FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
+		Object result = library.invokeFunction(fd, values);
+		return result;        
+	}
+	
+	private Object evaluate(ScalarSubquery scalarSubquery, List tuple)
+	    throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+	
+	    Object result = null;
+	    ValueIterator valueIter = scalarSubquery.getValueIterator();
+	    if(valueIter.hasNext()) {
+	        result = valueIter.next();
+	        if(valueIter.hasNext()) {
+	            // The subquery should be scalar, but has produced
+	            // more than one result value - this is an exception case
+	            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0058, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0058, scalarSubquery.getCommand()));
+	        }
+	    }
+	    return result;
+	}        
+    
 }
