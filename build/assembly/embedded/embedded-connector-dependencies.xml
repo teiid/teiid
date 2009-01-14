@@ -15,13 +15,13 @@
         <includeSubModules>true</includeSubModules>
                
         <includes>        	
-            <include>org.federate:connector-jdbc</include>
-            <include>org.federate:connector-xml</include>
-            <include>org.federate:connector-loopback</include>
-            <include>org.federate:connector-text</include>
-            <include>org.federate:connector-ldap</include>
-            <include>org.federate:connector-salesforce</include>
-            <include>org.federate:salesforce-api</include>
+            <include>org.jboss.federate:connector-jdbc</include>
+            <include>org.jboss.federate:connector-xml</include>
+            <include>org.jboss.federate:connector-loopback</include>
+            <include>org.jboss.federate:connector-text</include>
+            <include>org.jboss.federate:connector-ldap</include>
+            <include>org.jboss.federate:connector-salesforce</include>
+            <include>org.jboss.federate:salesforce-api</include>
         </includes>
         
         <binaries>        

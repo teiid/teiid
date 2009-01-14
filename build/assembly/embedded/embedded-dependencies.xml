@@ -15,18 +15,18 @@
         <includeSubModules>true</includeSubModules>
                
         <includes>
-            <include>org.federate:federate-cache-jbosscache</include>
-            <include>org.federate:federate-client</include>
-            <include>org.federate:federate-client-jdbc</include>	
-            <include>org.federate:federate-common-core</include>	
-            <include>org.federate:federate-common-internal</include>
+            <include>org.jboss.federate:federate-cache-jbosscache</include>
+            <include>org.jboss.federate:federate-client</include>
+            <include>org.jboss.federate:federate-client-jdbc</include>	
+            <include>org.jboss.federate:federate-common-core</include>	
+            <include>org.jboss.federate:federate-common-internal</include>
     	
-        	<include>org.federate:federate-connector-api</include>
-        	<include>org.federate:federate-connector-metadata</include>
-            <include>org.federate:federate-embedded</include>
-        	<include>org.federate:federate-engine</include>
-        	<include>org.federate:federate-metadata</include>
-        	<include>org.federate:federate-txn-jbossts</include>        	
+        	<include>org.jboss.federate:federate-connector-api</include>
+        	<include>org.jboss.federate:federate-connector-metadata</include>
+            <include>org.jboss.federate:federate-embedded</include>
+        	<include>org.jboss.federate:federate-engine</include>
+        	<include>org.jboss.federate:federate-metadata</include>
+        	<include>org.jboss.federate:federate-txn-jbossts</include>        	
         </includes>
         
         <binaries>        
