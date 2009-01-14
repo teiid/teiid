@@ -284,7 +284,7 @@ public class JoinNode extends RelationalNode {
     }
     
     boolean matchesCriteria(List outputTuple) throws BlockedException, MetaMatrixComponentException, CriteriaEvaluationException {
-        return (this.joinCriteria == null || CriteriaEvaluator.evaluate(this.joinCriteria, this.combinedElementMap, outputTuple, this.getDataManager(), this.getContext()));
+        return (this.joinCriteria == null || new CriteriaEvaluator(this.combinedElementMap, this.getDataManager(), this.getContext()).evaluate(this.joinCriteria, outputTuple));
     }
 
     public List getLeftExpressions() {

@@ -141,7 +141,7 @@ public class FakeDataManager implements ProcessorDataManager {
 			    List filteredTuples = new ArrayList();
 			    for(int i=0; i<tuples.length; i++) {
 	                try {
-	    				if(CriteriaEvaluator.evaluate(query.getCriteria(), lookupMap, tuples[i])) {
+	    				if(new CriteriaEvaluator(lookupMap, null, null).evaluate(query.getCriteria(), tuples[i])) {
 	                        filteredTuples.add(tuples[i]);
 	                    }
 	                } catch(CriteriaEvaluationException e) {

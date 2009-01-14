@@ -98,7 +98,7 @@ public class IfInstruction extends ProgramInstruction {
 	 */
     static boolean evaluateCriteria(Criteria condition, ProcedureEnvironment env) throws BlockedException, MetaMatrixComponentException {
     	try {
-	    	return CriteriaEvaluator.evaluate(condition, Collections.EMPTY_MAP, Collections.EMPTY_LIST, env.getDataManager(), env.getContext());
+	    	return new CriteriaEvaluator(Collections.emptyMap(), env.getDataManager(), env.getContext()).evaluate(condition, Collections.EMPTY_LIST);
     	} catch(CriteriaEvaluationException e) {
             throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0020));
     	}

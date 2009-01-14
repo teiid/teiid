@@ -24,7 +24,6 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -83,7 +82,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
             }
             //if evaluatable
             try {
-                boolean eval = CriteriaEvaluator.evaluate(crit, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
+                boolean eval = CriteriaEvaluator.evaluate(crit);
                 if(eval) {
                     NodeEditor.removeChildNode(critNode.getParent(), critNode);
                 } else {

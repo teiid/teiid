@@ -25,6 +25,7 @@
 package com.metamatrix.query.eval;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -58,51 +59,47 @@ public class CriteriaEvaluator {
     private final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
     private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(".*", ".", REGEX_RESERVED, '\\');  //$NON-NLS-1$ //$NON-NLS-2$
 
-    private CriteriaEvaluator() {}
-
-    public static boolean evaluate(Criteria criteria, Map elements, List tuple)
-        throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
-
-        return evaluate(criteria, elements, tuple, null, null);
-    }
-
-    public static Boolean evaluateTVL(Criteria criteria, Map elements, List tuple)
-        throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
-
-        return evaluateTVL(criteria, elements, tuple, null, null);
-    }
+    private Map elements;
+    private LookupEvaluator dataMgr;
+    private CommandContext context;
     
-    public static boolean evaluate(Criteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context) 
+    public CriteriaEvaluator(Map elements, LookupEvaluator dataMgr, CommandContext context) {
+		this.context = context;
+		this.dataMgr = dataMgr;
+		this.elements = elements;
+	}
+
+	public boolean evaluate(Criteria criteria, List tuple)
         throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
-        
-        return Boolean.TRUE.equals(evaluateTVL(criteria, elements, tuple, dataMgr, context));
+
+        return Boolean.TRUE.equals(evaluateTVL(criteria, tuple));
     }
 
-	public static Boolean evaluateTVL(Criteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
-		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
-
+    public Boolean evaluateTVL(Criteria criteria, List tuple)
+        throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
+    	
 		if(criteria instanceof CompoundCriteria) {
-			return evaluate((CompoundCriteria)criteria, elements, tuple, dataMgr, context);
+			return evaluate((CompoundCriteria)criteria, tuple);
 		} else if(criteria instanceof NotCriteria) {
-			return evaluate((NotCriteria)criteria, elements, tuple, dataMgr, context);
+			return evaluate((NotCriteria)criteria, tuple);
 		} else if(criteria instanceof CompareCriteria) {
-			return evaluate((CompareCriteria)criteria, elements, tuple, dataMgr, context);
+			return evaluate((CompareCriteria)criteria, tuple);
 		} else if(criteria instanceof MatchCriteria) {
-			return evaluate((MatchCriteria)criteria, elements, tuple, dataMgr, context);
+			return evaluate((MatchCriteria)criteria, tuple);
 		} else if(criteria instanceof AbstractSetCriteria) {
-			return evaluate((AbstractSetCriteria)criteria, elements, tuple, dataMgr, context);
+			return evaluate((AbstractSetCriteria)criteria, tuple);
 		} else if(criteria instanceof IsNullCriteria) {
-			return Boolean.valueOf(evaluate((IsNullCriteria)criteria, elements, tuple, dataMgr, context));
+			return Boolean.valueOf(evaluate((IsNullCriteria)criteria, tuple));
         } else if(criteria instanceof SubqueryCompareCriteria) {
-            return evaluate((SubqueryCompareCriteria)criteria, elements, tuple, dataMgr, context);
+            return evaluate((SubqueryCompareCriteria)criteria, tuple);
         } else if(criteria instanceof ExistsCriteria) {
-            return Boolean.valueOf(evaluate((ExistsCriteria)criteria, elements, tuple, dataMgr, context));
+            return Boolean.valueOf(evaluate((ExistsCriteria)criteria, tuple));
 		} else {
             throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0010, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0010, criteria));
 		}
 	}
 
-	public static Boolean evaluate(CompoundCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public Boolean evaluate(CompoundCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		List subCrits = criteria.getCriteria();
@@ -112,7 +109,7 @@ public class CriteriaEvaluator {
             Boolean result = Boolean.TRUE;
 			while(subCritIter.hasNext()) {
 				Criteria subCrit = (Criteria) subCritIter.next();
-				Boolean value = CriteriaEvaluator.evaluateTVL(subCrit, elements, tuple, dataMgr, context);
+				Boolean value = evaluateTVL(subCrit, tuple);
                 if (value == null) {
 					result = null;
 				} else if (!value.booleanValue()) {
@@ -126,7 +123,7 @@ public class CriteriaEvaluator {
         Boolean result = Boolean.FALSE;
 		while(subCritIter.hasNext()) {
 			Criteria subCrit = (Criteria) subCritIter.next();
-			Boolean value = CriteriaEvaluator.evaluateTVL(subCrit, elements, tuple, dataMgr, context);
+			Boolean value = evaluateTVL(subCrit, tuple);
 			if (value == null) {
                 result = null;
                 continue;
@@ -139,11 +136,11 @@ public class CriteriaEvaluator {
 		return result;
 	}
 
-	public static Boolean evaluate(NotCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public Boolean evaluate(NotCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		Criteria subCrit = criteria.getCriteria();
-		Boolean result = CriteriaEvaluator.evaluateTVL(subCrit, elements, tuple, dataMgr, context);
+		Boolean result = evaluateTVL(subCrit, tuple);
         if (result == null) {
             return null;
         }
@@ -153,7 +150,7 @@ public class CriteriaEvaluator {
         return Boolean.TRUE;
 	}
 
-	public static Boolean evaluate(CompareCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public Boolean evaluate(CompareCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		// Evaluate left expression
@@ -189,25 +186,25 @@ public class CriteriaEvaluator {
 			case CompareCriteria.NE:
 				return Boolean.valueOf(! leftValue.equals(rightValue));
 			case CompareCriteria.LT:
-				return Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, rightValue) < 0));
+				return Boolean.valueOf((compareValues(leftValue, rightValue) < 0));
 			case CompareCriteria.LE:
-				return Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, rightValue) <= 0));
+				return Boolean.valueOf((compareValues(leftValue, rightValue) <= 0));
 			case CompareCriteria.GT:
-				return Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, rightValue) > 0));
+				return Boolean.valueOf((compareValues(leftValue, rightValue) > 0));
 			case CompareCriteria.GE:
-				return Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, rightValue) >= 0));
+				return Boolean.valueOf((compareValues(leftValue, rightValue) >= 0));
 			default:
                 throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
 		}
 	}
 
-    private static final int compareValues(Object leftValue, Object rightValue) {
+    private final int compareValues(Object leftValue, Object rightValue) {
     	ArgCheck.isInstanceOf(Comparable.class, leftValue);
     	ArgCheck.isInstanceOf(Comparable.class, rightValue);
         return ((Comparable)leftValue).compareTo(rightValue);
     }
 
-	public static Boolean evaluate(MatchCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public Boolean evaluate(MatchCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
         boolean result = false;
@@ -249,12 +246,12 @@ public class CriteriaEvaluator {
             return null;
         }
         
-        result = CriteriaEvaluator.match(rightValue, criteria.getEscapeChar(), leftValue);
+        result = match(rightValue, criteria.getEscapeChar(), leftValue);
         
         return Boolean.valueOf(result ^ criteria.isNegated());
 	}
 
-	private static boolean match(String pattern, char escape, CharSequence search)
+	private boolean match(String pattern, char escape, CharSequence search)
 		throws CriteriaEvaluationException {
 
 		StringBuffer rePattern = LIKE_TO_REGEX.translate(pattern, escape);
@@ -272,7 +269,7 @@ public class CriteriaEvaluator {
 		}
 	}
 
-	public static Boolean evaluate(AbstractSetCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public Boolean evaluate(AbstractSetCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		// Evaluate expression
@@ -318,7 +315,7 @@ public class CriteriaEvaluator {
         return Boolean.valueOf(criteria.isNegated());
 	}
 
-	public static boolean evaluate(IsNullCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+	public boolean evaluate(IsNullCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		// Evaluate expression
@@ -332,7 +329,7 @@ public class CriteriaEvaluator {
 		return (value == null ^ criteria.isNegated());
 	}
 
-    public static Boolean evaluate(SubqueryCompareCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+    public Boolean evaluate(SubqueryCompareCriteria criteria, List tuple)
         throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
         // Evaluate expression
@@ -373,16 +370,16 @@ public class CriteriaEvaluator {
                         result = Boolean.valueOf(!leftValue.equals(value));
                         break;
                     case SubqueryCompareCriteria.LT:
-                        result = Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, value) < 0));
+                        result = Boolean.valueOf((compareValues(leftValue, value) < 0));
                         break;
                     case SubqueryCompareCriteria.LE:
-                        result = Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, value) <= 0));
+                        result = Boolean.valueOf((compareValues(leftValue, value) <= 0));
                         break;
                     case SubqueryCompareCriteria.GT:
-                        result = Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, value) > 0));
+                        result = Boolean.valueOf((compareValues(leftValue, value) > 0));
                         break;
                     case SubqueryCompareCriteria.GE:
-                        result = Boolean.valueOf((CriteriaEvaluator.compareValues(leftValue, value) >= 0));
+                        result = Boolean.valueOf((compareValues(leftValue, value) >= 0));
                         break;
                     default:
                         throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
@@ -438,7 +435,7 @@ public class CriteriaEvaluator {
         return result;
     }
 
-    public static boolean evaluate(ExistsCriteria criteria, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
+    public boolean evaluate(ExistsCriteria criteria, List tuple)
         throws BlockedException, MetaMatrixComponentException {
 
         ValueIterator valueIter = criteria.getValueIterator();
@@ -446,6 +443,10 @@ public class CriteriaEvaluator {
             return true;
         }
         return false;
+    }
+    
+    public static boolean evaluate(Criteria criteria) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
+    	return new CriteriaEvaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
     }
 
 }

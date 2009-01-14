@@ -47,6 +47,7 @@ public class SelectNode extends RelationalNode {
     private boolean blockedOnPrepare = false;
     private TupleBatch blockedBatch = null;
     private int blockedRow = 0;
+    private CriteriaEvaluator criteriaEvaluator;
     
 	public SelectNode(int nodeID) {
 		super(nodeID);
@@ -78,6 +79,7 @@ public class SelectNode extends RelationalNode {
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
         }
+        this.criteriaEvaluator = new CriteriaEvaluator(elementMap, getDataManager(), getContext());
 	}
     
     /**
@@ -125,7 +127,7 @@ public class SelectNode extends RelationalNode {
                         
             // Evaluate criteria with tuple
             try {
-                if(CriteriaEvaluator.evaluate(this.criteria, elementMap, tuple, getDataManager(), getContext())) {
+                if(criteriaEvaluator.evaluate(this.criteria, tuple)) {
                     addBatchRow( projectTuple(elementMap, tuple, getElements()) );
                 }
             } catch(BlockedException e) {

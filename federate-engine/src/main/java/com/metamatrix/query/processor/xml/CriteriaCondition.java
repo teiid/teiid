@@ -80,7 +80,7 @@ public class CriteriaCondition extends Condition {
         } 
 
         try {
-			return CriteriaEvaluator.evaluate(this.criteria, elementMap, data, env.getDataManager(), env.getProcessorContext());
+			return new CriteriaEvaluator(elementMap, env.getDataManager(), env.getProcessorContext()).evaluate(this.criteria, data);
 		} catch (CriteriaEvaluationException e) {
             throw new MetaMatrixComponentException(e);
 		}

@@ -62,7 +62,7 @@ public class TestCriteriaEvaluator extends TestCase {
     private void helpTestMatch(String value, String pattern, char escape, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
         MatchCriteria crit = new MatchCriteria(new Constant(value), new Constant(pattern), escape);
         crit.setNegated(negated);
-        boolean actualMatch = CriteriaEvaluator.evaluate(crit, null, null);
+        boolean actualMatch = CriteriaEvaluator.evaluate(crit);
         // Compare actual and expected match
         assertEquals("Match criteria test failed for value=[" + value + "], pattern=[" + pattern + "], hasEscape=" + (escape != MatchCriteria.NULL_ESCAPE_CHAR) + ": ", expectedMatch, actualMatch); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
@@ -75,49 +75,25 @@ public class TestCriteriaEvaluator extends TestCase {
         IsNullCriteria criteria = new IsNullCriteria(new Constant(value));
         criteria.setNegated(negated);
         
-        boolean result = CriteriaEvaluator.evaluate(criteria, null, null);
+        boolean result = CriteriaEvaluator.evaluate(criteria);
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
     
-    private void helpTestSetCriteria(int value, boolean negated, boolean expectedMatch) {
+    private void helpTestSetCriteria(int value, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
         helpTestSetCriteria(new Integer(value), negated, expectedMatch);
     }
     
-    private void helpTestSetCriteria(Integer value, boolean negated, boolean expectedMatch) {
-        try {
-            Collection constants = new ArrayList(2);
-            constants.add(new Constant(new Integer(1000)));
-            constants.add(new Constant(new Integer(5000)));
-            SetCriteria crit = new SetCriteria(new Constant(value), constants);
-            crit.setNegated(negated);
-            boolean result = CriteriaEvaluator.evaluate(crit, null, null);
-            assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
-        } catch (Throwable e) {
-            e.printStackTrace();
-            fail();
-        }
+    private void helpTestSetCriteria(Integer value, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
+        Collection constants = new ArrayList(2);
+        constants.add(new Constant(new Integer(1000)));
+        constants.add(new Constant(new Integer(5000)));
+        SetCriteria crit = new SetCriteria(new Constant(value), constants);
+        crit.setNegated(negated);
+        boolean result = CriteriaEvaluator.evaluate(crit);
+        assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
-    
-    private void helpTestCompareSubqueryCriteria(Criteria crit, boolean expectedResult){
         
-        Map elementMap = new HashMap();
-        ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
-        elementMap.put(e1, new Integer(0));
-//        ElementSymbol e2 = new ElementSymbol("e2");
-//        elementMap.put(e2, new Integer(1));
-        
-//        List tuple = Arrays.asList(new String[]{"a", "b"});
-        List tuple = Arrays.asList(new String[]{"a"}); //$NON-NLS-1$
-        
-        try {
-            assertTrue(expectedResult == CriteriaEvaluator.evaluate(crit, elementMap, tuple));
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } 
-    }
-
-    private void helpTestCompareSubqueryCriteriaFails(Criteria crit){
+    private void helpTestCompareSubqueryCriteria(Criteria crit, boolean expectedResult) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException{
         
         Map elementMap = new HashMap();
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
@@ -125,17 +101,7 @@ public class TestCriteriaEvaluator extends TestCase {
         
         List tuple = Arrays.asList(new String[]{"a"}); //$NON-NLS-1$
         
-        CriteriaEvaluationException expected = null;
-        try {
-            CriteriaEvaluator.evaluate(crit, elementMap, tuple);
-        } catch (CriteriaEvaluationException e) {
-            //Expected
-            expected = e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } 
-        assertNotNull(expected);
+        assertEquals(expectedResult, new CriteriaEvaluator(elementMap, null, null).evaluate(crit, tuple));
     }
 
     private SubqueryCompareCriteria helpGetCompareSubqueryCriteria(int operator, int predicateQuantifier){
@@ -387,31 +353,31 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestMatch("\\", "\\%", MatchCriteria.NULL_ESCAPE_CHAR, true); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testSetCriteria1() {
+    public void testSetCriteria1() throws Exception {
         helpTestSetCriteria(1000, false, true);
     }
     
-    public void testSetCriteria2() {
+    public void testSetCriteria2() throws Exception {
         helpTestSetCriteria(1, false, false);
     }
     
-    public void testSetCriteria3() {
+    public void testSetCriteria3() throws Exception {
         helpTestSetCriteria(1000, true, false);
     }
     
-    public void testSetCriteria4() {
+    public void testSetCriteria4() throws Exception {
         helpTestSetCriteria(1, true, true);
     }
     
-    public void testSetCriteria5() {
+    public void testSetCriteria5() throws Exception {
         helpTestSetCriteria(null, true, false);
     }
     
-    public void testSetCriteria6() {
+    public void testSetCriteria6() throws Exception {
         helpTestSetCriteria(null, false, false);
     }
     
-    public void testExistsCriteria(){
+    public void testExistsCriteria() throws Exception {
         ExistsCriteria crit = new ExistsCriteria(new Query());
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -420,32 +386,22 @@ public class TestCriteriaEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         crit.setValueIterator(valueIter);
         
-        try {
-            assertTrue( CriteriaEvaluator.evaluate(crit, null, null) );
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } 
+        assertTrue( CriteriaEvaluator.evaluate(crit) );
     }
 
-    public void testExistsCriteria2(){
+    public void testExistsCriteria2() throws Exception {
         ExistsCriteria crit = new ExistsCriteria(new Query());
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         crit.setValueIterator(valueIter);
         
-        try {
-            assertFalse( CriteriaEvaluator.evaluate(crit, null, null) );
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } 
+        assertFalse( CriteriaEvaluator.evaluate(crit) );
     }
 
     /**
      * If rows are returned but they contain null, the result should
      * still be true.
      */
-    public void testExistsCriteria3(){
+    public void testExistsCriteria3() throws Exception {
         ExistsCriteria crit = new ExistsCriteria(new Query());
         ArrayList values = new ArrayList();
         values.add(null);
@@ -454,19 +410,14 @@ public class TestCriteriaEvaluator extends TestCase {
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         crit.setValueIterator(valueIter);
         
-        try {
-            assertTrue( CriteriaEvaluator.evaluate(crit, null, null) );
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } 
+        assertTrue( CriteriaEvaluator.evaluate(crit) );
     }
 
     /**
      * Special case: if ALL is specified and the subquery returns no rows,
      * the result is true.
      */
-    public void testCompareSubqueryCriteriaNoRows(){
+    public void testCompareSubqueryCriteriaNoRows() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         crit.setValueIterator(valueIter);
@@ -477,7 +428,7 @@ public class TestCriteriaEvaluator extends TestCase {
      * Special case: if ANY/SOME is specified and the subquery returns no rows,
      * the result is false.
      */
-    public void testCompareSubqueryCriteriaNoRows2(){
+    public void testCompareSubqueryCriteriaNoRows2() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         crit.setValueIterator(valueIter);
@@ -488,14 +439,14 @@ public class TestCriteriaEvaluator extends TestCase {
      * Special case: if no predicate quantifier is specified and the subquery returns no rows,
      * the result is false.
      */
-    public void testCompareSubqueryCriteriaNoRows3(){
+    public void testCompareSubqueryCriteriaNoRows3() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
         CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
         crit.setValueIterator(valueIter);
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteria2(){
+    public void testCompareSubqueryCriteria2() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -506,7 +457,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteria3(){
+    public void testCompareSubqueryCriteria3() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -517,7 +468,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, true); 
     }
     
-    public void testCompareSubqueryCriteria4(){
+    public void testCompareSubqueryCriteria4() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add("b"); //$NON-NLS-1$
@@ -527,7 +478,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteria5(){
+    public void testCompareSubqueryCriteria5() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -538,7 +489,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, true); 
     }
 
-    public void testCompareSubqueryCriteria6(){
+    public void testCompareSubqueryCriteria6() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -547,7 +498,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, true); 
     }
 
-    public void testCompareSubqueryCriteria7(){
+    public void testCompareSubqueryCriteria7() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
         ArrayList values = new ArrayList();
         values.add("b"); //$NON-NLS-1$
@@ -562,7 +513,7 @@ public class TestCriteriaEvaluator extends TestCase {
      * have a predicate quantifier, but there is more than one value in the
      * ValueIterator
      */
-    public void testCompareSubqueryCriteriaFails1(){
+    public void testCompareSubqueryCriteriaFails1() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -570,24 +521,14 @@ public class TestCriteriaEvaluator extends TestCase {
         values.add("c"); //$NON-NLS-1$
         CollectionValueIterator valueIter = new CollectionValueIterator(values);
         crit.setValueIterator(valueIter);
-        helpTestCompareSubqueryCriteriaFails(crit); 
+        try {
+        	helpTestCompareSubqueryCriteria(crit, false);
+        } catch (CriteriaEvaluationException e) {
+        	assertEquals("The subquery of this compare criteria has to be scalar, but returned more than one value: e1 = (<undefined>)", e.getMessage()); //$NON-NLS-1$
+        }
     }
 
-    /**
-     * Should fail because the subquery returns two nulls, when it should 
-     * be scalar
-     */
-    public void testCompareSubqueryCriteriaNulls(){
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        ArrayList values = new ArrayList();
-        values.add(null);
-        values.add(null);
-        CollectionValueIterator valueIter = new CollectionValueIterator(values);
-        crit.setValueIterator(valueIter);
-        helpTestCompareSubqueryCriteriaFails(crit); 
-    }
-
-    public void testCompareSubqueryCriteriaNulls2(){
+    public void testCompareSubqueryCriteriaNulls2() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
         ArrayList values = new ArrayList();
         values.add(null);
@@ -596,7 +537,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteriaNulls3(){
+    public void testCompareSubqueryCriteriaNulls3() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         ArrayList values = new ArrayList();
         values.add(null);
@@ -606,7 +547,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteriaNulls4(){
+    public void testCompareSubqueryCriteriaNulls4() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add(null);
@@ -616,7 +557,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, false); 
     }
 
-    public void testCompareSubqueryCriteriaNulls5(){
+    public void testCompareSubqueryCriteriaNulls5() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add(null);
@@ -627,7 +568,7 @@ public class TestCriteriaEvaluator extends TestCase {
         helpTestCompareSubqueryCriteria(crit, true); 
     }
 
-    public void testCompareSubqueryCriteriaNulls6(){
+    public void testCompareSubqueryCriteriaNulls6() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
         ArrayList values = new ArrayList();
         values.add("a"); //$NON-NLS-1$
@@ -641,7 +582,7 @@ public class TestCriteriaEvaluator extends TestCase {
     /**
      * null is unknown
      */
-    public void testCompareSubqueryCriteriaNulls7(){
+    public void testCompareSubqueryCriteriaNulls7() throws Exception{
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.LT, SubqueryCompareCriteria.ALL);
         ArrayList values = new ArrayList();
         values.add(null);
@@ -654,7 +595,7 @@ public class TestCriteriaEvaluator extends TestCase {
     /**
      * null is unknown
      */
-    public void testCompareSubqueryCriteriaNulls8(){
+    public void testCompareSubqueryCriteriaNulls8() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.GT, SubqueryCompareCriteria.ALL);
         ArrayList values = new ArrayList();
         values.add(null);

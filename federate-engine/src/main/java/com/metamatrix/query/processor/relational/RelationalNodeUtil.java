@@ -65,7 +65,7 @@ public class RelationalNodeUtil {
         if(criteria == null) {
             return true;
         }
-        return CriteriaEvaluator.evaluate(criteria, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
+        return CriteriaEvaluator.evaluate(criteria);
     }
 
     /**

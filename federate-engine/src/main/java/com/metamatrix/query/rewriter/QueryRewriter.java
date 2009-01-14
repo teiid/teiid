@@ -1130,7 +1130,7 @@ public class QueryRewriter {
     private static Criteria evaluateCriteria(Criteria crit) throws QueryValidatorException {
         if(EvaluateExpressionVisitor.isFullyEvaluatable(crit, true)) {
             try {
-                Boolean eval = CriteriaEvaluator.evaluateTVL(crit, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
+            	Boolean eval = new CriteriaEvaluator(Collections.emptyMap(), null, null).evaluateTVL(crit, Collections.emptyList());
                 
                 if (eval == null) {
                     return UNKNOWN_CRITERIA;
@@ -2174,7 +2174,7 @@ public class QueryRewriter {
             if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
                 CompareCriteria crit = new CompareCriteria(rewrittenExpr, CompareCriteria.EQ, rewrittenWhen);
                 try {
-                    boolean eval = CriteriaEvaluator.evaluate(crit, null, null);
+                    boolean eval = CriteriaEvaluator.evaluate(crit);
                     if(eval) {
                         // This WHEN will always match, so return the THEN expression
                         return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
@@ -2257,7 +2257,7 @@ public class QueryRewriter {
             Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), procCommand, context, metadata);
             if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
                 try {
-                    boolean eval = CriteriaEvaluator.evaluate(rewrittenWhen, null, null);
+                	boolean eval = CriteriaEvaluator.evaluate(rewrittenWhen);
                     if(eval) {
                         // WHEN is always true, so just return the THEN
                         return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);

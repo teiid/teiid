@@ -128,9 +128,10 @@ public class ExpressionEvaluator {
 
     private static Object evaluate(SearchedCaseExpression expr, Map elements, List tuple, LookupEvaluator dataMgr, CommandContext context)
     throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+    	CriteriaEvaluator criteriaEvaluator = new CriteriaEvaluator(elements, dataMgr, context);
         for (int i = 0; i < expr.getWhenCount(); i++) {
             try {
-                if (CriteriaEvaluator.evaluate(expr.getWhenCriteria(i), elements, tuple, dataMgr, context)) {
+                if (criteriaEvaluator.evaluate(expr.getWhenCriteria(i), tuple)) {
                     return internalEvaluate(expr.getThenExpression(i), elements, tuple, dataMgr, context);
                 }
             } catch (CriteriaEvaluationException e) {
