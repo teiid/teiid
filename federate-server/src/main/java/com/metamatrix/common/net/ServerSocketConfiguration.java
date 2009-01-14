@@ -25,17 +25,8 @@
 package com.metamatrix.common.net;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.nio.channels.ServerSocketChannel;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -51,12 +42,7 @@ import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 
-
 /**
- * The SSL configuration is separated into internal (host controller/RMI) and external
- * (client and console socket) connections.
- * 
- * @since 4.2
  */
 public class ServerSocketConfiguration {
 
@@ -136,45 +122,6 @@ public class ServerSocketConfiguration {
         sslProtocol = props.getProperty(SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);            
     } 
     
-    /**
-     * Returns a client socket that will perform a custom handshake based upon the cluster key
-     * 
-     * @param bindAddr
-     * @param port
-     * @return
-     * @throws IOException
-     */
-    public Socket getInternalClientSocket(InetAddress bindAddr,
-                                                 int port) throws IOException {
-        Socket clientSocket = new Socket(bindAddr, port);
-        
-        boolean success = false;
-        try {
-	        OutputStream out = clientSocket.getOutputStream();
-	        Random r = new Random();
-	        byte[] challenge = new byte[16];
-	        r.nextBytes(challenge);
-	        byte[] msg = CryptoUtil.getCryptor().encrypt(challenge);
-	        out.write(msg);
-	        InputStream in = clientSocket.getInputStream();
-	        byte[] response = new byte[48];
-	        in.read(response);
-	        response = CryptoUtil.getCryptor().decrypt(response);
-	        if (!Arrays.equals(challenge, Arrays.copyOf(response, 16))) {
-	        	throw new IOException("handshake failed"); //$NON-NLS-1$
-	        }
-	        success = true;
-        } catch (CryptoException e) {
-        	throw new IOException(e);
-        } finally {
-        	if (!success) {
-        		clientSocket.close();
-        	}
-        }
-        
-        return clientSocket;
-    }
-
     public SSLEngine getServerSSLEngine() throws IOException {
         if (!isServerSSLEnabled()) {
         	return null;
@@ -207,133 +154,6 @@ public class ServerSocketConfiguration {
         return result;
     }
 
-    public ServerSocket getInternalServerSocket(int port,
-                                               int backlog,
-                                               InetAddress bindAddr) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(port, backlog, bindAddr);
-        
-        return new ServerHandshakeDelegate(serverSocket);
-    }
-    
-    private class ServerHandshakeDelegate extends ServerSocket {
-    	
-    	private ServerSocket serverSocket;
-    	
-    	public ServerHandshakeDelegate(ServerSocket serverSocket) throws IOException {
-			this.serverSocket = serverSocket;
-		}
-
-		public Socket accept() throws IOException {
-			Socket socket = serverSocket.accept();
-			boolean success = false;
-	        try {
-	        	InputStream in = socket.getInputStream();
-		        byte[] response = new byte[32];
-		        in.read(response);
-		        response = CryptoUtil.getCryptor().decrypt(response);
-		        if (response.length != 16) {
-		        	throw new IOException("handshake failed"); //$NON-NLS-1$
-		        }
-		        
-		        OutputStream out = socket.getOutputStream();
-		        Random r = new Random();
-		        byte[] challenge = new byte[16];
-		        r.nextBytes(challenge);
-		        
-		        challenge = Arrays.copyOf(response, 32);
-		        System.arraycopy(response, 0, challenge, 16, 16);
-		        
-		        byte[] msg = CryptoUtil.getCryptor().encrypt(challenge);
-		        out.write(msg);
-		        success = true;
-	        } catch (CryptoException e) {
-	        	throw new IOException(e);
-	        } finally {
-	        	if (!success) {
-	        		socket.close();
-	        	}
-	        }
-			return socket;
-		}
-
-		public void bind(SocketAddress arg0, int arg1) throws IOException {
-			serverSocket.bind(arg0, arg1);
-		}
-
-		public void bind(SocketAddress arg0) throws IOException {
-			serverSocket.bind(arg0);
-		}
-
-		public void close() throws IOException {
-			serverSocket.close();
-		}
-
-		public boolean equals(Object obj) {
-			return serverSocket.equals(obj);
-		}
-
-		public ServerSocketChannel getChannel() {
-			return serverSocket.getChannel();
-		}
-
-		public InetAddress getInetAddress() {
-			return serverSocket.getInetAddress();
-		}
-
-		public int getLocalPort() {
-			return serverSocket.getLocalPort();
-		}
-
-		public SocketAddress getLocalSocketAddress() {
-			return serverSocket.getLocalSocketAddress();
-		}
-
-		public int getReceiveBufferSize() throws SocketException {
-			return serverSocket.getReceiveBufferSize();
-		}
-
-		public boolean getReuseAddress() throws SocketException {
-			return serverSocket.getReuseAddress();
-		}
-
-		public int getSoTimeout() throws IOException {
-			return serverSocket.getSoTimeout();
-		}
-
-		public int hashCode() {
-			return serverSocket.hashCode();
-		}
-
-		public boolean isBound() {
-			return serverSocket.isBound();
-		}
-
-		public boolean isClosed() {
-			return serverSocket.isClosed();
-		}
-
-		public void setPerformancePreferences(int arg0, int arg1, int arg2) {
-			serverSocket.setPerformancePreferences(arg0, arg1, arg2);
-		}
-
-		public void setReceiveBufferSize(int arg0) throws SocketException {
-			serverSocket.setReceiveBufferSize(arg0);
-		}
-
-		public void setReuseAddress(boolean arg0) throws SocketException {
-			serverSocket.setReuseAddress(arg0);
-		}
-
-		public void setSoTimeout(int arg0) throws SocketException {
-			serverSocket.setSoTimeout(arg0);
-		}
-
-		public String toString() {
-			return serverSocket.toString();
-		}
-    	
-    }
-    
     public boolean isServerSSLEnabled() {
         return ssl_enabled && CryptoUtil.isEncryptionEnabled();
     }
