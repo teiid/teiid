@@ -8,6 +8,10 @@
   <name>Federate</name>
   <version>6.0.0-SNAPSHOT</version>
   <description>Federated SQL and XML query engine.</description>
+  <properties>
+  	<ant.version>1.7.0</ant.version>
+  	<site.url>http://www.federateproject.org</site.url>
+  </properties>
   <licenses>
     <license>
       <name>GNU Lesser General Public License</name>
@@ -16,6 +20,7 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+  <url>${site.url}</url>
   <developers>
     <developer>
       <name>Steve Hawkins</name>
@@ -391,7 +396,7 @@
       <dependency>
       	<groupId>ant</groupId>
       	<artifactId>ant</artifactId>
-      	<version>1.7.0</version>
+      	<version>${ant.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

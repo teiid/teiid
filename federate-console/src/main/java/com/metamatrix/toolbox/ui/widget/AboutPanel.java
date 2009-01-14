@@ -39,6 +39,7 @@ import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
 import com.metamatrix.common.util.ApplicationInfo;
+import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.toolbox.ui.widget.util.BrowserControl;
 import com.metamatrix.toolbox.ToolboxPlugin;
 
@@ -73,7 +74,7 @@ public class AboutPanel extends DialogPanel {
      */
     protected void initializeAboutPanel() {
         final ApplicationInfo info = ApplicationInfo.getInstance();
-        final String url = info.getMainComponent().getAboutURL();
+        final String url = ApplicationInfo.getInstance().getUrl();
         
         final SplashPanel panel = new SplashPanel();
         final JLabel label = new JLabel("<html><a href='" + url + "'>" + url + "</a></html>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -97,7 +98,7 @@ public class AboutPanel extends DialogPanel {
         setContent(panel);
         registerKeyboardAction(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
-                final JTextArea box = new JTextArea(info.toString());
+                final JTextArea box = new JTextArea(VMNaming.getHostInfo());
                 box.setLineWrap(false);
                 box.setEditable(false);
                 final DialogPanel panel = new DialogPanel(new JScrollPane(box)) {

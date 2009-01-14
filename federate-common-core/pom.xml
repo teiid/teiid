@@ -10,4 +10,33 @@
 	<artifactId>federate-common-core</artifactId>
 	<name>Common Core</name>
 	<description>Core shared library</description>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>process-resources</phase>
+						<configuration>
+							<tasks>
+								<tstamp />
+								<replace dir="${project.build.outputDirectory}" token="@build-date@" value="${DSTAMP}">
+									<include name="**/*.properties" />
+								</replace>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
 </project>

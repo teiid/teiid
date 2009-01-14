@@ -79,9 +79,9 @@ import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.namedobject.BaseID;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.BuildVersion;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.api.service.ConfigurationServicePropertyNames;
@@ -1243,7 +1243,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an business error occurred within or during communication with the Configuration Service.
      */
     public Collection getProductReleaseInfos() throws ConfigurationException {
-    	BuildVersion build = new BuildVersion();
+    	ApplicationInfo build = ApplicationInfo.getInstance();
     	ReleaseInfo info = new ReleaseInfo("Server", build.getReleaseNumber(), build.getBuildDate(), build.getBuildNumber()); //$NON-NLS-1$
     	List l = new ArrayList();
     	l.add(info);

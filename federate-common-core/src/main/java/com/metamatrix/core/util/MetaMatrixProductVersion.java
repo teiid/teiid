@@ -24,6 +24,8 @@
 
 package com.metamatrix.core.util;
 
+import com.metamatrix.common.util.ApplicationInfo;
+
 
 /**
  * Contains constants for code base versioning and license checking
@@ -37,7 +39,7 @@ public class MetaMatrixProductVersion {
      * The {@link #VERSION_NUMBER} indicates the current major.minor version of the product.  
      * If the product is in a patch version (i.e., 4.2.1) release, that will not be indicated.
      */
-    public static final String VERSION_NUMBER = "6.0"; //$NON-NLS-1$
+    public static final String VERSION_NUMBER = ApplicationInfo.getInstance().getMajorReleaseNumber();
         
     // Changing any of these will force a change to config.xml and data_mmproducts_insert.sql
     // (see build.kits.server.common.config and build.kits.server.common.config.sql repectively)
@@ -46,20 +48,4 @@ public class MetaMatrixProductVersion {
     public static final String CONNECTOR_PRODUCT_TYPE_NAME = "Connectors"; //$NON-NLS-1$
     public static final String MODELER_PRODUCT_TYPE_NAME = "Modeler"; //$NON-NLS-1$
     
-    public String getReleaseNumber() {
-		return "6.0"; //$NON-NLS-1$
-	}
-	
-	public String getBuildNumber() {
-		return "0.1"; //$NON-NLS-1$
-	}
-	
-	public String getCopyright() {
-		return "Copyright (C) 2008 Red Hat, Inc"; //$NON-NLS-1$
-	}
-	
-	public String getBuildDate() {
-		return "pre-relese anyday"; //$NON-NLS-1$
-	}
-
 }

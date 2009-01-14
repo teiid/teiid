@@ -24,15 +24,17 @@
 
 package com.metamatrix.common.util;
 
-import java.io.*;
-import java.util.*;
-
-import com.metamatrix.common.CommonPlugin;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ByteArrayHelper {
-
-    private static final String SEPARATOR = "-"; //$NON-NLS-1$
-    private static final String ZERO_FILL = "0"; //$NON-NLS-1$
 
     /**
      * <p>The default size of each temporary byte array that is instantiated
@@ -46,49 +48,6 @@ public class ByteArrayHelper {
      * created, and so on until all of the stream is read.</p>
      */
     public static final int CHUNK_SIZE = 32000;
-
-    public static String toString(byte[] bytes) {
-        if (bytes != null) {
-            if (bytes.length == 0) {
-                return ""; //$NON-NLS-1$
-            }
-            StringBuffer buf = new StringBuffer(bytes.length * 3 - 1);
-            for (int i=0; i<bytes.length; i++) {
-                // Insert a separator if specified
-                if (i > 0) buf.append(SEPARATOR);
-                // Get the hex value of the byte
-                String hexValue = Integer.toHexString(bytes[i] & 0xFF);
-                // Pad with a 0 if necessary
-                if (hexValue.length() == 1) buf.append(ZERO_FILL);
-                buf.append(hexValue.toUpperCase());
-            }
-            return buf.toString();
-        }
-        return null;
-    }
-
-    public static byte[] parse(String s) throws NumberFormatException {
-        if (s != null) {
-            // Tokenize the hex string into a sequence of byte values
-            List byteArray = new ArrayList(s.length()/3 + 1);
-            StringTokenizer tokenizer = new StringTokenizer(s, SEPARATOR);
-            while (tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken();
-                if (token.trim().length() != 2) {
-                    throw new NumberFormatException(CommonPlugin.Util.getString(ErrorMessageKeys.CM_UTIL_ERR_0019, token));
-                }
-                // Need to use Integer to parse the hex string as Byte.valueOf only parses 0 < hex < 128 due to sign
-                byteArray.add(Integer.valueOf(token, 16));
-            }
-            // Convert the byte sequence to a byte array
-            byte[] bytes = new byte[byteArray.size()];
-            for (int i=0; i<byteArray.size(); i++) {
-                bytes[i] = ((Integer) byteArray.get(i)).byteValue();
-            }
-            return bytes;
-        }
-        return null;
-    }
 
     /**
      * <p>Reads data from the file and returns it as a
@@ -208,27 +167,6 @@ public class ByteArrayHelper {
 
 
 	/**
-	 * Writes the byte array to the output stream.
-	 */
-    public static void toOutputStream(byte[] data, OutputStream outputStream) throws Exception {
-
-        	ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        	InputStream isContent = new BufferedInputStream(bais);
-
-            byte[] buff = new byte[2048];
-            int bytesRead;
-
-            // Simple read/write loop.
-            while(-1 != (bytesRead = isContent.read(buff, 0, buff.length))) {
-                outputStream.write(buff, 0, bytesRead);
-            }
-
-            outputStream.flush();
-            outputStream.close();
-
-    }
-    
-    /**
      * converts the byte array to an input stream 
      */
     public static InputStream toInputStream(byte[] data) throws Exception {

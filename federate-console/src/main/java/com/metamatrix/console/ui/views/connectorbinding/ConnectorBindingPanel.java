@@ -594,8 +594,7 @@ public class ConnectorBindingPanel extends BasePanel implements
                 FileOutputStream fileOutput = new FileOutputStream(filename);
                 XMLConfigurationImportExportUtility xmlUtil = new XMLConfigurationImportExportUtility();
                 String userName = UserCapabilities.getLoggedInUser(connection).getName();
-                String version = StaticProperties.getVersions() + ":" + //$NON-NLS-1$
-                                 StaticProperties.getBuild();
+                String version = StaticProperties.getVersion();
                 Properties props = new Properties();
                 props.put(ConfigurationPropertyNames.APPLICATION_CREATED_BY, DeployPkgUtils.getString("dmp.console.name")); //$NON-NLS-1$
                 props.put(ConfigurationPropertyNames.APPLICATION_VERSION_CREATED_BY, version);

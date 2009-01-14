@@ -31,7 +31,6 @@ import java.awt.Window;
 
 import javax.swing.SwingUtilities;
 
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.toolbox.ToolboxPlugin;
 
 /**
@@ -42,8 +41,7 @@ public class AboutDialog extends DialogWindow {
     //# Constants                                                                                                                #
     //############################################################################################################################
     
-    private static final String TITLE = ToolboxPlugin.Util.getString("AboutDialog.About__1") + //$NON-NLS-1$
-                                        ApplicationInfo.getInstance().getMainComponent().getTitle();
+    private static final String TITLE = ToolboxPlugin.Util.getString("AboutDialog.About__1"); //$NON-NLS-1$
     
     //############################################################################################################################
     //# Static Methods                                                                                                           #

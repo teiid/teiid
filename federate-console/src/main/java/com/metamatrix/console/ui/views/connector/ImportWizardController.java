@@ -524,7 +524,7 @@ public class ImportWizardController extends WizardInterfaceImpl implements Impor
     
     private Properties getExportProperties() throws Exception {
         String userName = UserCapabilities.getLoggedInUser(this.conn).getName();
-        String version = StaticProperties.getVersions() + ":" + StaticProperties.getBuild(); //$NON-NLS-1$
+        String version = StaticProperties.getVersion();
         Properties props = new Properties();
         props.put(ConfigurationPropertyNames.APPLICATION_CREATED_BY,DeployPkgUtils.getString("dmp.console.name")); //$NON-NLS-1$
         props.put(ConfigurationPropertyNames.APPLICATION_VERSION_CREATED_BY,version);

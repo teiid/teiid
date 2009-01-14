@@ -38,8 +38,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.metamatrix.common.properties.TextManager;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.core.util.BuildVersion;
 import com.metamatrix.toolbox.ui.UIDefaults;
 
 /**
@@ -182,7 +182,7 @@ public class SplashPanel extends JPanel {
         final Font font = dflts.getFont("normalFont"); //$NON-NLS-1$
         int margin = getFontMetrics(font).getHeight();
         String name = "Console"; //$NON-NLS-1$
-        BuildVersion build = new BuildVersion();
+        ApplicationInfo build = ApplicationInfo.getInstance();
         validateProperty(name, APPLICATION_NAME_PROPERTY); 
         validateProperty(build.getReleaseNumber(), VERSION_NUMBER_PROPERTY);
         validateProperty(build.getBuildNumber(), BUILD_NUMBER_PROPERTY);

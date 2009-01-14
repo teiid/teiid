@@ -123,5 +123,22 @@ public final class VMNaming {
     public static void setBindAddress(String bindaddress) {
         BIND_ADDRESS = bindaddress;
     }     
+    
+    /**
+     * Return the stringified representation of this application information object.
+     * @return the string form of this object; never null
+     */
+    public static String getHostInfo() {
+        StringBuffer sb = new StringBuffer("Host Information"); //$NON-NLS-1$ 
+        sb.append('\n');
+        sb.append(" VM Name:               " + VMNAME ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Hostname:              " + HOST_ADDRESS ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Version:               ").append(ApplicationInfo.getInstance().getReleaseNumber());
+        sb.append('\n');
+        sb.append(" Build Date:            ").append(ApplicationInfo.getInstance().getBuildDate());
+        return sb.toString();
+    }
 
 }

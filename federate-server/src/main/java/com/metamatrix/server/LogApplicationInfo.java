@@ -37,7 +37,6 @@ import java.util.Random;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -48,6 +47,7 @@ import com.metamatrix.common.extensionmodule.ExtensionModuleTypes;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.TempDirectory;
 import com.metamatrix.core.util.ZipFileUtil;
@@ -77,13 +77,7 @@ class LogApplicationInfo extends Thread {
             ApplicationInfo info = ApplicationInfo.getInstance();
             StringBuffer sb = new StringBuffer();
 
-            try {
-				info.setMainComponent("metamatrix-server.jar"); //$NON-NLS-1$
-			} catch (ComponentNotFoundException e) {
-				sb.append("metamatrix-server.jar not found.\n");
-			}
-            
-            sb.append(info.toString());
+            sb.append(VMNaming.getHostInfo());
                             
             sb.append("\n---- System Properties ----\n");  //$NON-NLS-1$             
             sb.append(PropertiesUtils.prettyPrint(System.getProperties()));

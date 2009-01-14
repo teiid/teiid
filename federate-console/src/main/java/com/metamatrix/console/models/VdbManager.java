@@ -266,7 +266,7 @@ public class VdbManager extends Manager {
         Properties headerProps = new Properties();
 
         String userName = UserCapabilities.getLoggedInUser(getConnection()).getName();
-        String version = StaticProperties.getVersions() + ":" + StaticProperties.getBuild(); //$NON-NLS-1$
+        String version = StaticProperties.getVersion();
 
         headerProps.put(DEFReaderWriter.Header.APPLICATION_CREATED_BY, DeployPkgUtils.getString("dmp.console.name")); //$NON-NLS-1$
         headerProps.put(DEFReaderWriter.Header.APPLICATION_VERSION, version);
