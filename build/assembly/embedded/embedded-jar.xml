@@ -28,13 +28,13 @@
         	<include>org.jboss.federate:federate-metadata</include>
         	<include>org.jboss.federate:federate-txn-jbossts</include>
 
-        	<include>org.jboss.federate:connector-jdbc</include>
-            <include>org.jboss.federate:connector-xml</include>
-            <include>org.jboss.federate:connector-loopback</include>
-            <include>org.jboss.federate:connector-text</include>
-            <include>org.jboss.federate:connector-ldap</include>
-            <include>org.jboss.federate:connector-salesforce</include>
-            <include>org.jboss.federate:salesforce-api</include>                      
+        	<include>org.jboss.federate.connectors:connector-jdbc</include>
+            <include>org.jboss.federate.connectors:connector-xml</include>
+            <include>org.jboss.federate.connectors:connector-loopback</include>
+            <include>org.jboss.federate.connectors:connector-text</include>
+            <include>org.jboss.federate.connectors:connector-ldap</include>
+            <include>org.jboss.federate.connectors:connector-salesforce</include>
+            <include>org.jboss.federate.connectors:salesforce-api</include>                      
         </includes>
         
         <binaries>
