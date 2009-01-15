@@ -42,7 +42,6 @@ import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMAdminStatus;
-import com.metamatrix.api.exception.ComponentNotAvailableException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -93,8 +92,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // the Configuration Service. Since we do not have dynamic properties on
             // DQP this should be OK for now.
             getConfigurationService().setSystemProperty(propertyName, propertyValue);            
-        } catch(ComponentNotAvailableException e) {
-        	throw new AdminComponentException(e);
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }
@@ -215,8 +212,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             else {
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", new Object[] {deployName})); //$NON-NLS-1$
             }
-        } catch (ComponentNotAvailableException e) {
-        	throw new AdminComponentException(e);
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
 		} catch (MetaMatrixProcessingException e) {
@@ -235,8 +230,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_ct_name")); //$NON-NLS-1$                
             }            
             getConfigurationService().deleteConnectorType(deployName);
-        } catch (ComponentNotAvailableException e) {
-        	throw new AdminComponentException(e);
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
 		}         
