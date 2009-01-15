@@ -70,6 +70,21 @@ public class ArjunaTransactionProvider implements TransactionProvider {
 
     private RecoveryManager recoveryManager;
     
+    private static ArjunaTransactionProvider INSTANCE;
+    
+    private ArjunaTransactionProvider() {
+    	
+    }
+    
+    public static synchronized ArjunaTransactionProvider getInstance(Properties props) throws XATransactionException {
+    	if (INSTANCE == null) {
+    		ArjunaTransactionProvider atp = new ArjunaTransactionProvider();
+    		atp.init(props);
+    		INSTANCE = atp;
+    	}
+    	return INSTANCE;
+    }
+    
     /** 
      * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#init(java.lang.String)
      */

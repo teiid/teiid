@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -83,7 +84,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     private Map connectorMgrs = new HashMap();
     
     // A counter to keep track of connector ids
-    private int counter = 0;
+    private AtomicInteger counter = new AtomicInteger();
     
     // Connector List
     private Map loadedConnectorBindingsMap = new HashMap();
@@ -441,19 +442,9 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         // Decrypt properties first
         Properties connectorProperties = getDecryptedProperties(binding);
         
-        String connectorId = String.valueOf(counter++);
+        String connectorId = String.valueOf(counter.getAndIncrement());
         connectorProperties.setProperty(ConnectorPropertyNames.CONNECTOR_ID, connectorId);
         connectorProperties.setProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, binding.getFullName());
-        
-        // Based on how we loaded the DQP and loading the connector bindings, set the degistration
-        // of the drivers, to avoid memory leak by the DriverManager, during the shutdown.
-        boolean useExtensionClassPath = getConfigurationService().useExtensionClasspath();
-        boolean useUnifiedClassLoader = getConfigurationService().useUnifiedClassLoader();
-        if(useExtensionClassPath) {
-            connectorProperties.setProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSLOADER); 
-        }else if(!useExtensionClassPath && !useUnifiedClassLoader) {
-            connectorProperties.setProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSNAME); 
-        }
         
         try {
             ConnectorManager mgr = initConnectorManager(connectorProperties);            
@@ -583,6 +574,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             }
             
             if (!useExtensionClassPath) {
+            	connectorProperties.setProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSNAME);
                 mgr = new ConnectorManager();
             }
             else {

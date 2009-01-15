@@ -27,7 +27,6 @@ package com.metamatrix.dqp.internal.transaction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -115,13 +114,8 @@ public class TransactionServerImpl implements
     public TransactionServerImpl() {
     }
 
-    public void init(Properties props, TransactionProvider theProvider) throws XATransactionException {
+    public void init(TransactionProvider theProvider) throws XATransactionException {
         this.provider = theProvider;
-        try {
-            this.provider.init(props);
-        } catch (Throwable e) {
-            throw new XATransactionException(e);
-        }
     }
 
     public synchronized void shutdown(boolean force) {

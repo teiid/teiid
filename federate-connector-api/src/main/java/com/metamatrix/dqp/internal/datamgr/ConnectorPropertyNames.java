@@ -68,14 +68,6 @@ public class ConnectorPropertyNames {
     public static final String CONNECTION_POOL_ENABLED = "ConnectionPoolEnabled"; //$NON-NLS-1$
 
     /**
-     * The environment property name for the class used to load runtime metadata to the repository.
-     * This property is required when design time metadata is not available and runtimemetadata
-     * is to be loaded dynamically ot through an admin API.
-     * @since 3.1
-     */
-    public static final String RUNTIME_METADATA_LOADER= "RuntimeMetadataLoader"; //$NON-NLS-1$
-
-    /**
      * The environment property used to identify a <i>type</i> of connector binding.
      * This property is required and is a component used to uniquely identify a
      * connector instance.

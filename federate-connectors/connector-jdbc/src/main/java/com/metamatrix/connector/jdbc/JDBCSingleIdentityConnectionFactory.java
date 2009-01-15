@@ -27,9 +27,7 @@
 package com.metamatrix.connector.jdbc;
 
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.Properties;
 
 import com.metamatrix.data.api.ConnectorEnvironment;
@@ -39,7 +37,6 @@ import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.SingleIdentity;
 import com.metamatrix.data.pool.SourceConnection;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 /**
  * Factory to create JDBCSourceConnection for SingleIdentity.
@@ -52,7 +49,6 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
     private Properties userProps;
     protected ConnectionListener connectionListener = new DefaultConnectionListener();
     private ConnectorLogger logger;
-    private String deregisterType;
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
@@ -79,7 +75,6 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
         // Build connection properties from user name and password
         String username = connectionProps.getProperty(JDBCPropertyNames.USERNAME);
         String password = connectionProps.getProperty(JDBCPropertyNames.PASSWORD);
-        this.deregisterType = connectionProps.getProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSNAME);
         userProps = new Properties();
         if (username != null && username.trim().length() > 0) {
             userProps.setProperty("user", username.trim()); //$NON-NLS-1$
@@ -126,29 +121,4 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
         return connectionListener;
     }
     
-    public void shutdown() {
-        Enumeration drivers = DriverManager.getDrivers();
-        Driver tempdriver = null;
-        // De-Register Driver
-        while(drivers.hasMoreElements()){
-            tempdriver = (Driver)drivers.nextElement();
-            if(tempdriver.getClass().getClassLoader() == this.getClass().getClassLoader()) {
-                if(this.deregisterType != null && this.deregisterType.equals(ConnectorPropertyNames.DEREGISTER_BY_CLASSNAME)) {
-                    if(tempdriver.getClass().getName().equals(this.driver.getClass().getName())) {
-                        deregisterDriver(tempdriver);
-                    }
-                }else {
-                    deregisterDriver(tempdriver);
-                }
-            }
-        }
-    }
-    
-    private void deregisterDriver(Driver driver) {
-        try {
-            DriverManager.deregisterDriver(driver);
-        } catch (Throwable e) {
-            logger.logError(e.getMessage());
-        }
-    }
 }

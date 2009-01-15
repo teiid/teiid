@@ -28,13 +28,16 @@ package com.metamatrix.connector.jdbc;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Properties;
 
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.pool.SourceConnection;
 import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 /**
  * Represents a base class for a JDBC source connection factory.  Subclasses
@@ -50,6 +53,8 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
     
     /**How often (in ms) to test that the data source is available by establishing a new connection.*/
     protected int sourceConnectionTestInterval;
+    private String deregisterType;
+    
 
     /**
      *
@@ -62,6 +67,7 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
         Properties props = env.getProperties();
         String value = props.getProperty(SourceConnection.SOURCE_CONNECTION_TEST_INTERVAL, SourceConnection.DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
         this.sourceConnectionTestInterval = (Integer.parseInt(value) * 1000);
+        this.deregisterType = props.getProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSLOADER);
     }
     
     protected ConnectorEnvironment getConnectorEnvironment() {
@@ -155,8 +161,25 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
         return isoLevel;
     }
     
-    protected void shutdown() {
-        
+    public void shutdown() {
+        Enumeration drivers = DriverManager.getDrivers();
+        //this is not correct the correct name for datasources, but we will still do the deregister
+        String driverClassname = this.environment.getProperties().getProperty(JDBCPropertyNames.DRIVER_CLASS);
+        // De-Register Driver
+        while(drivers.hasMoreElements()){
+        	Driver tempdriver = (Driver)drivers.nextElement();
+            if(tempdriver.getClass().getClassLoader() != this.getClass().getClassLoader()) {
+            	continue;
+            }
+            if(ConnectorPropertyNames.DEREGISTER_BY_CLASSLOADER.equals(this.deregisterType) 
+            		|| tempdriver.getClass().getName().equals(driverClassname)) {
+                try {
+                    DriverManager.deregisterDriver(tempdriver);
+                } catch (Throwable e) {
+                    this.environment.getLogger().logError(e.getMessage());
+                }
+            }
+        }
     }
-
+    
 }

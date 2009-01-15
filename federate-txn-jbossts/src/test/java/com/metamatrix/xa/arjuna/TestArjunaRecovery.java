@@ -119,8 +119,7 @@ public class TestArjunaRecovery extends TestCase {
         resource_1.setRecoverableXid(xid1); 
         resource_2.setRecoverableXid(xid2); 
         
-        ArjunaTransactionProvider provider = new ArjunaTransactionProvider();
-        provider.init(props); 
+        ArjunaTransactionProvider provider = ArjunaTransactionProvider.getInstance(props);
         provider.registerRecoverySource(CONN1, connector_1);
         provider.registerRecoverySource(CONN2, connector_2);
 

@@ -43,7 +43,7 @@ public class FakeTransactionService implements TransactionService {
 	
 	public FakeTransactionService() {
 		try {
-			server.init(new Properties(), SimpleMock.createSimpleMock(TransactionProvider.class));
+			server.init(SimpleMock.createSimpleMock(TransactionProvider.class));
 		} catch (XATransactionException e) {
 			throw new RuntimeException(e);
 		}

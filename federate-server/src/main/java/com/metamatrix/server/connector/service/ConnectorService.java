@@ -118,7 +118,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      * This is based on the assumption that two classloaders 
      * with the same URLs should be identical.
      */
-    private static WeakReference<Map<String, NonDelegatingClassLoader>> classLoaderCache = new WeakReference<Map<String, NonDelegatingClassLoader>>(new HashMap<String, NonDelegatingClassLoader> ());
+    private static Map<String, WeakReference<NonDelegatingClassLoader>> classLoaderCache = new HashMap<String, WeakReference<NonDelegatingClassLoader>> ();
         
     static {
         //read value of cacheClassLoaders
@@ -214,23 +214,21 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
         
         synchronized (ConnectorService.class) {
-            NonDelegatingClassLoader result = null;
-            Map<String, NonDelegatingClassLoader> map = classLoaderCache.get();
-            if (map != null) {
-                result = map.get(urls);
-                if (result != null) {
-                    return result;
-                }
-            }
-
+        	NonDelegatingClassLoader result = null;
+        	if (cacheClassLoaders) {
+	        	WeakReference<NonDelegatingClassLoader> ref = classLoaderCache.get(urls);
+	        	if (ref != null) {
+	        		result = ref.get();
+	        		if (result != null) {
+	        			return result;
+	        		}
+	        	}
+        	}
+        	
             try {
                 result = new URLFilteringClassLoader(URLFactory.parseURLs(urls, ";")); //$NON-NLS-1$
                 if (cacheClassLoaders) {
-                    if (map == null) {
-                        map = new HashMap<String, NonDelegatingClassLoader>();
-                        classLoaderCache = new WeakReference<Map<String,NonDelegatingClassLoader>>(map);
-                    }
-                    map.put(urls, result);
+                    classLoaderCache.put(urls, new WeakReference<NonDelegatingClassLoader>(result));
                 }
                 return result;
             } catch (MalformedURLException e1) {

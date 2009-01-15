@@ -54,7 +54,6 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
     private ConnectionPool pool;
     private JDBCSourceConnectionFactory factory;
     
-    private String deregisterDriver;
     private boolean initializedClean = false;
     
     private ConnectorCapabilities capabilities;
@@ -64,7 +63,6 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
         this.environment = environment;
         
         Properties props = environment.getProperties();
-        this.deregisterDriver = props.getProperty(ConnectorPropertyNames.DEREGISTER_DRIVER); 
 
         this.connectionPoolEnabled = true;
         String connectionPoolEnabledStr = props.getProperty(ConnectorPropertyNames.CONNECTION_POOL_ENABLED); 
@@ -116,7 +114,7 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
         }
         
         //Shutdown Factory
-        if(this.deregisterDriver != null && this.factory != null) {
+        if(this.factory != null) {
             this.factory.shutdown();
         }
     }

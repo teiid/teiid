@@ -51,7 +51,7 @@ public class TestTransactionServer extends TestCase {
      */
     protected void setUp() throws Exception {
         server = new TransactionServerImpl();
-        server.init(null, SimpleMock.createSimpleMock(TransactionProvider.class)); 
+        server.init(SimpleMock.createSimpleMock(TransactionProvider.class)); 
     }
 
     /**

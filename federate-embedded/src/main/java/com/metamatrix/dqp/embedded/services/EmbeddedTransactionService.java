@@ -56,7 +56,7 @@ public class EmbeddedTransactionService extends EmbeddedBaseDQPService implement
             props.put(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.put(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
             
-            arjunaTs.init(props, new ArjunaTransactionProvider());
+            arjunaTs.init(ArjunaTransactionProvider.getInstance(props));
             
             final Class[] interfaces = new Class[] {TransactionServer.class, XAServer.class};
             

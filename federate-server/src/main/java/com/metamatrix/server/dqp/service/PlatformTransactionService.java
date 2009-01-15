@@ -85,7 +85,7 @@ public class PlatformTransactionService implements TransactionService{
             props.setProperty(TransactionService.VMNAME, VMNaming.getVMName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 
 
-            arjunaTs.init(props, new ArjunaTransactionProvider());
+            arjunaTs.init(ArjunaTransactionProvider.getInstance(props));
             
             final Class[] interfaces = new Class[] {TransactionServer.class, XAServer.class};
             
