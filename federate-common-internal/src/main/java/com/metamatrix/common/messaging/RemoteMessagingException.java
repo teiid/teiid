@@ -27,5 +27,13 @@ package com.metamatrix.common.messaging;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class RemoteMessagingException extends MetaMatrixRuntimeException {
+	
+	public RemoteMessagingException(String message) {
+		super(message);
+	}
+	
+	public RemoteMessagingException(Throwable t) {
+		super(t);
+	}
 
 }

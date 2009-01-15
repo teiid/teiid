@@ -58,6 +58,7 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.event.EventBroker;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.server.ChannelProvider;
 
 public class JGroupsMessageBus implements MessageBus {
@@ -138,7 +139,7 @@ public class JGroupsMessageBus implements MessageBus {
 				RspList rsp_list = rpcDispatcher.callRemoteMethods(dest, new MethodCall(RemoteProxy.getInvokeMethod(), invokeArgs), GroupRequest.GET_FIRST, REMOTE_TIMEOUT);
 				
 				if (rsp_list.isEmpty()) {
-					throw new RemoteMessagingException();
+					throw new RemoteMessagingException(PlatformPlugin.Util.getString("JGroupsMessageBus.noResponse")); //$NON-NLS-1$
 				}
 	
 				return rsp_list.getFirst();
