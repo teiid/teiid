@@ -242,7 +242,7 @@ public class TestJoinOptimization extends TestCase {
     }
 
     /**
-     * Copy criteria should not work here as the select criteria does not have an equality operator 
+     * Copy criteria should not work here as the join criteria has an implicit convert and the where criteria is a non-equality predicate
      */
     public void testCopyCriteriaWithFunction2() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla, bqt2.smalla where bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey <> 1"; //$NON-NLS-1$
@@ -1021,6 +1021,38 @@ public class TestJoinOptimization extends TestCase {
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
         
+    }
+    
+    /**
+     * RuleCopyCriteria will remove the first join criteria and the source doesn't support the * function.  However we still
+     * want the join to be pushed since it originally contained proper criteria.
+     */
+    public void testCopyCriteriaJoinPushed() throws Exception {
+    	String sql = "select pm1.g1.e1 from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = 5 and pm1.g1.e2 * 5 = pm1.g2.e2";
+    	
+    	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+    	
+    	ProcessorPlan plan = TestOptimizer.helpPlan(sql,metadata, 
+    			new String[] { "SELECT g_0.e2, g_1.e2, g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = '5') AND (g_1.e1 = '5')" }); //$NON-NLS-1$
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+    	});
     }
         
 }

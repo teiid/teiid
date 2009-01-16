@@ -53,6 +53,7 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.AccessPattern;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -255,13 +256,12 @@ public class RulePlanJoins implements OptimizerRule {
                         }
                     }
                     
-                    if (hasJoinCriteria && joinCriteriaNodes.isEmpty()) {
-                    	float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
-                        float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
-                        float acceptableCost = context == null? 45.0f : (float)Math.sqrt(context.getProcessorBatchSize());
-                        if((cost1 == -1 || cost2 == -1 || (cost1 > acceptableCost && cost2 > acceptableCost))){
-                        	continue;
-                        }
+                    /*
+                     * If we failed to find direct criteria, but still have non-pushable or criteria to
+                     * other groups we'll use additional checks
+                     */
+                    if (hasJoinCriteria && joinCriteriaNodes.isEmpty() && !canPushCrossJoin(joinRegion, metadata, context, accessNode1, accessNode2)) {
+                    	continue;
                     }
                     
                     List toTest = new ArrayList(2);
@@ -322,6 +322,23 @@ public class RulePlanJoins implements OptimizerRule {
             joinRegion.reconstructJoinRegoin();
         }
     }
+
+	private boolean canPushCrossJoin(JoinRegion joinRegion, QueryMetadataInterface metadata,
+			CommandContext context, PlanNode accessNode1, PlanNode accessNode2)
+			throws QueryMetadataException, MetaMatrixComponentException {
+    	/*
+    	 * Check for the possibility that the join criteria was removed by rule copy criteria
+    	 */
+    	Set<GroupSymbol> removedGroups = joinRegion.getRemovedJoinGroups();
+    	if (removedGroups != null && !Collections.disjoint(removedGroups, accessNode1.getGroups()) && !Collections.disjoint(removedGroups, accessNode2.getGroups())) {
+			return true;
+    	}
+
+		float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
+		float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
+		float acceptableCost = context == null? 45.0f : (float)Math.sqrt(context.getProcessorBatchSize());
+		return !((cost1 == -1 || cost2 == -1 || (cost1 > acceptableCost && cost2 > acceptableCost)));
+	}
 
     /**
      * Return a map of Access Nodes to JoinSources that may be eligible for pushdown as
@@ -468,6 +485,7 @@ public class RulePlanJoins implements OptimizerRule {
                     currentRegion.addParentCriteria(root);
                     currentRegion.addJoinCriteriaList((List)root.getProperty(NodeConstants.Info.JOIN_CRITERIA));
                 }
+                currentRegion.addRemovedJoinGroups(root);
                 
                 for (Iterator i = root.getChildren().iterator(); i.hasNext();) {
                     PlanNode child = (PlanNode)i.next();

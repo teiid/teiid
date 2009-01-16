@@ -91,6 +91,7 @@ public final class NodeConstants {
         NON_EQUI_JOIN_CRITERIA,      // List <CompareCriteria>
         SORT_LEFT,  // Boolean
         SORT_RIGHT,     // Boolean
+        REMOVED_JOIN_GROUPS, //Set<GroupSymbol>
         
         IS_OPTIONAL,          // Boolean
 

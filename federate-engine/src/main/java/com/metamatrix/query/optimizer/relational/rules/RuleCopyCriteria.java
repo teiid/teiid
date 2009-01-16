@@ -45,12 +45,14 @@ import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
@@ -62,7 +64,7 @@ import com.metamatrix.query.util.LogConstants;
  * 
  * Equality relationships look like element symbol = expression regardless of whether they are from select or join criteria
  * 
- * Upon sucessfully changing a multi group join criteria into another expression with fewer groups, the original criteria
+ * Upon successfully changing a multi group join criteria into another expression with fewer groups, the original criteria
  * will be replace with the new criteria in the on clause.
  *  
  * RulePushNonJoinCriteia and CopyCriteria will be run again after this rule if any new join criteria is created.
@@ -225,7 +227,12 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 
                 srcToTgt = buildElementMap(allCriteria);
                             
-                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits);
+                Set<GroupSymbol> joinGroups = (Set<GroupSymbol>) node.getProperty(Info.REMOVED_JOIN_GROUPS);
+                if (joinGroups == null) {
+                	joinGroups = new HashSet<GroupSymbol>();
+                	node.setProperty(Info.REMOVED_JOIN_GROUPS, joinGroups);
+                }
+                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, joinGroups);
                 
                 joinCrits.addAll(newJoinCrits);
             }
@@ -288,7 +295,8 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                    List joinCrits,
                                                    Set combinedCriteria,
                                                    Map srcToTgt,
-                                                   List newJoinCrits) {
+                                                   List newJoinCrits,
+                                                   Set<GroupSymbol> joinGroups) {
         if (srcToTgt.size() == 0) {
             return changedTree;
         }
@@ -298,6 +306,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             
             if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, true)) {
                 i.remove();
+                joinGroups.addAll(GroupsUsedByElementsVisitor.getGroups(crit));
                 changedTree = true;
             }
         }

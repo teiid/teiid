@@ -42,6 +42,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.resolver.util.AccessPattern;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -82,8 +83,10 @@ class JoinRegion {
     
     private List unsatisfiedAccessPatterns = new LinkedList();
     
-    private Map dependentCriteriaElements = null;
-    private Map critieriaToSourceMap = null;
+    private Map dependentCriteriaElements;
+    private Map critieriaToSourceMap;
+    
+    private Set<GroupSymbol> removedJoinGroups;
     
     public PlanNode getJoinRoot() {
         return joinRoot;
@@ -135,7 +138,7 @@ class JoinRegion {
         }
     }
 
-    public PlanNode addParentCriteria(PlanNode sourceNode) {
+    public void addParentCriteria(PlanNode sourceNode) {
         PlanNode parent = sourceNode.getParent();
         while (parent != null && parent.getType() == NodeConstants.Types.SELECT) {
             criteriaNodes.add(parent);
@@ -145,7 +148,6 @@ class JoinRegion {
         if (joinRoot == null) {
             joinRoot = sourceNode;
         }
-        return parent;
     }
                     
     public void addJoinCriteriaList(List joinCriteria) {
@@ -156,6 +158,17 @@ class JoinRegion {
             Criteria crit = (Criteria)i.next();
             criteriaNodes.add(GenerateCanonical.createSelectNode(crit, false));
         }
+    }
+    
+    public void addRemovedJoinGroups(PlanNode joinNode) {
+    	Set<GroupSymbol> groups = (Set<GroupSymbol>) joinNode.getProperty(Info.REMOVED_JOIN_GROUPS);
+    	if (groups == null) {
+    		return;
+    	}
+    	if (this.removedJoinGroups == null) {
+    		this.removedJoinGroups = new HashSet<GroupSymbol>();
+    	}
+    	this.removedJoinGroups.addAll(groups);
     }
     
     /**
@@ -503,5 +516,9 @@ class JoinRegion {
             this.joinSourceNodes.put(entry.getKey(), entry.getValue());
         }
     }
+
+	public Set<GroupSymbol> getRemovedJoinGroups() {
+		return removedJoinGroups;
+	}
     
 }
