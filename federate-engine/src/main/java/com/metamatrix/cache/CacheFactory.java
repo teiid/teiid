@@ -33,4 +33,9 @@ public interface CacheFactory {
 	 * @return
 	 */
 	Cache get(Cache.Type type, CacheConfiguration config);
+
+	/**
+	 * Destroy the cache factory and any caches underneath.
+	 */
+	void destroy();
 }
