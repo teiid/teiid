@@ -36,7 +36,9 @@ public class FakeCache<K, V> implements Cache<K, V> {
 		public Cache get(Type type, CacheConfiguration config) {
 			return new FakeCache();
 		}
-    	
+		
+		public void destroy() {
+		}
     }
     
 	Map<K, V> map = new HashMap();
