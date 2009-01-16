@@ -27,7 +27,6 @@ package com.metamatrix.dqp;
 
 import com.google.inject.Injector;
 import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 
