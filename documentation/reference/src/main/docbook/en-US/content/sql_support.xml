@@ -359,7 +359,7 @@
   </sect1>
   <sect1 id="sql_commands">
     <title>SQL Commands</title>
-    <para>There are 4 basic commands for manipulating data in SQL, corresponding to the CRUD create, read, update, and delete operations: INSERT, SELECT, UPDATE, and DELETE. In addition, procedures can be executed using the EXECUTE command.</para>
+    <para>There are 4 basic commands for manipulating data in SQL, corresponding to the CRUD create, read, update, and delete operations: INSERT, SELECT, UPDATE, and DELETE. In addition, procedures can be executed using the EXECUTE command or through a <link linkend="procedural_relational">procedural relational command</link>.</para>
     <sect2 id="select_command">
       <title>SELECT Command</title>
       <para>The SELECT command is used to retrieve records any number of relations.</para> 
@@ -497,11 +497,11 @@
           </para>
         </listitem>
         <listitem>
-          <para>EXECUTE proc(param, ...)
+          <para>EXECUTE proc(value, ...)
           </para>
         </listitem>
         <listitem>
-          <para>EXECUTE proc(name1=param1,name4=param4,name7=param7) - named parameter syntax
+          <para>EXECUTE proc(name1=value1,name4=param4, ...) - named parameter syntax
           </para>
         </listitem>
       </itemizedlist>
@@ -514,6 +514,67 @@
           from the named parameter call and will have the appropriate value
           passed at runtime.</para>
       </note>
+    </sect2>
+    <sect2 id="procedural_relational">
+	  <title>Procedural Relational Command</title>
+      <para> Procedural relational commands use the syntax of a SELECT to
+		emulate an EXEC. In a procedural relational command a procedure group
+		names is used in a FROM clause in place of a table. That procedure
+		will be executed in place of a normal table access if all of the
+		necessary input values can be found in criteria against the procedure.  
+		Each combination of input values found in the criteria results in an execution of the procedure.
+	  </para>
+	  <para>
+	    <itemizedlist>
+          <para>Example Syntax</para>
+          <listitem>
+            <para>select * from proc
+            </para>
+          </listitem>
+          <listitem>
+            <para>select output_param1, output_param2 from proc where input_param1 = 'x'
+            </para>
+          </listitem>
+          <listitem>
+            <para>select output_param1, output_param2 from proc, table where input_param1 = table.col1 and input_param2 = table.col2
+            </para>
+          </listitem>
+        </itemizedlist>
+	    <itemizedlist>
+          <para>Syntax Rules:</para>
+          <listitem>
+	        <para>The procedure as a table projects all of the
+		      IN,OUT,RETURN,IN_OUT parameters, as well as the result set columns.
+		      IN_OUT columns will be projected as two columns, one that represents
+		      the output value and one named {column name}_IN that represents the
+		      input of the parameter.</para>
+          </listitem>
+          <listitem>
+            <para>Input values are passed via criteria. Values can be passed by '=','is null', or 'in' predicates.
+            </para>
+          </listitem>
+          <listitem>
+            <para>The procedure virtual group automatically has an access pattern on its IN and IN_OUT parameters which
+            allows it to be planned correctly as a dependent join when necessary or fail when sufficient criteria cannot be found.
+            </para>
+          </listitem>
+          <listitem>
+            <para>Procedures containing duplicate names between the parameters (IN, IN_OUT, OUT, RETURN) and columns in its result set
+            cannot be used in a procedural relational command.
+            </para>
+          </listitem>
+          <listitem>
+            <para>Default values for IN, IN_OUT parameters are not used if there is no criteria present for a given input.  Default values are
+            only valid for <link linkend="exec_command">named procedure syntax</link>.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <note>
+		<title>Multiple Execution</title>
+		  <para>The usage of 'in' or join criteria can result in
+				the procedure being executed multiple times.</para>
+	  </note>
     </sect2>
   </sect1>
   <sect1 id="temp_tables">
