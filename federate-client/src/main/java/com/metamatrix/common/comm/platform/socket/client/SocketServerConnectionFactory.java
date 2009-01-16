@@ -71,6 +71,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	public static final int DEFAULT_SOCKET_INPUT_BUFFER_SIZE = 102400;
 	public static final int DEFAULT_SOCKET_OUTPUT_BUFFER_SIZE = 102400;
 	
+	private static final String URL = "URL"; //$NON-NLS-1$
+	
 	private static SocketServerConnectionFactory INSTANCE;
 	
     private SocketLog log; 
@@ -147,12 +149,17 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		MMURL url = new MMURL(connectionProperties.getProperty(MMURL.CONNECTION.SERVER_URL));
 		
 		String discoveryStrategyName = connectionProperties.getProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, AdminApiServerDiscovery.class.getName());
-		
+
 		ServerDiscovery discovery;
-		try {
-			discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, Thread.currentThread().getContextClassLoader());
-		} catch (MetaMatrixCoreException e) {
-			throw new ConnectionException(e);
+
+		if (URL.equalsIgnoreCase(discoveryStrategyName)) {
+			discovery = new UrlServerDiscovery();
+		} else {
+			try {
+				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, Thread.currentThread().getContextClassLoader());
+			} catch (MetaMatrixCoreException e) {
+				throw new ConnectionException(e);
+			}
 		}
 		
 		discovery.init(url, connectionProperties);
