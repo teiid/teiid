@@ -24,6 +24,7 @@
 
 package com.metamatrix.platform.vm.api.controller;
 
+import java.net.InetAddress;
 import java.util.Date;
 
 import com.metamatrix.admin.api.exception.AdminException;
@@ -60,7 +61,7 @@ public interface VMControllerInterface {
 	void stopVM();
 
 	/**
-	 * Kill all services now, do not wait for work to complete, do not collect $200
+	 * Kill all services now, do not wait for work to complete
 	 */
 	void stopVMNow();
 
@@ -106,9 +107,9 @@ public interface VMControllerInterface {
     Date getStartTime();
 
 	/**
-	 * Get the name of the host this VM is running on.
+	 * Get the address of the host this VM is running on.
 	 */
-    String getHostname();
+    InetAddress getAddress();
 
 	/**
 	 * Get the ID for this controller.

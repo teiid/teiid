@@ -24,6 +24,7 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -211,6 +212,11 @@ public class RuntimeStateAdminAPIHelper {
     }   
     
 
+    public InetAddress getVMHostName(VMControllerID vmID) throws MetaMatrixComponentException  {
+		VMRegistryBinding vm = registry.getVM(vmID.getHostName(), vmID.toString());
+		return vm.getVMController().getAddress();    	
+    }
+    
     /**
      * Return Collection of QueueStats for service.
      * 

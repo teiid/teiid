@@ -24,9 +24,7 @@
 
 package com.metamatrix.common.comm.platform.socket.server;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +36,6 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
-import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SSLAwareChannelHandler;
@@ -56,10 +53,8 @@ import com.metamatrix.platform.vm.controller.SocketListenerStats;
  * Server-side class to listen for new connection requests and create a SocketClientConnection for each connection request.
  */
 public class SocketListener implements ChannelListenerFactory {
-    private HostInfo hostInfo;
     private ClientServiceRegistry server;
     private WorkerPool workerPool;
-    private String bindAddress;
     private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
     private boolean isClientEncryptionEnabled;
@@ -67,7 +62,6 @@ public class SocketListener implements ChannelListenerFactory {
     /**
      * 
      * @param port
-     * @param hostaddress
      * @param bindaddress
      * @param server
      * @param inputBufferSize
@@ -75,25 +69,19 @@ public class SocketListener implements ChannelListenerFactory {
      * @param workerPool
      * @param engine null if SSL is disabled
      */
-    public SocketListener(int port, String hostaddress, String bindaddress,
+    public SocketListener(int port, String bindAddress,
 			ClientServiceRegistry server, int inputBufferSize,
 			int outputBufferSize, WorkerPool workerPool, SSLEngine engine, boolean isClientEncryptionEnabled) {
     	this.isClientEncryptionEnabled = isClientEncryptionEnabled;
-    	InetAddress inetAddress = null;
-        try {
-            inetAddress = InetAddress.getByName(hostaddress);
-        } catch (UnknownHostException err) {
+
+    	if (port < 0 || port > 0xFFFF) {
+            throw new IllegalArgumentException("port out of range:" + port); //$NON-NLS-1$
         }
-        this.hostInfo = new HostInfo(hostaddress,port, inetAddress);
-        if (bindaddress == null) {
-        	this.bindAddress = this.hostInfo.getHostName();
-        } else {
-        	this.bindAddress = bindaddress;
-        }
-        this.server = server;
+
+       	this.server = server;
         this.workerPool = workerPool;
         if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
-            LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + hostInfo.getPortNumber()); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(0,
@@ -111,7 +99,7 @@ public class SocketListener implements ChannelListenerFactory {
         bootstrap.setOption("sendBufferSize", new Integer(outputBufferSize)); //$NON-NLS-1$
         bootstrap.setOption("keepAlive", Boolean.TRUE); //$NON-NLS-1$
         
-        this.serverChanel = bootstrap.bind(new InetSocketAddress(this.bindAddress, hostInfo.getPortNumber()));
+        this.serverChanel = bootstrap.bind(new InetSocketAddress(bindAddress, port));
     }
     
     public int getPort() {

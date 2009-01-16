@@ -26,6 +26,7 @@ package com.metamatrix.common.comm.platform.socket.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -226,15 +227,11 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 
 	static void updateConnectionProperties(Properties connectionProperties) {
 		try {
-			connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, NetUtils.getHostAddress());
+			InetAddress addr = NetUtils.getInstance().getInetAddress();
+			connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, addr.getHostAddress());
+			connectionProperties.put(MMURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
         } catch (UnknownHostException err1) {
         	connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
-        }
-        
-        try {
-        	connectionProperties.put(MMURL.CONNECTION.CLIENT_HOSTNAME, NetUtils.getHostname());
-        } catch (UnknownHostException err1) {
-        	connectionProperties.put(MMURL.CONNECTION.CLIENT_HOSTNAME, "UnknownClientHost"); //$NON-NLS-1$
         }
 	}
 

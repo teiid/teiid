@@ -51,7 +51,6 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
@@ -85,7 +84,7 @@ public class HostController implements HostManagement {
         this.host = host;
         this.registry = registry;
         this.monitor = hostMonitor;
-        this.messageBus = bus;
+        this.messageBus = bus;        
     }
     
     public void run(boolean startProcesses) throws ConfigurationException, IOException, StartupStateException {
@@ -148,10 +147,6 @@ public class HostController implements HostManagement {
     }
     
     private void startLogging() throws ConfigurationException, IOException {
-
-        VMNaming.setLogicalHostName(host.getFullName());
-        VMNaming.setHostAddress(host.getHostAddress());
-        VMNaming.setBindAddress(host.getBindAddress());
         
         // setup the log file
         String hostFileName = StringUtil.replaceAll(host.getFullName(), ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -241,7 +236,7 @@ public class HostController implements HostManagement {
      * else hostController reads in hostPort from CurrentConfiguration.
      */
     public static void main(String args[]) {
-        String hostname = null;
+        String configName = null;
         boolean startProcesses = true;
         boolean shutdown = false;
         
@@ -254,7 +249,7 @@ public class HostController implements HostManagement {
                     printUsage();
                     System.exit(-1);
                 } else {
-                    hostname = args[i];
+                    configName = args[i];
                 }
                 
             } else if (command.equalsIgnoreCase("-noprocesses")) { //$NON-NLS-1$
@@ -277,23 +272,26 @@ public class HostController implements HostManagement {
             // if the hostname was not passed, then add the hostname
             // to the logmsg to let the user know which hostname
             // is being used, for informational purposes
-            if (hostname == null) {
-                hostname = NetUtils.getHostname();
-                logMsg += "resolved host " + hostname;  //$NON-NLS-1$
+            if (configName == null) {
+                configName = VMNaming.getDefaultConfigName();
+                logMsg += "resolved config " + configName;  //$NON-NLS-1$
             } 
             
             LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,logMsg);
            
             Host host = null;
             try {
-    			host = CurrentConfiguration.findHost(hostname);        
+    			host = CurrentConfiguration.findHost(configName);        
     		} catch (ConfigurationException e) {
     		}
 
             if (host == null) {
-            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, hostname)); //$NON-NLS-1$
+            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, configName)); //$NON-NLS-1$
                 System.exit(-1);
-            }            
+            }        
+
+            // VMNaming used in multiple places to get the host-address
+            VMNaming.setup(host.getFullName(), host.getHostAddress(), host.getBindAddress());
             
             HostController hostController = loadHostcontroller(host);
             if (!shutdown) {
@@ -324,7 +322,8 @@ public class HostController implements HostManagement {
 
    private String buildVMCommand(Properties vmprops) {
 	   String java = vmprops.getProperty(HostType.JAVA_EXEC, "java"); //$NON-NLS-1$
-	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, System.getProperty(VMComponentDefnType.JAVA_OPTS)); 
+	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
+	   java_opts = java_opts + " " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
 	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
 	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS, ""); //$NON-NLS-1$
 	   

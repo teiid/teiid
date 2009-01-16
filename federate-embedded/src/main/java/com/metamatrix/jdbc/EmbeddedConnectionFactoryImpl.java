@@ -166,6 +166,9 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
                     
             // then close the dqp handler it self, which root for the factory.
             this.handler.shutdown();
+            
+            // shutdown the cache.
+            ResourceFinder.getCacheFactory().destroy();
         }
     }
      

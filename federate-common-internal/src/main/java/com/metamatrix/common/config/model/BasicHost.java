@@ -94,12 +94,7 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
     * @since 4.3
     */
    public String getBindAddress() {
-       String address = getProperty(HostType.HOST_BIND_ADDRESS);
-       if (address == null || address.length() == 0) {
-           return getFullName();
-       }
-       return address;
-       
+       return getProperty(HostType.HOST_BIND_ADDRESS);
    }
    
    /**
@@ -109,12 +104,6 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
     * @since 4.3
     */
    public String getHostAddress() {
-       String address = getProperty(HostType.HOST_PHYSICAL_ADDRESS);
-       if (address == null || address.length() == 0) {
-           return getFullName();
-       }
-       return address;
-       
-       
+       return getProperty(HostType.HOST_PHYSICAL_ADDRESS);
    }
 }

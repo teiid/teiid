@@ -754,6 +754,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		               }
 		               
 		               process.setDeployed(false);  
+	            	   process.setInetAddress(getRuntimeStateAdminAPIHelper().getVMHostName(processID));
 		               String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 		               runtimeMap.put(key, process);
 		               results.add(process);
@@ -798,11 +799,13 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		           if( portString != null ) {
 		               process.setPort(Integer.parseInt(portString));
 		           }
-		           try {
-						process.setInetAddress(InetAddress.getByName(h.getHostAddress()));
-				   } catch (UnknownHostException e) {
-						throw new AdminComponentException(e);
-				   }
+		           if (process.getInetAddress() == null) {
+			           try {
+							process.setInetAddress(InetAddress.getByName(h.getHostAddress()));
+					   } catch (UnknownHostException e) {
+							throw new AdminComponentException(e);
+					   }
+		           }
 		           results.add(process);
 		       }
 		   }

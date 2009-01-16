@@ -65,7 +65,7 @@ public class TestCommSockets extends TestCase {
 		ClientServiceRegistry csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
 		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
-		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
+		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
 						"testIO", 1, 120000), null, true); //$NON-NLS-1$
 
@@ -124,7 +124,7 @@ public class TestCommSockets extends TestCase {
 				return new LogonResult();
 			}
 		}, "foo"); //$NON-NLS-1$
-		listener = new SocketListener(addr.getPort(), addr.getHostName(), null,
+		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
 						"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled); //$NON-NLS-1$
 

@@ -40,10 +40,12 @@ import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 @Singleton
 public class JBossCacheFactory implements CacheFactory {
 	private org.jboss.cache.Cache cacheStore;
+	private volatile boolean destroyed = false;
 	
 	@Inject
 	public JBossCacheFactory(org.jboss.cache.Cache cacheStore) {
@@ -54,14 +56,17 @@ public class JBossCacheFactory implements CacheFactory {
 	 * {@inheritDoc}
 	 */
 	public Cache get(Type type, CacheConfiguration config) {
-		Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Federate")); //$NON-NLS-1$
-		Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
-		
-		
-		Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
-		cacheRegion.setEvictionPolicy(buildEvictionPolicy(config));
-		
-		return new JBossCache(this.cacheStore, node.getFqn());
+		if (!destroyed) {
+			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Federate")); //$NON-NLS-1$
+			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
+			
+			
+			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
+			cacheRegion.setEvictionPolicy(buildEvictionPolicy(config));
+			
+			return new JBossCache(this.cacheStore, node.getFqn());
+		}
+		throw new MetaMatrixRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
 
 	private EvictionPolicyConfig buildEvictionPolicy(CacheConfiguration config) {
@@ -91,4 +96,9 @@ public class JBossCacheFactory implements CacheFactory {
 		}
 		return evictionConfig;
 	}    
+	
+	public void destroy() {
+		this.cacheStore.destroy();
+		this.destroyed = true;
+	}	
 }

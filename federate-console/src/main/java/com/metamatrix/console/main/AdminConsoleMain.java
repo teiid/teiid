@@ -327,13 +327,8 @@ public final class AdminConsoleMain {
 		String outputStr;
     	int index = str.indexOf(VM_STRING);
     	if (index >= 0) {
-    		String theVM = VMNaming.getVMName();
-    		if ((theVM == null) || (theVM.length() == 0) ||
-    				theVM.equalsIgnoreCase("null")) { //$NON-NLS-1$
-    			theVM = VMNaming.getVMIDString();
-    		}
-    		outputStr = str.substring(0, index) + theVM +
-    				str.substring(index + VM_STRING_LEN);
+    		String theVM = "MMProcess"; //$NON-NLS-1$
+    		outputStr = str.substring(0, index) + theVM + str.substring(index + VM_STRING_LEN);
     	} else {
     		outputStr = str;
     	}

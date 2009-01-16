@@ -131,7 +131,6 @@ public class SocketVMController extends VMController {
         long timeToLive = PropertiesUtils.getLongProperty(props, TIMETOLIVE, DEFAULT_TIMETOLIVE);
         int inputBufferSize = PropertiesUtils.getIntProperty(props, INPUT_BUFFER_SIZE, DEFAULT_INPUT_BUFFER_SIZE);
         int outputBufferSize = PropertiesUtils.getIntProperty(props, OUTPUT_BUFFER_SIZE, DEFAULT_OUTPUT_BUFFER_SIZE);
-        String hostaddress = VMNaming.getHostAddress();
         String bindaddress =  VMNaming.getBindAddress();
         
         final Object[] param = new Object[] {
@@ -143,7 +142,7 @@ public class SocketVMController extends VMController {
         ServerSocketConfiguration helper = new ServerSocketConfiguration();
         try {
 	        helper.init();
-	        listener = new SocketListener(socketPort, hostaddress, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled());
+	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled());
         } catch (Exception e) {
         	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 

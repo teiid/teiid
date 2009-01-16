@@ -32,12 +32,14 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.DbLogListener;
 import com.metamatrix.common.log.DbWriterException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
@@ -82,10 +84,11 @@ public class Main {
 		    System.exit(-1);
 		}
 		
+        VMComponentDefn deployedVM = CurrentConfiguration.getConfiguration().getVMForHost(hostName, vmName);
+        String bindAddress = deployedVM.getBindAddress();
+		
 		VMNaming.setVMName(vmName);
-        VMNaming.setLogicalHostName(host.getFullName());
-        VMNaming.setBindAddress(host.getBindAddress());
-        VMNaming.setHostAddress(host.getHostAddress());
+		VMNaming.setup(host.getFullName(), host.getHostAddress(), bindAddress);
 		
         // write info log
         writeInfoLog(host, vmName);
@@ -132,6 +135,9 @@ public class Main {
             configListener.shutdown();
             
             this.messageBus.shutdown();
+
+            // shutdown cache
+            ResourceFinder.getCacheFactory().destroy();
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

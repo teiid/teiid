@@ -53,6 +53,7 @@ import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.util.StringUtil;
 
 /**
  * <p>
@@ -79,7 +80,8 @@ import com.metamatrix.common.util.VMNaming;
  */
 public final class CurrentConfiguration {
 
-    private static CurrentConfigurationReader READER = null;
+    private static final String DOT_STR = "."; //$NON-NLS-1$
+	private static CurrentConfigurationReader READER = null;
     private static boolean REQUIRES_CLOSE = false;
     private static Properties BOOTSTRAP_PROPERTIES=null;
     
@@ -655,8 +657,9 @@ public final class CurrentConfiguration {
             if (h != null) {
                 return h;
             }
+            
             // get short name
-            String shortName =NetUtils.getHostShortName(inetAddress.getCanonicalHostName());
+            String shortName = StringUtil.getFirstToken(inetAddress.getCanonicalHostName(),DOT_STR);
             h = getHost(shortName);
             if (h != null) {
                 return h;
@@ -681,17 +684,16 @@ public final class CurrentConfiguration {
             // then try to match to the Host short name
             
             Iterator hi = hosts.iterator(); 
-            
             while (hi.hasNext()) {
                 h = (Host) hi.next();
-                String shortname = NetUtils.getHostShortName(h.getFullName());
+                String shortname = StringUtil.getFirstToken(h.getFullName(), DOT_STR);
                 if (shortname.equalsIgnoreCase(hostName)) {
                     return h;
                 }
     
             }     
             
-            String shortName =NetUtils.getHostShortName();
+            String shortName = StringUtil.getFirstToken(NetUtils.getInstance().getInetAddress().getCanonicalHostName(), DOT_STR); 
             h = getHost(shortName);
             if (h != null) {
                 return h;
@@ -705,10 +707,10 @@ public final class CurrentConfiguration {
          
         while (hostIter.hasNext()) {
             h = (Host) hostIter.next();
-            
-            if (h.getHostAddress().equalsIgnoreCase(hostName)) {
+             
+            if (h.getHostAddress() != null && h.getHostAddress().equalsIgnoreCase(hostName)) {
                 return h;
-            } else if (h.getBindAddress().equalsIgnoreCase(hostName)) {
+            } else if (h.getBindAddress() != null && h.getBindAddress().equalsIgnoreCase(hostName)) {
                 return h;
             }
 
@@ -735,7 +737,7 @@ public final class CurrentConfiguration {
         // use the logicalHostName firstt, because this would be set if this
         // is called within a running VM (i.e., hostcontroller, vmcontroller)
         // otherwise use localhost
-        Host host = findHost(VMNaming.getLogicalHostName());
+        Host host = findHost(VMNaming.getConfigName());
         if (host == null) {
             host = findHost("localhost");//$NON-NLS-1$
         }

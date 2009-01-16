@@ -285,7 +285,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return String Host name
      */
     public final String getHostname() {
-        return VMNaming.getLogicalHostName();
+        return VMNaming.getConfigName();
     }
 
     /**

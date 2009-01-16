@@ -33,7 +33,7 @@ import com.metamatrix.common.util.VMNaming;
 
 public class AuditMessage implements Externalizable {
     public static final String VM_NAME = VMNaming.getVMName();
-    public static final String HOST_NAME = VMNaming.getLogicalHostName();
+    public static final String HOST_NAME = VMNaming.getConfigName();
 
     private static final String RESOURCE_DELIMITER = ", "; //$NON-NLS-1$
 

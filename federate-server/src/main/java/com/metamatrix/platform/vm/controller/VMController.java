@@ -26,6 +26,7 @@ package com.metamatrix.platform.vm.controller;
 
 import java.io.File;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -309,17 +310,12 @@ public abstract class VMController implements VMControllerInterface {
 
         if (deployedVM != null) {
         	this.vmComponentDefn = deployedVM;
-        	
-            String bindAddress = deployedVM.getBindAddress();
-            if (bindAddress != null && bindAddress.length() > 0) {
-                VMNaming.setBindAddress(bindAddress);
-            }
-            
+        	            
            vmProps = config.getDefaultPropertyValues(deployedVM.getComponentTypeID());
            Properties props = config.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
            vmProps.putAll(props);
            
-           // this sytem property setting will override the setting in the VM
+           // this system property setting will override the setting in the VM
            // this is done because the command line argument
            force_shutdown_time = PropertiesUtils.getIntProperty(System.getProperties(), STOP_DELAY_TIME, DEFAULT_FORCE_SHUTDOWN_TIME);
            if (DEFAULT_FORCE_SHUTDOWN_TIME == force_shutdown_time) {
@@ -1113,8 +1109,8 @@ public abstract class VMController implements VMControllerInterface {
     }
 
 
-	public String getHostname() {
-		return this.host.getFullName();
+	public InetAddress getAddress() {
+		return VMNaming.getHostAddress();
 	}
 
 

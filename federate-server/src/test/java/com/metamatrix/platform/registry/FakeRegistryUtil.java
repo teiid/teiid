@@ -24,10 +24,12 @@
 
 package com.metamatrix.platform.registry;
 
+import java.net.InetAddress;
 import java.util.Date;
 
 import org.jboss.cache.Cache;
 import org.jboss.cache.notifications.annotation.CacheListener;
+import org.mockito.Mockito;
 
 import com.metamatrix.admin.server.FakeCacheAdmin;
 import com.metamatrix.admin.server.FakeConfiguration;
@@ -113,7 +115,10 @@ public class FakeRegistryUtil {
 	    HostID hostID1 = new HostID(hostName); 
 	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, process);  
 	    VMComponentDefn defn1 = new BasicVMComponentDefn(Configuration.NEXT_STARTUP_ID, hostID1, defnID1, new ComponentTypeID(VMComponentDefnType.COMPONENT_TYPE_NAME)); 
-	    VMControllerInterface vmInterface1 = SimpleMock.createSimpleMock(VMControllerInterface.class);
+	    VMControllerInterface vmInterface1 = Mockito.mock(VMControllerInterface.class);
+		Mockito.stub(vmInterface1.getAddress()).toReturn(InetAddress.getLocalHost());
+
+	    
 	    VMRegistryBinding binding = new VMRegistryBinding(hostName, vmID1, defn1, vmInterface1, new NoOpMessageBus());
 	    binding.setAlive(true);
 	    return binding;

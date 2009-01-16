@@ -24,7 +24,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.net.InetAddress;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -44,7 +43,6 @@ public class TestMMDriver extends TestCase {
     }
     
     protected void setUp() throws Exception {
-        localhost =  InetAddress.getLocalHost().getHostName();
     }
 
     /** Valid format of urls*/
@@ -133,8 +131,8 @@ public class TestMMDriver extends TestCase {
 
         assertEquals(6, info.length);
         assertEquals(true, info[0].required);
-        assertEquals("VirtualDatabaseName", info[0].name);
-        assertEquals("vdb", info[0].value);
+        assertEquals("VirtualDatabaseName", info[0].name); //$NON-NLS-1$
+        assertEquals("vdb", info[0].value); //$NON-NLS-1$
     }
     
 }

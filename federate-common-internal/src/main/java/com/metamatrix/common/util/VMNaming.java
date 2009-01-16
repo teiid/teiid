@@ -24,30 +24,28 @@
 
 package com.metamatrix.common.util;
 
-import java.util.Random;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-import com.metamatrix.core.util.HashCodeUtil;
 
 public final class VMNaming {
+	private static final String HOSTNAME = "HOSTNAME"; //$NON-NLS-1$
 
-    private static int VM_ID = 0;
-    private static int MAX_VM_ID = 9999;
-    
     /* 
-     * LOGICAL_HOSTNAME refers to the hostname used to look up the host in the configuration
+     * CONFIG_NAME refers to the name used to look up the host in the configuration
      */
-    private static String LOGICAL_HOSTNAME = "";//$NON-NLS-1$
+    private static String CONFIG_NAME = "";//$NON-NLS-1$
 
     /*
-     * HOST_ADDRESS refers to the physical host address used when opening the socket
-     * This may or maynot be the same as the #LOGICAL_HOSTNAME
+     * HOST_ADDRESS refers to to the host-name/ip, that is given to clients to connect where
+     * the server is. So, in case of Firewall, this may be firewall name, but the bind_address 
+     * would be the physical address of the server
      */
-    private static String HOST_ADDRESS = "";//$NON-NLS-1$
+    private static InetAddress HOST_ADDRESS = null;
     
     /*
      * BIND_ADDRESS refers to the address used by listeners.  This would include
      * the socket listeners and JGroups.
-     * This may or maynot be the same as the #LOGICAL_HOSTNAME
      */
     private static String BIND_ADDRESS = "";//$NON-NLS-1$
     
@@ -56,29 +54,7 @@ public final class VMNaming {
      */
     private static String VMNAME = "";//$NON-NLS-1$
 
-   static {
-        String hostName = ""; //$NON-NLS-1$
-        try {
-            hostName = NetUtils.getHostname();
-            
-            LOGICAL_HOSTNAME = hostName;
-            BIND_ADDRESS = hostName;
-            HOST_ADDRESS = hostName;
-        } catch ( Exception e ) {
-        }
-        
-        // Compute a "pseudo-unique" VM ID
-        int seed = 10;
-        seed = HashCodeUtil.hashCode(seed,Runtime.getRuntime().hashCode());
-        seed = HashCodeUtil.hashCode(seed,hostName);
-        seed = HashCodeUtil.hashCode(seed,System.currentTimeMillis());
-
-        Random randomGenerator = new Random(seed);
-        VM_ID = randomGenerator.nextInt(MAX_VM_ID);
-    }
-
-        
-
+    
     public static String getVMName() {
         return VMNAME;
     }
@@ -87,42 +63,43 @@ public final class VMNaming {
     	VMNAME = vmname;
     }
     
-    public static String getLogicalHostName() {
-        return LOGICAL_HOSTNAME;
+    public static String getConfigName() {
+        return CONFIG_NAME;
     }
     
-    
-    public static String getHostAddress() {
+    public static InetAddress getHostAddress() {
         return HOST_ADDRESS;
     }
     
     public static String getBindAddress() {
         return BIND_ADDRESS;
     }     
+   
+    public static void setup(String configName, String hostName, String bindAddress) throws UnknownHostException {
+    	CONFIG_NAME = configName;
+    	
+    	boolean bindAddressDefined = (bindAddress != null && bindAddress.length() > 0);
+    	boolean hostNameDefined = (hostName != null && hostName.length() > 0);
 
-    public static int getVMID() {
-        return VM_ID;
+    	    	
+    	if (bindAddressDefined && hostNameDefined) {
+    		BIND_ADDRESS = bindAddress;
+    		HOST_ADDRESS = NetUtils.resolveHostByName(hostName);
+    	}
+    	else if (bindAddressDefined && !hostNameDefined) {
+    		BIND_ADDRESS = bindAddress;
+    		HOST_ADDRESS = InetAddress.getByAddress(BIND_ADDRESS.getBytes());
+    	}
+    	else if (!bindAddressDefined && hostNameDefined) {
+    		HOST_ADDRESS = NetUtils.resolveHostByName(hostName);
+    		BIND_ADDRESS = HOST_ADDRESS.getCanonicalHostName();
+    	}
+    	else {
+    		InetAddress addr = NetUtils.getInstance().getInetAddress();
+    		BIND_ADDRESS = addr.getHostAddress();
+    		HOST_ADDRESS = addr;
+    	}
     }
-
-    public static String getVMIDString() {
-        return String.valueOf(VM_ID);
-    }
-    
-    public static void setLogicalHostName(String hostName) {
-        LOGICAL_HOSTNAME = hostName;
-    }    
-    
-    public static void setHostAddress(String hostAddress) {
-        if (hostAddress != null) {
-            NetUtils.setHostName(hostAddress);
-        
-            HOST_ADDRESS = hostAddress;
-        }
-    }
-    
-    public static void setBindAddress(String bindaddress) {
-        BIND_ADDRESS = bindaddress;
-    }     
     
     /**
      * Return the stringified representation of this application information object.
@@ -133,12 +110,24 @@ public final class VMNaming {
         sb.append('\n');
         sb.append(" VM Name:               " + VMNAME ); //$NON-NLS-1$
         sb.append('\n');
-        sb.append(" Hostname:              " + HOST_ADDRESS ); //$NON-NLS-1$
+        sb.append(" Hostname:              " + HOST_ADDRESS.getCanonicalHostName() ); //$NON-NLS-1$
         sb.append('\n');
-        sb.append(" Version:               ").append(ApplicationInfo.getInstance().getReleaseNumber());
+        sb.append(" Version:               ").append(ApplicationInfo.getInstance().getReleaseNumber()); //$NON-NLS-1$
         sb.append('\n');
-        sb.append(" Build Date:            ").append(ApplicationInfo.getInstance().getBuildDate());
+        sb.append(" Build Date:            ").append(ApplicationInfo.getInstance().getBuildDate()); //$NON-NLS-1$
         return sb.toString();
     }
-
+    
+	public static String getDefaultConfigName() {
+		String nvalue;
+		nvalue = System.getenv(HOSTNAME); 
+		if (nvalue == null) {
+			try {
+				nvalue = InetAddress.getLocalHost().getHostName();
+			} catch (UnknownHostException e) {
+				nvalue = "federate-system"; //$NON-NLS-1$
+			}
+		}
+		return nvalue;
+	}
 }

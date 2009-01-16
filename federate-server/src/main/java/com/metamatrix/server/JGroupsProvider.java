@@ -34,7 +34,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
-import com.metamatrix.common.util.NetUtils;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.StringUtil;
@@ -153,7 +154,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
                 if (UDP_MCAST_ADDR == null || UDP_MCAST_ADDR.length() == 0) {
                     // use the last node of the local machine address as the last node
                     // of the DEFAULT address.
-                    String lastNode = StringUtil.getLastToken(NetUtils.getHostAddress(), ".");//$NON-NLS-1$
+                    String lastNode = StringUtil.getLastToken(VMNaming.getBindAddress(), ".");//$NON-NLS-1$
                     
                     UDP_MCAST_ADDR = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
                 }
@@ -198,7 +199,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
         }
             
         if (bindAddress == null) {
-            System.out.println("WARNING: Unable to set " + JGroupsProvider.BIND_ADDRESS_PROPERTY + ", will set to 127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logWarning(LogCommonConstants.CTX_MESSAGE_BUS,"WARNING: Unable to set " + JGroupsProvider.BIND_ADDRESS_PROPERTY + ", will set to 127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
             bindAddress = "127.0.0.1";//$NON-NLS-1$
         }
         

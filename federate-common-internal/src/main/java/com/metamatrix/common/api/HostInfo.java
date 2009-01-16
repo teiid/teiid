@@ -27,6 +27,7 @@ package com.metamatrix.common.api;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -65,7 +66,8 @@ public class HostInfo {
         }
         if( host.equalsIgnoreCase("localhost")) { //$NON-NLS-1$
             try {
-				this.hostName = InetAddress.getLocalHost().getHostName();
+            	InetAddress addr = NetUtils.getInstance().getInetAddress();
+				this.hostName = addr.getCanonicalHostName();
 			} catch (UnknownHostException e) {
 				this.hostName = host.toLowerCase();
 			}

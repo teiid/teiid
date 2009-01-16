@@ -118,7 +118,7 @@ public class TestCurrentConfiguration extends BaseTest {
 
         try {
             System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
-            VMNaming.setLogicalHostName("DummyHost"); //$NON-NLS-1$
+            VMNaming.setup("DummyHost", null, null); //$NON-NLS-1$
 
             init(CONFIG_FILE);
                                                                 
@@ -150,7 +150,7 @@ public class TestCurrentConfiguration extends BaseTest {
 
             Host host = CurrentConfiguration.findHost("slwxp141.quadrian.com"); //$NON-NLS-1$
             
-            if (host == null) { //$NON-NLS-1$
+            if (host == null) { 
                 fail(" host was not found in configuration");//$NON-NLS-1$
             }
                             
@@ -174,7 +174,7 @@ public class TestCurrentConfiguration extends BaseTest {
 
             Host host = CurrentConfiguration.findHost("slwxp141"); //$NON-NLS-1$
             
-            if (host == null) { //$NON-NLS-1$
+            if (host == null) { 
                 fail(" host was not found in configuration");//$NON-NLS-1$
             }
                             
@@ -198,7 +198,7 @@ public class TestCurrentConfiguration extends BaseTest {
 
             Host host = CurrentConfiguration.findHost("dummyhost.quadrian.com"); //$NON-NLS-1$
             
-            if (host == null) { //$NON-NLS-1$
+            if (host == null) { 
                 fail("host was not found in configuration");//$NON-NLS-1$
             }
                             
@@ -222,7 +222,7 @@ public class TestCurrentConfiguration extends BaseTest {
 
             Host host = CurrentConfiguration.findHost("192.168.10.166"); //$NON-NLS-1$
             
-            if (host == null) { //$NON-NLS-1$
+            if (host == null) { 
                 fail("host was not found in configuration");//$NON-NLS-1$
             }
                             
@@ -234,14 +234,13 @@ public class TestCurrentConfiguration extends BaseTest {
         
             printMsg("Completed testFindHostByBindingAddress"); //$NON-NLS-1$        
     }       
-    
     public void testCurrentVM() {
         
         printMsg("Starting testCurrentVM");       //$NON-NLS-1$
 
         try {
             System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
-            VMNaming.setLogicalHostName("DummyHost"); //$NON-NLS-1$
+            VMNaming.setup("DummyHost",null,null); //$NON-NLS-1$
 
             init(CONFIG_FILE);
                                                                 

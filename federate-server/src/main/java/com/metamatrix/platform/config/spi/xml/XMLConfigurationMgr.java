@@ -98,7 +98,7 @@ public class XMLConfigurationMgr {
     
     private XMLConfigurationMgr(MessageBus bus)  {
     	this.messageBus = bus;
-    	this.hostName = VMNaming.getLogicalHostName();
+    	this.hostName = VMNaming.getConfigName();
     	
     	try {
 			messageBus.addListener(ConfigurationChangeEvent.class, createChangeListener());
@@ -127,7 +127,7 @@ public class XMLConfigurationMgr {
 
        
         // if already initialized before, don't reinit everything
-		if (this.props != null) {
+		if (this.connection != null && !connection.isClosed()) {
 			return;
 		}
         

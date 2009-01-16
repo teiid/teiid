@@ -55,6 +55,7 @@ import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
 import com.metamatrix.common.pooling.api.ResourceStatistics;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.NetUtils;
+import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
@@ -1377,7 +1378,7 @@ public class ServiceManager {
     public static void main(String[] args) throws Exception {
 
         String command = ""; //$NON-NLS-1$ 
-        String hostName = null; 
+        String configName = null; 
 		boolean exit = false;
 
         for (int i = 0; i < args.length; i++) {
@@ -1386,7 +1387,7 @@ public class ServiceManager {
                 	printNoviceUsage();
                     System.exit(-1);
                 } else {
-                    hostName = args[i];
+                    configName = args[i];
                 }
             } 
             else {
@@ -1396,14 +1397,17 @@ public class ServiceManager {
         }
 
         Host host = null;
-        if (hostName == null) {
-        	hostName = NetUtils.getHostname();
-        	host = CurrentConfiguration.findHost(hostName);
+        if (configName == null) {
+            configName = VMNaming.getDefaultConfigName();
+        	host = CurrentConfiguration.findHost(configName);
         	if (host == null) {
         		System.out.println("Failed to find the host name in the configuration; please use -config option to set the hostname"); //$NON-NLS-1$
         		System.exit(-1);
         	}
         }
+        
+        VMNaming.setup(host.getFullName(), host.getHostAddress(), host.getBindAddress());
+        
 
         try {
 			ServiceManager manager = loadServiceManager(host);

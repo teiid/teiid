@@ -26,9 +26,11 @@ package com.metamatrix.platform.security.audit.destination;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
-import com.metamatrix.common.log.I18nLogManager;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.PlatformPlugin;
@@ -121,7 +123,7 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
             StringBuffer tempFileName = new StringBuffer(fileName);
             String vmName = VMNaming.getVMName();
             if ( vmName == null || vmName.trim().length() == 0 ) {
-                vmName = VMNaming.getVMIDString();
+                vmName = VMNaming.getConfigName();
             }
             tempFileName.replace(index,index+VM_NAME_TOKEN.length(),vmName);
             fileName = tempFileName.toString();
@@ -157,8 +159,7 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
     	    fileWriter.write(StringUtil.getLineSeparator());
     	    fileWriter.flush();
     	} catch(IOException e) {
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0024, e,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0024, e.getMessage()));
+            LogManager.logError(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0024, e.getMessage()));
     	    System.out.println(this.getFormat().formatMessage(message));
     	}
 	}

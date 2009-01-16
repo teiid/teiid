@@ -38,7 +38,6 @@ import org.jboss.cache.DefaultCacheFactory;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.ConnectionPool;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
@@ -52,7 +51,6 @@ import com.metamatrix.admin.objects.MMResource;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
