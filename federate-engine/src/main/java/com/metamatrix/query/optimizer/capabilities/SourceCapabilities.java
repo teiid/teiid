@@ -52,6 +52,12 @@ public interface SourceCapabilities {
          */
         QUERY_FROM_JOIN,
         /**
+         * Indicates that the source prefers ANSI style joins
+         * 
+         * @since 6.0.0
+         */
+        QUERY_FROM_ANSI_JOIN,
+        /**
          * Support indicates connector can accept self-joins where a group is joined to itself with aliases
          * 
          * @since 3.1 SP2

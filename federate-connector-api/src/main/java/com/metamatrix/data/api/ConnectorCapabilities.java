@@ -481,4 +481,10 @@ public interface ConnectorCapabilities {
      */
     int getMaxFromGroups();
     
+    /**
+     * Whether the source prefers to use ANSI style joins.
+     * @since 6.0
+     */
+    boolean useAnsiJoin();
+    
 }

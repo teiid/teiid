@@ -447,4 +447,9 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     public boolean supportsSetQueryOrderBy() {
         return false;
     }    
+    
+    @Override
+    public boolean useAnsiJoin() {
+    	return false;
+    }
 }

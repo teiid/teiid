@@ -36,6 +36,8 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
@@ -156,7 +158,11 @@ public final class RuleCollapseSource implements OptimizerRule {
 		if (query.getCriteria() instanceof CompoundCriteria) {
             query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria()));
         }
-		simplifyFromClause(query);
+		String modelName = metadata.getFullName(RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata));
+        SourceCapabilities caps = capFinder.findCapabilities(modelName);
+        if (!caps.supportsCapability(Capability.QUERY_FROM_ANSI_JOIN)) {
+        	simplifyFromClause(query);
+        }
 		return query;
 	}		
 
