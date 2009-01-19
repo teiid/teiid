@@ -2,11 +2,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>org.jboss.federate.documentation</groupId>
-    <artifactId>federate-docs</artifactId>
+    <artifactId>documentation</artifactId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>federate-server-extensions-guide</artifactId>
+  <artifactId>server-extensions-guide</artifactId>
   <packaging>jdocbook</packaging>
   <name>Federate Server Extensions</name>
   <description>The Federate Server Extensions manual</description>

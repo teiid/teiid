@@ -7,7 +7,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.federate.documentation</groupId>
-  <artifactId>federate-docs</artifactId>
+  <artifactId>documentation</artifactId>
   <packaging>pom</packaging>
   <name>Federate Documents</name>
   <description>Federate Documentation</description>
