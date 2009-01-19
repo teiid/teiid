@@ -48,7 +48,7 @@ public class TestCurrentConfiguration extends BaseTest {
     public TestCurrentConfiguration(String name) {
         super(name);
         
-        printMessages = true;
+        printMessages = false;
         
         System.setProperty("metamatrix.encryption.jce.provider","none"); //$NON-NLS-1$ //$NON-NLS-2$$
         
