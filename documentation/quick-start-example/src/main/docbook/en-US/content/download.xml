@@ -35,7 +35,9 @@
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
        If you have access to these JDBC drivers, we recommend their use.
     </para>
+    <!-- 
     <para>Free open source software JDBC drivers for MySQL, Postgres,and Derby are included in the "lib" folder as the LGPL
       license permits them to be included with the Federate Embedded kit.</para>
+    -->
   </note>
 </chapter>
