@@ -2,8 +2,8 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="deployment">
   <title>Deployment</title>
-  <para> Now that you have built the VDB, you are ready to deploy the VDB. Essentially once you deploy you can
-    connect to VDB using JDBC connection. Note that there are two steps involved in this deployment</para>
+  <para> Having built the VDB, it must be deployed so it can be access through a JDBC connection.
+  Note there are two steps involved in this deployment:</para>
   <orderedlist>
     <listitem>
       <para>Deploying Federate Embedded</para>
@@ -12,11 +12,11 @@
       <para>Deploying VDB</para>
     </listitem>
   </orderedlist>
-  <para> Federate Embedded can be deployed in a couple different scenarios.</para>
+  <para> Federate Embedded is typically used in one of two manners:</para>
   <itemizedlist>
     <listitem>
       <para>
-        In a
+        As a
         <link linkend="stand-alone-deployment">Stand-alone</link>
         Java application
       </para>
@@ -26,8 +26,8 @@
     </listitem>
   </itemizedlist>
   <para />
-  <para>For this example purposes the stand-alone deployment explained below. However you can find more
-    details about deploying to application servers on the Federate web-site</para>
+  <para>This example deploys Federate Embedded as a stand-alone Java application. The sample deployment is shown below.
+  You can find more details about deploying to application servers on the Federate web-site</para>
   <para />
   <sect1 id="stand-alone-deployment">
     <title>Stand-alone Application Deployment</title>
@@ -40,17 +40,17 @@
         <para>Add "federate-${version}-embedded.jar" to your application classpath</para>
       </listitem>
       <listitem>
-        <para>Add all the dependent jar files in the "lib" directory ito your application's classpath. If your
-          application is already using the any of dependent jars defined in "lib" directory you can safely ignore
-          adding that jar file to the classpath. Make sure the that the versions match</para>
+        <para>Add all the dependent jar files in the "lib" directory to your application's classpath. If your
+          application is already using the any of the "lib" directory's dependent jars, you can safely ignore
+          adding that jar to the classpath. Make sure the versions match.</para>
       </listitem>
       <listitem>
-        <para>Place VDB in a folder and add this folder and add this folder to your applications classpath
+        <para>Place the VDB in a folder and add this folder to your application's classpath.
         </para>
       </listitem>
       <listitem>
         <para>
-          Now check out next section on how to
+          Now, go to the next section to learn how to
           <link linkend="OpenConnection">connect to the VDB</link>
         </para>
       </listitem>

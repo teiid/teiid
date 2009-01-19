@@ -5,7 +5,7 @@
   <sect1>
     <title>Portfolio Application Explained</title>
     <para>
-      o demonstrate how Federate Modeler and Federate Embedded work together, follow these steps to build a simple
+      To demonstrate how Federate Designer and Federate Embedded work together, follow these steps to build a simple
       portfolio valuation virtual database. The investor's portfolio information is stored in a Derby database and
       "current" stock prices are stored in a delimited text file. When completed, a single query will cause
       Federate Embedded to access the relational and non-relational sources, calculate the portfolio values, and
@@ -66,16 +66,16 @@
   <sect1 id="step-1">
     <title>Step-1: Create the Relational Database's schema and load the sample data</title>
     <para>
-      In this example written using
+      This example is written using
       <ulink url="http://db.apache.org/derby/">"Derby"</ulink>
       as the relational database.
       <ulink url="http://db.apache.org/derby/derby_downloads.html">Download</ulink>
-      and install Derby on your machine, or if you have access to installed instance use that instance. It is
+      and install Derby on your machine, or if you have access to an installed instance use that. It is
       expected that you create a database called "accounts" in this Derby instance that is used by this example
       application.
     </para>
     <para>
-      Below find the corresponding schema. For complete schema, please refer to
+      Below find the corresponding schema. For the complete schema, please refer to
       <emphasis>"examples/portfolio/customer-schema.sql"</emphasis>
       file of the downloaded kit.
     </para>
@@ -123,17 +123,18 @@
           );                  
     ]]>
     </programlisting>
-    <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. The
-      directions below are given for Linux environment, for starting the Derby instance, however find the similar
-      commands if you are working with Windows environment. Start a terminal session, and change directory to where
+    <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. These
+      commands are intended for a Linux environment. For starting the Derby instance on another platform, you will need to use 
+      commands appropariate to that platform.</para>
+      <para>Start a terminal session, and change directory to where
       Derby is installed and execute following commands</para>
     <programlisting><![CDATA[
       export DERBY_HOME=`pwd`
       ./bin/startNetworkServer
     ]]>        
     </programlisting>
-    <para>The above starts the Derby in network mode. Now, start another terminal and we will start 'ij' tool of
-      the Derby (like SQL*PLus for Oracle) to create the schema, and use the "customer-schema.sql" file in
+    <para>The above starts the Derby in network mode. Now, start another terminal and we will use Derby''s 'ij' tool 
+    (like SQL*PLus for Oracle) to create the schema, using the "customer-schema.sql" file in
       "examples/portfolio" directory</para>
     <programlisting><![CDATA[
       export DERBY_HOME=`pwd`
@@ -141,31 +142,32 @@
       ]]>        
     </programlisting>
     <para>
-      Make sure that you did not have any issues in creating the schema needed for going forward in this example.
-      You can use 'ij' tool to make sure the tables got created. or if you like use any tools like
+      Make sure you did not have any issues when creating the schema as it is needed for going forward in this example.
+      You can use 'ij' tool to verify the tables were created. As an alternative, you may use other tools like
       <ulink url="http://www.squirrelsql.org/">SQuirreL</ulink>
       , or
       <ulink url="http://www.eclipse.org/datatools/">Eclipse's Data Tools</ulink>
-      plugin to connect to Derby instance and check the schema and sample data.
+      plugin to connect to the Derby instance to check the schema and sample data.
     </para>
   </sect1>
   <sect1 id="step-2">
     <title>Step-2: Describe the CSV file and its contents</title>
-    <para>In order to use a Text file as the source, we need to define two different types of files. A descriptor
-      file and one or more data files. Conceptually, a Descriptor file defines schema, and each data file defines
+    <para>In order to use a Text file as the source, we need to define two different types of files: A descriptor
+      file and one or more data files. Conceptually, a Descriptor file defines a schema, and each data file defines
       data inside a table</para>
     <orderedlist>
       <listitem>
-        <para>Text Descriptor File - The Text Descriptor file contains information that describes the structure
-          of the text file you want to use as a data source, path to the file name and delimiter information etc.
-          Below shown a sample format of the file</para>
+        <para>Text Descriptor File - The Text Descriptor file defines the structure
+          of the text file you want to use as a data source. The path to the data file, delimiter character used,and the number
+          of header lines are attributes of the Descriptor file.
+          A sample descriptor file is shown below.</para>
         <programlisting><![CDATA[
             MarketData.Price.location = /path/to/marketdata-price.txt
             MarketData.Price.delimiter = ,
             MarketData.Price.headerLine = 1
          ]]>        
         </programlisting>
-        <para>The below table shows some of the available properties that can be used in a Descriptor file. For
+        <para>The table shown below details some of the available properties that can be used in a Descriptor file. For
           full details look in Text File Connector documentation</para>
         <table frame="all">
           <title>Connection Properties</title>
@@ -204,7 +206,7 @@
                   <para>headerLine</para>
                 </entry>
                 <entry>
-                  <para>The line number in on which the names of the columns are defined</para>
+                  <para>The line number in which the names of the columns are defined</para>
                 </entry>
               </row>
               <row>
@@ -212,25 +214,23 @@
                   <para>skipHeaderLines</para>
                 </entry>
                 <entry>
-                  <para>The number of top lines to skip in a text file.(include one for the header)</para>
+                  <para>The number of top lines to skip in a text file (include one for the header).</para>
                 </entry>
               </row>
             </tbody>
           </tgroup>
         </table>
-        <para>note that each property line starts with "schema" information and followed by logical "table"
-          name and then the "property". In the above sample file "MarketData" is "schema" information, "Price" is
-          table name. This information defines text files as a sudo relational source to the Federate Embedded
-          engine. The above defined content is for a 'single' table, however you can repeat those lines in defining
-          multiple tables in the same Descriptor file but each "location" property for a given "table" needs to
-          point to different data file.</para>
+        <para>Note that each property line starts with the "schema" information and followed by the logical "table"
+          name and then the "property" itself. In the above sample file "MarketData" is the schema and "Price" is
+          the table. The sample Descriptor file is for a 'single' table. You can define multiple tables in the 
+          same Descriptor file, but each "location" property for a given "table" must point to different data file.</para>
       </listitem>
       <listitem>
-        <para>Data File: This is the file that is identified by "location" property in the Descriptor file.
-          Each data file contains column information for the table and all the associated data for that table. The
+        <para>Data File: This is the file that is identified by the "location" property in the Descriptor file.
+          Each data file contains column information for the table. The
           column information is typically defined on line 1 as header line in the file, and all the following lines
-          contain the actual rows of data. Each single line corresponds to single row. The sample file is shown
-          below. A complete sample file is in the "examples/portfolio/marketdata-price.txt" file</para>
+          contain the actual rows of data. Each single line corresponds to single row. A portion of the sample file
+          is shown below. The complete sample file is "examples/portfolio/marketdata-price.txt".</para>
         <programlisting><![CDATA[
            SYMBOL,PRICE
            IBM,83.46
@@ -242,7 +242,7 @@
       </listitem>
     </orderedlist>
     <para>Just locate the sample data files provided or create your own data files. Make sure that the
-      descriptor file contains correct URL or the full path to the data file. Now, both our sources are ready to be
+      descriptor file contains the full path to the data file. Now, both our sources are ready to be
       used to build a VDB</para>
   </sect1>
 </chapter>

@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="designer">
-  <title>Using Designer to build a VDB</title>
+  <title>Using Federate Designer to build a VDB</title>
   <sect1>
-    <title>Download Designer</title>
+    <title>Download Federate Designer</title>
     <para>
-      Federate Tools project provides a Eclipse based designer tool for this purpose of building a VDB. You can
-      download Designer
-      <ulink url="/projects/federate/Tools.html">here</ulink>
-      Also, follow instructions for the tool as to how to install on your machine. Once done installing, start the
-      Designer.
+      The Federate Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
+      download Federate Designer
+      <ulink url="/projects/federatedesigner.html">here</ulink>
+      Once downloaded, please follow the installation instructions. Start the Federate Designer and return here to continue
+      building the VDB.
     </para>
   </sect1>
   <sect1 id="step-3">
     <title>Building a VDB</title>
-    <para>Once you start the Designer, there are various steps you will need to do to create a VDB. The below
-      is a list of steps that need to be accomplished using the Designer tool. See the video at the end of the
-      list, that will takes you though the all the steps involved.</para>
+    <para>Once you start the Designer, there are several steps you must perform to create a VDB. These steps are 
+    summarized in the following table. There is a video at the end of the
+      list that will take you though all the steps involved.</para>
     <orderedlist>
       <listitem>
-        <para>Switch to Designer Prespective, by opening the "Window->Open Prespective.."</para>
+        <para>Switch to the Designer Perspective, by opening the "Window->Open Prespective.."</para>
       </listitem>
       <listitem>
-        <para>Create new "Model Project", using "File->New->ModelProject</para>
+        <para>Create new "Model Project", using "File->New->ModelProject"</para>
       </listitem>
       <listitem>
         <para>Import the Derby database's "account" schema into a source model.</para>

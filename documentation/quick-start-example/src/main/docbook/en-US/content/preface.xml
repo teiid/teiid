@@ -2,15 +2,15 @@
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <preface>
   <title>Preface</title>
-  <para> Federate Embedded offers the power of the a federated relational query engine for use with any Java
+  <para> Federate Embedded offers the power of a federated relational query engine for use with any Java
     application - without the need for a separate server process. Accessing your federated data is as easy as
-    making JDBC connection to any relational data source. This guide will take you through</para>
+    making a JDBC connection to any relational data source. This guide will take you through</para>
   <itemizedlist>
     <listitem>
       <para>Deployment of Federate Embedded in your environment</para>
     </listitem>
     <listitem>
-      <para>Building and deploying Virtual Database(VDB)</para>
+      <para>Building and deploying a Virtual Database(VDB)</para>
     </listitem>
     <listitem>
       <para>Connecting to your VDB and issuing federated queries against your VDB and getting results
@@ -21,7 +21,7 @@
     Federate is a Professional Open Source project and a critical component of the JBoss Enterprise Data Services
     Platform.</para>
   <sect1>
-    <title>What this about?</title>
+    <title>What is This Guide About?</title>
     <para>This guide takes you through an introduction to the concepts important to Federate Embedded, 
     downloading the software,  and building and deploying a demonstration virtual database in 60 minutes.
     There is a lot to cover, so let's begin!</para>
@@ -31,8 +31,8 @@
       Please read 
       <ulink url="/project/federate/Federation-Basics">Federation Basics</ulink>
       and understand different terminologies used, resources needed and artifacts that need to be generated before
-      developing a successful application. In this example, we provide very minimal feature set that is supported
-      by Federate for the sake of simplicity and time.
+      developing a successful application. This example takes advantage of only a minimal set of features from
+      Federate Embedded for the sake of simplicity and time.
     </para>
   </note>
 </preface>

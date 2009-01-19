@@ -4,7 +4,7 @@
   <title>Download</title>
   <para>
     You need to download the binaries for
-    <ulink url="http://jboss.org/federate/download">Federate Embedded</ulink>
+    <ulink url="/projects/federate/Download.html">Federate Embedded</ulink>
     . Note that there are three different artifacts are available for download.
   </para>
   <orderedlist>
@@ -25,18 +25,17 @@
     and extract this tar/zip file to a directory you can access.
   </para>
   <para>In the expanded directory, you will find "federate-${version}-embedded.jar", which is the main binary jar
-    file for Federate Embedded, and the "lib" and "extension" directories contain supporting 3rd party binaries
+    file for Federate Embedded, and the "lib" and "extension" directories containing supporting 3rd party binaries
     required to execute Federate Embedded. Later sections describe installing these artifacts.</para>
   <note>
     <para>
       Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Federate relies upon
-      the user supplying their own JDBC drivers in the deployment. Open source JDBC drivers for MySQL, Postgres,
-      and Derby are included in the "lib" folder as the LGPL license permits them. Additionally, Federate Embedded
+      the user supplying their own JDBC drivers in the deployment. Federate Embedded
       has been tested extensively with
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
-       If you have access to these JDBC drivers, we recommend using these drivers.
+       If you have access to these JDBC drivers, we recommend their use.
     </para>
-    <para>JDBC drivers for MySQL, Postgres,and Derby were already included in the "lib" folder as the LGPL
+    <para>Free open source software JDBC drivers for MySQL, Postgres,and Derby are included in the "lib" folder as the LGPL
       license permits them to be included with the Federate Embedded kit.</para>
   </note>
 </chapter>
