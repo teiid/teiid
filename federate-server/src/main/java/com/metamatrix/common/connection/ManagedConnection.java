@@ -26,9 +26,7 @@ package com.metamatrix.common.connection;
 
 import java.util.Properties;
 
-import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.properties.UnmodifiableProperties;
-import com.metamatrix.common.util.ErrorMessageKeys;
 
 public abstract class ManagedConnection {
     /**
@@ -68,7 +66,6 @@ public abstract class ManagedConnection {
     private String userName;
     private Properties environment;
     private boolean isOpen = false;
-    private Transaction currentTransaction = null;
     private ConnectionStatistics stats;
 
     private static final String NOT_ASSIGNED = "NoUserNameAssigned"; //$NON-NLS-1$
@@ -233,24 +230,6 @@ public abstract class ManagedConnection {
      * @throws ManagedConnectionException if an error occurred within or during communication with this connection.
      */
     protected abstract void performRollback() throws ManagedConnectionException;
-
-    public Transaction getTransaction() {
-        return this.currentTransaction;
-    }
-
-    public final void setTransaction( Transaction t ) {
-        if ( t == null ) {
-	        throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONNECTION_ERR_0005));
-        }
-        this.currentTransaction = t;
-    }
-
-    public final void disconnectionFromTransaction( Transaction t ) {
-        if ( this.currentTransaction != t ) {
-	        throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONNECTION_ERR_0006));
-        }
-        this.currentTransaction = null;
-    }
 
     public final ConnectionStatistics getStats() {
         return this.stats;

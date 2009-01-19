@@ -1521,7 +1521,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
  //       List statementArgs = new ArrayList();
  //       statementArgs.add(principalName);
        try{
-           long permUID = DBIDGenerator.getID(JDBCNames.AuthPermissions.TABLE_NAME);
+           long permUID = DBIDGenerator.getInstance().getID(JDBCNames.AuthPermissions.TABLE_NAME);
 
            statement = jdbcConnection.prepareStatement(sql);
 
@@ -1950,7 +1950,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
       String nameValue = policy.getAuthorizationPolicyID().getName();
 
      try{
-         long policyUID = DBIDGenerator.getID(JDBCNames.AuthPolicies.TABLE_NAME);
+         long policyUID = DBIDGenerator.getInstance().getID(JDBCNames.AuthPolicies.TABLE_NAME);
          String description = policy.getDescription();
          if( description == null){
              description = DEFALT_POLICY_DESCRIPTION;
@@ -2083,7 +2083,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
       PreparedStatement statement = null;
       String sql = null;
        try{
-          realmUID = new Long(DBIDGenerator.getID(JDBCNames.AuthRealms.TABLE_NAME));
+          realmUID = new Long(DBIDGenerator.getInstance().getID(JDBCNames.AuthRealms.TABLE_NAME));
 
           sql = JDBCNames.INSERT_AUTH_REALM;
           statement = jdbcConnection.prepareStatement(sql);
@@ -2305,7 +2305,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
                 }
 
-                  long permUID = DBIDGenerator.getID(JDBCNames.AuthPermissions.TABLE_NAME);
+                  long permUID = DBIDGenerator.getInstance().getID(JDBCNames.AuthPermissions.TABLE_NAME);
 
 
                 prepStatement.setLong(1, policyUID.longValue());

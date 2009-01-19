@@ -22,31 +22,40 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.connection;
+package com.metamatrix.common.id.dbid.spi.jdbc;
 
 import java.util.Properties;
 
-public interface ManagedConnectionFactory {
+import com.metamatrix.common.connection.ManagedConnection;
+import com.metamatrix.common.connection.ManagedConnectionException;
+import com.metamatrix.common.connection.TransactionFactory;
+import com.metamatrix.common.connection.TransactionInterface;
+import com.metamatrix.common.connection.jdbc.JDBCMgdResourceConnection;
+
+public class DBIDResourceTransactionFactory implements TransactionFactory {
 
     /**
      * Create a new instance of a managed connection.
      * @param env the environment properties for the new connection.
+     * @param userName is the name of the one creating the connection
      * @throws ManagedConnectionException if there is an error creating the connection.
      */
-    ManagedConnection createConnection(Properties env) throws ManagedConnectionException;
-
+    public ManagedConnection createConnection(Properties env, String userName) throws ManagedConnectionException {
+        return new JDBCMgdResourceConnection(env, userName);
+    }
+    
     /**
      * Create a new instance of a transaction for a managed connection.
-     * @param connectionPool the pool to which the transaction should return the connection when completed
      * @param connection the connection that should be used and that was created using this
      * factory's <code>createConnection</code> method (thus the transaction subclass may cast to the
      * type created by the <code>createConnection</code> method.
      * @param readonly true if the transaction is to be readonly, or false otherwise
      * @throws ManagedConnectionException if there is an error creating the transaction.
      */
-    TransactionInterface createTransaction( ManagedConnectionPool connectionPool, ManagedConnection connection, boolean readonly )
-            throws ManagedConnectionException;
+    public TransactionInterface createTransaction(ManagedConnection connection, boolean readonly )
+            throws ManagedConnectionException {
+        return new DBIDResourceTransaction(connection, readonly);                
+                
+    }
+
 }
-
-
-

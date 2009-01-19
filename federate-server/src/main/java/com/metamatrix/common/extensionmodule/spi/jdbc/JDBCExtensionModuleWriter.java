@@ -153,7 +153,7 @@ public class JDBCExtensionModuleWriter {
                 sql = JDBCExtensionModuleTranslator.ADD_SOURCE_FILE_DATA;
             }
             
-            long longUID = DBIDGenerator.getID(JDBCNames.ExtensionFilesTable.TABLE_NAME);
+            long longUID = DBIDGenerator.getInstance().getID(JDBCNames.ExtensionFilesTable.TABLE_NAME);
             
             orignalAutocommit=jdbcConnection.getAutoCommit();
             jdbcConnection.setAutoCommit(false);

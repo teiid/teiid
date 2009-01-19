@@ -54,7 +54,7 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
         
-        DBIDGenerator.setUseMemoryIDGeneration(true);
+        DBIDGenerator.getInstance().setUseMemoryIDGeneration(true);
         
         
         FakeQueryService.clearState();

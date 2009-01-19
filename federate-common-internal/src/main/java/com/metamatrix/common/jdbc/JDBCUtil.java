@@ -36,7 +36,6 @@ import javax.sql.DataSource;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;

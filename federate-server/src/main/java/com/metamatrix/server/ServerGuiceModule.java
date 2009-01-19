@@ -40,6 +40,7 @@ import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.VMMessageBus;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.VMMonitor;
 import com.metamatrix.platform.service.proxy.ProxyManager;
@@ -63,9 +64,9 @@ class ServerGuiceModule extends AbstractModule {
 
 		long vmID = 1;
 		try {
-			vmID = DBIDGenerator.getID(DBIDGenerator.VM_ID);
+			vmID = DBIDGenerator.getInstance().getID(DBIDGenerator.VM_ID);
 		} catch (DBIDGeneratorException e1) {
-			e1.printStackTrace();
+			throw new MetaMatrixRuntimeException(e1);
 		}
 		
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());
@@ -76,7 +77,7 @@ class ServerGuiceModule extends AbstractModule {
 		try {
 			Names.bindProperties(binder(), CurrentConfiguration.getProperties());
 		} catch (ConfigurationException e) {
-			e.printStackTrace();
+			throw new MetaMatrixRuntimeException(e);
 		}
 		
 		bind(VMControllerID.class).toInstance(new VMControllerID(vmID, host.getFullName()));

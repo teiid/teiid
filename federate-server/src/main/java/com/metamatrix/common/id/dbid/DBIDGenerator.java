@@ -24,10 +24,12 @@
 
 package com.metamatrix.common.id.dbid;
 
-import com.metamatrix.common.id.dbid.spi.InMemoryIDController;
-import com.metamatrix.common.id.dbid.spi.PersistentIDController;
-import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.connection.ManagedConnectionException;
+import com.metamatrix.common.id.dbid.spi.InMemoryIDController;
+import com.metamatrix.common.id.dbid.spi.jdbc.PersistentIDController;
+import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class DBIDGenerator {
 
@@ -36,18 +38,10 @@ public class DBIDGenerator {
     public static final String RESOURCE_POOL_MGR_ID = "ResourcePoolMgr"; //$NON-NLS-1$
 
     private static DBIDGenerator generator;
-    private static DBIDController controller;
+    private DBIDController controller;
 
-    private static boolean usePersistenceIDGeneration=true;
-
-    private DBIDGenerator() throws Exception {
-
-            if (usePersistenceIDGeneration) {
-                controller = new PersistentIDController();
-            } else {
-                controller = new InMemoryIDController();
-            }
-
+    private DBIDGenerator() {
+	    setUseMemoryIDGeneration(false);
     }
     /**
      * call to get a unique id for the given context and pass true if
@@ -56,11 +50,10 @@ public class DBIDGenerator {
      * @param enableRollOver is true if the ids can reused
      * @return long is the next id
      */
-    public static long getID(String context, boolean enableRollOver) throws DBIDGeneratorException {
+    public long getID(String context, boolean enableRollOver) throws DBIDGeneratorException {
         try {
-            return getInstance().getUniqueID(context, enableRollOver);
+            return getUniqueID(context, enableRollOver);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new DBIDGeneratorException(e, "Error creating id for " + context + " context."); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
@@ -71,11 +64,10 @@ public class DBIDGenerator {
      * @param context that identifies a unique entity
      * @return long is the next id
      */
-    public static long getID(String context) throws DBIDGeneratorException {
+    public long getID(String context) throws DBIDGeneratorException {
         try {
-            return getInstance().getUniqueID(context, true);
+            return getUniqueID(context, true);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new DBIDGeneratorException(e, ErrorMessageKeys.ID_ERR_0011, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0011, context));
         }
     }
@@ -89,11 +81,10 @@ public class DBIDGenerator {
      * @param cache is the size of the blocks to use
 
      */
-    public static void setCacheBlockSize(String context, long cache) throws DBIDGeneratorException {
+    public void setCacheBlockSize(String context, long cache) throws DBIDGeneratorException {
         try {
-            getInstance().setContextBlockSize(context, cache);
+            setContextBlockSize(context, cache);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new DBIDGeneratorException(e, ErrorMessageKeys.ID_ERR_0012, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0012, context));
         }
     }
@@ -105,50 +96,37 @@ public class DBIDGenerator {
     *  This was made available for the CDK because it needs to load runtime metadata
     *  disconnected from the application server or database.
     */
-    public static void setUseMemoryIDGeneration()  {
-        usePersistenceIDGeneration = false;
-        try {
-            DBIDGenerator.controller = new InMemoryIDController();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void setUseMemoryIDGeneration()  {
+        controller = new InMemoryIDController();
     }
 
     /**
      * Call to switch whether persistent storage of ID's is to be used.
      * @param useInMemory whether or not to use in Memory ID generation
      */
-    public static void setUseMemoryIDGeneration(boolean useInMemory)  {
+    public void setUseMemoryIDGeneration(boolean useInMemory)  {
         if(useInMemory){
-            usePersistenceIDGeneration = false;
-            DBIDGenerator.controller = new InMemoryIDController();
+            controller = new InMemoryIDController();
         }else{
-            usePersistenceIDGeneration = true;
-            if (usePersistenceIDGeneration) {
-                try {
-                    DBIDGenerator.controller = new PersistentIDController();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else {
-                DBIDGenerator.controller = new InMemoryIDController();
-            }
-
+			try {
+				controller = new PersistentIDController();
+			} catch (ManagedConnectionException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
         }
-
     }
 
     /**
     * Call when the DBIDGenerator is no longer needed and the database connections
     * can be closed.
     */
-    public static void shutDown() {
+    public void shutDown() {
         if (controller != null) {
             controller.shutDown();
         }
     }
 
-    private synchronized static DBIDGenerator getInstance() throws Exception {
+    public synchronized static DBIDGenerator getInstance() {
         if (generator == null) {
             generator = new DBIDGenerator();
         }
@@ -161,7 +139,6 @@ public class DBIDGenerator {
     }
     private void setContextBlockSize(String context, long size) {
           controller.setContextBlockSize(context, size);
-
     }
 
 }

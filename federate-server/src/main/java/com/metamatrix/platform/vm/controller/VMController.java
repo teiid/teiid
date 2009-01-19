@@ -219,7 +219,7 @@ public abstract class VMController implements VMControllerInterface {
 
         // Create and registry resource pool manager
         this.resourcePoolMgr = new ResourcePoolMgrImpl();
-        ResourcePoolMgrID rpmID = new ResourcePoolMgrID(DBIDGenerator.getID(DBIDGenerator.RESOURCE_POOL_MGR_ID), id);
+        ResourcePoolMgrID rpmID = new ResourcePoolMgrID(DBIDGenerator.getInstance().getID(DBIDGenerator.RESOURCE_POOL_MGR_ID), id);
         ResourcePoolMgrBinding rpmBinding = new ResourcePoolMgrBinding(rpmID, resourcePoolMgr, this.messageBus);
         this.events.resourcePoolManagerAdded(rpmBinding);
 
@@ -1075,7 +1075,7 @@ public abstract class VMController implements VMControllerInterface {
      */
     private ServiceID createServiceID() {
         try {
-            return new ServiceID(DBIDGenerator.getID(DBIDGenerator.SERVICE_ID), id);
+            return new ServiceID(DBIDGenerator.getInstance().getID(DBIDGenerator.SERVICE_ID), id);
         } catch (DBIDGeneratorException e) {
             throw new ServiceException(e, ErrorMessageKeys.SERVICE_0025, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0025));
         }

@@ -400,15 +400,6 @@ public class JDBCTranslator {
                                         + AND
                                         + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?";
 
-    public static final String UPDATE_SYS_MODEL
-                                    = UPDATE + JDBCNames.VDBModels.TABLE_NAME
-                                        + SET
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?,"
-                                        + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM + "=?,"
-                       //                 + JDBCNames.VDBModels.ColumnName.VISIBILITY + "=?"
-                                        + WHERE
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?";
-
     public static final String UPDATE_MODEL_NAME
                                     = UPDATE + JDBCNames.Models.TABLE_NAME
                                         + SET

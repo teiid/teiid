@@ -253,7 +253,7 @@ public class TransactionLogWriter {
 
     private long getNextSqlID() throws SQLException {
         try {
-            return DBIDGenerator.getID("TX_SQL"); //$NON-NLS-1$
+            return DBIDGenerator.getInstance().getID("TX_SQL"); //$NON-NLS-1$
         } catch (DBIDGeneratorException e) {
             throw new SQLException(ServerPlugin.Util.getString("ERR.003.031.0039")); //$NON-NLS-1$
         }

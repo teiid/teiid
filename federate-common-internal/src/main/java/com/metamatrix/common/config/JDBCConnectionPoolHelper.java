@@ -91,14 +91,6 @@ public final class JDBCConnectionPoolHelper {
 
     }
 
-
-    public static Connection getConnection(String poolName, String userName) throws ResourcePoolException {
-
-
-			return (Connection) ResourceHelper.getResource(poolName, userName);
-
-    }
-
     private static Connection getConnection(ResourceDescriptor descriptor, String userName) throws ResourcePoolException {
 
         try {

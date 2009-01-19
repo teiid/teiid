@@ -22,25 +22,20 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.id.dbid.spi;
+package com.metamatrix.common.id.dbid.spi.jdbc;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
+import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.id.dbid.DBIDController;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.id.dbid.ReservedIDBlock;
-import com.metamatrix.common.id.dbid.spi.jdbc.DBIDResourceTransaction;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.PropertiesUtils;
 
 public class PersistentIDController implements DBIDController {
 
@@ -58,10 +53,7 @@ public class PersistentIDController implements DBIDController {
     
     private final static long VM_ID_BLOCK_SIZE = 1;
     private final static long SERVICE_ID_BLOCK_SIZE = 10;
-    private final static long SESSION_ID_BLOCK_SIZE = 100;
     private final static long RESOURCE_POOL_MGR_ID_SIZE = 1;
-    private final static long TUPLE_SOURCE_ID_SIZE = 20000;
-    
 
     private static final long DEFAULT_ID_BLOCK_SIZE = 100;
 //    private static final String DEFAULT_MAXIMUM_CONCURRENT_USERS = "1";
@@ -70,7 +62,7 @@ public class PersistentIDController implements DBIDController {
 
 	private static final String PRINCIPAL = "DBID_GENERATOR"; //$NON-NLS-1$
 
-    public PersistentIDController() throws Exception {
+    public PersistentIDController() throws ManagedConnectionException {
 
             // get the resource connection properties, if system properties where set
             // prior to this being called they will override.

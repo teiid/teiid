@@ -405,7 +405,7 @@ public class UpdateController {
         // Create the ID for the Virtual Database ...
         long id = 0;
         try{
-            id = DBIDGenerator.getID("VirtualDatabases"); //$NON-NLS-1$
+            id = DBIDGenerator.getInstance().getID("VirtualDatabases"); //$NON-NLS-1$
         }catch(DBIDGeneratorException e){
             throw new VirtualDatabaseException(e, ErrorMessageKeys.GEN_0004, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0004) );
         }
@@ -539,7 +539,7 @@ public class UpdateController {
     private long getNextModelUid() throws VirtualDatabaseException {
         long uid = 0;
         try {
-            uid = DBIDGenerator.getID("model"); //$NON-NLS-1$
+            uid = DBIDGenerator.getInstance().getID("model"); //$NON-NLS-1$
         } catch (DBIDGeneratorException e) {
             throw new VirtualDatabaseException(e, ErrorMessageKeys.GEN_0004, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0004) );
         }
