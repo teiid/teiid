@@ -34,12 +34,6 @@ public final class ProgramUtil {
     private ProgramUtil() {
     }
 
-    // ######## For debug printing of programs ####### 
-
-    public static final void printProgram(Program program) {
-        System.out.println(programToString(program));    
-    }
-      
     public static final String programToString(Program program) {
         
         StringBuffer str = new StringBuffer();   

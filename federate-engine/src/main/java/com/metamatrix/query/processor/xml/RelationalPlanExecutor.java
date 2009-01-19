@@ -201,7 +201,6 @@ class RelationalPlanExecutor implements PlanExecutor {
      * Close the executor and release all the resources.
      */
     public void close() throws MetaMatrixComponentException {
-        //System.out.println("close="+resultSetName);
         removeTupleSource(this.resultInfo.getResultSetName(), this.internalResultID);
     }
     

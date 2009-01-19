@@ -36,6 +36,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
@@ -357,7 +359,6 @@ public abstract class RelationalNode implements Cloneable, Describable{
      * For debugging purposes - all intermediate batches should go through this
      * method so we can easily trace data flow through the plan.
      * @param batch Batch being sent
-     * @return Same batch - merely a pass through with optional debugging
      */
     private void recordBatch(TupleBatch batch) {
         // Print summary
@@ -367,14 +368,13 @@ public abstract class RelationalNode implements Cloneable, Describable{
         str.append(getID());
         str.append(") sending "); //$NON-NLS-1$
         str.append(batch);
-        System.out.println(str.toString());
+        str.append("\n"); //$NON-NLS-1$
 
         // Print batch contents
-        if (batch.getRowCount() > 0) {
-            for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
-                System.out.println("\t" + row + ": " + batch.getTuple(row)); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+        for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
+        	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
+        LogManager.logDetail(LogConstants.CTX_DQP, str.toString());
     }
 
     // =========================================================================

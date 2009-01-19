@@ -169,22 +169,6 @@ public class RelationalNodeStatistics implements Describable {
         this.batchEndTime = 0;
     }
     
-    public void dumpProperties(String className) {
-        StringBuffer stringDump = new StringBuffer();
-        stringDump.append("---------------------------------------------------------------------------------------------------------\n"); //$NON-NLS-1$
-        stringDump.append("<<Node Type: "+className+" Object: "+ this + ">>\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        stringDump.append("<<nodeStartTimestamp: "+this.nodeStartTimestamp); //$NON-NLS-1$
-        stringDump.append(" | nodeEndTimestamp: "+this.nodeEndTimestamp); //$NON-NLS-1$
-        stringDump.append(" | nodeCumulativeProcessingTime (ms): "+this.nodeCumulativeProcessingTime+">>\n"); //$NON-NLS-1$ //$NON-NLS-2$
-        stringDump.append("<<nodeProcessingTime (ms): "+this.nodeProcessingTime); //$NON-NLS-1$
-        stringDump.append(" | nodeCumulativeNextBatchProcessingTime (ms): "+this.nodeCumulativeNextBatchProcessingTime+">>\n"); //$NON-NLS-1$ //$NON-NLS-2$
-        stringDump.append("<<nodeNextBatchCalls: "+this.nodeNextBatchCalls); //$NON-NLS-1$
-        stringDump.append(" | nodeBlocks: "+this.nodeBlocks+">>\n"); //$NON-NLS-1$ //$NON-NLS-2$
-        stringDump.append("<<End Node Stats Dump>>\n"); //$NON-NLS-1$ 
-        stringDump.append("---------------------------------------------------------------------------------------------------------\n"); //$NON-NLS-1$
-        System.out.println(stringDump.toString());
-    }
-    
     /** 
      * @return Returns the nodeBlocks.
      * @since 4.2

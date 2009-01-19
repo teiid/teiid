@@ -43,7 +43,6 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
@@ -514,10 +513,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
             try {
                 processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
             } finally {
-                // If debug log exists, write it to System.out, which should end up in server log
                 String debugLog = analysisRecord.getDebugLog();
                 if(debugLog != null && debugLog.length() > 0) {
-                    System.out.println(debugLog); //TODO: fix me               
+                    LogManager.logInfo(LogConstants.CTX_DQP, debugLog);               
                 }
             }
             

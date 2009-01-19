@@ -32,12 +32,6 @@ public final class ProgramUtil {
     private ProgramUtil() {
     }
 
-    // ######## For debug printing of programs ####### 
-
-    public static final void printProgram(Program program) {
-        System.out.println(programToString(program));    
-    }
-      
     public static final String programToString(Program program) {
         
         StringBuffer str = new StringBuffer();   
@@ -65,47 +59,11 @@ public final class ProgramUtil {
             
             printLine(counter++, tabs, inst.toString(), str);
 
-if(counter > 1000) { 
-    printLine(counter, tabs, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
-    break;
-}
+			if(counter > 1000) { 
+			    printLine(counter, tabs, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
+			    break;
+			}
 
-//            if (inst instanceof WhileInstruction){
-//                subprogram = ((WhileInstruction)inst).getBlockProgram();
-//                counter = programToString(subprogram, counter, tabs + 1, str);
-//
-//            } else if (inst instanceof IfInstruction){
-//                IfInstruction ifInst = (IfInstruction)inst;
-//                
-//                int thenCount = ifInst.getThenCount();
-//
-//                for (int i=0; i<thenCount; i++){
-//
-//                    Object cond = ifInst.getThenCondition(i);
-//
-//                    if (i==0){
-//                        printLine(counter++, tabs, "IF " + cond.toString(), str);
-//                    } else {
-//                        printLine(counter++, tabs, "ELSE IF " + cond.toString(), str);
-//                    }
-//
-//                    if (cond instanceof RecurseProgramCondition){
-//                        printLine(counter++, tabs, "THEN [recursive sub Program]", str);
-//                    } else {
-//                        subprogram = ifInst.getThenProgram(i);
-//    		            printLine(counter++, tabs, "THEN", str);
-//                        
-//    	                counter = programToString(subprogram, counter, tabs + 1, str);
-//                    }
-//                }
-//                subprogram = ifInst.getElseProgram();
-//                if (subprogram != null){
-//                    printLine(counter++, tabs, "ELSE", str);
-//                    counter = programToString(subprogram, counter, tabs + 1, str);
-//                }
-//            }
-
-            
             instructionIndex++;
             inst = program.getInstructionAt(instructionIndex);
         
