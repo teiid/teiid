@@ -100,7 +100,7 @@ public abstract class ProcedureContainer extends Command implements CommandConta
         
         try {
             if (!metadata.isVirtualGroup(this.getGroup().getMetadataID())) {
-                return 1; //physical stored procedures are assumed to not perform an update
+                return 1; //physical stored procedures are assumed to perform an update
             } 
         } catch (QueryMetadataException e) {
             throw new MetaMatrixComponentException(e);

@@ -28,7 +28,7 @@
 INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
         </example>
     </sect2>
-    <sect2>
+    <sect2 id="dynamic_sql">
       <title>Dynamic SQL Command</title>
       <para>Dynamic SQL allows for the execution of an arbitrary SQL command in a virtual procedure. Dynamic SQL is useful in situations where the exact command form is not known prior to execution.
       </para>
@@ -53,7 +53,7 @@ INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
           </para>
         </listitem>
         <listitem>
-          <para>The "UPDATE" clause is used to specify the need for a transaction. Accepted values are (0,1,*). 0 means this is a read-only command, 1 specifies that an update may be performed but will be tied to the success or failure of the dynamic SQL, * specifies that the command may performs 1 or more updates that are not bound to the success or failure of the command and that a transaction is required. 0 is the default value if the clause is not specified.
+          <para>The "UPDATE" clause is used to specify the <link linkend="updating_model_count">updating model count</link>. Accepted values are (0,1,*). 0 is the default value if the clause is not specified.
           </para>
         </listitem>
       </itemizedlist>
