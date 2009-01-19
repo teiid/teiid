@@ -1,20 +1,20 @@
 <chapter id="federate_info">
 	<title>Connecting to Your Enterprise Information System</title>
  
-	<para>The MetaMatrix System (comprised of the MetaMatrix Server and the MetaMatrix metadata management system) offers your organization a way to manage and describe the information across your disparate enterprise information systems. You can even integrate these enterprise information systems into a single, complete data access solution using the MetaMatrix Server.</para>
+	<para>The Federate System offers your organization a way to manage and describe the information across your disparate enterprise information systems. You can even integrate these enterprise information systems into a single, complete data access solution using the Federate Server.</para>
  
 	<sect1 id="about_federate">
-		<title>The MetaMatrix System</title>
-		<para>The entire MetaMatrix System is comprised of several interconnected products and services:</para>
+		<title>The Federate System</title>
+		<para>The entire Federate System is comprised of several interconnected products and services:</para>
 
         <figure id="federate-system">
           <title>Federate System</title>
           <graphic align="center" scale="100" fileref="../images/federate_system.png"/>
         </figure>
         
-		<para>The MetaMatrix System, when used in its totality, enables your end user applications to process queries that select (and even update) data from one or more of your enterprise information sources, regardless of the native physical data storage method used by each enterprise information system.  This means that a single query can access, reference, and return results from multiple integrated data sources.</para>
+		<para>The Federate System, when used in its totality, enables your end user applications to process queries that select (and even update) data from one or more of your enterprise information sources, regardless of the native physical data storage method used by each enterprise information system.  This means that a single query can access, reference, and return results from multiple integrated data sources.</para>
 
-		<para>Within the MetaMatrix System, the MetaMatrix products (including the MetaMatrix Designer, the MetaMatrix Server, and the MetaMatrix Repository), enable you to create and manage metadata models: representations describing the nature and content of your enterprise information systems.</para>
+		<para>Within the Federate System, the Federate products (including the Federate Designer, the Federate Server), enable you to create and manage metadata models: representations describing the nature and content of your enterprise information systems.</para>
 
 		<para>Once captured, this valuable metadata can searched, analyzed, and applied by applications throughout your enterprise.</para>
 

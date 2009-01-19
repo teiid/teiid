@@ -9,7 +9,7 @@
   <para>The following are the currently available extensions</para>
       <orderedlist>
         <listitem>
-          <para><link linkend="custom_security">MetaMatrix Security</link></para>
+          <para><link linkend="custom_security">Federate Security</link></para>
         </listitem>
         <listitem>
           <para><link linkend="command_logging">Command Logging</link></para>

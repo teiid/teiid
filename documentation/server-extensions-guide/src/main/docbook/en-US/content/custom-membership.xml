@@ -5,7 +5,7 @@
   <sect1>
     <title>Creating a Custom Membership Domain</title>
     <para>The creation of a custom membership domain based upon the MembershipDomain interface allows for easy
-      extensibility of the MetaMatrix security system.   The API and associate classes are focused solely on
+      extensibility of the Federate security system.   The API and associate classes are focused solely on
       conveying authentication and group information.  At this time other development concerns, such as access to
       the internal logging facilities, are not documented or generally available to custom membership domain
       implementors.</para>
@@ -209,7 +209,7 @@ public Set getGroupNamesForUser(String username) throws InvalidUserException,
         method.</para>
         <para />
         <para>NOTE: It is important that the return values from all of the MembershipDomain methods are Serializable</para>
-        <para>NOTE:  The preceding example is case sensitive with respect to user names.  The MetaMatrix system does
+        <para>NOTE:  The preceding example is case sensitive with respect to user names.  The Federate system does
           not require logons to be case insensitive.  That is up to the implementation of the member domain.</para>                
     </sect2>
   </sect1>

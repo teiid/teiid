@@ -695,7 +695,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
           <para>The GenerateCanonical class generates the initial (or
             “canonical” plan).  This plan is based on the typical logical order
             that a SQL query gets executed.  A SQL select query has the following
-            possible clauses (all but SELECT are optional in MetaMatrix):  SELECT,
+            possible clauses (all but SELECT are optional in Federate):  SELECT,
             FROM, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT.  These clauses are
             logically executed in the following order:</para>
           <orderedlist>
@@ -872,7 +872,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
 
         <para>This plan tree must have the criteria remain above the join,
           since the outer join may be introducing null values itself.  This will
-          be true regardless of which version of MetaMatrix is used.</para>
+          be true regardless of which version of Federate is used.</para>
         </listitem>
         <listitem>
         <para>RulePushNonJoinCriteria – this rule will push criteria out of
@@ -911,7 +911,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
           within that set.  More than likely it will be sent to the source in
           the non-ANSI multi-join syntax and will be optimized by the
           database).  Third it will use costing information to determine the
-          best left-linear ordering of joins performed in MetaMatrix.  This
+          best left-linear ordering of joins performed in Federate.  This
           third step will do an exhaustive search for 6 or less join sources
           and is heuristically driven by join selectivity for 7 or more
           sources.</para>

@@ -44,7 +44,7 @@
               </entry>
               <entry>
                 <para>Constructor – takes the path to a file which is a valid metadata
-                  archive created by the MetaMatrix Designer.  These files have the suffix “.vdb”.  
+                  archive created by the Federate Designer.  These files have the suffix “.vdb”.  
                 </para>
               </entry>
             </row>
@@ -75,7 +75,7 @@
       <title>Command Execution</title>
       <para>The primary purpose of a Connector is to execute commands against an information
         source.  The query execution utilities allow you to test the execution of commands
-        programmatically.  This utility does not run the MetaMatrix query engine or the connector
+        programmatically.  This utility does not run the Federate query engine or the connector
         manager although does simulate what happens when those components use a Connector to execute
         a command.</para>
       <para>The command execution utilities are provided in the class ConnectorHost.  This class
@@ -259,7 +259,7 @@ List results = host.executeCommand(“SELECT col FROM group WHERE col = 5”);
     <sect2>
       <title>Using the Command Line Tester</title>
       <para>The command line tester is available in the mmtools kit along with the other
-        MetaMatrix products in the tools directory. The tester can be executed in interactive mode by running </para>
+        Federate products in the tools directory. The tester can be executed in interactive mode by running </para>
         
         <programlisting><![CDATA[
           <unzipped folder>S\cdk\cdk.bat
@@ -659,7 +659,7 @@ List results = host.executeCommand(“SELECT col FROM group WHERE col = 5”);
       </listitem>
       <listitem>
         <para>Start the command line tester.  You can start the tester by executing the cdk.bat
-          file in the cdk directory of the MetaMatrix Tools installation.  </para>
+          file in the cdk directory of the Federate Tools installation.  </para>
       </listitem>
       <listitem>
         <para>Load your connector class and the associated runtime metadata.  You can load your

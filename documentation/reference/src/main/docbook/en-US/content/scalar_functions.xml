@@ -1454,7 +1454,7 @@
               <para>CONVERT(x, type)</para>
             </entry>
             <entry>
-              <para>Convert x to type, where type is a MetaMatrix
+              <para>Convert x to type, where type is a Federate
                 Base Type</para>
             </entry>
           </row>
@@ -1463,7 +1463,7 @@
               <para>CAST(x AS type)</para>
             </entry>
             <entry>
-              <para>Convert x to type, where type is a MetaMatrix
+              <para>Convert x to type, where type is a Federate
                 Base Type</para>
             </entry>
           </row>
@@ -1520,7 +1520,7 @@
   </sect1>
   <sect1>
     <title>Decode Functions</title>
-    <para>Decode functions allow you to have the MetaMatrix Server
+    <para>Decode functions allow you to have the Federate Server
       examine the contents of a column in a result set and alter, or
       decode, the value so that your application can better use the
       results.</para>
@@ -1614,7 +1614,7 @@
       application to process. In this case, you can use the DECODEINTEGER
       function to change the Boolean values to integers:</para>
     <programlisting>SELECT DECODEINTEGER(IS_IN_STOCK, 'false, 0, true, 1') FROM PartsSupplier.PARTS;</programlisting> 
-    <para>When the MetaMatrix System encounters the value false in the
+    <para>When the Federate System encounters the value false in the
       result set, it replaces the value with 0.</para>
     <para>If, instead of using integers, your application requires
       string values, you can use the DECODESTRING function to return the
@@ -1623,11 +1623,11 @@
     <para>In addition to two input/output value pairs, this sample query
       provides a value to use if the column does not contain any of the
       preceding input values. If the row in the IS_IN_STOCK column does
-      not contain true or false, the MetaMatrix Server inserts a null into
+      not contain true or false, the Federate Server inserts a null into
       the result set.</para>
     <para>When you use these DECODE functions, you can provide as many
       input/output value pairs if you want within the string. By default,
-      the MetaMatrix System expects a comma delimiter, but you can add a
+      the Federate System expects a comma delimiter, but you can add a
       third parameter to the function call to specify a different
       delimiter:</para>
     <programlisting>SELECT DECODESTRING(IS_IN_STOCK, 'false:no:true:yes:null',’:’) FROM PartsSupplier.PARTS;</programlisting>
@@ -1639,7 +1639,7 @@
     <programlisting>SELECT DECODESTRING( IS_IN_STOCK, 'null,no,"null",no,nil,no,false,no,true,yes' ) FROM PartsSupplier.PARTS;</programlisting>
     <para>If the DECODE function does not find a matching output value
       in the column and you have not specified a default value, the DECODE
-      function will return the original value the MetaMatrix Server found
+      function will return the original value the Federate Server found
       in that column.</para>
   </sect1>
   <sect1>
@@ -1657,18 +1657,18 @@
       provide the PostalCode and expect the StateDisplayName in response.
     </para>
     <para>When you call this function for the first time, the
-      MetaMatrix System caches the lookup group when you first request a
+      Federate System caches the lookup group when you first request a
       value for any combination of codeGroup, returnElement, and
-      keyElement. The MetaMatrix System uses this cached map for all
+      keyElement. The Federate System uses this cached map for all
       queries, in all sessions, that later access this lookup group. The
       codeGroup requires use of the fully-qualified name, and the
       returnElement and keyElement parameters should use shortened column
       names.</para>
-    <para>Because the MetaMatrix System caches and indexes this
+    <para>Because the Federate System caches and indexes this
       information in memory, this function provides quick access after the
-      MetaMatrix System initially caches the lookup group. The MetaMatrix
+      Federate System initially caches the lookup group. The Federate
       System unloads these cached lookup groups when you stop and restart
-      the MetaMatrix System. Thus, you should not use this function for
+      the Federate System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
       static data that does not change over time.</para>
     <note>
@@ -1684,7 +1684,7 @@
         <listitem>
           <para>Cached lookup groups might consume significant memory. You
             can limit the number and maximum size of these code groups by
-            setting properties of the QueryService through the MetaMatrix
+            setting properties of the QueryService through the Federate
             Console.</para>
         </listitem>
       </itemizedlist>
@@ -1732,7 +1732,7 @@
       <title>Clearing the Cache</title>
       <para>You can force a cache clearing by using the expert mode of
         the svcmgr command, found under the \bin directory of your
-        MetaMatrix server installation.</para>
+        Federate server installation.</para>
       <para>Launch the appropriate command:</para>
       <orderedlist>
         <listitem>
@@ -1747,7 +1747,7 @@
   </sect1>
   <sect1>
     <title>System Functions</title>
-    <para>System functions provide access to information in the MetaMatrix system from within a query. </para>
+    <para>System functions provide access to information in the Federate system from within a query. </para>
     <informaltable frame="all">
       <tgroup cols="3">
         <thead>
@@ -1796,7 +1796,7 @@
             <entry>
               <para>Retrieve the string form of the command payload
                 or null if no command payload was specified. The command
-                payload is set by a method on the MetaMatrix JDBC API
+                payload is set by a method on the Federate JDBC API
                 extensions on a per-query basis.</para>
             </entry>
             <entry>
@@ -1860,7 +1860,7 @@
   <sect1>
     <title>Security Functions</title>
     <para>Security functions provide the ability to interact
-    with the security system within MetaMatrix.</para>
+    with the security system within Federate.</para>
     <informaltable frame="all">
       <tgroup cols="3">
         <thead>
@@ -1918,8 +1918,8 @@
             <itemizedlist>
               <listitem>
                 <para>You cannot use a reserved word, which includes
-                  existing MetaMatrix System function names.  You cannot
-                  overload existing MetaMatrix System functions.</para>
+                  existing Federate System function names.  You cannot
+                  overload existing Federate System functions.</para>
               </listitem>
               <listitem>
                 <para>The function name must be unique among user-defined
@@ -2000,7 +2000,7 @@
       <itemizedlist>
         <para>For example, to extend the Oracle Connector</para>
         <listitem>
-          <para><emphasis>Required</emphasis> - extend OracleCapabilities and set up SCORE and CONTAINS as supported functions (this lets MetaMatrix know that the connector can accept these functions).</para>
+          <para><emphasis>Required</emphasis> - extend OracleCapabilities and set up SCORE and CONTAINS as supported functions (this lets Federate know that the connector can accept these functions).</para>
         </listitem>
         <listitem>
           <para>Optionally extend the OracleSQLTranslator to insert new FunctionModifiers to handle translation of these functions. Given that the syntax of these functions is same as other typical functions, this probably isn't needed - the default translation should work.</para>

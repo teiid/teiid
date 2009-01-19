@@ -50,7 +50,7 @@ testResults(){
 // now actually run the above defined tests
 runTests();
       ]]></programlisting>
-  <para>In the above example, “testCountRows”, made connection to a MetaMatrix system and issued a query and made
+  <para>In the above example, “testCountRows”, made connection to a Federate system and issued a query and made
     sure that certain table has required number of rows. Where as “testResults” asserted that results match to a
     certain set of pre-built results.</para>
   <para>

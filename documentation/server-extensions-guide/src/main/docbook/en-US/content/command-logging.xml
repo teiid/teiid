@@ -7,34 +7,34 @@
     to the system and data source commands are those that are being executed by the connectors</para>
   <para>Users have the ability to capture command logging information in a log file, saved to a user-specified
     location. If a custom command logger is in use, command logging information will no longer be logged to the
-    repository tables. Users and administrators must choose between the default logging to the MetaMatrix
+    repository tables. Users and administrators must choose between the default logging to the Federate
     Repository and custom command logging.</para>
   <sect1>
     <title>Command Logging API</title>
     <para>
       Command Logging is defined by interface com.metamatrix.dqp.spi.CommandLoggerSPI
       administrators and users can write their own Java implementation of this interface and plug it into
-      MetaMatrix by supplying the fully-qualified classname as the value of the
+      Federate by supplying the fully-qualified classname as the value of the
       metamatrix.server.commandLoggerClassname system property.
     </para>
-    <para>Users must also add the implementation class file to the classpath of the MetaMatrix System. This
+    <para>Users must also add the implementation class file to the classpath of the Federate System. This
       can be done by creating a jar file, adding it to the /lib/patches directory section, and doing a full stop
       and restart of the server.</para>
     <para>A user’s CommandLogger implementation may require its own property names and values. Add these
-      name/value pairs as a semicolon-delimited list after the command logger classname property in the MetaMatrix
+      name/value pairs as a semicolon-delimited list after the command logger classname property in the Federate
       Console. For example, a user might need to place a value such as this into the Console system property:
     </para>
     <programlisting><![CDATA[    
 com.myCode.MyClass;metamatrix.transaction.log.storeMMCMD=true;metamatrix.transaction.log.storeSRCCMD=true;myCustomProperty1=MyValue1;    
     ]]></programlisting>
-    <para>The first part of this string tells MetaMatrix what class it needs to load and instantiate. The other
+    <para>The first part of this string tells Federate what class it needs to load and instantiate. The other
       two parts of the string (delimited by semicolons), are a couple of name/value pairs that will be passed to
       the newly-instantiated Command Logger.</para>
     <para>The system properties "metamatrix.transaction.log.storeMMCMD" and
       "metamatrix.transaction.log.storeSRCCMD" control whether to send the custom logger user level command and
       source level commands respectively.</para>
     <note>
-      <para>MetaMatrix has provided a sample implementation of the SPI that logs to a file. Supply the
+      <para>Federate has provided a sample implementation of the SPI that logs to a file. Supply the
         following text for the "metamatrix.server.commandLoggerClassname" property in the Console to enable it</para>
       <programlisting><![CDATA[    
         com.metamatrix.dqp.spi.basic.FileCommandLogger;dqp.commandLogger.fileName=commandLogFile.txt

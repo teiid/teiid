@@ -2,8 +2,8 @@
   <title>Monitored Connectors</title>
   <sect1>
     <title>Overview</title>
-    <para>The MetaMatrix Connector API contains an optional interface that allows connectors to
-      be automatically monitored by the MetaMatrix Enterprise Server or checked via the MetaMatrix
+    <para>The Federate Connector API contains an optional interface that allows connectors to
+      be automatically monitored by the Federate Enterprise Server or checked via the Federate
       Admin API.  </para>
   </sect1>
   <sect1>
@@ -97,15 +97,15 @@
       ConnectionPool.getStatus() and return the result from the ConnectionPool, which is already
       tracking the appropriate state.  Otherwise, you must track and return the appropriate status.
        </para>
-    <para>A monitored connector will be polled for status in the MetaMatrix Enterprise Server
-      (connector monitoring is not supported on MetaMatrix Query or Dimension products).  The poll
+    <para>A monitored connector will be polled for status in the Federate Enterprise Server
+      (connector monitoring is not supported on Federate Query or Dimension products).  The poll
       rate is the value of the metamatrix.server.serviceMonitorInterval system property, which can
-      be set in the MetaMatrix Console.  This property defaults to 60 seconds.  If the
+      be set in the Federate Console.  This property defaults to 60 seconds.  If the
       ConnectionStatus indicates an AliveStatus of DEAD, then the connector is marked in the service
       registry as “data source unavailable”.  If the ConnectionStatus indicates an AliveStatus of
       ALIVE, the connector is marked as “open”.  An AliveStatus of UNKNOWN does not change the state
       of the registry.</para>
-    <para>In addition, the Admin API can be used in MetaMatrix Query and MetaMatrix Enterprise to
+    <para>In addition, the Admin API can be used in Federate Query and Federate Enterprise to
       obtain the status of connectors at runtime.  For more information, see the Admin API Javadoc.
     </para>
   </sect1>

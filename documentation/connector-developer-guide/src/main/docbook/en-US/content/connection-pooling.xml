@@ -2,14 +2,14 @@
   <title>Connection Pooling</title>
   <sect1>
     <title>Overview</title>
-    <para>The MetaMatrix Connector API obtains and releases a connection for each command that is
+    <para>The Federate Connector API obtains and releases a connection for each command that is
       executed with the assumption that the underlying connector will pool connections as necessary.
        </para>
-    <para>Many enterprise information systems provide persistent connections so MetaMatrix
+    <para>Many enterprise information systems provide persistent connections so Federate
       provides a connection pool framework available for your use.  This framework handles many of
       the details of connection pooling while providing the ability to customize what the connection
       object consists of and how that connection is created and pooled.  </para>
-    <para>The JDBC Connector provided by MetaMatrix uses the connection pooling utility.</para>
+    <para>The JDBC Connector provided by Federate uses the connection pooling utility.</para>
   </sect1>
   
   <sect1>

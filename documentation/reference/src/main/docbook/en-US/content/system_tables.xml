@@ -639,7 +639,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>MetaMatrix runtime data type name</para>
+                <para>Federate runtime data type name</para>
               </entry>
             </row>
             <row>
@@ -1695,7 +1695,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>MetaMatrix runtime data type name</para>
+                <para>Federate runtime data type name</para>
               </entry>
             </row>
             <row>
@@ -1826,7 +1826,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>MetaMatrix design-time type name</para>
+                <para>Federate design-time type name</para>
               </entry>
             </row>
             <row>
@@ -1994,7 +1994,7 @@
                 <para>string</para>
               </entry>
               <entry>
-                <para>MetaMatrix runtime data type name</para>
+                <para>Federate runtime data type name</para>
               </entry>
             </row>
             <row>

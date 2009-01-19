@@ -16,17 +16,17 @@
     scripts using the MMAdmin. To learn Java language  find learning resources at
     <ulink url="http://java.sun.com/">http://java.sun.com</ulink>.
   </para>
-  <para>You can learn about the MetaMatrix administrative API either using “help()” command or find JavaDoc
+  <para>You can learn about the Federate administrative API either using “help()” command or find JavaDoc
     for in the installation directory.</para>
   <para>MMAdmin is a specialized version of BeanShell with lots of pre-built libraries and scripts
-    designed to be  used with the MetaMatrix system. MMAdmin works in two different modes: interactive or script
+    designed to be  used with the Federate system. MMAdmin works in two different modes: interactive or script
     run mode.</para>
-  <para>In interactive mode, user can invoke the tool and connect to a live MetaMatrix system and issue any
+  <para>In interactive mode, user can invoke the tool and connect to a live Federate system and issue any
     ad-hoc commands to control the system or issue a SQL query against connected virtual database and view the
     results. All the commands executed during interactive mode are automatically captured into a log file, more
     on this later in the document.</para>
   <para>In the script run mode, user can execute/play back previously developed scripts. This mode especially
-    useful to automate any testing or to perform any repeated configurations/migrations changes to a MetaMatrix
+    useful to automate any testing or to perform any repeated configurations/migrations changes to a Federate
     system</para>  
   
   <sect1>
@@ -76,11 +76,11 @@
     </orderedlist>
     <para>To execute the commands in interactive mode you enter them first and press enter to execute, then
       enter next command, so on.</para>
-    <para>To exit the tool in the interactive mode, first disconnect if you are connected to the MetaMatrix
+    <para>To exit the tool in the interactive mode, first disconnect if you are connected to the Federate
       system by executing “disconnect();” then execute "exit();". In the script mode, when execution of the
-      script finishes the tool will exit automatically, however you still have to disconnect from MetaMatrix
+      script finishes the tool will exit automatically, however you still have to disconnect from Federate
       system in the script.</para>
-    <para>Note: If SSL is turned on the MetaMatrix server, you would need to supply the correct certificates
+    <para>Note: If SSL is turned on the Federate server, you would need to supply the correct certificates
       for connection. Edit the command file used to execute the MMAdmin and make sure correct trust store is
       defined in the path.</para>
   </sect1>
@@ -88,7 +88,7 @@
     <title>Basic commands to get started</title>
     <para>The list below contains some common commands used in MMAdmin. The best way to learn scripting in the
       MMAdmin is to read the scripts in "samples" directory in the MMAdmin kit's installation directory, and
-      experiment your own scripts using a developer instance of MetaMatrix System.</para>
+      experiment your own scripts using a developer instance of Federate System.</para>
     <programlisting><![CDATA[   
 print("xxx");   // print something to console
 
@@ -96,7 +96,7 @@ help();        // shows all the available admin commands;
 
 connect();      // connect using connection.properties file
 
-connect(<URL>);   // connect to MetaMatrix using the supplied URL
+connect(<URL>);   // connect to Federate using the supplied URL
 
 connectAsAdmin(<url>); // connect as admin; no need have the vdb name. SQL commands will not work under this connection
 
