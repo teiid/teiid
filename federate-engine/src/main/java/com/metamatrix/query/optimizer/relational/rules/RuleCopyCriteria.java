@@ -53,7 +53,6 @@ import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.LogConstants;
@@ -332,24 +331,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
         Iterator i = toCopy.iterator();
         while (i.hasNext()) {
             Criteria crit = (Criteria)i.next();
-            
-            // Check that each src element has an equivalence
-            boolean matchedAll = true;
-
-            Set srcElements = (Set) ElementCollectorVisitor.getElements(crit, true);
-            Iterator srcIter = srcElements.iterator();
-            while(srcIter.hasNext()) {
-                ElementSymbol srcElement = (ElementSymbol) srcIter.next();
-                
-                if (!srcToTgt.containsKey(srcElement)) {
-                    matchedAll = false;
-                    break;
-                }                    
-            }
-  
-            if(matchedAll) {
-                changedTree |= copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, false);
-            }
+            changedTree |= copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, false);            
         }
         return changedTree;
     }
@@ -414,18 +396,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
             }
             CompareCriteria crit = (CompareCriteria) theCrit;
             if (crit.getOperator() == CompareCriteria.EQ) {
-                if(crit.getLeftExpression() instanceof ElementSymbol) {
-                    if (srcToTgt == null) {
-                        srcToTgt = new HashMap();
-                    }
-                    srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
-                } 
-                if(crit.getRightExpression() instanceof ElementSymbol) {                            
-                    if (srcToTgt == null) {
-                        srcToTgt = new HashMap();
-                    }
-                    srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
-                }
+                if (srcToTgt == null) {
+                    srcToTgt = new HashMap();
+            	}
+                srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
+                srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
             }
         }
         if (srcToTgt == null) {
