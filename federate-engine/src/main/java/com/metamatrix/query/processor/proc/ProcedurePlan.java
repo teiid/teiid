@@ -41,6 +41,7 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.BaseProcessorPlan;
@@ -254,18 +255,23 @@ public class ProcedurePlan extends BaseProcessorPlan {
             Program program = env.peek();
             inst = program.getCurrentInstruction();
 	        if (inst == null){
+	        	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Finished program", program); //$NON-NLS-1$
                 this.env.pop();
                 continue;
             }
             if (inst instanceof RepeatedInstruction) {
+    	        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing repeated instruction", inst); //$NON-NLS-1$
                 RepeatedInstruction loop = (RepeatedInstruction)inst;
                 if (loop.testCondition(env)) {
+                    LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
                     inst.process(env);
                     env.push(loop.getNestedProgram());
                     continue;
-                } 
+                }
+                LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Exiting repeated instruction", inst); //$NON-NLS-1$
                 loop.postInstruction(env);
             } else {
+            	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing instruction", inst); //$NON-NLS-1$
                 inst.process(this.env);
             }
             program.incrementProgramCounter();

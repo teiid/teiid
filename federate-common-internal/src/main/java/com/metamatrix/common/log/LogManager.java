@@ -426,7 +426,7 @@ public final class LogManager {
      * @param msgParts the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void logTrace(String context, Object[] msgParts) {
+    public static void logTrace(String context, Object ... msgParts) {
         if (msgParts != null) {
             LogManager.getInstance().logMessage(MessageLevel.TRACE, context, msgParts);
         }

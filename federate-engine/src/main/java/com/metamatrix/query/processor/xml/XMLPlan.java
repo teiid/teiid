@@ -324,6 +324,7 @@ public class XMLPlan extends BaseProcessorPlan {
         // do the xml processing.
         ProcessorInstruction inst = env.getCurrentInstruction();
         while (inst != null){
+        	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing instruction", inst); //$NON-NLS-1$
             this.context = inst.process(this.env, this.context);
 
             //code to check for end of document, set current doc
