@@ -27,13 +27,13 @@ package com.metamatrix.platform.registry;
 import java.net.InetAddress;
 import java.util.Date;
 
-import org.jboss.cache.Cache;
 import org.jboss.cache.notifications.annotation.CacheListener;
 import org.mockito.Mockito;
 
 import com.metamatrix.admin.server.FakeCacheAdmin;
 import com.metamatrix.admin.server.FakeConfiguration;
 import com.metamatrix.admin.server.FakeQueryService;
+import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConnectorBindingID;
@@ -48,7 +48,6 @@ import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.messaging.NoOpMessageBus;
-import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.controller.AbstractService;
@@ -61,13 +60,13 @@ public class FakeRegistryUtil {
 
 	private static ClusteredRegistryState registry;
 	
-	public static ClusteredRegistryState getFakeRegistry(Cache cache) throws Exception {
+	public static ClusteredRegistryState getFakeRegistry() throws Exception {
 	
 		if (registry != null) {
 			return registry;
 		}
 		
-		registry = new ClusteredRegistryState(cache);
+		registry = new ClusteredRegistryState(new FakeCacheFactory());
         
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("2.2.2.2"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("3.3.3.3"); //$NON-NLS-1$

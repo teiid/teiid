@@ -42,7 +42,8 @@ public class FakeCache<K, V> implements Cache<K, V> {
     }
     
 	Map<K, V> map = new HashMap();
-
+	Map<String, Cache> children = new HashMap();
+	
 	public void addListener(CacheListener listener) {
 	}
 
@@ -75,5 +76,27 @@ public class FakeCache<K, V> implements Cache<K, V> {
 	}
 
 	public void removeListener(CacheListener listener) {
+	}
+
+	@Override
+	public Cache addChild(String name) {
+		Cache c = new FakeCache();
+		children.put(name, c);
+		return c;
+	}
+
+	@Override
+	public Cache getChild(String name) {
+		return children.get(name);
+	}
+
+	@Override
+	public Collection<Cache> getChildren() {
+		return children.values();
+	}
+
+	@Override
+	public Cache removeChild(String name) {
+		return children.remove(name);
 	}
 }

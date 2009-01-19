@@ -122,4 +122,33 @@ public interface Cache<K, V>  {
      * an empty {@link Collection} is returned.
      */
 	Collection<V> values();
+	
+	
+	/** 
+	 * Add a child node to the current cache node
+	 * @param name - name of the child
+	 * @return Cache instance.
+	 */
+	Cache addChild(String name);
+	
+	/**
+	 * Get the child cache node from the current node
+	 * @param name
+	 * @return null if not found
+	 */
+	Cache getChild(String name);
+	
+	/**
+	 * Destroys the child from the current node; no-op if node not found
+	 * @param name
+	 * @return null if node not found; otherwise removed node returned.
+	 */
+	Cache removeChild(String name);
+	
+	
+	/**
+	 * Get child nodes under this cache node. If none found empty set is returned
+	 * @return
+	 */
+	Collection<Cache> getChildren();
 }

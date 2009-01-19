@@ -27,6 +27,9 @@ package com.metamatrix.cache.jboss;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.cache.Fqn;
@@ -48,7 +51,9 @@ public class JBossCache<K, V> implements Cache<K, V> {
 
 	private org.jboss.cache.Cache cacheStore;
 	private Fqn rootFqn;
-	private ArrayList<CacheListener> listeners;
+	private List<CacheListener> listeners;
+	private Map<String, Cache> children;
+
 	
 	public JBossCache(org.jboss.cache.Cache cacheStore, Fqn fqn) {
 		this.cacheStore = cacheStore;
@@ -150,5 +155,52 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	    		}
 	    	}
     	}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Cache addChild(String name) {
+		Node node = this.cacheStore.getNode(this.rootFqn);
+		Node childNode = node.addChild(Fqn.fromString(name));
+		if (this.children == null) {
+			this.children = Collections.synchronizedMap(new HashMap<String, Cache>());
+		}
+		Cache child = new JBossCache(this.cacheStore, childNode.getFqn());
+		this.children.put(name, child);
+		return child;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Cache getChild(String name) {
+		return this.children.get(name);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Collection<Cache> getChildren() {
+		if (this.children == null) {
+			return Collections.EMPTY_SET;
+		}
+		return this.children.values();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Cache removeChild(String name) {
+		if (this.children == null) {
+			return null;
+		}
+		Node node = this.cacheStore.getNode(this.rootFqn);
+		node.removeChild(Fqn.fromString(name));
+		return this.children.remove(name);
 	} 	
 }

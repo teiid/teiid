@@ -25,107 +25,89 @@
 package com.metamatrix.platform.registry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.jboss.cache.Cache;
-import org.jboss.cache.Fqn;
-import org.jboss.cache.Node;
-import org.jboss.cache.notifications.annotation.CacheListener;
-import org.jboss.cache.notifications.annotation.NodeCreated;
-import org.jboss.cache.notifications.annotation.NodeModified;
-import org.jboss.cache.notifications.annotation.NodeMoved;
-import org.jboss.cache.notifications.annotation.NodeRemoved;
-import org.jboss.cache.notifications.event.NodeEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.metamatrix.cache.Cache;
+import com.metamatrix.cache.CacheConfiguration;
+import com.metamatrix.cache.CacheFactory;
+import com.metamatrix.cache.CacheListener;
+import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceID;
 
 @Singleton
-@CacheListener
-public class ClusteredRegistryState {
+public class ClusteredRegistryState implements CacheListener {
 
-	private static final String REGISTRY = "Registry"; //$NON-NLS-1$
 	private static final String VM_CONTROLLER = "VM_Controller"; //$NON-NLS-1$
 	private static final String SERVICES = "Services"; //$NON-NLS-1$
 	private static final String RESOURCE_POOL = "ResourcePool"; //$NON-NLS-1$
 	private static final String NAME = "Name"; //$NON-NLS-1$
 	
-	private Node rootRegistryNode;
-	private Cache cache;
+	Cache cache;
 	private List<RegistryListener> listeners = Collections.synchronizedList(new ArrayList<RegistryListener>());
 	
 	@Inject
-	public ClusteredRegistryState(Cache cacheStore) {
-		this.cache = cacheStore;
-		Node rootNode = cacheStore.getRoot();
-		this.rootRegistryNode = rootNode.getChild(Fqn.fromString(REGISTRY));
-		if (this.rootRegistryNode == null) {
-			this.rootRegistryNode = rootNode.addChild(Fqn.fromString(REGISTRY));
-		}
-		cache.addCacheListener(this);
+	public ClusteredRegistryState(CacheFactory cacheFactory) {
+		this.cache = cacheFactory.get(Cache.Type.REGISTRY, new CacheConfiguration(Policy.LRU, 0, 20000));
+		this.cache.addListener(this);
 	}
 	
-	private Node getHostNode(String hostName) throws NodeNotFoundException {
-		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
-		Node node =  this.rootRegistryNode.getChild(fqn);
+	private Cache getHostNode(String hostName) throws CacheNodeNotFoundException {
+		Cache node =  this.cache.getChild(hostName.toUpperCase());
 		if (node == null) {
-			throw new NodeNotFoundException("Host Node not found="+hostName);	 //$NON-NLS-1$
+			throw new CacheNodeNotFoundException("Host Node not found="+hostName);	 //$NON-NLS-1$
 		}
 		return node;
 	}
 	
-	private Node addVMNode(String hostName, String vmName) throws NodeNotFoundException {
-		Node hostNode = getHostNode(hostName);
-		Fqn fqn = Fqn.fromString(vmName.toUpperCase());
-		Node n =  hostNode.addChild(fqn);
+	private Cache addVMNode(String hostName, String vmName) throws CacheNodeNotFoundException {
+		Cache hostNode = getHostNode(hostName);
+		Cache n =  hostNode.addChild(vmName.toUpperCase());
 		n.put(NAME, vmName);
 		return n;
 	}
 	
-	private Node getVMNode(String hostName, String vmName) throws NodeNotFoundException {
-		Node hostNode = getHostNode(hostName);
-		Node vmNode = hostNode.getChild(Fqn.fromString(vmName.toUpperCase()));
+	private Cache getVMNode(String hostName, String vmName) throws CacheNodeNotFoundException {
+		Cache hostNode = getHostNode(hostName);
+		Cache vmNode = hostNode.getChild(vmName.toUpperCase());
 		if (vmNode == null) {
-			throw new NodeNotFoundException("VM Node not found="+vmName); //$NON-NLS-1$
+			throw new CacheNodeNotFoundException("VM Node not found="+vmName); //$NON-NLS-1$
 		}
 		
 		// only return the active vms
 		VMRegistryBinding binding = (VMRegistryBinding)vmNode.get(VM_CONTROLLER);
 		if (!binding.isAlive()) {
-			throw new NodeNotFoundException("VM Node not found"); //$NON-NLS-1$
+			throw new CacheNodeNotFoundException("VM Node not found"); //$NON-NLS-1$
 		}
 		return vmNode;
 	}
 		
 	protected void addHost(HostControllerRegistryBinding binding) {
 		String hostName = binding.getHostName().toUpperCase();
-		Fqn fqn = Fqn.fromString(hostName);
-		Node n = this.rootRegistryNode.addChild(fqn);
+		Cache n = this.cache.addChild(hostName);
 		n.put(NAME, hostName);
 		n.put(hostName, binding);
 	}
 	
 	protected void removeHost(String hostName) {
-		Fqn fqn = Fqn.fromString(hostName.toUpperCase());
-		this.rootRegistryNode.removeChild(fqn);
+		this.cache.removeChild(hostName.toUpperCase());
 	}
 	
-	protected void addVM(String hostName, String vmName, VMRegistryBinding vmBinding) throws NodeNotFoundException {
-		Node vmNode = addVMNode(hostName, vmName);
+	protected void addVM(String hostName, String vmName, VMRegistryBinding vmBinding) throws CacheNodeNotFoundException {
+		Cache vmNode = addVMNode(hostName, vmName);
 		vmNode.put(VM_CONTROLLER, vmBinding);
 	}
 	
 	protected void removeVM(String hostName, String vmName) {
 		try {
-			Node hostNode = getHostNode(hostName);
-			hostNode.removeChild(Fqn.fromString(vmName.toUpperCase()));
-		} catch (NodeNotFoundException e) {
+			Cache hostNode = getHostNode(hostName);
+			hostNode.removeChild(vmName.toUpperCase());
+		} catch (CacheNodeNotFoundException e) {
 			// this is OK, this is already gone.
 		}
 	}
@@ -136,8 +118,8 @@ public class ClusteredRegistryState {
 	 */
 	public List<HostControllerRegistryBinding> getHosts(){
 		ArrayList<HostControllerRegistryBinding> list = new ArrayList<HostControllerRegistryBinding>();
-		Set<Node> hostNodes = rootRegistryNode.getChildren();
-		for(Node hostNode:hostNodes) {
+		Collection<Cache> hostNodes = this.cache.getChildren();
+		for(Cache hostNode:hostNodes) {
 			String hostName = (String)hostNode.get(NAME);
 			list.add((HostControllerRegistryBinding)hostNode.get(hostName));
 		}
@@ -146,9 +128,9 @@ public class ClusteredRegistryState {
 	
 	public HostControllerRegistryBinding getHost(String hostName) {
 		try {
-			Node node = getHostNode(hostName);
+			Cache node = getHostNode(hostName);
 			return (HostControllerRegistryBinding)node.get(hostName.toUpperCase());
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			return null;
 		}
 	}
@@ -166,19 +148,19 @@ public class ClusteredRegistryState {
 	private List<VMRegistryBinding> getVMs(String hostName, ArrayList list){
 		
 		if (hostName == null) {
-			Set<Node> hostNodes = this.rootRegistryNode.getChildren();
-			for (Node hostNode:hostNodes) {
+			Collection<Cache> hostNodes = this.cache.getChildren();
+			for (Cache hostNode:hostNodes) {
 				getVMs((String)hostNode.get(NAME), list);
 			}
 		}
 		else {
 			try {
-				Node hostNode = getHostNode(hostName);
-				Set<Node> vmNodes = hostNode.getChildren();
-				for (Node vmNode:vmNodes) {
+				Cache hostNode = getHostNode(hostName);
+				Collection<Cache> vmNodes = hostNode.getChildren();
+				for (Cache vmNode:vmNodes) {
 					list.add(vmNode.get(VM_CONTROLLER));
 				}
-			} catch (NodeNotFoundException e) {
+			} catch (CacheNodeNotFoundException e) {
 				// OK, just return empty list.
 			}
 		}
@@ -187,24 +169,21 @@ public class ClusteredRegistryState {
 	
 	public VMRegistryBinding getVM(String hostName, String vmName) throws ResourceNotBoundException {
 		try {
-			Node vmNode = getVMNode(hostName, vmName);
+			Cache vmNode = getVMNode(hostName, vmName);
 			VMRegistryBinding binding = (VMRegistryBinding)vmNode.get(VM_CONTROLLER);
 			if (binding == null) {
 				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+vmName )); //$NON-NLS-1$				
 			}
 			return binding;
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+vmName )); //$NON-NLS-1$
 		} 
 	}
 	
 	
-	protected void addServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException, NodeNotFoundException {
-		Node vmNode = addVMNode(hostName, vmName);
+	protected void addServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
+		Cache services = getServices(hostName, vmName);
 
-		// get/add the services node
-        Node services = vmNode.addChild(Fqn.fromString(SERVICES));
-		
 		// check if this service already exists
 		ServiceRegistryBinding existing = (ServiceRegistryBinding)services.get(binding.getServiceID());
         if (existing != null && !existing.isServiceBad()) {
@@ -217,13 +196,12 @@ public class ClusteredRegistryState {
 	public ServiceRegistryBinding getServiceBinding(String hostName, String vmName, ServiceID serviceId ) throws ResourceNotBoundException {
 		ServiceRegistryBinding binding;
 		try {
-			Node vmNode = getVMNode(hostName, vmName);
-			Node services = vmNode.addChild(Fqn.fromString(SERVICES));
+	        Cache services = getServices(hostName, vmName);
 			binding = (ServiceRegistryBinding)services.get(serviceId);
 			if (binding == null) {
 				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0011, serviceId ));
 			}
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0011, serviceId ));			
 		}
         return binding;
@@ -263,45 +241,57 @@ public class ClusteredRegistryState {
 		
 		try {
 			if (hostName == null && vmName == null) {
-				Set<Node> hostNodes = this.rootRegistryNode.getChildren();
-				for(Node host:hostNodes) {
+				Collection<Cache> hostNodes = this.cache.getChildren();
+				for(Cache host:hostNodes) {
 					getServiceBindings((String)host.get(NAME), null, list);
 				}
 			}
 			else if (hostName != null && vmName == null) {
-				Set<Node> vmNodes = getHostNode(hostName).getChildren();
-				for(Node vm:vmNodes) {
+				Collection<Cache> vmNodes = getHostNode(hostName).getChildren();
+				for(Cache vm:vmNodes) {
 					getServiceBindings(hostName, (String)vm.get(NAME), list);
 				}
 			}
 			else if (hostName != null && vmName != null) {
-				Node vmNode = getVMNode(hostName, vmName);
-			    Node services = vmNode.addChild(Fqn.fromString(SERVICES));
-				Map m = services.getData();
-				synchronized (m) {
-					list.addAll(m.values());
-				}			    
+				Cache services = getServices(hostName, vmName);
+				list.addAll(services.values());
 			}
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			// this OK, this should not happen however in error return the empty list.
 		}
 		return list;
 	}	
 	
+	private Cache getServices(String hostName, String vmName) throws CacheNodeNotFoundException {
+		Cache vmNode = getVMNode(hostName, vmName);
+        Cache services = vmNode.getChild(SERVICES);
+        if (services == null) {
+        	services = vmNode.addChild(SERVICES);
+        }		
+        return services;
+	}
+	
+	private Cache getResourcePool(String hostName, String vmName) throws CacheNodeNotFoundException {
+		Cache vmNode = getVMNode(hostName, vmName);
+        Cache services = vmNode.getChild(RESOURCE_POOL);
+        if (services == null) {
+        	services = vmNode.addChild(RESOURCE_POOL);
+        }		
+        return services;
+	}	
+	
 	protected void removeServiceBinding(String hostName, String vmName, ServiceID serviceId) {
 		try {
-			Node vmNode = getVMNode(hostName, vmName);
-			Node services = vmNode.addChild(Fqn.fromString(SERVICES));
+			Cache services = getServices(hostName, vmName);
 			services.remove(serviceId);
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			// OK, this already gone.
 		}
 	}
 	
 	
-	protected void addResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrBinding binding) throws ResourceAlreadyBoundException, NodeNotFoundException {
-		Node vmNode = addVMNode(hostName, vmName);
-        Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
+	protected void addResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrBinding binding) throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
+        Cache resources = getResourcePool(hostName, vmName);
 		ResourcePoolMgrBinding existing = (ResourcePoolMgrBinding)resources.get(binding.getID());
 		if (existing != null) {
 			throw new ResourceAlreadyBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0025, binding.getID()));
@@ -311,14 +301,13 @@ public class ClusteredRegistryState {
 	
 	public ResourcePoolMgrBinding getResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrID id) throws ResourceNotBoundException {
 		try {
-			Node vmNode = getVMNode(hostName, vmName);
-			Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
+	        Cache resources = getResourcePool(hostName, vmName);
 			ResourcePoolMgrBinding binding =  (ResourcePoolMgrBinding)resources.get(id);
 			if (binding == null) {
 				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0010, id));				
 			}
 			return binding;
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0010, id));
 		}
 	}
@@ -330,27 +319,22 @@ public class ClusteredRegistryState {
 	private List<ResourcePoolMgrBinding> getResourcePoolManagerBindings(String hostName, String vmName, ArrayList list) {	
 		try {
 			if (hostName == null && vmName == null) {
-				Set<Node> hostNodes = this.rootRegistryNode.getChildren();
-				for(Node host:hostNodes) {
+				Collection<Cache> hostNodes = this.cache.getChildren();
+				for(Cache host:hostNodes) {
 					getResourcePoolManagerBindings((String)host.get(NAME), null, list);
 				}
 			}
 			else if (hostName != null && vmName == null) {
-				Set<Node> vmNodes = getHostNode(hostName).getChildren();
-				for(Node vm:vmNodes) {
+				Collection<Cache> vmNodes = getHostNode(hostName).getChildren();
+				for(Cache vm:vmNodes) {
 					getResourcePoolManagerBindings(hostName, (String)vm.get(NAME), list);
 				}
 			}
 			else if (hostName != null && vmName != null) {
-				Node vmNode = getVMNode(hostName, vmName);
-				Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
-				
-				Map m = resources.getData();
-				synchronized (m) {
-					list.addAll(m.values());
-				}
+		        Cache resources = getResourcePool(hostName, vmName);
+				list.addAll(resources.values());
 			}
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			// this is Ok, just return the empty list.
 		}
 		return list;
@@ -359,16 +343,15 @@ public class ClusteredRegistryState {
 	
 	protected void removeResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrID managerId) {
 		try {
-			Node vmNode = getVMNode(hostName, vmName);
-			Node resources = vmNode.addChild(Fqn.fromString(RESOURCE_POOL));
+	        Cache resources = getResourcePool(hostName, vmName);
 			resources.remove(managerId);
-		} catch (NodeNotFoundException e) {
+		} catch (CacheNodeNotFoundException e) {
 			// Ok, this is already gone.
 		}
 	}
 	
-	static class NodeNotFoundException extends Exception{
-		public NodeNotFoundException(String msg) {
+	static class CacheNodeNotFoundException extends Exception{
+		public CacheNodeNotFoundException(String msg) {
 			super(msg);
 		}
 	}
@@ -381,16 +364,10 @@ public class ClusteredRegistryState {
 		this.listeners.add(obj);
 	}
 	
-    @NodeCreated
-	@NodeRemoved
-	@NodeModified
-	@NodeMoved
-	public void registryChanged(NodeEvent ne) {
-    	Fqn fqn = ne.getFqn();
-    	if (fqn.isChildOf(rootRegistryNode.getFqn())) {
-    		for(RegistryListener l:this.listeners) {
-    			l.registryChanged();
-    		}
-    	}
+	@Override
+	public void cacheChanged() {
+		for(RegistryListener l:this.listeners) {
+			l.registryChanged();
+		}		
 	} 
 }

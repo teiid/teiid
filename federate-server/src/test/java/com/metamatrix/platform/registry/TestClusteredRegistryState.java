@@ -29,12 +29,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.CacheFactory;
-import org.jboss.cache.DefaultCacheFactory;
-import org.jboss.cache.Fqn;
-import org.jboss.cache.Node;
-
+import com.metamatrix.cache.Cache;
+import com.metamatrix.cache.CacheFactory;
+import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.HostID;
@@ -44,33 +41,22 @@ import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.core.util.SimpleMock;
-import com.metamatrix.platform.registry.ClusteredRegistryState.NodeNotFoundException;
+import com.metamatrix.platform.registry.ClusteredRegistryState.CacheNodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public class TestClusteredRegistryState extends TestCase {
-	Cache cache;
+	CacheFactory factory = new FakeCacheFactory();
 	
-	@Override
-	protected void setUp() throws Exception {
-		CacheFactory factory = new DefaultCacheFactory();
-		cache = factory.createCache();
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		cache.stop();
-	}
-	
-	private Fqn buildKey(String key) {
-		return Fqn.fromString(key.toUpperCase());
+	private String key(String key) {
+		return key.toUpperCase();
 	}
 	
 	public void testAddVM() throws Exception {		
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
-		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
+		Cache rootNode = state.cache;
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -86,17 +72,17 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertEquals(rootNode.getChildren().size(), 2);
-		assertNotNull(rootNode.getChild(buildKey("host-1"))); //$NON-NLS-1$
-		assertNotNull(rootNode.getChild(buildKey("host-2"))); //$NON-NLS-1$
-		assertNotNull(rootNode.getChild(buildKey("host-2")).getChild(buildKey("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(key("host-1"))); //$NON-NLS-1$
+		assertNotNull(rootNode.getChild(key("host-2"))); //$NON-NLS-1$
+		assertNotNull(rootNode.getChild(key("host-2")).getChild(key("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-		assertEquals(rootNode.getChild(buildKey("host-1")).get("Name"), "HOST-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-1")).get("Name"), "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		assertEquals(rootNode.getChild(key("host-1")).get("Name"), "HOST-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(rootNode.getChild(key("host-1")).getChild(key("vm-1")).get("Name"), "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
 	public void testRemoveVM() throws Exception {
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
-		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
+		Cache rootNode = state.cache;
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -115,13 +101,13 @@ public class TestClusteredRegistryState extends TestCase {
 		
 		state.removeVM("host-1", "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		assertNull(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
-		assertNotNull(rootNode.getChild(buildKey("host-1")).getChild(buildKey("vm-2"))); //$NON-NLS-1$ //$NON-NLS-2$
-		assertNotNull(rootNode.getChild(buildKey("host-2")).getChild(buildKey("vm-1")));		 //$NON-NLS-1$ //$NON-NLS-2$
+		assertNull(rootNode.getChild(key("host-1")).getChild(key("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(key("host-1")).getChild(key("vm-2"))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(rootNode.getChild(key("host-2")).getChild(key("vm-1")));		 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testGetVMs() throws Exception {
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -145,7 +131,7 @@ public class TestClusteredRegistryState extends TestCase {
 	}
 
 	public void testHosts() throws Exception {
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -167,16 +153,16 @@ public class TestClusteredRegistryState extends TestCase {
 	}
 
 	public void testAddServiceBinding() throws Exception {
-		buildRegistry();
-		Node rootNode = cache.getRoot().getChild("Registry"); //$NON-NLS-1$
+		ClusteredRegistryState state = buildRegistry();
+		Cache rootNode = state.cache;
 		
-		assertEquals(2, rootNode.getChild(new Fqn(buildKey("host-1/vm-1"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals(1, rootNode.getChild(new Fqn(buildKey("host-1/vm-2"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals(3, rootNode.getChild(new Fqn(buildKey("host-2/vm-1"), "Services")).getData().size()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(2, rootNode.getChild(key("host-1")).getChild(key("vm-1")).getChild("Services").values().size()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(1, rootNode.getChild(key("host-1")).getChild(key("vm-2")).getChild("Services").values().size()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(3, rootNode.getChild(key("host-2")).getChild(key("vm-1")).getChild("Services").values().size()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	ClusteredRegistryState buildRegistry() throws ResourceAlreadyBoundException, NodeNotFoundException {
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+	ClusteredRegistryState buildRegistry() throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -233,7 +219,7 @@ public class TestClusteredRegistryState extends TestCase {
 
 
 	public void testRemoveServiceBinding() throws Exception {
-		ClusteredRegistryState state = new ClusteredRegistryState(cache);
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
 		
 		HostControllerRegistryBinding host1 = buildHostRegistryBinding("host-1"); //$NON-NLS-1$
 		HostControllerRegistryBinding host2 = buildHostRegistryBinding("host-2"); //$NON-NLS-1$
@@ -288,8 +274,10 @@ public class TestClusteredRegistryState extends TestCase {
 	}
 	
 	public void testUpdate() {
-		Node rootNode = cache.getRoot();
-		Node n = rootNode.addChild(buildKey("test")); //$NON-NLS-1$
+		ClusteredRegistryState state = new ClusteredRegistryState(factory);
+		Cache rootNode = state.cache;
+		
+		Cache n = rootNode.addChild("test"); //$NON-NLS-1$
 		n.put("x", new Foo()); //$NON-NLS-1$
 		
 		Foo f = (Foo)n.get("x"); //$NON-NLS-1$

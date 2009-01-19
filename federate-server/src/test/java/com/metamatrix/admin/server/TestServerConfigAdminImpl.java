@@ -70,15 +70,11 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
         
-        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry(getCacheNode());
+        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new FakeServerConfigAdminImpl(parent, registry);        
     }
    
-	private Cache getCacheNode() {
-		CacheFactory factory = new DefaultCacheFactory();
-		return factory.createCache();
-	}
     
     
     private void helpCheckBindings(Model model, Collection expectedBindingNames) throws Exception {

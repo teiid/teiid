@@ -25,9 +25,6 @@
 package com.metamatrix.admin.server;
 import junit.framework.TestCase;
 
-import org.jboss.cache.CacheFactory;
-import org.jboss.cache.DefaultCacheFactory;
-
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -64,15 +61,11 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         FakeCacheAdmin.clearState();
         FakeRuntimeStateAdminAPIHelper.clearState();
         
-        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry(getCacheNode());
+        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new ServerRuntimeStateAdminImpl(parent, registry);        
     }
-   
-	private org.jboss.cache.Cache getCacheNode() {
-		CacheFactory factory = new DefaultCacheFactory();
-		return factory.createCache();
-	}
+
     /**
      * Tests <code>ServerRuntimeStateAdminImpl.cancelRequest()</code> 
      * Fake data is set up in FakeQueryService.cancelQuery()

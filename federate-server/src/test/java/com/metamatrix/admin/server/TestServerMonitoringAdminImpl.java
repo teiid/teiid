@@ -32,10 +32,6 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.CacheFactory;
-import org.jboss.cache.DefaultCacheFactory;
-
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
@@ -74,15 +70,11 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
 
-        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry(getCacheNode());
+        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new ServerMonitoringAdminImpl(parent, registry);        
     }
    
-	private Cache getCacheNode() {
-		CacheFactory factory = new DefaultCacheFactory();
-		return factory.createCache();
-	}
     
     /**
      * Tests <code>ServerMonitoringImpl.trimString()</code> 
