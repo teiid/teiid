@@ -1,44 +1,39 @@
 <!--This script builds a JAR for a Federate Embedded Server Installation -->
 <assembly>
   
-  <id>embedded-dist</id>
+  <id>cdk-dist</id>
   
   <formats>
     <format>zip</format>
   </formats>
   
   <includeBaseDirectory>true</includeBaseDirectory>
-  <baseDirectory>federate-embedded-${version}</baseDirectory>
+  <baseDirectory>federate-cdk-${version}</baseDirectory>
+
 
   <fileSets>
   
     <fileSet>
-      <directory>target/distribution</directory>
+      <directory>target/distribution/federate-${version}-cdk-dependencies.dir</directory>
       <includes>
-        <include>federate-${version}-embedded.jar</include>
+        <include>federate-connector-api-${version}.jar</include>
       </includes>
       <outputDirectory>/</outputDirectory>      
     </fileSet>
-    
-    
+  
     <fileSet>
-      <directory>target/distribution/federate-${version}-embedded-dependencies.dir</directory>
+      <directory>target/distribution/federate-${version}-cdk-dependencies.dir</directory>
       <includes>
         <include>*.jar</include>
       </includes>
+        <excludes>
+          <exclude>federate-connector-api-*</exclude>
+        </excludes>              
       <outputDirectory>lib</outputDirectory>      
     </fileSet>    
     
     <fileSet>
-      <directory>target/distribution/federate-${version}-connector-dependencies.dir</directory>
-      <includes>
-        <include>*.jar</include>
-      </includes>
-      <outputDirectory>extensions</outputDirectory>      
-    </fileSet>      
-
-    <fileSet>
-        <directory>build/kit-embedded</directory>
+        <directory>build/kit-cdk</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.foo</exclude>

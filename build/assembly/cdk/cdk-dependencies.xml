@@ -1,0 +1,46 @@
+<!--This script builds a JAR for a Federate Embedded Server Installation -->
+<assembly>
+  
+  <id>cdk-dependencies</id>
+  
+  <formats>
+    <format>dir</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>federate-cdk</baseDirectory>
+    
+  <moduleSets>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
+        	<include>org.jboss.federate:federate-connector-api</include>
+            <include>org.jboss.federate:federate-connector-sdk</include>
+        </includes>
+        
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+                                    
+          <dependencySets>
+            <dependencySet>
+              <useProjectArtifact>false</useProjectArtifact>
+              <unpack>false</unpack>
+              <useTransitiveDependencies>false</useTransitiveDependencies>
+              <useDefaultExcludes>true</useDefaultExcludes>
+              <!-- 
+              <excludes>
+                <exclude>federate*</exclude>
+                <exclude>jta*</exclude>
+              </excludes>
+               -->
+            </dependencySet>
+          </dependencySets>
+          
+        </binaries>
+      
+    </moduleSet>
+  </moduleSets>
+    
+</assembly>

@@ -18,25 +18,17 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-engine</artifactId>
-    </dependency>
+      <artifactId>federate-common-core</artifactId>
+      <type>test-jar</type>
+    </dependency>    
     <dependency>
       <groupId>org.jboss.federate</groupId>
       <artifactId>federate-engine</artifactId>
-      <type>test-jar</type>
-    </dependency>        
+    </dependency>
     <dependency>
       <groupId>org.jboss.federate</groupId>
       <artifactId>federate-metadata</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-client-jdbc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-core</artifactId>
-      <type>test-jar</type>
-    </dependency>        
   </dependencies>
+  
 </project>
