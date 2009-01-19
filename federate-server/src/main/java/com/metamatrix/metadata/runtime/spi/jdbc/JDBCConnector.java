@@ -44,7 +44,6 @@ import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
-import com.metamatrix.metadata.runtime.api.MetaBaseInfo;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
@@ -84,14 +83,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
         }
 
         JDBCRuntimeMetadataReader.setJDBCPlatform(this.platform);
-    }
-    /**
-     * Returns the current information describing the MetaBase.
-     * @return MeteBaseInfo
-     * @throws VirtualDatabaseException if an error occurs while trying to read the data.
-     */
-    public MetaBaseInfo getMetaBaseInfo() throws VirtualDatabaseException {
-        return JDBCRuntimeMetadataReader.getMetaBaseInfo(jdbcConnection);
     }
 
     /**
@@ -147,10 +138,6 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
      */
     public VirtualDatabaseID getActiveVirtualDatabaseID(String vdbName, String vdbVersion) throws VirtualDatabaseException, VirtualDatabaseDoesNotExistException{
         return getVirtualDatabaseID(vdbName, vdbVersion, true);
-    }
-
-    public List getAllModelIDs() throws VirtualDatabaseException{
-        return JDBCRuntimeMetadataReader.getAllModelIDs(jdbcConnection);
     }
 
     public Collection getModelIDsOnlyInVDB(VirtualDatabaseID vdbID) throws VirtualDatabaseException{

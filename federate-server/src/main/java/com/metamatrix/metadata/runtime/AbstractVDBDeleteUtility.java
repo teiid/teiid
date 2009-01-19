@@ -90,43 +90,6 @@ public abstract class AbstractVDBDeleteUtility {
     }
 
     /** 
-     * @see com.metamatrix.platform.util.VDBDeleteUtility#deleteVDBsMarkedForDelete()
-     * @since 4.3
-     */
-    public void deleteVDBsMarkedForDelete() throws VirtualDatabaseException, MetaMatrixComponentException {
-        // Get all VDBIDs marked for delete
-        Collection vdbs = RuntimeMetadataCatalog.getInstance().getDeletedVirtualDatabaseIDs();
-        // If none marked for delete, nothing to do.
-        if (vdbs.size() == 0) {
-            return;
-        }
-        LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "deleteVDBsMarkedForDelete(): checking " + vdbs.size() + //$NON-NLS-1$
-                                                                              " VDBs marked for deletion."); //$NON-NLS-1$
-
-        Iterator vdbItr = vdbs.iterator();
-        while (vdbItr.hasNext()) {
-            VirtualDatabaseID vdbID = (VirtualDatabaseID) vdbItr.next();
-            
-            // If no sessions are logged in to the VDB version, delete it.
-            if (checkSessions(vdbID)) {
-
-                LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "deleteVDBsMarkedForDelete(): deleting " + vdbID + //$NON-NLS-1$
-                                                                                      " - no sessions logged in."); //$NON-NLS-1$
-                // Delete any entitlements to VDB version first
-                deleteAuthorizationPoliciesForVDB(vdbID.getName(), vdbID.getVersion());
-
-                // Finally, delete VDB
-                RuntimeMetadataCatalog.getInstance().deleteVirtualDatabase(vdbID);
-                LogManager.logInfo(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, RuntimeMetadataPlugin.Util.getString("VDBDeleteUtility.1", new Object[] {vdbID})); //$NON-NLS-1$
-                
-            } else {
-                LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "deleteVDBsMarkedForDelete(): NOT deleting " + vdbID + //$NON-NLS-1$
-                                                                                      " - has sessions logged in."); //$NON-NLS-1$
-            }
-        }
-    }
-
-    /** 
      * @see com.metamatrix.platform.util.VDBDeleteUtility#deleteVDBsMarkedForDelete(com.metamatrix.platform.security.api.MetaMatrixSessionID)
      * @since 4.3
      */

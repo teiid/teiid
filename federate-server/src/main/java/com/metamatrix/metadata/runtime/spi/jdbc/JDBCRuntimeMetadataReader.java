@@ -41,7 +41,6 @@ import com.metamatrix.common.jdbc.JDBCPlatform;
 import com.metamatrix.common.jdbc.syntax.ExpressionOperator;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
-import com.metamatrix.metadata.runtime.api.MetaBaseInfo;
 import com.metamatrix.metadata.runtime.api.MetadataConstants;
 import com.metamatrix.metadata.runtime.api.MetadataID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
@@ -67,40 +66,6 @@ public final class JDBCRuntimeMetadataReader {
 
     public static void setJDBCPlatform(JDBCPlatform jdbcPlatform) {
         platform = jdbcPlatform;
-    }
-
-    /**
-     * Returns the current information describing the MetaBase.
-     * @return MeteBaseInfo
-     * @throws VirtualDatabaseException if an error occurs while trying to read the data.
-     */
-    public static MetaBaseInfo getMetaBaseInfo(Connection jdbcConnection) throws VirtualDatabaseException {
-        Statement statement = null;
-        String sql = null;
-        MetaBaseInfo result = null;
-
-        try{
-            sql = JDBCTranslator.SELECT_METABASE_INFO;
-            statement = jdbcConnection.createStatement();
-            if (! statement.execute(sql)){
-                throw new VirtualDatabaseException(ErrorMessageKeys.GEN_0007, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0007, sql) );
-            }
-            ResultSet results = statement.getResultSet();
-            if(results.next())
-                result = JDBCTranslator.getMetaBaseInfo(results);
-        }catch (SQLException se){
-                throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCR_0001, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCR_0001, sql) );
-        }finally {
-            if ( statement != null ) {
-                try {
-                    statement.close();
-                } catch ( SQLException e ) {
-                    I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0008, e);
-                }
-            }
-        }
-
-        return result;
     }
 
     /**
