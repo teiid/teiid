@@ -29,4 +29,6 @@ public interface Configuration {
 	final String HOSTNAME = "HostName"; //$NON-NLS-1$
 	final String VMNAME = "VMName"; //$NON-NLS-1$
 	final String VMID = "VMId"; //$NON-NLS-1$
+	final String CLUSTERNAME = "ClusterName"; //$NON-NLS-1$
+
 }

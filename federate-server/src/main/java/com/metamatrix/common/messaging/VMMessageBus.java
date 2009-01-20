@@ -32,6 +32,7 @@ import org.jgroups.ChannelException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -43,6 +44,7 @@ import com.metamatrix.core.event.EventBrokerException;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.event.EventSourceException;
 import com.metamatrix.server.ChannelProvider;
+import com.metamatrix.server.Configuration;
 
 @Singleton
 public class VMMessageBus implements MessageBus {
@@ -54,7 +56,7 @@ public class VMMessageBus implements MessageBus {
     private EventBroker eventBroker = new AsynchEventBroker("VMMessageBus"); //$NON-NLS-1$
     
     @Inject
-    public VMMessageBus(ChannelProvider channelProvider) throws MetaMatrixComponentException {
+    public VMMessageBus(ChannelProvider channelProvider, @Named(Configuration.CLUSTERNAME) String clusterName) throws MetaMatrixComponentException {
         Properties env = null;
         // when the old messagebus Resource was replaced with the JGroups resource,
         // the MESSAGE_BUS_TYPE property was moved to the global properties section
@@ -73,7 +75,7 @@ public class VMMessageBus implements MessageBus {
             messageBus = new NoOpMessageBus();
         } else {
             try {
-				messageBus = new JGroupsMessageBus(channelProvider, eventBroker);
+				messageBus = new JGroupsMessageBus(channelProvider, eventBroker, clusterName);
 			} catch (ChannelException e) {
 				throw new MetaMatrixComponentException(e);
 			}

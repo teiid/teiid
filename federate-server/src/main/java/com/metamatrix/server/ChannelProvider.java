@@ -32,8 +32,6 @@ import org.jgroups.mux.Multiplexer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 @Singleton
@@ -49,14 +47,7 @@ public class ChannelProvider {
 		Channel c = this.channelMap.get(id);
 		if (c == null) {
 			try {
-				String systemName = null;
-				try {
-				    systemName = CurrentConfiguration.getSystemName();
-				} catch (ConfigurationException err) {
-				    systemName = "Federate"; //$NON-NLS-1$
-				}
 				c = this.mux.createMuxChannel(id.toString(), "Federate"); //$NON-NLS-1$
-				c.connect(systemName+"_Bus_"); //$NON-NLS-1$
 				this.channelMap.put(id, c);
 			} catch (Exception e) {
 				throw new MetaMatrixRuntimeException("Failed to create a Channel"); //$NON-NLS-1$

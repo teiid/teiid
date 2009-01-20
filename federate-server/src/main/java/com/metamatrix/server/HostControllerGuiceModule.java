@@ -50,9 +50,18 @@ class HostControllerGuiceModule extends AbstractModule {
 	
 	@Override
 	protected void configure() {
+		
+		String systemName = null;
+		try {
+		    systemName = CurrentConfiguration.getSystemName();
+		} catch (ConfigurationException err) {
+		    systemName = "FederateChannel"; //$NON-NLS-1$
+		}
+
 	
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
+		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 				
 		try {
 			Names.bindProperties(binder(), CurrentConfiguration.getProperties());

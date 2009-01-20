@@ -75,7 +75,7 @@ public class JGroupsMessageBus implements MessageBus {
 	
 	private RpcDispatcher rpcDispatcher;
 	
-	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker) throws ChannelException {
+	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker, String clusterName) throws ChannelException {
 		Channel c = channelProvider.get(ChannelProvider.ChannelID.RPC);
 		
 		if (c == null || !c.isOpen()) {
@@ -102,6 +102,7 @@ public class JGroupsMessageBus implements MessageBus {
 		};
 		
 		this.rpcDispatcher = new RpcDispatcher(this.channel, receiver, receiver, new RemoteProxy(this.rpcStructs));
+		this.channel.connect(clusterName);
 	}
 
 	public void unExport(Object object) {
