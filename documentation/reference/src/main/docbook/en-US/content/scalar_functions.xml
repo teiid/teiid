@@ -995,7 +995,7 @@
       </tgroup>
     </informaltable>
   </sect1>
-  <sect1>
+  <sect1 id="date_time_functions">
     <title>Date/Time Functions</title>
     <para>Date and time functions return dates, times, or timestamps. </para>
     <informaltable frame="all">
@@ -1344,6 +1344,18 @@
                 returns a timestamp</para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>FROM_UNIXTIME (unix_timestamp)</para>
+            </entry>
+            <entry>
+              <para>Return the Unix timestamp (in seconds) as a Timestamp value
+              </para>
+            </entry>
+            <entry>
+              <para>Unix timestamp (in seconds)</para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </informaltable>
@@ -1472,7 +1484,7 @@
     </informaltable>
     <para>These functions are identical other than syntax; CAST is the standard SQL syntax, CONVERT is the standard JDBC/ODBC syntax. </para>
   </sect1>
-  <sect1>
+  <sect1 id="choice_functions">
     <title>Choice Functions</title>
     <para>Choice functions provide a way to select from two values based on some characteristic of one of the values. </para>
     <informaltable frame="all">
@@ -1511,6 +1523,28 @@
             <entry>
               <para>x, y, and the return type must be the same type but
                 can be any type</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>NULLIF(param1, param2)</para>
+            </entry>
+            <entry>
+              <para>Equivalent to case when (param1 = param2) then null else param1</para>
+            </entry>
+            <entry>
+              <para>param1 and param2 must be compatable comparable types</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>COALESCE(x,y)</para>
+            </entry>
+            <entry>
+              <para>Returns the first non-null parameter</para>
+            </entry>
+            <entry>
+              <para>x, y can be any type</para>
             </entry>
           </row>
         </tbody>
