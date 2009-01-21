@@ -207,7 +207,7 @@ public final class LogManager {
 
             // Get the preferred LogConfiguration ...
             try {
-                LogConfiguration newConfig = CurrentConfiguration.getConfiguration().getLogConfiguration();
+                LogConfiguration newConfig = CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration();
                 CONFIGURATION = newConfig;
 //                System.out.println("** LOGMGR LogLevel: " + newConfig.getMessageLevel());
             } catch ( ConfigurationException e ) {

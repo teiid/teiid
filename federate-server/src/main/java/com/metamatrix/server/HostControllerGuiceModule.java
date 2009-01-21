@@ -53,7 +53,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		
 		String systemName = null;
 		try {
-		    systemName = CurrentConfiguration.getSystemName();
+		    systemName = CurrentConfiguration.getInstance().getSystemName();
 		} catch (ConfigurationException err) {
 		    systemName = "FederateChannel"; //$NON-NLS-1$
 		}
@@ -64,7 +64,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 				
 		try {
-			Names.bindProperties(binder(), CurrentConfiguration.getProperties());
+			Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 		}

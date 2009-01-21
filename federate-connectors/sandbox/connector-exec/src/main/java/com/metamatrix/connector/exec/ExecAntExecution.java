@@ -94,9 +94,9 @@ public class ExecAntExecution implements SynchQueryExecution {
 	static {
 		String hosttempdir = ".";//$NON-NLS-1$
 		try {
-			if (CurrentConfiguration.getHost() != null) {
-				INSTALL_DIR = CurrentConfiguration.getHost().getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
-				hosttempdir = CurrentConfiguration.getHost().getTempDirectory();
+			if (CurrentConfiguration.getInstance().getHost() != null) {
+				INSTALL_DIR = CurrentConfiguration.getInstance().getHost().getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
+				hosttempdir = CurrentConfiguration.getInstance().getHost().getTempDirectory();
 			}
 			TEMPDIR = new TempDirectory(hosttempdir,System.currentTimeMillis(), random.nextLong());
 

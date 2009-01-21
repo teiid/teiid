@@ -163,10 +163,10 @@ public class VDBDefnFactory {
         //	1.  The name of the binding
         //  2.  The name of a system binding, for which no actual binding will be found
 
-        ConnectorBinding cb = CurrentConfiguration.getConfiguration().getConnectorBindingByRoutingID(routing);
+        ConnectorBinding cb = CurrentConfiguration.getInstance().getConfiguration().getConnectorBindingByRoutingID(routing);
 
         if (cb == null) {
-        Collection b = CurrentConfiguration.getConfiguration().getConnectorBindings();
+        Collection b = CurrentConfiguration.getInstance().getConfiguration().getConnectorBindings();
         for (Iterator it = b.iterator(); it.hasNext();) {
               ConnectorBinding cb2 = (ConnectorBinding) it.next();
             
@@ -181,7 +181,7 @@ public class VDBDefnFactory {
     }
 
     private static ComponentType getComponentType(ComponentTypeID typeID) throws Exception {
-        return CurrentConfiguration.getConfigurationModel().getComponentType(typeID.getFullName());
+        return CurrentConfiguration.getInstance().getConfigurationModel().getComponentType(typeID.getFullName());
 
     }
 }

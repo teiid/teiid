@@ -624,10 +624,8 @@ public class RuntimeMetadataCatalog  {
                 List bindings = (List) modelAndCBNames.get(mName);
                 for (Iterator bit=bindings.iterator(); bit.hasNext();) {
                     String bRouting = (String) bit.next();
-                    if (CurrentConfiguration.getConfiguration().getConnectorBindingByRoutingID(bRouting) == null) {
+                    if (CurrentConfiguration.getInstance().getConfiguration().getConnectorBindingByRoutingID(bRouting) == null) {
                         throw new VirtualDatabaseException(RuntimeMetadataPlugin.Util.getString("RuntimeMetadataCatalog.No_connector_binding_found", new Object[] {mName, bRouting} ) ); //$NON-NLS-1$
-
-                        
                     }
                 }
                 cNamesByIDs.put(mID, modelAndCBNames.get(mName));
@@ -759,7 +757,7 @@ public class RuntimeMetadataCatalog  {
     }    
 
     /**
-     * obtain the properties from the CurrentConfiguration.
+     * obtain the properties from the CurrentConfiguration.getInstance().
      */
     private Properties getProperties(Properties runtimeProps) {
         Properties prop = new Properties();

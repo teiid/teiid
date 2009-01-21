@@ -32,7 +32,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
@@ -175,7 +174,7 @@ public final class AuditManager {
         Properties currentConfigProperties = new Properties();
         try {
 
-            Properties globalProperties = CurrentConfiguration.getProperties();
+            Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
  
             currentConfigProperties.putAll(globalProperties);
  
@@ -259,7 +258,7 @@ public final class AuditManager {
             Properties currentConfigProperties = new Properties();
             try {
 
-                Properties globalProperties = CurrentConfiguration.getProperties();
+                Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
 
                 currentConfigProperties.putAll(globalProperties);
 

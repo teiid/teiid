@@ -75,7 +75,7 @@ public class Main {
 
         Host host = null;
         try {
-			host = CurrentConfiguration.findHost(hostName);        
+			host = CurrentConfiguration.getInstance().findHost(hostName);        
 		} catch (ConfigurationException e) {
 		}
 		if (host == null) {
@@ -83,7 +83,7 @@ public class Main {
 		    System.exit(-1);
 		}
 		
-        VMComponentDefn deployedVM = CurrentConfiguration.getConfiguration().getVMForHost(hostName, vmName);
+        VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(hostName, vmName);
         String bindAddress = deployedVM.getBindAddress();
 		
 		VMNaming.setVMName(vmName);
@@ -165,7 +165,7 @@ public class Main {
 	}   
 	
     private static DbLogListener startDbLogging() throws Exception, DbWriterException {
-        Properties currentProps = CurrentConfiguration.getProperties();
+        Properties currentProps = CurrentConfiguration.getInstance().getProperties();
         Properties resultsProps = PropertiesUtils.clone(currentProps, null, true, false);
         
         // write a db log listener

@@ -161,7 +161,7 @@ public class TestRuntimeMetadataHelper extends TestCase {
     }
 
     public void testCreateMaterializedViewLoadPropertiesOracleUsingSSL() throws Exception {
-        CurrentConfiguration.getConfiguration();
+        CurrentConfiguration.getInstance().getConfiguration();
         
         Map ddlFiles = setupMaterializationModelDDLFiles();
         fakeMaterializationModel.setDDLFiles(ddlFiles);

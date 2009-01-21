@@ -86,12 +86,12 @@ public class ServerSocketConfiguration {
     boolean client_encryption_enabled = false;
     
     public static boolean isSSLEnabled() throws ConfigurationException {
-    	return CryptoUtil.isEncryptionEnabled() && PropertiesUtils.getBooleanProperty(CurrentConfiguration.getProperties(), SSL_ENABLED, false);
+    	return CryptoUtil.isEncryptionEnabled() && PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), SSL_ENABLED, false);
     }
     
     public void init() throws ConfigurationException {
-    	Properties p = CurrentConfiguration.getProperties();
-    	p = PropertiesUtils.clone(CurrentConfiguration.getResourceProperties(ResourceNames.SSL), p, true);
+    	Properties p = CurrentConfiguration.getInstance().getProperties();
+    	p = PropertiesUtils.clone(CurrentConfiguration.getInstance().getResourceProperties(ResourceNames.SSL), p, true);
     	init(p);
     }
     

@@ -134,7 +134,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
         }
         
 	    try {
-	        Properties configProps = CurrentConfiguration.getResourceProperties(ResourceNames.JGROUPS);
+	        Properties configProps = CurrentConfiguration.getInstance().getResourceProperties(ResourceNames.JGROUPS);
 
             UDP_MCAST_SUPPORTED      =  configProps.getProperty(UDP_MCAST_SUPPORTED_PROPERTY, DEFAULT_UDP_MCAST_SUPPORTED);
 

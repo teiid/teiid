@@ -233,7 +233,7 @@ public class HostController implements HostManagement {
     /**
      * Optional arg; portNum
      * if exists then hostController listens on portNum
-     * else hostController reads in hostPort from CurrentConfiguration.
+     * else hostController reads in hostPort from CurrentConfiguration.getInstance().
      */
     public static void main(String args[]) {
         String configName = null;
@@ -281,7 +281,7 @@ public class HostController implements HostManagement {
            
             Host host = null;
             try {
-    			host = CurrentConfiguration.findHost(configName);        
+    			host = CurrentConfiguration.getInstance().findHost(configName);        
     		} catch (ConfigurationException e) {
     		}
 
@@ -516,8 +516,8 @@ public class HostController implements HostManagement {
 		if (isRootHost(hostName)) {
 	    	try {
 				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "StartVM " + vmName); //$NON-NLS-1$
-				CurrentConfiguration.verifyBootstrapProperties();
-				ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+				CurrentConfiguration.getInstance().verifyBootstrapProperties();
+				ConfigurationModelContainer currentConfig = CurrentConfiguration.getInstance().getConfigurationModel();
 	
 				VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(this.host.getFullName(), vmName);
 	
@@ -547,8 +547,8 @@ public class HostController implements HostManagement {
 	        try {
 	        	hostName = this.host.getFullName();
 	        	LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,"StartAllVMs on Host " + hostName); //$NON-NLS-1$
-				CurrentConfiguration.verifyBootstrapProperties();
-				ConfigurationModelContainer currentConfig = CurrentConfiguration.getConfigurationModel();
+				CurrentConfiguration.getInstance().verifyBootstrapProperties();
+				ConfigurationModelContainer currentConfig = CurrentConfiguration.getInstance().getConfigurationModel();
 				Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostName);
 	
 				if ( deployedVMs != null && deployedVMs.size() > 0) {

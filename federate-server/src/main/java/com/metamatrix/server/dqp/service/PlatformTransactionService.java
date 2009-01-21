@@ -70,7 +70,7 @@ public class PlatformTransactionService implements TransactionService{
         try {
             Properties env = null;
             try {
-                env = CurrentConfiguration.getResourceProperties(ResourceNames.XA_TRANSACTION_MANAGER);
+                env = CurrentConfiguration.getInstance().getResourceProperties(ResourceNames.XA_TRANSACTION_MANAGER);
             } catch ( ConfigurationException e ) {
                 throw new ApplicationInitializationException(e);
             }

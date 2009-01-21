@@ -71,7 +71,7 @@ public class ConfigurationChangeListener implements EventObjectListener {
 	public void processEvent(EventObject obj) {
 		if(obj instanceof ConfigurationChangeEvent){
 			try {
-				currentConfig = CurrentConfiguration.getConfiguration(true);
+				currentConfig = CurrentConfiguration.getInstance().getConfiguration();
                 
                 if (logger != null) {
                     logger.determineIfEnabled(currentConfig.getProperties());

@@ -217,7 +217,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     public String getConnectorName(String connectorBindingID) throws MetaMatrixComponentException {
         
-        Configuration operational = CurrentConfiguration.getConfiguration();
+        Configuration operational = CurrentConfiguration.getInstance().getConfiguration();
         
         ServiceComponentDefn bindingName = operational.getConnectorBindingByRoutingID(connectorBindingID);
         

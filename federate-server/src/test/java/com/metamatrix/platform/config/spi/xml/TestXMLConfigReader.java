@@ -137,7 +137,7 @@ public class TestXMLConfigReader extends BaseTest {
 
 
     public void testComponentTypeDefn() throws Exception {
-        ConfigurationModelContainer cmc = CurrentConfiguration.getConfigurationModel();
+        ConfigurationModelContainer cmc = CurrentConfiguration.getInstance().getConfigurationModel();
 
         ComponentType ct = cmc.getComponentType("Connector");//$NON-NLS-1$
         if (ct == null) {

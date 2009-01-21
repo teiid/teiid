@@ -180,7 +180,7 @@ public final class AdminConsoleMain {
 	private void setLogLevelAndDiscardedLogContexts() {
 		LogConfiguration logConfig = null;
  		try {
- 			logConfig = CurrentConfiguration.getConfiguration()
+ 			logConfig = CurrentConfiguration.getInstance().getConfiguration()
  					.getLogConfiguration();
  		} catch (Exception ex) {
  		}
@@ -261,7 +261,7 @@ public final class AdminConsoleMain {
     			"metamatrix.log.captureSystemOut"; //$NON-NLS-1$
     	String captureSystemErrProp =
     			"metamatrix.log.captureSystemErr"; //$NON-NLS-1$
-    	String captureSystemOutVal = CurrentConfiguration.getProperty(
+    	String captureSystemOutVal = CurrentConfiguration.getInstance().getProperty(
     			captureSystemOutProp);
         if (captureSystemOutVal == null) {
             captureSystemOutVal = "false"; //$NON-NLS-1$
@@ -270,7 +270,7 @@ public final class AdminConsoleMain {
         }
     	boolean captureSystemOut = captureSystemOutVal.equalsIgnoreCase(
     			"true"); //$NON-NLS-1$
-    	String captureSystemErrVal = CurrentConfiguration.getProperty(
+    	String captureSystemErrVal = CurrentConfiguration.getInstance().getProperty(
     			captureSystemErrProp);
         if (captureSystemErrVal == null) {
             captureSystemErrVal = "false"; //$NON-NLS-1$
@@ -280,7 +280,7 @@ public final class AdminConsoleMain {
     	boolean captureSystemErr = captureSystemErrVal.equalsIgnoreCase(
     			"true"); //$NON-NLS-1$
     	String logFileProp = "metamatrix.log.file"; //$NON-NLS-1$
-    	String logFile = CurrentConfiguration.getProperty(logFileProp);
+    	String logFile = CurrentConfiguration.getInstance().getProperty(logFileProp);
     	File tmpFile = null;
     	if (logFile == null) {
     		logFile = substituteVMName(DEFAULT_LOG_FILE);

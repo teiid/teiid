@@ -48,10 +48,10 @@ public class TestCurrentConfigurationShutdown extends BaseTest {
 
     	try {
 			CurrentConfigHelper.initConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);		   		    			    		    			    		
-//    		CurrentConfiguration.performSystemInitialization(true); 
+//    		CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
             validConfigurationModel();
-//    		Configuration config = CurrentConfiguration.getConfiguration();
+//    		Configuration config = CurrentConfiguration.getInstance().getConfiguration();
 //    		
 //    		if (config == null) {
 //    			fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
@@ -61,7 +61,7 @@ public class TestCurrentConfigurationShutdown extends BaseTest {
 
 			printMsg("Call Configuration to Shutdown System"); //$NON-NLS-1$
 
-			CurrentConfiguration.indicateSystemShutdown();
+			CurrentConfiguration.getInstance().indicateSystemShutdown();
 
 			printMsg("Shutdown System"); //$NON-NLS-1$
 			
@@ -95,9 +95,9 @@ public class TestCurrentConfigurationShutdown extends BaseTest {
     }
     
     private void validConfigurationModel() throws Exception {
-        ConfigurationModelContainer ccm = CurrentConfiguration.getConfigurationModel();
+        ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();
         if (ccm == null) {
-            fail("Configuration Model was not obtained from CurrentConfiguration."); //$NON-NLS-1$
+            fail("Configuration Model was not obtained from CurrentConfiguration"); //$NON-NLS-1$
         }
         
         

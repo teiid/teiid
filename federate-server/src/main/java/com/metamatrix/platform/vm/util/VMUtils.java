@@ -62,7 +62,7 @@ public class VMUtils {
        System.setErr(ps);
 
        Properties logProps = new Properties();
-       Properties configProps = CurrentConfiguration.getProperties();
+       Properties configProps = CurrentConfiguration.getInstance().getProperties();
        if (configProps.containsKey(FileLimitSizeLogWriter.FILE_SIZE_LIMIT)) {
            logProps.setProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT,configProps.getProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT));
        }

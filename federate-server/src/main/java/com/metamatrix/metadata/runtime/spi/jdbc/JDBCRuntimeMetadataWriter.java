@@ -563,7 +563,7 @@ public final class JDBCRuntimeMetadataWriter {
                     List bindings = m.getConnectorBindingNames();
                     if (bindings != null && bindings.size() > 0) {
                          String cbName = (String) bindings.get(0);
-                         cb = CurrentConfiguration.getConfiguration().getConnectorBinding(cbName);
+                         cb = CurrentConfiguration.getInstance().getConfiguration().getConnectorBinding(cbName);
                          if (cb != null) {
                              routing = cb.getRoutingUUID();
                          }
@@ -617,7 +617,7 @@ public final class JDBCRuntimeMetadataWriter {
                     for (Iterator it=bindings.iterator(); it.hasNext();) {
                         String cbName = (String) it.next();
                         
-                        ConnectorBinding cb = CurrentConfiguration.getConfiguration().getConnectorBinding(cbName);
+                        ConnectorBinding cb = CurrentConfiguration.getInstance().getConfiguration().getConnectorBinding(cbName);
                         
                         String routing = null;
                         if (cb != null) {

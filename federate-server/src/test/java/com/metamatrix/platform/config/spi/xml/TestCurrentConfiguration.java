@@ -30,7 +30,6 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.CurrentConfigHelper;
@@ -76,7 +75,6 @@ public class TestCurrentConfiguration extends BaseTest {
      	} catch (Exception e) {
     		fail(e.getMessage());
      	}
-     	
     		printMsg("Completed testValidateConfiguration"); //$NON-NLS-1$
      	
 
@@ -90,12 +88,12 @@ public class TestCurrentConfiguration extends BaseTest {
             
             init(CONFIG_FILE);
    		    			    		    			    		
-    		CurrentConfiguration.performSystemInitialization(true); 
+    		CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
             validConfigurationModel();
 
     		
-    		Properties configProps = CurrentConfiguration.getProperties();	
+    		Properties configProps = CurrentConfiguration.getInstance().getProperties();	
     		if (configProps == null || configProps.isEmpty()) {
     			fail("No Global Configuration Properties were found"); //$NON-NLS-1$
     		}
@@ -122,9 +120,9 @@ public class TestCurrentConfiguration extends BaseTest {
 
             init(CONFIG_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.getHost();
+            Host host = CurrentConfiguration.getInstance().getHost();
             
             if (!host.getFullName().equals("DummyHost")) { //$NON-NLS-1$
                 fail("DummyHost host was not the default host in the configuration");//$NON-NLS-1$
@@ -146,9 +144,9 @@ public class TestCurrentConfiguration extends BaseTest {
         try {
             init(CONFIG_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.findHost("slwxp141.quadrian.com"); //$NON-NLS-1$
+            Host host = CurrentConfiguration.getInstance().findHost("slwxp141.quadrian.com"); //$NON-NLS-1$
             
             if (host == null) { 
                 fail(" host was not found in configuration");//$NON-NLS-1$
@@ -170,9 +168,9 @@ public class TestCurrentConfiguration extends BaseTest {
         try {
             init(CONFIG_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.findHost("slwxp141"); //$NON-NLS-1$
+            Host host = CurrentConfiguration.getInstance().findHost("slwxp141"); //$NON-NLS-1$
             
             if (host == null) { 
                 fail(" host was not found in configuration");//$NON-NLS-1$
@@ -194,9 +192,9 @@ public class TestCurrentConfiguration extends BaseTest {
         try {
             init(CONFIG_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.findHost("dummyhost.quadrian.com"); //$NON-NLS-1$
+            Host host = CurrentConfiguration.getInstance().findHost("dummyhost.quadrian.com"); //$NON-NLS-1$
             
             if (host == null) { 
                 fail("host was not found in configuration");//$NON-NLS-1$
@@ -218,9 +216,9 @@ public class TestCurrentConfiguration extends BaseTest {
         try {
             init(CONFIG_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.findHost("192.168.10.166"); //$NON-NLS-1$
+            Host host = CurrentConfiguration.getInstance().findHost("192.168.10.166"); //$NON-NLS-1$
             
             if (host == null) { 
                 fail("host was not found in configuration");//$NON-NLS-1$
@@ -234,32 +232,6 @@ public class TestCurrentConfiguration extends BaseTest {
         
             printMsg("Completed testFindHostByBindingAddress"); //$NON-NLS-1$        
     }       
-    public void testCurrentVM() {
-        
-        printMsg("Starting testCurrentVM");       //$NON-NLS-1$
-
-        try {
-            System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
-            VMNaming.setup("DummyHost",null,null); //$NON-NLS-1$
-
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.performSystemInitialization(true); 
-
-            VMComponentDefn vm = CurrentConfiguration.getVM();
-            
-            if (vm.getFullName().equals("MetaMatrixProcess")) { //$NON-NLS-1$
-                fail("MetaMatrixProcess process was not the default vm in the configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        
-            printMsg("Completed testCurrentVM"); //$NON-NLS-1$        
-    }     
     
     public void test30SystemInitialization() {
         
@@ -268,9 +240,9 @@ public class TestCurrentConfiguration extends BaseTest {
         try {
             init(CONFIG_30_FILE);
                                                                 
-            CurrentConfiguration.performSystemInitialization(true); 
+            CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Configuration config = CurrentConfiguration.getConfiguration();
+            Configuration config = CurrentConfiguration.getInstance().getConfiguration();
             
             if (config == null) {
                 fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
@@ -279,7 +251,7 @@ public class TestCurrentConfiguration extends BaseTest {
             HelperTestConfiguration.validateConfigContents(config);
             
             
-            Properties configProps = CurrentConfiguration.getProperties();  
+            Properties configProps = CurrentConfiguration.getInstance().getProperties();  
             if (configProps == null || configProps.isEmpty()) {
                 fail("No Global Configuration Properties were found"); //$NON-NLS-1$
             }
@@ -296,9 +268,9 @@ public class TestCurrentConfiguration extends BaseTest {
     }
     
     private void validConfigurationModel() throws Exception {
-        ConfigurationModelContainer ccm = CurrentConfiguration.getConfigurationModel();
+        ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();
         if (ccm == null) {
-            fail("Configuration Model was not obtained from CurrentConfiguration."); //$NON-NLS-1$
+            fail("Configuration Model was not obtained from CurrentConfiguration.getInstance()."); //$NON-NLS-1$
         }
         
         

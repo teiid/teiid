@@ -77,7 +77,7 @@ public class TestExtensionModuleManager extends TestCase {
 
 	public static void resetProperties() {
 		try {
-			CurrentConfiguration.reset();
+			CurrentConfiguration.getInstance().reset();
 		} catch (ConfigurationException e) {
 		}
 		System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$

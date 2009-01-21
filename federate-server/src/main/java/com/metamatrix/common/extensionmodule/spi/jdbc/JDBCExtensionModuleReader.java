@@ -71,7 +71,7 @@ public class JDBCExtensionModuleReader {
     
         if (fileCache == null) {
             fileCache = new FileCache();
-            String typesToCacheString = CurrentConfiguration.getProperty(CommonPropertyNames.EXTENSION_TYPES_TO_CACHE);    
+            String typesToCacheString = CurrentConfiguration.getInstance().getProperty(CommonPropertyNames.EXTENSION_TYPES_TO_CACHE);    
             if (typesToCacheString != null) {
                 StringTokenizer tokenizer = new StringTokenizer(typesToCacheString, ","); //$NON-NLS-1$
                 while (tokenizer.hasMoreTokens()) {

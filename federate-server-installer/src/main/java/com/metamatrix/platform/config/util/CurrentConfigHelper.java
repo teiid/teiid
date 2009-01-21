@@ -30,8 +30,8 @@ import java.util.Properties;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
-import com.metamatrix.common.config.bootstrap.SystemCurrentConfigBootstrap;
 import com.metamatrix.common.messaging.MessageBusConstants;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
@@ -62,7 +62,7 @@ public class CurrentConfigHelper {
 	 */
 	public static void initConfig(String fileName, String path, String principal) throws Exception {
 		Properties sysProps = new Properties();
-		sysProps.put(SystemCurrentConfigBootstrap.NO_CONFIGURATION, "none");  //$NON-NLS-1$
+		sysProps.put(CoreConstants.NO_CONFIGURATION, "none");  //$NON-NLS-1$
  		sysProps.put(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
  		
  		File f = new File(path, fileName);
@@ -90,12 +90,12 @@ public class CurrentConfigHelper {
 		System.setProperties(sysProps);	
 		
 		cleanModelFile(principal, fileName, path);		
-		CurrentConfiguration.reset();
+		CurrentConfiguration.getInstance().reset();
 		
 		createSystemProperties(fileName, path);
 		
-        CurrentConfiguration.performSystemInitialization(true);
-		Configuration config = CurrentConfiguration.getConfiguration();
+        CurrentConfiguration.getInstance().performSystemInitialization(true);
+		Configuration config = CurrentConfiguration.getInstance().getConfiguration();
 		System.out.println("Configuration: " + config.getFullName());
 
 	}

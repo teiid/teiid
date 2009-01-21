@@ -92,7 +92,7 @@ public class DBLogReader implements LogReader {
     public void init() throws MetaMatrixException {
         
         // Read the necessary properties
-        Properties globalProperties = CurrentConfiguration.getProperties();
+        Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
  
         Properties props = new Properties();
         props.putAll(globalProperties);

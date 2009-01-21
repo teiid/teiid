@@ -163,7 +163,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
             MembershipDomain newDomain = null;
 
             try {
-                AuthenticationProvider provider = CurrentConfiguration.getConfiguration().getAuthenticationProvider(domainName);
+                AuthenticationProvider provider = CurrentConfiguration.getInstance().getConfiguration().getAuthenticationProvider(domainName);
                 // Create the domain...
                 if(provider!=null) {
                     Properties props = ComponentCryptoUtil.getDecryptedProperties(provider);

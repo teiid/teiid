@@ -198,7 +198,7 @@ public abstract class VMController implements VMControllerInterface {
     	this.events = serverEvents;
     	this.messageBus = bus;
     	    	
-        Properties configProps = CurrentConfiguration.getProperties(); 
+        Properties configProps = CurrentConfiguration.getInstance().getProperties(); 
         int maxThreads = PropertiesUtils.getIntProperty(configProps, STARTER_MAX_THREADS, DEFAULT_STARTER_MAX_THREADS);
         int timeToLive = PropertiesUtils.getIntProperty(configProps, STARTER_TIMETOLIVE, DEFAULT_STARTER_TIMETOLIVE);
     	
@@ -215,7 +215,7 @@ public abstract class VMController implements VMControllerInterface {
 
         this.clientServices = new ClientServiceRegistry(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
 
-        RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
+        RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getInstance().getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
         
         this.registerILogonAPI();
         this.registerAdmin(hostManagement);
@@ -263,7 +263,7 @@ public abstract class VMController implements VMControllerInterface {
      * @throws ConfigurationException 
      */
     private void registerILogonAPI() throws ConfigurationException, ServiceException {
-    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getSystemName()), LogCommonConstants.CTX_LOGON);
+    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getSystemName()), LogCommonConstants.CTX_LOGON);
     }    
 
 	private void addShutdownHook() {
@@ -282,7 +282,7 @@ public abstract class VMController implements VMControllerInterface {
      * Lazily get Current Configuration
      */
     ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
-        return CurrentConfiguration.getConfigurationModel();
+        return CurrentConfiguration.getInstance().getConfigurationModel();
     }    
 
     /**
@@ -464,7 +464,7 @@ public abstract class VMController implements VMControllerInterface {
             
             if (defaultProps == null) {
                 if (hostProperties == null) {
-                    hostProperties = CurrentConfiguration.getSystemBootStrapProperties();
+                    hostProperties = CurrentConfiguration.getInstance().getSystemBootStrapProperties();
                     hostProperties = new Properties(hostProperties);
                     PropertiesUtils.putAll(hostProperties, host.getProperties());
                 }

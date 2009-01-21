@@ -70,7 +70,7 @@ public class SystemStateBuilder {
     public SystemStateBuilder(ClusteredRegistryState registry, HostManagement hostManagement) throws Exception {
     	this.registry = registry;
     	this.hostManagement = hostManagement;
-        config = CurrentConfiguration.getConfiguration(true);
+        config = CurrentConfiguration.getInstance().getConfiguration();
         deployedComponents = config.getDeployedComponents();
         Collection vms = config.getVMComponentDefns();
         deployedComponents.addAll(vms);

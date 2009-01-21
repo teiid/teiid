@@ -133,7 +133,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
         logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0002, instanceName, System.getProperty("java.class.path"))); //$NON-NLS-1$
 
         try {
-            Properties resourceProps = CurrentConfiguration.getResourceProperties(getResourceName());
+            Properties resourceProps = CurrentConfiguration.getInstance().getResourceProperties(getResourceName());
             if (resourceProps != null) {
                 this.props.putAll(resourceProps);
             }

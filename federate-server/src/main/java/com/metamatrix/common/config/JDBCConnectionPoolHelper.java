@@ -43,7 +43,7 @@ public final class JDBCConnectionPoolHelper {
 	public static synchronized SimplePooledConnectionSource getInstance() {
 		if (INSTANCE == null) {
 			try {
-				INSTANCE = new SimplePooledConnectionSource(CurrentConfiguration.getBootStrapProperties());
+				INSTANCE = new SimplePooledConnectionSource(CurrentConfiguration.getInstance().getBootStrapProperties());
 			} catch (ConfigurationException e) {
 				throw new MetaMatrixRuntimeException(e);
 			}

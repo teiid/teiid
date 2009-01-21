@@ -24,6 +24,8 @@
 
 package com.metamatrix.common.config;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -37,11 +39,7 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
-import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.bootstrap.CurrentConfigBootstrap;
-import com.metamatrix.common.config.bootstrap.PropertyFileCurrentConfigBootstrap;
-import com.metamatrix.common.config.bootstrap.SystemCurrentConfigBootstrap;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.config.reader.SystemCurrentConfigurationReader;
 import com.metamatrix.common.properties.UnmodifiableProperties;
@@ -49,6 +47,7 @@ import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 
 /**
@@ -76,24 +75,28 @@ import com.metamatrix.core.util.StringUtil;
  */
 public final class CurrentConfiguration {
 
+    public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
+    public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
+    
     private static final String DOT_STR = "."; //$NON-NLS-1$
     
-	private static CurrentConfigurationReader READER = null;
-    private static Properties BOOTSTRAP_PROPERTIES=null;
+	private CurrentConfigurationReader reader;
+    private Properties bootstrapProperties;
+    private Properties systemBootstrapProperties;
     
-    private static Properties SYSTEM_BOOTSTRAP_PROPERTIES=null;
-    private static Properties STARTUP_PROPERTIES= null;
+    private static CurrentConfiguration INSTANCE = new CurrentConfiguration();
+    
+    public static CurrentConfiguration getInstance() {
+    	return INSTANCE;
+    }
 
-    private static boolean SHUTDOWN_REQUESTED = false;
-    private static boolean performedBootStrap = false;
-    
     /**
      * Private constructor that prevents instantiation.
      */
     private CurrentConfiguration() {
     }
     
-    public static String getSystemName() throws ConfigurationException {
+    public String getSystemName() throws ConfigurationException {
         
         return getConfigurationModel().getSystemName();
     }
@@ -108,110 +111,7 @@ public final class CurrentConfiguration {
      * no property with the specified name or if the configuration
      * bootstrap information could not be accessed.
      */
-    public static String getProperty( String name, boolean forceRefresh) throws ConfigurationException {
-        if ( name == null ) {
-            return null;
-        }
-
-        if (!forceRefresh) {
-            return getProperty(name);
-        }
-        
-        check();
-        
-
-        return READER.getComponentPropertyValue(Configuration.NEXT_STARTUP_ID, name);
-
-    }   
-
-    
-    /**
-     * Get all of the startup configuration properties.  The properties
-     * @param forceRefresh forces the refreshing of the cache from the datasource.
-     * @return the immutable properties; never null
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public synchronized static Properties getStartupProperties() throws ConfigurationException {
-        check();
-        Properties result = READER.getStartupConfigurationProperties();
-        Properties copyResult = PropertiesUtils.clone(result, getBootStrapProperties(), false, true);
-        if (!(copyResult instanceof UnmodifiableProperties)) {
-            copyResult = new UnmodifiableProperties(copyResult);
-        }
-
-        return copyResult;
-    }
-    
-    
-    /**
-     * Get the value for the property with the specified name.  First, this method obtains the
-     * value from the property in the configuration.  If no such property exists,
-     * then this method obtains the value from the property in the bootstrap
-     * properties.  If no such method exists, this method returns null.
-     * @param name the name of the property
-     * @return the value for the property; null if there is
-     * no property with the specified name or if the configuration
-     * bootstrap information could not be accessed.
-     */
-    public synchronized static String getStartupProperty(String name) {
-
-        if (name == null) {
-            return null;
-        }
-
-        try {
-            check();
-            if (STARTUP_PROPERTIES == null) {
-                STARTUP_PROPERTIES = READER.getStartupConfigurationProperties();
-            }
-        } catch (ConfigurationException e) {
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Unable to read/obtain the configuration property from Startup Configuration. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            return null;
-        } catch (Throwable e) {
-            e.printStackTrace();
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err
-                      .println("** ERROR: Unknown error during reading of the configuration properties from Startup Configuration. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            return null;
-        }
-
-        String result = null;
-        if (STARTUP_PROPERTIES == null) {
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Startup Configuration properties are null - call MetaMatrix Support. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-
-            return null;
-        }
-        result = STARTUP_PROPERTIES.getProperty(name);
-
-        if (result == null || result.trim().length() == 0) {
-            result = getBootStrapProperty(name);
-        }
-
-        return result;
-    }
-    
-    public static String getProperty( String name, String defaultValue ) {
-        String value = getProperty(name);
-        return value == null ? defaultValue: value;
-    }
-    
-    /**
-     * Get the value for the property with the specified name.  First, this method obtains the
-     * value from the property in the configuration.  If no such property exists,
-     * then this method obtains the value from the property in the bootstrap
-     * properties.  If no such method exists, this method returns null.
-     * @param name the name of the property
-     * @return the value for the property; null if there is
-     * no property with the specified name or if the configuration
-     * bootstrap information could not be accessed.
-     */
-    public static String getProperty( String name ) {
+    public String getProperty( String name ) {
 
         if ( name == null ) {
             return null;
@@ -219,32 +119,16 @@ public final class CurrentConfiguration {
 
        Properties configProps;
        try {
-            check();
-            configProps = READER.getConfigurationProperties();
+            configProps = getReader().getConfigurationProperties();
         } catch ( ConfigurationException e ) {
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Unable to read/obtain the configuration property for the current configuration. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            return null;
-        } catch ( Throwable e ) {
             System.err.println("**********************************************************************************************"); //$NON-NLS-1$
             System.err.println("** ERROR: Unknown error during reading of the configuration properties for the current configuration. **"); //$NON-NLS-1$
             System.err.println("**********************************************************************************************"); //$NON-NLS-1$
+            e.printStackTrace(System.err);
             return null;
        }
 
-
-
-
-        String result = null;
-        if ( configProps == null ) {
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Configuration properties are null - call MetaMatrix Support. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-
-            return null;
-        }
-        result = configProps.getProperty(name);
+        String result = configProps.getProperty(name);
         
         if (result == null || result.trim().length() == 0) {
             result = getBootStrapProperty(name);
@@ -253,7 +137,7 @@ public final class CurrentConfiguration {
         return result;
     }
     
-    public synchronized static String getBootStrapProperty(String key) {
+    public String getBootStrapProperty(String key) {
 		try {
 	        return getBootStrapProperties().getProperty(key);
 		} catch (ConfigurationException e) {
@@ -272,21 +156,8 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if the current configuration and/or
      * bootstrap properties could not be obtained
      */
-    public static Properties getProperties() throws ConfigurationException {
-        return getProperties(false);
-    }
-
-    /**
-     * Get all of the configuration properties.  The properties
-     * that are returned have default properties that are the bootstrap properties.
-     * @param forceRefresh forces the refreshing of the cache from the datasource.
-     * @return the immutable properties; never null
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public synchronized static Properties getProperties(boolean forceRefresh) throws ConfigurationException {
-		check();
-        Properties result = READER.getConfigurationProperties();
+    public Properties getProperties() throws ConfigurationException {
+        Properties result = getReader().getConfigurationProperties();
         Properties copyResult = PropertiesUtils.clone(result,getBootStrapProperties(),false,true);
         if ( !(copyResult instanceof UnmodifiableProperties) ) {
                     copyResult = new UnmodifiableProperties(copyResult);
@@ -306,12 +177,10 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if the current configuration and/or
      * bootstrap properties could not be obtained
      */
-    public synchronized static Properties getResourceProperties(String resourceName) throws ConfigurationException {
-        check();
-
+    public Properties getResourceProperties(String resourceName) throws ConfigurationException {
         Properties result;
 
-        SharedResource sr = READER.getResource(resourceName);
+        SharedResource sr = getReader().getResource(resourceName);
 
         Properties props;
         if (sr != null) {
@@ -331,41 +200,14 @@ public final class CurrentConfiguration {
 
         return result;
     }
-
-    /**
-     * Get the startup configuration that was used for deployment.
-     * @return the Configuration that was used for deployment.
-     * @throws ConfigurationException if the startup configuration could not be obtained
-     */
-    public synchronized static Configuration getStartupConfiguration() throws ConfigurationException {
-        check();
-        Configuration config = READER.getStartupConfiguration();
-        if ( config == null ) {
-               throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0021, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0021));
-        }
-
-        return config;
-    }
-    
     
     /**
      * Get the current configuration that is to be used for deployment.
      * @return the Configuration used for deployment
      * @throws ConfigurationException if the current configuration could not be obtained
      */
-    public static Configuration getConfiguration() throws ConfigurationException {
-        return getConfiguration(false);
-    }
-
-    /**
-     * Get the current configuration that is to be used for deployment.
-     * @param forceRefresh forces the refreshing of the cache from the datasource.
-     * @return the Configuration used for deployment
-     * @throws ConfigurationException if the current configuration could not be obtained
-     */
-    public synchronized static Configuration getConfiguration(boolean forceRefresh) throws ConfigurationException {
-	   check();
-       Configuration config = READER.getNextStartupConfiguration();
+    public Configuration getConfiguration() throws ConfigurationException {
+       Configuration config = getReader().getNextStartupConfiguration();
        if ( config == null ) {
               throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0021, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0021));
        }
@@ -376,16 +218,13 @@ public final class CurrentConfiguration {
 
     /**
      * Get the current configuration that is to be used for deployment.
-     * @param forceRefresh forces the refreshing of the cache from the datasource.
      * @return the Configuration used for deployment
      * @throws ConfigurationException if the current configuration could not be obtained
      */
-    public synchronized static ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
-	   check();
-
+    public ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
         ConfigurationModelContainer config = null;
         try {
-            config = READER.getConfigurationModel();
+            config = getReader().getConfigurationModel();
         } catch (UnsupportedOperationException e) {
         }
 
@@ -398,44 +237,6 @@ public final class CurrentConfiguration {
     }
     
     /**
-     * Get the current configuration that is to be used for deployment.
-     * @param forceRefresh forces the refreshing of the cache from the datasource.
-     * @return the Configuration used for deployment
-     * @throws ConfigurationException if the current configuration could not be obtained
-     */
-    public synchronized static ConfigurationModelContainer getStartupConfigurationModel() throws ConfigurationException {
-       check();
-       
-       ConfigurationModelContainer config = null;
-       try {
-           config = READER.getStartupConfigurationModel();
-       } catch (UnsupportedOperationException e) {
-       }
-           
-       if (config == null) {
-           throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0022, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0022));
-       }
-
-       return config;
-    }    
-
-
-    /**
-     * Returns a <code>Collection</code> of type <code>ComponentType</code> .
-     * that are flagged as being monitored.  A component of this type is considered
-     * to be available for monitoring statistics.
-     * @param includeDeprecated true if class names that have been deprecated should be
-     *    included in the returned list, or false if only non-deprecated constants should be returned.
-     * @return List of type <code>ComponentType</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see com.metamatrix.common.api.ComponentType
-     */
-
-    public static Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-       throw new UnsupportedOperationException("Method getMonitoredComponent is not implemented on CurrentConfiguration."); //$NON-NLS-1$
-    }
-
-    /**
      * Returns a <code>Collection</code> of type <code>ComponentType</code> that represent
      * all the ComponentTypes defined.
      * @param includeDeprecated true if class names that have been deprecated should be
@@ -444,9 +245,8 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      * @see com.metamatrix.common.api.ComponentType
      */
-    public static Collection getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        check();
-        return READER.getComponentTypes(includeDeprecated);
+    public Collection getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
+        return getReader().getComponentTypes(includeDeprecated);
     }
     
     /**
@@ -456,12 +256,8 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      * @see #ProductType
      */
-    public static Collection getProductTypes() throws ConfigurationException {
-        
-        check();
-        return READER.getProductTypes();
-       
-        
+    public Collection getProductTypes() throws ConfigurationException {
+        return getReader().getProductTypes();
     }
       
      /**
@@ -476,9 +272,8 @@ public final class CurrentConfiguration {
      * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
      * implementation
      */
-    public static Host getHost(HostID hostID) throws ConfigurationException{
-        check();
-        return READER.getHost(hostID);
+    public Host getHost(HostID hostID) throws ConfigurationException{
+        return getReader().getHost(hostID);
     }
 
     /**
@@ -493,9 +288,8 @@ public final class CurrentConfiguration {
      * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
      * implementation
      */
-    public static Host getHost(String name) throws ConfigurationException{
-        check();
-        return READER.getConfigurationModel().getHost(name);
+    private Host getHost(String name) throws ConfigurationException{
+        return getReader().getConfigurationModel().getHost(name);
     } 
     
     /**
@@ -522,8 +316,7 @@ public final class CurrentConfiguration {
      * @throws Exception
      * @since 4.3
      */
-    public static Host findHost(String hostName) throws ConfigurationException  {
-        check();
+    public Host findHost(String hostName) throws ConfigurationException  {
         Host h = null;
         
         try {
@@ -634,8 +427,7 @@ public final class CurrentConfiguration {
      * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
      * implementation
      */
-    public static Host getHost() throws ConfigurationException, UnknownHostException{
-        check();
+    public Host getHost() throws ConfigurationException, UnknownHostException{
         // use the logicalHostName firstt, because this would be set if this
         // is called within a running VM (i.e., hostcontroller, vmcontroller)
         // otherwise use localhost
@@ -647,95 +439,13 @@ public final class CurrentConfiguration {
     }  
     
     /**
-     * Returns the VM based on the current process thats running. 
-     * @return the full Host object
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service
-     * @throws UnknownHostException if the NetUtils cannot derive the current host name
-     * @throws UnsupportedOperationException if this method is not implemented
-     * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
-     * implementation
-     */
-    public static VMComponentDefn getVM() throws ConfigurationException, UnknownHostException{
-        check();
-        // use the logicalHostName first, because this would be set if this
-        // is called within a running VM (i.e., hostcontroller, vmcontroller)
-        Host host = getHost();
-        if (host == null) return null;
-        
-        VMComponentDefn vm = 
-                READER.getConfigurationModel().
-                    getConfiguration().
-                    getVMForHost(host.getFullName(), VMNaming.getVMName());
-        
-        if (vm != null) return vm;
-        
-        // if not found based on the actual vm name, 
-        // then if the host only has 1 vm, then return it
-        Collection vms = READER.getConfigurationModel().
-                                getConfiguration().getVMsForHost(host.getFullName());
-        
-        if (vms != null && vms.size() == 1) {
-            return (VMComponentDefn) vms.iterator().next();
-        }
-        
-        return null;
-    }      
-
-    // the primary method used to perform all the checking
-    // if data is preloaded.
-    protected synchronized static final void check() throws ConfigurationException {
-        verifyBootstrapProperties();
-    }
-
-    public synchronized static final void refresh() throws ConfigurationException {
-        // during initialization or shutdown, do not allow a refresh to occur
-        if (SHUTDOWN_REQUESTED) {
-            return;
-        }
-
-
-        clear();
-    }
-
-    /**
      * Reset causes not just a refresh, but the bootstrapping process
-     * to occurr again.
+     * to occur again.
      */
-    public synchronized static final void reset() throws ConfigurationException {
-        // during initialization or shutdown, do not allow a refresh to occur
-        if (SHUTDOWN_REQUESTED) {
-            return;
-        }
-
-        clear();
-
-    }
-
-    private static final void clear() {
-
-        READER = null;
-        BOOTSTRAP_PROPERTIES = null;
-        SYSTEM_BOOTSTRAP_PROPERTIES = null;
-        // force a rebootstrap
-        performedBootStrap = false;
-
-    }
-
-    public synchronized static final void shutdown() {
-        SHUTDOWN_REQUESTED = true;
-
-
-        if ( READER != null ) {
-            try {
-                READER.close();
-                clear();
-            } catch ( Exception e ) {
-                System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0023));
-                e.printStackTrace(System.err);
-            }
-
-        }
+    public synchronized final void reset() throws ConfigurationException {
+        reader = null;
+        bootstrapProperties = null;
+        systemBootstrapProperties = null;
     }
 
     /**
@@ -743,7 +453,7 @@ public final class CurrentConfiguration {
      * {@link StartupStateController}, which is used by
      * MetaMatrixController to initialize the system configurations during bootstrapping.
      * Once bootstrap properties are verified, this method will use
-     * the {@link #READER} to attempt to put the system state into
+     * the {@link #reader} to attempt to put the system state into
      * {@link StartupStateController#STATE_STARTING}, and then
      * commence with initialization.  If the state is already
      * {@link StartupStateController#STATE_STARTING}, then another
@@ -769,88 +479,14 @@ public final class CurrentConfiguration {
      * bootstrap properties could not be obtained
      */
 //JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-    public static synchronized final void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
+    public final void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
 
-        try {
-            check();
-
-            // this only initializes the persistence of the configuration
-            // (i.e., copying NEXTSTARTUP to OPERATIONAL, etc)
-            READER.getInitializer().performSystemInitialization(forceInitialization);
-
-        } catch (StartupStateException se) {
-            throw se;
-        } catch (ConfigurationException ce) {
-            throw ce;
-        }
+        // this only initializes the persistence of the configuration
+        // (i.e., copying NEXTSTARTUP to OPERATIONAL, etc)
+    	getReader().getInitializer().performSystemInitialization(forceInitialization);
 
 		// perform reset to reload configuration information
         reset();
-
-
-    }
-
-
-    /**
-     * This method should be called <i>only</i> by
-     * {@link StartupStateController}, which is used by
-     * MetaMatrixController to initialize the system configurations during bootstrapping.
-     * Once bootstrap properties are verified, this method will use
-     * the {@link #READER} to attempt to put the system state into
-     * {@link StartupStateController#STATE_STARTING}, and then
-     * commence with initialization.  If the state is already
-     * {@link StartupStateController#STATE_STARTING}, then another
-     * MetaMatrixController is already currently in the process of
-     * starting the system, and a {@link StartupStateException}
-     * will be thrown.  If this method returns without an
-     * exception, then the system state will be in state
-     * {@link StartupStateController#STATE_STARTING}, and the calling
-     * code should proceed with startup.
-
-
-     * @param forceInitialization if the system is in a state other than
-     * {@link StartupStateController#STATE_STOPPED}, and the
-     * administrator thinks the system actually crashed and is
-     * not really running, he can choose to force the
-     * initialization.  Otherwise, if the system is in one of these states,
-     * an exception will be thrown.  This method is package-level so
-     * that only StartupStateController can access it.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can proceed.  This
-     * exception will indicate the current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-//JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-    public static final void beginSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
-		throw new UnsupportedOperationException("beginSystemInitialization is no longer supported."); //$NON-NLS-1$
-
-    }
-
-    /**
-     * If the {@link #beginSystemInitialization} method executes without
-     * an exception, StartupStateController should call this method
-     * after any startup work is done.  This will put the system into a
-     * state of {@link #STATE_STARTED}.  StartupStateController should <i>only</i>
-     * call this method if the {@link #beginSystemInitialization} method
-     * executed without exception.  This method will throw an exception if
-     * the system is not currently in a state of {@link #STATE_STARTING}, but
-     * that will not prevent the wrong client code from calling this method
-     * if a different StartupStateController had successfully called
-     * {@link #beginSystemInitialization}.  This method is package-level so
-     * that only StartupStateController can access it.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can be finished, namely
-     * {@link #STATE_STARTING}.  This exception will indicate the
-     * current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-//JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-
-    public static synchronized final void finishSystemInitialization() throws StartupStateException, ConfigurationException {
-		throw new UnsupportedOperationException("finishSystemInitialization is no longer supported."); //$NON-NLS-1$
-
     }
 
     /**
@@ -859,43 +495,47 @@ public final class CurrentConfiguration {
      * bootstrap properties could not be obtained
      */
 //JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-    public static final void indicateSystemShutdown() throws ConfigurationException {
-        check();
-        READER.getInitializer().indicateSystemShutdown();
+    public final void indicateSystemShutdown() throws ConfigurationException {
+    	getReader().getInitializer().indicateSystemShutdown();
     }
 
-	synchronized static Properties getBootStrapProperties() throws ConfigurationException {
-		if (BOOTSTRAP_PROPERTIES == null) {
-			CurrentConfigBootstrap bootstrapStrategy = null;
+	synchronized Properties getBootStrapProperties() throws ConfigurationException {
+		if (bootstrapProperties == null) {
 			Properties systemBootStrapProps = getSystemBootStrapProperties();
-			boolean useSystemProperties = systemBootStrapProps.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null;
+			boolean useSystemProperties = systemBootStrapProps.getProperty(CoreConstants.NO_CONFIGURATION) != null;
 			try {
-			
-					bootstrapStrategy = new PropertyFileCurrentConfigBootstrap(useSystemProperties);
-					BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties(systemBootStrapProps);
-	
+				Properties bootstrapProps = new Properties(systemBootStrapProps);
+		        InputStream bootstrapPropStream = null;
+		        try {
+		        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
+		        	if (bootstrapPropStream != null) {
+		        		bootstrapProps.load(bootstrapPropStream);
+		        	}
+		        } catch (IOException e) {
+		        	if (!useSystemProperties) {
+		        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
+		        	}
+		        } finally {
+			        try {
+			        	if (bootstrapPropStream != null) {
+			        		bootstrapPropStream.close();
+			        	}
+			        } catch (IOException e ) {
+			        }
+		        }
+				bootstrapProperties = new UnmodifiableProperties(bootstrapProps);
 	        } catch (ConfigurationException ce) {
 	            throw ce;
-			} catch (Exception e) {
-				throw new ConfigurationException();
 			}
 		}
-		return BOOTSTRAP_PROPERTIES;
+		return bootstrapProperties;
 	}
-
     
-    public static final Properties getSystemBootStrapProperties() throws ConfigurationException {
-        if (SYSTEM_BOOTSTRAP_PROPERTIES != null) {
-            return PropertiesUtils.clone(SYSTEM_BOOTSTRAP_PROPERTIES, false);
+    public synchronized final Properties getSystemBootStrapProperties() throws ConfigurationException {
+        if (systemBootstrapProperties == null) {
+            systemBootstrapProperties = new UnmodifiableProperties(System.getProperties());
         }
-        CurrentConfigBootstrap bootstrapStrategy = null;
-        try {
-            bootstrapStrategy = new SystemCurrentConfigBootstrap();
-            SYSTEM_BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties();
-        } catch (Exception e) {
-            throw new ConfigurationException(e.getMessage());
-        }
-        return PropertiesUtils.clone(SYSTEM_BOOTSTRAP_PROPERTIES, false);
+        return systemBootstrapProperties;
     }
 
     /**
@@ -904,61 +544,38 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if the current configuration and/or
      * bootstrap properties could not be obtained
      */
-    public synchronized static final void verifyBootstrapProperties() throws ConfigurationException {
+    public final void verifyBootstrapProperties() throws ConfigurationException {
+    	getReader();
+    }
+    	
+    synchronized CurrentConfigurationReader getReader() throws ConfigurationException {
+    	if (reader == null) {
+            // Get the default bootstrap properties from the System properties ...
+            boolean useSystemProperties = false;
+			Properties bootstrap = getBootStrapProperties();
+			
+            useSystemProperties = bootstrap.getProperty(CoreConstants.NO_CONFIGURATION) != null;
 
-        if (performedBootStrap) {
-            return;
-        }
+            String readerClassName = bootstrap.getProperty( CONFIGURATION_READER_CLASS_PROPERTY_NAME );
 
-		try {
+            if ( readerClassName == null ) {
+				if (!useSystemProperties) {
+					throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0024, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0024, CONFIGURATION_READER_CLASS_PROPERTY_NAME));
+				}
+				reader = new SystemCurrentConfigurationReader();
+            } else {
+            	CurrentConfigurationReader tempReader;
+            	try {
+	                Class readerClass = Class.forName(readerClassName);
+	                tempReader = (CurrentConfigurationReader) readerClass.newInstance();
+            	} catch (Exception e) {
+            		throw new ConfigurationException(e);
+				}
+            	tempReader.connect(bootstrap);
+                reader = tempReader;
+            }
+    	}
 
-        	if ( READER == null ) {
-
-                // Get the default bootstrap properties from the System properties ...
-                boolean useSystemProperties = false;
-				Properties bootstrap = getBootStrapProperties();
-				
-                useSystemProperties = bootstrap.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null;
-
-                String readerClassName = bootstrap.getProperty( CurrentConfigBootstrap.CONFIGURATION_READER_CLASS_PROPERTY_NAME );
-
-                if ( readerClassName == null ) {
-					if (useSystemProperties) {
-	       				READER = new SystemCurrentConfigurationReader();
-					} else {
-						throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0024, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0024, CurrentConfigBootstrap.CONFIGURATION_READER_CLASS_PROPERTY_NAME));
-					}
-                } else {
-                    Class readerClass = Class.forName(readerClassName);
-                    CurrentConfigurationReader tempReader = (CurrentConfigurationReader) readerClass.newInstance();
-                    tempReader.connect(bootstrap);
-                    READER = tempReader;
-                }
-              
-                performedBootStrap = true;
-			}
-		} catch ( ConfigurationException e ) {
-                System.err.println("*************************************************************************************"); //$NON-NLS-1$
-                System.err.println("** ERROR: Unable to obtain the bootstrap properties for the current configuration. **"); //$NON-NLS-1$
-                System.err.println("*************************************************************************************"); //$NON-NLS-1$
- 				e.printStackTrace(System.err);
-                throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_ERR_0025, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0025));
-
-           } catch ( Throwable e ) {
-                System.err.println("*************************************************************************************"); //$NON-NLS-1$
-                System.err.println("** ERROR: Unable to obtain the bootstrap properties for the current configuration. **"); //$NON-NLS-1$
-                System.err.println("*************************************************************************************"); //$NON-NLS-1$
- 				e.printStackTrace(System.err);
-
-                throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0025, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0025));
-           }
-
-
+    	return reader;
     }
 }
-
-
-
-
-
-

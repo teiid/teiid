@@ -80,7 +80,7 @@ public class StartupVDBDeleteUtility extends AbstractVDBDeleteUtility {
         throws MetaMatrixComponentException {
         
         //Get JDBCSessionTransaction connection properties
-        Properties transactionProps = CurrentConfiguration.getProperties();
+        Properties transactionProps = CurrentConfiguration.getInstance().getProperties();
         if (transactionProps.getProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY) == null) {
         	transactionProps.setProperty(AuthorizationServicePropertyNames.CONNECTION_FACTORY, AuthorizationServicePropertyNames.DEFAULT_FACTORY_CLASS);
         }       

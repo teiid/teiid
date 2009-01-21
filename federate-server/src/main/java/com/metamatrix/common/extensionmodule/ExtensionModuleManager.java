@@ -78,7 +78,7 @@ import com.metamatrix.server.ResourceFinder;
  * if CurrentConfiguration has already been initialized with a different
  * bootstrap strategy.  Alternately, a different bootstrap strategy can
  * be used for CurrentConfiguration, as long as the properties listed
- * below are available to this object via CurrentConfiguration.</p>
+ * below are available to this object via CurrentConfiguration.getInstance().</p>
  *
  * <p>The following properties are required:
  * <ul>
@@ -857,7 +857,7 @@ public class ExtensionModuleManager {
 			//will be checked for in ordinary CurrentConfiguration properties
             String key = ExtensionModulePropertyNames.CONNECTION_FACTORY;
             if (resourceProps.getProperty(key) == null){
-                String value = CurrentConfiguration.getProperty(key);
+                String value = CurrentConfiguration.getInstance().getProperty(key);
                 if (value != null) {
                 	resourceProps.setProperty(key, value);
                 }

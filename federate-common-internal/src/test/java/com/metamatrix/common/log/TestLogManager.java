@@ -68,7 +68,7 @@ public class TestLogManager extends TestCase {
     
 	private static void setUpOnce() throws Exception {
 		System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-		CurrentConfiguration.reset();
+		CurrentConfiguration.getInstance().reset();
 		LogManager.stop();
 		
 	}

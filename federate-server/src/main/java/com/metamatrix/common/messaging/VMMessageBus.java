@@ -60,14 +60,14 @@ public class VMMessageBus implements MessageBus {
         Properties env = null;
         // when the old messagebus Resource was replaced with the JGroups resource,
         // the MESSAGE_BUS_TYPE property was moved to the global properties section
-        // however, (HERES THE HACK), CurrentConfiguration.getProperties() does not
+        // however, (HERES THE HACK), CurrentConfiguration.getInstance().getProperties() does not
         // allow the system properties to override configuration settings, therefore,
         // the MESSAGE_BUS_TYPE property could not be overridden with TYPE_NOOP
         // so were looking at System.getProperty() to force the override
         String mbType = System.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
         
         if (mbType == null || mbType.trim().length() == 0) {
-            env = CurrentConfiguration.getProperties();
+            env = CurrentConfiguration.getInstance().getProperties();
             mbType = env.getProperty(MessageBusConstants.MESSAGE_BUS_TYPE);
         }
 

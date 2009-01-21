@@ -123,7 +123,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     static {
         //read value of cacheClassLoaders
         String cacheClassLoadersString = 
-            CurrentConfiguration.getProperty(ServerPropertyNames.CACHE_CLASS_LOADERS);
+            CurrentConfiguration.getInstance().getProperty(ServerPropertyNames.CACHE_CLASS_LOADERS);
         if (cacheClassLoadersString != null) {
             cacheClassLoaders = Boolean.valueOf(cacheClassLoadersString).booleanValue();
         }   
@@ -469,7 +469,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
 //System.out.println(" *** ConnectorService.decryptMaskedProperties - ConnectorBindingName: " + connectorBindingName);
         Configuration currentConfig = null;
         try {
-            currentConfig = CurrentConfiguration.getConfiguration();
+            currentConfig = CurrentConfiguration.getInstance().getConfiguration();
         } catch (ConfigurationException e) {
             Object[] params = new Object[] {connectorBindingName};
             String msg = ServerPlugin.Util.getString("ConnectorService.Unable_to_get_Configuration_for_connector_binding_{0}", params); //$NON-NLS-1$
@@ -477,7 +477,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
         ConfigurationModelContainer configModel = null;
         try {
-            configModel = CurrentConfiguration.getConfigurationModel();
+            configModel = CurrentConfiguration.getInstance().getConfigurationModel();
         } catch (ConfigurationException e) {
             Object[] params = new Object[]{connectorBindingName};
             String msg = ServerPlugin.Util.getString("ConnectorService.Unable_to_get_ConfigurationModelContainer_for_connector_binding_{0}", params); //$NON-NLS-1$

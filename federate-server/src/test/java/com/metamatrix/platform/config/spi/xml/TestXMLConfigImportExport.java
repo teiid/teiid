@@ -381,7 +381,7 @@ public class TestXMLConfigImportExport extends BaseTest {
             
             commit();
             
-            ProductServiceConfig psc = CurrentConfiguration.getConfiguration().getPSC((ProductServiceConfigID) newPSC.getID());
+            ProductServiceConfig psc = CurrentConfiguration.getInstance().getConfiguration().getPSC((ProductServiceConfigID) newPSC.getID());
             assertNotNull(psc);
                 
             return newPSC;

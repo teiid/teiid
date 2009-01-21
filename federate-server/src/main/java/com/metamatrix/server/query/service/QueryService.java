@@ -68,7 +68,7 @@ import com.metamatrix.server.util.LogConstants;
  * Wraps up a QueryServiceEngine to tie it into the platform concept of services.  Is a remote object.
  * Provides the QueryServiceEngine with a session service object.
  * Configures the QueryServiceEngine from the configuration source.
- * Buffers the QueryServiceEngine from dependencies on CurrentConfiguration.
+ * Buffers the QueryServiceEngine from dependencies on CurrentConfiguration.getInstance().
  * These measures allow the QueryServiceEngine to be instantiated in a light-weight fashion without a full, running "server".
  */
 public class QueryService extends AbstractService implements QueryServiceInterface {
@@ -97,7 +97,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
-        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getProperties(), new Long(getID().getID()), CurrentConfiguration.getHost(), VMNaming.getVMName());
+        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getInstance().getProperties(), new Long(getID().getID()), CurrentConfiguration.getInstance().getHost(), VMNaming.getVMName());
         dqp = new DQPCore();
         dqp.start(configSource);
     }
@@ -109,7 +109,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     private void registerUDFSource(String udfSource) throws IOException {
     	URL[] urls = null;
     	
-    	String extensionClasspath = CurrentConfiguration.getProperty(UDF_CLASSPATH_PROPERTY);
+    	String extensionClasspath = CurrentConfiguration.getInstance().getProperty(UDF_CLASSPATH_PROPERTY);
         if (extensionClasspath != null && extensionClasspath.trim().length() > 0){
             try {
                 urls = URLFactory.parseURLs(extensionClasspath, CLASSPATH_DELIMITER);

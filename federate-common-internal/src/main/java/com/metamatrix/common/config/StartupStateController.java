@@ -118,60 +118,6 @@ final public class StartupStateController {
     /**
      * This method should be called <i>only</i> by
      * {@link com.metamatrix.platform.util.MetaMatrixController}
-     * to initialize the system configurations
-     * in the configuration database during bootstrapping.
-     * This method will attempt to put the system state into
-     * {@link StartupStateController#STATE_STARTING}, and then
-     * commence with initialization.  If the state is already
-     * {@link StartupStateController#STATE_STARTING}, then another
-     * MetaMatrixController is already currently in the process of
-     * starting the system, and a {@link StartupStateException}
-     * will be thrown.  If this method returns without an
-     * exception, then the system state will be in state
-     * {@link StartupStateController#STATE_STARTING}, and the calling
-     * code should proceed with startup.
-     * @param forceInitialization if the system is in a state other than
-     * {@link StartupStateController#STATE_STOPPED}, and the
-     * administrator thinks the system actually crashed and is
-     * not really running, he can choose to force the
-     * initialization.  Otherwise, if the system is in one of these states,
-     * an exception will be thrown.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can proceed.  This
-     * exception will indicate the current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public final static void beginSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException{
-        CurrentConfiguration.beginSystemInitialization(forceInitialization);
-    }
-
-    /**
-     * If the {@link #beginSystemInitialization} method executes without
-     * an exception, the client should call this method
-     * after doing any startup work.  This will put the system into a
-     * state of {@link #STATE_STARTED}.  MetaMatrixController should <i>only</i>
-     * call this method if the {@link #beginSystemInitialization} method
-     * executed without exception.  This method will throw an exception if
-     * the system is not currently in a state of {@link #STATE_STARTING}, but
-     * that will not prevent the wrong client code from calling this method
-     * if a different client had successfully called
-     * {@link #beginSystemInitialization}
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can be finished, namely
-     * {@link #STATE_STARTING}.  This exception will indicate the
-     * current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public final static void finishSystemInitialization() throws StartupStateException, ConfigurationException{
-        CurrentConfiguration.finishSystemInitialization();
-    }
-    
-    
-    /**
-     * This method should be called <i>only</i> by
-     * {@link com.metamatrix.platform.util.MetaMatrixController}
      * to initialize the system configurations during bootstrapping.
      * This method will attempt to put the system state into
      * {@link StartupStateController#STATE_STARTING}, and then
@@ -200,20 +146,8 @@ final public class StartupStateController {
      */
     
  	public final static void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException{
-        CurrentConfiguration.performSystemInitialization(forceInitialization);
+        CurrentConfiguration.getInstance().performSystemInitialization(forceInitialization);
     }
-
-
-    /**
-     * This will put the system into a state of {@link #STATE_STOPPED}.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public final static void indicateSystemShutdown() throws ConfigurationException {
-        CurrentConfiguration.indicateSystemShutdown();
-    }
-
-
 
 }
 

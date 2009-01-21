@@ -61,7 +61,7 @@ public class TestEncryptPasswordTask extends TestCase {
     	props.remove(CommonPropertyNames.JCE_PROVIDER);
     	System.setProperties(props);
     	
-     	CurrentConfiguration.reset();
+     	CurrentConfiguration.getInstance().reset();
 		CryptoUtil.reinit();
 
         String path = UnitTestUtil.getTestScratchFile("test.keystore").getAbsolutePath();

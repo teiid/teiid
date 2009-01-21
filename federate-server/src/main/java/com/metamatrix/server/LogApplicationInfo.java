@@ -69,7 +69,7 @@ class LogApplicationInfo extends Thread {
         InputStream is = null;
         try {
                            
-            ConfigurationModelContainer configmodel = CurrentConfiguration.getConfigurationModel();
+            ConfigurationModelContainer configmodel = CurrentConfiguration.getInstance().getConfigurationModel();
             VMComponentDefn deployedVM = configmodel.getConfiguration().getVMForHost(this.hostName, this.vmName);
 
             Properties configprops = null;

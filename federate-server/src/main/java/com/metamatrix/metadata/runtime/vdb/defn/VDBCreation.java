@@ -137,7 +137,7 @@ public class VDBCreation  {
             ComponentType ct = (ComponentType) connectorTypes.get(cb.getComponentTypeID().getName());
 
             if (cmc == null) {
-                cmc = CurrentConfiguration.getConfigurationModel(); 
+                cmc = CurrentConfiguration.getInstance().getConfigurationModel(); 
             }                
             ConnectorBinding existingBinding = addConfigurationObjects(cmc, cb, ct, createdPSC, writer, editor);
             // if the binding is returned, it indicates the binding already existed and

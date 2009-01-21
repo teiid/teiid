@@ -126,11 +126,11 @@ public class SessionServiceImpl extends AbstractService implements
         CacheFactory cf = ResourceFinder.getCacheFactory();
         this.sessionCache = cf.get(Cache.Type.SESSION, new CacheConfiguration(Policy.LRU, 24*60*60, 5000));
 
-        Configuration config = CurrentConfiguration.getConfiguration();
+        Configuration config = CurrentConfiguration.getInstance().getConfiguration();
         Properties nextProperties = config.getProperties();
         this.sessionMaxLimit = PropertiesUtils.getIntProperty(nextProperties, MAX_ACTIVE_SESSIONS, 0);
         this.sessionTimeLimit = PropertiesUtils.getIntProperty(nextProperties, SESSION_TIME_LIMIT, 0) * 60000;
-        this.clusterName = CurrentConfiguration.getSystemName();
+        this.clusterName = CurrentConfiguration.getInstance().getSystemName();
         this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override

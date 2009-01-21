@@ -100,7 +100,7 @@ public class UserPreferences implements PropertiedObject {
         
         //Load the properties and user preference values
         try {
-            configProperties = CurrentConfiguration.getProperties(true);
+            configProperties = CurrentConfiguration.getInstance().getProperties();
         } catch (ConfigurationException e) {
             configProperties = new Properties();
         }

@@ -209,7 +209,7 @@ public class ServiceManager {
     private boolean expertMode = false;
     
     public ServiceManager() throws Exception {
-    	this.currentConfig = CurrentConfiguration.getConfiguration();
+    	this.currentConfig = CurrentConfiguration.getInstance().getConfiguration();
     }
 
     public void run (String command, boolean exit) {
@@ -1356,7 +1356,7 @@ public class ServiceManager {
         Host host = null;
         if (configName == null) {
             configName = VMNaming.getDefaultConfigName();
-        	host = CurrentConfiguration.findHost(configName);
+        	host = CurrentConfiguration.getInstance().findHost(configName);
         	if (host == null) {
         		System.out.println("Failed to find the host name in the configuration; please use -config option to set the hostname"); //$NON-NLS-1$
         		System.exit(-1);

@@ -96,7 +96,7 @@ public class ComponentCryptoUtil {
     }       
     
     public static Properties getDecryptedProperties(ComponentDefn defn) throws ConfigurationException, CryptoException {
-        ConfigurationModelContainer configModel = CurrentConfiguration.getConfigurationModel();
+        ConfigurationModelContainer configModel = CurrentConfiguration.getInstance().getConfigurationModel();
         
         ComponentType componentType = configModel.getComponentType(defn.getComponentTypeID().getName());
         Assertion.isNotNull(componentType, "unknown component type"); //$NON-NLS-1$

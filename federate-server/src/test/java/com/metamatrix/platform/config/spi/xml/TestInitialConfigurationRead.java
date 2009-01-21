@@ -66,7 +66,7 @@ public class TestInitialConfigurationRead extends BaseTest{
       		createSystemProperties("config.xml"); //$NON-NLS-1$
       		
 			// do the reset after setting the system properties
-     		CurrentConfiguration.reset();
+     		CurrentConfiguration.getInstance().reset();
       		   		    		      	
             validConfigurationModel();
  
@@ -78,9 +78,9 @@ public class TestInitialConfigurationRead extends BaseTest{
     }
     
     private void validConfigurationModel() throws Exception {
-        ConfigurationModelContainer ccm = CurrentConfiguration.getConfigurationModel();
+        ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();
         if (ccm == null) {
-            fail("Configuration Model was not obtained from CurrentConfiguration."); //$NON-NLS-1$
+            fail("Configuration Model was not obtained from CurrentConfiguration"); //$NON-NLS-1$
         }
         
   	 	Collection providers = ccm.getConfiguration().getAuthenticationProviders();
