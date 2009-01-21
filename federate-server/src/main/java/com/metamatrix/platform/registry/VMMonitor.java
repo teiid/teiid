@@ -128,22 +128,6 @@ public class VMMonitor implements ServerEvents {
         }, pollingIntervel, pollingIntervel);
     }
 
-	public void resourcePoolManagerAdded(ResourcePoolMgrBinding binding) {
-		try {
-			this.registry.addResourcePoolManagerBinding(hostName, vmId.toString(), binding);
-			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Resource Pool Added:"+binding.getID()); //$NON-NLS-1$
-		} catch (ResourceAlreadyBoundException e) {
-			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "Resource Pool exists:"+binding.getID()); //$NON-NLS-1$
-		} catch(CacheNodeNotFoundException e) {
-			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add Resource Pool:"+binding.getID()); //$NON-NLS-1$
-		}
-	}
-
-	public void resourcePoolManagerRemoved(ResourcePoolMgrID id) {
-		this.registry.removeResourcePoolManagerBinding(hostName, vmId.toString(), id);
-		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Resource Pool Removed:"+id); //$NON-NLS-1$
-	}
-
 	public void serviceAdded(ServiceRegistryBinding binding) {
 		try {
 			this.registry.addServiceBinding(hostName, vmId.toString(), binding);

@@ -26,22 +26,19 @@ package com.metamatrix.console.ui.views.resources;
 
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.object.PropertiedObject;
-import com.metamatrix.common.pooling.api.ResourcePool;
-import com.metamatrix.console.models.PoolManager;
+import com.metamatrix.console.models.ResourceManager;
 
 public class ResourceData {
     String name;
     String type;
-    String poolAssignedTo;
     PropertiedObject propertiedObject;
     
-    public ResourceData(SharedResource rd, PoolManager mgr) {
+    public ResourceData(SharedResource rd, ResourceManager mgr) {
         super();
         name = rd.getName();
         type = rd.getComponentTypeID().getName();
         
         propertiedObject = mgr.getPropertiedObjectForResourceDescriptor(rd);
-        poolAssignedTo = rd.getProperty(ResourcePool.RESOURCE_POOL);
     }
     
     public String getName() {
@@ -50,10 +47,6 @@ public class ResourceData {
     
     public String getType() {
         return type;
-    }
-    
-    public String getPoolAssignedTo() {
-        return poolAssignedTo;
     }
     
     public PropertiedObject getPropertiedObject() {

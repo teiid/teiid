@@ -24,8 +24,6 @@
 
 package com.metamatrix.platform.vm.controller;
 
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
-import com.metamatrix.platform.registry.ResourcePoolMgrID;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -40,7 +38,4 @@ public interface ServerEvents {
 	
 	void serviceRemoved(ServiceID id);
 	
-	void resourcePoolManagerAdded(ResourcePoolMgrBinding binding);
-	
-	void resourcePoolManagerRemoved(ResourcePoolMgrID id);
 }

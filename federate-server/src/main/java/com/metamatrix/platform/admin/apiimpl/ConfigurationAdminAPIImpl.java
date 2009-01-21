@@ -51,18 +51,13 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
-import com.metamatrix.common.pooling.api.ResourcePoolMgr;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
@@ -71,7 +66,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
 
     // Auth svc proxy
     private ConfigurationServiceInterface configAdmin;
-    private ClusteredRegistryState registry;
     private static ConfigurationAdminAPI configAdminAPI;
 
     /**
@@ -79,7 +73,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      */
     private ConfigurationAdminAPIImpl(ClusteredRegistryState registry) throws MetaMatrixComponentException {
         configAdmin = PlatformProxyHelper.getConfigurationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
-        this.registry = registry;
     }
 
     public synchronized static ConfigurationAdminAPI getInstance(ClusteredRegistryState registry) throws MetaMatrixComponentException {
@@ -620,104 +613,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     }
 
     /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType} for all resource pool types of
-     * a specified configuration.
-     * 
-     * @param configurationID
-     *            is the configuration from which the component types are to be derived
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
-                                                                                        InvalidSessionException,
-                                                                                        AuthorizationException,
-                                                                                        MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getResourcePoolTypes(configurationID);
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType} that represent the pool types
-     * for which new {@link ResourceDescriptor ResourcePools} of these types can be created. This means only these types have
-     * logic implemented to make use of the resource pool.
-     * 
-     * @param configurationID
-     *            is the configuration from which the component types are to be derived
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getPoolableResourcePoolTypes(ConfigurationID configurationID) throws ConfigurationException,
-                                                                                                InvalidSessionException,
-                                                                                                AuthorizationException,
-                                                                                                MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getPoolableResourcePoolTypes(configurationID);
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all resource
-     * pools defined to the system.
-     * 
-     * @param configurationID
-     *            is the configuration from which the component defns are to be derived
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourcePools(ConfigurationID configurationID) throws ConfigurationException,
-                                                                                    InvalidSessionException,
-                                                                                    AuthorizationException,
-                                                                                    MetaMatrixComponentException {
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getResourcePools(configurationID);
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all resource
-     * pools of a specified type defined in a configuration.
-     * 
-     * @param configurationID
-     *            is the configuration from which the component defns are to be derived
-     * @param componentTypeID
-     *            indicates the type of pools in the configuration to return
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourcePools(ConfigurationID configurationID,
-                                                    ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                                    InvalidSessionException,
-                                                                                    AuthorizationException,
-                                                                                    MetaMatrixComponentException {
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getResourcePools(configurationID, componentTypeID);
-    }
-
-    /**
      * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all internal
      * resources defined to the system. The internal resources are not managed with the other configuration related information.
      * They are not dictated based on which configuration they will operate (i.e., next startup or operational);
@@ -996,43 +891,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.setHistoryLimit(" +maximumHistoryCount + ")"); //$NON-NLS-1$ //$NON-NLS-2$
         configAdmin.setHistoryLimit(maximumHistoryCount);
-    }
-
-    /**
-     * Execute an update to immediately apply the changes to the
-     * {@link com.metamatrix.common.pooling.api.ResourcePool ResourcePool} identified by the
-     * {@link com.metamatrix.common.config.api.ResourceDescriptorID ID}.
-     * 
-     * @param resourcePoolID
-     *            identifies the resource pool for which the changes will be applied
-     * @param properties
-     *            are the changes to be applied to the resource pool
-     * @throws ResourcePoolException
-     *             if an error occurs applying the changes to the resource pool
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws AuthorizationException
-     *             if the user is not authorized to make the changes
-     */
-    public synchronized void executeUpdateTransaction(ResourceDescriptorID resourcePoolID,
-                                                      Properties properties) throws ResourcePoolException,
-                                                                            InvalidSessionException,
-                                                                            AuthorizationException,
-                                                                            MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeUpdateTransaction(" + resourcePoolID + ", " + properties + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        Iterator poolIter = registry.getResourcePoolManagerBindings(null,null).iterator();
-        while (poolIter.hasNext()) {
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-            mgr.updateResourcePool(resourcePoolID, properties);
-
-        }
-
     }
 
     /**

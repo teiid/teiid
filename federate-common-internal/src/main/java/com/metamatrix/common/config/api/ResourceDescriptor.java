@@ -39,22 +39,6 @@ import com.metamatrix.common.config.model.ConfigurationVisitor;
 
 public interface ResourceDescriptor extends ComponentDefn {
     
-    /** 
-     * The JDBC_RESOURCE_TYPE defines a resource that interacts with a jdbc source
-     */  
-    public static final String JDBC_RESOURCE_TYPE_NAME = "JDBC Resource Type";    //$NON-NLS-1$
-
-    public static final ComponentTypeID JDBC_RESOURCE_TYPE_ID = new ComponentTypeID(JDBC_RESOURCE_TYPE_NAME);
-    
-   
-   
-    /** 
-     * The APPSERVER_RESOURCE_TYPE defines a resource that interacts with the app server
-     */  
-    public static final String APPSERVER_RESOURCE_TYPE_NAME = "AppServerPoolType";    //$NON-NLS-1$
-
-    public static final ComponentTypeID APPSERVER_RESOURCE_TYPE_ID = new ComponentTypeID(APPSERVER_RESOURCE_TYPE_NAME);
-   
    void accept(ConfigurationVisitor visitor);
 
 }

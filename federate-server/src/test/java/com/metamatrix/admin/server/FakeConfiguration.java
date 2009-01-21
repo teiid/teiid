@@ -49,8 +49,6 @@ import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -58,7 +56,6 @@ import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
-import com.metamatrix.common.config.model.BasicResourceDescriptor;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
@@ -450,58 +447,6 @@ public class FakeConfiguration implements Configuration {
         
         
         return defns;
-    }
-
-    public Collection getResourcePools() {
-        
-        ArrayList pools = new ArrayList();
-
-        
-        ResourceDescriptorID resourceDescriptorID1 = new ResourceDescriptorID(Configuration.NEXT_STARTUP_ID, "pool1"); //$NON-NLS-1$
-        BasicResourceDescriptor resourceDescriptor1 = new BasicResourceDescriptor(Configuration.NEXT_STARTUP_ID, resourceDescriptorID1,
-                                                                             ResourceDescriptor.JDBC_RESOURCE_TYPE_ID);
-
-        ConfigurationObjectEditorHelper.addProperty(resourceDescriptor1, "prop1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
-        ConfigurationObjectEditorHelper.addProperty(resourceDescriptor1, "prop2", "value2"); //$NON-NLS-1$ //$NON-NLS-2$
-        pools.add(resourceDescriptor1);
-
-            
-        
-        ResourceDescriptorID resourceDescriptorID2 = new ResourceDescriptorID(Configuration.NEXT_STARTUP_ID, "pool2"); //$NON-NLS-1$
-        ResourceDescriptor resourceDescriptor2 = new BasicResourceDescriptor(Configuration.NEXT_STARTUP_ID, resourceDescriptorID2, 
-                                                                             ResourceDescriptor.JDBC_RESOURCE_TYPE_ID);
-        pools.add(resourceDescriptor2);
-
-        
-        return pools;
-    }
-
-    /**
-     * Return fake ResourceDescriptor, based on the specified name. 
-     * Returns "pool1" and "pool2".
-     * @see com.metamatrix.common.config.api.Configuration#getResourcePool(java.lang.String)
-     * @since 4.3
-     */
-    public ResourceDescriptor getResourcePool(String poolName) {
-
-        if ("pool1".equals(poolName)) {  //$NON-NLS-1$
-            ResourceDescriptorID resourceDescriptorID1 = new ResourceDescriptorID(Configuration.NEXT_STARTUP_ID, "pool1"); //$NON-NLS-1$
-            BasicResourceDescriptor resourceDescriptor1 = new BasicResourceDescriptor(Configuration.NEXT_STARTUP_ID, resourceDescriptorID1,
-                                                                                 ResourceDescriptor.JDBC_RESOURCE_TYPE_ID);
-
-            ConfigurationObjectEditorHelper.addProperty(resourceDescriptor1, "prop1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
-            ConfigurationObjectEditorHelper.addProperty(resourceDescriptor1, "prop2", "value2"); //$NON-NLS-1$ //$NON-NLS-2$
-
-            return resourceDescriptor1;
-            
-        } else if ("pool2".equals(poolName)) {  //$NON-NLS-1$
-            ResourceDescriptorID resourceDescriptorID2 = new ResourceDescriptorID(Configuration.NEXT_STARTUP_ID, "pool2"); //$NON-NLS-1$
-            ResourceDescriptor resourceDescriptor2 = new BasicResourceDescriptor(Configuration.NEXT_STARTUP_ID, resourceDescriptorID2, 
-                                                                                 ResourceDescriptor.JDBC_RESOURCE_TYPE_ID);
-            return resourceDescriptor2;
-        }
-        
-        return null;
     }
 
     public LogConfiguration getLogConfiguration() {

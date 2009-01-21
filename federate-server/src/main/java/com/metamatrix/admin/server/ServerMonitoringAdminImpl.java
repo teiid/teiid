@@ -52,7 +52,6 @@ import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
-import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
 import com.metamatrix.admin.objects.MMDQP;
@@ -67,14 +66,12 @@ import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -82,10 +79,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
-import com.metamatrix.common.pooling.api.PoolStatistic;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
@@ -94,7 +88,6 @@ import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
@@ -130,116 +123,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         //todo: [P2]
         return null;
     }
-
-   
-    /**
-     * Get monitoring information about connection pools.
-     * @see com.metamatrix.admin.api.server.ServerMonitoringAdmin#getConnectionPools(java.lang.String)
-     * @param identifier Fully-qualified identifier of a host, process, connector binding, or connection pool
-     * to get information for.  For example, "hostname", or "hostname.processname"
-     * or "hostname.processname.poolname".
-     * <p>If identifier is "*", this method returns information about all connection pools in the system.
-     * @return a <code>Collection</code> of <code>com.metamatrix.admin.api.ConnectionPool</code>
-     * @since 4.3
-     * @deprecated 5.5.4
-     */
-    public Collection getConnectionPools(String identifier) throws AdminException {
-        
-        if (identifier == null) {
-            throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
-        }
-        
-        HashSet results = null;
-		Map configMap  = new HashMap();
-		try {
-   			Configuration nextStartupConfig = getConfigurationServiceProxy().getConfiguration(Configuration.NEXT_STARTUP);
-			    Collection pools = CurrentConfiguration.getResourceDescriptors();
-			    
-			    if (pools != null) {
-			        for (Iterator it = pools.iterator(); it.hasNext();) {
-			            ResourceDescriptor rd = (ResourceDescriptor)it.next();
-			            String name = rd.getName();
-			            
-			            Collection processes = nextStartupConfig.getVMComponentDefns();
-			            for (final Iterator iter = processes.iterator(); iter.hasNext();) {
-			                final VMComponentDefn vmDefn = (VMComponentDefn)iter.next();
-			                String[] identifierParts = new String[] { vmDefn.getHostID().getName(), vmDefn.getName(), name };
-			                if (identifierMatches(identifier, identifierParts)) {
-
-			                    MMConnectionPool pool = new MMConnectionPool(identifierParts);
-			                    pool.setType(rd.getComponentTypeID().getName());
-			                    Properties properties = PropertiesUtils.clone(rd.getProperties(), false);
-			                    pool.setProperties(properties);
-			                    String key = pool.getIdentifier().toUpperCase();
-			                    configMap.put(key, pool);
-			                }
-			            } // for
-			        }
-			    }
-
-			    // get pools from RuntimeStateAdminAPIHelper
-			    Collection statsCollection = getRuntimeStateAdminAPIHelper().getResourcePoolStatistics();
-
-			    // convert results into MMConnectionPool objects
-			    results = new HashSet(configMap.values().size());
-			    for (Iterator iter = statsCollection.iterator(); iter.hasNext();) {
-			        ResourcePoolStats stats = (ResourcePoolStats)iter.next();
-			        String name = stats.getPoolName();
-			        String[] identifierParts = new String[] {
-			            stats.getHostName(), stats.getProcessName(), name
-			        };
-
-			            
-			        if (identifierMatches(identifier, identifierParts)) {
-			            String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-			            if (configMap.containsKey(key)) {
-			                MMConnectionPool pool = (MMConnectionPool) configMap.get(key);
-			                Properties properties = pool.getProperties();
-			                properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
-			                pool.setActive(true);
-			                results.add(pool);
-			                configMap.remove(key);
-			            } else {
-			                ResourceDescriptor resourceDescriptor =CurrentConfiguration.getResourceDescriptor(name);
-			                
-			                MMConnectionPool pool = new MMConnectionPool(identifierParts);
-			                pool.setType(stats.getPoolType());
-			                Properties properties = PropertiesUtils.clone(resourceDescriptor.getProperties(), false);
-			                properties.putAll(convertPoolStatisticsToProperties(stats.getPoolStatistics()));
-			                pool.setProperties(properties);
-
-			                pool.setActive(true);
-			                results.add(pool);
-			            }
-			        }
-			    }
-		} catch (ConfigurationException e) {
-			throw new AdminComponentException(e);
-		} catch (ServiceException e) {
-			throw new AdminComponentException(e);
-		} catch (MetaMatrixComponentException e) {
-			throw new AdminComponentException(e);
-		} catch (ResourcePoolException e) {
-			throw new AdminComponentException(e);
-		}
-        results.addAll(configMap.values());
-        return results;
-    }
-
-    
-    private Properties convertPoolStatisticsToProperties(Map statistics) {
-        Properties properties = new Properties();
-        for (Iterator iter = statistics.keySet().iterator(); iter.hasNext();) {
-            String key = (String) iter.next();
-            PoolStatistic statistic = (PoolStatistic) statistics.get(key);
-            Object value = statistic.getValue();
-            
-            properties.setProperty(key, value.toString());
-        }
-        return properties;
-    }
-    
-    
     
     /**
      * Get monitoring information about connector bindings.
@@ -1205,10 +1088,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        ServiceComponentDefn defn = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));  
 			        
 			        return convertPropertyDefinitions(getDQPComponent(objectIdentifier), defn.getProperties());
-			        
-			    case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
-			        config = getConfigurationServiceProxy().getCurrentConfiguration();
-			        return convertPropertyDefinitions(config.getResourcePool(adminObject.getName()));
 			        
 			    case MMAdminObject.OBJECT_TYPE_RESOURCE:
 			        return convertPropertyDefinitions(getResourceComponent(objectIdentifier));

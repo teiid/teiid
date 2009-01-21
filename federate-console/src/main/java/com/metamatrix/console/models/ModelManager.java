@@ -142,7 +142,7 @@ public class ModelManager {
         
         EntitlementManager entitlementManager = new EntitlementManager(conn);
         
-        PoolManager poolManager = new PoolManager(conn);
+        ResourceManager resourceManager = new ResourceManager(conn);
         
         SummaryManager summaryManager = new SummaryManager(conn);
         
@@ -164,7 +164,7 @@ public class ModelManager {
         
         Managers mgrs = new Managers(userManager, sessionManager,
                                      queryManager, entitlementManager, 
-                                     poolManager, summaryManager,
+                                     resourceManager, summaryManager,
                                      serverLogManager, propertiesManager, vdbManager,
                                      configurationManager, connectorManager, authenticationProviderManager,
                                      runtimeMgmtManager, extensionSourceManager);
@@ -173,7 +173,7 @@ public class ModelManager {
         sessionManager.init();
         queryManager.init();
         entitlementManager.init();
-        poolManager.init();
+        resourceManager.init();
         summaryManager.init();
         serverLogManager.init();
         propertiesManager.init();
@@ -230,8 +230,8 @@ public class ModelManager {
         return mgr;
 	}
 
-	public static PoolManager getPoolManager(ConnectionInfo conn) {
-    	PoolManager mgr = null;
+	public static ResourceManager getResourceManager(ConnectionInfo conn) {
+    	ResourceManager mgr = null;
     	Managers mgrs = (Managers)mgrsMap.get(conn);
     	if (mgrs != null) {
     		mgr = mgrs.getPoolManager();

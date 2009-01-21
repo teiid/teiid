@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -66,8 +65,6 @@ public abstract class PersistentConnectionFactory {
 
         Properties properties = PropertiesUtils.clone(props, false);
         String factoryName = properties.getProperty(PERSISTENT_FACTORY_NAME);
-
-//      System.out.println("Repository Persistence Factory: " + factoryName);
 
         if (factoryName == null || factoryName.trim().length() == 0) {
             // if no factory name, then check if this a file connection
@@ -110,14 +107,7 @@ public abstract class PersistentConnectionFactory {
 	private static boolean isJDBCFactory(Properties props) {
 		String driver = props.getProperty("metamatrix.config.jdbc.persistent.readerDriver");
 
-		if (driver != null && driver.length() > 0) {
-			return true;
-		}
-		// for backwards compatibility reasons,
-		// this will allow the use of either the persistent connection properties
-		// or the pooling connection properties
-    	driver = props.getProperty(JDBCConnectionResource.DRIVER);
-    	return driver != null && driver.length() > 0;
+		return driver != null && driver.length() > 0;
 	}
 
 }

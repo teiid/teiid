@@ -152,10 +152,6 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
 
             configObjects.addAll(getConfiguration().getPSCs());
 
-            configObjects.addAll(getConfiguration().getResourcePools());
-
-            
-            
 // Add the objects that are not configuration based, meaning they
 // are not added,updated,delete within the context of a configuration
             configObjects.addAll(getHosts());

@@ -59,17 +59,11 @@ public class PanelsTreeModel extends DefaultTreeModel {
 //    public static final String TRANSACTIONS = "Transactions";
 //    public static final Class TRANSACTIONS_PANEL_CLASS =
 //        	com.metamatrix.console.ui.views.transactions.TransactionsPanel.class;
-    public static final String POOLS = "Connection Pools"; //$NON-NLS-1$
-    public static final Class POOLS_PANEL_CLASS = 
-    		com.metamatrix.console.ui.views.pools.PoolsPanel.class;
-
     public static final String CONFIGURATION = "Configuration"; //$NON-NLS-1$
     public static final String SYS_PROPS = "System Properties"; //$NON-NLS-1$
     public static final Class SYSTEM_PROPERTIES_PANEL_CLASS =
         	com.metamatrix.console.ui.views.properties.PropertiesMasterPanel.class;
     public static final String POOLS_CONFIG = "Connection Pools"; //$NON-NLS-1$
-    public static final Class POOLS_CONFIG_PANEL_CLASS = 
-    		com.metamatrix.console.ui.views.pools.PoolsConfigurationPanel.class;
     public static final String RESOURCES = "Resources"; //$NON-NLS-1$
     public static final Class RESOURCES_PANEL_CLASS = 
     		com.metamatrix.console.ui.views.resources.ResourcesMainPanel.class;
@@ -214,13 +208,6 @@ public class PanelsTreeModel extends DefaultTreeModel {
         log.setToolTipText(tipText); 
         runtime.add(log);
 
-		// pools panel node
-		PanelsTreeNode pools = new PanelsTreeNode(POOLS, POOLS_PANEL_CLASS,
-				connection, false);
-        tipText = ConsolePlugin.Util.getString("PanelsTreeModel.sysConnPoolsPanel.tooltip"); //$NON-NLS-1$
-		pools.setToolTipText(tipText); 
-		runtime.add(pools);
-
         // MetaMatrixServer header node
         PanelsTreeNode runtimeMMServer = new PanelsTreeNode(MM_SERVER, null,
         		connection, false);
@@ -268,13 +255,6 @@ public class PanelsTreeModel extends DefaultTreeModel {
         props.setToolTipText(tipText); 
         configuration.add(props);
 
-		// Resource pools configuration panel node
-		PanelsTreeNode poolsConfig = new PanelsTreeNode(POOLS_CONFIG,
-				POOLS_CONFIG_PANEL_CLASS, connection, false);
-        tipText = ConsolePlugin.Util.getString("PanelsTreeModel.poolsConfigPanel.tooltip"); //$NON-NLS-1$
-		poolsConfig.setToolTipText(tipText);
-		configuration.add(poolsConfig);
-		
 		// Resources panel node
 		PanelsTreeNode resources = new PanelsTreeNode(RESOURCES,
 				RESOURCES_PANEL_CLASS, connection, false);

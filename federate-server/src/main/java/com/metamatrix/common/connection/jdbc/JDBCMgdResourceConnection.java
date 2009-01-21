@@ -33,7 +33,6 @@ import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 
@@ -72,12 +71,10 @@ public class JDBCMgdResourceConnection extends ManagedConnection {
     protected void openConnection() throws ManagedConnectionException {
 
         try {
-            this.jdbcConnection = JDBCConnectionPoolHelper.getConnection(this.getEnvironment(), this.getUserName());
+            this.jdbcConnection = JDBCConnectionPoolHelper.getInstance().getConnection();
             this.originalAutocommit = jdbcConnection.getAutoCommit();
         } catch (SQLException rpe) {
-            throw new ManagedConnectionException(rpe, ErrorMessageKeys.CONNECTION_ERR_0010, CommonPlugin.Util.getString(ErrorMessageKeys.CONNECTION_ERR_0010, this.getUserName()));
-          
-        } catch (ResourcePoolException rpe) {
+        	closeConnection();
             throw new ManagedConnectionException(rpe, ErrorMessageKeys.CONNECTION_ERR_0010, CommonPlugin.Util.getString(ErrorMessageKeys.CONNECTION_ERR_0010, this.getUserName()));
         }
     }

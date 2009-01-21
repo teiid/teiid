@@ -25,19 +25,15 @@
 package com.metamatrix.platform.config.persistence.impl.jdbc;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Properties;
 
+import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.jdbc.JDBCUtil;
-import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.ConfigurationModelAdapterImpl;
-import com.metamatrix.platform.util.ErrorMessageKeys;
 
 public class JDBCPersistentConnectionFactory
 	extends PersistentConnectionFactory {
@@ -76,8 +72,6 @@ public class JDBCPersistentConnectionFactory
      */
     public static final String PASSWORD = "metamatrix.config.jdbc.persistent.readerPassword"; //$NON-NLS-1$
 
-	private Properties connProps;
-
 	/**
 	 * Constructor for JDBCPersistentConnectionFactory.
 	 * @param factoryProperties
@@ -95,12 +89,12 @@ public class JDBCPersistentConnectionFactory
 	public PersistentConnection createPersistentConnection()
 		throws ConfigurationException {
 
-		if (connProps == null) {
-			connProps = validateProperties(getProperties());
+		Connection conn;
+		try {
+			conn = JDBCConnectionPoolHelper.getInstance().getConnection();
+		} catch (SQLException e) {
+			throw new ConfigurationConnectionException(e);
 		}
-
-		DriverManager.setLoginTimeout(480);
-		Connection conn = getConnection(connProps);
 
 		ConfigurationModelAdapterImpl adapter =
 			new ConfigurationModelAdapterImpl();
@@ -111,103 +105,6 @@ public class JDBCPersistentConnectionFactory
 
 		return fps;
 
-	}
-
-	protected Properties validateProperties(Properties props) throws ConfigurationException {
-       Properties envClone = PropertiesUtils.clone(props, false);
-
-        String driver;
-        String database;
-        String username;
-        String password;
-        String protocol;
-
-		driver = props.getProperty(DRIVER);
-		if (driver != null && driver.length() > 0) {
-//		System.out.println("JDBC Persistence using Persistent Properties");
-
-
-	    	protocol        = props.getProperty(PROTOCOL);
-	    	database        = props.getProperty(DATABASE);
-	    	username        = props.getProperty(USERNAME);
-	    	password        = props.getProperty(PASSWORD);
-
-	  // the persistent properties were not passed, check for pooling properties.
-	  // the pooling properties are what exist in the bootstratp file
-		} else {
-//		System.out.println("JDBC Persistence using Pooling Properties");
-
-
-
-        	driver = props.getProperty(JDBCConnectionResource.DRIVER);
- 	    	protocol        = props.getProperty(JDBCConnectionResource.PROTOCOL);
-	    	database        = props.getProperty(JDBCConnectionResource.DATABASE);
-	    	username        = props.getProperty(JDBCConnectionResource.USERNAME);
-	    	password        = props.getProperty(JDBCConnectionResource.PASSWORD);
-		}
-
-	    // Verify required items
-	    if (driver == null || driver.trim().length() == 0) {
-	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0030, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0030));
-	    }
-	    envClone.setProperty(DRIVER, driver);
-	    if (protocol != null && protocol.trim().length() > 0) {
-		 	envClone.setProperty(PROTOCOL, protocol);
-	    }
-	   
-	    if (database == null || database.trim().length() == 0) {
-	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0032, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0032));
-	    }
-	    envClone.setProperty(DATABASE, database);
-
-	    if (username != null && username.length() > 0) {
-	    	envClone.setProperty(USERNAME, username);
-	    }
-
-	    if (password != null && password.length() > 0) {
-	    	envClone.setProperty(PASSWORD, password);
-	    }
-
-		return envClone;
-
-	}
-
-	/**
-	 * env properties are exprected to be that of {@see JDBCPersistentConnection}
-	 */
-	
-	static Connection getConnection(Properties env) throws ConfigurationConnectionException {
-	    // Get the JDBC properties ...
-	
-	 	String driverClassName = env.getProperty(DRIVER);
-	    String protocol        = env.getProperty(PROTOCOL);
-	    String database        = env.getProperty(DATABASE);
-	    String username        = env.getProperty(USERNAME);
-	    String password        = env.getProperty(PASSWORD);
-	    // Verify required items
-	    if (driverClassName == null || driverClassName.trim().length() == 0) {
-	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0030, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0030));
-	    }
-	
-	    if (database == null || database.trim().length() == 0) {
-	        throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_0032, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0032));
-	    }
-	
-		Properties props = new Properties();
-		props.setProperty(JDBCUtil.DATABASE, database);
-		props.setProperty(JDBCUtil.DRIVER, driverClassName);
-	   	if (protocol != null && protocol.trim().length() > 0) {
-			props.setProperty(JDBCUtil.PROTOCOL, protocol);
-		}
-		props.setProperty(JDBCUtil.USERNAME, username);
-		props.setProperty(JDBCUtil.PASSWORD, password);
-	
-		try {
-			Connection connection = JDBCUtil.decryptAndCreateJDBCConnection(props);
-			return connection;
-		} catch (Exception e) {
-			throw new ConfigurationConnectionException(e, ErrorMessageKeys.CONFIG_0033, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0033));
-		}
 	}
 
 }

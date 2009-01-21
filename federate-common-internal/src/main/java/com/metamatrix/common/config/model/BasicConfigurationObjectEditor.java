@@ -625,13 +625,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
              }
         }
 
-// These objects need to be added in order
-		Iterator pools = original.getResourcePools().iterator();
-		while (pools.hasNext()) {
-			ResourceDescriptor rd = (ResourceDescriptor) pools.next();
-            this.createResourceDescriptor(config, rd, rd.getName());
-		}
-
 		Iterator svcDefns = original.getServiceComponentDefns().iterator();
 		while (svcDefns.hasNext()) {
 			ServiceComponentDefn sDefn = (ServiceComponentDefn) svcDefns.next();

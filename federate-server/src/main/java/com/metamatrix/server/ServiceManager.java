@@ -50,11 +50,7 @@ import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
-import com.metamatrix.common.pooling.api.ResourcePoolMgr;
-import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
-import com.metamatrix.common.pooling.api.ResourceStatistics;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
@@ -62,7 +58,6 @@ import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.service.api.CacheAdmin;
@@ -105,16 +100,15 @@ public class ServiceManager {
     private final static int COMMAND_GET_VM_STATS            = 24;
     private final static int COMMAND_DUMP_THREADS            = 25;
     private final static int COMMAND_SYNCH_SERVER            = 26;
-    private final static int COMMAND_LIST_POOLS              = 27;
-    private final static int COMMAND_KILL_ALL_HCS            = 28;
-    private final static int COMMAND_KILL_HC                 = 29;
-    private final static int COMMAND_BOUNCE_SERVICE          = 30;
-    private final static int COMMAND_CLEAR_CODE_TABLE_CACHES = 31;
-    private final static int COMMAND_CLEAR_PREPARED_STMT_CACHES = 32;
-    private final static int COMMAND_DUMP_JNDI				 = 33;
-    private final static int COMMAND_EXIT                    = 34;
-    private final static int COMMAND_HELP                    = 35;
-    private final static int COMMAND_INVALID                 = 36;
+    private final static int COMMAND_KILL_ALL_HCS            = 27;
+    private final static int COMMAND_KILL_HC                 = 28;
+    private final static int COMMAND_BOUNCE_SERVICE          = 29;
+    private final static int COMMAND_CLEAR_CODE_TABLE_CACHES = 30;
+    private final static int COMMAND_CLEAR_PREPARED_STMT_CACHES = 31;
+    private final static int COMMAND_DUMP_JNDI				 = 32;
+    private final static int COMMAND_EXIT                    = 33;
+    private final static int COMMAND_HELP                    = 34;
+    private final static int COMMAND_INVALID                 = 35;
 
 
     private final static String[] commands = {"ListProcesses", //$NON-NLS-1$
@@ -144,7 +138,6 @@ public class ServiceManager {
                                               "GetProcessStats", //$NON-NLS-1$
                                               "DumpThreads", //$NON-NLS-1$
                                               "Synch", //$NON-NLS-1$
-                                              "ListPools", //$NON-NLS-1$
                                               "KillAllHostControllers", //$NON-NLS-1$
                                               "KillHostController", //$NON-NLS-1$
 											  "BounceService", //$NON-NLS-1$
@@ -181,7 +174,6 @@ public class ServiceManager {
                                                    "GetProcessStats", //$NON-NLS-1$
                                                    "DumpThreads", //$NON-NLS-1$
                                                    "Synch", //$NON-NLS-1$
-                                                   "ListPools", //$NON-NLS-1$
                                                    "KillAllHCs", //$NON-NLS-1$
                                                    "KillHC", //$NON-NLS-1$
 												   "BounceService", //$NON-NLS-1$
@@ -555,10 +547,6 @@ public class ServiceManager {
                 this.doSynchronize();
                 break;
 
-            case COMMAND_LIST_POOLS:
-                this.doListPools();
-                break;
-
             case COMMAND_EXIT:
                 this.doExit();
                 System.exit(0);
@@ -732,7 +720,6 @@ public class ServiceManager {
         System.out.println("ListDeployedHosts                           List all deployed hosts"); //$NON-NLS-1$
         System.out.println("ListDeployedServices                        Display all deployed services"); //$NON-NLS-1$
         System.out.println("ListDeployedProcesses                       List all deployed Processes"); //$NON-NLS-1$
-        System.out.println("ListPools                                   List all resource pools"); //$NON-NLS-1$
         System.out.println("ListServices                                List all running Services"); //$NON-NLS-1$
         System.out.println("ListServiceProps <Name>                     List properties of service"); //$NON-NLS-1$
         System.out.println("ListProcessProps <Process Name>             List properties of process."); //$NON-NLS-1$
@@ -1049,36 +1036,6 @@ public class ServiceManager {
             }
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0034, vmName));
-            e.printStackTrace();
-        }
-    }
-
-    public void doListPools() {
-        try {
-
-            Iterator poolIter = registry.getResourcePoolManagerBindings(null, null).iterator();
-            while (poolIter.hasNext()) {
-                ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding) poolIter.next();
-                System.out.println(binding.getID());
-                ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-                try {
-                    Iterator iter = mgr.getResourcePoolStatistics().iterator();
-                    while (iter.hasNext()) {
-                        ResourcePoolStatistics stats = (ResourcePoolStatistics) iter.next();
-                        System.out.println(stats.getResourceDescriptorID()+": " + stats); //$NON-NLS-1$
-                        Iterator rStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID()).iterator();
-                        while (rStats.hasNext()) {
-                            ResourceStatistics rs = (ResourceStatistics) rStats.next();
-                            System.out.println("\t" + rs.getCreationTime() +"\t" + rs.getUserName() + "\t" + rs.getLastUsed()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0035));
             e.printStackTrace();
         }
     }

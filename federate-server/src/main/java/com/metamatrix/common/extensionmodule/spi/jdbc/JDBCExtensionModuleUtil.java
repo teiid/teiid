@@ -45,24 +45,17 @@ import java.util.zip.Checksum;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.FileUtils;
 
 public final class JDBCExtensionModuleUtil {
 
-    private static final String LOG_CONTEXT = LogCommonConstants.CTX_EXTENSION_SOURCE;
     private static final String PRINCIPAL = "JDBCExtensionUtil"; //$NON-NLS-1$
 
     private static Set configurationNames;
@@ -108,7 +101,7 @@ public final class JDBCExtensionModuleUtil {
 
         Connection connection = null;
         try {
-            connection = JDBCConnectionPoolHelper.getConnection(this.properties, "JDBCExtensionUtil"); //$NON-NLS-1$
+            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
 
 
 
@@ -169,7 +162,7 @@ public final class JDBCExtensionModuleUtil {
         Connection connection = null;
 		try {
 
-        	connection = JDBCConnectionPoolHelper.getConnection(this.properties, "JDBCExtensionUtil"); //$NON-NLS-1$
+        	connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
 
         	byte[] data = JDBCExtensionModuleReader.getSource(sourceName, connection);
 
@@ -206,9 +199,7 @@ public final class JDBCExtensionModuleUtil {
             
             try {
                 connection =
-                    JDBCConnectionPoolHelper.getConnection(
-                        this.properties,
-                        "JDBCExtensionUtil"); //$NON-NLS-1$
+                    JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
                          
                 boolean inuse = JDBCExtensionModuleReader.isNameInUse(extName, connection);
                 
@@ -311,7 +302,7 @@ public final class JDBCExtensionModuleUtil {
         Connection connection = null;
         try {
 
-            connection = JDBCConnectionPoolHelper.getConnection(this.properties, "JDBCExtensionUtil"); //$NON-NLS-1$
+            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
 
             boolean inuse = JDBCExtensionModuleReader.isNameInUse(sourceName, connection);
             if (!inuse) {
@@ -351,9 +342,7 @@ public final class JDBCExtensionModuleUtil {
         Connection connection = null;
         try {
             connection =
-                JDBCConnectionPoolHelper.getConnection(
-                    this.properties,
-                    "JDBCExtensionUtil"); //$NON-NLS-1$
+                JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
                           
             LinkedList orderList = new LinkedList();                                    
             Collection descriptors = JDBCExtensionModuleReader.getSourceDescriptors(null, true, connection);  

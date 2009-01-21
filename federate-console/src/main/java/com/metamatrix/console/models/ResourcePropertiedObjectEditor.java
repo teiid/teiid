@@ -41,10 +41,8 @@ import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
-import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
@@ -52,10 +50,8 @@ import com.metamatrix.common.jdbc.JDBCReservedWords;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
-import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.console.connections.ConnectionInfo;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 
 
@@ -173,10 +169,10 @@ public class ResourcePropertiedObjectEditor extends ConfigurationPropertiedObjec
             
             if (pd.isConstrainedToAllowedValues()) {
                 
-                    if (defn.getFullName().equalsIgnoreCase(ResourcePool.RESOURCE_POOL)) {
+                    if (defn.getFullName().equalsIgnoreCase("metamatrix.common.pooling.resource.name")) { //$NON-NLS-1$
                         PropertyDefinitionImpl pDefn = new PropertyDefinitionImpl(pd);
 
-                        pDefn.setAllowedValues(getAllowedPoolValues(componentObject.getComponentTypeID()));
+                        pDefn.setAllowedValues(Collections.EMPTY_LIST);
                         result.add(pDefn);
                     } else {
                         result.add(pd);
@@ -289,57 +285,6 @@ public class ResourcePropertiedObjectEditor extends ConfigurationPropertiedObjec
      */
     private void storeObject(ComponentObject object) {
         resources.put(object.getID(), object);
-    }
-
-
-    private List getAllowedPoolValues(ComponentTypeID typeID) {
-        List allowedValues = null;
-
-        try {
-            if(this.configID == null){
-                Assertion.isNotNull(this.configID,AdminPlugin.Util.getString(AdminMessages.ADMIN_0018, "ConfigurationID")); //$NON-NLS-1$
-            }
-            if(this.configID == null){
-                Assertion.isNotNull(this.configID,AdminPlugin.Util.getString(AdminMessages.ADMIN_0018, "compentTypeID")); //$NON-NLS-1$
-            }
-
-
-            // Question - to cache or not, it caching then a new pool would
-            // not be seen unless a new editor was obtained
-            // current solution - do not cache
-            Collection rds = getConfigurationAPI().getResourcePools(this.configID, typeID);
-
-
-            if (rds == null) {
-                return Collections.EMPTY_LIST;
-            }
-
-            allowedValues = new ArrayList(rds.size());
-
-
-            for (Iterator it=rds.iterator(); it.hasNext(); ) {
-                ResourceDescriptor rd = (ResourceDescriptor) it.next();
-
-                allowedValues.add(rd.getName());
-
-            }
-
-            return allowedValues;
-
-        } catch (ConfigurationException e){
-            throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0044, AdminPlugin.Util.getString(AdminMessages.ADMIN_0044));
-        } catch (InvalidSessionException e){
-            throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0023, AdminPlugin.Util.getString(AdminMessages.ADMIN_0023));
-        } catch (AuthorizationException e){
-            throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0045, AdminPlugin.Util.getString(AdminMessages.ADMIN_0045));
-        } catch (MetaMatrixComponentException e){
-            throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0046, AdminPlugin.Util.getString(AdminMessages.ADMIN_0046));
-        } catch (ClassCastException e){
-//            e.printStackTrace();
-            throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0029, AdminPlugin.Util.getString(AdminMessages.ADMIN_0029));
-        }
-
-
     }
 
      /**

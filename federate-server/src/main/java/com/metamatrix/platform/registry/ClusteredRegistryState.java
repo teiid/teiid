@@ -289,67 +289,6 @@ public class ClusteredRegistryState implements CacheListener {
 		}
 	}
 	
-	
-	protected void addResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrBinding binding) throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
-        Cache resources = getResourcePool(hostName, vmName);
-		ResourcePoolMgrBinding existing = (ResourcePoolMgrBinding)resources.get(binding.getID());
-		if (existing != null) {
-			throw new ResourceAlreadyBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0025, binding.getID()));
-		}
-		resources.put(binding.getID(), binding);
-	}
-	
-	public ResourcePoolMgrBinding getResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrID id) throws ResourceNotBoundException {
-		try {
-	        Cache resources = getResourcePool(hostName, vmName);
-			ResourcePoolMgrBinding binding =  (ResourcePoolMgrBinding)resources.get(id);
-			if (binding == null) {
-				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0010, id));				
-			}
-			return binding;
-		} catch (CacheNodeNotFoundException e) {
-			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0010, id));
-		}
-	}
-	
-	public List<ResourcePoolMgrBinding> getResourcePoolManagerBindings(String hostName, String vmName) {
-		return getResourcePoolManagerBindings(hostName, vmName, new ArrayList());
-	}
-	
-	private List<ResourcePoolMgrBinding> getResourcePoolManagerBindings(String hostName, String vmName, ArrayList list) {	
-		try {
-			if (hostName == null && vmName == null) {
-				Collection<Cache> hostNodes = this.cache.getChildren();
-				for(Cache host:hostNodes) {
-					getResourcePoolManagerBindings((String)host.get(NAME), null, list);
-				}
-			}
-			else if (hostName != null && vmName == null) {
-				Collection<Cache> vmNodes = getHostNode(hostName).getChildren();
-				for(Cache vm:vmNodes) {
-					getResourcePoolManagerBindings(hostName, (String)vm.get(NAME), list);
-				}
-			}
-			else if (hostName != null && vmName != null) {
-		        Cache resources = getResourcePool(hostName, vmName);
-				list.addAll(resources.values());
-			}
-		} catch (CacheNodeNotFoundException e) {
-			// this is Ok, just return the empty list.
-		}
-		return list;
-	}
-	
-	
-	protected void removeResourcePoolManagerBinding(String hostName, String vmName, ResourcePoolMgrID managerId) {
-		try {
-	        Cache resources = getResourcePool(hostName, vmName);
-			resources.remove(managerId);
-		} catch (CacheNodeNotFoundException e) {
-			// Ok, this is already gone.
-		}
-	}
-	
 	static class CacheNodeNotFoundException extends Exception{
 		public CacheNodeNotFoundException(String msg) {
 			super(msg);

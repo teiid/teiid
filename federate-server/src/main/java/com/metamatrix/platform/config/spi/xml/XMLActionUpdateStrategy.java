@@ -67,8 +67,6 @@ import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ProductTypeID;
 import com.metamatrix.common.config.api.PropDefnAllowedValueID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
@@ -177,20 +175,6 @@ public class XMLActionUpdateStrategy  {
 //					System.out.println("STRATEGY: Update Config " + m.getConfigurationID());
 
 				executeActions(m, id, actions, transaction);
-			}
-
-
-
-        } else if (target instanceof ResourceDescriptorID) {
-            ResourceDescriptorID id = (ResourceDescriptorID) target;
-
-			Collection trans = transaction.getObjects();
-
-			for (Iterator it=trans.iterator(); it.hasNext(); ) {
-				ConfigurationModelContainerImpl m = (ConfigurationModelContainerImpl) it.next();
-
-				executeActions(m, id, actions, transaction);
-
 			}
 			
         } else if (target instanceof AuthenticationProviderID) {
@@ -372,107 +356,6 @@ public class XMLActionUpdateStrategy  {
 //    }    
 
 
-    /**
-     * Executes the specified component type actions and will update the list of component types
-     * with the changes.
-     * @param componentTypes is the configuration to be updated
-     */
-
-    public Set executeActions(ConfigurationModelContainerImpl config, ResourceDescriptorID targetID, List actions, ConfigTransaction transaction )
-                        throws InvalidConfigurationException, ConfigurationException{
-
-    Set affectedIDs = new HashSet();
-        if ( actions.isEmpty() ) {
-            return affectedIDs;
-        }
-//		System.out.println("STRATEGY: ResourceDescriptor Component Target " + targetID);
-
-        int actionIndex = -1;
-
-        affectedIDs.add(targetID);
-
-		Configuration cfg = config.getConfiguration();
-
-        try {
-
-           // Iterate through the actions ...
-            Iterator iter = actions.iterator();
-            ResourceDescriptor rd = null;
-            while ( iter.hasNext() ) {
-                ActionDefinition action = (ActionDefinition) iter.next();
-                actionIndex++;
-                Object args[] = action.getArguments();
-				rd = cfg.getResourcePool(targetID.getName());
-                if(action instanceof CreateObject ) {
-
-                    if (rd != null) {
-                        DuplicateComponentException e = new DuplicateComponentException(ConfigMessages.CONFIG_0073, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0073,  targetID));
-                        e.setActionIndex(actionIndex);
-                        throw e;
-                    }
-                    rd = (ResourceDescriptor) args[0];
-					rd = (ResourceDescriptor) setCreationDate(rd, transaction.getLockAcquiredBy());
-
-                    ComponentType type = getComponentType(config, rd.getComponentTypeID(), targetID); 
-
-                    //ComponentType type = config.getComponentType(rd.getComponentTypeID().getFullName());
-
-                    // process properties for any encryptions
-                    processPropertyForNewObject(rd, type, config, transaction.getLockAcquiredBy());
-
-                    ConfigurationObjectEditorHelper.addConfigurationComponentDefn(cfg, rd);
-
-
-                } else if (action instanceof AddObject ||
-                			action instanceof RemoveObject ||
-                			action instanceof ExchangeObject)  {
-
-
-                 	if (rd == null) {
-                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0074, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0074,  targetID));
-                	}
-
-//                    ComponentType type = config.getComponentType(rd.getComponentTypeID().getFullName());
-                    ComponentType type = getComponentType(config, rd.getComponentTypeID(), targetID); 
-
-                    rd = (ResourceDescriptor) setLastChangedDate(rd, transaction.getLockAcquiredBy());
-
-        			processPropertyChanges(action,
-    									rd,
-    									type,
-    									config,
-    									transaction.getLockAcquiredBy());
-
-
-
-
-                } else if (action instanceof DestroyObject) {
-
-                    if (rd != null) {
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
-                    }
-
-
-                } else {
-                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription() ));
-                }
-
-            }
-
-        } catch (ConfigurationException ce) {
-            throw ce;
-
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e);
-            e2.setActionIndex(actionIndex);
-            throw e2;
-        }
-
-
-        return affectedIDs;
-    }
-    
     public Set executeActions(ConfigurationModelContainerImpl config,
 			AuthenticationProviderID targetID, List actions,
 			ConfigTransaction transaction)

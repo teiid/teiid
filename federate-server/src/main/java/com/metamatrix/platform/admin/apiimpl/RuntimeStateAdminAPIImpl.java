@@ -30,7 +30,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.admin.api.server.AdminRoles;
@@ -40,18 +39,12 @@ import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.log.reader.DBLogReader;
 import com.metamatrix.common.log.reader.LogReader;
-import com.metamatrix.common.object.PropertiedObject;
-import com.metamatrix.common.pooling.api.ResourcePoolMgr;
-import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.platform.PlatformPlugin;
@@ -60,13 +53,11 @@ import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.PscID;
-import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -1071,168 +1062,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         // Any administrator may call this read-only method - no need to validate role
         VMControllerInterface vm = helper.getVMControllerInterface(vmID);
         vm.runGC();
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}for all resource
-     * pools defined to the system.
-     * 
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourceDescriptors() throws ResourcePoolException,
-                                                                                              AuthorizationException,
-                                                                                              InvalidSessionException,
-                                                                                              MetaMatrixComponentException {
-
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "getResourceDescriptors "); //$NON-NLS-1$
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return helper.getResourceDescriptors();
-    }
-
-    
-    
-    /**
-     * Execute an update to immediately apply the changes to the
-     * {@link com.metamatrix.common.pooling.api.ResourcePool ResourcePool}identified by the
-     * {@link com.metamatrix.common.config.api.ResourceDescriptorID ID}.
-     * 
-     * @param resourcePoolID
-     *            identifies the resource pool for which the changes will be applied
-     * @param properties
-     *            are the changes to be applied to the resource pool
-     * @throws ResourcePoolException
-     *             if an error occurs applying the changes to the resource pool
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws AuthorizationException
-     *             if the user is not authorized to make the changes
-     */
-    public synchronized void updateResourcePool(ResourceDescriptorID resourcePoolID,
-                                                Properties properties) throws ResourcePoolException,
-                                                                      InvalidSessionException,
-                                                                      AuthorizationException,
-                                                                      MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "UpdateResourcePool: user = " + token.getUsername()); //$NON-NLS-1$
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "RuntimeStateAdminAPIImpl.updateResourcePool(" + resourcePoolID + ", " + properties + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-        while (poolIter.hasNext()) {
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-            mgr.updateResourcePool(resourcePoolID, properties);
-        }
-
-    }
-
-    /**
-     * Return a PropertiedObject that contains the pool properties and their values for
-     * a particular pool.  PropertiedObject is much preferred since these are modifiable and may have
-     * constraints on allowable values.
-     * @param descriptorID ID of the resource pool in question.
-     * @return The PropertiedObject for the given pool.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    public synchronized PropertiedObject getPoolProps(ResourceDescriptorID descriptorID) throws ResourcePoolException,
-                                                                                        AuthorizationException,
-                                                                                        InvalidSessionException,
-                                                                                        MetaMatrixComponentException {
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "getPoolProps " + descriptorID); //$NON-NLS-1$
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-
-
-        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-        while (poolIter.hasNext()) {
-            // find
-
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-            // find the first resource descriptor for this id,
-            // all descriptors across all the vms are not being
-            // maintained independently
-            ResourceDescriptor descriptor = mgr.getResourceDescriptor(descriptorID);
-            // dPRops is unmodifiable, instead of removing just copy
-            // the properties that are needed
-            if (descriptor != null) {
-                return (PropertiedObject)descriptor;
-
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.platform.admin.api.runtime.ResourcePoolStats ResourcePoolStats}
-     * for all resource pools known to the system.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourcePoolStatistics() throws ResourcePoolException,
-                                                                                                 AuthorizationException,
-                                                                                                 InvalidSessionException,
-                                                                                                 MetaMatrixComponentException {
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "getResourcePoolStatistics"); //$NON-NLS-1$
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        
-        
-        return helper.getResourcePoolStatistics();
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.platform.admin.api.runtime.ResourcePoolStats ResourcePoolStats}
-     * for all resource pools for the given DescriptorID.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException,
-                                                                                               AuthorizationException,
-                                                                                               InvalidSessionException,
-                                                                                               MetaMatrixComponentException {
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "getResourcePoolStatistics"); //$NON-NLS-1$
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-
-        Collection result = new ArrayList();
-
-        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-        while (poolIter.hasNext()) {
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-            ResourcePoolStatistics stats = mgr.getResourcePoolStatistics(descriptorID);
-            Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
-            String processName = this.helper.getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-            ResourcePoolStats poolStats = new ResourcePoolStats(stats, stats.getResourceDescriptorID(),
-                                                                    binding.getID().getHostName(),
-                                                                    processName, resStats);
-
-            result.add(poolStats);
-        }
-        return result;
     }
 
     /**

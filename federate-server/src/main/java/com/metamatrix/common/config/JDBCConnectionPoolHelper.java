@@ -22,23 +22,33 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.server;
+package com.metamatrix.common.config;
 
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.pooling.impl.BasicResourcePool;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.jdbc.SimplePooledConnectionSource;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
+ * Created on May 14, 2002
+ *
+ * The JDBCResourcePool is used to obtain a JDBC Connection from the
+ * resource pool.
  */
-public class FakeTestResourcePool extends BasicResourcePool {
 
-    /**
-     * Constructor for FakeTestResourcePool.
-     */
-    public FakeTestResourcePool() {
-        super();
-    }
 
-    public void init(ResourceDescriptor descriptor) {
-        this.resourceDescriptor = descriptor;
-    }
+public final class JDBCConnectionPoolHelper {
+	
+	private static SimplePooledConnectionSource INSTANCE;
+			
+	public static synchronized SimplePooledConnectionSource getInstance() {
+		if (INSTANCE == null) {
+			try {
+				INSTANCE = new SimplePooledConnectionSource(CurrentConfiguration.getBootStrapProperties());
+			} catch (ConfigurationException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
+		}
+		return INSTANCE;
+	}
+	
 }

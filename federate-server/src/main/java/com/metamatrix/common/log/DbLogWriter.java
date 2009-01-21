@@ -33,11 +33,7 @@ import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
-import com.metamatrix.common.pooling.api.ResourceContainer;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
-import com.metamatrix.common.pooling.impl.BaseResource;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
@@ -50,7 +46,7 @@ import com.metamatrix.core.util.StringUtil;
  * -  add System.err messages when restarting and stopping the logging
  * 
  */
-public class DbLogWriter implements DbWriter {
+public class DbLogWriter {
 
     /**
      * Static String to use as the user name when checking out connections from the pool
@@ -137,7 +133,7 @@ public class DbLogWriter implements DbWriter {
 	public static final int DEFAULT_MAX_GENERAL_LENGTH = 64;
 	public static final int DEFAULT_MAX_EXCEPTION_LENGTH = 4000;
 	public static final int DEFAULT_MAX_MSG_LENGTH = 2000;
-    
+	private static final String NULL = "Null";    //$NON-NLS-1$
 	
 	public static final String PLUGIN_PREFIX = "com.metamatrix.";  //$NON-NLS-1$
 
@@ -153,19 +149,11 @@ public class DbLogWriter implements DbWriter {
 		public static final String THREAD           = "THREADNAME"; //$NON-NLS-1$
 	}
     
-    private static final int WAIT_TIME = 60 * 1000; // 60 secs or 1 min
-    private static final int RETRY_TIME = 5 * 1000; // 5 sec
-    
     private static final int WRITE_RETRIES = 5; // # of retries before stop writing
     private static final int RESUME_LOGGING_AFTER_TIME =  300 * 1000; // 5 mins 
     
     private boolean isLogSuspended=false;
     private long resumeTime=-1;
-    
-
-	// Maximum number of consecutive exceptions allowed before removing this
-	// destination from the list.
-	private int consecutiveExceptions = 0;
     
 	private short sequenceNumber;
 	private long lastSequenceStart;
@@ -173,9 +161,7 @@ public class DbLogWriter implements DbWriter {
 	private int maxGeneralLength    = DEFAULT_MAX_GENERAL_LENGTH;
 	private int maxExceptionLength  = DEFAULT_MAX_EXCEPTION_LENGTH;
 
-	private Connection con;
 	private Properties connProps;
-	private PreparedStatement stmt;
 	private StringBuffer insertStr;
        
     private boolean shutdown = false;
@@ -192,94 +178,7 @@ public class DbLogWriter implements DbWriter {
     
     public synchronized void shutdown() {
         shutdown = true;
-        cleanup();
     }
-    
-    // cleanup is used internally to close and cleanup connections after
-    // the connection has failed.
-	private void cleanup() {
-		try {
-			if( stmt != null ) {
-				stmt.close();
-			}
-		} catch(SQLException ex) {
-			System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0027) + ex.getMessage());
-		}
-        
-        stmt = null;
-
-		try {
-			if( con != null ) {     
-				con.close();                
-			}
-		} catch(SQLException ex) {
-			System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0027) + ex.getMessage());
-		}	
-        con = null;
-
-	}
-    
-    private void startup() throws DbWriterException {
-        // initialize the connection
-        con = getConnection();
-        
-    }
-	
-	public synchronized Connection getConnection() throws DbWriterException {
-        SQLException firstException = null;
-        Connection connection = null;
-        
-        long endTime = System.currentTimeMillis() + WAIT_TIME;
-        
-        
-		// Establish connection and prepare statement
-        while(true) {
-    		try {
-               
-                           
-        		  try {
-        		      connection = JDBCConnectionPoolHelper.getConnection(connProps, LOGGING);
-        		  } catch (ResourcePoolException err) {
-                      // throw this as a SQLException so that it will be 
-                      // wrapped above and set as the nextException
-                      throw new SQLException(err.getMessage());
-        		  }
-                                  
-        		  getStatement(connection);
-                                
-        		  return connection;
-            } catch(SQLException sqle) {
-                  cleanup();
-                  if (firstException == null) {
-                      firstException = sqle;
-                  }
-               
-                  if (System.currentTimeMillis() > endTime) {
-                        System.err.println(LogCommonConstants.CTX_LOGGING + " " + CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0028, firstException.getMessage())); //$NON-NLS-1$
-    
-                        SQLException se = new SQLException(
-                            CommonPlugin.Util.getString(
-                                ErrorMessageKeys.LOG_ERR_0028,
-                                firstException.getMessage()));
-                       se.setNextException(firstException);
-                    }
-    
-                    try {
-                        Thread.sleep(RETRY_TIME); // retry every 5 seconds.
-    
-                    } catch (InterruptedException ie) {
-                        // ignore it
-                    }
-              
-            } 
-        }
-        
-    }        
-              
-              
-	private void getStatement(Connection connection) throws SQLException {
-		  stmt = connection.prepareStatement(insertStr.toString());
-	}
 	
 	public String getTableName(Properties props) {
 		String tableName = props.getProperty(TABLE_PROPERTY_NAME, DEFAULT_TABLE_NAME);
@@ -297,8 +196,6 @@ public class DbLogWriter implements DbWriter {
 	 * @throws LogDestinationInitFailedException if there was an error during initialization.
 	 */
 	public void initialize() throws DbWriterException {
-
-
 		sequenceNumber = 0;
 		lastSequenceStart = 0;
 
@@ -350,81 +247,36 @@ public class DbLogWriter implements DbWriter {
 		insertStr.append(COMMA);
 		insertStr.append( '"'+ ColumnName.EXCEPTION +'"' );
 		insertStr.append(VALUES);
-        
-        startup();
 	}
 	
 
-	public void logMessage(LogMessage msg) {
+	public synchronized void logMessage(LogMessage msg) {
 		write(msg);	
 	}
 			
 	private void write(LogMessage message) {
 		// put this in a while to so that as long a 
         int retrycnt = 0;
-        if (isLogSuspended) {
-            if (System.currentTimeMillis() > resumeTime) {             
-                resumeLogging();
-            }
+        if (isLogSuspended && System.currentTimeMillis() > resumeTime) {             
+            resumeLogging();
         }
 		while (!isLogSuspended && !shutdown) {
 			try {
 				printMsg(message);
 				return;
 
-			} catch (SQLException ex) {
+			} catch (Exception ex) {
 
                 if (retrycnt >= WRITE_RETRIES) {
                     suspendLogging();
                 } else {
-                    reconnect();
+                    resumeLogging();
                 }
                 ++retrycnt;                
-
-			} catch (Throwable t) {
-			    // used to catch the NPE when the logger is 
-                // shutdown while a write is in progress
-                if (retrycnt >= WRITE_RETRIES) {
-                    suspendLogging();
-                } else {
-                    reconnect();
-                }
-                ++retrycnt;                
-
-            }
+			} 
 		}
 	}
 	
-	private synchronized boolean reconnect()  {
-		if (!shutdown) {
-			try {
-                if(con instanceof BaseResource) {
-                    final BaseResource rsrc = (BaseResource)con;
-                    //If the resource is checked out by the logger or is not checked out at all
-                    //close the container so that we can get a good connection on the next retry.
-                    if(LOGGING.equals(rsrc.getCheckedOutBy() ) || rsrc.getCheckedOutBy() == null){
-                        ResourceContainer container = rsrc.getContainer();
-                        container.shutDown();
-                    }
-                }
-                
-                //reset the statement and connection variables
-                cleanup();                
-                
-                // get new connection
-				con = getConnection();
-                return true;
-			} catch (Exception e) {
-				System.err.println(LogCommonConstants.CTX_LOGGING + " " + CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0028, e.getMessage())); //$NON-NLS-1$
-				suspendLogging();
-			}
-		}
-        return false;
-	}
-
-	
-	
-	private static final String NULL = "Null";    //$NON-NLS-1$
 	private void printMsg(LogMessage message) throws SQLException {
         if (this.shutdown) {
             return;
@@ -435,7 +287,12 @@ public class DbLogWriter implements DbWriter {
 			lastSequenceStart = msgTimeStamp;
 			sequenceNumber = 0;
 		}
-                        
+		Connection connection = null;
+		PreparedStatement stmt = null;
+		try {
+			connection = JDBCConnectionPoolHelper.getInstance().getConnection();
+			stmt = connection.prepareStatement(insertStr.toString());  
+
 			// Add values to Prepared statement
             
 			// Timestamp column
@@ -478,19 +335,31 @@ public class DbLogWriter implements DbWriter {
 
 			// Insert the row into the table
 			stmt.executeUpdate();
-           
-
-			// Execute was successful. Wipe out the outstanding exception cnt, if any
-			if ( this.consecutiveExceptions > 0 ) {
-				this.consecutiveExceptions = 0;
-			}
+		} finally   {         
 
 			// Increment VM sequence number
 			++sequenceNumber;
+			
+			try {
+				if( stmt != null ) {
+					stmt.close();
+				}
+			} catch(SQLException ex) {
+				System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0027) + ex.getMessage());
+			}
+	        
+			try {
+				if( connection != null ) {     
+					connection.close();                
+				}
+			} catch(SQLException ex) {
+				System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0027) + ex.getMessage());
+			}
+		}
             
 	}
     
-    private synchronized void suspendLogging() {
+    private void suspendLogging() {
         // suspend logging until the resumeTime has passed
         isLogSuspended=true;
         resumeTime = System.currentTimeMillis() + RESUME_LOGGING_AFTER_TIME;
@@ -500,19 +369,16 @@ public class DbLogWriter implements DbWriter {
         
     }
     
-    private synchronized void resumeLogging() {
-        if (reconnect()) {
-            // if the resume time has passed, then set the suspended flag to false
-            // so that logging will resume
-            isLogSuspended=false;
-            resumeTime=-1;
-            
-            Date rd = new Date(System.currentTimeMillis());
-            String stringDate = DateUtil.getDateAsString(rd);
-            
-            System.err.println(CommonPlugin.Util.getString("DBLogWriter.Database_Logging_has_been_resumed", stringDate)); //$NON-NLS-1$
-        } 
-       
+    private void resumeLogging() {
+        // if the resume time has passed, then set the suspended flag to false
+        // so that logging will resume
+        isLogSuspended=false;
+        resumeTime=-1;
+        
+        Date rd = new Date(System.currentTimeMillis());
+        String stringDate = DateUtil.getDateAsString(rd);
+        
+        System.err.println(CommonPlugin.Util.getString("DBLogWriter.Database_Logging_has_been_resumed", stringDate)); //$NON-NLS-1$
     }
 
 }

@@ -46,6 +46,7 @@ import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.common.comm.platform.socket.server.LogonImpl;
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.DeployedComponent;
@@ -65,8 +66,6 @@ import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.pooling.api.ResourcePoolMgr;
-import com.metamatrix.common.pooling.impl.ResourcePoolMgrImpl;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -96,8 +95,6 @@ import com.metamatrix.platform.admin.apiimpl.SessionAdminAPIImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
-import com.metamatrix.platform.registry.ResourcePoolMgrID;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.security.api.ILogon;
@@ -165,7 +162,6 @@ public abstract class VMController implements VMControllerInterface {
     
 	private Date startTime;
 	private Properties vmProps;
-	private ResourcePoolMgr resourcePoolMgr;
 	VMComponentDefn vmComponentDefn;
 
     private boolean shuttingDown = false;
@@ -216,12 +212,6 @@ public abstract class VMController implements VMControllerInterface {
 
         //Register with registry
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0006, id));
-
-        // Create and registry resource pool manager
-        this.resourcePoolMgr = new ResourcePoolMgrImpl();
-        ResourcePoolMgrID rpmID = new ResourcePoolMgrID(DBIDGenerator.getInstance().getID(DBIDGenerator.RESOURCE_POOL_MGR_ID), id);
-        ResourcePoolMgrBinding rpmBinding = new ResourcePoolMgrBinding(rpmID, resourcePoolMgr, this.messageBus);
-        this.events.resourcePoolManagerAdded(rpmBinding);
 
         this.clientServices = new ClientServiceRegistry(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
 
@@ -561,13 +551,7 @@ public abstract class VMController implements VMControllerInterface {
             logException(e, e.getMessage());
         } 
 
-		// shutdown resourcePoolMgr - Should be LAST component shut down!
-		try {
-			resourcePoolMgr.shutDown();
-			resourcePoolMgr = null;
-		} catch (Exception e) {
-			logException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0033));
-		}
+		JDBCConnectionPoolHelper.getInstance().shutDown();
 
         // unregister VMController
         events.vmRemoved(id);

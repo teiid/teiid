@@ -27,18 +27,14 @@ package com.metamatrix.platform.admin.api;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.object.PropertiedObject;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
@@ -569,101 +565,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
     void runGC(VMControllerID vmID) throws AuthorizationException,
                                    InvalidSessionException,
                                    MetaMatrixComponentException;
-
-    /**
-     * Execute an update to immediately apply the changes to the
-     * {@link com.metamatrix.common.pooling.api.ResourcePool ResourcePool} identified by the
-     * {@link com.metamatrix.common.config.api.ResourceDescriptorID ID}.
-     * 
-     * @param resourcePoolID
-     *            identifies the resource pool for which the changes will be applied
-     * @param properties
-     *            are the changes to be applied to the resource pool
-     * @throws ResourcePoolException
-     *             if an error occurs applying the changes to the resource pool
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws AuthorizationException
-     *             if the user is not authorized to make the changes
-     */
-    void updateResourcePool(ResourceDescriptorID resourcePoolID,
-                            Properties properties) throws ResourcePoolException,
-                                                  InvalidSessionException,
-                                                  AuthorizationException,
-                                                  MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all resource
-     * pools defined to the system.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    Collection getResourceDescriptors() throws ResourcePoolException,
-                                       AuthorizationException,
-                                       InvalidSessionException,
-                                       MetaMatrixComponentException;
-
-    /**
-     * Return a PropertiedObject that contains the pool properties and their values for a particular pool. PropertiedObject is
-     * much preferred since these are modifiable and may have constraints on allowable values.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @param descriptorID
-     *            ID of the resource pool in question.
-     * @return The PropertiedObject for the given pool.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    PropertiedObject getPoolProps(ResourceDescriptorID descriptorID) throws ResourcePoolException,
-                                                                    AuthorizationException,
-                                                                    InvalidSessionException,
-                                                                    MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.platform.admin.api.runtime.ResourcePoolStats ResourcePoolStats} for all
-     * resource pools known to the system.
-     * 
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    Collection getResourcePoolStatistics() throws ResourcePoolException,
-                                          AuthorizationException,
-                                          InvalidSessionException,
-                                          MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.platform.admin.api.runtime.ResourcePoolStats ResourcePoolStats} for all
-     * resource pools for the given DescriptorID.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    Collection getResourcePoolStatistics(ResourceDescriptorID descriptorID) throws ResourcePoolException,
-                                                                           AuthorizationException,
-                                                                           InvalidSessionException,
-                                                                           MetaMatrixComponentException;
 
     /**
      * Return the PscID by Name

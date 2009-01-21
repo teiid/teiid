@@ -504,8 +504,6 @@ public class AbstractAdminImpl {
         switch(code) {
             case MMAdminObject.OBJECT_TYPE_CACHE:
                 return parent.getCaches(identifier);
-            case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
-                return parent.getConnectionPools(identifier);
             case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
                 return parent.getConnectorBindings(identifier);
             case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:

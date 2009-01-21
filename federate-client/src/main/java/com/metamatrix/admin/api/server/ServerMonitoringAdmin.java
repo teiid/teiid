@@ -64,19 +64,6 @@ public interface ServerMonitoringAdmin extends CoreMonitoringAdmin {
     Collection getProcesses(String processIdentifier) throws AdminException;
 
     /**
-     * Get the Connection Pools that correspond to the specified identifer pattern.
-     *
-     * @param poolIdentifier the unique poolIdentifier for for a {@link com.metamatrix.admin.api.objects.ConnectionPool ConnectionPool}
-     * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#WILDCARD WILDCARD}"
-     * if all Connection Pools are desired.
-     * @return Collection of {@link com.metamatrix.admin.api.objects.ConnectionPool ConnectionPool}s
-     * @throws AdminException if there's a system error.
-     * @since 4.3
-     * @deprecated 5.5.4
-     */
-    Collection getConnectionPools(String poolIdentifier) throws AdminException;
-
-    /**
      * Get the Resources that correspond to the specified identifer pattern.
      *
      * @param resourceIdentifier the unique resourceIdentifier for for a {@link com.metamatrix.admin.api.objects.Resource Resource}

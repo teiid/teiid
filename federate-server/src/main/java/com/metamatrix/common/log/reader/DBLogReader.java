@@ -44,8 +44,6 @@ import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.jdbc.JDBCUtil;
-import com.metamatrix.common.pooling.api.ResourcePool;
-import com.metamatrix.common.pooling.jdbc.JDBCConnectionResource;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -111,7 +109,7 @@ public class DBLogReader implements LogReader {
     protected Connection getConnection() throws ManagedConnectionException {
         try {
         	
-        	Connection connection = JDBCConnectionPoolHelper.getConnection(this.properties, "DBLogReader");
+        	Connection connection = JDBCConnectionPoolHelper.getInstance().getConnection();
          //   Connection connection = JDBCUtil.createJDBCConnection(this.connectionProperties);
 
             return connection;

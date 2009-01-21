@@ -45,7 +45,7 @@ import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ExtensionSourceManager;
 import com.metamatrix.console.models.GroupsManager;
 import com.metamatrix.console.models.ModelManager;
-import com.metamatrix.console.models.PoolManager;
+import com.metamatrix.console.models.ResourceManager;
 import com.metamatrix.console.models.ServerLogManager;
 import com.metamatrix.console.notification.RuntimeUpdateNotification;
 import com.metamatrix.console.security.UserCapabilities;
@@ -58,8 +58,6 @@ import com.metamatrix.console.ui.views.deploy.DeployMainPanel;
 import com.metamatrix.console.ui.views.entitlements.EntitlementsPanel;
 import com.metamatrix.console.ui.views.extensionsource.ExtensionSourcesPanel;
 import com.metamatrix.console.ui.views.logsetup.SystemLogSetUpPanel;
-import com.metamatrix.console.ui.views.pools.PoolsConfigurationPanel;
-import com.metamatrix.console.ui.views.pools.PoolsPanel;
 import com.metamatrix.console.ui.views.properties.PropertiesMasterPanel;
 import com.metamatrix.console.ui.views.queries.QueryPanel;
 import com.metamatrix.console.ui.views.resources.ResourcesMainPanel;
@@ -366,10 +364,6 @@ public class WorkspaceController implements
             panel = createRuntimeMgmtPanel(connection);
         } else if (cls == SystemLogSetUpPanel.class) {
             panel = createSystemLogSetupPanel(connection);
-        } else if (cls == PoolsPanel.class) {
-            panel = createPoolsPanel(connection);
-        } else if (cls == PoolsConfigurationPanel.class) {
-            panel = createPoolsConfigurationPanel(connection);
         } else if (cls == ResourcesMainPanel.class) {
             panel = createResourcesPanel(connection);
         }
@@ -498,38 +492,12 @@ public class WorkspaceController implements
         return entPanel;
     }
 
-    private WorkspacePanel createPoolsPanel(ConnectionInfo connection) {
-        PoolsPanel poolsPanel = null;
-        try {
-            UserCapabilities cap = UserCapabilities.getInstance();
-            boolean canModify = cap.canModifyPools(connection);
-            PoolManager mgr = ModelManager.getPoolManager(connection);
-            poolsPanel = new PoolsPanel(mgr, canModify, connection);
-        } catch (Exception ex) {
-            ExceptionUtility.showMessage("Create Pools panel", ex); //$NON-NLS-1$
-        }
-        return poolsPanel;
-    }
-
-    private WorkspacePanel createPoolsConfigurationPanel(ConnectionInfo connection) {
-        PoolsConfigurationPanel pcp = null;
-        try {
-            UserCapabilities cap = UserCapabilities.getInstance();
-            boolean canModify = cap.canModifyPools(connection);
-            PoolManager mgr = ModelManager.getPoolManager(connection);
-            pcp = new PoolsConfigurationPanel(mgr, canModify, connection);
-        } catch (Exception ex) {
-            ExceptionUtility.showMessage("Create Pools Configuration panel", ex); //$NON-NLS-1$
-        }
-        return pcp;
-    }
-
     private WorkspacePanel createResourcesPanel(ConnectionInfo connection) {
         ResourcesMainPanel rp = null;
         try {
             UserCapabilities cap = UserCapabilities.getInstance();
             boolean canModify = cap.canModifyResources(connection);
-            PoolManager mgr = ModelManager.getPoolManager(connection);
+            ResourceManager mgr = ModelManager.getResourceManager(connection);
             rp = new ResourcesMainPanel(mgr, canModify, connection);
         } catch (Exception ex) {
             ExceptionUtility.showMessage("Create Resources panel", ex); //$NON-NLS-1$
@@ -698,11 +666,6 @@ public class WorkspaceController implements
                                   StaticProperties.getSysLogRefreshRate());
         }
 
-        if (wsp instanceof PoolsPanel) {
-            boolean enabled = StaticProperties.getResourcePoolsRefreshEnabled();
-            int rate = StaticProperties.getResourcePoolsRefreshRate();
-            applyAutoRefreshParms((AutoRefreshable)wsp, enabled, rate);
-        }
     }
 
     public void applyAutoRefreshParms(AutoRefreshable refAutoRefreshablePanel,

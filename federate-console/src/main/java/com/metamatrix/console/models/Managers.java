@@ -29,7 +29,7 @@ public class Managers {
     private SessionManager sessionManager;
     private QueryManager queryManager;
     private EntitlementManager entitlementManager;
-    private PoolManager poolManager;
+    private ResourceManager resourceManager;
     private SummaryManager summaryManager;
     private ServerLogManager serverLogManager;
     private PropertiesManager propertiesManager;
@@ -42,7 +42,7 @@ public class Managers {
     
     public Managers(GroupsManager groupsManager, SessionManager sessionManager,
     		QueryManager queryManager, EntitlementManager entitlementManager, 
-    		PoolManager poolManager,
+    		ResourceManager resourceManager,
     		SummaryManager summaryManager, 
     		ServerLogManager serverLogManager,
     		PropertiesManager propertiesManager, VdbManager vdbManager,
@@ -55,7 +55,7 @@ public class Managers {
     	this.sessionManager = sessionManager;
     	this.queryManager = queryManager;
     	this.entitlementManager = entitlementManager;
-    	this.poolManager = poolManager;
+    	this.resourceManager = resourceManager;
     	this.summaryManager = summaryManager;
     	this.serverLogManager = serverLogManager;
     	this.propertiesManager = propertiesManager;
@@ -83,8 +83,8 @@ public class Managers {
     	return entitlementManager;
     }
     
-    public PoolManager getPoolManager() {
-    	return poolManager;
+    public ResourceManager getPoolManager() {
+    	return resourceManager;
     }
     
     public SummaryManager getSummaryManager() {

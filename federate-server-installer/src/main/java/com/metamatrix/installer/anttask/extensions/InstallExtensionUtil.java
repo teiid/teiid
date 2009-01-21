@@ -35,7 +35,6 @@ import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.ExtensionModuleInstallUtil;
 import com.metamatrix.common.extensionmodule.ExtensionModulePropertyNames;
 import com.metamatrix.common.extensionmodule.ExtensionModuleTypes;
-import com.metamatrix.common.pooling.api.ResourcePool;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
@@ -55,10 +54,6 @@ public class InstallExtensionUtil {
         newProps
                 .setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY,
                              com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleTransactionFactory.class.getName());
-
-        if (!newProps.containsKey(ResourcePool.RESOURCE_POOL)) {
-            newProps.setProperty(ResourcePool.RESOURCE_POOL, ResourcePool.JDBC_SHARED_CONNECTION_POOL);
-        }
 
         return new ExtensionModuleInstallUtil(newProps);
     }

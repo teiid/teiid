@@ -435,27 +435,6 @@ public interface Configuration extends ComponentObject {
     Collection getVMComponentDefns(); 
 
     /**
-     * Returns a <code>Collection</code> of type <code>ComponentType</code> that represent
-     * all the ComponentTypes defined.
-     * @param includeDeprecated true if class names that have been deprecated should be
-     *    included in the returned list, or false if only non-deprecated constants should be returned.
-     * @return List of type <code>ComponentType</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see #ComponentType
-     */
-    Collection getResourcePools();
-    
-    /**
-     * Returns a <code>ResourceDescriptor</code> for the specified <code>descriptorName</code>
-     * that represents a resource pool
-     * @param descriptorName is the name of the resource descriptor to return
-     * @return ResourceDescriptor is the descriptor requested
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    ResourceDescriptor getResourcePool(String poolName) ;
-    
-
-    /**
      *  Returns the <code>LogConfiguration</code>
      *  @return LogConfiguration
      */

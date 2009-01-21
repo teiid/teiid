@@ -52,8 +52,6 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     
     /**Object type code for Cache*/
     public static final int OBJECT_TYPE_CACHE = 0;
-    /**Object type code for ConnectionPool*/
-    public static final int OBJECT_TYPE_CONNECTION_POOL = 1;
     /**Object type code for ConnectorBinding*/
     public static final int OBJECT_TYPE_CONNECTOR_BINDING = 2;
     /**Object type code for ConnectorType*/
@@ -103,7 +101,6 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     
     static {
         objectTypeMap.put(com.metamatrix.admin.api.objects.Cache.class.getName(), new Integer(OBJECT_TYPE_CACHE));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.ConnectionPool.class.getName(), new Integer(OBJECT_TYPE_CONNECTION_POOL));
         objectTypeMap.put(com.metamatrix.admin.api.objects.ConnectorBinding.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_BINDING));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.ConnectorType.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_TYPE));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.DQP.class.getName(), new Integer(OBJECT_TYPE_DQP));        

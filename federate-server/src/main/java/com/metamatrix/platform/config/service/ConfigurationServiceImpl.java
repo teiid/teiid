@@ -45,7 +45,6 @@ import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.AddObject;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -62,9 +61,7 @@ import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ReleaseInfo;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
-import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -974,163 +971,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
   /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType}
-     * for all resource pool types of a specified configuration.
-     * @param configurationID is the configuration from which the component types are to
-     * be derived
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-   public Collection getResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException {
-
-        if (configurationID == null || configurationID.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-
-        ConfigurationTransaction transaction = null;
-        try {
-
-
-            Collection types = getAllComponentTypes(false);
-            Collection keepTypes = new ArrayList(5);
-
-            for (Iterator it = types.iterator(); it.hasNext(); ) {
-                    ComponentType type = (ComponentType) it.next();
-                    if (type.getComponentTypeCode() == ComponentType.RESOURCE_COMPONENT_TYPE_CODE) {
-                        if (type.getID().equals(SharedResource.JDBC_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        } else if (type.getID().equals(SharedResource.JMS_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        } else if (type.getID().equals(SharedResource.SEARCHBASE_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        } else if (type.getID().equals(SharedResource.MISC_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        }
-                    }
-
-            }
-            return keepTypes;
-
-
-        } catch ( ConfigurationException e ) {
-                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
-            }
-        }
-
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType}
-     * that represent the pool types for which new {@link ResourceDescriptor ResourcePools}
-     * of these types can be created.  This means only these types have logic implemented to
-     * make use of the resource pool.
-     * @param configurationID is the configuration from which the component types are to
-     * be derived
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    public Collection getPoolableResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException {
-
-        if (configurationID == null || configurationID.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-        ConfigurationTransaction transaction = null;
-        try {
-
-            Collection types = getAllComponentTypes(false);
-            Collection keepTypes = new ArrayList(5);
-
-            for (Iterator it = types.iterator(); it.hasNext(); ) {
-                    ComponentType type = (ComponentType) it.next();
-                    if (type.getComponentTypeCode() == ComponentType.RESOURCE_COMPONENT_TYPE_CODE) {
-                        if (type.getID().equals(SharedResource.JDBC_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        } else if (type.getID().equals(SharedResource.SEARCHBASE_COMPONENT_TYPE_ID)) {
-                            keepTypes.add(type);
-                        }
-                    }
-
-            }
-            return keepTypes;
-
-        } catch ( ConfigurationException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
-            }
-        }
-
-    }
-
-
-     public Collection getResourcePools(ConfigurationID configurationID)
-                        throws ConfigurationException {
-
-
-        if (configurationID == null || configurationID.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-
-        Collection pools = new ArrayList(1);
-        pools.add(CurrentConfiguration.getResourceDescriptors());
-        return pools;
-       
-    }
-
-   /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
-     * for all resource pools of a specified type defined in a configuration.
-     * @param callerSessionID ID of the caller's current session.
-     * @param configurationID is the configuration from which the component defns are to
-     * be derived
-     * @param componentTypeID indicates the type of pools in the configuration to return
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    public Collection getResourcePools(ConfigurationID configurationID, ComponentTypeID componentTypeID)
-    throws ConfigurationException {
-
-        if (configurationID == null || configurationID.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-
-        if (componentTypeID == null || componentTypeID.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-
-        Collection result = null;
-
-        Collection pools = getResourcePools(configurationID);
-        result = new ArrayList(pools.size());
-
-        for (Iterator it=pools.iterator(); it.hasNext(); ) {
-            ResourceDescriptor rd =(ResourceDescriptor) it.next();
-            if (rd.getComponentTypeID().equals(componentTypeID)) {
-                result.add(rd);
-            }
-
-        }
-
-        return result;
-    }
-
-
-    /**
      * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
      * for all internal resources defined to the system.  The internal resources are not managed with
      * the other configuration related information.  They are not dictated based on which configuration

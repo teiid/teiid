@@ -28,11 +28,11 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import com.metamatrix.common.jdbc.JDBCUtil;
+import com.metamatrix.common.jdbc.SimplePooledConnectionSource;
 
 /**
- * This is the basic implemecntation of the ConnectionPoolFactory interface. It uses the apache dbcp libarary to create DataSource
- * instances that pool connections under the covers.
+ * This is the basic implementation of the ConnectionPoolFactory interface.
  * 
  * @since 4.3
  */
@@ -66,26 +66,14 @@ public class BasicConnectionPoolFactory implements
         if (poolProperties == null) {
             return null;
         }
-        final BasicDataSource pool = new BasicDataSource();
-        pool.setDriverClassName("com.metamatrix.jdbc.MMDriver"); //$NON-NLS-1$
-        pool.setUsername(poolProperties.getProperty(ConnectionSource.USERNAME));
-        pool.setPassword(poolProperties.getProperty(ConnectionSource.PASSWORD));
-        pool.setUrl(poolProperties.getProperty(ConnectionSource.SERVER_URL));
-        pool.setInitialSize(Integer.parseInt(getProperty(INITIAL_POOL_SIZE_PROPERTY_KEY)));
-        pool.setMaxActive(Integer.parseInt(getProperty(MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY)));
-        pool.setMaxIdle(Integer.parseInt(getProperty(MAX_IDLE_CONNECTIONS_PROPERTY_KEY)));
-        pool.setMaxWait(Integer.parseInt(getProperty(MAX_WAIT_PROPERTY_KEY)));
-        pool.setMinIdle(Integer.parseInt(getProperty(MIN_IDLE_COUNT_PROPERTY_KEY)));
-        pool.setTimeBetweenEvictionRunsMillis(Integer.parseInt(getProperty(TIME_BETWEEN_EVICTION_THREAD_RUNS_KEY)));
-        pool.setMinEvictableIdleTimeMillis(Integer.parseInt(getProperty(MIN_EVICTABLE_IDLE_TIME_MILLIS_KEY)));
-
-        /*
-         * we do this to make sure that if the session has been invalidated, that we find out early and go ahead and clean the
-         * connections out of the pool.
-         */
-        pool.setTestWhileIdle(true);
-
-        return pool;
+        Properties p = new Properties(poolProperties);
+        p.setProperty(JDBCUtil.DRIVER, "com.metamatrix.jdbc.MMDriver");
+        p.setProperty(JDBCUtil.USERNAME, poolProperties.getProperty(ConnectionSource.USERNAME));
+        p.setProperty(JDBCUtil.PASSWORD, poolProperties.getProperty(ConnectionSource.PASSWORD));
+        p.setProperty(JDBCUtil.DATABASE, poolProperties.getProperty(ConnectionSource.SERVER_URL));
+        p.setProperty(SimplePooledConnectionSource.MAXIMUM_RESOURCE_POOL_SIZE, getProperty(MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY));
+        p.setProperty(SimplePooledConnectionSource.WAIT_TIME_FOR_RESOURCE, getProperty(MAX_WAIT_PROPERTY_KEY));
+        return new SimplePooledConnectionSource(p);
     }
 
     /**

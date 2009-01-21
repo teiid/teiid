@@ -24,12 +24,26 @@
 
 package com.metamatrix.console.ui.views.resources;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -37,15 +51,28 @@ import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.console.connections.ConnectionInfo;
-import com.metamatrix.console.models.PoolManager;
+import com.metamatrix.console.models.ResourceManager;
 import com.metamatrix.console.models.ResourcePropertiedObjectEditor;
 import com.metamatrix.console.notification.RuntimeUpdateNotification;
 import com.metamatrix.console.ui.NotifyOnExitConsole;
-import com.metamatrix.console.ui.layout.*;
-import com.metamatrix.console.ui.util.*;
+import com.metamatrix.console.ui.layout.BasePanel;
+import com.metamatrix.console.ui.layout.ConsoleMainFrame;
+import com.metamatrix.console.ui.layout.WorkspacePanel;
+import com.metamatrix.console.ui.util.POPWithButtons;
+import com.metamatrix.console.ui.util.POPWithButtonsController;
+import com.metamatrix.console.ui.util.PropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.views.DefaultConsoleTableComparator;
-import com.metamatrix.console.util.*;
-import com.metamatrix.toolbox.ui.widget.*;
+import com.metamatrix.console.util.DialogUtility;
+import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
+import com.metamatrix.console.util.Refreshable;
+import com.metamatrix.console.util.StaticUtilities;
+import com.metamatrix.toolbox.ui.widget.ButtonWidget;
+import com.metamatrix.toolbox.ui.widget.CheckBox;
+import com.metamatrix.toolbox.ui.widget.LabelWidget;
+import com.metamatrix.toolbox.ui.widget.Splitter;
+import com.metamatrix.toolbox.ui.widget.TableWidget;
+import com.metamatrix.toolbox.ui.widget.TitledBorder;
 import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 import com.metamatrix.toolbox.ui.widget.table.EnhancedTableColumn;
 
@@ -55,15 +82,12 @@ public class ResourcesMainPanel extends BasePanel implements
 		Refreshable {
 	public final static int RESOURCE_NAME_COL_NUM = 0;
 	public final static int RESOURCE_TYPE_COL_NUM = 1;
-	public final static int RESOURCE_POOL_COL_NUM = 2;
-	public final static int NUM_COLUMNS = 3;
+	public final static int NUM_COLUMNS = 2;
 	
 	public final static double SPLIT_PANE_DIVIDER_LOC_FRAME_PROPORTION = 0.6;
 	
 	public final static String RESOURCE_NAME_COL_HDR = "Resource Name"; //$NON-NLS-1$
 	public final static String RESOURCE_TYPE_COL_HDR = "Resource Type"; //$NON-NLS-1$
-	public final static String RESOURCE_POOL_COL_HDR = 
-			"Assigned to\nConnection Pool"; //$NON-NLS-1$
 	
 	private ConnectionInfo connection;	    
 	private TableWidget table;
@@ -71,7 +95,7 @@ public class ResourcesMainPanel extends BasePanel implements
 	private PropertiedObjectPanel pop = null;
 	private POPWithButtons popWithButtons = null;
 	private ResourcePropertiedObjectEditor rpoe;
-	private PoolManager manager;
+	private ResourceManager manager;
 	private JPanel lowerPanel;
 	private Map /*<String pool name to ResourceData>*/ resourceMap =
 			new HashMap();
@@ -80,7 +104,7 @@ public class ResourcesMainPanel extends BasePanel implements
 	private boolean programmaticTableRowSelection = false;
 	private boolean showingNeedRestartToActivateDialog = true;
 	
-	public ResourcesMainPanel(PoolManager manager, boolean modifiable,
+	public ResourcesMainPanel(ResourceManager manager, boolean modifiable,
 			ConnectionInfo conn) throws Exception {
 	    super();
 	    this.manager = manager;
@@ -98,7 +122,6 @@ public class ResourcesMainPanel extends BasePanel implements
 	    String[] colHdrs = new String[NUM_COLUMNS];
 	    colHdrs[RESOURCE_NAME_COL_NUM] = RESOURCE_NAME_COL_HDR;
 	    colHdrs[RESOURCE_TYPE_COL_NUM] = RESOURCE_TYPE_COL_HDR;
-	    colHdrs[RESOURCE_POOL_COL_NUM] = RESOURCE_POOL_COL_HDR;
 	    Vector colHdrsVec = new Vector(Arrays.asList(colHdrs));
 	    tableModel = new com.metamatrix.toolbox.ui.widget.table.DefaultTableModel(
 	    		colHdrsVec);
@@ -241,7 +264,6 @@ public class ResourcesMainPanel extends BasePanel implements
 				Object[] rowData = new Object[NUM_COLUMNS];
 				rowData[RESOURCE_NAME_COL_NUM] = rData.getName();
 				rowData[RESOURCE_TYPE_COL_NUM] = rData.getType();
-				rowData[RESOURCE_POOL_COL_NUM] = rData.getPoolAssignedTo();
 				tableModel.addRow(rowData);
 	    	}
 	    	if (resourceToSelect != null) {

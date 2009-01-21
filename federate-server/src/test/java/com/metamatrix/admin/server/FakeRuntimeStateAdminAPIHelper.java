@@ -38,23 +38,14 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ResourceDescriptor;
-import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.messaging.NoOpMessageBus;
-import com.metamatrix.common.pooling.api.ResourcePool;
-import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
-import com.metamatrix.common.pooling.impl.BasicPoolStatistic;
-import com.metamatrix.common.pooling.impl.BasicResourcePoolStatistics;
-import com.metamatrix.common.pooling.impl.statistics.SumStat;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -124,49 +115,6 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         return null;
     }
 
-    public Collection getResourceDescriptors() throws ResourcePoolException,
-                                                                         MetaMatrixComponentException {
-        return null;
-    }
-    
-    /**
-     * Return Collection of fake ResourceDescriptors for testing. 
-     * Returns "pool1" and "pool2".
-     * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper#getResourcePoolStatistics(com.metamatrix.platform.registry.MetaMatrixRegistry)
-     * @since 4.3
-     */
-    public Collection getResourcePoolStatistics() throws MetaMatrixComponentException,
-                                                                            ResourcePoolException {
-        
-        List statsList = new ArrayList();
-        
-        ResourcePool pool1 = new FakeTestResourcePool();
-        ResourceDescriptor resourceDescriptor1 = configuration.getResourcePool("pool1"); //$NON-NLS-1$
-        pool1.init(resourceDescriptor1);
-        ResourcePoolStatistics statistics1 = new BasicResourcePoolStatistics(pool1);
-        statistics1.addStatistic(new SumStat("stat1", "stat1", "stat1", BasicPoolStatistic.SUM_AGGREGATE_TYPE)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        statistics1.addStatistic(new SumStat("stat2", "stat2", "stat2", BasicPoolStatistic.SUM_AGGREGATE_TYPE)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        
-        ResourcePoolStats stats1 = new ResourcePoolStats(statistics1, (ResourceDescriptorID) resourceDescriptor1.getID(), 
-                                                             "1.1.1.1", "process1",  //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                             new ArrayList());
-        statsList.add(stats1);
-        
-        
-        
-        ResourcePool pool2 = new FakeTestResourcePool();
-        ResourceDescriptor resourceDescriptor2 = configuration.getResourcePool("pool2"); //$NON-NLS-1$
-        pool2.init(resourceDescriptor2);
-        ResourcePoolStatistics statistics2 = new BasicResourcePoolStatistics(pool2);
-        ResourcePoolStats stats2 = new ResourcePoolStats(statistics2, (ResourceDescriptorID) resourceDescriptor2.getID(),
-                                                             "2.2.2.2", "process2", //$NON-NLS-1$ //$NON-NLS-2$
-                                                             new ArrayList()); 
-        statsList.add(stats2);
-
-        
-        return statsList;        
-    }
-    
     /**
      * Return fake ServiceRegistryBinding for testing, based on the specified ServiceID.
      * Returns "connectorBinding2" and "connectorBinding3"; "dqp2" and "dqp3"

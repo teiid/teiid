@@ -45,7 +45,6 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
@@ -363,70 +362,6 @@ public interface ConfigurationAdminAPI extends SubSystemAdminAPI {
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     Collection getComponentDefns(Collection componentDefnIDs, ConfigurationID configurationID)
-    throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
-     * for all resource pools defined to the system.
-     * @param configurationID is the configuration from which the component defns are to
-     * be derived
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     * @see getResourcePool(ConfigurationID) 
-     */
-    //Collection getResourceDescriptors(ConfigurationID configurationID)
-    //throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-   /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType}
-     * for all resource pool types of a specified configuration.
-     * @param configurationID is the configuration from which the component types are to
-     * be derived
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    Collection getResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-   /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ComponentType ComponentType}
-     * that represent the pool types for which new {@link ResourceDescriptor ResourcePools} 
-     * of these types can be created.  This means only these types have logic implemented to
-     * make use of the resource pool.
-     * @param configurationID is the configuration from which the component types are to
-     * be derived
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    Collection getPoolableResourcePoolTypes(ConfigurationID configurationID)
-    throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
-     * for all resource pools defined in a configuration.
-     * @param configurationID is the configuration from which the component defns are to
-     * be derived
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    Collection getResourcePools(ConfigurationID configurationID)
-    throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
-     * for all resource pools of a specified type defined in a configuration.
-     * @param configurationID is the configuration from which the component defns are to
-     * be derived
-     * @param componentTypeID indicates the type of pools in the configuration to return
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    Collection getResourcePools(ConfigurationID configurationID, ComponentTypeID componentTypeID)
     throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
 
     /**

@@ -26,7 +26,6 @@ package com.metamatrix.common.config;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Properties;
@@ -36,7 +35,6 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -46,8 +44,6 @@ import com.metamatrix.common.config.bootstrap.PropertyFileCurrentConfigBootstrap
 import com.metamatrix.common.config.bootstrap.SystemCurrentConfigBootstrap;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.config.reader.SystemCurrentConfigurationReader;
-import com.metamatrix.common.pooling.api.ResourcePool;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.NetUtils;
@@ -81,28 +77,16 @@ import com.metamatrix.core.util.StringUtil;
 public final class CurrentConfiguration {
 
     private static final String DOT_STR = "."; //$NON-NLS-1$
+    
 	private static CurrentConfigurationReader READER = null;
-    private static boolean REQUIRES_CLOSE = false;
     private static Properties BOOTSTRAP_PROPERTIES=null;
     
-    private static Object systemPropLock = new Object();
     private static Properties SYSTEM_BOOTSTRAP_PROPERTIES=null;
     private static Properties STARTUP_PROPERTIES= null;
 
     private static boolean SHUTDOWN_REQUESTED = false;
     private static boolean performedBootStrap = false;
-    private static boolean isInitializing = false;
     
-    /**
-     * 11/5/08 VAH
-     * At boot time, from the bootstrap properties, the bootstrap descriptor will be
-     * created and will be the descriptor provided for all resource connection pool descriptor
-     * requests.   Only ONE connection pool will exist in the server.
-     * 
-     */
-    private static ResourceDescriptor BOOTSTRAP_DESCRIPTOR = null;
-
-
     /**
      * Private constructor that prevents instantiation.
      */
@@ -151,7 +135,7 @@ public final class CurrentConfiguration {
     public synchronized static Properties getStartupProperties() throws ConfigurationException {
         check();
         Properties result = READER.getStartupConfigurationProperties();
-        Properties copyResult = PropertiesUtils.clone(result, BOOTSTRAP_PROPERTIES, false, true);
+        Properties copyResult = PropertiesUtils.clone(result, getBootStrapProperties(), false, true);
         if (!(copyResult instanceof UnmodifiableProperties)) {
             copyResult = new UnmodifiableProperties(copyResult);
         }
@@ -170,7 +154,7 @@ public final class CurrentConfiguration {
      * no property with the specified name or if the configuration
      * bootstrap information could not be accessed.
      */
-    public static String getStartupProperty(String name) {
+    public synchronized static String getStartupProperty(String name) {
 
         if (name == null) {
             return null;
@@ -270,33 +254,15 @@ public final class CurrentConfiguration {
     }
     
     public synchronized static String getBootStrapProperty(String key) {
-
-        String result = null;
 		try {
-	        initBootStrapProperties();
+	        return getBootStrapProperties().getProperty(key);
 		} catch (ConfigurationException e) {
 			System.err.println("*************************************************************************************"); //$NON-NLS-1$
 			System.err.println("** ERROR: Unable to obtain the bootstrap properties for the current configuration. **"); //$NON-NLS-1$
 			System.err.println("*************************************************************************************"); //$NON-NLS-1$
 			e.printStackTrace(System.err);
 		}
-
-        try {
-
-            if (BOOTSTRAP_PROPERTIES != null) {                
-                result = BOOTSTRAP_PROPERTIES.getProperty(key);
-                if (result == null || result.trim().length() == 0) {
-                    result = getSystemBootStrapProperties().getProperty(key);
-                }           
-            }
-        } catch (ConfigurationException e) {
-            System.err.println("*************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Unable to obtain the bootstrap properties for the current configuration. **"); //$NON-NLS-1$
-            System.err.println("*************************************************************************************"); //$NON-NLS-1$
-            e.printStackTrace(System.err);
-        }
-
-        return result;
+        return null;
     }
 
     /**
@@ -321,7 +287,7 @@ public final class CurrentConfiguration {
     public synchronized static Properties getProperties(boolean forceRefresh) throws ConfigurationException {
 		check();
         Properties result = READER.getConfigurationProperties();
-        Properties copyResult = PropertiesUtils.clone(result,BOOTSTRAP_PROPERTIES,false,true);
+        Properties copyResult = PropertiesUtils.clone(result,getBootStrapProperties(),false,true);
         if ( !(copyResult instanceof UnmodifiableProperties) ) {
                     copyResult = new UnmodifiableProperties(copyResult);
         }
@@ -365,70 +331,6 @@ public final class CurrentConfiguration {
 
         return result;
     }
-
-
-    /**
-     * Returns a <code>ResourceDescriptor</code> for the specified <code>descriptorName</code>
-     * @param descriptorName is the name of the resource descriptor to return
-     * @return ResourceDescriptor is the descriptor requested
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    public static synchronized ResourceDescriptor getResourceDescriptor(String descriptorName) throws ConfigurationException {
-        check();
-
-    	if (BOOTSTRAP_DESCRIPTOR != null) {
-    		return BOOTSTRAP_DESCRIPTOR;
-    	}
-    	
-     	/**
-     	 * The change is to use the bootstrap properties as the source properties for the
-     	 * connection pool properties.   The config.xml will no longer contain/manage connection connection pool
-     	 * properties.  
-     	 *
-     	 * If the bootstrap properties contain the essential properties for the connection pool,
-     	 * then those properties will be used for the connection pool (and not rely on the
-     	 * connection pool in the config.xml- this should only happen in test cases)
-     	 */
-    	try {
-			BOOTSTRAP_DESCRIPTOR = JDBCConnectionPoolHelper.createDescriptor(Configuration.STARTUP_ID, 
-					ResourcePool.JDBC_SHARED_CONNECTION_POOL,
-					BOOTSTRAP_PROPERTIES);
-		} catch (ResourcePoolException e) {
-			// TODO Auto-generated catch block
-			throw new ConfigurationException(e);
-		}
-    	if (BOOTSTRAP_DESCRIPTOR == null) {
-    		Configuration config = getConfiguration();
-
-            if (config == null) {
-                return null;
-            }
-    		BOOTSTRAP_DESCRIPTOR = config.getResourcePool(descriptorName);
-    	}
-        return BOOTSTRAP_DESCRIPTOR;
-    }
-
-    /**
-     * Returns a <code>Collection</code> of type <code>ResourceDescriptor</code> that represent
-     * all the ComponentTypes defined.
-     * @param includeDeprecated true if class names that have been deprecated should be
-     *    included in the returned list, or false if only non-deprecated constants should be returned.
-     * @return List of type <code>ComponentType</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see com.metamatrix.common.api.ComponentType
-     */
-    public static Collection getResourceDescriptors() throws ConfigurationException {
-        Collection<ResourceDescriptor> rd = new ArrayList(1);
-        
-        ResourceDescriptor connpool = getResourceDescriptor(ResourcePool.JDBC_SHARED_CONNECTION_POOL);
-        if (connpool != null) {
-        	rd.add(connpool);
-        }
-
-        return rd;
-
-    }
-
 
     /**
      * Get the startup configuration that was used for deployment.
@@ -783,28 +685,12 @@ public final class CurrentConfiguration {
     // the primary method used to perform all the checking
     // if data is preloaded.
     protected synchronized static final void check() throws ConfigurationException {
-
-        if (!performedBootStrap) {
-            verifyBootstrapProperties();
-        }
-
+        verifyBootstrapProperties();
     }
-
-    /**
-     * Forces the cache of current properties and configuration information to
-     * be cleared.
-     */
-//    public synchronized static final void clearCache() {
-//
-////            DEPLOYED_CONFIGURATION = EMPTY_CONFIGURATION;
-////            DEPLOYED_CONFIGURATION_PROPERTIES = EMPTY_PROPERTIES;
-////            RESOURCES = null;
-//
-//    }
 
     public synchronized static final void refresh() throws ConfigurationException {
         // during initialization or shutdown, do not allow a refresh to occur
-        if (isInitializing || SHUTDOWN_REQUESTED) {
+        if (SHUTDOWN_REQUESTED) {
             return;
         }
 
@@ -818,7 +704,7 @@ public final class CurrentConfiguration {
      */
     public synchronized static final void reset() throws ConfigurationException {
         // during initialization or shutdown, do not allow a refresh to occur
-        if (isInitializing || SHUTDOWN_REQUESTED) {
+        if (SHUTDOWN_REQUESTED) {
             return;
         }
 
@@ -826,25 +712,11 @@ public final class CurrentConfiguration {
 
     }
 
-
-    public static final boolean isShutdownRequired() {
-        boolean result = false;
-
-        result = REQUIRES_CLOSE;
-
-        return result;
-
-    }
-
-
     private static final void clear() {
 
         READER = null;
         BOOTSTRAP_PROPERTIES = null;
-        synchronized(systemPropLock) {
-            SYSTEM_BOOTSTRAP_PROPERTIES = null;
-        }
-
+        SYSTEM_BOOTSTRAP_PROPERTIES = null;
         // force a rebootstrap
         performedBootStrap = false;
 
@@ -854,10 +726,9 @@ public final class CurrentConfiguration {
         SHUTDOWN_REQUESTED = true;
 
 
-        if ( REQUIRES_CLOSE && READER != null ) {
+        if ( READER != null ) {
             try {
                 READER.close();
-                REQUIRES_CLOSE = false;
                 clear();
             } catch ( Exception e ) {
                 System.err.println(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0023));
@@ -900,7 +771,6 @@ public final class CurrentConfiguration {
 //JBoss fix - method made public to get around a AccessDenied problem with Jboss30
     public static synchronized final void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
 
-        isInitializing = true;
         try {
             check();
 
@@ -912,10 +782,7 @@ public final class CurrentConfiguration {
             throw se;
         } catch (ConfigurationException ce) {
             throw ce;
-        } finally {
-            isInitializing = false;
         }
-
 
 		// perform reset to reload configuration information
         reset();
@@ -997,52 +864,38 @@ public final class CurrentConfiguration {
         READER.getInitializer().indicateSystemShutdown();
     }
 
-	private synchronized static void initBootStrapProperties() throws ConfigurationException {
-		
-		if (BOOTSTRAP_PROPERTIES != null) {
-			return;
-		}
-        
-		boolean useSystemProperties = false;
-		CurrentConfigBootstrap bootstrapStrategy = null;
-		Properties systemBootStrapProps = getSystemBootStrapProperties();
-		try {
-			if(systemBootStrapProps.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null) {
-				useSystemProperties = true;
+	synchronized static Properties getBootStrapProperties() throws ConfigurationException {
+		if (BOOTSTRAP_PROPERTIES == null) {
+			CurrentConfigBootstrap bootstrapStrategy = null;
+			Properties systemBootStrapProps = getSystemBootStrapProperties();
+			boolean useSystemProperties = systemBootStrapProps.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null;
+			try {
+			
+					bootstrapStrategy = new PropertyFileCurrentConfigBootstrap(useSystemProperties);
+					BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties(systemBootStrapProps);
+	
+	        } catch (ConfigurationException ce) {
+	            throw ce;
+			} catch (Exception e) {
+				throw new ConfigurationException();
 			}
-		} catch (Exception e) {
 		}
-
-		try {
-		
-				bootstrapStrategy = new PropertyFileCurrentConfigBootstrap(useSystemProperties);
-				BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties(systemBootStrapProps);
-
-        } catch (ConfigurationException ce) {
-            throw ce;
-		} catch (Exception e) {
-			throw new ConfigurationException();
-		}
+		return BOOTSTRAP_PROPERTIES;
 	}
 
     
     public static final Properties getSystemBootStrapProperties() throws ConfigurationException {
-        synchronized(systemPropLock) {
-            if (SYSTEM_BOOTSTRAP_PROPERTIES != null) {
-                return PropertiesUtils.clone(SYSTEM_BOOTSTRAP_PROPERTIES, false);
-            }
-            CurrentConfigBootstrap bootstrapStrategy = null;
-            try {
-                bootstrapStrategy = new SystemCurrentConfigBootstrap();
-                SYSTEM_BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties();
-            } catch (Exception e) {
-                throw new ConfigurationException(e.getMessage());
-            }
+        if (SYSTEM_BOOTSTRAP_PROPERTIES != null) {
             return PropertiesUtils.clone(SYSTEM_BOOTSTRAP_PROPERTIES, false);
-
         }
-        
-
+        CurrentConfigBootstrap bootstrapStrategy = null;
+        try {
+            bootstrapStrategy = new SystemCurrentConfigBootstrap();
+            SYSTEM_BOOTSTRAP_PROPERTIES = bootstrapStrategy.getBootstrapProperties();
+        } catch (Exception e) {
+            throw new ConfigurationException(e.getMessage());
+        }
+        return PropertiesUtils.clone(SYSTEM_BOOTSTRAP_PROPERTIES, false);
     }
 
     /**
@@ -1063,15 +916,11 @@ public final class CurrentConfiguration {
 
                 // Get the default bootstrap properties from the System properties ...
                 boolean useSystemProperties = false;
-				CurrentConfiguration.initBootStrapProperties();
+				Properties bootstrap = getBootStrapProperties();
 				
-                if(getSystemBootStrapProperties().getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null ||
-                    BOOTSTRAP_PROPERTIES.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null) {
-                                    useSystemProperties = true;
-                                   
-                }
+                useSystemProperties = bootstrap.getProperty(SystemCurrentConfigBootstrap.NO_CONFIGURATION) != null;
 
-                String readerClassName = BOOTSTRAP_PROPERTIES.getProperty( CurrentConfigBootstrap.CONFIGURATION_READER_CLASS_PROPERTY_NAME );
+                String readerClassName = bootstrap.getProperty( CurrentConfigBootstrap.CONFIGURATION_READER_CLASS_PROPERTY_NAME );
 
                 if ( readerClassName == null ) {
 					if (useSystemProperties) {
@@ -1082,11 +931,8 @@ public final class CurrentConfiguration {
                 } else {
                     Class readerClass = Class.forName(readerClassName);
                     CurrentConfigurationReader tempReader = (CurrentConfigurationReader) readerClass.newInstance();
-                    tempReader.connect(BOOTSTRAP_PROPERTIES);
+                    tempReader.connect(bootstrap);
                     READER = tempReader;
-					if (!useSystemProperties) {
-						REQUIRES_CLOSE = true;
-					}
                 }
               
                 performedBootStrap = true;

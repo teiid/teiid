@@ -35,7 +35,6 @@ import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.server.ServerPlugin;
@@ -75,25 +74,6 @@ public class TransactionLogWriter {
      */
     public TransactionLogWriter(Properties props) {
         this.connProps = props;
-    }
-
-    protected Connection getConnection() throws SQLException {
-
-        // Establish connection and prepare statement
-
-        Connection connection = null;
-        try {
-            connection = JDBCConnectionPoolHelper.getConnection(connProps, "TRANSACTION_LOGGING"); //$NON-NLS-1$
-        } catch (ResourcePoolException err) {
-            throw new SQLException(err.getMessage());
-        } 
-
-        // because the logger using the DirectConnectionPool, it can
-        // set the autocommit to true so that it doesn't have to
-        // perform the commit after each insert.
-        connection.setAutoCommit(true);
-
-        return connection;
     }
 
     public void print(TransactionLogMessage message) {
@@ -141,7 +121,8 @@ public class TransactionLogWriter {
         PreparedStatement ps = null;
         
         try {
-            con = getConnection();
+            con = JDBCConnectionPoolHelper.getInstance().getConnection();
+            con.setAutoCommit(true);
             
             short dest = message.getDestinationTable();
     

@@ -29,11 +29,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -43,21 +41,16 @@ import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.pooling.api.ResourcePoolMgr;
-import com.metamatrix.common.pooling.api.ResourcePoolStatistics;
-import com.metamatrix.common.pooling.api.exception.ResourcePoolException;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.admin.api.runtime.ResourcePoolStats;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.admin.api.runtime.SystemStateBuilder;
@@ -65,7 +58,6 @@ import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
-import com.metamatrix.platform.registry.ResourcePoolMgrBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
@@ -451,69 +443,6 @@ public class RuntimeStateAdminAPIHelper {
         if (!exceptions.isEmpty()) {
             throw new MultipleException(exceptions, ErrorMessageKeys.ADMIN_0054,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0054, errorMsg));
         }
-    }
-
-    
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}for all resource
-     * pools defined to the system.
-     * 
-     * @param registry
-     */
-    public Collection getResourceDescriptors()throws ResourcePoolException, MetaMatrixComponentException {
-
-        Set stats = new HashSet();
-        Collection result = new ArrayList();
-
-        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-        while (poolIter.hasNext()) {
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-            // find the first resource descriptor for this id,
-            // all descriptors across all the vms are not being
-            // maintained independently
-
-            Collection rds = mgr.getAllResourceDescriptors();
-            for (Iterator it = rds.iterator(); it.hasNext();) {
-                ResourceDescriptor descriptor = (ResourceDescriptor)it.next();
-                if (!stats.contains(descriptor.getID())) {
-                    stats.add(descriptor.getID());
-                    result.add(descriptor);
-                }
-            }
-
-        }
-        return result;
-
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.platform.admin.api.runtime.ResourcePoolStats ResourcePoolStats} for all
-     * resource pools known to the system.
-     */
-    public Collection getResourcePoolStatistics() throws MetaMatrixComponentException, ResourcePoolException {
-
-        Collection result = new ArrayList();
-
-        Iterator poolIter = this.registry.getResourcePoolManagerBindings(null, null).iterator();
-        while (poolIter.hasNext()) {
-            ResourcePoolMgrBinding binding = (ResourcePoolMgrBinding)poolIter.next();
-            ResourcePoolMgr mgr = binding.getResourcePoolMgr();
-
-            Iterator iter = mgr.getResourcePoolStatistics().iterator();
-            while (iter.hasNext()) {
-                ResourcePoolStatistics stats = (ResourcePoolStatistics)iter.next();
-                Collection resStats = mgr.getResourcesStatisticsForPool(stats.getResourceDescriptorID());
-                String processName = getVMControllerInterface(binding.getID().getVMControllerID()).getName();
-                ResourcePoolStats poolStats = new ResourcePoolStats(stats, stats.getResourceDescriptorID(),
-                                                                        binding.getID().getHostName(),
-                                                                        processName, resStats);
-
-                result.add(poolStats);
-            }
-        }
-        return result;
     }
 
     public VMControllerInterface getVMControllerInterface(VMControllerID id) throws ResourceNotBoundException {
