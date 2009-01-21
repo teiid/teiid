@@ -508,9 +508,8 @@ public class ConnectionPool {
     
                     if (theConn.isAlive()) {
                         return AliveStatus.ALIVE;
-                    } else if (theConn.isFailed()) {
-                        return AliveStatus.DEAD;
-                    }
+                    } 
+                    //TODO: remove connection
                 }
             }
         }

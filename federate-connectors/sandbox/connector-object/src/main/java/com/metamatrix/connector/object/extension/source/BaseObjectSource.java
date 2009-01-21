@@ -160,16 +160,5 @@ public abstract class BaseObjectSource implements IObjectSource {
         return this.isAlive;
     }
 
-    /** 
-     * @see com.metamatrix.data.pool.SourceConnection#isFailed()
-     * @since 4.2
-     */
-    public boolean isFailed() {
-        return !(isAlive());
-    }
-    
-
-    
-    
     
 }

@@ -172,19 +172,6 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
         }
     }
     
-    
-    public boolean isFailed() {
-        if (connectionStrategy == null) {
-            return false;
-        }
-        try {
-            return connectionStrategy.isConnectionFailed(getPhysicalConnection());
-        } catch (ConnectorException err) {
-            return true;
-        }
-    }
-    
-
     public void setConnectionPool(ConnectionPool pool){
         this.pool = pool;
     }

@@ -187,14 +187,6 @@ public class ObjectConnection implements Connection, SourceConnection{
     }
 
     /** 
-     * @see com.metamatrix.data.pool.SourceConnection#isFailed()
-     * @since 4.3
-     */
-    public boolean isFailed() {
-        return api.isFailed();
-    }
-
-    /** 
      * @see com.metamatrix.data.api.Connection#release()
      * @since 4.3
      */

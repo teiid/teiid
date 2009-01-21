@@ -61,13 +61,6 @@ public interface ISysAdminSource  {
     boolean isAlive();
 
     /**
-     * Determine whether the source has failed.
-     * @return True if failed, false if open or closed without failure.
-     */    
-    boolean isFailed();
-    
-    
-    /**
      * Close the underlying source connection
      * @throws ConnectorException If an error occured while closing
      */

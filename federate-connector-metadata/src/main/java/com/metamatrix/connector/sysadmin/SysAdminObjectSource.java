@@ -51,7 +51,6 @@ public class SysAdminObjectSource implements ISysAdminSource  {
     
      
     private boolean isAlive = false;
-    private boolean isFailed = false;
         
     /**
      * Constructor.
@@ -92,10 +91,8 @@ public class SysAdminObjectSource implements ISysAdminSource  {
             }
             return null;
         } catch (ConnectorException ce) {
-            isFailed = true;
             throw ce;
         } catch (Throwable e) {
-            isFailed = true;
             throw new ConnectorException(e);
         }
 
@@ -187,13 +184,4 @@ public class SysAdminObjectSource implements ISysAdminSource  {
         return this.isAlive;
     }
 
-
-    /** 
-     * @see com.metamatrix.connector.object.extension.IObjectSource#isFailed()
-     * @since 4.3
-     */
-    public boolean isFailed() {
-        return this.isFailed;
-    }
-    
 }

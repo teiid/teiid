@@ -287,13 +287,4 @@ public class LDAPConnection implements Connection, SourceConnection {
 		return true;
 	}
 
-	/** 
-	 * Currently, we assume that all connections have not failed and are alive.
-	 * A connection will automatically fail and throw an error during execution time if there's a problem.
-	 * (non-Javadoc)
-	 * @see com.metamatrix.data.pool.SourceConnection#isFailed()
-	 */
-	public boolean isFailed() {
-		return false;
-	}
 }
