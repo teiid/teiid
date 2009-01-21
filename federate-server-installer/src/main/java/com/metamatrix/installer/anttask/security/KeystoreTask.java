@@ -31,15 +31,11 @@ package com.metamatrix.installer.anttask.security;
  */
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.cipher.SymmetricCryptor;
 import com.metamatrix.core.util.ArgCheck;
