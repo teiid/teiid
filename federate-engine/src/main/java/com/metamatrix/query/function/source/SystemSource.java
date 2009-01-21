@@ -39,6 +39,7 @@ import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
+import com.metamatrix.query.validator.ValidationVisitor;
 
 /**
  * This metadata source has metadata for the hard-coded system functions.  All
@@ -181,26 +182,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         
         addSecurityFunctions();
         
-        String[] comparableTypes = new String[] {
-        		DefaultDataTypes.BIG_DECIMAL,
-        		DefaultDataTypes.BIG_INTEGER,
-        		DefaultDataTypes.BOOLEAN,
-        		DefaultDataTypes.BYTE,
-        		DefaultDataTypes.CHAR,
-        		DefaultDataTypes.DATE,
-        		DefaultDataTypes.DOUBLE,
-        		DefaultDataTypes.FLOAT,
-        		DefaultDataTypes.INTEGER,
-        		DefaultDataTypes.LONG,
-        		DefaultDataTypes.SHORT,
-        		DefaultDataTypes.STRING
-        };
-        
-        for (int i = 0; i < comparableTypes.length; i++) {
-        	addTypedNullIfFunction(comparableTypes[i]);
-        	addTypedCoalesceFunction(comparableTypes[i]);
+        for (String type : DataTypeManager.getAllDataTypeNames()) {
+        	if (!DataTypeManager.isNonComparable(type)) {
+        		addTypedNullIfFunction(type);
+        	}
+        	addTypedCoalesceFunction(type);
         }
-
     }
 
     private void addSecurityFunctions() {
@@ -685,47 +672,10 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
     
     private void addConversionFunctions() {
-        // convert
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.BOOLEAN); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.BYTE); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.SHORT); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.CHAR); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.LONG); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.BIG_INTEGER); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.FLOAT); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.DOUBLE); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.BIG_DECIMAL); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.OBJECT); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.NULL); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.BLOB); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$
-        addTypedConversionFunction("convert", DataTypeManager.DefaultDataTypes.XML); //$NON-NLS-1$
-  
-        // cast
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.BOOLEAN); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.BYTE); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.SHORT); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.CHAR); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.LONG); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.BIG_INTEGER); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.FLOAT); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.DOUBLE); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.BIG_DECIMAL); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.OBJECT); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.NULL); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.BLOB); //$NON-NLS-1$
-        addTypedConversionFunction("cast", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$
-    
+    	for (String type : DataTypeManager.getAllDataTypeNames()) {
+            addTypedConversionFunction("convert", type); //$NON-NLS-1$
+            addTypedConversionFunction("cast", type); //$NON-NLS-1$
+    	}
     }
     
     private void addTypedConversionFunction(String name, String sourceType) {
@@ -739,50 +689,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }    
 
     private void addContextFunctions() {
-        // convert
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.STRING);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BYTE);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.SHORT);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.CHAR);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.LONG);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.DATE);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.TIME);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.NULL);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.XML);
+    	for (String contextType : DataTypeManager.getAllDataTypeNames()) {
+    		for (String exprType : DataTypeManager.getAllDataTypeNames()) {
+                addTypedContextFunction(contextType, exprType);
+        	}
+    	}
     }
     
-    private void addTypedContextFunction(String exprType) {
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.STRING, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BOOLEAN, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BYTE, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.SHORT, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.CHAR, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.INTEGER, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.LONG, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.FLOAT, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.DOUBLE, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.DATE, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.TIME, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.OBJECT, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.NULL, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.BLOB, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.CLOB, exprType);
-        addTypedContextFunction(DataTypeManager.DefaultDataTypes.XML, exprType);
-    }
-
     private void addTypedContextFunction(String contextType, String exprType) {
         functions.add(
             new FunctionMethod("context", QueryPlugin.Util.getString("SystemSource.Context_desc"), MISCELLANEOUS, FUNCTION_CLASS, "context", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -793,66 +706,24 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     } 
     
     private void addRowLimitFunctions() {
-        // convert
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.STRING);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.BYTE);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.SHORT);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.CHAR);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.LONG);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.DATE);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.TIME);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.NULL);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addTypedRowLimitFunction(DataTypeManager.DefaultDataTypes.XML);
+    	for (String exprType : DataTypeManager.getAllDataTypeNames()) {
+            functions.add(
+                    new FunctionMethod("rowlimit", QueryPlugin.Util.getString("SystemSource.Rowlimit_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimit", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        new FunctionParameter[] {
+                            new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+    	}
     }
     
     private void addRowLimitExceptionFunctions() {
-        // convert
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.STRING);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.BYTE);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.SHORT);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.CHAR);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.LONG);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.DATE);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.TIME);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.NULL);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addTypedRowLimitExceptionFunction(DataTypeManager.DefaultDataTypes.XML);
+    	for (String exprType : DataTypeManager.getAllDataTypeNames()) {
+            functions.add(
+                    new FunctionMethod("rowlimitexception", QueryPlugin.Util.getString("SystemSource.RowlimitException_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimitexception", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        new FunctionParameter[] {
+                            new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+    	}
     }    
-
-    private void addTypedRowLimitFunction(String exprType) {
-        functions.add(
-            new FunctionMethod("rowlimit", QueryPlugin.Util.getString("SystemSource.Rowlimit_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimit", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
-    }     
-    
-    private void addTypedRowLimitExceptionFunction(String exprType) {
-        functions.add(
-            new FunctionMethod("rowlimitexception", QueryPlugin.Util.getString("SystemSource.RowlimitException_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimitexception", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
-    }     
     
     private void addDecodeFunctions(){
         
@@ -879,38 +750,17 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
 
     private void addLookupFunctions() {
-        // convert
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.STRING);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.BYTE);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.SHORT);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.CHAR);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.LONG);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.DATE);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.TIME);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.NULL);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addTypedLookupFunction(DataTypeManager.DefaultDataTypes.XML);
-    }
-    
-    private void addTypedLookupFunction(String keyValueType) {
-        functions.add(
-            new FunctionMethod("lookup", QueryPlugin.Util.getString("SystemSource.Lookup_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "lookup", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("codetable", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("returnelement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("keyelement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg3")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("keyvalue", keyValueType, QueryPlugin.Util.getString("SystemSource.Lookup_arg4")), //$NON-NLS-1$ //$NON-NLS-2$
-                     },
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.Lookup_result")), true, FunctionMethod.SERVER_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+    	for (String keyValueType : DataTypeManager.getAllDataTypeNames()) {
+            functions.add(
+                    new FunctionMethod("lookup", QueryPlugin.Util.getString("SystemSource.Lookup_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "lookup", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        new FunctionParameter[] {
+                            new FunctionParameter("codetable", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("returnelement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("keyelement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg3")), //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("keyvalue", keyValueType, QueryPlugin.Util.getString("SystemSource.Lookup_arg4")), //$NON-NLS-1$ //$NON-NLS-2$
+                             },
+                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.Lookup_result")), true, FunctionMethod.SERVER_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+    	}
     }
 
     private void addUserFunction() {
@@ -942,45 +792,15 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
     
     private void addNvlFunctions() {
-        addNvlFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);    
-        addNvlFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.BYTE);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.CHAR);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.DATE);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.LONG);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.SHORT);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.STRING);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.TIME);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addNvlFunction(DataTypeManager.DefaultDataTypes.XML);
+    	for (String type : DataTypeManager.getAllDataTypeNames()) {
+            addNvlFunction(type);    
+    	}
     }
 
 	private void addIfNullFunctions() {
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);    
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.BOOLEAN);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.BYTE);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.CHAR);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.DATE);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.FLOAT);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.INTEGER);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.LONG);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.OBJECT);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.SHORT);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.STRING);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.TIME);
-		addIfNullFunction(DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        addIfNullFunction(DataTypeManager.DefaultDataTypes.BLOB);
-        addIfNullFunction(DataTypeManager.DefaultDataTypes.CLOB);
-        addIfNullFunction(DataTypeManager.DefaultDataTypes.XML);
+    	for (String type : DataTypeManager.getAllDataTypeNames()) {
+    		addIfNullFunction(type);    
+    	}
 	}
 	
     private void addNvlFunction(String valueType) {

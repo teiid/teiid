@@ -627,11 +627,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
     public static boolean isNonComparable(Expression symbol) {
-        Class type = symbol.getType();
-        return DataTypeManager.DefaultDataClasses.OBJECT.equals(type)
-            || DataTypeManager.DefaultDataClasses.BLOB.equals(type)
-            || DataTypeManager.DefaultDataClasses.CLOB.equals(type)
-            || DataTypeManager.DefaultDataClasses.XML.equals(type);
+        return DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(symbol.getType()));
     }
 
 	/**

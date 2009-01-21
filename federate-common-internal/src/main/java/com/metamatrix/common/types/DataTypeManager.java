@@ -1116,4 +1116,11 @@ public class DataTypeManager {
 		}
 		return (T) transform.transform(value);
 	}
+	
+    public static boolean isNonComparable(String type) {
+        return DataTypeManager.DefaultDataTypes.OBJECT.equals(type)
+            || DataTypeManager.DefaultDataTypes.BLOB.equals(type)
+            || DataTypeManager.DefaultDataTypes.CLOB.equals(type)
+            || DataTypeManager.DefaultDataTypes.XML.equals(type);
+    }
 }
