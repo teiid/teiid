@@ -48,7 +48,6 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.PropertyValidations;
-import com.metamatrix.common.jdbc.JDBCReservedWords;
 import com.metamatrix.common.object.ConfigurationPropertyObjDisplayComparator;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertiedObjectEditor;
@@ -399,7 +398,7 @@ public class ConfigurationPropertiedObjectEditor implements PropertiedObjectEdit
                 String stringValue = null;
                 if (value instanceof Boolean) {
                     Boolean bValue = (Boolean) value;
-                    stringValue = (bValue.booleanValue()?JDBCReservedWords.TRUE:JDBCReservedWords.FALSE);
+                    stringValue = Boolean.toString(bValue.booleanValue());
                     stringValue = stringValue.toLowerCase();
                 } else { // assume string
                     stringValue = (String)value;

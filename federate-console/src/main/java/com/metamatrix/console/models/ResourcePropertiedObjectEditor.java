@@ -46,7 +46,6 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.common.jdbc.JDBCReservedWords;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
@@ -251,7 +250,7 @@ public class ResourcePropertiedObjectEditor extends ConfigurationPropertiedObjec
                 String stringValue = null;
                 if (value instanceof Boolean) {
                     Boolean bValue = (Boolean) value;
-                    stringValue = (bValue.booleanValue()?JDBCReservedWords.TRUE:JDBCReservedWords.FALSE);
+                    stringValue = Boolean.toString(bValue.booleanValue());
                     stringValue = stringValue.toLowerCase();
                 } else { // assume string
                     stringValue = (String)value;
