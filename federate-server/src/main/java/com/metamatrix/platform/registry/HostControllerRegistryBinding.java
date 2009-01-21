@@ -3,7 +3,7 @@ package com.metamatrix.platform.registry;
 import java.io.Serializable;
 
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.HostManagement;
 
 public class HostControllerRegistryBinding implements Serializable {

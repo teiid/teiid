@@ -28,7 +28,7 @@ import java.io.Serializable;
 
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 

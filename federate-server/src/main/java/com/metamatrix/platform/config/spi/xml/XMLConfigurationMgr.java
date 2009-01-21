@@ -48,7 +48,7 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;

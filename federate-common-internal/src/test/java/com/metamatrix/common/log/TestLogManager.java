@@ -34,7 +34,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
@@ -69,7 +68,6 @@ public class TestLogManager extends TestCase {
     
 	private static void setUpOnce() throws Exception {
 		System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
 		CurrentConfiguration.reset();
 		LogManager.stop();
 		

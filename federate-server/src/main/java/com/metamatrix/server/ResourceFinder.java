@@ -22,23 +22,18 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.dqp;
+package com.metamatrix.server;
 
 
-import com.google.inject.Injector;
-import com.metamatrix.cache.CacheFactory;
+import com.metamatrix.common.messaging.MessageBus;
+import com.metamatrix.common.messaging.NoOpMessageBus;
 
-public class ResourceFinder {
-	protected static Injector injector;
+public class ResourceFinder extends com.metamatrix.dqp.ResourceFinder {
 	
-	public static CacheFactory getCacheFactory() {
+	public static MessageBus getMessageBus() {
 		if (injector == null) {
-			throw new IllegalStateException();
+			return new NoOpMessageBus();
 		}
-		return injector.getInstance(CacheFactory.class);
-	}	
-	
-	public static void setInjector(Injector i) {
-		injector = i;
-	}
+		return injector.getInstance(MessageBus.class);
+	}		
 }

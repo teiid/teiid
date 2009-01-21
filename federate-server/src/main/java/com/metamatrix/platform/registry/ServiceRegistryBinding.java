@@ -38,7 +38,7 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 

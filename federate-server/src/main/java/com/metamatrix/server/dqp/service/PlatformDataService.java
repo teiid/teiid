@@ -46,7 +46,7 @@ import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;

@@ -49,8 +49,8 @@ import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
+import com.metamatrix.server.ResourceFinder;
 
 /**
  * <p>This class is the mechanism to manage the MetaMatrix extension modules.</p>
