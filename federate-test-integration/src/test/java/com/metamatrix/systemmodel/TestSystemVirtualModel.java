@@ -37,7 +37,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath()+ "/partssupplier/dqp.properties"; //$NON-NLS-1$
 	private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
 
-	public TestSystemVirtualModel() {
+	public TestSystemVirtualModel(String name) {
+		super(name);
 		// this is needed because the result files are generated
 		// with another tool which uses tab as delimiter
 		super.DELIMITER = "\t";
@@ -1078,5 +1079,12 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 
 		executeAndAssertResults("select* FROM System.JDBC.ReferenceKeyColumns",
 				expected);
+	}
+	
+	public void testVirtualLookup() {
+		String[] expected = { "expr[string]", "null"};
+		executeAndAssertResults(
+				"select lookup('System.KeyElements', 'RefKeyUID', 'KeyName', 'PK_PARTS')", expected);
+		
 	}
 }
