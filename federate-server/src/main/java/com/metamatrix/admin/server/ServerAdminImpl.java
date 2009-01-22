@@ -940,5 +940,15 @@ public class ServerAdminImpl implements ServerAdmin {
     public void deleteUDF() throws AdminException {
         getConfigurationAdmin().deleteUDF();
     }
+    
+    @Override
+    public Properties getBootstrapProperties() throws AdminException {
+    	return getConfigurationAdmin().getBootstrapProperties();
+    }
+    
+    @Override
+    public byte[] getClusterKey() throws AdminException {
+    	return getConfigurationAdmin().getClusterKey();
+    }
 
 }

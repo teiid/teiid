@@ -64,6 +64,7 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.common.actions.ModificationException;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
@@ -105,6 +106,8 @@ import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
+import com.metamatrix.common.util.crypto.Cryptor;
+import com.metamatrix.common.util.crypto.cipher.SymmetricCryptor;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
@@ -2259,5 +2262,30 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         deleteExtensionModule(FUNCTION_DEFINITIONS_MODEL);
         setSystemProperty("metamatrix.server.UDFClasspath", ""); //$NON-NLS-1$ //$NON-NLS-2$
     }
+
+	@Override
+	public Properties getBootstrapProperties() throws AdminException {
+		Properties p = new Properties();
+		try {
+			p.putAll(CurrentConfiguration.getInstance().getBootStrapProperties());
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		}
+		return p;
+	}
+
+	@Override
+	public byte[] getClusterKey() throws AdminException {
+		Cryptor cryptor;
+		try {
+			cryptor = CryptoUtil.getCryptor();
+		} catch (CryptoException e) {
+			throw new AdminComponentException(e);
+		}
+		if (cryptor instanceof SymmetricCryptor) {
+			return ((SymmetricCryptor)cryptor).getEncodedKey(); 
+		}
+		return null;
+	}
     
 }

@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.platform.service.api.ServiceInterface;
 
 /**
@@ -56,24 +55,6 @@ public class SystemState implements Serializable {
         return hosts;
     }
     
-    public boolean isMetabaseRepositoryAvailable() {
-        // if any service failed to initialize or failed then return true.
-        // else return false;
-        Iterator iter = getServices().iterator();
-        while (iter.hasNext()) {
-            ServiceData sData = (ServiceData) iter.next();
-            if (sData.getComponentDefnID().getName().equals(ResourceNames.DIRECTORY_SERVICE)) {
-                if(sData.getCurrentState() == ServiceInterface.STATE_OPEN) {
-                    return true;
-                }                
-                
-            }
-            
-        }
-        
-        return false;        
-    }
-
     /**
      * Returns true if any services have failed.
      */

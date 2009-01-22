@@ -257,6 +257,20 @@ public interface ServerConfigAdmin extends
      */
     void addAuthorizationProvider(String domainprovidername, String providertypename, Properties properties) throws AdminException;
     
+    /**
+     * Return the bootstrap properties used to configure initialize the system.
+     * @return
+     * @throws AdminException
+     * @since 6.0.0
+     */
+    Properties getBootstrapProperties() throws AdminException;
     
+    /**
+     * Retrieves the cluster key that authenticates and secures intra-cluster communication.
+     * @return the cluster key or null if encryption is disabled
+     * @throws AdminException
+     * @since 6.0.0
+     */
+    byte[] getClusterKey() throws AdminException;
 
 }

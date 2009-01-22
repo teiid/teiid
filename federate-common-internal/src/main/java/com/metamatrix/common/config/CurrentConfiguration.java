@@ -499,34 +499,30 @@ public final class CurrentConfiguration {
     	getReader().getInitializer().indicateSystemShutdown();
     }
 
-	synchronized Properties getBootStrapProperties() throws ConfigurationException {
+	public synchronized Properties getBootStrapProperties() throws ConfigurationException {
 		if (bootstrapProperties == null) {
 			Properties systemBootStrapProps = getSystemBootStrapProperties();
 			boolean useSystemProperties = systemBootStrapProps.getProperty(CoreConstants.NO_CONFIGURATION) != null;
-			try {
-				Properties bootstrapProps = new Properties(systemBootStrapProps);
-		        InputStream bootstrapPropStream = null;
+			Properties bootstrapProps = new Properties(systemBootStrapProps);
+	        InputStream bootstrapPropStream = null;
+	        try {
+	        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
+	        	if (bootstrapPropStream != null) {
+	        		bootstrapProps.load(bootstrapPropStream);
+	        	}
+	        } catch (IOException e) {
+	        	if (!useSystemProperties) {
+	        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
+	        	}
+	        } finally {
 		        try {
-		        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
 		        	if (bootstrapPropStream != null) {
-		        		bootstrapProps.load(bootstrapPropStream);
+		        		bootstrapPropStream.close();
 		        	}
-		        } catch (IOException e) {
-		        	if (!useSystemProperties) {
-		        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
-		        	}
-		        } finally {
-			        try {
-			        	if (bootstrapPropStream != null) {
-			        		bootstrapPropStream.close();
-			        	}
-			        } catch (IOException e ) {
-			        }
+		        } catch (IOException e ) {
 		        }
-				bootstrapProperties = new UnmodifiableProperties(bootstrapProps);
-	        } catch (ConfigurationException ce) {
-	            throw ce;
-			}
+	        }
+			bootstrapProperties = new UnmodifiableProperties(bootstrapProps);
 		}
 		return bootstrapProperties;
 	}
@@ -551,10 +547,9 @@ public final class CurrentConfiguration {
     synchronized CurrentConfigurationReader getReader() throws ConfigurationException {
     	if (reader == null) {
             // Get the default bootstrap properties from the System properties ...
-            boolean useSystemProperties = false;
 			Properties bootstrap = getBootStrapProperties();
 			
-            useSystemProperties = bootstrap.getProperty(CoreConstants.NO_CONFIGURATION) != null;
+            boolean useSystemProperties = bootstrap.getProperty(CoreConstants.NO_CONFIGURATION) != null;
 
             String readerClassName = bootstrap.getProperty( CONFIGURATION_READER_CLASS_PROPERTY_NAME );
 

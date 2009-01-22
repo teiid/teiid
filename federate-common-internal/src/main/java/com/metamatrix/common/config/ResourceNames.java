@@ -37,7 +37,6 @@ public interface ResourceNames {
 
 
     public static final String RUNTIME_METADATA_SERVICE = "RuntimeMetadataService"; //$NON-NLS-1$
-    public static final String DIRECTORY_SERVICE = "DirectoryService"; //$NON-NLS-1$
     public static final String MEMBERSHIP_SERVICE = "MembershipService"; //$NON-NLS-1$
     // Txn Mgr properties for Transactional Server product
     public static final String XA_TRANSACTION_MANAGER = "XATransactionManager"; //$NON-NLS-1$
