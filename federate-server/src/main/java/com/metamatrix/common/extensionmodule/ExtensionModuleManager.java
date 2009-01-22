@@ -103,17 +103,6 @@ import com.metamatrix.server.ResourceFinder;
  * <li>{@link ExtensionModulePropertyNames#CONNECTION_USERNAME} the JDBC connection username</li>
  * <li>{@link ExtensionModulePropertyNames#CONNECTION_PASSWORD} the JDBC connection password</li>
  * <li>{@link ExtensionModulePropertyNames#CONNECTION_PROTOCOL} the JDBC connection protocol</li>
- *
- * <li>{@link com.metamatrix.common.id.dbid.DBIDGeneratorPropertyNames#CONNECTION_DATABASE}
- * the DBID Generator JDBC connection database</li>
- * <li>{@link com.metamatrix.common.id.dbid.DBIDGeneratorPropertyNames#CONNECTION_DRIVER}
- * the DBID Generator JDBC connection driver</li>
- * <li>{@link com.metamatrix.common.id.dbid.DBIDGeneratorPropertyNames#CONNECTION_USERNAME}
- * the DBID Generator JDBC connection username</li>
- * <li>{@link com.metamatrix.common.id.dbid.DBIDGeneratorPropertyNames#CONNECTION_PASSWORD}
- * the DBID Generator JDBC connection password</li>
- * <li>{@link com.metamatrix.common.id.dbid.DBIDGeneratorPropertyNames#CONNECTION_PROTOCOL}
- * the DBID Generator JDBC connection protocol</li>
  * </ul></p>
  *
  * History:

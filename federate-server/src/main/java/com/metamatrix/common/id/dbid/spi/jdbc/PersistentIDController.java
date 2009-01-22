@@ -49,11 +49,9 @@ public class PersistentIDController implements DBIDController {
     // Contexts
     public final static String VM_ID = DBIDGenerator.VM_ID;
     public final static String SERVICE_ID = DBIDGenerator.SERVICE_ID;
-    public static final String RESOURCE_POOL_MGR_ID = DBIDGenerator.RESOURCE_POOL_MGR_ID;
     
     private final static long VM_ID_BLOCK_SIZE = 1;
     private final static long SERVICE_ID_BLOCK_SIZE = 10;
-    private final static long RESOURCE_POOL_MGR_ID_SIZE = 1;
 
     private static final long DEFAULT_ID_BLOCK_SIZE = 100;
 //    private static final String DEFAULT_MAXIMUM_CONCURRENT_USERS = "1";
@@ -77,7 +75,6 @@ public class PersistentIDController implements DBIDController {
             // Initialize block size for known contexts.
             blockSizeMap.put(VM_ID, new Long(VM_ID_BLOCK_SIZE));
             blockSizeMap.put(SERVICE_ID, new Long(SERVICE_ID_BLOCK_SIZE));
-            blockSizeMap.put(RESOURCE_POOL_MGR_ID, new Long(RESOURCE_POOL_MGR_ID_SIZE));
     }
 
 

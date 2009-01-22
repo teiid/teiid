@@ -35,9 +35,8 @@ public class DBIDGenerator {
 
     public final static String VM_ID = "VM"; //$NON-NLS-1$
     public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
-    public static final String RESOURCE_POOL_MGR_ID = "ResourcePoolMgr"; //$NON-NLS-1$
 
-    private static DBIDGenerator generator;
+    private static DBIDGenerator generator = new DBIDGenerator();
     private DBIDController controller;
 
     private DBIDGenerator() {
@@ -126,11 +125,7 @@ public class DBIDGenerator {
         }
     }
 
-    public synchronized static DBIDGenerator getInstance() {
-        if (generator == null) {
-            generator = new DBIDGenerator();
-        }
-
+    public static DBIDGenerator getInstance() {
         return generator;
     }
 
