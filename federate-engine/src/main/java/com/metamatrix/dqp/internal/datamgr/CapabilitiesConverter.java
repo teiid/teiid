@@ -41,10 +41,10 @@ public class CapabilitiesConverter {
     }
 
     public static SourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps) {
-        return convertCapabilities(srcCaps, null);
+        return convertCapabilities(srcCaps, null, false);
     }
     
-    public static BasicSourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps, String connectorID) {
+    public static BasicSourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps, String connectorID, boolean isXa) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, srcCaps.supportsSelectDistinct());
@@ -55,7 +55,6 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, srcCaps.supportsOuterJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, srcCaps.supportsFullOuterJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, srcCaps.supportsInlineViews());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS_ORDER_BY, srcCaps.supportsOrderByInInlineViews());
         tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE, srcCaps.supportsCriteria());
         tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_BETWEEN, srcCaps.supportsBetweenCriteria());
         tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, srcCaps.supportsCompareCriteria());
@@ -114,7 +113,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(srcCaps.getMaxInCriteriaSize()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
-        
+        tgtCaps.setSourceProperty(Capability.TRANSACTIONS_XA, isXa);
         return tgtCaps;
     }
 

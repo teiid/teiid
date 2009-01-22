@@ -28,8 +28,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import javax.xml.transform.Source;
@@ -37,12 +35,9 @@ import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.basic.BasicBatch;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
 import com.metamatrix.data.language.IProcedure;
 import com.metamatrix.data.metadata.runtime.MetadataObject;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
@@ -105,47 +100,11 @@ public class FileExecution extends XMLSourceExecution {
 			throw new ConnectorException(e);
 		} 
 		
-        this.context.keepExecutionAlive(true);
-        
         XMLSourcePlugin.logDetail(this.env.getLogger(), "executing_procedure", new Object[] {procedure.getProcedureName()}); //$NON-NLS-1$
     }
-
-    /** 
-     * @see com.metamatrix.connector.xmlsource.XMLSourceExecution#nextBatch()
-     */
-    public Batch nextBatch() throws ConnectorException {
-        Batch b = new BasicBatch();
-        List row = new ArrayList();
-        if (this.returnValue != null) {
-        	this.context.keepExecutionAlive(true);
-            row.add(convertToXMLType(this.returnValue));   
-        }
-        else {
-            row.add(this.returnValue);
-        }
-        b.addRow(row);
-        b.setLast();
-        return b;
-    }  
     
-    /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
-     */
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        throw new ConnectorException(XMLSourcePlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
-    }
+    public Source getReturnValue() {
+		return returnValue;
+	}
 
-    /** 
-     * @see com.metamatrix.data.api.Execution#close()
-     */
-    public void close() throws ConnectorException {
-        // no-op
-    }
-
-    /** 
-     * @see com.metamatrix.data.api.Execution#cancel()
-     */
-    public void cancel() throws ConnectorException {
-        // no-op
-    }
 }

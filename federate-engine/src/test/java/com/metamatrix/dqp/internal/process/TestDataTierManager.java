@@ -379,7 +379,6 @@ public class TestDataTierManager extends TestCase {
         public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public List getConnectorBindings() throws ComponentNotFoundException {return null;}
         public AliveStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
-        public String getConnectorBindingName(ConnectorID connector) {return null;}       
         public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {}

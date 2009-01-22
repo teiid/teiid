@@ -141,7 +141,8 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
     		if (!(connection instanceof XAConnection)){
                 throw new ConnectorException(DQPPlugin.Util.getString("ConnectorRequestState.invalidConnectionType")); //$NON-NLS-1$                    		                    			
-    		}                    		
+    		} 
+    		this.securityContext.setTransactional(true);
     	} else {
     	    if (requestMsg.isTransactional() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
     	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
@@ -566,6 +567,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         // if we need to keep the execution alive, then we can not support
         // implicit close.
         response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
+        response.setTransactional(this.securityContext.isTransactional());
 
         if ( lastBatch ) {
             response.setFinalRow(rowCount);

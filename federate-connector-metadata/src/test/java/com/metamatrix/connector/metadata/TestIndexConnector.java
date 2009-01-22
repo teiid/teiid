@@ -25,7 +25,6 @@
 package com.metamatrix.connector.metadata;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -54,6 +53,7 @@ import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.IQuery;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
+import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
 import com.metamatrix.metadata.runtime.FakeQueryMetadata;
@@ -184,54 +184,7 @@ public class TestIndexConnector extends TestCase {
     }
     
     private SecurityContext helpGetSecurityContext() {
-        return new SecurityContext() {
-            public String getVirtualDatabaseName() {
-                return "testName"; //$NON-NLS-1$
-            }
-
-            public String getVirtualDatabaseVersion() {
-                return "testVersion"; //$NON-NLS-1$
-            }
-
-            public String getUser() {
-                return null;
-            }
-
-            public Serializable getTrustedPayload() {
-                return null;
-            }
-
-            public Serializable getExecutionPayload() {
-                return null;
-            }
-
-            public String getRequestIdentifier() {
-                return null;
-            }
-
-            public String getPartIdentifier() {
-                return null;
-            }
-
-			public String getConnectionIdentifier() {
-				return null;
-			}
-
-			public boolean useResultSetCache() {
-				return false;
-			}
-
-            public String getConnectorIdentifier() {
-                return null;
-            }
-
-            public String getExecutionCountIdentifier() {
-                return null;
-            }
-
-            public void keepExecutionAlive(boolean alive) {
-            }
-        };
+        return new ExecutionContextImpl("testname", "1", null, null, null, null, null, null, null, null, false); //$NON-NLS-1$ //$NON-NLS-2$
     }
     /* 
      * @see junit.framework.TestCase#tearDown()

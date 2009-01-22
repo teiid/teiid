@@ -367,7 +367,11 @@ public interface SourceCapabilities {
         /** Support indicates connector support prepared statement batch update
          * @since 5.5.2
          */
-        PREPARED_BATCH_UPDATE
+        PREPARED_BATCH_UPDATE,
+        /**
+         * @since 6.0.0 indicates the source supports XA transactions
+         */
+        TRANSACTIONS_XA
     }
 
     public enum Scope {

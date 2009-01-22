@@ -183,12 +183,6 @@ public interface ConnectorCapabilities {
      */
     boolean supportsInlineViews();
 
-    /**
-     * Supports ORDER BY in inline views
-     * @since 5.0 SP1
-     */
-    boolean supportsOrderByInInlineViews();
-    
     /** 
      * Support indicates connector can accept a WHERE criteria on queries
      * @since 3.1 SP2 
@@ -436,12 +430,6 @@ public interface ConnectorCapabilities {
      * @since 3.1 SP3    
      */        
     List getSupportedFunctions();
-    
-    /**
-     * Support indicates that the connector supports XATransaction.
-     * @since 4.1
-     */
-    boolean supportsXATransactions();
     
     /**
      * Get the integer value representing the number of values allowed in an IN criteria

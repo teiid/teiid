@@ -25,8 +25,6 @@
 package com.metamatrix.connector.metadata.internal;
 
 import java.nio.charset.Charset;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,10 +36,10 @@ import java.util.Map;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.vdb.api.VDBFile;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.ResultsIterator;
-import com.metamatrix.connector.metadata.adapter.ObjectResultsTranslator;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.data.exception.ConnectorException;
 
@@ -54,8 +52,6 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
 
     // object to use to query metadata
     private final IObjectSource objectSource;
-    // this translates the results
-    private final ObjectResultsTranslator resultsTranslator;
     
     private String resultDefiningMethodName;
     private String resultSetSourceName;
@@ -67,9 +63,8 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
      * @param objectSource The object used to query metadata and get back results
      * @since 4.2
      */
-    public ObjectProcedureProcessor(final IObjectSource objectSource, final ObjectResultsTranslator resultsTranslator) {
+    public ObjectProcedureProcessor(final IObjectSource objectSource) {
         this.objectSource = objectSource;
-        this.resultsTranslator = resultsTranslator;
     }
 
     /**
@@ -181,9 +176,9 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
                     }
                 }
                
-                value = ObjectProcedureProcessor.this.resultsTranslator.translateClob((Clob)value);
+                value = DataTypeManager.convertToRuntimeType(value);
             } else if(type.equals(BlobType.class)) {
-                value = ObjectProcedureProcessor.this.resultsTranslator.translateBlob((Blob)value);
+            	value = DataTypeManager.convertToRuntimeType(value);
             } else {
                 this.procedure.checkType(i, value);
             }

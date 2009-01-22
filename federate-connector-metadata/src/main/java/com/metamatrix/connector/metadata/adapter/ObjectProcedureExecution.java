@@ -42,7 +42,6 @@ import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 public class ObjectProcedureExecution implements ProcedureExecution {
 
     private ProcedureExecution redirection = null;
-    private ObjectResultsTranslator translator = null;    
     
     private final RuntimeMetadata metadata;
     private ConnectorEnvironment environment;
@@ -56,9 +55,8 @@ public class ObjectProcedureExecution implements ProcedureExecution {
      * @param objectSource
      * @since 4.2
      */
-    public ObjectProcedureExecution(final RuntimeMetadata metadata, ObjectConnection connection, final ObjectResultsTranslator resultsTranslator, ConnectorEnvironment environment) {
+    public ObjectProcedureExecution(final RuntimeMetadata metadata, ObjectConnection connection, ConnectorEnvironment environment) {
         this.metadata = metadata;
-        this.translator = resultsTranslator;
         this.environment = environment;
         this.connection = connection;
         
@@ -73,7 +71,7 @@ public class ObjectProcedureExecution implements ProcedureExecution {
         if (isAdminModel(procedure)) {
             redirection = new SysAdminProcedureExecution(metadata, connection.getSysAdminobjectSource(), environment);
         } else {
-            redirection = new MetadataProcedureExecution(metadata, connection.getMetadataObjectSource(), translator);
+            redirection = new MetadataProcedureExecution(metadata, connection.getMetadataObjectSource());
             
         }
         

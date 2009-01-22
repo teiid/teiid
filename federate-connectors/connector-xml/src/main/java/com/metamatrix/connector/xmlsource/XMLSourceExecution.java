@@ -24,17 +24,19 @@
 
 package com.metamatrix.connector.xmlsource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.sql.SQLXML;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.transform.Source;
 
 import com.metamatrix.data.DataPlugin;
 import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.basic.BasicBatch;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.language.IParameter;
 
 
 /** 
@@ -54,43 +56,50 @@ public abstract class XMLSourceExecution implements ProcedureExecution {
         this.env = env;
     }
     
-    /**
-     * Convert input stream to an byte array. 
-     * @param in
-     * @return
-     * @throws IOException
-     */
-    protected byte[] convertToByteArray(InputStream in) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(10 * 1024);
-        int b = 0;
-        while ((b = in.read()) != -1) {
-            out.write(b);
-        }
-        return out.toByteArray();    
-    }     
-    
-    /** 
-     * The result is always returned as RETURN output parameter, so the
-     * batch access is not needed.
-     * @see com.metamatrix.data.api.BatchedExecution#nextBatch()
-     */
-    public Batch nextBatch() throws ConnectorException {
-        Batch b = new BasicBatch();       
-        b.setLast();
-        return b;
-    } 
-    
-    protected Object convertToXMLType(Object value) throws ConnectorException {
+    protected SQLXML convertToXMLType(Source value) throws ConnectorException {
     	if (value == null) {
     		return null;
     	}
-    	value = env.getTypeFacility().convertToRuntimeType(value);
-    	if (value.getClass() == TypeFacility.RUNTIME_TYPES.XML) {
-    		return value;
-    	}
-    	if (!env.getTypeFacility().hasTransformation(value.getClass(), TypeFacility.RUNTIME_TYPES.XML)) {
+    	Object result = env.getTypeFacility().convertToRuntimeType(value);
+    	if (!(result instanceof SQLXML)) {
     		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml"));
     	}
-    	return env.getTypeFacility().transformValue(value, value.getClass(), TypeFacility.RUNTIME_TYPES.XML);
+    	return (SQLXML)result;
     }
+    
+    protected abstract Source getReturnValue();
+    
+    /** 
+     * @see com.metamatrix.connector.xmlsource.XMLSourceExecution#nextBatch()
+     */
+    public Batch nextBatch() throws ConnectorException {
+        Batch b = new BasicBatch();
+        List row = new ArrayList();
+        row.add(convertToXMLType(getReturnValue()));   
+        b.addRow(row);
+        b.setLast();
+        return b;
+    }  
+    
+    /** 
+     * @see com.metamatrix.data.api.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
+     */
+    public Object getOutputValue(IParameter parameter) throws ConnectorException {
+        throw new ConnectorException(XMLSourcePlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
+    }
+
+    /** 
+     * @see com.metamatrix.data.api.Execution#close()
+     */
+    public void close() throws ConnectorException {
+        // no-op
+    }
+
+    /** 
+     * @see com.metamatrix.data.api.Execution#cancel()
+     */
+    public void cancel() throws ConnectorException {
+        // no-op
+    }
+
 }

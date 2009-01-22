@@ -81,7 +81,6 @@ public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
         m_logger.logTrace("ExecutionCountIdentifier: " + exeContext.getExecutionCountIdentifier());
         m_logger.logTrace("PartIdentifier: " + exeContext.getPartIdentifier());
         m_logger.logTrace("RequestIdentifier: " + exeContext.getRequestIdentifier());
-        exeContext.keepExecutionAlive(true);
     }
 
     /*
@@ -133,6 +132,7 @@ public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
                 batch.setLast();
                 return batch;
             }
+            exeContext.keepExecutionAlive(true);
             BaseBatchProducer batchProducer = new BaseBatchProducer();
             batch = batchProducer.createBatch(m_resultList, this.returnIndex, this.m_maxBatch,
                     this.m_info, this.exeContext, this.connectorEnv);

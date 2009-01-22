@@ -27,7 +27,6 @@ package com.metamatrix.connector.metadata;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.metadata.adapter.ObjectResultsTranslator;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.ObjectProcedure;
 import com.metamatrix.connector.metadata.internal.ObjectProcedureProcessor;
@@ -58,9 +57,9 @@ public class MetadataProcedureExecution implements ProcedureExecution {
      * @param objectSource
      * @since 4.2
      */
-    public MetadataProcedureExecution(final RuntimeMetadata metadata, final IObjectSource objectSource, final ObjectResultsTranslator resultsTranslator) {
+    public MetadataProcedureExecution(final RuntimeMetadata metadata, final IObjectSource objectSource) {
         this.metadata = metadata;
-        this.processor = new ObjectProcedureProcessor(objectSource, resultsTranslator);
+        this.processor = new ObjectProcedureProcessor(objectSource);
     }
 
     /** 

@@ -54,14 +54,11 @@ public class ObjectConnection implements Connection {
      * @see com.metamatrix.data.Connection#createSynchExecution(com.metamatrix.data.language.ICommand, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
      */
     public Execution createExecution(final int executionMode, final ExecutionContext executionContext, final RuntimeMetadata metadata) {
-
-        
-        ObjectResultsTranslator translator = new ObjectResultsTranslator(this.environment, executionContext);
         switch(executionMode) {
             case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-                return new ObjectSynchExecution(metadata, this, translator);
+                return new ObjectSynchExecution(metadata, this);
             case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-                return new ObjectProcedureExecution(metadata, this, translator, environment);
+                return new ObjectProcedureExecution(metadata, this, environment);
             default:
                 return null;
         }

@@ -66,6 +66,8 @@ public class AtomicResultsMessage implements Externalizable {
 
     // this flag is used to notify the connector state
     private boolean requestClosed = false;
+    
+    private boolean isTransactional;
 
     // to honor the externalizable contract
 	public AtomicResultsMessage() {
@@ -189,5 +191,13 @@ public class AtomicResultsMessage implements Externalizable {
         out.writeInt(finalRow);
         out.writeBoolean(supportsImplicitClose);
         out.writeBoolean(requestClosed);
+	}
+
+	public boolean isTransactional() {
+		return isTransactional;
+	}
+
+	public void setTransactional(boolean isTransactional) {
+		this.isTransactional = isTransactional;
 	}    
 }

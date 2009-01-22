@@ -59,6 +59,8 @@ public class ExecutionContextImpl implements SecurityContext {
     // keep the execution object alive during the processing. default:false 
     private boolean keepAlive = false;
     
+    private boolean isTransactional;
+    
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 
                                 String originalConnectionID, String connectorId, String requestId, String partId, String execCount, boolean useResultSetCache) {
@@ -158,4 +160,12 @@ public class ExecutionContextImpl implements SecurityContext {
     public String toString() {
         return "ExecutionContext<vdb=" + this.vdbName + ", version=" + this.vdbVersion + ", user=" + this.userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
+
+	boolean isTransactional() {
+		return isTransactional;
+	}
+
+	void setTransactional(boolean isTransactional) {
+		this.isTransactional = isTransactional;
+	}
 }

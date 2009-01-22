@@ -271,8 +271,23 @@ public class RequestWorkItem extends AbstractWorkItem {
 		    doneProducingBatches = processor.process(this.processorTimeslice);
 		}
 		if (doneProducingBatches) {
-			if (this.transactionState == TransactionState.ACTIVE && this.connectorInfo.isEmpty()) {
-				this.transactionState = TransactionState.END;	
+			if (this.transactionState == TransactionState.ACTIVE) {
+				boolean end = true;
+				/*
+				 * FEDERATE-111 if we are done producing batches, then proactively close transactional 
+				 * executions even ones that were intentionally kept alive. this may 
+				 * break the read of a lob from a transactional source under a transaction 
+				 * if the source does not support holding the clob open after commit
+				 */
+	        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+	        		if (connectorRequest.isTransactional()) {
+	        			connectorRequest.fullyCloseSource();
+	        			end = false;
+	        		}
+	            }
+				if (end) {
+					this.transactionState = TransactionState.END;
+				}
 			}
 			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.TRANSACTION_REQUEST) {
 				this.transactionService.getTransactionServer().commit(transactionContext);
@@ -605,7 +620,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         	return requestCancel();
         }
         // Walk through all connector infos and attempt to cancel each one
-    	for (DataTierTupleSource connectorRequest : this.getConnectorRequests()) {
+    	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
             AtomicRequestMessage aqr = connectorRequest.getAtomicRequestMessage();
             if (aqr.getAtomicRequestID().getNodeID() == accessNodeID) {
             	connectorRequest.cancelRequest();
@@ -709,9 +724,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	}
 	
 	Collection<DataTierTupleSource> getConnectorRequests() {
-		synchronized (this.connectorInfo) {
-			return new LinkedList<DataTierTupleSource>(this.connectorInfo.values());
-		}
+		return new LinkedList<DataTierTupleSource>(this.connectorInfo.values());
 	}
 	
 	DataTierTupleSource getConnectorRequest(AtomicRequestID id) {

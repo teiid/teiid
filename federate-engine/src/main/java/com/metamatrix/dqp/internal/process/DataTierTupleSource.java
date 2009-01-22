@@ -61,6 +61,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     private boolean waitingForData = false;
     private Throwable exception;
     private volatile boolean supportsImplicitClose;
+    private volatile boolean isTransactional;
     
     /**
      * Constructor for DataTierTupleSource.
@@ -113,21 +114,6 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     }
     
     /**
-     * Send request for more data but use waitingForData flag to avoid requesting batches multiple times
-     * @throws MetaMatrixComponentException if an unexpected error occurs
-     */
-    private void requestBatch() throws MetaMatrixComponentException {
-        // check that the same request hasn't already been sent
-        if(! waitingForData) { 
-
-            this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), connectorId);
-            
-            // update waitingForData
-            this.waitingForData = true;
-        }
-    }
-    
-    /**
      * Switches to the next batch.
      * @throws BlockedException if we're still waiting for data from the connector
      * @throws MetaMatrixComponentException if the request for the next batch failed.
@@ -143,22 +129,25 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
     		}
     		throw new MetaMatrixComponentException(exception);
     	}
-        if (nextBatch == null) {
-            // If we don't have a next batch, request it.
-            requestBatch();
-            throw BlockedException.INSTANCE;
-        }
-        // Switch the current batch
-        this.currentBatch = this.nextBatch;
-        this.isLast = this.nextBatchIsLast;
-        this.currentBatchCount = this.currentBatch.length;
-        this.index = 0;
-        this.nextBatch = null;
-        
-
+    	boolean shouldBlock = true;
+        if (nextBatch != null) {
+            // Switch the current batch
+            this.currentBatch = this.nextBatch;
+            this.isLast = this.nextBatchIsLast;
+            this.currentBatchCount = this.currentBatch.length;
+            this.index = 0;
+            this.nextBatch = null;
+            shouldBlock = false;
+        } 
         // Request the next batch immediately
-        if (!this.isLast) {
-            requestBatch();
+        if (!this.isLast && !waitingForData) {
+            this.dataMgr.requestBatch(this.aqr.getAtomicRequestID(), connectorId);
+            
+            // update waitingForData
+            this.waitingForData = true;
+        }
+        if (shouldBlock) {
+        	throw BlockedException.INSTANCE;
         }
     }
     
@@ -204,6 +193,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	        	removeRequest = true;
 	        } else {
 		        supportsImplicitClose = response.supportsImplicitClose();
+		        isTransactional = response.isTransactional();
 		        aqr.setProcessingTimestamp(response.getProcessingTimestamp());
 		        
 		        nextBatch = response.getResults();    
@@ -226,5 +216,9 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	public ConnectorID getConnectorId() {
 		return connectorId;
 	}
-
+	
+	public boolean isTransactional() {
+		return this.isTransactional;
+	}
+	
 }

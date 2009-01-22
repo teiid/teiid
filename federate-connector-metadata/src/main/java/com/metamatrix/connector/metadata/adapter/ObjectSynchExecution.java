@@ -53,7 +53,7 @@ public class ObjectSynchExecution implements SynchQueryExecution {
     private boolean closed;
     private ObjectConnection connection;
 
-    public ObjectSynchExecution(RuntimeMetadata metadata, ObjectConnection connection, final ObjectResultsTranslator resultsTranslator) {
+    public ObjectSynchExecution(RuntimeMetadata metadata, ObjectConnection connection) {
         this.metadata = metadata;
         this.connection = connection;
     }

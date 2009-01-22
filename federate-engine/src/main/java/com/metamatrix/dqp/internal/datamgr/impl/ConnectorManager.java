@@ -151,7 +151,7 @@ public class ConnectorManager implements ApplicationService {
             	caps = conn.getCapabilities();
             	global = caps.getCapabilitiesScope() == ConnectorCapabilities.SCOPE.GLOBAL;
             }
-            BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName());
+            BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), connector instanceof XAConnector);
             resultCaps.setScope(global?Scope.SCOPE_GLOBAL:Scope.SCOPE_PER_USER);
             return resultCaps;
         } finally {
