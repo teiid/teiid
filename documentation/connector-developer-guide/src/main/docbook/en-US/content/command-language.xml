@@ -839,17 +839,6 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>XATransactions</para>
-                </entry>
-                <entry>
-                  <para />
-                </entry>
-                <entry>
-                  <para>Connector can support XA transactions</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
                   <para>SelectLiterals</para>
                 </entry>
                 <entry>
@@ -872,13 +861,35 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>UnionOrderBy</para>
+                  <para>Intersect</para>
                 </entry>
                 <entry>
-                  <para>Unions</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector supports UNION with an ORDER BY on the UNION</para>
+                  <para>Connector supports INTERSECT</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Except</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector supports Except</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>SetQueryOrderBy</para>
+                </entry>
+                <entry>
+                  <para>Unions, Intersect, or Except</para>
+                </entry>
+                <entry>
+                  <para>Connector supports set queries with an ORDER BY</para>
                 </entry>
               </row>
               <row>
@@ -894,19 +905,23 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>OrderByInInlineViews</para>
+                  <para>FunctionsInGroupBy</para>
                 </entry>
                 <entry>
-                  <para>InlineViews</para>
+                  <para>ScalarFunctions, Aggregates</para>
                 </entry>
                 <entry>
-                  <para>Connector supports ORDER BY in an inline view without additional clauses.  This
-                    capability is not currently used.</para>
+                  <para>Connector supports functions in the GROUP BY list</para>
                 </entry>
-              </row> 
+              </row>
             </tbody>
           </tgroup>
         </table>
+      </sect2>
+      
+      <sect2>
+        <title>Command Form</title>
+        <para>The method ConnectorCapabilities.useAnsiJoin() should return true if the Connector prefers the use of ANSI style join structure for INNER and CROSS joins that are pushed down.</para>
       </sect2>
       
       <sect2>
@@ -918,6 +933,7 @@ int count = visitor.getCount();
       <sect2>
         <title>Physical Limits</title>
         <para>The method ConnectorCapabilities.getMaxInCriteriaSize() can be used to specify the maximum number of values that can be passed in an IN criteria.  This is an important constraint as an IN criteria is frequently used to pass criteria between one source and another using a dependent join.</para>
+        <para>The method ConnectorCapabilities.getMaxFromGroups() can be used to specify the maximum number of FROM Clause groups that can used in a join. -1 indicates there is no limit.</para>
       </sect2>
    </sect1>
 
