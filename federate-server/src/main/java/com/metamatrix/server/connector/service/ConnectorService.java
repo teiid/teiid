@@ -122,14 +122,8 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         
     static {
         //read value of cacheClassLoaders
-        String cacheClassLoadersString = 
-            CurrentConfiguration.getInstance().getProperty(ServerPropertyNames.CACHE_CLASS_LOADERS);
-        if (cacheClassLoadersString != null) {
-            cacheClassLoaders = Boolean.valueOf(cacheClassLoadersString).booleanValue();
-        }   
+        cacheClassLoaders = PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ServerPropertyNames.CACHE_CLASS_LOADERS, false);
         logOK("ConnectorService.Cache_class_loaders", new Boolean(cacheClassLoaders)); //$NON-NLS-1$
-        
-        
         initExtensionModuleListener();
     }
 

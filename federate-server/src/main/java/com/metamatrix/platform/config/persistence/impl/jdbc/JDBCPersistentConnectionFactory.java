@@ -31,9 +31,9 @@ import java.util.Properties;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
-import com.metamatrix.platform.config.persistence.impl.ConfigurationModelAdapterImpl;
 
 public class JDBCPersistentConnectionFactory
 	extends PersistentConnectionFactory {
@@ -96,8 +96,8 @@ public class JDBCPersistentConnectionFactory
 			throw new ConfigurationConnectionException(e);
 		}
 
-		ConfigurationModelAdapterImpl adapter =
-			new ConfigurationModelAdapterImpl();
+		ConfigurationModelContainerAdapter adapter =
+			new ConfigurationModelContainerAdapter();
 
 		JDBCPersistentConnection fps =
 			new JDBCPersistentConnection(conn, adapter, getProperties());

@@ -32,6 +32,7 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
 import com.metamatrix.common.namedobject.BaseID;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 
@@ -214,11 +215,13 @@ class DefaultIndexConnectorBinding implements ConnectorBinding {
      * Return a deep cloned instance of this object.  Subclasses must override
      * this method.
      * @return the object that is the clone of this instance.
-     * @throws CloneNotSupportedException if this object cannot be cloned (i.e., only objects in
-     * {@link com.metamatrix.metadata.api.Defaults Defaults} cannot be cloned).
      */
-    public Object clone() throws CloneNotSupportedException{
-        throw new CloneNotSupportedException();
+    public Object clone() {
+        try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
 
     /** 

@@ -44,14 +44,8 @@ public class BasicHostType extends BasicComponentType implements HostType {
      * Return a deep cloned instance of this object.  Subclasses must override
      *  this method.
      *  @return the object that is the clone of this instance.
-     *  @throws CloneNotSupportedException if this object cannot be cloned
      */
-    public synchronized Object clone() throws CloneNotSupportedException {
-
-        BasicHostType result = null;
-	    result = new BasicHostType(this);
-		return result;
-        
-
+    public synchronized Object clone() {
+		return new BasicHostType(this);
     }
 }

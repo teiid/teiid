@@ -24,17 +24,26 @@
 
 package com.metamatrix.common.config.reader;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
-import com.metamatrix.common.config.StartupStateController;
+import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.StartupStateException;
+import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
+import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
+import com.metamatrix.common.util.ErrorMessageKeys;
 
 /**
  * <p>
- * This interface defines a self-contained reader for the current configuration,
+ * This class implements a self-contained reader for the current configuration,
  * and should be used <i>only</i> by the {@link com.metamatrix.common.config.CurrentConfiguration CurrentConfiguration}
  * framework.  As such, this is an extremely low-level implementation that may
  * <i>not</i> use anything but <code>com.metamatrix.common.util</code> components
@@ -44,7 +53,20 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
  * Each class that implements this interface must supply a no-arg constructor.
  * </p>
  */
-public interface CurrentConfigurationReader {
+public class PropertiesConfigurationReader implements CurrentConfigurationReader {
+
+	private ConfigurationModelContainer c;
+	
+    /**
+     * The environment property name for the property file that contains the configuration.
+     */
+    public static final String FILENAME = "metamatrix.config.readerFile"; //$NON-NLS-1$
+
+    /**
+     * Default, no-arg constructor
+     */
+    public PropertiesConfigurationReader(){
+    }
 
     /**
      * This method should connect to the repository that holds the current
@@ -54,7 +76,43 @@ public interface CurrentConfigurationReader {
      * @param env the environment properties that define the information
      * @throws ConfigurationConnectionException if there is an error establishing the connection.
      */
-    void connect( Properties env ) throws ConfigurationConnectionException;
+    public void connect( Properties env ) throws ConfigurationConnectionException{
+        String filename = env.getProperty(FILENAME);
+        Properties p = null;
+        if (filename != null) {
+        	File f = new File(filename);
+        	InputStream is = null;
+        	try {
+	        	if (f.exists()) {
+					is = new FileInputStream(f);
+	        	} else {
+	        		is = this.getClass().getResourceAsStream(filename);
+	        	}
+	        	if (is == null) {
+	        		throw new ConfigurationConnectionException(ErrorMessageKeys.CONFIG_ERR_0064, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0064, filename));
+	        	}
+        		p = new Properties(env);
+        		p.load(is);
+			} catch (IOException e) {
+				throw new ConfigurationConnectionException(e);
+        	} finally {
+        		if (is != null) {
+        			try {
+						is.close();
+					} catch (IOException e) {
+					}
+        		}
+        	}
+        } else {
+        	p = env;
+        }
+        
+        // Use the properties from the file to create a new Configuration object ...
+        ConfigurationObjectEditor coe = new BasicConfigurationObjectEditor(false);
+        Configuration currentConfiguration = coe.createConfiguration(PropertiesConfigurationReader.class.getSimpleName() + ':' + filename);
+        currentConfiguration = (Configuration)coe.modifyProperties(currentConfiguration, p, ConfigurationObjectEditor.SET);
+        c = new ConfigurationModelContainerImpl(currentConfiguration);
+    }
 
     /**
      * This method should close the connection to the repository that holds the current
@@ -62,7 +120,8 @@ public interface CurrentConfigurationReader {
      * instead should rely upon returning an exception in the case of any errors.
      * @throws Exception if there is an error establishing the connection.
      */
-    void close() throws Exception;
+    public void close() throws Exception{
+    }
 
     // ------------------------------------------------------------------------------------
     //                     C O N F I G U R A T I O N   I N F O R M A T I O N
@@ -76,47 +135,20 @@ public interface CurrentConfigurationReader {
      * @throws ConfigurationException if an error occurred within or during
      * communication with the repository.
      */
-    ConfigurationModelContainer getConfigurationModel() throws ConfigurationException;
+    public ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
+    	return c;
+    }
 
-    /**
-     * This method should be called <i>only</i> by
-     * {@link com.metamatrix.platform.util.MetaMatrixController}
-     * to initialize the system configurations during bootstrapping.
-     * This method will attempt to put the system state into
-     * {@link StartupStateController#STATE_STARTING}, and then
-     * commence with initialization.  If the state is already
-     * {@link StartupStateController#STATE_STARTING}, then another
-     * MetaMatrixController is already currently in the process of
-     * starting the system, and a {@link StartupStateException}
-     * will be thrown.  If this method returns without an
-     * exception, then the system state will be in state
-     * {@link StartupStateController#STATE_STARTING}, and the calling
-     * code should proceed with startup.
-     * @param forceInitialization if the system is in a state other than
-     * {@link StartupStateController#STATE_STOPPED}, and the
-     * administrator thinks the system actually crashed and is
-     * not really running, he can choose to force the
-     * initialization.  Otherwise, if the system is in one of these states,
-     * an exception will be thrown.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can proceed.  This
-     * exception will indicate the current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     * 
-     * NOTE: This method replaces the begin... and finish.. SystemInitialization methods
-     * for the new configuration implementations.
-     */
-    void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException;
-    
+	@Override
+	public void indicateSystemShutdown() throws ConfigurationException {
+		
+	}
 
-    /**
-     * This will put the system into a state of
-     * {@link com.metamatrix.common.config.StartupStateController#STATE_STOPPED}.
-     * @throws ConfigurationException if an error occurred in communication
-     * with the configuration data source
-     */
-    void indicateSystemShutdown() throws ConfigurationException;
+	@Override
+	public void performSystemInitialization(boolean forceInitialization)
+			throws StartupStateException, ConfigurationException {
+		
+	}
 
 }
 

@@ -82,11 +82,7 @@ class ServerGuiceModule extends AbstractModule {
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 				
-		try {
-			Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
-		} catch (ConfigurationException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
+		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
 		bind(VMControllerID.class).toInstance(new VMControllerID(vmID, host.getFullName()));
 		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);

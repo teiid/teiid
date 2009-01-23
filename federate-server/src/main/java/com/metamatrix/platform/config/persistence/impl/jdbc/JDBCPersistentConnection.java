@@ -45,6 +45,7 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.common.extensionmodule.ExtensionModuleTypes;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleReader;
@@ -54,7 +55,6 @@ import com.metamatrix.common.jdbc.JDBCPlatformFactory;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.config.persistence.api.ConfigurationModelAdapter;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
@@ -68,10 +68,10 @@ public class JDBCPersistentConnection implements PersistentConnection {
     private Connection connection;
 
 
-    private ConfigurationModelAdapter adapter;
+    private ConfigurationModelContainerAdapter adapter;
     private JDBCPlatform platform;
 
-    public JDBCPersistentConnection(Connection conn, ConfigurationModelAdapter adapter, Properties props)  {
+    public JDBCPersistentConnection(Connection conn, ConfigurationModelContainerAdapter adapter, Properties props)  {
 	   Assertion.isNotNull(conn, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0146));
 	   Assertion.isNotNull(adapter, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0147));
 

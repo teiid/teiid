@@ -445,11 +445,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			 getConfigurationServiceProxy().executeTransaction(coe.getDestination().popActions(), getUserName());
 		} catch (InvalidConfigurationException e) {
 			throw new AdminComponentException(e);
-		} catch (ConfigurationLockException e) {
-			throw new AdminComponentException(e);
 		} catch (ConfigurationException e) {
-			throw new AdminComponentException(e);
-		} catch (ServiceException e) {
 			throw new AdminComponentException(e);
 		} catch (ModificationException e) {
 			throw new AdminComponentException(e);

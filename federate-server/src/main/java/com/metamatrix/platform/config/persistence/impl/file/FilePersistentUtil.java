@@ -24,17 +24,17 @@
 
 package com.metamatrix.platform.config.persistence.impl.file;
 
-import java.io.*;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Properties;
 
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
-import com.metamatrix.platform.config.persistence.impl.ConfigurationModelAdapterImpl;
 
 public class FilePersistentUtil {
 	
@@ -91,7 +91,7 @@ public class FilePersistentUtil {
         }
                     
                                        
-        ConfigurationModelAdapterImpl adapter = new ConfigurationModelAdapterImpl();
+        ConfigurationModelContainerAdapter adapter = new ConfigurationModelContainerAdapter();
                     
         FileOutputStream os = null;                    
         try {

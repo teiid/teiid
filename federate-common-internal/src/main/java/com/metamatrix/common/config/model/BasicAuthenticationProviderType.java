@@ -55,7 +55,7 @@ public class BasicAuthenticationProviderType extends BasicComponentType implemen
         return true;
     }
     
-    public synchronized Object clone() throws CloneNotSupportedException {
+    public synchronized Object clone() {
         BasicComponentType result = null;
 	    result = new BasicAuthenticationProviderType(this);
 

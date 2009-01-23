@@ -25,23 +25,15 @@
 package com.metamatrix.platform.config.spi.xml;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.config.StartupStateException;
-import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.reader.CurrentConfigurationInitializer;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.transaction.TransactionException;
@@ -49,7 +41,7 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
 
-public class XMLCurrentConfigurationReader implements CurrentConfigurationReader, CurrentConfigurationInitializer{
+public class XMLCurrentConfigurationReader implements CurrentConfigurationReader {
     /**
      * The date of installation of the MetaMatrix suite
      */
@@ -141,16 +133,6 @@ public class XMLCurrentConfigurationReader implements CurrentConfigurationReader
     //                     C O N F I G U R A T I O N   I N F O R M A T I O N
     // ------------------------------------------------------------------------------------
 
-    public String getComponentPropertyValue(ConfigurationID configID, String propertyName) throws ConfigurationException {
-        String result = null;
-
-        ComponentTypeID typeID = new ComponentTypeID(Configuration.COMPONENT_TYPE_NAME);
-
-        result = getConfigurationReader().getComponentPropertyValue(configID, typeID, propertyName);
-
-        return result;
-    }
-
     /**
      * Obtain the properties for the current configuration.  The implementation
      * may <i>not</i> use logging but instead should rely upon returning
@@ -160,9 +142,7 @@ public class XMLCurrentConfigurationReader implements CurrentConfigurationReader
      * communication with the repository.
      */
     public Properties getConfigurationProperties() throws ConfigurationException{
-        Properties result = null;
-
-        result = getConfigurationReader().getDesignatedConfigurationProperties(Configuration.NEXT_STARTUP);
+        Properties result = getConfigurationReader().getDesignatedConfigurationProperties(Configuration.NEXT_STARTUP);
 
         if ( result == null ) {
             throw new ConfigurationException(ConfigMessages.CONFIG_0139, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0139));
@@ -170,69 +150,6 @@ public class XMLCurrentConfigurationReader implements CurrentConfigurationReader
 
         return result;
     }
-
-    
-    /**
-     * Obtain the properties for the current configuration.  The implementation
-     * may <i>not</i> use logging but instead should rely upon returning
-     * an exception in the case of any errors.
-     * @return the properties
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the repository.
-     */
-    public Properties getStartupConfigurationProperties() throws ConfigurationException{
-        Properties result = null;
-
-        result = getConfigurationReader().getDesignatedConfigurationProperties(Configuration.STARTUP);
-
-        if ( result == null ) {
-            throw new ConfigurationException(ConfigMessages.CONFIG_0139, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0139));
-        }
-
-        return result;
-    }
-    
- 
-
-    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        return Collections.EMPTY_LIST;
-
-    }
-
-    public Collection getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        return getConfigurationReader().getComponentTypes(includeDeprecated);
-
-    }
-    
-    /**
-     * Returns a <code>Collection</code> of type <code>ProductType</code> that represents
-     * all the ComponentTypes defined.
-     * @return List of type <code>ProductType</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see #ProductType
-     */
-    public Collection getProductTypes() throws ConfigurationException {
-        return getConfigurationReader().getProductTypes(false);
-        
-    }    
-
-
-
-    /**
-     * Obtain the current configuration.  The implementation
-     * may <i>not</i> use logging but instead should rely upon returning
-     * an exception in the case of any errors.
-     * @return the serializable Configuration instance
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the repository.
-     */
-//    public Configuration getConfiguration() throws ConfigurationException{
-//        // a private variable for configHelper is not used so that the
-//        // caching of the component types and hosts can be used
-//        // during this method call;
-//
-//        return getConfigurationReader().getDesignatedConfiguration(Configuration.STARTUP_ID);
-//    }
 
    /**
      * Obtain the next startup configuration.  The implementation
@@ -259,56 +176,6 @@ public class XMLCurrentConfigurationReader implements CurrentConfigurationReader
         return getConfigurationReader().getConfigurationModel(Configuration.NEXT_STARTUP_ID);
     }
     
-    
-    
-
-
-    /** 
-     * @see com.metamatrix.common.config.reader.CurrentConfigurationReader#getStartupConfiguration()
-     * @since 4.2
-     */
-    public Configuration getStartupConfiguration() throws ConfigurationException {
-        return getConfigurationReader().getDesignatedConfiguration(Configuration.STARTUP);
-    }
-    /** 
-     * @see com.metamatrix.common.config.reader.CurrentConfigurationReader#getStartupConfigurationModel()
-     * @since 4.2
-     */
-    public ConfigurationModelContainer getStartupConfigurationModel() throws ConfigurationException {
-        return getConfigurationReader().getConfigurationModel(Configuration.STARTUP_ID);
-    }
-    /**
-     * Returns the full Host impl for a HostID.  <i>Optional method.</i>
-     * @param hostID ID of the Host that is wanted
-     * @return the full Host object
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service, or if there is no object
-     * for the given ID.
-     * @throws UnsupportedOperationException if this method is not implemented
-     */
-    public Host getHost(HostID hostID) throws ConfigurationException{
-        return getConfigurationReader().getHost(hostID);
-    }
-
-    /**
-     * @see com.metamatrix.common.config.reader.CurrentConfigurationInitializer#beginSystemInitialization
-     */
-
-    public synchronized void beginSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException{
-        throw new UnsupportedOperationException(ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0140, "beginSystemInitialization")); //$NON-NLS-1$
-
-    }
-
-    /**
-     * @see com.metamatrix.common.config.reader.CurrentConfigurationInitializer#finishSystemInitialization
-     */
-
-    public synchronized void finishSystemInitialization() throws StartupStateException, ConfigurationException{
-        throw new UnsupportedOperationException(ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0140, "finishSystemInitialization")); //$NON-NLS-1$
-
-    }
-
-
 	public synchronized void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
 
     /*
@@ -414,43 +281,6 @@ if the process ends abrubtly and the state doesn't get changed, here's how it ca
 
 			} catch(Exception e) {
 			}
-    }
-
-
-    /**
-     * Returns an appropriate initializer for the system configuration(s).
-     * Actually returns <code>this</code> object, which implements the
-     * CurrentConfigurationInitializer interface.
-     * @return this as an appropriate initializer for the system configuration(s)
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service, or if there is no object
-     * for the given ID.
-     */
-    public CurrentConfigurationInitializer getInitializer() throws ConfigurationException{
-        return this;
-    }
-
-    /**
-    * Returns a map of all the resource properties defined.  These resources
-    * are the connection properties required to connect to a specific resource.
-    * The key is the resource name, the value is a Property object.
-    * @return Map of resource properties.
-    */
-    public Map getResourceProperties() throws ConfigurationException {
-    	Map rp = new HashMap();
-
-    	Collection rs = getConfigurationReader().getResources();
-    	for (Iterator it=rs.iterator(); it.hasNext(); ) {
-    		SharedResource rd = (SharedResource) it.next();
-    		rp.put(rd.getFullName(), rd.getProperties() );
-    	}
-
-        return rp;
-    }
-
-
-    public SharedResource getResource(String resourceName ) throws ConfigurationException {
-		return getConfigurationReader().getResource(resourceName);
     }
 
     protected ConfigUserTransaction getWriteTransaction() throws ConfigTransactionException, ConfigurationException {

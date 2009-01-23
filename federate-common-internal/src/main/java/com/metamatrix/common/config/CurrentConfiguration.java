@@ -41,13 +41,13 @@ import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
-import com.metamatrix.common.config.reader.SystemCurrentConfigurationReader;
+import com.metamatrix.common.config.reader.PropertiesConfigurationReader;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
-import com.metamatrix.core.CoreConstants;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.StringUtil;
 
 /**
@@ -101,42 +101,6 @@ public final class CurrentConfiguration {
         return getConfigurationModel().getSystemName();
     }
 
-    /**
-     * Get the value for the property with the specified name.  First, this method obtains the
-     * value from the property in the configuration.  If no such property exists,
-     * then this method obtains the value from the property in the bootstrap
-     * properties.  If no such method exists, this method returns null.
-     * @param name the name of the property
-     * @return the value for the property; null if there is
-     * no property with the specified name or if the configuration
-     * bootstrap information could not be accessed.
-     */
-    public String getProperty( String name ) {
-
-        if ( name == null ) {
-            return null;
-        }
-
-       Properties configProps;
-       try {
-            configProps = getReader().getConfigurationProperties();
-        } catch ( ConfigurationException e ) {
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            System.err.println("** ERROR: Unknown error during reading of the configuration properties for the current configuration. **"); //$NON-NLS-1$
-            System.err.println("**********************************************************************************************"); //$NON-NLS-1$
-            e.printStackTrace(System.err);
-            return null;
-       }
-
-        String result = configProps.getProperty(name);
-        
-        if (result == null || result.trim().length() == 0) {
-            result = getBootStrapProperty(name);
-        }
-
-        return result;
-    }
-    
     public String getBootStrapProperty(String key) {
 		try {
 	        return getBootStrapProperties().getProperty(key);
@@ -156,14 +120,17 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if the current configuration and/or
      * bootstrap properties could not be obtained
      */
-    public Properties getProperties() throws ConfigurationException {
-        Properties result = getReader().getConfigurationProperties();
-        Properties copyResult = PropertiesUtils.clone(result,getBootStrapProperties(),false,true);
-        if ( !(copyResult instanceof UnmodifiableProperties) ) {
-                    copyResult = new UnmodifiableProperties(copyResult);
-        }
-
-        return copyResult;
+    public Properties getProperties() {
+		try {
+			Properties result = getReader().getConfigurationModel().getConfiguration().getProperties();
+	        Properties copyResult = PropertiesUtils.clone(result,getBootStrapProperties(),false,true);
+	        if ( !(copyResult instanceof UnmodifiableProperties) ) {
+	        	copyResult = new UnmodifiableProperties(copyResult);
+	        }
+	        return copyResult;
+		} catch (ConfigurationException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
 
     /**
@@ -180,14 +147,12 @@ public final class CurrentConfiguration {
     public Properties getResourceProperties(String resourceName) throws ConfigurationException {
         Properties result;
 
-        SharedResource sr = getReader().getResource(resourceName);
+        SharedResource sr = getReader().getConfigurationModel().getResource(resourceName);
 
         Properties props;
         if (sr != null) {
             props = ResourceModel.getDefaultProperties(resourceName);
             props.putAll(sr.getProperties());
-//        	props = PropertiesUtils.clone(sr.getProperties(), false);
-
         } else {
             props = new Properties();
 
@@ -207,11 +172,10 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if the current configuration could not be obtained
      */
     public Configuration getConfiguration() throws ConfigurationException {
-       Configuration config = getReader().getNextStartupConfiguration();
+       Configuration config = getReader().getConfigurationModel().getConfiguration();
        if ( config == null ) {
-              throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0021, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0021));
+    	   throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0021, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0021));
        }
-
        return config;
     }
 
@@ -246,7 +210,7 @@ public final class CurrentConfiguration {
      * @see com.metamatrix.common.api.ComponentType
      */
     public Collection getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        return getReader().getComponentTypes(includeDeprecated);
+        return getReader().getConfigurationModel().getComponentTypes().values();
     }
     
     /**
@@ -257,7 +221,7 @@ public final class CurrentConfiguration {
      * @see #ProductType
      */
     public Collection getProductTypes() throws ConfigurationException {
-        return getReader().getProductTypes();
+        return getReader().getConfigurationModel().getProductTypes();
     }
       
      /**
@@ -273,7 +237,7 @@ public final class CurrentConfiguration {
      * implementation
      */
     public Host getHost(HostID hostID) throws ConfigurationException{
-        return getReader().getHost(hostID);
+        return getHost(hostID.getFullName());
     }
 
     /**
@@ -483,7 +447,7 @@ public final class CurrentConfiguration {
 
         // this only initializes the persistence of the configuration
         // (i.e., copying NEXTSTARTUP to OPERATIONAL, etc)
-    	getReader().getInitializer().performSystemInitialization(forceInitialization);
+    	getReader().performSystemInitialization(forceInitialization);
 
 		// perform reset to reload configuration information
         reset();
@@ -496,13 +460,12 @@ public final class CurrentConfiguration {
      */
 //JBoss fix - method made public to get around a AccessDenied problem with Jboss30
     public final void indicateSystemShutdown() throws ConfigurationException {
-    	getReader().getInitializer().indicateSystemShutdown();
+    	getReader().indicateSystemShutdown();
     }
 
 	public synchronized Properties getBootStrapProperties() throws ConfigurationException {
 		if (bootstrapProperties == null) {
 			Properties systemBootStrapProps = getSystemBootStrapProperties();
-			boolean useSystemProperties = systemBootStrapProps.getProperty(CoreConstants.NO_CONFIGURATION) != null;
 			Properties bootstrapProps = new Properties(systemBootStrapProps);
 	        InputStream bootstrapPropStream = null;
 	        try {
@@ -511,9 +474,7 @@ public final class CurrentConfiguration {
 	        		bootstrapProps.load(bootstrapPropStream);
 	        	}
 	        } catch (IOException e) {
-	        	if (!useSystemProperties) {
-	        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
-	        	}
+        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
 	        } finally {
 		        try {
 		        	if (bootstrapPropStream != null) {
@@ -527,7 +488,7 @@ public final class CurrentConfiguration {
 		return bootstrapProperties;
 	}
     
-    public synchronized final Properties getSystemBootStrapProperties() throws ConfigurationException {
+    public synchronized final Properties getSystemBootStrapProperties() {
         if (systemBootstrapProperties == null) {
             systemBootstrapProperties = new UnmodifiableProperties(System.getProperties());
         }
@@ -549,26 +510,17 @@ public final class CurrentConfiguration {
             // Get the default bootstrap properties from the System properties ...
 			Properties bootstrap = getBootStrapProperties();
 			
-            boolean useSystemProperties = bootstrap.getProperty(CoreConstants.NO_CONFIGURATION) != null;
+            String readerClassName = bootstrap.getProperty( CONFIGURATION_READER_CLASS_PROPERTY_NAME, PropertiesConfigurationReader.class.getName() );
 
-            String readerClassName = bootstrap.getProperty( CONFIGURATION_READER_CLASS_PROPERTY_NAME );
-
-            if ( readerClassName == null ) {
-				if (!useSystemProperties) {
-					throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0024, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0024, CONFIGURATION_READER_CLASS_PROPERTY_NAME));
-				}
-				reader = new SystemCurrentConfigurationReader();
-            } else {
-            	CurrentConfigurationReader tempReader;
-            	try {
-	                Class readerClass = Class.forName(readerClassName);
-	                tempReader = (CurrentConfigurationReader) readerClass.newInstance();
-            	} catch (Exception e) {
-            		throw new ConfigurationException(e);
-				}
-            	tempReader.connect(bootstrap);
-                reader = tempReader;
-            }
+        	CurrentConfigurationReader tempReader;
+        	try {
+                Class readerClass = Class.forName(readerClassName);
+                tempReader = (CurrentConfigurationReader) readerClass.newInstance();
+        	} catch (Exception e) {
+        		throw new ConfigurationException(e);
+			}
+        	tempReader.connect(bootstrap);
+            reader = tempReader;
     	}
 
     	return reader;

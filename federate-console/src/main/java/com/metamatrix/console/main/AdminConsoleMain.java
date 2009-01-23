@@ -31,18 +31,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
@@ -55,7 +50,6 @@ import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.internal.core.log.PlatformLog;
-import com.metamatrix.toolbox.preference.UserPreferences;
 import com.metamatrix.toolbox.ui.widget.SplashWindow;
 import com.metamatrix.toolbox.ui.widget.util.IconFactory;
 
@@ -129,7 +123,6 @@ public final class AdminConsoleMain {
                     "Error loading bootstrap.", e); //$NON-NLS-1$
             throw new RuntimeException(e.getMessage());
         }
-		setLogLevelAndDiscardedLogContexts();
 
 		java.util.List /*<String>*/ urls = getURLNames();
         ConsoleLogin logon = new ConsoleLogin(urls, true, null);
@@ -177,48 +170,6 @@ public final class AdminConsoleMain {
         }
     }
 
-	private void setLogLevelAndDiscardedLogContexts() {
-		LogConfiguration logConfig = null;
- 		try {
- 			logConfig = CurrentConfiguration.getInstance().getConfiguration()
- 					.getLogConfiguration();
- 		} catch (Exception ex) {
- 		}
- 		if (logConfig != null) {
- 			boolean modified = false;
- 			String contextValues = (String)UserPreferences.getInstance(
- 					).getProperties().get(
- 					BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME);
- 			if (contextValues != null) {
- 				StringTokenizer tokenizer = new StringTokenizer(contextValues, 
-    					BasicLogConfiguration.CONTEXT_DELIMETER);
-  				while (tokenizer.hasMoreElements()) {
-  					String token = tokenizer.nextElement().toString();
-  					logConfig.discardContext(token);
-  					modified = true;
-  				}
-   			}
-   			String logLevelStr = (String)UserPreferences.getInstance(
-   					).getProperties().get(
-   					BasicLogConfiguration.LOG_LEVEL_PROPERTY_NAME);
-   			if (logLevelStr != null) {
-   				Integer logLevelInt = null;
-   				try {
-   					logLevelInt = new Integer(logLevelStr);
-   				} catch (Exception ex) {
-   				}
-   				if (logLevelInt != null) {
-   					int logLevel = logLevelInt.intValue();
-   					logConfig.setMessageLevel(logLevel);
-   					modified = true;
-   				}
-   			}
-   			if (modified) {
-  				LogManager.setLogConfiguration(logConfig);
-   			}
- 		}
- 	}   
-     
 	private JWindow showSplashWindow(JWindow splash) {
         final String alternateSplash = ConsolePlugin.Util.getString("Console.alternateSplash");  //$NON-NLS-1$
 	    ImageIcon altSplashIcon = null;
@@ -261,26 +212,16 @@ public final class AdminConsoleMain {
     			"metamatrix.log.captureSystemOut"; //$NON-NLS-1$
     	String captureSystemErrProp =
     			"metamatrix.log.captureSystemErr"; //$NON-NLS-1$
-    	String captureSystemOutVal = CurrentConfiguration.getInstance().getProperty(
-    			captureSystemOutProp);
-        if (captureSystemOutVal == null) {
-            captureSystemOutVal = "false"; //$NON-NLS-1$
-        } else {
-            captureSystemOutVal = captureSystemOutVal.trim();
-        }
+    	String captureSystemOutVal = System.getProperty(
+    			captureSystemOutProp, "false");
     	boolean captureSystemOut = captureSystemOutVal.equalsIgnoreCase(
     			"true"); //$NON-NLS-1$
-    	String captureSystemErrVal = CurrentConfiguration.getInstance().getProperty(
-    			captureSystemErrProp);
-        if (captureSystemErrVal == null) {
-            captureSystemErrVal = "false"; //$NON-NLS-1$
-        } else {
-            captureSystemErrVal = captureSystemErrVal.trim();
-        }
+    	String captureSystemErrVal = System.getProperty(
+    			captureSystemErrProp, "false");
     	boolean captureSystemErr = captureSystemErrVal.equalsIgnoreCase(
     			"true"); //$NON-NLS-1$
     	String logFileProp = "metamatrix.log.file"; //$NON-NLS-1$
-    	String logFile = CurrentConfiguration.getInstance().getProperty(logFileProp);
+    	String logFile = System.getProperty(logFileProp);
     	File tmpFile = null;
     	if (logFile == null) {
     		logFile = substituteVMName(DEFAULT_LOG_FILE);

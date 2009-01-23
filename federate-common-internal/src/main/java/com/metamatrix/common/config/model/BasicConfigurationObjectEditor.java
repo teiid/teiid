@@ -408,14 +408,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 //        BasicHost bh = new BasicHost(Configuration.NEXT_STARTUP_ID, id, Host.HOST_COMPONENT_TYPE_ID);
         this.createCreationAction(bh.getID(), bh);
 
-        try {
-            Host newHost = (Host) bh.clone();
-            return newHost;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Host.class.getName(),  e.getMessage()}));
-        }
-
+        Host newHost = (Host) bh.clone();
+        return newHost;
     }
     
     public Host createHost(ConfigurationID configurationID, String hostName ) {
@@ -435,15 +429,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         
         this.createCreationAction(bh.getID(), bh);
 
-        try {
-            Host newHost = (Host) bh.clone();
+        Host newHost = (Host) bh.clone();
 
-            return newHost;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Host.class.getName(),  e.getMessage()}));
-        }
-
+        return newHost;
     }
     
 
@@ -464,19 +452,13 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         
         this.createCreationAction(bh.getID(), bh);
 
-        try {
-            Host newHost = (Host) bh.clone();
+        Host newHost = (Host) bh.clone();
 
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addHost(newHost);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addHost(newHost);
 
-            return newHost;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Host.class.getName(),  e.getMessage()}));
-        }
-
+        return newHost;
     }
    
    
@@ -505,17 +487,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(bh, original.getProperties(), ADD);
 
-        try {
-            Host newHost = (Host) bh.clone();
+        Host newHost = (Host) bh.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addHost(newHost);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addHost(newHost);
 
-            return newHost;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Host.class.getName(),  e.getMessage()}));
-        }
+        return newHost;
     }
 
 
@@ -531,14 +508,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         BasicConfiguration config = new BasicConfiguration(info, Configuration.CONFIG_COMPONENT_TYPE_ID);
         this.createCreationAction(id, config);
 
-        try {
-            Configuration newConfig = (Configuration) config.clone();
-            return newConfig;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Configuration.class.getName(),  e.getMessage()}));
-        }
-
+        Configuration newConfig = (Configuration) config.clone();
+        return newConfig;
     }
 
     /**
@@ -565,13 +536,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         BasicConfiguration config = new BasicConfiguration(info, Configuration.CONFIG_COMPONENT_TYPE_ID);
         this.createCreationAction(id, config);
 
-        try {
-            Configuration newConfig = (Configuration) config.clone();
-            return newConfig;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Configuration.class.getName(),  e.getMessage()}));
-        }
+        Configuration newConfig = (Configuration) config.clone();
+        return newConfig;
     }
 
 
@@ -706,13 +672,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 //            }
         }
 
-        try {
-            Configuration newConfig = (Configuration) config.clone();
-            return newConfig;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {Configuration.class.getName(),  e.getMessage()}));
-        }
+        Configuration newConfig = (Configuration) config.clone();
+        return newConfig;
     }
 
     public ComponentType createComponentType(int classTypeCode, String name, ComponentTypeID parentID, ComponentTypeID superID, boolean deployable, boolean monitored) {
@@ -727,13 +688,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(type.getID(), type);
 
-        try {
-            ComponentType newType = (ComponentType) type.clone();
-            return newType;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ComponentType.class.getName(),  e.getMessage()}));
-        }
+        ComponentType newType = (ComponentType) type.clone();
+        return newType;
     }
     
     public ComponentType createComponentType(ComponentType componentType, String name) {
@@ -753,15 +709,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         
         createCreationAction(newType.getID(), newType);
 
-        try {
-            ComponentType nType = (ComponentType) newType.clone();
-            return nType;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ComponentType.class.getName(),  e.getMessage()}));
-        }
-        
-        
+        ComponentType nType = (ComponentType) newType.clone();
+        return nType;
     }
 
 
@@ -842,17 +791,11 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         createCreationAction(defnID, defn);
 
 
-        try {
-            ComponentTypeDefn newDefn = (ComponentTypeDefn) defn.clone();
+        ComponentTypeDefn newDefn = (ComponentTypeDefn) defn.clone();
 
-            BasicComponentType basicType = (BasicComponentType) verifyTargetClass(type,BasicComponentType.class);
-            basicType.addComponentTypeDefinition(newDefn);
-            return newDefn;
-
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ComponentTypeDefn.class.getName(),  e.getMessage()}));
-        }
+        BasicComponentType basicType = (BasicComponentType) verifyTargetClass(type,BasicComponentType.class);
+        basicType.addComponentTypeDefinition(newDefn);
+        return newDefn;
     }
 
     /**
@@ -879,14 +822,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(defnID, defn);
 
-        try {
-            ComponentTypeDefn newDefn = (ComponentTypeDefn) defn.clone();
-            return newDefn;
-
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ComponentTypeDefn.class.getName(),  e.getMessage()}));
-        }
+        ComponentTypeDefn newDefn = (ComponentTypeDefn) defn.clone();
+        return newDefn;
     }
 
     /**
@@ -975,18 +912,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(deployComponent.getID(), deployComponent );
 
-        try {
-            DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+        DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addDeployedComponent(newDefn);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addDeployedComponent(newDefn);
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-        }
-
+        return newDefn;
     }
 
 
@@ -1039,14 +970,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(deployComponent.getID(), deployComponent );
 
-        try {
-            DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-        }
-
+        DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+        return newDefn;
     }
 
     public DeployedComponent createDeployedVMComponentx(String name, Configuration configuration,VMComponentDefn vmComponentDefn) {
@@ -1076,18 +1001,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(deployComponent.getID(), deployComponent );
 
-        try {
-            DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+        DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addDeployedComponent(newDefn);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addDeployedComponent(newDefn);
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-        }
-
+        return newDefn;
     }
 
     /*
@@ -1123,14 +1042,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(deployComponent.getID(), deployComponent );
 
-        try {
-            DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-        }
-
+        DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+        return newDefn;
     }
 
     /*
@@ -1190,13 +1103,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         defn.setRoutingUUID(routingUUID );
         createCreationAction(defn.getID(), defn);
 
-        try {
-            ServiceComponentDefn newDefn = (ServiceComponentDefn) defn.clone();
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ServiceComponentDefn.class.getName(),  e.getMessage()}));
-         }
+        ServiceComponentDefn newDefn = (ServiceComponentDefn) defn.clone();
+        return newDefn;
     }
 
     /**
@@ -1235,20 +1143,15 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 		// add the service to the psc so that this relationship is found in the deployServiceDefn method
 		addServiceComponentDefn(psc, (ServiceComponentDefnID) newServiceDefn.getID());
 
-        try {
             ServiceComponentDefn newDefn = (ServiceComponentDefn) newServiceDefn.clone();
             
             BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
             bc.addComponentDefn(newDefn);
    
             //automatically deploy the service anywhere that the PSC is already deployed
-            this.deployServiceDefn(bc,newDefn,pscID);            
-            
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078, 
-                        new Object[] {ServiceComponentDefn.class.getName(),  e.getMessage()}));
-        }
+        this.deployServiceDefn(bc,newDefn,pscID);            
+        
+        return newDefn;
     }
 
     public ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName) {
@@ -1305,17 +1208,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         serviceDefn.setRoutingUUID( routingUUID );
         createCreationAction(serviceDefn.getID(), serviceDefn);
 
-        try {
-            ServiceComponentDefn newDefn = (ServiceComponentDefn) serviceDefn.clone();
+        ServiceComponentDefn newDefn = (ServiceComponentDefn) serviceDefn.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ServiceComponentDefn.class.getName(),  e.getMessage()}));
-        }
+        return newDefn;
     }
 
 
@@ -1367,15 +1265,10 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(serviceDefn, originalServiceComponentDefn.getProperties(), ADD);
 
-        try {
-            ServiceComponentDefn newServiceDefn = (ServiceComponentDefn) serviceDefn.clone();
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newServiceDefn);
-            return newServiceDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ServiceComponentDefn.class.getName(),  e.getMessage()}));
-        }
+        ServiceComponentDefn newServiceDefn = (ServiceComponentDefn) serviceDefn.clone();
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newServiceDefn);
+        return newServiceDefn;
     }
 
     public ResourceDescriptor createResourceDescriptor(ConfigurationID configurationID, ComponentTypeID typeID, String descriptorName) {
@@ -1393,16 +1286,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 //        BasicComponentDefn.getInstance(ComponentDefn.RESOURCE_COMPONENT_DEFN_CODE, configurationID, typeID, descriptorName);
         createCreationAction(defn.getID(), defn);
 
-        try {
-            ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
+        ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ResourceDescriptor.class.getName(),  e.getMessage()}));
-        }
-
-
+        return newDefn;
     }
 
     public ResourceDescriptor createResourceDescriptor(Configuration configuration, ComponentTypeID typeID, String descriptorName) {
@@ -1423,19 +1309,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
  //       BasicComponentDefn.getInstance(ComponentDefn.RESOURCE_COMPONENT_DEFN_CODE, configID, typeID, descriptorName);
         createCreationAction(defn.getID(), defn);
 
-        try {
-            ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
+        ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ResourceDescriptor.class.getName(),  e.getMessage()}));
-        }
-
-
+        return newDefn;
     }
 
     public ResourceDescriptor createResourceDescriptor(Configuration configuration, ResourceDescriptor original, String newName) {
@@ -1459,17 +1338,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(defn, original.getProperties(), ADD);
 
-        try {
-            ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
+        ResourceDescriptor newDefn = (ResourceDescriptor) defn.clone();
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ResourceDescriptor.class.getName(),  e.getMessage()}));
-        }
+        return newDefn;
     }
 
 
@@ -1493,13 +1367,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(defn.getID(), defn);
 
-        try {
-            SharedResource newDefn = (SharedResource) defn.clone();
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {SharedResource.class.getName(),  e.getMessage()}));
-        }
+        SharedResource newDefn = (SharedResource) defn.clone();
+        return newDefn;
     }
 
 
@@ -1526,14 +1395,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 //							componentName);
         createCreationAction(defn.getID(), defn);                     
 
-        try {
-            VMComponentDefn newDefn = (VMComponentDefn) defn.clone();
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {VMComponentDefn.class.getName(),  e.getMessage()}));
-        }
-
+        VMComponentDefn newDefn = (VMComponentDefn) defn.clone();
+        return newDefn;
     }
 
     public VMComponentDefn createVMComponentDefn(Configuration configuration, HostID hostID, ComponentTypeID typeID, String componentName) {
@@ -1584,18 +1447,12 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         
         this.createDeployedVMComponentx(defn.getName(), configuration, defn);
         
+        VMComponentDefn newDefn = (VMComponentDefn) defn.clone();
 
-        try {
-            VMComponentDefn newDefn = (VMComponentDefn) defn.clone();
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
 
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
-
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {VMComponentDefn.class.getName(),  e.getMessage()}));
-        }
+        return newDefn;
     }
 
     /**
@@ -1635,16 +1492,10 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         }
 
-        try {
-            ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newPSC);
-            return newPSC;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ProductServiceConfig.class.getName(),  e.getMessage()}));
-        }
-
+        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newPSC);
+        return newPSC;
     }
 
     /**
@@ -1674,14 +1525,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         createCreationAction(psc.getID(), psc);
 
-        try {
-            ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
-            return newPSC;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ProductServiceConfig.class.getName(),  e.getMessage()}));
-
-        }
+        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
+        return newPSC;
     }
 
 
@@ -1793,14 +1638,7 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         HashSet set = new HashSet();
         set.addAll(psc.getServiceComponentDefnIDs());
         
-        ProductServiceConfig c = null;
-        try {
-            c = (ProductServiceConfig) psc.clone();
-
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078, 
-                        new Object[] {ProductServiceConfig.class.getName(),  e.getMessage()}));
-        }        
+        ProductServiceConfig c = (ProductServiceConfig) psc.clone();
         
         BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) verifyTargetClass(c,BasicProductServiceConfig.class);
         basicPSC.resetServices();
@@ -1978,13 +1816,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
                         if (ds != null) {
                             throw new ConfigurationException("Deployed Component " + deployedServiceID + " was not removed"); //$NON-NLS-1$ //$NON-NLS-2$
                         }
-                        try {
-                            DeployedComponent newService = (DeployedComponent) deployedService.clone();
-                            result.add(newService);
-                        } catch (CloneNotSupportedException e) {
-                            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                                        new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-                        }
+                        DeployedComponent newService = (DeployedComponent) deployedService.clone();
+                        result.add(newService);
                     }
                 }
              } else if (enabled){
@@ -2063,15 +1896,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         createExchangeAction(serviceComponentDefnID,ConfigurationModel.Attribute.PSC_NAME, null, basicPSC.getID());
 
 
-        try {
-            ProductServiceConfig newDefn = (ProductServiceConfig) basicPSC.clone();
-            return newDefn;
-
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078, 
-                        new Object[] {ProductServiceConfig.class.getName(),  e.getMessage()}));
-        }
-
+        ProductServiceConfig newDefn = (ProductServiceConfig) basicPSC.clone();
+        return newDefn;
     }
 
     /**
@@ -2787,15 +2613,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         defn.setRoutingUUID(routingUUID);
 
+        ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
 
-        try {
-            ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
-
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ConnectorBinding.class.getName(), e.getMessage()}));
-        }
+        return newDefn;
     }
 
     public ConnectorBinding createConnectorComponent(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) {
@@ -2849,14 +2669,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(defn, original.getProperties(), ADD);
 
-        try {
-            ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
+        ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ConnectorBinding.class.getName(),  e.getMessage() }  ));
-        }
+        return newDefn;
     }
 
     public ConnectorBinding createConnectorComponent(Configuration configuration, ConnectorBinding originalConnector, String newName) {
@@ -2884,15 +2699,10 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(defn, originalConnector.getProperties(), ADD);
 
-        try {
-            ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ConnectorBinding.class.getName(),  e.getMessage()}));
-        }
+        ConnectorBinding newDefn = (ConnectorBinding) defn.clone();
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
+        return newDefn;
     }
 
 
@@ -2934,15 +2744,10 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(defn, originalProvider.getProperties(), ADD);
 
-        try {
-        	AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {ConnectorBinding.class.getName(),  e.getMessage()}));
-        }
+    	AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
+        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+        bc.addComponentDefn(newDefn);
+        return newDefn;
     }
 
     public AuthenticationProvider createAuthenticationProviderComponent(ConfigurationID configurationID, ComponentTypeID typeID, String descriptorName) {
@@ -2958,14 +2763,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
             BasicUtil.createComponentDefn(ComponentDefn.AUTHPROVIDER_COMPONENT_CODE, configurationID, typeID, descriptorName); 
         createCreationAction(defn.getID(), defn);
 
-        try {
-            AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
+        AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {AuthenticationProvider.class.getName(), e.getMessage()}));
-        }
+        return newDefn;
     }
 
     public AuthenticationProvider createAuthenticationProviderComponent(ConfigurationID configurationID, AuthenticationProvider original, String newName) {
@@ -2986,14 +2786,9 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         this.modifyProperties(defn, original.getProperties(), ADD);
 
-        try {
-        	AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
+    	AuthenticationProvider newDefn = (AuthenticationProvider) defn.clone();
 
-            return newDefn;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-                        new Object[] {AuthenticationProvider.class.getName(),  e.getMessage() }  ));
-        }
+        return newDefn;
     }
 
     // ----------------------------------------------------------------------------------

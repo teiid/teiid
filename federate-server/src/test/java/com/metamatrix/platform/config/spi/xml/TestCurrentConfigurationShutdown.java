@@ -38,19 +38,18 @@ public class TestCurrentConfigurationShutdown extends BaseTest {
 
     public TestCurrentConfigurationShutdown(String name) {
         super(name);
-      	printMessages = true;
+      	printMessages = false;
              
     }
     
-    public void testSystemShutdown() {
+    public void testSystemShutdown() throws Exception {
     	
     	printMsg("Starting testSystemShutdown");    	 //$NON-NLS-1$
 
-    	try {
-			CurrentConfigHelper.initConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);		   		    			    		    			    		
+		CurrentConfigHelper.initConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);		   		    			    		    			    		
 //    		CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            validConfigurationModel();
+        validConfigurationModel();
 //    		Configuration config = CurrentConfiguration.getInstance().getConfiguration();
 //    		
 //    		if (config == null) {
@@ -59,38 +58,32 @@ public class TestCurrentConfigurationShutdown extends BaseTest {
 //    		
 //    		HelperTestConfiguration.validateConfigContents(config);
 
-			printMsg("Call Configuration to Shutdown System"); //$NON-NLS-1$
+		printMsg("Call Configuration to Shutdown System"); //$NON-NLS-1$
 
-			CurrentConfiguration.getInstance().indicateSystemShutdown();
+		CurrentConfiguration.getInstance().indicateSystemShutdown();
 
-			printMsg("Shutdown System"); //$NON-NLS-1$
+		printMsg("Shutdown System"); //$NON-NLS-1$
+		
+		XMLConfigurationMgr mgr = XMLConfigurationMgr.getInstance();
+		
+		printMsg("Check System State"); //$NON-NLS-1$
+		int state = mgr.getServerStartupState();
+		if (state != StartupStateController.STATE_STOPPED) {
+
+			String lbl;
+			if (state == StartupStateController.STATE_STARTED) {
+				lbl = StartupStateController.STATE_STARTED_LABEL;
+			} else if (state == StartupStateController.STATE_STARTING) {
+				lbl = StartupStateController.STATE_STARTING_LABEL;
+			} else {
+				lbl = "UNDEFINED STATE CODE of " + state; //$NON-NLS-1$
+			} 
 			
-			XMLConfigurationMgr mgr = XMLConfigurationMgr.getInstance();
-			
-			printMsg("Check System State"); //$NON-NLS-1$
-			int state = mgr.getServerStartupState();
-			if (state != StartupStateController.STATE_STOPPED) {
-
-				String lbl;
-				if (state == StartupStateController.STATE_STARTED) {
-					lbl = StartupStateController.STATE_STARTED_LABEL;
-				} else if (state == StartupStateController.STATE_STARTING) {
-					lbl = StartupStateController.STATE_STARTING_LABEL;
-				} else {
-					lbl = "UNDEFINED STATE CODE of " + state; //$NON-NLS-1$
-				} 
-				
-				fail("Server State was not set to " + StartupStateController.STATE_STOPPED_LABEL + //$NON-NLS-1$
-					" but is currently set to " + lbl); //$NON-NLS-1$
-			}				
- 		    		   		
-    		
-     	} catch (Exception e) {
-     		e.printStackTrace();
-    		fail(e.getMessage());
-     	}
+			fail("Server State was not set to " + StartupStateController.STATE_STOPPED_LABEL + //$NON-NLS-1$
+				" but is currently set to " + lbl); //$NON-NLS-1$
+		}				
      	
-    		printMsg("Completed testSystemShutdown"); //$NON-NLS-1$
+		printMsg("Completed testSystemShutdown"); //$NON-NLS-1$
     	
     }
     

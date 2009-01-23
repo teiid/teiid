@@ -217,7 +217,7 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
 	    configurationID = configID;
     }
     
-   public synchronized Object clone() throws CloneNotSupportedException {
+   public synchronized Object clone() {
     	 return new BasicDeployedComponent(this);
     }
     

@@ -76,7 +76,7 @@ public class BasicConnectorBindingType extends BasicComponentType implements Con
     }    
 
 
-    public synchronized Object clone() throws CloneNotSupportedException {
+    public synchronized Object clone() {
         BasicComponentType result = null;
 	    result = new BasicConnectorBindingType(this);
 

@@ -40,11 +40,11 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.config.persistence.api.ConfigurationModelAdapter;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
@@ -79,11 +79,11 @@ public class FilePersistentConnection implements PersistentConnection {
 
     private String ns_override;
 
-    private ConfigurationModelAdapter adapter;
+    private ConfigurationModelContainerAdapter adapter;
     private boolean closed = true;
 
 
-    public FilePersistentConnection(Properties props, ConfigurationModelAdapter adapter) {
+    public FilePersistentConnection(Properties props, ConfigurationModelContainerAdapter adapter) {
         this.adapter = adapter;
 
         path = props.getProperty(CONFIG_FILE_PATH_PROPERTY, ""); //$NON-NLS-1$

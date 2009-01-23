@@ -93,7 +93,7 @@ public class BasicConfigurationInfo extends BasicObject implements Configuration
         lastChangedDate = lastChanged;
     }
 
-    public synchronized Object clone() throws CloneNotSupportedException {
+    public synchronized Object clone() {
 
        	return new BasicConfigurationInfo(this);
     }

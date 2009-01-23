@@ -109,7 +109,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     private void registerUDFSource(String udfSource) throws IOException {
     	URL[] urls = null;
     	
-    	String extensionClasspath = CurrentConfiguration.getInstance().getProperty(UDF_CLASSPATH_PROPERTY);
+    	String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(UDF_CLASSPATH_PROPERTY);
         if (extensionClasspath != null && extensionClasspath.trim().length() > 0){
             try {
                 urls = URLFactory.parseURLs(extensionClasspath, CLASSPATH_DELIMITER);

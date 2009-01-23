@@ -1578,7 +1578,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
     	
      }
 
-    public synchronized Object clone() throws CloneNotSupportedException {
+    public synchronized Object clone() {
         BasicConfiguration result = null;
             
             /**

@@ -69,7 +69,7 @@ public class ExecAntExecution implements SynchQueryExecution {
 	private static final Random random = new Random(System.currentTimeMillis());
 	private static TempDirectory TEMPDIR = null;
 
-	private static String INSTALL_DIR;
+	private static String INSTALL_DIR = ".";//$NON-NLS-1$
 
 	private static final String WIN_EXEC = "win.executable"; //$NON-NLS-1$
 	private static final String UNIX_EXEC = "unix.executable"; //$NON-NLS-1$
@@ -97,11 +97,9 @@ public class ExecAntExecution implements SynchQueryExecution {
 			if (CurrentConfiguration.getInstance().getHost() != null) {
 				INSTALL_DIR = CurrentConfiguration.getInstance().getHost().getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
 				hosttempdir = CurrentConfiguration.getInstance().getHost().getTempDirectory();
-			}
+			} 
 			TEMPDIR = new TempDirectory(hosttempdir,System.currentTimeMillis(), random.nextLong());
-
 		} catch (Exception e) {
-			INSTALL_DIR = ".";//$NON-NLS-1$
 			TEMPDIR = new TempDirectory(System.currentTimeMillis(), random.nextLong());
 		}
 		TEMPDIR.create();
@@ -157,7 +155,7 @@ public class ExecAntExecution implements SynchQueryExecution {
 			execute(command);
 		} catch (Exception e) {
 			env.getLogger().logError("Execution Error", e); //$NON-NLS-1$
-			throw new ConnectorException(e.getMessage());
+			throw new ConnectorException(e);
 		}
 	}
 

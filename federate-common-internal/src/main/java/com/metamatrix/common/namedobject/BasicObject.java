@@ -28,6 +28,7 @@ import java.io.Serializable;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * This class represents the basic implementation of MetadataObject, which is
@@ -199,15 +200,15 @@ public abstract class BasicObject implements BaseObject, Serializable {
     public String toString(){
 	    return this.id.toString();
     }
-
-    /**
-     * Return a deep cloned instance of this object.  Subclasses must override
-     * this method.
-     * @return the object that is the clone of this instance.
-     * @throws CloneNotSupportedException if this object cannot be cloned (i.e., only objects in
-     * {@link com.metamatrix.metadata.api.Defaults Defaults} cannot be cloned.
-     */
-    public abstract Object clone() throws CloneNotSupportedException;
+    
+    @Override
+    public Object clone() {
+    	try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+    }
 
 }
 

@@ -39,7 +39,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
  * 
  * The persistent layer will build this container 
  */
-public interface ConfigurationModelContainer {
+public interface ConfigurationModelContainer extends Cloneable {
     
     public static final String DEFAULT_SYSTEM_NAME = "Default"; //$NON-NLS-1$
 
@@ -163,6 +163,6 @@ public interface ConfigurationModelContainer {
     
 	ConfigurationModelContainer copyAs(ConfigurationID configID) throws ConfigurationException;
 	           
-    Object clone() throws CloneNotSupportedException;
+    Object clone();
     
 }

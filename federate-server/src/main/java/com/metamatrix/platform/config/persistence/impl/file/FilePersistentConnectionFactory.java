@@ -27,10 +27,10 @@ package com.metamatrix.platform.config.persistence.impl.file;
 import java.util.Properties;
 
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
-import com.metamatrix.platform.config.persistence.impl.ConfigurationModelAdapterImpl;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
 public class FilePersistentConnectionFactory extends PersistentConnectionFactory {
@@ -60,8 +60,8 @@ public class FilePersistentConnectionFactory extends PersistentConnectionFactory
 		throws ConfigurationException {
 
 
-		ConfigurationModelAdapterImpl adapter =
-			new ConfigurationModelAdapterImpl();
+		ConfigurationModelContainerAdapter adapter =
+			new ConfigurationModelContainerAdapter();
 
 		FilePersistentConnection fps =
 			new FilePersistentConnection(this.getProperties(), adapter);

@@ -50,44 +50,13 @@ public interface BaseObject extends Comparable, Cloneable {
      */
     String getFullName();
 
-
-    /**
-     * Compares this object to another. If the specified object is an instance of
-     * the same class, then this method compares the name; otherwise, it throws a
-     * ClassCastException (as instances are comparable only to instances of the same
-     * class).  Note:  this method is consistent with <code>equals()</code>.
-     * <p>
-     * @param obj the object that this instance is to be compared to.
-     * @return a negative integer, zero, or a positive integer as this object
-     *      is less than, equal to, or greater than the specified object, respectively.
-     * @throws ClassCastException if the specified object's type prevents it
-     *      from being compared to this instance.
-     */
-    int compareTo(Object obj);
-
-    /**
-     * Returns a string representing the current state of the object.
-     * @return the string representation of this instance.
-     */
-    String toString();
-
-    /**
-     * Returns true if the specified object is semantically equal to this instance.
-     * Note:  this method is consistent with <code>compareTo()</code>.
-     * <p>
-     * @param obj the object that this instance is to be compared to.
-     * @return whether the object is equal to this object.
-     */
-    boolean equals(Object obj);
-
     /**
      * Return a deep cloned instance of this object.  Subclasses must override
      * this method.
      * @return the object that is the clone of this instance.
-     * @throws CloneNotSupportedException if this object cannot be cloned (i.e., only objects in
      * {@link com.metamatrix.metadata.api.Defaults Defaults} cannot be cloned).
      */
-    public Object clone() throws CloneNotSupportedException;
+    Object clone();
 
   
 }

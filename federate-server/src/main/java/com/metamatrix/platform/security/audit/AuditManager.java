@@ -32,7 +32,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
@@ -172,18 +171,11 @@ public final class AuditManager {
         // Get the AuditConfiguration from the current configuration properties ...
         AuditConfigurationFactory configFactory = new CurrentConfigAuditConfigurationFactory();
         Properties currentConfigProperties = new Properties();
-        try {
-
-            Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
+        Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
  
-            currentConfigProperties.putAll(globalProperties);
+        currentConfigProperties.putAll(globalProperties);
  
-            AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
-        } catch ( ConfigurationException e ) {
-            I18nLogManager.logWarning(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0003, e,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0003));
-            AUDIT_PROPERTIES = PropertiesUtils.clone(System.getProperties(),false);
-        }
+        AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
         UNMODIFIABLE_AUDIT_PROPERTIES = new UnmodifiableProperties(AUDIT_PROPERTIES);
 
         try {
@@ -256,16 +248,11 @@ public final class AuditManager {
         // If this is the first initialization, then get the system properties ...
         if ( ! this.isInitialized ) {
             Properties currentConfigProperties = new Properties();
-            try {
+            Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
 
-                Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
+            currentConfigProperties.putAll(globalProperties);
 
-                currentConfigProperties.putAll(globalProperties);
-
-                AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
-            } catch ( ConfigurationException e ) {
-                AUDIT_PROPERTIES = PropertiesUtils.clone(System.getProperties(),false);
-            }
+            AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
         } else {
             // If this is NOT the first initialization, make sure the file destination is appended ...
             AUDIT_PROPERTIES.setProperty(SingleFileAuditDestination.APPEND_PROPERTY_NAME,Boolean.TRUE.toString());

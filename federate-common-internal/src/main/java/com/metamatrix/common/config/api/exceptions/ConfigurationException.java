@@ -24,11 +24,7 @@
 
 package com.metamatrix.common.config.api.exceptions;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
-import com.metamatrix.api.exception.*;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 
 public class ConfigurationException extends MetaMatrixComponentException {
 
@@ -107,21 +103,6 @@ public class ConfigurationException extends MetaMatrixComponentException {
      */
     public int getActionIndex() {
         return actionIndex;
-    }
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        actionIndex = in.readInt();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        out.writeInt(actionIndex);
     }
 
 }

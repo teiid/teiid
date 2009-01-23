@@ -31,16 +31,16 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Properties;
 
-import com.metamatrix.common.config.api.*;
+import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.util.ConfigObjectsNotResolvableException;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.MetaMatrixProductNames;
-import com.metamatrix.common.CommonPlugin;
 
 public class ConfigurationModelContainerAdapter {
 
@@ -56,7 +56,6 @@ public class ConfigurationModelContainerAdapter {
             throw ce;
             
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0016, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0016, configID.getFullName()));
         } finally {
             try {
@@ -87,7 +86,6 @@ public class ConfigurationModelContainerAdapter {
             return configModel;
 
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0016, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0016, configID.getFullName()));
         }
 
@@ -104,7 +102,6 @@ public class ConfigurationModelContainerAdapter {
         } catch (ConfigurationException ce) {
             throw ce;
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0017, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0017, model.getConfiguration().getID()));
         } finally {
             try {

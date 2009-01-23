@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
@@ -62,6 +61,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.namedobject.BaseID;
 import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ConfigurationModelContainerImpl implements ConfigurationModelContainer, Serializable {
 
@@ -78,9 +78,6 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
 
     private Map resources = Collections.synchronizedMap(new HashMap(25));
     
-    
-    
-
     public ConfigurationModelContainerImpl() {
 
     }
@@ -170,9 +167,7 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
     }
 
     public Map getComponentTypes() {
-        Map m = new HashMap();
-        m.putAll(this.compTypes);
-        return m;
+        return new HashMap(this.compTypes);
     }
     
     /**
@@ -762,27 +757,20 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
      }
 
 
-    public Object clone() throws CloneNotSupportedException {
+    public Object clone() {
 
+        Configuration config = (Configuration) configuration.clone();
+
+        ConfigurationModelContainerImpl newConfig = new ConfigurationModelContainerImpl(config);
         try {
-
-
-            Configuration config = (Configuration) configuration.clone();
-
-            ConfigurationModelContainerImpl newConfig = new ConfigurationModelContainerImpl(config);
-            newConfig.setComponentTypes(this.compTypes);
+			newConfig.setComponentTypes(this.compTypes);
 			newConfig.setProductTypes(this.prodTypes.values());
-            newConfig.setResources(this.resources);
+		} catch (ConfigurationLockException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+        newConfig.setResources(this.resources);
 
-            return newConfig;
-
-
-        } catch ( Exception e ) {
-            System.out.println(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0006,  this.getConfigurationID(),
-                     e.getMessage()));
-            throw new CloneNotSupportedException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0005, this.getClass().getName(),this.getConfigurationID() ));
-        }
-
+        return newConfig;
     }
 
 }

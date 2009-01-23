@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.DefaultPropertyAccessPolicy;
 import com.metamatrix.common.object.PropertiedObject;
@@ -90,20 +88,13 @@ public class UserPreferences implements PropertiedObject {
 	 * @supplierRole configProperties
 	 * @link aggregation
 	 */
-	private Properties configProperties;
+	private Properties configProperties = System.getProperties();
 
 	private boolean readOnly = false;
 	private boolean changed = false;
 
 	private UserPreferences() {
 		readOnly = false; // this is assumed!
-        
-        //Load the properties and user preference values
-        try {
-            configProperties = CurrentConfiguration.getInstance().getProperties();
-        } catch (ConfigurationException e) {
-            configProperties = new Properties();
-        }
         
 		this.loadProperties();
 	}

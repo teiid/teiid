@@ -81,14 +81,6 @@ public class BasicExtensionModule extends BasicComponentDefn implements Extensio
         return type;
     }
 
-    /** 
-     * @see com.metamatrix.common.namedobject.BasicObject#clone()
-     * @since 4.3
-     */
-    public Object clone() throws CloneNotSupportedException {
-        return new CloneNotSupportedException();
-    }
-    
     void setModuleType(String type) {
         this.type = type;
     }

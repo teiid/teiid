@@ -43,7 +43,7 @@ public class BasicServiceComponentType extends BasicComponentType implements Ser
         return false;
     }
 
-   public synchronized Object clone() throws CloneNotSupportedException {
+   public synchronized Object clone() {
         BasicComponentType result = null;
 	    result = new BasicServiceComponentType(this);
 

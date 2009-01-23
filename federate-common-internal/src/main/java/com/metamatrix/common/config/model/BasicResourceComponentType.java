@@ -43,7 +43,7 @@ public class BasicResourceComponentType extends BasicComponentType implements Re
         return false;
     }
 
-   public synchronized Object clone() throws CloneNotSupportedException {
+   public synchronized Object clone() {
         BasicComponentType result = null;
 	    result = new BasicResourceComponentType(this);
 

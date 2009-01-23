@@ -846,7 +846,7 @@ public class ExtensionModuleManager {
 			//will be checked for in ordinary CurrentConfiguration properties
             String key = ExtensionModulePropertyNames.CONNECTION_FACTORY;
             if (resourceProps.getProperty(key) == null){
-                String value = CurrentConfiguration.getInstance().getProperty(key);
+                String value = CurrentConfiguration.getInstance().getProperties().getProperty(key);
                 if (value != null) {
                 	resourceProps.setProperty(key, value);
                 }

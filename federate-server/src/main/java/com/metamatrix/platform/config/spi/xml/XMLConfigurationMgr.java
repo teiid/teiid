@@ -242,11 +242,7 @@ public class XMLConfigurationMgr {
      * {@see Configuration}.
      */
     public synchronized ConfigurationModelContainer getConfigurationModel(ConfigurationID configID) throws ConfigurationException {
-        ConfigurationModelContainer cmc = null;
-
-        if (configs.containsKey(configID.getFullName())) {
-            cmc = (ConfigurationModelContainer)configs.get(configID.getFullName());
-        }
+        ConfigurationModelContainer cmc = (ConfigurationModelContainer)configs.get(configID.getFullName());
 
         if (cmc == null) {
             cmc = readModel(configID);
@@ -370,8 +366,6 @@ public class XMLConfigurationMgr {
                         transConfigs.put(cmct.getConfigurationID().getFullName(), cmct);
 					} catch (ConfigurationException ce) {
 						throw new ConfigTransactionException(ce, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
-					} catch (CloneNotSupportedException e) {
-						throw new ConfigTransactionException(e,ConfigMessages.CONFIG_0115, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0115,config.getConfigurationID()));
 					} catch (ConfigObjectsNotResolvableException e) {
 						throw new ConfigTransactionException(e, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
 					} 

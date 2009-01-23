@@ -63,11 +63,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 				
-		try {
-			Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
-		} catch (ConfigurationException e) {
-			e.printStackTrace();
-		}
+		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
 		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
 		bind(ChannelProvider.class).in(Scopes.SINGLETON);
