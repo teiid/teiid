@@ -44,6 +44,6 @@ public interface XAConnector extends Connector{
      * @return A Connection, created by the Connector
      * @throws ConnectorException If an error occurred obtaining a connection
      */
-    Connection getXAConnection( SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException;
+    XAConnection getXAConnection( SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException;
 
 }

@@ -68,7 +68,7 @@ public interface Connector {
      * when execution has completed against it.  
      * @param context The context of the current MetaMatrix user that will be using this connection 
      * @return A Connection, created by the Connector
-     * @throws ConnectorException If an error occured obtaining a connection
+     * @throws ConnectorException If an error occurred obtaining a connection
      */
     Connection getConnection( SecurityContext context ) throws ConnectorException;
 

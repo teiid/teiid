@@ -27,6 +27,8 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.transaction.xa.XAResource;
+
 import junit.framework.Assert;
 
 import com.metamatrix.common.xa.TransactionContext;
@@ -45,6 +47,7 @@ import com.metamatrix.data.basic.BasicConnectorCapabilities;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.IQueryCommand;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
 public class FakeConnector implements Connector, XAConnector {
@@ -70,7 +73,7 @@ public class FakeConnector implements Connector, XAConnector {
     public void initialize(ConnectorEnvironment environment) throws ConnectorException {}
     public void start() throws ConnectorException {}
     public void stop() {}
-	public Connection getXAConnection(SecurityContext securityContext,
+	public XAConnection getXAConnection(SecurityContext securityContext,
 			TransactionContext transactionContext) throws ConnectorException {
 		return new FakeXAConnection();
 	}
@@ -88,7 +91,7 @@ public class FakeConnector implements Connector, XAConnector {
         }
     }
     
-    private final class FakeXAConnection implements Connection {
+    private final class FakeXAConnection implements XAConnection {
         public boolean released = false;
         public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
             return new FakeBlockingExecution(executionContext);
@@ -105,6 +108,10 @@ public class FakeConnector implements Connector, XAConnector {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;
         }
+		@Override
+		public XAResource getXAResource() throws ConnectorException {
+			return null;
+		}
     }   
     
     private final class FakeBlockingExecution implements SynchQueryCommandExecution {

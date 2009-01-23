@@ -47,6 +47,7 @@ import com.metamatrix.data.pool.ConnectionPool;
 import com.metamatrix.data.pool.ConnectionPoolException;
 import com.metamatrix.data.pool.DisabledConnectionPool;
 import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
 
@@ -145,7 +146,7 @@ public class JDBCXAConnector extends JDBCConnector implements XAConnector{
     /*
      * @see com.metamatrix.data.api.xa.XAConnector#getXAConnection(com.metamatrix.data.api.SecurityContext)
      */
-    public Connection getXAConnection(SecurityContext context, final TransactionContext transactionContext) throws ConnectorException {
+    public XAConnection getXAConnection(SecurityContext context, final TransactionContext transactionContext) throws ConnectorException {
         JDBCSourceXAConnection conn = null;
         
         if(transactionContext != null){

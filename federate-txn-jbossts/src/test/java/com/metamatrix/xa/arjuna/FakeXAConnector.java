@@ -29,6 +29,7 @@ import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
 class FakeXAConnector implements XAConnector{
@@ -40,7 +41,7 @@ class FakeXAConnector implements XAConnector{
         this.conn = new FakeXAConnection(this.name);
     }
     
-    public Connection getXAConnection(SecurityContext securityContext, TransactionContext transactionContext) 
+    public XAConnection getXAConnection(SecurityContext securityContext, TransactionContext transactionContext) 
         throws ConnectorException {
         return this.conn;
     }

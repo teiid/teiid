@@ -46,17 +46,11 @@ public class JavaUtilDateValueTranslator implements ValueTranslator {
     }
 
     public Object translate(Object value, ExecutionContext context) throws ConnectorException {
-        if(value instanceof Date) {         
-            Date d = (Date) value;
-               long dt = d.getTime();
-                
-               Timestamp ts = new Timestamp(dt);
-               return ts;
-                
-        }
+        Date d = (Date) value;
+        long dt = d.getTime();
         
-        return  null;
+        Timestamp ts = new Timestamp(dt);
+        return ts;
     }    
-              
 
 }

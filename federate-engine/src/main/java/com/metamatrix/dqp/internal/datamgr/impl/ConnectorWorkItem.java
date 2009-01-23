@@ -139,9 +139,6 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
                                                        ); 
         if (isTransactional){
     		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
-    		if (!(connection instanceof XAConnection)){
-                throw new ConnectorException(DQPPlugin.Util.getString("ConnectorRequestState.invalidConnectionType")); //$NON-NLS-1$                    		                    			
-    		} 
     		this.securityContext.setTransactional(true);
     	} else {
     	    if (requestMsg.isTransactional() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {

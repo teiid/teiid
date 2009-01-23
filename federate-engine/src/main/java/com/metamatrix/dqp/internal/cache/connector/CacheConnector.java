@@ -32,6 +32,7 @@ import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
 
@@ -64,7 +65,7 @@ public class CacheConnector implements Connector, XAConnector, GlobalCapabilitie
 		return cache;
 	}
 
-	public Connection getXAConnection(SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException {
+	public XAConnection getXAConnection(SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException {
 		if(actualConnector instanceof XAConnector){
             return ((XAConnector)actualConnector).getXAConnection(securityContext, transactionContext);
 		}
