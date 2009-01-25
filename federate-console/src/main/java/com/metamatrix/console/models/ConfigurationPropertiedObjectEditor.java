@@ -32,9 +32,9 @@ import java.util.List;
 
 import com.metamatrix.admin.AdminMessages;
 import com.metamatrix.admin.AdminPlugin;
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;

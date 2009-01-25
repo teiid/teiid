@@ -29,7 +29,6 @@ import java.util.Collection;
 
 import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.objects.PropertyDefinition;
-import com.metamatrix.common.object.PropertyType;
 
 
 /** 
@@ -44,8 +43,8 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     private String displayName = null;
     private int minimumMultiplicity = 0;
     private int maximumMultiplicity = PropertyDefinition.UNBOUNDED_VALUE;
-    private String propertyType = PropertyType.STRING.getDisplayName();
-    private String propertyTypeClassName = PropertyType.STRING.getClassName();
+    private String propertyType = "String"; //$NON-NLS-1$
+    private String propertyTypeClassName = String.class.getName();
     private boolean requiresRestart = false;
     private String valueDelimiter = null;
     private boolean constrainedToAllowedValues = false;

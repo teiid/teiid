@@ -31,10 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 
 import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.common.actions.ModificationException;

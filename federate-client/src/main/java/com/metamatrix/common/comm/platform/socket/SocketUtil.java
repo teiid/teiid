@@ -43,7 +43,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.core.util.Assertion;
 
 
@@ -258,7 +258,7 @@ public class SocketUtil {
             try {
                 stream = new FileInputStream(name);
             } catch (FileNotFoundException e) {
-                IOException exception = new IOException(CommonPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
+                IOException exception = new IOException(CommPlatformPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
                 exception.initCause(e);
                 throw exception;
             }

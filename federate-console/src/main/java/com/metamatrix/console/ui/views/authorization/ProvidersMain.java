@@ -87,7 +87,6 @@ import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.Refreshable;
 import com.metamatrix.console.util.StaticUtilities;
-import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.toolbox.ui.UIDefaults;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
@@ -440,7 +439,7 @@ public class ProvidersMain extends BasePanel implements
         ServiceComponentDefn serviceDefn = config.getServiceComponentDefn(ResourceNames.MEMBERSHIP_SERVICE);
         Properties currentProps = serviceDefn.getProperties();
         
-        currentProps.put(MembershipServiceInterface.MEMBERSHIP_SERVICE_PROPERTY_PREFIX+".DomainOrder",sb.toString()); //$NON-NLS-1$
+        currentProps.put("security.membership.DomainOrder",sb.toString()); //$NON-NLS-1$
     	
 		getConfigurationManager().modifyService(serviceDefn,currentProps);
     }

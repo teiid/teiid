@@ -27,12 +27,12 @@ package com.metamatrix.console.security;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.admin.api.server.AdminRoles.RoleName;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.ui.views.users.RoleDisplay;

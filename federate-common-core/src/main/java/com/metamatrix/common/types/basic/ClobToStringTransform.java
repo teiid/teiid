@@ -1,0 +1,89 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.types.basic;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.sql.SQLException;
+
+import com.metamatrix.common.types.ClobType;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.InvalidReferenceException;
+import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.core.CorePlugin;
+
+public class ClobToStringTransform extends AnyToStringTransform {
+
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transform(Object value) throws TransformationException {
+        if(value == null) {
+            return value;
+        }
+
+        ClobType source = (ClobType)value;
+        
+        try {
+            BufferedReader reader = new BufferedReader (source.getCharacterStream());
+            StringBuffer contents = new StringBuffer();
+            
+            int chr = reader.read();
+            while (chr != -1 && contents.length() < DataTypeManager.MAX_STRING_LENGTH) {
+                contents.append((char)chr);
+                chr = reader.read();
+            }
+            reader.close();
+            return contents.toString();         
+            
+        } catch (SQLException e) {
+            throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
+        } catch(IOException e) {
+            throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$
+        } catch(InvalidReferenceException e) {
+            throw new TransformationException(e, CorePlugin.Util.getString("remote_lob_access")); //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class getSourceType() {
+        return ClobType.class;
+    }
+    
+    /** 
+     * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
+     */
+    public boolean isNarrowing() {
+        return true;
+    }
+}

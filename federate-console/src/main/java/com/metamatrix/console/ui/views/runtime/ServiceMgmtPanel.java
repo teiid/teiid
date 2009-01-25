@@ -51,7 +51,7 @@ import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.toolbox.ui.UIDefaults;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
@@ -187,7 +187,7 @@ public final class ServiceMgmtPanel
                 // hack for odbc service to display a more appropriate
                 // text when the actual MMODBC service is not running
                 if (service.getName().equalsIgnoreCase("ODBCService") &&
-                    state == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {       
+                    state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {       
                     state =  RuntimeMgmtUtils.ODBC_UNAVAILABLE_SERVICE_STATE;
                 }
                 row.setElementAt(new Integer(state), STATE_COL);

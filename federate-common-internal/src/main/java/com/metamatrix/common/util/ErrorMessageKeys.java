@@ -530,59 +530,6 @@ public interface ErrorMessageKeys {
 		public static final String JDBC_ERR_0064 = "ERR.003.015.0064"; //$NON-NLS-1$
         public static final String JDBC_ERR_0065 = "ERR.003.015.0065"; //$NON-NLS-1$
 
-		/** license (016) */
-//		public static final String LICENSE_ERR_0001 = "ERR.003.016.0001"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0002 = "ERR.003.016.0002"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0003 = "ERR.003.016.0003"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0004 = "ERR.003.016.0004"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0005 = "ERR.003.016.0005"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0006 = "ERR.003.016.0006"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0007 = "ERR.003.016.0007"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0008 = "ERR.003.016.0008"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0009 = "ERR.003.016.0009"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0010 = "ERR.003.016.0010"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0011 = "ERR.003.016.0011"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0012 = "ERR.003.016.0012"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0013 = "ERR.003.016.0013"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0014 = "ERR.003.016.0014"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0015 = "ERR.003.016.0015"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0016 = "ERR.003.016.0016"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0017 = "ERR.003.016.0017"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0018 = "ERR.003.016.0018"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0019 = "ERR.003.016.0019"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0020 = "ERR.003.016.0020"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0021 = "ERR.003.016.0021"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0022 = "ERR.003.016.0022"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0023 = "ERR.003.016.0023"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0024 = "ERR.003.016.0024"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0025 = "ERR.003.016.0025"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0026 = "ERR.003.016.0026"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0027 = "ERR.003.016.0027"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0028 = "ERR.003.016.0028"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0029 = "ERR.003.016.0029"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0030 = "ERR.003.016.0030"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0031 = "ERR.003.016.0031"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0032 = "ERR.003.016.0032"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0033 = "ERR.003.016.0033"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0034 = "ERR.003.016.0034"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0035 = "ERR.003.016.0035"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0036 = "ERR.003.016.0036"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0037 = "ERR.003.016.0037"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0038 = "ERR.003.016.0038"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0039 = "ERR.003.016.0039"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0040 = "ERR.003.016.0040"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0041 = "ERR.003.016.0041"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0042 = "ERR.003.016.0042"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0043 = "ERR.003.016.0043"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0044 = "ERR.003.016.0044"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0045 = "ERR.003.016.0045"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0046 = "ERR.003.016.0046"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0047 = "ERR.003.016.0047"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0048 = "ERR.003.016.0048"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0049 = "ERR.003.016.0049"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0050 = "ERR.003.016.0050"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0051 = "ERR.003.016.0051"; //$NON-NLS-1$
-//		public static final String LICENSE_ERR_0052 = "ERR.003.016.0052"; //$NON-NLS-1$
 
 		/** messaging (017) */
 		public static final String MESSAGING_ERR_0001 = "ERR.003.017.0001"; //$NON-NLS-1$
@@ -650,8 +597,6 @@ public interface ErrorMessageKeys {
 		public static final String PROPERTIES_ERR_0007 = "ERR.003.021.0007"; //$NON-NLS-1$
 		public static final String PROPERTIES_ERR_0008 = "ERR.003.021.0008"; //$NON-NLS-1$
 		public static final String PROPERTIES_ERR_0009 = "ERR.003.021.0009"; //$NON-NLS-1$
-		public static final String PROPERTIES_ERR_0010 = "ERR.003.021.0010"; //$NON-NLS-1$
-		public static final String PROPERTIES_ERR_0011 = "ERR.003.021.0011"; //$NON-NLS-1$
 		public static final String PROPERTIES_ERR_0012 = "ERR.003.021.0012"; //$NON-NLS-1$
 
 		/** proxy (022) */
@@ -778,33 +723,7 @@ public interface ErrorMessageKeys {
 		public static final String TREE_ERR_0071 = "ERR.003.028.0071"; //$NON-NLS-1$
 		public static final String TREE_ERR_0072 = "ERR.003.028.0072"; //$NON-NLS-1$
 
-		/** types (029) */
-		public static final String TYPES_ERR_0001 = "ERR.003.029.0001"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0002 = "ERR.003.029.0002"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0003 = "ERR.003.029.0003"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0004 = "ERR.003.029.0004"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0005 = "ERR.003.029.0005"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0006 = "ERR.003.029.0006"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0007 = "ERR.003.029.0007"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0008 = "ERR.003.029.0008"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0009 = "ERR.003.029.0009"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0010 = "ERR.003.029.0010"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0011 = "ERR.003.029.0011"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0012 = "ERR.003.029.0012"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0013 = "ERR.003.029.0013"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0014 = "ERR.003.029.0014"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0015 = "ERR.003.029.0015"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0016 = "ERR.003.029.0016"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0017 = "ERR.003.029.0017"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0018 = "ERR.003.029.0018"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0019 = "ERR.003.029.0019"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0020 = "ERR.003.029.0020"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0021 = "ERR.003.029.0021"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0022 = "ERR.003.029.0022"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0023 = "ERR.003.029.0023"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0024 = "ERR.003.029.0024"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0025 = "ERR.003.029.0025"; //$NON-NLS-1$
-		public static final String TYPES_ERR_0026 = "ERR.003.029.0026"; //$NON-NLS-1$
+
 
 		/** util (030) */
 		public static final String CM_UTIL_ERR_0001 = "ERR.003.030.0001"; //$NON-NLS-1$
@@ -868,26 +787,16 @@ public interface ErrorMessageKeys {
 		public static final String CM_UTIL_ERR_0059 = "ERR.003.030.0059"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0060 = "ERR.003.030.0060"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0061 = "ERR.003.030.0061"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0062 = "ERR.003.030.0062"; //$NON-NLS-1$
+		
 		public static final String CM_UTIL_ERR_0063 = "ERR.003.030.0063"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0064 = "ERR.003.030.0064"; //$NON-NLS-1$
+		
 		public static final String CM_UTIL_ERR_0065 = "ERR.003.030.0065"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0066 = "ERR.003.030.0066"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0067 = "ERR.003.030.0067"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0068 = "ERR.003.030.0068"; //$NON-NLS-1$
+		
+		
 		public static final String CM_UTIL_ERR_0069 = "ERR.003.030.0069"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0070 = "ERR.003.030.0070"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0071 = "ERR.003.030.0071"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0072 = "ERR.003.030.0072"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0073 = "ERR.003.030.0073"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0074 = "ERR.003.030.0074"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0075 = "ERR.003.030.0075"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0076 = "ERR.003.030.0076"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0077 = "ERR.003.030.0077"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0078 = "ERR.003.030.0078"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0079 = "ERR.003.030.0079"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0080 = "ERR.003.030.0080"; //$NON-NLS-1$
-		public static final String CM_UTIL_ERR_0081 = "ERR.003.030.0081"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0082 = "ERR.003.030.0082"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0083 = "ERR.003.030.0083"; //$NON-NLS-1$
 		public static final String CM_UTIL_ERR_0084 = "ERR.003.030.0084"; //$NON-NLS-1$

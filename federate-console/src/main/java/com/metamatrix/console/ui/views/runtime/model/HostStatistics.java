@@ -30,7 +30,7 @@ import java.util.List;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 
 public class HostStatistics
     implements StatisticsConstants {
@@ -103,17 +103,17 @@ public class HostStatistics
         }
         if (registered) {
             int state = theService.getCurrentState();
-            if (state == ServiceInterface.STATE_OPEN) {
+            if (state == ServiceState.STATE_OPEN) {
                 runningServs.add(theService);
-            } else if (state == ServiceInterface.STATE_CLOSED) {
+            } else if (state == ServiceState.STATE_CLOSED) {
                 stoppedServs.add(theService);
-            } else if (state == ServiceInterface.STATE_FAILED) {
+            } else if (state == ServiceState.STATE_FAILED) {
                 failedServs.add(theService);
-            } else if (state == ServiceInterface.STATE_INIT_FAILED) {
+            } else if (state == ServiceState.STATE_INIT_FAILED) {
                 initFailedServs.add(theService);
-            } else if (state == ServiceInterface.STATE_NOT_INITIALIZED) {
+            } else if (state == ServiceState.STATE_NOT_INITIALIZED) {
                 notInitServs.add(theService);
-            } else if (state == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+            } else if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
                 dataSourceUnavailableServs.add(theService);
             }
         }

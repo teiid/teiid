@@ -31,11 +31,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.metamatrix.console.util.StaticUtilities;
-
-import com.metamatrix.server.transaction.ServerTransaction;
-import com.metamatrix.toolbox.ui.widget.table.DefaultTableModel;
 import com.metamatrix.common.xa.TransactionID;
+import com.metamatrix.console.util.StaticUtilities;
+import com.metamatrix.toolbox.ui.widget.table.DefaultTableModel;
 /**
  * Extension to DefaultSortableTableModel to model the Transactions tab table.
  */
@@ -120,32 +118,35 @@ public class TransactionTableModel extends DefaultTableModel {
     public void resetFromTransactionsList(Collection /*<ServerTransaction>*/ tx) {
         transMap = new HashMap();
         int numRows = tx.size();
-
+        String NA = "N/A"; //$NON-NLS-1$ 
+        
+        // This panel needs to be removed, any transaction information provided
+        // should be on the queries panel.
+        
         //Store list's contents in a matrix-- one row per transaction.
         SimpleDateFormat formatter = StaticUtilities.getDefaultDateFormat();
         Object[][] data = new Object[numRows][NUM_COLUMNS];
         Iterator it = tx.iterator();
         for (int row = 0; it.hasNext(); row++) {
-            ServerTransaction st = (ServerTransaction)it.next();
 
             //getDisplayString() for TransactionID is guaranteed to return a
             //numeric string.
-            data[row][TRANSACTION_ID_COL] = new Long(st.getTransactionID().getID());
-            transMap.put(data[row][TRANSACTION_ID_COL], st.getTransactionID());
-            data[row][SESSION_ID_COL] = st.getSessionToken().getSessionIDValue();
-            data[row][STATUS_COL] = st.getStatusString();
+            data[row][TRANSACTION_ID_COL] = 0L;
+            transMap.put(data[row][TRANSACTION_ID_COL], NA);
+            data[row][SESSION_ID_COL] = NA;
+            data[row][STATUS_COL] = NA;
 
             //Form new Date objects for begin and end time, rather than using
             //the objects returned by ServerTransaction.  This is so we can
             //ensure that we have objects whose toString() method displays both
             //date and time.  toString() for java.sql.Date displays date only.
-            Date beginTime = st.getBeginTime();
+            Date beginTime = new Date();
             if (beginTime == null) {
                 data[row][START_TIME_COL] = null;
             } else {
                 data[row][START_TIME_COL] = formatter.format(new Date(beginTime.getTime()));
             }
-            Date endTime = st.getEndTime();
+            Date endTime = new Date();
             if (endTime == null) {
                 data[row][END_TIME_COL] = null;
             } else {
@@ -153,11 +154,11 @@ public class TransactionTableModel extends DefaultTableModel {
             }
             data[row][CONNECTOR_ID_COL] = null;
             data[row][PROCESSOR_ID_COL] = null;            
-            data[row][DATABASE_COL] = st.getDatabase();
+            data[row][DATABASE_COL] = NA;
 //            if (st.getRequestID() == null) {
 //                data[row][REQUEST_ID_COL] = null;
 //            } else {
-                data[row][REQUEST_ID_COL] = new Long(st.getRequestID());
+                data[row][REQUEST_ID_COL] = new Long(0);
 //            }
         }
         //Set model's data to this matrix.

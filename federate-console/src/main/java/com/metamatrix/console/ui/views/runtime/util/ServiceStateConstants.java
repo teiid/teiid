@@ -25,18 +25,18 @@
 //#############################################################################
 package com.metamatrix.console.ui.views.runtime.util;
 
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 
 public interface ServiceStateConstants {
 
     // state indexes
-    public static final int OPEN = ServiceInterface.STATE_OPEN;
-    public static final int CLOSED = ServiceInterface.STATE_CLOSED;
-    public static final int FAILED = ServiceInterface.STATE_FAILED;
-    public static final int INIT_FAILED = ServiceInterface.STATE_INIT_FAILED;
-    public static final int NOT_INITIALIZED = ServiceInterface.STATE_NOT_INITIALIZED;
-    public static final int NOT_REGISTERED = ServiceInterface.STATE_NOT_REGISTERED;
-    public static final int DATA_SOURCE_UNAVAILABLE = ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE;
+    public static final int OPEN = ServiceState.STATE_OPEN;
+    public static final int CLOSED = ServiceState.STATE_CLOSED;
+    public static final int FAILED = ServiceState.STATE_FAILED;
+    public static final int INIT_FAILED = ServiceState.STATE_INIT_FAILED;
+    public static final int NOT_INITIALIZED = ServiceState.STATE_NOT_INITIALIZED;
+    public static final int NOT_REGISTERED = ServiceState.STATE_NOT_REGISTERED;
+    public static final int DATA_SOURCE_UNAVAILABLE = ServiceState.STATE_DATA_SOURCE_UNAVAILABLE;
     
     public static final int START = 0;
     public static final int STOP = 1;

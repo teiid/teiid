@@ -31,7 +31,6 @@ import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.ScriptsContainer;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.common.config.api.AuthenticationProvider;
 
 
 /**

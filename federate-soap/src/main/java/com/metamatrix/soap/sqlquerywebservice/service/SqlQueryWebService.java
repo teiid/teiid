@@ -64,7 +64,7 @@ import com.metamatrix.soap.sqlquerywebservice.helper.LogInParameters;
 import com.metamatrix.soap.sqlquerywebservice.helper.Results;
 import com.metamatrix.soap.sqlquerywebservice.helper.Row;
 import com.metamatrix.soap.sqlquerywebservice.helper.SqlWarning;
-import com.metamatrix.soap.sqlquerywebservice.log.SqlQueryWebServicePlatformLog;
+import com.metamatrix.soap.sqlquerywebservice.log.LogUtil;
 import com.metamatrix.soap.util.WebServiceUtil;
 
 /**
@@ -463,7 +463,7 @@ public class SqlQueryWebService {
 
 		SqlQueryWebServiceFault fault = SqlQueryWebServiceFault.create(client, e);
 
-		SqlQueryWebServicePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
+		LogUtil.log(MessageLevel.ERROR, e, e.getMessage());
 
 		throw fault;
 	}

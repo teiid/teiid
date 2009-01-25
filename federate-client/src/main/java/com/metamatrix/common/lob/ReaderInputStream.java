@@ -55,7 +55,7 @@ public class ReaderInputStream extends InputStream {
 		this.reader = reader;
 		this.charSet = charSet;
 		this.bufferSize = bufferSize;
-		if (charSet.displayName().equalsIgnoreCase("UTF-16")) {
+		if (charSet.displayName().equalsIgnoreCase("UTF-16")) { //$NON-NLS-1$
 			prefixBytes = 2;
 		}
 	}

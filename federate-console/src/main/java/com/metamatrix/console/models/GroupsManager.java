@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.util.ConsoleConstants;
 import com.metamatrix.console.ui.views.entitlements.PrincipalChangeListener;

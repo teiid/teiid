@@ -23,11 +23,6 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-internal</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.federate</groupId>
       <artifactId>federate-common-core</artifactId>
       <type>test-jar</type>
     </dependency> 

@@ -23,6 +23,11 @@
 			<artifactId>federate-common-core</artifactId>
 			<type>test-jar</type>
 		</dependency>
+    
+        <dependency>
+          <groupId>org.jboss.federate</groupId>
+          <artifactId>federate-client</artifactId>
+        </dependency>    
 		
 		<dependency>
 			<groupId>jdom</groupId>

@@ -38,7 +38,7 @@ import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 
 public final class RuntimeMgmtManager
     extends Manager {
@@ -157,7 +157,7 @@ public final class RuntimeMgmtManager
 
     private boolean isNotRegistered(ServiceData theService) {
         return (theService.getCurrentState() ==
-                ServiceInterface.STATE_NOT_REGISTERED);
+        	ServiceState.STATE_NOT_REGISTERED);
     }
     
     /**
@@ -214,7 +214,7 @@ public final class RuntimeMgmtManager
                                                 ServiceData service =
                                                     (ServiceData)serviceItr.next();
                                                 if (service.getComponentDefnID().getName().equalsIgnoreCase(serviceName)) {
-                                                    if (service.getCurrentState() == ServiceInterface.STATE_OPEN) {
+                                                    if (service.getCurrentState() == ServiceState.STATE_OPEN) {
 //                                                        hostNames.add(host.getName());
                                                         return true;
                                                     }

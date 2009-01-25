@@ -31,7 +31,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 
-import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.core.CorePlugin;
 
 
 /** 
@@ -56,7 +56,7 @@ public class LobChunkInputStream extends InputStream {
     
     public int read() throws IOException {               
         if (this.closed) {
-            throw new IllegalStateException(CommonPlugin.Util.getString("stream_closed")); //$NON-NLS-1$
+            throw new IllegalStateException(CorePlugin.Util.getString("stream_closed")); //$NON-NLS-1$
         }        
         if (this.availableCounter == 0) {
         	if (this.lastChunk) {
@@ -83,7 +83,7 @@ public class LobChunkInputStream extends InputStream {
             this.currentCounter = 0;
             this.availableCounter = this.byteData.length;
         } else {
-            throw new IOException(CommonPlugin.Util.getString("lob.invaliddata")); //$NON-NLS-1$
+            throw new IOException(CorePlugin.Util.getString("lob.invaliddata")); //$NON-NLS-1$
         }
     }
 

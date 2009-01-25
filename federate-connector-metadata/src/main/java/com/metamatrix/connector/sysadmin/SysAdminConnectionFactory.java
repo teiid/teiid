@@ -65,7 +65,7 @@ public class SysAdminConnectionFactory implements ISysAdminConnectionFactory {
      * @since 4.3
      */
     public ISysAdminSource getObjectSource(final SecurityContext context) throws ConnectorException {
-		 ClientServiceRegistry registry = (ClientServiceRegistry)((ConnectorEnvironmentImpl)env).findResource(DQPServiceNames.REGISTRY_SERVICE);
+		 ClientServiceRegistry<?> registry = (ClientServiceRegistry)((ConnectorEnvironmentImpl)env).findResource(DQPServiceNames.REGISTRY_SERVICE);
 		 ServerAdmin serverAdmin = registry.getClientService(ServerAdmin.class);
 		 return new SysAdminObjectSource(serverAdmin, env, sourceTranslator);
     }

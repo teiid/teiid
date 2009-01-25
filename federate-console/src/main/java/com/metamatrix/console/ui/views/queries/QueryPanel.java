@@ -67,7 +67,6 @@ import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
 import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
@@ -401,11 +400,7 @@ public final class QueryPanel
             StaticUtilities.invokeLaterSafe(runnable);
             
 		} catch (ExternalException ee) {
-            if( ee.getCause() != null && ee.getCause() instanceof ServiceNotFoundException) {
-                ExceptionUtility.showQueryServiceNotAvailableFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), ee);     //$NON-NLS-1$
-            } else {
-                ExceptionUtility.showUnspecifiedFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), ee); //$NON-NLS-1$
-            }
+            ExceptionUtility.showUnspecifiedFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), ee); //$NON-NLS-1$
         } catch (Throwable e) {
 			ExceptionUtility.showUnspecifiedFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), e); //$NON-NLS-1$
 		} finally {

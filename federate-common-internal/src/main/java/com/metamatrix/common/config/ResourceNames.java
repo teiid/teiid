@@ -27,7 +27,7 @@ package com.metamatrix.common.config;
 /**
 *   ResourceNames defines the different resources that require
 *   connection properties.  These properties are loaded up by
-*   the {@link CurrentConfiguration} and made availble by calling
+*   the {@link CurrentConfiguration} and made available by calling
 *   the method {@link #getResourceProperties}.  The following
 *   are the basis for the names:
 *     -  CompTypes, excluding connectors (e.g., Config Service, Session Service, etc).
@@ -38,12 +38,9 @@ public interface ResourceNames {
 
     public static final String RUNTIME_METADATA_SERVICE = "RuntimeMetadataService"; //$NON-NLS-1$
     public static final String MEMBERSHIP_SERVICE = "MembershipService"; //$NON-NLS-1$
-    // Txn Mgr properties for Transactional Server product
     public static final String XA_TRANSACTION_MANAGER = "XATransactionManager"; //$NON-NLS-1$
     public static final String INDEXING_SERVICE = "IndexingService"; //$NON-NLS-1$
     public static final String WEB_SERVICES = "WebServices"; //$NON-NLS-1$
     public static final String JGROUPS = "JGroups"; //$NON-NLS-1$
     public static final String SSL = "SSL"; //$NON-NLS-1$
-
-    
 }

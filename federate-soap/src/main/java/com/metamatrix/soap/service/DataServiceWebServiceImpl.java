@@ -43,7 +43,7 @@ import org.apache.axiom.soap.SOAPBody;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.MessageContext;
 
-import com.metamatrix.common.log.LogManager;
+import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.util.StringUtil;
@@ -51,6 +51,7 @@ import com.metamatrix.jdbc.api.SQLStates;
 import com.metamatrix.soap.SOAPPlugin;
 import com.metamatrix.soap.exceptions.SOAPProcessingException;
 import com.metamatrix.soap.security.Credential;
+import com.metamatrix.soap.sqlquerywebservice.log.LogUtil;
 import com.metamatrix.soap.util.EndpointUriTranslatorStrategyImpl;
 import com.metamatrix.soap.util.WebServiceUtil;
 
@@ -186,8 +187,7 @@ public class DataServiceWebServiceImpl {
 
 				} else {
 					final String[] params = { procedure };
-					LogManager.logError(SOAPPlugin.PLUGIN_ID, SOAPPlugin.Util
-							.getString("DataServiceWebServiceImpl.8")); //$NON-NLS-1$
+					LogUtil.log(LogConfiguration.ERROR, SOAPPlugin.Util.getString("DataServiceWebServiceImpl.8")); //$NON-NLS-1$
 					createSOAPFaultMessage(new Exception(SOAPPlugin.Util
 							.getString("DataServiceWebServiceImpl.7", params)), //$NON-NLS-1$
 							SOAPPlugin.Util.getString(
@@ -230,9 +230,8 @@ public class DataServiceWebServiceImpl {
 		} catch (Exception e) {
 			String faultcode = SOAP_11_STANDARD_SERVER_FAULT_CODE;
 			Object[] params = new Object[] { e };
-			String msg = SOAPPlugin.Util.getString(
-					"DataServiceWebServiceImpl.6", params); //$NON-NLS-1$
-			LogManager.logError(SOAPPlugin.PLUGIN_ID, e, msg);
+			String msg = SOAPPlugin.Util.getString("DataServiceWebServiceImpl.6", params); //$NON-NLS-1$
+			LogUtil.log(LogConfiguration.ERROR, e, msg);
 			if (e instanceof SQLException) {
 				final SQLException sqlException = (SQLException) e;
 				if (SQLStates.isUsageErrorState(sqlException.getSQLState())) {
@@ -257,9 +256,7 @@ public class DataServiceWebServiceImpl {
 				 * a SOAP fault just because closing the connection failed.
 				 */
 
-				LogManager.logWarning(SOAPPlugin.PLUGIN_ID, SOAPPlugin.Util
-						.getString("DataServiceWebServiceImpl.3")); //$NON-NLS-1$
-
+				LogUtil.log(LogConfiguration.WARNING, SOAPPlugin.Util.getString("DataServiceWebServiceImpl.3")); //$NON-NLS-1$
 			}
 		}
 		return element;
@@ -351,7 +348,7 @@ public class DataServiceWebServiceImpl {
 			final String faultMessageString, final String faultCode)
 			throws AxisFault {
 
-		LogManager.logError(SOAPPlugin.PLUGIN_ID, e, faultMessageString);
+		LogUtil.log(LogConfiguration.ERROR, e, faultMessageString);
 
 		AxisFault fault = new AxisFault(faultMessageString, faultCode);
 
@@ -402,7 +399,7 @@ public class DataServiceWebServiceImpl {
 			Object[] params2 = new Object[] { e.getMessage() };
 			String s1 = SOAPPlugin.Util.getString(
 					"DataServiceWebServiceImpl.9", params1); //$NON-NLS-1$
-			LogManager.logError(SOAPPlugin.PLUGIN_ID, e, s1);
+			LogUtil.log(LogConfiguration.ERROR, e, s1);
 			String s2 = SOAPPlugin.Util.getString(
 					"DataServiceWebServiceImpl.10", params2); //$NON-NLS-1$
 			createSOAPFaultMessage(e, s2, SOAP_11_STANDARD_SERVER_FAULT_CODE);
@@ -431,12 +428,10 @@ public class DataServiceWebServiceImpl {
 						.parseInt(System
 								.getProperty(WSDLServletUtil.MM_WEBSERVICE_QUERY_TIMEOUT));
 			} catch (NumberFormatException nfe) {
-				LogManager.logWarning(SOAPPlugin.PLUGIN_ID, nfe, SOAPPlugin.Util
-						.getString("DataServiceWebServiceImpl.16")); //$NON-NLS-1$
+				LogUtil.log(LogConfiguration.WARNING, nfe, SOAPPlugin.Util.getString("DataServiceWebServiceImpl.16")); //$NON-NLS-1$
 				timeout = 0;
 			}
 		}
-
 		return timeout;
 	}
 

@@ -32,13 +32,11 @@ import javax.swing.Icon;
 import javax.swing.JTree;
 
 import com.metamatrix.console.ui.views.runtime.util.RuntimeMgmtUtils;
-
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
-import com.metamatrix.platform.service.api.ServiceInterface;
-
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.toolbox.ui.widget.tree.DefaultTreeCellRenderer;
 import com.metamatrix.toolbox.ui.widget.tree.DefaultTreeNode;
 
@@ -117,7 +115,7 @@ public final class RuntimeStateCellRenderer extends DefaultTreeCellRenderer {
             // hack for odbc service to display a more appropriate
             // text when the actual MMODBC service is not running
             if (service.getName().equalsIgnoreCase("ODBCService") &&
-                state == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+                state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
                 state = RuntimeMgmtUtils.ODBC_UNAVAILABLE_SERVICE_STATE;
             } 
             

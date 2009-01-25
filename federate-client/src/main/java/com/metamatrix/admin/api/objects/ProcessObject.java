@@ -26,8 +26,6 @@ package com.metamatrix.admin.api.objects;
 
 import java.net.InetAddress;
 
-import com.metamatrix.common.config.api.VMComponentDefnType;
-
 
 
 /** 
@@ -43,39 +41,39 @@ public interface ProcessObject extends
     /**
      * Proces Min Heap Size Property Name
      */
-    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME; 
+    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.minHeapSize"; //$NON-NLS-1$ VMComponentDefnType.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME; 
     /**
      * Proces Max Heap Size Property Name
      */
-    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = VMComponentDefnType.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME;
+    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.maxHeapSize"; //$NON-NLS-1$ VMComponentDefnType.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME;
     /**
      * Proces Port Property Name
      */
-    public static final String SERVER_PORT = VMComponentDefnType.SERVER_PORT;
+    public static final String SERVER_PORT = "vm.socketPort"; //$NON-NLS-1$ VMComponentDefnType.SERVER_PORT;
     /**
      * Proces Max Treads Property Name
      */
-    public static final String MAX_THREADS = VMComponentDefnType.MAX_THREADS;
+    public static final String MAX_THREADS = "vm.maxThreads"; //$NON-NLS-1$ VMComponentDefnType.MAX_THREADS;
     /**
      * Proces Time To Live Property Name
      */
-    public static final String TIMETOLIVE = VMComponentDefnType.TIMETOLIVE;
+    public static final String TIMETOLIVE = "vm.timetolive"; //$NON-NLS-1$ VMComponentDefnType.TIMETOLIVE;
     /**
      * Proces Import Buffer Size Property Name
      */
-    public static final String INPUT_BUFFER_SIZE = VMComponentDefnType.INPUT_BUFFER_SIZE;
+    public static final String INPUT_BUFFER_SIZE = "vm.inputBufferSize";       //$NON-NLS-1$ VMComponentDefnType.INPUT_BUFFER_SIZE;
     /**
      * Proces Output Buffer Size Property Name
      */
-    public static final String OUTPUT_BUFFER_SIZE = VMComponentDefnType.OUTPUT_BUFFER_SIZE;
+    public static final String OUTPUT_BUFFER_SIZE = "vm.outputBufferSize";       //$NON-NLS-1$ VMComponentDefnType.OUTPUT_BUFFER_SIZE;
     /**
      * Proces Forced Shutdown Time Property Name
      */
-    public static final String FORCED_SHUTDOWN_TIME = VMComponentDefnType.FORCED_SHUTDOWN_TIME;
+    public static final String FORCED_SHUTDOWN_TIME = "vm.forced.shutdown.time"; //$NON-NLS-1$ VMComponentDefnType.FORCED_SHUTDOWN_TIME;
     /**
      * Proces Enabled Flag Property Name
      */
-    public static final String ENABLED_FLAG = VMComponentDefnType.ENABLED_FLAG;
+    public static final String ENABLED_FLAG = "vm.enabled"; //$NON-NLS-1$ VMComponentDefnType.ENABLED_FLAG;
 
     /**
      * Get the {@link Host} Identifier for this MetaMatrix Process

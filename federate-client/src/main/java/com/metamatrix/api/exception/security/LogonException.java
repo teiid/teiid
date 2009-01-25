@@ -24,6 +24,8 @@
 
 package com.metamatrix.api.exception.security;
 
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
+
 /**
  * This exception is thrown when an attempt to log in to obtain a session has failed.
  * Possible reasons include but are not limited to:

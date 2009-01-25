@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 
-import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.core.CorePlugin;
 
 /**
  * A wrapper class, given a InputStream object can convert a underlying 
@@ -53,7 +53,7 @@ public class ByteLobChunkStream  implements LobChunkProducer {
     public LobChunk getNextChunk() throws IOException{
 
         if (this.closed) {
-            throw new IllegalStateException(CommonPlugin.Util.getString("stream_closed")); //$NON-NLS-1$
+            throw new IllegalStateException(CorePlugin.Util.getString("stream_closed")); //$NON-NLS-1$
         }
                 
         // read contents from the stream

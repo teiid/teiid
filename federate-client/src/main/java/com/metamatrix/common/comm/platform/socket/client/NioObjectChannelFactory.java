@@ -41,7 +41,7 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.socket.SSLAwareChannelHandler;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
-import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.core.util.NamedThreadFactory;
 
 public class NioObjectChannelFactory implements ObjectChannelFactory {
 	
@@ -59,7 +59,7 @@ public class NioObjectChannelFactory implements ObjectChannelFactory {
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(0,
 				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 				new SynchronousQueue<Runnable>(),
-				new WorkerPoolFactory.DefaultThreadFactory("Nio")); //$NON-NLS-1$
+				new NamedThreadFactory("Nio")); //$NON-NLS-1$
 		this.channlFactory = new NioClientSocketChannelFactory(executor, executor, workerCount);
 	}
 

@@ -38,13 +38,11 @@ import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.util.property.GuiComponentFactory;
 import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.ui.views.runtime.OperationsPanel;
-
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
-import com.metamatrix.platform.service.api.ServiceInterface;
-
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
 
 public final class RuntimeMgmtUtils
@@ -195,27 +193,6 @@ public final class RuntimeMgmtUtils
         else {
             enablements[START_ORDINAL_POSITION] = true;
         }
-
-        // if has one suspended service then resume can be enabled
-        // if has one open/running service then suspend can be enabled
-//        Collection procs = theHost.getProcesses();
-//        if ((procs != null) && (!procs.isEmpty())) {
-//            Iterator procItr = procs.iterator();
-//            while (procItr.hasNext()) {
-//                if (enablements[RESUME] &&
-//                    enablements[SUSPEND]) {
-//                    break;
-//                }
-//                ProcessData proc = (ProcessData)procItr.next();
-//                boolean[] procEnablements = getOperationsEnablements(proc);
-//                if (!enablements[SUSPEND] && procEnablements[SUSPEND]) {
-//                    enablements[SUSPEND] = true;
-//                }
-//                if (!enablements[RESUME] && procEnablements[RESUME]) {
-//                    enablements[RESUME] = true;
-//                }
-//            }
-//        }
         return enablements;
     }
 
@@ -230,28 +207,6 @@ public final class RuntimeMgmtUtils
         else {
             enablements[START_ORDINAL_POSITION] = true;
         }
-
-        // if has one suspended service then resume can be enabled
-        // if has one open/running service then suspend can be enabled
-//        Collection pscs = theProcess.getPSCs();
-//        if ((pscs != null) && (!pscs.isEmpty())) {
-//            Iterator pscItr = pscs.iterator();
-//            while (pscItr.hasNext()) {
-//                if (enablements[RESUME] &&
-//                    enablements[SUSPEND]) {
-//                    break;
-//                }
-//                PSCData psc = (PSCData)pscItr.next();
-//                boolean[] pscEnablements =
-//                    getOperationsEnablements(psc, theProcess);
-//                if (!enablements[SUSPEND] && pscEnablements[SUSPEND]) {
-//                    enablements[SUSPEND] = true;
-//                }
-//                if (!enablements[RESUME] && pscEnablements[RESUME]) {
-//                    enablements[RESUME] = true;
-//                }
-//            }
-//        }
         return enablements;
     }
 
@@ -278,25 +233,14 @@ public final class RuntimeMgmtUtils
         if ((services != null) && (!services.isEmpty())) {
             Iterator servItr = services.iterator();
             while (servItr.hasNext()) {
-//                if (enablements[RESUME] &&
-//                    enablements[SUSPEND]) {
-//                    break;
-//                }
                 ServiceData service = (ServiceData)servItr.next();
                 int state = service.getCurrentState();
-//                if (!enablements[SUSPEND] &&
-//                    (state == ServiceInterface.STATE_OPEN)) {
-//                    enablements[SUSPEND] = true;
-//                }
-//                if (!enablements[RESUME] &&
-//                    (state == ServiceInterface.STATE_SUSPENDED)) {
-//                    enablements[RESUME] = true;
-//                }
-                if(state != ServiceInterface.STATE_OPEN){
+
+                if(state != ServiceState.STATE_OPEN){
                     enablements[START_ORDINAL_POSITION] = true;
-                } else if (state == ServiceInterface.STATE_INIT_FAILED || 
-                                state == ServiceInterface.STATE_FAILED ||
-                                state == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+                } else if (state == ServiceState.STATE_INIT_FAILED || 
+                                state == ServiceState.STATE_FAILED ||
+                                state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
                     enablements[SHOW_SERVICE_ERROR_ORDINAL_POSITION] = true;
                 }
             }
@@ -316,19 +260,19 @@ public final class RuntimeMgmtUtils
 
     public static Color getServiceStateColor(int theState) {
         Color color = null;
-        if (theState == ServiceInterface.STATE_OPEN) {
+        if (theState == ServiceState.STATE_OPEN) {
             color = getColor("state.open.color");
-        } else if (theState == ServiceInterface.STATE_CLOSED) {
+        } else if (theState == ServiceState.STATE_CLOSED) {
             color = getColor("state.closed.color");
-        } else if (theState == ServiceInterface.STATE_FAILED) {
+        } else if (theState == ServiceState.STATE_FAILED) {
             color = getColor("state.failed.color");
-        } else if (theState == ServiceInterface.STATE_INIT_FAILED) {
+        } else if (theState == ServiceState.STATE_INIT_FAILED) {
             color = getColor("state.initfailed.color");
-        } else if (theState == ServiceInterface.STATE_NOT_INITIALIZED) {
+        } else if (theState == ServiceState.STATE_NOT_INITIALIZED) {
             color = getColor("state.notinit.color");
-        } else if (theState == ServiceInterface.STATE_NOT_REGISTERED) {
+        } else if (theState == ServiceState.STATE_NOT_REGISTERED) {
             color = getColor("state.notregisteredservice.color");
-        } else if (theState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+        } else if (theState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
             color = getColor("state.datasourceunavailable.color");
         }
         return color;
@@ -336,19 +280,19 @@ public final class RuntimeMgmtUtils
 
     public static String getServiceStateText(int theState) {
         String stateTxt = getString("state.unknown");
-        if (theState == ServiceInterface.STATE_OPEN) {
+        if (theState == ServiceState.STATE_OPEN) {
             stateTxt = getString("state.open");
-        } else if (theState == ServiceInterface.STATE_CLOSED) {
+        } else if (theState == ServiceState.STATE_CLOSED) {
             stateTxt = getString("state.closed");
-        } else if (theState == ServiceInterface.STATE_FAILED) {
+        } else if (theState == ServiceState.STATE_FAILED) {
             stateTxt = getString("state.failed");
-        } else if (theState == ServiceInterface.STATE_INIT_FAILED) {
+        } else if (theState == ServiceState.STATE_INIT_FAILED) {
             stateTxt = getString("state.initfailed");
-        } else if (theState == ServiceInterface.STATE_NOT_INITIALIZED) {
+        } else if (theState == ServiceState.STATE_NOT_INITIALIZED) {
             stateTxt = getString("state.notinit");
-        } else if (theState == ServiceInterface.STATE_NOT_REGISTERED) {
+        } else if (theState == ServiceState.STATE_NOT_REGISTERED) {
             stateTxt = getString("state.notregistered");
-        } else if (theState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+        } else if (theState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
             stateTxt = getString("state.datasourceunavailable");
         } else if (theState == ODBC_UNAVAILABLE_SERVICE_STATE) {
             // this is a hack, because there are too many places to update
