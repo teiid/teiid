@@ -47,7 +47,7 @@ import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.HostManagement;
@@ -897,16 +897,16 @@ public class ServerAdminImpl implements ServerAdmin {
     
     
     private boolean isStateStopped(int state) {
-        return state != ServiceInterface.STATE_OPEN &&
-            state != ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE;
+        return state != ServiceState.STATE_OPEN &&
+            state != ServiceState.STATE_DATA_SOURCE_UNAVAILABLE;
     }
     
 
     private boolean isStateAttempted(int state) {
-        return state == ServiceInterface.STATE_OPEN ||
-            state == ServiceInterface.STATE_FAILED ||
-            state == ServiceInterface.STATE_INIT_FAILED ||            
-            state == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE;
+        return state == ServiceState.STATE_OPEN ||
+            state == ServiceState.STATE_FAILED ||
+            state == ServiceState.STATE_INIT_FAILED ||            
+            state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE;
     }
 
     /** 

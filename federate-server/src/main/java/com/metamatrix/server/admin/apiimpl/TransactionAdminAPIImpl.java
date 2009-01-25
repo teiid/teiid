@@ -27,11 +27,11 @@ package com.metamatrix.server.admin.apiimpl;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.xa.TransactionID;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.platform.admin.apiimpl.AdminAPIHelper;

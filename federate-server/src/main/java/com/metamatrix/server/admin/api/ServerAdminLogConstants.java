@@ -22,9 +22,11 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.admin.api;
+package com.metamatrix.server.admin.api;
 
-public interface PlatformAdminLogConstants {
+import com.metamatrix.platform.admin.api.PlatformAdminLogConstants;
+
+public interface ServerAdminLogConstants extends PlatformAdminLogConstants {
 
 //**********************************************************************
 //PLEASE NOTE:!!!!!!!!!!!!!!!!!
@@ -32,11 +34,6 @@ public interface PlatformAdminLogConstants {
 //com.metamatrix.common.util.LogContextsUtil
 //**********************************************************************
 
-	// Platform Admin logging contexts
-    public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_ADMIN_API_CONNECTION = "ADMIN_API_CONNECTION"; //$NON-NLS-1$
-    public static final String CTX_AUTHORIZATION_ADMIN_API = "AUTHORIZATION_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_CONFIGURATION_ADMIN_API = "CONFIGURATION_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_RUNTIME_STATE_ADMIN_API = "RUNTIME_STATE_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_EXTENSION_SOURCE_ADMIN_API = "EXTENSION_SOURCE_ADMIN_API"; //$NON-NLS-1$
+	// Server Admin logging contexts
+    public static final String CTX_RUNTIME_METADATA_ADMIN_API = "RUNTIME_METADATA_ADMIN_API"; //$NON-NLS-1$
 }

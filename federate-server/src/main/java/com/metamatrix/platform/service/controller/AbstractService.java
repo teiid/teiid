@@ -48,6 +48,7 @@ import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceClosedException;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceNotInitializedException;
@@ -62,7 +63,7 @@ import com.metamatrix.platform.vm.controller.VMControllerID;
 public abstract class AbstractService implements ServiceInterface, EventObjectListener {
 
     // current state, default to not initialized.
-    private int state = STATE_NOT_INITIALIZED;
+    private int state = ServiceState.STATE_NOT_INITIALIZED;
 
     // Service type, used to look up in registry.
     private String serviceType;
@@ -316,19 +317,19 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
     public void checkState() throws ServiceStateException {
 
-        if (state == STATE_OPEN) {
+        if (state == ServiceState.STATE_OPEN) {
             return;
         }
 
-        if (state == STATE_NOT_INITIALIZED) {
+        if (state == ServiceState.STATE_NOT_INITIALIZED) {
             throw new ServiceNotInitializedException(ServiceMessages.SERVICE_0009, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0009, this.getServiceName(), id));
         }
 
-        if (state == STATE_CLOSED) {
+        if (state == ServiceState.STATE_CLOSED) {
             throw new ServiceClosedException(ServiceMessages.SERVICE_0010, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0010, this.getServiceName(), id));
         }
 
-        if (state == STATE_DATA_SOURCE_UNAVAILABLE) {
+        if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
             throw new ServiceClosedException(ServiceMessages.SERVICE_0069, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0069, this.getServiceName(), id));
         }
 
@@ -339,35 +340,35 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * Helper method to set state to open.
      */
     private final void markAsOpen() {
-    	updateState(STATE_OPEN);
+    	updateState(ServiceState.STATE_OPEN);
     }
 
     /**
      * Helper method to set state to closed.
      */
     private final void markAsClosed() {
-    	updateState(STATE_CLOSED);
+    	updateState(ServiceState.STATE_CLOSED);
     }
     
     /**
      * Return true if service has been initialized.
      */
     public final boolean isInitialized() {
-        return state != STATE_NOT_INITIALIZED;
+        return state != ServiceState.STATE_NOT_INITIALIZED;
     }
 
     /**
      * Return true if service is open
      */
     public final boolean isOpen() {
-        return state == STATE_OPEN;
+        return state == ServiceState.STATE_OPEN;
     }
 
     /**
      * Return true if service is closed.
      */
     public final boolean isClosed() {
-        return state == STATE_CLOSED;
+        return state == ServiceState.STATE_CLOSED;
     }
 
 

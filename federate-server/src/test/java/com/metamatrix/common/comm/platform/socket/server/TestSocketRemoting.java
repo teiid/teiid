@@ -35,9 +35,9 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;

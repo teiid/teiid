@@ -6,7 +6,7 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.cache.FakeCache;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;

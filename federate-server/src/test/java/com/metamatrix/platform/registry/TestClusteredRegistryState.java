@@ -43,7 +43,7 @@ import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.platform.registry.ClusteredRegistryState.CacheNodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 
@@ -306,7 +306,7 @@ public class TestClusteredRegistryState extends TestCase {
 	static ServiceRegistryBinding buildServiceRegistryBinding(int id, VMControllerID vmId, String type) {
 		ServiceID sid = new ServiceID(id, vmId);
 		//ServiceInterface si = SimpleMock.createSimpleMock(ServiceInterface.class);
-	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, vmId.getHostName(), null, null, ServiceInterface.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
+	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, vmId.getHostName(), null, null, ServiceState.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

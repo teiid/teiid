@@ -34,10 +34,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
@@ -65,6 +65,7 @@ import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
@@ -268,7 +269,7 @@ public class RuntimeStateAdminAPIHelper {
         
         for(ServiceRegistryBinding binding:bindings) {
         	int currentState = binding.getCurrentState();
-        	if (binding.getServiceType().equals(serviceType) && (currentState == ServiceInterface.STATE_OPEN || currentState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE)) {
+        	if (binding.getServiceType().equals(serviceType) && (currentState == ServiceState.STATE_OPEN || currentState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE)) {
         		list.add(binding);
         	}
         }
@@ -419,13 +420,13 @@ public class RuntimeStateAdminAPIHelper {
                                 ServiceID serviceID = sData.getServiceID();
                                 try {
                                     switch (sData.getCurrentState()) {
-                                        case ServiceInterface.STATE_CLOSED:
-                                        case ServiceInterface.STATE_FAILED:
-                                        case ServiceInterface.STATE_INIT_FAILED:
+                                        case ServiceState.STATE_CLOSED:
+                                        case ServiceState.STATE_FAILED:
+                                        case ServiceState.STATE_INIT_FAILED:
                                             vmController.startService(serviceID);
                                             break;
 
-                                        case ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE:
+                                        case ServiceState.STATE_DATA_SOURCE_UNAVAILABLE:
                                             vmController.checkService(serviceID);
                                             break;
 

@@ -32,12 +32,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.ComponentCommunicationException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;

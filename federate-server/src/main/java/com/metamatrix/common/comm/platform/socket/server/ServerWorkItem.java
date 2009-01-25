@@ -52,13 +52,14 @@ import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.ILogon;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.server.util.LogConstants;
 
 public class ServerWorkItem implements Runnable {
 	private final ClientInstance socketClientInstance;
 	private final Serializable messageKey;
     private final Message message;
-    private final ClientServiceRegistry server;
+    private final ClientServiceRegistry<SessionServiceInterface> server;
     
     public ServerWorkItem(ClientInstance socketClientInstance,
 			Serializable messageKey, Message message,

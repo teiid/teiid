@@ -38,9 +38,10 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
+import com.metamatrix.server.ResourceFinder;
 
 public class ServiceRegistryBinding implements Serializable {
 
@@ -226,9 +227,9 @@ public class ServiceRegistryBinding implements Serializable {
     }
 
     public boolean isServiceBad() {
-        return (currentState == ServiceInterface.STATE_CLOSED ||
-                currentState == ServiceInterface.STATE_FAILED ||
-                currentState == ServiceInterface.STATE_INIT_FAILED);
+        return (currentState == ServiceState.STATE_CLOSED ||
+                currentState == ServiceState.STATE_FAILED ||
+                currentState == ServiceState.STATE_INIT_FAILED);
     }
 
     public Collection getQueueNames() {
@@ -302,11 +303,11 @@ public class ServiceRegistryBinding implements Serializable {
 	}
 	
 	public boolean isActive() {
-		return (this.currentState == ServiceInterface.STATE_OPEN || this.currentState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE);		
+		return (this.currentState == ServiceState.STATE_OPEN || this.currentState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);		
 	}
 	
 	public void markServiceAsBad() {
-		this.currentState = ServiceInterface.STATE_FAILED;
+		this.currentState = ServiceState.STATE_FAILED;
 		setService(null);
 	}
 }

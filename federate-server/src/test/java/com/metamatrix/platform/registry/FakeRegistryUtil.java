@@ -49,8 +49,7 @@ import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.service.controller.AbstractService;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.query.service.QueryService;
@@ -92,7 +91,7 @@ public class FakeRegistryUtil {
 		registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getVMControllerID().toString(), new ServiceRegistryBinding(sid1, new FakeQueryService(sid1), QueryService.SERVICE_NAME,
                                                                     "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                     "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                    AbstractService.STATE_CLOSED,
+                                                                    ServiceState.STATE_CLOSED,
                                                                     new Date(),  
                                                                     false, new NoOpMessageBus()));
 
@@ -100,7 +99,7 @@ public class FakeRegistryUtil {
 		registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getVMControllerID().toString(), new ServiceRegistryBinding(sid2, new FakeQueryService(sid2), QueryService.SERVICE_NAME,
                 "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                 "dqp3", "3.3.3.3", (DeployedComponent)new FakeConfiguration().deployedComponents.get(5), null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                AbstractService.STATE_CLOSED,
+                ServiceState.STATE_CLOSED,
                 new Date(),  
                 false, new NoOpMessageBus())); 
 		
@@ -133,7 +132,7 @@ public class FakeRegistryUtil {
 		BasicDeployedComponent deployedComponent = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID(), connectorBindingID1, pscID,ConnectorBindingType.CONNECTOR_TYPE_ID);
 		deployedComponent.setDescription(name); 
 		
-	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent, null, ServiceInterface.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
+	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent, null, ServiceState.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

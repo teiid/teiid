@@ -36,10 +36,10 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
-import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;

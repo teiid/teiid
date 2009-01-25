@@ -45,7 +45,7 @@ import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.server.HostManagement;
 
@@ -244,7 +244,7 @@ public class SystemStateBuilder {
                     list.add(new ServiceData(null, dCmp.getComponentTypeID().getFullName(),
                                              null, dCmp.getServiceComponentDefnID(),
                                              dCmp, null,
-                                             ServiceInterface.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered.
+                                             ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered.
     
                     deployedComponents.remove(dCmp);
                 }
@@ -316,7 +316,7 @@ public class SystemStateBuilder {
             list.add(new ServiceData(null, dCmp.getComponentTypeID().getName(),
                                      null, dCmp.getServiceComponentDefnID(),
                                      dCmp, null,
-                                     ServiceInterface.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered
+                                     ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered
         }
 
 

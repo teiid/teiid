@@ -24,9 +24,9 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 

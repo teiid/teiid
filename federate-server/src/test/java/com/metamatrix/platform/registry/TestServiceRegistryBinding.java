@@ -35,6 +35,7 @@ import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceClosedException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.server.query.service.QueryService;
@@ -48,7 +49,7 @@ public class TestServiceRegistryBinding extends TestCase {
 	private static class FakeServiceImpl extends AbstractService implements FakeServiceInterface {
 
 		public FakeServiceImpl() {
-			this.updateState(ServiceInterface.STATE_OPEN);
+			this.updateState(ServiceState.STATE_OPEN);
 		}
 		
 		@Override
@@ -82,7 +83,7 @@ public class TestServiceRegistryBinding extends TestCase {
     	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, service, QueryService.SERVICE_NAME,
                                                                     "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                     "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                    AbstractService.STATE_CLOSED,
+                                                                    ServiceState.STATE_CLOSED,
                                                                     new Date(),  
                                                                     false, new NoOpMessageBus()); 
 		

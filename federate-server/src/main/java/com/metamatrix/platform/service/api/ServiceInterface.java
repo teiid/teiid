@@ -35,14 +35,6 @@ import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public interface ServiceInterface {
 
-    public static final int STATE_NOT_INITIALIZED = 0;
-    public static final int STATE_OPEN = 1;
-    public static final int STATE_CLOSED = 2;
-    public static final int STATE_FAILED = 3;
-    public static final int STATE_INIT_FAILED = 4;
-    public static final int STATE_NOT_REGISTERED = 5;
-    public static final int STATE_DATA_SOURCE_UNAVAILABLE = 6;
-
     /** Time to wait for queues to clear before giving up (1 min)*/
     public static final int WAIT_TO_DIE_TIME = 1000 * 60;
 

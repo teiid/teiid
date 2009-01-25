@@ -78,7 +78,6 @@ import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
@@ -92,10 +91,12 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.util.ServerPropertyNames;
 
@@ -362,9 +363,9 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         if (monitoringEnabled) {
             ConnectionStatus status = connectorMgr.getStatus();
             int state = getCurrentState();
-            if (state == STATE_OPEN) {
+            if (state == ServiceState.STATE_OPEN) {
                 if (status.getStatus().equals(AliveStatus.DEAD)) {
-                    updateState(STATE_DATA_SOURCE_UNAVAILABLE);
+                    updateState(ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);
                     
                     logOK("ConnectorService.Change_state_to_data_source_unavailable", connectorMgrName); //$NON-NLS-1$
                     
@@ -372,16 +373,16 @@ public class ConnectorService extends AbstractService implements ConnectorServic
                 }
             }
             
-            if (state == STATE_DATA_SOURCE_UNAVAILABLE) {                  
+            if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {                  
                 if (status.getStatus().equals(AliveStatus.ALIVE)) {
-                    this.updateState(STATE_OPEN);
+                    this.updateState(ServiceState.STATE_OPEN);
                     
                     logOK("ConnectorService.Change_state_to_open", connectorMgrName); //$NON-NLS-1$                
                 }            
             }
         }
         
-        if (getCurrentState() != STATE_DATA_SOURCE_UNAVAILABLE) { 
+        if (getCurrentState() != ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) { 
             super.checkState();
         }
     }

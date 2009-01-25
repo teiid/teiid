@@ -25,9 +25,9 @@
 package com.metamatrix.platform.admin.apiimpl;
 
 import com.metamatrix.admin.AdminPlugin;
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.log.MessageLevel;

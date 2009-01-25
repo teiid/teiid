@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.comm.ClientServiceRegistry;

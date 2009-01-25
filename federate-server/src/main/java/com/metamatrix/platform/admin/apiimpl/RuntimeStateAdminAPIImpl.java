@@ -32,12 +32,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.I18nLogManager;
@@ -63,6 +63,7 @@ import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
@@ -688,13 +689,13 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                 ServiceID serviceID = serviceData.getServiceID();
                 try {
                     switch (serviceData.getCurrentState()) {
-                        case ServiceInterface.STATE_CLOSED:
-                        case ServiceInterface.STATE_FAILED:
-                        case ServiceInterface.STATE_INIT_FAILED:
+                        case ServiceState.STATE_CLOSED:
+                        case ServiceState.STATE_FAILED:
+                        case ServiceState.STATE_INIT_FAILED:
                             vm.startService(serviceID);
                             break;
 
-                        case ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE:
+                        case ServiceState.STATE_DATA_SOURCE_UNAVAILABLE:
                             vm.checkService(serviceID);
                             break;
 

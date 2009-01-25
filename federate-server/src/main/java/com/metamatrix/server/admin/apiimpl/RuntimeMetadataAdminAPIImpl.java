@@ -36,10 +36,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.net.ServerSocketConfiguration;

@@ -37,6 +37,7 @@ import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.connection.ManagedConnectionException;
+import com.metamatrix.platform.security.api.BasicMetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -45,7 +46,6 @@ import com.metamatrix.platform.security.authorization.cache.AuthorizationCache;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceTransaction;
 import com.metamatrix.platform.security.authorization.spi.FakeAuthorizationSource;
 import com.metamatrix.platform.security.authorization.spi.TestFakeAuthorizationSource;
-import com.metamatrix.platform.security.membership.BasicMetaMatrixPrincipal;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 
 public class TestAuthorizationServiceImpl extends TestCase {

@@ -76,7 +76,6 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.ZipFileUtil;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
@@ -103,6 +102,7 @@ import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.platform.util.ErrorMessageKeys;
@@ -112,6 +112,7 @@ import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.util.VMResources;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.server.HostManagement;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.admin.api.QueryAdminAPI;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
 import com.metamatrix.server.admin.api.TransactionAdminAPI;
@@ -176,7 +177,7 @@ public abstract class VMController implements VMControllerInterface {
     // Server events that are being generated
     ServerEvents events;
     
-    protected ClientServiceRegistry clientServices;
+    protected ClientServiceRegistry<SessionServiceInterface> clientServices;
     private Map<ComponentTypeID, Properties> defaultPropertiesCache = new HashMap<ComponentTypeID, Properties>();
     private Properties hostProperties;
 
@@ -657,7 +658,7 @@ public abstract class VMController implements VMControllerInterface {
         validateServiceID(serviceID);
 
         // if service is not running then don't try to stop.
-        if (serviceBinding.getService() != null && serviceBinding.getCurrentState() != ServiceInterface.STATE_INIT_FAILED) {
+        if (serviceBinding.getService() != null && serviceBinding.getCurrentState() != ServiceState.STATE_INIT_FAILED) {
             stopService(serviceBinding, now, true);
         }
 
@@ -965,8 +966,8 @@ public abstract class VMController implements VMControllerInterface {
         }
 
         // Do not kill a service that was not intialized. May throw meaningless exception
-        if (currentState != ServiceInterface.STATE_INIT_FAILED &&
-            currentState != ServiceInterface.STATE_CLOSED) {
+        if (currentState != ServiceState.STATE_INIT_FAILED &&
+            currentState != ServiceState.STATE_CLOSED) {
             if (!now) {
                 service.die(); // throws ServiceException
             } else {
@@ -1011,8 +1012,8 @@ public abstract class VMController implements VMControllerInterface {
 
         try {
             //Only check state of OPEN and DATA_SOURCE_UNAVAILABLE services
-            if (currentState == ServiceInterface.STATE_OPEN ||
-                currentState == ServiceInterface.STATE_DATA_SOURCE_UNAVAILABLE) {
+            if (currentState == ServiceState.STATE_OPEN ||
+                currentState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
                 service.checkState(); // throws ServiceException
             }
         } catch (ServiceException e) {

@@ -22,14 +22,42 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.admin.api;
+package com.metamatrix.platform.service.api.event;
 
 import java.util.EventObject;
 
-public class RuntimeStateChangeEvent extends EventObject{
+import com.metamatrix.platform.service.api.ServiceID;
 
-    public RuntimeStateChangeEvent(Object source){
+public class ServiceEvent extends EventObject {
+
+    private ServiceID serviceID;
+    private ServiceEvent serviceEvent;
+
+    public ServiceEvent(Object source) {
         super(source);
+    }
+
+    public ServiceEvent(Object source, ServiceID serviceID) {
+        super(source);
+        this.serviceID = serviceID;
+    }
+
+    public ServiceEvent(Object source, ServiceEvent event) {
+        this(source);
+        this.serviceEvent = event;
+    }
+
+    public ServiceEvent(Object source, ServiceID serviceID, ServiceEvent event) {
+        this(source, serviceID);
+        this.serviceEvent = event;
+    }
+
+    public ServiceID getServiceID() {
+        return this.serviceID;
+    }
+
+    public ServiceEvent getServiceEvent() {
+        return this.serviceEvent;
     }
 
 }

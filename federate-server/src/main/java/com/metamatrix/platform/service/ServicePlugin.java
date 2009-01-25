@@ -22,14 +22,24 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.admin.api;
+package com.metamatrix.platform.service;
 
-import java.io.Serializable;
+import java.util.ResourceBundle;
+import com.metamatrix.core.BundleUtil;
 
 /**
- * This is the base interface of all subsystem administrative API interfaces.
+ * PlatformPlugin
+ * <p>Used here in <code>platform</code> to have access to the new
+ * logging framework for <code>LogManager</code>.</p>
  */
-public interface SubSystemAdminAPI extends Serializable {
+public class ServicePlugin { // extends Plugin {
 
+    /**
+     * The plug-in identifier of this plugin
+     * (value <code>"com.metamatrix.platform"</code>).
+     */
+    public static final String PLUGIN_ID = "com.metamatrix.platform.service" ; //$NON-NLS-1$
+
+	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
+	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 }
-

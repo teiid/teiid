@@ -27,10 +27,10 @@ package com.metamatrix.platform.admin.apiimpl;
 import java.util.Collection;
 import java.util.List;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;

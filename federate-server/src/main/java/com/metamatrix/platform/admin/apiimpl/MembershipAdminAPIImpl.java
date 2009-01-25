@@ -31,12 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
-import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.common.util.MultipleRequestConfirmation;
 import com.metamatrix.platform.admin.api.MembershipAdminAPI;
 import com.metamatrix.platform.security.api.Credentials;

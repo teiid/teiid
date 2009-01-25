@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Properties;
 
 import com.google.inject.Inject;
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.common.application.ApplicationEnvironment;

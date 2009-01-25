@@ -62,7 +62,7 @@ public class TestCommSockets extends TestCase {
 
 	public void testFailedConnect() throws Exception {
 		InetSocketAddress addr = new InetSocketAddress(0);
-		ClientServiceRegistry csr = new ClientServiceRegistry(
+		ClientServiceRegistry<SessionServiceInterface> csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
 		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
@@ -114,7 +114,7 @@ public class TestCommSockets extends TestCase {
 			SSLEngine serverSSL, boolean isClientEncryptionEnabled, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
 		InetSocketAddress addr = new InetSocketAddress(0);
-		ClientServiceRegistry csr = new ClientServiceRegistry(
+		ClientServiceRegistry<SessionServiceInterface> csr = new ClientServiceRegistry(
 				mock(SessionServiceInterface.class));
 		csr.registerClientService(ILogon.class, new LogonImpl(csr
 				.getSessionService(), "fakeCluster") { //$NON-NLS-1$

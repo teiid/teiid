@@ -40,8 +40,8 @@ import com.metamatrix.platform.registry.FakeRegistryUtil;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
-import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.service.controller.FakeService;
 import com.metamatrix.platform.service.controller.FakeServiceInterface;
 import com.metamatrix.server.query.service.QueryService;
@@ -99,7 +99,7 @@ public class TestProxies extends TestCase {
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus());         	
             serviceBindings.add(binding);
@@ -153,7 +153,7 @@ public class TestProxies extends TestCase {
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus());        	
             serviceBindings.add(binding);

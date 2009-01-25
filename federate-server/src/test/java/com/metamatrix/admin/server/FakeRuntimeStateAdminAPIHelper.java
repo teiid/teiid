@@ -52,8 +52,8 @@ import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.platform.vm.controller.VMStatistics;
 import com.metamatrix.server.connector.service.ConnectorService;
@@ -132,7 +132,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
                                                                         "connectorBinding2", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
                                                                         "connectorBinding2", "2.2.2.2", deployedComponent, null,   //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(), false, new NoOpMessageBus());
             return binding;
         } else if (serviceID.getID() == 3) {
@@ -141,7 +141,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
                                                                         "connectorBinding3", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
                                                                         "connectorBinding3", "3.3.3.3", deployedComponent, null,  //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(), false, new NoOpMessageBus());                                                                        
             return binding;
             
@@ -152,7 +152,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp2", "2.2.2.2", deployedComponent, null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus()); 
             return binding;
@@ -162,7 +162,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
                                                                         "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp3", "3.3.3.3", deployedComponent, null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        AbstractService.STATE_CLOSED,
+                                                                        ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus()); 
             return binding;

@@ -27,9 +27,9 @@ package com.metamatrix.metadata.runtime;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;

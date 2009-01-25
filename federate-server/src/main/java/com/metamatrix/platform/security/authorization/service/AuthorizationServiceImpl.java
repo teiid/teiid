@@ -35,15 +35,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
-import com.metamatrix.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
-import com.metamatrix.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
@@ -265,7 +265,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      *                        request and all dependants.
      * @return true if the specified principal is granted access to the requested resources,
      *         or false otherwise
-     * @throws com.metamatrix.api.exception.security.InvalidSessionException
+     * @throws com.metamatrix.admin.api.exception.security.InvalidSessionException
      *                                  if the session token for this cache is not valid
      * @throws com.metamatrix.api.exception.security.AuthorizationMgmtException
      *                                  if this service is unable to locate resources required

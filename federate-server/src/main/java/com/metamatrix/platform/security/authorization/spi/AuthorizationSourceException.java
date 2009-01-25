@@ -22,16 +22,22 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.security.membership.spi;
+package com.metamatrix.platform.security.authorization.spi;
 
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 
-public class MembershipSourceException extends MetaMatrixSecurityException {
+/**
+ * Thrown when an exception has occured in the Authorization Source.
+ * This exception will have been something other than a communication error
+ * with the source.
+ * @see AuthorizationSourceConnectionException
+ */
+public class AuthorizationSourceException extends MetaMatrixSecurityException {
 
     /**
      * No-arg CTOR
      */
-    public MembershipSourceException(  ) {
+    public AuthorizationSourceException(  ) {
         super(  );
     }
     /**
@@ -39,7 +45,7 @@ public class MembershipSourceException extends MetaMatrixSecurityException {
      * message is a String that describes this particular exception.
      * @param the detail message
      */
-    public MembershipSourceException(String message) {
+    public AuthorizationSourceException(String message) {
     	super(message);
     }
     /**
@@ -47,7 +53,7 @@ public class MembershipSourceException extends MetaMatrixSecurityException {
      * single exception.
      * @param e the exception that is encapsulated by this exception
      */
-    public MembershipSourceException(Throwable e) {
+    public AuthorizationSourceException(Throwable e) {
         super(e);
     }
     /**
@@ -57,7 +63,7 @@ public class MembershipSourceException extends MetaMatrixSecurityException {
      * @param message the detail message
      * @param e the exception that is encapsulated by this exception
      */
-    public MembershipSourceException( Throwable e, String message ) {
+    public AuthorizationSourceException( Throwable e, String message ) {
         super(e, message);
     }
     /**
@@ -66,7 +72,7 @@ public class MembershipSourceException extends MetaMatrixSecurityException {
      * @param message The error message
      * @param code    The error code 
      */
-    public MembershipSourceException( String code, String message ) {
+    public AuthorizationSourceException( String code, String message ) {
         super( message );
         setCode( code );
     }
@@ -78,7 +84,7 @@ public class MembershipSourceException extends MetaMatrixSecurityException {
      * @param message The error message
      * @param code    The error code 
      */
-    public MembershipSourceException( Throwable e, String code, String message ) {
+    public AuthorizationSourceException( Throwable e, String code, String message ) {
         super( e, code, message );
     }
 }
