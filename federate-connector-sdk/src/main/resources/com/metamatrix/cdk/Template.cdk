@@ -2,11 +2,11 @@
 <ConfigurationDocument>
     <Header>
         <ApplicationCreatedBy>Connector Development Kit</ApplicationCreatedBy>
-        <ApplicationVersionCreatedBy>4.1:1788</ApplicationVersionCreatedBy>
+        <ApplicationVersionCreatedBy>${pom.version}</ApplicationVersionCreatedBy>
         <UserCreatedBy>MetaMatrixAdmin</UserCreatedBy>
         <DocumentTypeVersion>1.0</DocumentTypeVersion>
-        <MetaMatrixSystemVersion>4.1</MetaMatrixSystemVersion>
-        <Time>2004-01-30T15:22:05.296-06:00</Time>
+        <MetaMatrixSystemVersion>${pom.version}</MetaMatrixSystemVersion>
+        <Time>@build-date@</Time>
     </Header>
     <ComponentTypes>
         <ComponentType Name="My Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors">
