@@ -101,18 +101,6 @@ public final class CurrentConfiguration {
         return getConfigurationModel().getSystemName();
     }
 
-    public String getBootStrapProperty(String key) {
-		try {
-	        return getBootStrapProperties().getProperty(key);
-		} catch (ConfigurationException e) {
-			System.err.println("*************************************************************************************"); //$NON-NLS-1$
-			System.err.println("** ERROR: Unable to obtain the bootstrap properties for the current configuration. **"); //$NON-NLS-1$
-			System.err.println("*************************************************************************************"); //$NON-NLS-1$
-			e.printStackTrace(System.err);
-		}
-        return null;
-    }
-
     /**
      * Get all of the configuration properties.  The properties
      * that are returned have default properties that are the bootstrap properties.
