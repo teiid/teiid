@@ -43,14 +43,10 @@ public interface ConfigurationPropertyNames {
     // needs to be change, which will impact the importing of .DEF files.
     static final double MM_LATEST_CONFIG_VERSION = 4.2;
     
-//    interface ConnectorTypeName {
-//
-//        static final String ORACLE_CONNECTOR = "Oracle JDBC Connector"; //$NON-NLS-1$
-//        static final String DB2_HIT_CONNECTOR = "DB2 Hit Driver JDBC Connectory"; //$NON-NLS-1$
-//        static final String DB2_IBM_CONNECTOR = "DB2 IBM Driver JDBC Connector"; //$NON-NLS-1$
-//        static final String SYBASE_CONNECTOR = "Sybase JConnect JDBC Connector"; //$NON-NLS-1$
-//        static final String MSSQL_CONNECTOR = "SQL Server JDBC Connector"; //$NON-NLS-1$
-//
-//    }
+    
+    public static final String MEMBERSHIP_ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_ADMIN_USERNAME = "security.membership.admin.username"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_SECURITY_ENABLED = "security.membership.security.enabled"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_DOMAIN_ORDER = "security.membership.security.DomainOrder"; //$NON-NLS-1$
     
 }

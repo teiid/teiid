@@ -40,42 +40,42 @@ public interface Host extends AdminObject {
     /**
      * Port Number Property
      */
-    public static final String PORT_NUMBER = "hostControllerPortNumber"; //$NON-NLS-1$ HostType.PORT_NUMBER; 
+    public static final String PORT_NUMBER = "hostControllerPortNumber"; //$NON-NLS-1$ 
     
     /**
      * Install Directory Property
      */
-    public static final String INSTALL_DIR = "metamatrix.installationDir"; //$NON-NLS-1$ -- HostType.INSTALL_DIR;
+    public static final String INSTALL_DIR = "metamatrix.installationDir"; //$NON-NLS-1$ 
     
     /**
      * Log Directory Property
      */
-    public static final String LOG_DIRECTORY = "metamatrix.log.dir"; //$NON-NLS-1$ HostType.LOG_DIRECTORY; 
+    public static final String LOG_DIRECTORY = "metamatrix.log.dir"; //$NON-NLS-1$ 
     
     /**
      * Data Directory Property
      */
-    public static final String DATA_DIRECTORY = "metamatrix.data.dir"; //$NON-NLS-1$ HostType.DATA_DIRECTORY; 
+    public static final String DATA_DIRECTORY = "metamatrix.data.dir"; //$NON-NLS-1$
     
     /**
      * Host Directory Property
      */
-    public static final String HOST_DIRECTORY = "metamatrix.host.dir"; //$NON-NLS-1$ HostType.HOST_DIRECTORY; 
+    public static final String HOST_DIRECTORY = "metamatrix.host.dir"; //$NON-NLS-1$ 
     
     /**
      * Host Enabled Property
      */
-    public static final String HOST_ENABLED = "host.enabled"; //$NON-NLS-1$ HostType.HOST_ENABLED; 
+    public static final String HOST_ENABLED = "host.enabled"; //$NON-NLS-1$ 
     
     /**
      * Host Bind Address Property
      */
-    public static final String HOST_BIND_ADDRESS = "metamatrix.host.bind.address"; //$NON-NLS-1$ HostType.HOST_BIND_ADDRESS; 
+    public static final String HOST_BIND_ADDRESS = "metamatrix.host.bind.address"; //$NON-NLS-1$ 
     
     /**
      * Host Physical Address Property
      */
-    public static final String HOST_PHYSICAL_ADDRESS = "metamatrix.host.physical.address"; //$NON-NLS-1$ HostType.HOST_PHYSICAL_ADDRESS; 
+    public static final String HOST_PHYSICAL_ADDRESS = "metamatrix.host.physical.address"; //$NON-NLS-1$ 
     
 
     /**

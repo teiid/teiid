@@ -31,21 +31,21 @@ public interface VMComponentDefnType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "VM"; //$NON-NLS-1$
     
-    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.minHeapSize"; //$NON-NLS-1$
-    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.maxHeapSize"; //$NON-NLS-1$
+    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = com.metamatrix.admin.api.objects.ProcessObject.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME;
+    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = com.metamatrix.admin.api.objects.ProcessObject.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME;
 
     // Socket VM related properties
     /**
      * @see SocketVMController
      */
-    public static final String SERVER_PORT = "vm.socketPort"; //$NON-NLS-1$
-    public static final String MAX_THREADS = "vm.maxThreads"; //$NON-NLS-1$
-    public static final String TIMETOLIVE = "vm.timetolive"; //$NON-NLS-1$
+    public static final String SERVER_PORT = com.metamatrix.admin.api.objects.ProcessObject.SERVER_PORT;
+    public static final String MAX_THREADS = com.metamatrix.admin.api.objects.ProcessObject.MAX_THREADS;
+    public static final String TIMETOLIVE = com.metamatrix.admin.api.objects.ProcessObject.TIMETOLIVE;
 
-    public static final String INPUT_BUFFER_SIZE = "vm.inputBufferSize";       //$NON-NLS-1$
-    public static final String OUTPUT_BUFFER_SIZE = "vm.outputBufferSize";       //$NON-NLS-1$
-    public static final String FORCED_SHUTDOWN_TIME = "vm.forced.shutdown.time"; //$NON-NLS-1$
-    public static final String ENABLED_FLAG = "vm.enabled"; //$NON-NLS-1$
+    public static final String INPUT_BUFFER_SIZE = com.metamatrix.admin.api.objects.ProcessObject.INPUT_BUFFER_SIZE;
+    public static final String OUTPUT_BUFFER_SIZE = com.metamatrix.admin.api.objects.ProcessObject.OUTPUT_BUFFER_SIZE;
+    public static final String FORCED_SHUTDOWN_TIME = com.metamatrix.admin.api.objects.ProcessObject.FORCED_SHUTDOWN_TIME;
+    public static final String ENABLED_FLAG = com.metamatrix.admin.api.objects.ProcessObject.ENABLED_FLAG;
     
     /**
      * When specified, indicates what address the vm will be bound to.  If this is not 

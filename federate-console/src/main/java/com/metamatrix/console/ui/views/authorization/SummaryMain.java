@@ -45,6 +45,7 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ConfigurationManager;
@@ -73,9 +74,6 @@ import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
  * and also whether authorization and authentication are enabled.
  */
 public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshable {
-    private static final String ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$
-    private static final String ADMIN_USERNAME = "security.membership.admin.username"; //$NON-NLS-1$
-    private static final String SECURITY_ENABLED = "security.membership.security.enabled"; //$NON-NLS-1$
 	
 	private static final String SPACE = " "; //$NON-NLS-1$
     private ConnectionInfo connection;
@@ -412,7 +410,7 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
     	// Get username from config
         final Configuration config = getConfigurationManager().getConfig(configID);
         final ServiceComponentDefn serviceDefn = config.getServiceComponentDefn(ResourceNames.MEMBERSHIP_SERVICE);
-        final String user = serviceDefn.getProperty(ADMIN_USERNAME);
+        final String user = serviceDefn.getProperty(ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME);
         
         return user;
     }
@@ -429,11 +427,11 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
         
         // Get default enabled state for MembershipService
         Properties props = configModel.getDefaultPropertyValues(serviceDefn.getComponentTypeID());
-        final String enabledDefault = props.getProperty(SECURITY_ENABLED);
+        final String enabledDefault = props.getProperty(ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED);
         
         // Enabled state
         boolean enabledState = false;
-        final String enabled = serviceDefn.getProperty(SECURITY_ENABLED);
+        final String enabled = serviceDefn.getProperty(ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED);
         if(enabled != null) {            
         	enabledState = new Boolean(enabled).booleanValue();
         } else if(enabledDefault != null) {
@@ -515,16 +513,16 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
         // Update the username
         final String user = this.usernameTextField.getText();
         if(user != null && user.trim().length() > 0) {
-            props.setProperty(ADMIN_USERNAME, user); 
+            props.setProperty(ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME, user); 
         }
         
         // Update the password
         if(this.newPassword != null && this.newPassword.trim().length() > 0){
-			props.setProperty(ADMIN_PASSWORD, this.newPassword); 
+			props.setProperty(ConfigurationPropertyNames.MEMBERSHIP_ADMIN_PASSWORD, this.newPassword); 
         }
         
         // Update the enabled flag
-        props.setProperty(SECURITY_ENABLED,new Boolean(this.chkbxEnableAuth.isSelected() ).toString() );
+        props.setProperty(ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED,new Boolean(this.chkbxEnableAuth.isSelected() ).toString() );
     	
         // Set properties on the NextStartup Configuration
 		try {

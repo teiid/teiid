@@ -32,6 +32,7 @@ import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.common.config.ResourceNames;
+import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -45,30 +46,12 @@ public interface MembershipServiceInterface extends ServiceInterface {
     public static String NAME = ResourceNames.MEMBERSHIP_SERVICE;
     
     /**
-     * Property name separator.
-     */
-    public static final String DOT = "."; //$NON-NLS-1$
-    
-    /**
-     * username separator.
-     */
-    public static final String AT = "@"; //$NON-NLS-1$
-    
-    /**
-     * The Membership service property name prefix.  This is used by the configurator
-     * to as an aid to parsing property names with domain names embedded.  The
-     * domain name is between the prefix and the property name.<br>
-     * e.g. The connection factory for the MetaMatrix internal membership domain is:
-     * <br><code>security.membership.connection.JDBCInternalDomain.Factory=com.metamatrix.security.membership.spi.jdbc.JDBCMembershipSourceFactory</code></br>
-     */
-    public static final String MEMBERSHIP_SERVICE_PROPERTY_PREFIX = "security.membership"; //$NON-NLS-1$
-    /**
      * The environment property describing both the domain names and their required
      * order of search.  Domain names are assumed to be in preferred search order
      * and in the form "A,X,...,D" where A, X and D are domain names.
      * This property is required (there is no default).
      */
-    public static final String DOMAIN_ORDER = MEMBERSHIP_SERVICE_PROPERTY_PREFIX + ".DomainOrder"; //$NON-NLS-1$
+    public static final String DOMAIN_ORDER = ConfigurationPropertyNames.MEMBERSHIP_DOMAIN_ORDER;
     /**
      * The environment property name for the class that is to be used for the names of the domains.
      * This property is required (there is no default).
@@ -78,10 +61,10 @@ public interface MembershipServiceInterface extends ServiceInterface {
     public static final String DEFAULT_ADMIN_USERNAME = "metamatrixadmin"; //$NON-NLS-1$
     public static final String DEFAULT_WSDL_USERNAME = "metamatrixwsdl"; //$NON-NLS-1$
     
-    public static final String ADMIN_PASSWORD = MEMBERSHIP_SERVICE_PROPERTY_PREFIX + DOT + "admin.password"; //$NON-NLS-1$
-    public static final String ADMIN_USERNAME = MEMBERSHIP_SERVICE_PROPERTY_PREFIX + DOT + "admin.username"; //$NON-NLS-1$
+    public static final String ADMIN_PASSWORD = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_PASSWORD;
+    public static final String ADMIN_USERNAME = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME;
     public static final String DOMAIN_ACTIVE = "activate"; //$NON-NLS-1$
-    public static final String SECURITY_ENABLED = MEMBERSHIP_SERVICE_PROPERTY_PREFIX + DOT + "security.enabled"; //$NON-NLS-1$
+    public static final String SECURITY_ENABLED = ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED;
     
     public static final String DOMAIN_PROPERTIES = "propertiesFile"; //$NON-NLS-1$
 

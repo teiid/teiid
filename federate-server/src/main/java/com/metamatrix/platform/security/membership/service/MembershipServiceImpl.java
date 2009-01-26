@@ -80,6 +80,8 @@ import com.metamatrix.platform.util.LogMessageKeys;
  */
 public class MembershipServiceImpl extends AbstractService implements MembershipServiceInterface {
 
+	private static final String AT = "@"; //$NON-NLS-1$
+    
     static class MembershipDomainHolder {
 
         private MembershipDomain membershipDomain;

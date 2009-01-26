@@ -24,7 +24,6 @@
 
 package com.metamatrix.common.config.api;
 
-import com.metamatrix.common.util.CommonPropertyNames;
 
 /**
 * The ConnectorComponentType represents the connector ComponentType.
@@ -33,29 +32,29 @@ public interface HostType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "Host"; //$NON-NLS-1$
     
-    public static final String PORT_NUMBER = "hostControllerPortNumber"; //$NON-NLS-1$
+    public static final String PORT_NUMBER = com.metamatrix.admin.api.objects.Host.PORT_NUMBER;
     
-    public static final String INSTALL_DIR = CommonPropertyNames.INSTALLATION_DIRECTORY;
+    public static final String INSTALL_DIR = com.metamatrix.admin.api.objects.Host.INSTALL_DIR;
     
-    public static final String LOG_DIRECTORY = "metamatrix.log.dir"; //$NON-NLS-1$
+    public static final String LOG_DIRECTORY = com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY;
     
-    public static final String DATA_DIRECTORY = "metamatrix.data.dir"; //$NON-NLS-1$
+    public static final String DATA_DIRECTORY = com.metamatrix.admin.api.objects.Host.DATA_DIRECTORY;
     
-    public static final String HOST_DIRECTORY = "metamatrix.host.dir"; //$NON-NLS-1$
+    public static final String HOST_DIRECTORY = com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY;
     
-    public static final String HOST_ENABLED = "host.enabled"; //$NON-NLS-1$
+    public static final String HOST_ENABLED = com.metamatrix.admin.api.objects.Host.HOST_ENABLED;
 
     /**
      * When specified, indicates what address the host will be bound to.  If this
      * is not specified, then the host (logical) name will be used.
      */
-    public static final String HOST_BIND_ADDRESS = "metamatrix.host.bind.address"; //$NON-NLS-1$
+    public static final String HOST_BIND_ADDRESS = com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS;
     
     /**
      * The physical address represents a resolvable address for which the host can
      * be found.  This may or may not be the same as the host name.
      */
-    public static final String HOST_PHYSICAL_ADDRESS = "metamatrix.host.physical.address"; //$NON-NLS-1$
+    public static final String HOST_PHYSICAL_ADDRESS = com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS;
     
    
     /**
