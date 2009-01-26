@@ -43,14 +43,14 @@ public class UUID implements ObjectID, Serializable {
     /**
      * The variants allowed by the UUID specification.
      */
-    public class Variant {
-        public static final int NSC_COMPATIBLE    = 0x0000;
-        public static final int STANDARD          = 0x8000;
-        public static final int MICROSOFT         = 0xc000;
-        public static final int RESERVED_FUTURE   = 0xe000;
+    class Variant {
+        public static final int NSC_COMPATIBLE    = 0;
+        public static final int STANDARD          = 2;
+        public static final int MICROSOFT         = 6;
+        public static final int RESERVED_FUTURE   = 7;
     }
 
-    public class Version {
+    class Version {
         public static final int TIME_BASED        = 1;
         public static final int DCE_RESERVED      = 2;
         public static final int NAME_BASED        = 3;
@@ -59,13 +59,10 @@ public class UUID implements ObjectID, Serializable {
 
     public static final String PROTOCOL = "mmuuid"; //$NON-NLS-1$
     public static final String PROTOCOL_UCASE = PROTOCOL.toUpperCase();
-    private static final char INTERNAL_DELIM = '-';
-    private static final int BASE_16 = 16;
     private static final int ID_STRING_LEN = 36;
     public static final int FQ_LENGTH = PROTOCOL.length() + 1 + ID_STRING_LEN;
 
-    private final long mostSig;
-    private final long leastSig;
+    private final java.util.UUID uuid;
     private String cachedExportableFormUuidString;
 
     /**
@@ -74,13 +71,11 @@ public class UUID implements ObjectID, Serializable {
      * @throws IllegalArgumentException if either value is negative
      */
     public UUID( long mostSig, long leastSig ) {
-        //if ( mostSig < 0 || leastSig < 0 ) {
-        //    throw new IllegalArgumentException(
-        //        "The parts of the UUID must be unsigned: (" + mostSig
-        //        + "," + leastSig + ")" );
-        //}
-        this.mostSig = mostSig;
-        this.leastSig = leastSig;
+        this.uuid = new java.util.UUID(mostSig, leastSig);
+    }
+    
+    public UUID(java.util.UUID uuid) {
+    	this.uuid = uuid;
     }
     
     /**
@@ -91,7 +86,7 @@ public class UUID implements ObjectID, Serializable {
     	Assertion.assertTrue((id instanceof UUID), UNPARSABLE_MESSAGE);
     	
     	UUID uuid = (UUID)id;
-	    return uuid.mostSig;
+	    return uuid.uuid.getMostSignificantBits();
     }
     
     /**
@@ -102,21 +97,21 @@ public class UUID implements ObjectID, Serializable {
     	Assertion.assertTrue((id instanceof UUID), UNPARSABLE_MESSAGE);
     	
     	UUID uuid = (UUID)id;
-	    return uuid.leastSig;
+    	return uuid.uuid.getLeastSignificantBits();
     }
     
     public static int getVariant(ObjectID id ) {
         Assertion.assertTrue((id instanceof UUID), NOT_UUID_MESSAGE);
         
         UUID uuid = (UUID)id;
-        return (int)((uuid.leastSig & 0xc000000000000000L) >>> (12*4));
+        return uuid.uuid.variant();
     }
 
     public static int getVersion(ObjectID id ) {
         Assertion.assertTrue((id instanceof UUID), NOT_UUID_MESSAGE);
         
         UUID uuid = (UUID)id;
-        return (int)((uuid.mostSig  & 0x000000000000f000L) >>> (3*4));
+        return uuid.uuid.version();
     }
 
     /**
@@ -132,7 +127,7 @@ public class UUID implements ObjectID, Serializable {
      * part of the longs are exclusively 'or'd together to yield the hashcode.
      */
     public int hashCode() {
-	    return (int)((mostSig >> 32) ^ mostSig ^ (leastSig >> 32) ^ leastSig);
+	    return uuid.hashCode();
     }
 
     /**
@@ -151,10 +146,9 @@ public class UUID implements ObjectID, Serializable {
 
         // Check if object can be compared to this one
         // (this includes checking for null ) ...
-        //if ( this.getClass().isInstance(obj) ) {
         if ( obj instanceof UUID ) {
             UUID that = (UUID) obj;
-            return (this.mostSig == that.mostSig && this.leastSig == that.leastSig);
+            return this.uuid.equals(that.uuid);
 		}
 
         // Otherwise not comparable ...
@@ -178,49 +172,7 @@ public class UUID implements ObjectID, Serializable {
      */
     public int compareTo(Object obj) {
         UUID that = (UUID) obj;     // May throw ClassCastException
-        Assertion.isNotNull(obj);
-
-        long diff = this.mostSig - that.mostSig;
-        if ( diff < 0 ) {
-            return -1;
-        }
-        if ( diff > 0 ) {
-            return 1;
-        }
-
-        diff = this.leastSig - that.leastSig;
-        if ( diff < 0 ) {
-            return -1;
-        }
-        if ( diff > 0 ) {
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * <p>Return whether the specified ObjectID instance is valid.  Only ObjectID
-     * instances that are for this protocol will be passed in. </p>
-     * 
-     * <p>This implementation chekcs that the variant field holds the bits '10'
-     * and that the version field holds . </p>
-     *
-     * @param id the ID that is to be validated, and which is never null
-     * @return true if the instance is valid for this protocol, or false if
-     * it is not valid.
-     */
-    public static boolean validate( ObjectID id ) {
-        if ( id instanceof UUID ) {
-            UUID uuid = (UUID)id;
-//            // Check that variant bits are '10' and that version bits are '0001'
-//            return ((uuid.leastSig & 0xc000000000000000L) == 0x8000000000000000L) &&
-//                   ((uuid.mostSig  & 0x000000000000f000L) == 0x0000000000001000L);
-
-            // Check the variant and the version ...
-            return ( getVariant(uuid) == UUID.Variant.STANDARD &&
-                     getVersion(uuid) == UUID.Version.TIME_BASED );
-        }
-        return false;
+        return this.uuid.compareTo(that.uuid);
     }
 
     /**
@@ -235,56 +187,8 @@ public class UUID implements ObjectID, Serializable {
      * @see com.metamatrix.core.id.ObjectID#toString(char)
      */
     public String toString(char delim) {
-        // Tested performance of using the StringBuffer initialized to "43" versus just using the String concat
-        // PROTOCOL + delim + this.exportableForm()
-        // For 2,000,000 calls the results were:
-        // String Concat = 1.7 seconds
-        // StringBuffer  = 1.25 seconds
-        // Result:  USE STRING BUFFER
         return new StringBuffer(43).append(PROTOCOL).append(delim).append(this.exportableForm()).toString();
     }
-
-    /**
-     * Returns a string representing the current state of the object used
-     * for internal testing and debugging.
-     * @return the string representation of this instance.
-     */
-    public String toStringTest() {
-        return this.exportableForm()
-            + '(' + this.mostSig + ',' + this.leastSig + ')';
-    }
-    
-    /**
-     * Helper method for test program.  This method takes a UUID, converts
-     * it to "exportable" (String) format, then converts it back to a UUID,
-     * and compares that UUID with the original.
-     *
-     * @param id1 The ID to test
-     * @return False if the original and the created UUID after the back-and
-     *         forth conversion do not match.
-     */
-    public static boolean testStringToObject( UUID id1 ) {
-        String uuidString = id1.exportableForm();
-
-        UUID id2 = null;
-        try {
-            id2 = (UUID)UUID.stringToObject( uuidString );
-        } catch ( InvalidIDException e ) {
-            e.printStackTrace();
-        }
-
-        boolean match = true;
-        if ( id1.mostSig != id2.mostSig ) {
-//            System.out.println("Most sig part of " + id1 + " does NOT match.");
-            match = false;
-        }
-        if ( id1.leastSig != id2.leastSig ) {
-//            System.out.println("Least sig part of " + id1 + " does NOT match.");
-            match = false;
-        }
-        return match;
-    }
-    
 
     /**
      * <p>Returns a 36-character string of six fields separated by hyphens,
@@ -297,42 +201,10 @@ public class UUID implements ObjectID, Serializable {
      *         where all the characters are lowercase hexadecimal digits
      */
     public String exportableForm() {
-        // Create this ONCE and cache it.
-        if( cachedExportableFormUuidString == null ) {
-            cachedExportableFormUuidString = 
-                           (toHex(mostSig  >> 32,  8)   + INTERNAL_DELIM +
-                            toHex(mostSig  >> 16,  4)   + INTERNAL_DELIM +
-                            toHex(mostSig       ,  4)   + INTERNAL_DELIM +
-                            toHex(leastSig >> 48,  4)   + INTERNAL_DELIM +
-                            toHex(leastSig      , 12) );
-        } 
-        return cachedExportableFormUuidString;
-    }
-
-    /**
-     * <p>Returns a long value represented in hexadecimal form by the specified
-     * number of hex digits. </p>
-     * @param val The long value, to be converted to hex form
-     * @param digits The number of hex digits we want
-     * @return The original value in hex form, to the specified # digits
-     */
-    private static String toHex(long val, int digits) {
-        // The following algorithm pads the result using bit arithmetic
-        // rather than String padding.
-        // Example:
-        //    mask            100000000
-        //    value                 101
-        //    v=value&(mask-1) 00000101
-        //    mask|v          100000101
-        // This yields the string "100000101", which when converted to hexadecimal
-        // format is '1??' (always starts with '1', followed by digits we care about).
-        // We take the substring starting after the first '1', yielding the desired
-        // hexadecimal value for '00000101'.
-
-        // Create a mask that is 1 bit beyond the bounds of # hex digits we want
-	    long hi = 1L << (digits * 4);   // 4 bits for every hex digit
-	    // Logical 'or' of mask and "padded" value
-	    return Long.toHexString(hi | (val & (hi - 1))).substring(1);
+    	if (this.cachedExportableFormUuidString == null) {
+    		this.cachedExportableFormUuidString = this.uuid.toString();
+    	}
+        return this.cachedExportableFormUuidString;
     }
 
     /**
@@ -343,21 +215,9 @@ public class UUID implements ObjectID, Serializable {
      * to parse the string, or null if the factory is unaware of the specified format.
      */
     public static ObjectID stringToObject(String value) throws InvalidIDException {
-
-        if ( value.length() != ID_STRING_LEN ) {
-            throw new InvalidIDException(
-                CorePlugin.Util.getString("UUID.InvalidLengthForProtocol",value,PROTOCOL)); //$NON-NLS-1$
-        }
         try {
-            long part1 = Long.parseLong(value.substring( 0, 8),BASE_16);
-            long part2 = Long.parseLong(value.substring( 9,13),BASE_16);
-            long part3 = Long.parseLong(value.substring(14,18),BASE_16);
-            long part4 = Long.parseLong(value.substring(19,23),BASE_16);
-            long part5 = Long.parseLong(value.substring(24)   ,BASE_16);
-            long most  = part1 << 32 | part2 << 16 | part3;
-            long least = part4 << 48 | part5;
-            return new UUID(most,least);
-        } catch ( NumberFormatException e ) {
+            return new UUID(java.util.UUID.fromString(value));
+        } catch ( IllegalArgumentException e ) {
             throw new InvalidIDException(
                 CorePlugin.Util.getString("UUID.InvalidFormatForProtocol",value,PROTOCOL)); //$NON-NLS-1$
         }

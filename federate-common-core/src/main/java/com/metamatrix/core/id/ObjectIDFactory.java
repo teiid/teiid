@@ -50,14 +50,6 @@ public interface ObjectIDFactory {
     ObjectID create();
 
     /**
-     * Return whether the specified ObjectID instance is valid.  Only ObjectID instances
-     * that are for this protocol will be passed in.
-     * @param id the ID that is to be validated, and which is never null
-     * @return true if the instance is valid for this protocol, or false if
-     * it is not valid.
-     */
-    boolean validate(ObjectID id);
-    /**
      * Attempt to convert the specified string to the appropriate ObjectID instance.
      * @param value the stringified id (the result of {@link ObjectID#toString()}),
      * and should never null or zero length

@@ -62,23 +62,6 @@ public class TestUUIDFactoryWithoutCreation extends TestCase {
     //                         T E S T     C A S E S
     // =========================================================================
 
-    public void testFactoryCreationTime() {
-        final Stopwatch sw = new Stopwatch();
-        sw.start();
-
-        // Create the factory ...
-        final UUIDFactory myFactory = new UUIDFactory();
-
-        // and use it immediately to parse (not to create an ID!) ...
-        helpTestStringToObject(myFactory,STRINGIFIED_ID_1);
-
-        sw.stop();
-        if ( sw.getTotalDuration() > 500 ) {
-            fail("Startup and one stringToObject took longer " + sw + //$NON-NLS-1$
-                              " (test fails if above 500ms)"); //$NON-NLS-1$
-        }
-    }
-
     public void testFactoryCreationTimeWithMultipleParses() {
         final Stopwatch sw = new Stopwatch();
         sw.start();
@@ -96,23 +79,6 @@ public class TestUUIDFactoryWithoutCreation extends TestCase {
         if ( sw.getTotalDuration() > 500 ) {
             fail("Startup and one stringToObject took longer " + sw + //$NON-NLS-1$
                               " (test fails if above 500ms)"); //$NON-NLS-1$
-        }
-    }
-
-    public void testCreatingFactoriesQuickly() {
-        final Stopwatch sw = new Stopwatch();
-        sw.start();
-
-        // Create the factory ...
-        final int count = 10;
-        for (int i = 0; i < count; i++) {
-            new UUIDFactory();
-        }
-
-        sw.stop();
-        if ( sw.getTotalDuration() > 100 ) {
-            fail("Creating " + count + " factories took longer " + sw + //$NON-NLS-1$ //$NON-NLS-2$
-                              " (test fails if above 100ms)"); //$NON-NLS-1$
         }
     }
 

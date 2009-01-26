@@ -168,8 +168,8 @@ public class TestUUIDFactory extends TestCase {
     public void testVersion() {
         ObjectID uuid = generator.create();
         int version = UUID.getVersion(uuid);
-        if ( version != UUID.Version.TIME_BASED ) {
-            fail("The version " + version + " doesn't match expected value of " + UUID.Version.TIME_BASED );     //$NON-NLS-1$ //$NON-NLS-2$
+        if ( version != UUID.Version.PSEUDO_RANDOM ) {
+            fail("The version " + version + " doesn't match expected value of " + UUID.Version.PSEUDO_RANDOM );     //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
         

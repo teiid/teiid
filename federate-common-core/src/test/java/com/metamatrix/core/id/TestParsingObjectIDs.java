@@ -126,16 +126,6 @@ public class TestParsingObjectIDs extends TestCase {
         }
     }
 
-    public void helpCheckVersion( Collection objectIDs, int expectedVersion ) {
-        Iterator iter = objectIDs.iterator();
-        while (iter.hasNext()) {
-            ObjectID objectId = (ObjectID) iter.next();
-            if ( objectId instanceof UUID ) {
-                helpCheckVersion((UUID)objectId,expectedVersion);
-            }
-        }
-    }
-
     /**
      * Ensure that the variant matches the expected variant.
      * @param uuid the ObjectID
@@ -148,21 +138,6 @@ public class TestParsingObjectIDs extends TestCase {
 //System.out.println("variant == UUID.Variant.MICROSOFT       ? " + (UUID.getVariant(uuid)==UUID.Variant.MICROSOFT) );
         if ( UUID.getVariant(uuid) != expectedVariant ) {
             fail( "UUID '" + uuid + "' variant ('" + UUID.getVariant(uuid) + "') does not match the expected variant " + expectedVariant); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        }
-    }
-
-    /**
-     * Ensure that the version matches the expected version.
-     * @param uuid the ObjectID
-     * @param expectedVersion one of the {@link com.metamatrix.common.id.UUID.Version UUID.Version} constants.
-     */
-    public static void helpCheckVersion( UUID uuid, int expectedVersion ) {
-//System.out.println("version == UUID.Version.DCE_RESERVED  ? " + (UUID.getVersion(uuid)==UUID.Version.DCE_RESERVED) );
-//System.out.println("version == UUID.Version.NAME_BASED    ? " + (UUID.getVersion(uuid)==UUID.Version.NAME_BASED) );
-//System.out.println("version == UUID.Version.PSEUDO_RANDOM ? " + (UUID.getVersion(uuid)==UUID.Version.PSEUDO_RANDOM) );
-//System.out.println("version == UUID.Version.TIME_BASED    ? " + (UUID.getVersion(uuid)==UUID.Version.TIME_BASED) );
-        if ( UUID.getVersion(uuid) != expectedVersion ) {
-            fail( "UUID '" + uuid + "' version ('" + UUID.getVersion(uuid) + "') does not match the expected version " + expectedVersion); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
     }
 
