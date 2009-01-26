@@ -34,7 +34,6 @@ import junit.framework.TestCase;
 import org.jdom.Document;
 import org.jdom.Element;
 
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -48,7 +47,6 @@ public class TestJdomHelper extends TestCase {
 
     public TestJdomHelper(String name) {
         super(name);
-        System.setProperty(CoreConstants.NO_CONFIGURATION, ""); //$NON-NLS-1$ 
     }
 
     // ################################## TEST HELPERS ################################

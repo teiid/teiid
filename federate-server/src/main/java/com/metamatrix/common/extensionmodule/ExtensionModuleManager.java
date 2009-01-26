@@ -87,15 +87,6 @@ import com.metamatrix.server.ResourceFinder;
  *  "com.metamatrix.platform.extension.spi.jdbc.JDBCExtensionModuleTransactionFactory"</li>
  * </ul></p>
  *
- * <p>The following properties are optional:
- * <ul>
- * <li>{@link com.metamatrix.common.config.bootstrap.SystemCurrentConfigBootstrap#NO_CONFIGURATION}
- * can be set to anything.  This will allow
- * {@link com.metamatrix.common.config.CurrentConfiguration CurrentConfiguration}
- * to work, which is needed for resource properties and logging.  CurrentConfiguration
- * will use system properties as properties.</li>
- * </ul></p>
- *
  * <p>The following properties are required with use of JDBCExtensionModuleTransactionFactory:
  * <ul>
  * <li>{@link ExtensionModulePropertyNames#CONNECTION_DATABASE} the JDBC connection database</li>

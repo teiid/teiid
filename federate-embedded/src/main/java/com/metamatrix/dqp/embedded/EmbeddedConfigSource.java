@@ -39,7 +39,6 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 import com.metamatrix.dqp.embedded.services.EmbeddedDataService;
@@ -66,7 +65,6 @@ public class EmbeddedConfigSource implements DQPConfigSource {
     * @throws ApplicationInitializationException
     */    
     public EmbeddedConfigSource(URL dqpURL, Properties connectionProperties) throws ApplicationInitializationException {
-        System.getProperties().setProperty(CoreConstants.NO_CONFIGURATION, Boolean.TRUE.toString());        
         String dqpURLString = dqpURL.toString(); 
         try {
             dqpURL = URLHelper.buildURL(dqpURLString);

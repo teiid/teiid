@@ -35,8 +35,6 @@ import java.io.Serializable;
 import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
-import com.metamatrix.core.CoreConstants;
-
 /**
  * This class contains static methods that are routinely and commonly used in many test cases, and related to methods to test
  * common functionality or to perform common tests.
@@ -358,10 +356,6 @@ public class UnitTestUtil {
         String path = UnitTestUtil.getTestScratchPath();
         File file = new File(path, fileName);
         return file;
-	}
-
-	public static void setDefaultProperties() {
-	    System.getProperties().setProperty(CoreConstants.NO_CONFIGURATION, "true"); //$NON-NLS-1$ 
 	}
 
 	/**

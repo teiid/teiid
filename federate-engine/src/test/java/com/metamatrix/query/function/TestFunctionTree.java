@@ -32,13 +32,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.mockito.Mockito;
-
 import junit.framework.TestCase;
+
+import org.mockito.Mockito;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
@@ -50,7 +49,6 @@ public class TestFunctionTree extends TestCase {
 	
 	public TestFunctionTree(String name) { 
 		super(name);		
-		System.setProperty(CoreConstants.NO_CONFIGURATION, ""); //$NON-NLS-1$ 
 	}	
 	
 	// ################################## TEST HELPERS ################################

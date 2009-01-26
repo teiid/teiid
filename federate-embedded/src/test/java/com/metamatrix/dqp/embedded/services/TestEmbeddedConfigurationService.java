@@ -47,7 +47,6 @@ import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
@@ -64,7 +63,6 @@ public class TestEmbeddedConfigurationService extends TestCase {
     EmbeddedConfigurationService service =  null;
        
     protected void setUp() throws Exception {
-    	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
     	EmbeddedTestUtil.createTestDirectory();
         service = new EmbeddedConfigurationService();  
         ApplicationEnvironment env = new ApplicationEnvironment();

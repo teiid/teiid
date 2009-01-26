@@ -42,10 +42,6 @@ import com.metamatrix.connector.xml.http.Messages;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.exception.ConnectorException;
 
-import com.metamatrix.connector.xml.http.Messages;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
-
 /**
  * The RequestResponseDocumentProducer is responsible for executing a single instance of a request permutation
  * as broken out by the QueryAnalyzer/RequestGenerator and producing a Response.

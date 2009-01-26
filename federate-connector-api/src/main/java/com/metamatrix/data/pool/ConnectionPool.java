@@ -198,7 +198,13 @@ public class ConnectionPool {
                 cleaningInterval = Integer.parseInt(value);
             }
             
-            if (!this.shuttingDownPool) {
+            property = ENABLE_SHRINKING;
+            value = poolProperties.getProperty(property);
+            if ( value != null ) {
+                enableShrinking = Boolean.valueOf(value).booleanValue();
+            }            
+            
+            if (enableShrinking && !this.shuttingDownPool) {
             	this.cleaningThread = new Timer("ConnectionPoolCleaningThread", true); //$NON-NLS-1$
             	cleaningThread.schedule(new TimerTask() {
 					@Override
@@ -207,12 +213,6 @@ public class ConnectionPool {
 					}
             	}, cleaningInterval * 1000, cleaningInterval * 1000);
             }
-
-            property = ENABLE_SHRINKING;
-            value = poolProperties.getProperty(property);
-            if ( value != null ) {
-                enableShrinking = Boolean.valueOf(value).booleanValue();
-            }            
             
             value = poolProperties.getProperty(SourceConnection.SOURCE_CONNECTION_TEST_INTERVAL, SourceConnection.DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
             testConnectInterval = (Integer.parseInt(value) * 1000);

@@ -29,7 +29,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -43,7 +42,6 @@ public class TestEmbeddedDataService extends TestCase {
     EmbeddedDataService dataService = null;
     
     protected void setUp() throws Exception {
-    	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
     	ApplicationEnvironment registry = new ApplicationEnvironment();
         configService = new EmbeddedConfigurationService();
         registry.bindService(DQPServiceNames.CONFIGURATION_SERVICE, configService);

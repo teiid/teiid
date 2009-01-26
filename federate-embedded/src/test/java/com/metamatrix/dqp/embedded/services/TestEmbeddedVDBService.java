@@ -36,7 +36,6 @@ import com.metamatrix.common.application.Application;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
@@ -53,7 +52,6 @@ public class TestEmbeddedVDBService extends TestCase{
     EmbeddedVDBService vdbService = null;
     
     protected void setUp() throws Exception {
-    	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
     	EmbeddedTestUtil.createTestDirectory();
         Application registry = new Application();
         configService = new EmbeddedConfigurationService();

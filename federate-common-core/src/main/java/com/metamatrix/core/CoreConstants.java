@@ -53,8 +53,6 @@ public interface CoreConstants {
         String PROXIES = "proxies"; //$NON-NLS-1$
     }
     
-    public static final String NO_CONFIGURATION = "metamatrix.config.none"; //$NON-NLS-1$
-    
     public static final String SYSTEM_VDB = "System.vdb"; //$NON-NLS-1$
 
     public static final String SYSTEM_PHYSICAL_MODEL_NAME = "SystemPhysical"; //$NON-NLS-1$

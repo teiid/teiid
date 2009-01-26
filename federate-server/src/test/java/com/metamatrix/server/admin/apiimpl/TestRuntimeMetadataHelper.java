@@ -43,7 +43,6 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.ModelType;
@@ -65,12 +64,6 @@ public class TestRuntimeMetadataHelper extends TestCase {
         super.setUp();
         fakeMaterializationModel = new FakeModelInfo(ModelType.MATERIALIZATION);
 
-        UnitTestUtil.setDefaultProperties();
-
-        // remove the no-configuration property from System properties
-        // it will be obtained from metamatrix.properties and
-        // will trigger the same result
-        System.getProperties().remove(CoreConstants.NO_CONFIGURATION);
         try {
         	RuntimeMetadataCatalog.getInstance().init(new Properties(), Mockito.mock(MessageBus.class), new FakeCache.FakeCacheFactory());
         } catch (VirtualDatabaseException e) {

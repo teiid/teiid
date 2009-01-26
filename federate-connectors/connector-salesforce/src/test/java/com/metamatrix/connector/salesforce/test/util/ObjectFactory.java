@@ -35,6 +35,7 @@ import com.metamatrix.data.pool.CredentialMap;
 
 public class ObjectFactory {
 
+	public static boolean DEBUG = false;
 	
     public static final String VALID_USERNAME= "jdoyleoss@gmail.com";
     public static final String VALID_PASSWORD = "l3tm31nNZ4loJCls59GlDr4sZLB8N4TT";
@@ -44,35 +45,35 @@ public class ObjectFactory {
 
 	public static ConnectorEnvironment getDefaultTestConnectorEnvironment() {
         Properties props = getDefaultProps(); 
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
      }
 	
 	public static ConnectorEnvironment getNoCredTestConnectorEnvironment() {
 		Properties props = new Properties();
 		props.put("sandbox", "false"); 
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
      }
 
 	public static ConnectorEnvironment getConnectorEnvironmentBadUser() {
         Properties props = getDefaultProps();
         props.put(ConnectorState.USERNAME, BOGUS_USERNAME);
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
      }
 	
 	public static ConnectorEnvironment getConnectorEnvironmentBadPass() {
         Properties props = getDefaultProps();
         props.put(ConnectorState.PASSWORD, BOGUS_PASSWORD);
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
      }
 	
 	public static ConnectorEnvironment getConnectorEnvironmentEmptyPass() {
         Properties props = getDefaultProps();
         props.put(ConnectorState.PASSWORD, "");
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
      }
 	
@@ -114,7 +115,7 @@ public class ObjectFactory {
 	public static ConnectorEnvironment getConnectorEnvironmentEmptyUser() {
 		Properties props = getDefaultProps();
         props.put(ConnectorState.USERNAME, "");
-        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props);
+        ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, DEBUG);
         return env;
 	}
 }

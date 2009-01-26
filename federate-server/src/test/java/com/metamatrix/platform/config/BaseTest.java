@@ -34,7 +34,6 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.messaging.MessageBusConstants;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
@@ -67,7 +66,6 @@ public abstract class BaseTest extends TestCase {
 		// test
 		// the indicates to use no configuration
 		Properties sysProps = System.getProperties();
-		sysProps.remove(CoreConstants.NO_CONFIGURATION);
 		sysProps.put(MessageBusConstants.MESSAGE_BUS_TYPE,
 				MessageBusConstants.TYPE_NOOP);
 
@@ -80,7 +78,6 @@ public abstract class BaseTest extends TestCase {
 		initData();
 		if (!useNoOpConfig) {
 			Properties sysProps = System.getProperties();
-			sysProps.remove(CoreConstants.NO_CONFIGURATION);
 			System.setProperties(sysProps);
 		}
 	}

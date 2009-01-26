@@ -36,7 +36,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,7 +61,6 @@ public class TestMMDatabaseMetaData extends TestCase {
     static String serverUrl = primaryUrl + ";logLevel=1;partialResultsMode=false"; //$NON-NLS-1$
     
     // URL for integration test
-    //static String serverUrl = "jdbc:metamatrix:DTMS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
     MMDatabaseMetaData dbmd = null;
     private Map expectedMap = new HashMap();
 
@@ -89,40 +87,24 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     public void tearDown() throws Exception {
-        oneTimeTearDown();
+    	tests--;
+        if (tests == 0) {
+        	if (conn != null) {
+                conn.close();
+            }
+        }
     }    
     
-    protected synchronized static void oneTimeSetUp(int numtests) {
-        UnitTestUtil.setDefaultProperties();
+    protected synchronized static void oneTimeSetUp(int numtests) throws Exception {
         if (tests == -1) {
             tests = numtests;
-            try {
-                if (conn == null) {
-                    Class.forName("com.metamatrix.jdbc.EmbeddedDriver"); //$NON-NLS-1$
-                    conn = DriverManager.getConnection(serverUrl);
-                }
-            } catch (ClassNotFoundException se) {
-                fail(" Unable to find driver class -- com.metamatrix.jdbc.MMDriver."); //$NON-NLS-1$
-            } catch (SQLException se) {
-                se.printStackTrace();
-                fail( "Unable to set up metamatrix connection through either DriverManager or DataSource."); //$NON-NLS-1$
+            if (conn == null) {
+                Class.forName("com.metamatrix.jdbc.EmbeddedDriver"); //$NON-NLS-1$
+                conn = DriverManager.getConnection(serverUrl);
             }
         }
     }
     
-    protected synchronized static void oneTimeTearDown() throws SQLException {
-        tests--;
-        if (tests == 0) {
-            closeMMConnection();
-        }
-    }
-    
-    private static void closeMMConnection() throws SQLException {
-        if (conn != null) {
-            conn.close();
-        }
-    }
-
     /** Test all the non-query methods */
     public void testMethodsWithoutParams() throws Exception {
         Class dbmdClass = dbmd.getClass();
@@ -168,15 +150,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         //System.out.println(" -- total method == " + methods.length + ", non-query == " + expectedMap.size());
         for (int i =0; i< methods.length; i++) {
             if (expectedMap.containsKey(methods[i].getName())) {
-                try {
-                    methods[i].invoke(dbmd, new Object[0]);
-                    fail("Expected exception"); //$NON-NLS-1$
-                } catch(Exception e) {
-                }
-                  
-                //assertEquals(" Expected doesn't match with actual for method - " + 
-                  //  methods[i].getName(), "MMSQLException", actualValue.getClass().getName());
-                 
+                methods[i].invoke(dbmd, new Object[0]);
             }
         }           
     }
@@ -1527,278 +1501,4 @@ public class TestMMDatabaseMetaData extends TestCase {
         return expected;
     }
     
-    /*******************************************************************
-     * <p> Please don't remove this part (all the code following this).*
-     *     Leave me alone !!! </p>                                     *
-     *******************************************************************/
-    
-    ////////////////Helper Test ////////////////////////
-    
-//    public void testGetPrimaryKeysHelper() {
-//        try {
-//            //PreparedStatement st = conn.prepareStatement(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME, k.Name AS COLUMN_NAME, -1 AS KEY_SEQ, KeyName AS PK_NAME, convert(Position, short) As Position  FROM System.KeyElements k CROSS JOIN System.VirtualDatabases v  WHERE KeyName LIKE 'PK_%' AND GroupFullName = ? ORDER BY TABLE_SCHEM, COLUMN_NAME, Position  "); //$NON-NLS-1$
-//            PreparedStatement st = conn.prepareStatement(" SELECT * FROM System.KeyElements "); //$NON-NLS-1$
-//            //st.setObject(1, "BQT1.SmallA"); //$NON-NLS-1$
-//            ResultSet rs = st.executeQuery();
-//            assertNotNull(rs);
-//            int j = 0;
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                j++;
-//                System.out.println(" ** rs("+ j+"):"); //$NON-NLS-1$ //$NON-NLS-2$
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        }
-//    }
-
-//    public void testGetPrimaryKeysHelper1() {
-//        try {
-//            DatabaseMetaData dbmd = conn.getMetaData();
-//            ResultSet rs = dbmd.getPrimaryKeys(null, null, "Xsd.XSDAttributeUseCategory"); //$NON-NLS-1$
-//            assertNotNull(rs);
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        }
-//    }
-        
-    /**
-     * The exception on server log are really unrelated for this:
-     * Exception are:
-     * ERROR <ConnectorID<1032|1168>|0> Error executing query "SELECT MBR_READ_ENTRIES.USER_NAME, MBR_READ_ENTRIES.ENTRY_ID_P1, MBR_READ_ENTRIES.ENTRY_ID_P2 FROM MBR_READ_ENTRIES".
-     * ERROR <com.metamatrix.dqp|0> Unable to open connector execution
-     * java.sql.SQLException: [MetaMatrix][Oracle JDBC Driver][Oracle]ORA-00942: table or view does not exist
-     */
-//    public void testGetImportedKeysHelper() {
-//        try {
-//            DatabaseMetaData dbmd = conn.getMetaData();
-//            ResultSet rs = dbmd.getImportedKeys(null, null, "DTMS.Dataaccess.Element");
-//            assertNotNull(rs);
-//            int j = 0;
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                j++;
-//                System.out.println(" ** rs("+ j+"):"); //$NON-NLS-1$ //$NON-NLS-2$
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        }
-//    }
-                
-//    public void testGetIndexInfoHelper() {
-//        try {
-//            Statement st = conn.createStatement();
-//            ResultSet rs = st.executeQuery(" SELECT * FROM System.ReferenceKeyElements ");
-//            assertNotNull(rs);
-//            
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        }
-//    } 
-
-    /** test for defect 11270 -- consecutive preparedstatement */
-//    public void testGetTablesHelper3() {
-//        String sql = " SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE ? ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME";
-//        try {
-//            PreparedStatement st = conn.prepareStatement(sql);
-//            st.setObject(1, "1"); //$NON-NLS-1$
-//            ResultSet rs = st.executeQuery();
-//            assertNotNull(rs);
-//
-//            int j = 0;
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                j++;
-//                System.out.println("** rs " + j + " : ");
-//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//            System.out.println(" \n=== table Table has totally " + j + " resultset.");
-//            st.close();
-//            
-//            st = conn.prepareStatement(sql);
-//            st.setObject(1, "2"); //$NON-NLS-1$
-//            rs = st.executeQuery();
-//            assertNotNull(rs);
-//            rsmd = rs.getMetaData();
-//            j = 0;
-//            while (rs.next()) {
-//                j++;
-//                System.out.println("** rs " + j + " : ");
-//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }            
-//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
-//            rs.close();
-//            st.close();
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        } finally {
-//            try {
-//                conn.close();
-//            } catch (Exception ex) {
-//                // ignore
-//            }
-//        }
-//    }
-    
-    /** test for defect 11270 -- consecutive statement */
-//    public void testGetTablesHelper2() {
-//        try {
-//            Statement st = conn.createStatement();
-//            ResultSet rs = st.executeQuery(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE '1' ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME");
-//            assertNotNull(rs);
-//
-//            int j = 0;
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while (rs.next()) {
-//                j++;
-//                System.out.println(" ** rs " + j + " : ");
-//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//            
-//            System.out.println(" \n=== table TABLE has totally " + j + " resultset.\n");
-//            
-//            st = conn.createStatement();
-//            rs = st.executeQuery(" SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME, Type AS TABLE_TYPE,  Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM,  NULL AS TYPE_NAME,  NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL  FROM System.Groups CROSS JOIN System.VirtualDatabases v WHERE UCASE(FullName) LIKE '%' AND UCASE(Type) LIKE '2' ORDER BY TABLE_TYPE, TABLE_SCHEM, TABLE_NAME");
-//            assertNotNull(rs);
-//            rsmd = rs.getMetaData();
-//            j = 0;
-//            while (rs.next()) {
-//                j++;
-//                System.out.println(" ** rs " + j + " : ");
-//                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }            
-//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
-//            
-//            rs.close();
-//            st.close();
-//        } catch (SQLException se) {
-//            se.printStackTrace();
-//        } finally {
-//            try {
-//                conn.close();
-//            } catch (Exception ex) {
-//                // ignore
-//            }
-//        }
-//    }
-        
-    /** test through DatabaseMetadata */
-//    public void testGetTablesHelper1() throws Exception {
-//        ResultSet rs = null;
-//        ResultSetMetaData rsmd = null;
-//        try {
-//            //List expected = getExpectedColumns();
-//            DatabaseMetaData dbmd = conn.getMetaData();
-//
-//            String[] types = helper(1);
-//            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
-//            rsmd = rs.getMetaData();
-//            int j = 0;
-//            while (rs.next()) {
-//                j++;
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//            System.out.println(" \n=== table TABLE has totally " + j + " resultset.");
-//            
-//            types = helper(2);
-//            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
-//            rsmd = rs.getMetaData();
-//            j = 0;
-//            while (rs.next()) {
-//                j++;
-//                for (int i = 1; i < rsmd.getColumnCount(); i++) {
-//                    System.out.println(rsmd.getColumnName(i) + " == " + rs.getObject(i)); //$NON-NLS-1$
-//                }
-//            }
-//            System.out.println(" \n=== table VIEW has totally " + j + " resultset.");
-////                   
-////            types = helper(3);
-////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
-////            rsmd = rs.getMetaData();
-////            
-////            types = helper(4);
-////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
-////            rsmd = rs.getMetaData();
-////
-////            types = helper(5);
-////            rs = dbmd.getTables(null, null, null, types); //$NON-NLS-1$ //$NON-NLS-2$
-////            rsmd = rs.getMetaData();
-////            
-//        } finally {
-//            if (rs != null) {
-//                rs.close();
-//            }
-//        }
-//    }
-    
-//    private String[] helper(int i) {
-//        String[] returned = new String[1];
-//        
-//        String[] tableTypes = new String[6];
-//        tableTypes[0] = "SYSTEMTABLE"; //$NON-NLS-1$
-//        tableTypes[1] = "TABLE"; //$NON-NLS-1$
-//        tableTypes[2] = "VIEW"; //$NON-NLS-1$
-//        tableTypes[3] = "DOCUMENT"; //$NON-NLS-1$
-//        tableTypes[4] = "XMLSTAGINGTABLE"; //$NON-NLS-1$
-//        tableTypes[5] = "XMLMAPPINGCLASS"; //$NON-NLS-1$
-//        
-//        switch(i) {
-//            case 0: 
-//                returned[0] = tableTypes[0];
-//                break;
-//            case 1: 
-//                returned[0] = tableTypes[1];
-//                break;
-//            case 2: 
-//                returned[0] = tableTypes[2];
-//                break;
-//            case 3: 
-//                returned[0] = tableTypes[3];
-//                break;
-//            case 4: 
-//                returned[0] = tableTypes[4];
-//                break;
-//            case 5: 
-//                returned[0] = tableTypes[5];
-//                break;     
-//            default:
-//                returned[0] = tableTypes[0];
-//                break;                          
-//        }
-//        
-//        return returned;
-//    }
-
 }

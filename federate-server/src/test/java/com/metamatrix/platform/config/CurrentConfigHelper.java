@@ -30,7 +30,6 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.messaging.MessageBusConstants;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
@@ -56,7 +55,6 @@ public class CurrentConfigHelper {
 	 */
 	public static void initConfig(String fileName, String path, String principal) throws Exception {
 		Properties sysProps = new Properties();
-		sysProps.put(CoreConstants.NO_CONFIGURATION, "none");  //$NON-NLS-1$
  		sysProps.put(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
 		sysProps.put(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME, "com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader"); //$NON-NLS-1$
 		sysProps.put("metamatrix.security.password.PasswordKeyStore", "c3B1dG5pazEz"); //$NON-NLS-1$ //$NON-NLS-2$

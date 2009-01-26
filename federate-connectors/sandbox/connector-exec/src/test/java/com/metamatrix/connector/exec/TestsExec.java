@@ -35,7 +35,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.data.api.SynchQueryExecution;
 import com.metamatrix.data.exception.ConnectorException;
@@ -56,10 +55,6 @@ public class TestsExec extends TestCase {
         
     }
     
-    public void setUp() throws Exception {
-    	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
-    }
-
     public void tearDown(){
         if(this.connector != null){   
             this.connector.stop();

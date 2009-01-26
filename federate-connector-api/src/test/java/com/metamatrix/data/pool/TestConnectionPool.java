@@ -33,7 +33,6 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.monitor.AliveStatus;
 
@@ -140,49 +139,40 @@ public class TestConnectionPool extends TestCase{
     }
     
     //=== tests ===//
-    public void testPoolUsingSingleIdentity(){
+    public void testPoolUsingSingleIdentity() throws Exception {
         SecurityContext context = createContext("x");//$NON-NLS-1$
 
-        try {
-            SourceConnection conn1 = singleIDPool.obtain(context);
-            SourceConnection conn2 = singleIDPool.obtain(context);
-            SourceConnection conn3 = singleIDPool.obtain(context);
-            SourceConnection conn4 = singleIDPool.obtain(context);         
-            singleIDPool.release(conn2);
-            singleIDPool.error(conn4);
-            
-            List unusedConns = singleIDPool.getUnusedConnections(conn1);
-            assertEquals(1, unusedConns.size());
-            assertTrue(unusedConns.contains(conn2));
-            List usedConns = singleIDPool.getUsedConnections(conn2);
-            assertEquals(2, usedConns.size());
-            assertTrue(usedConns.contains(conn1));
-            assertTrue(usedConns.contains(conn3));    
-            assertEquals(3, singleIDPool.getTotalConnectionCount());        
-        } catch (ConnectionPoolException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
+        SourceConnection conn1 = singleIDPool.obtain(context);
+        SourceConnection conn2 = singleIDPool.obtain(context);
+        SourceConnection conn3 = singleIDPool.obtain(context);
+        SourceConnection conn4 = singleIDPool.obtain(context);         
+        singleIDPool.release(conn2);
+        singleIDPool.error(conn4);
+        
+        List unusedConns = singleIDPool.getUnusedConnections(conn1);
+        assertEquals(1, unusedConns.size());
+        assertTrue(unusedConns.contains(conn2));
+        List usedConns = singleIDPool.getUsedConnections(conn2);
+        assertEquals(2, usedConns.size());
+        assertTrue(usedConns.contains(conn1));
+        assertTrue(usedConns.contains(conn3));    
+        assertEquals(3, singleIDPool.getTotalConnectionCount());        
     }
 
-    public void testDisabledPool(){
+    public void testDisabledPool() throws Exception {
         SecurityContext context = createContext("x");//$NON-NLS-1$
 
-        try {
-            SourceConnection conn1 = disabledPool.obtain(context);
-            
-            assertEquals(AliveStatus.ALIVE, disabledPool.getStatus().getStatus());
-            SourceConnection conn2 = disabledPool.obtain(context);
-            SourceConnection conn3 = disabledPool.obtain(context);
-            SourceConnection conn4 = disabledPool.obtain(context);         
-            assertEquals(AliveStatus.ALIVE, disabledPool.getStatus().getStatus());
-            disabledPool.release(conn1);
-            disabledPool.release(conn2);
-            disabledPool.release(conn3);
-            disabledPool.error(conn4);
-            
-        } catch (ConnectionPoolException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
+        SourceConnection conn1 = disabledPool.obtain(context);
+        
+        assertEquals(AliveStatus.ALIVE, disabledPool.getStatus().getStatus());
+        SourceConnection conn2 = disabledPool.obtain(context);
+        SourceConnection conn3 = disabledPool.obtain(context);
+        SourceConnection conn4 = disabledPool.obtain(context);         
+        assertEquals(AliveStatus.ALIVE, disabledPool.getStatus().getStatus());
+        disabledPool.release(conn1);
+        disabledPool.release(conn2);
+        disabledPool.release(conn3);
+        disabledPool.error(conn4);
     }
     
     public void testMaxConnectionTest() throws Exception {
@@ -245,25 +235,20 @@ public class TestConnectionPool extends TestCase{
         }
     }
 
-    public void testMessageWhenPoolMaxedOutPerIdentity(){
+    public void testMessageWhenPoolMaxedOutPerIdentity() throws Exception {
         SecurityContext context = createContext("x");//$NON-NLS-1$
 
-        try {            
-            // Max out the pool - 5 connections for same ID
-            for(int i=0; i<5; i++) {
-                singleIDPool.obtain(context);
-            }
-            
-            // Ask for one more - this should time out
-            try {
-                singleIDPool.obtain(context);
-                fail("No exception received when maxing out the pool"); //$NON-NLS-1$
-            } catch(ConnectionPoolException e) {
-                assertEquals("The connection pool for identity \"SingleIdentity: atomic-request=1.1.1\" is at the maximum connection count \"5\" and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
-            }
-           
-        } catch (ConnectionPoolException e) {
-            throw new MetaMatrixRuntimeException(e);
+        // Max out the pool - 5 connections for same ID
+        for(int i=0; i<5; i++) {
+            singleIDPool.obtain(context);
+        }
+        
+        // Ask for one more - this should time out
+        try {
+            singleIDPool.obtain(context);
+            fail("No exception received when maxing out the pool"); //$NON-NLS-1$
+        } catch(ConnectionPoolException e) {
+            assertEquals("The connection pool for identity \"SingleIdentity: atomic-request=1.1.1\" is at the maximum connection count \"5\" and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -296,55 +281,47 @@ public class TestConnectionPool extends TestCase{
         }
     }
 
-    public void testPoolUsingUserIdentity(){
+    public void testPoolUsingUserIdentity() throws Exception {
         SecurityContext context1 = createContext("Jack"); //$NON-NLS-1$
         SecurityContext context2 = createContext("Tom"); //$NON-NLS-1$
-        try {
-            userIDPool.obtain(context1);
-            SourceConnection conn2 = userIDPool.obtain(context1);
-            SourceConnection conn3 = userIDPool.obtain(context2);
-            SourceConnection conn4 = userIDPool.obtain(context2);         
-            userIDPool.release(conn2);
-            userIDPool.error(conn4);
-            
-            List unusedConns = userIDPool.getUnusedConnections(conn2);
-            assertEquals(1, unusedConns.size());
-            assertTrue(unusedConns.contains(conn2));
-            List usedConns = userIDPool.getUsedConnections(conn3);
-            assertEquals(1, usedConns.size());
-            assertTrue(usedConns.contains(conn3));    
-            assertEquals(3, userIDPool.getTotalConnectionCount());        
-        } catch (ConnectionPoolException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
+        userIDPool.obtain(context1);
+        SourceConnection conn2 = userIDPool.obtain(context1);
+        SourceConnection conn3 = userIDPool.obtain(context2);
+        SourceConnection conn4 = userIDPool.obtain(context2);         
+        userIDPool.release(conn2);
+        userIDPool.error(conn4);
+        
+        List unusedConns = userIDPool.getUnusedConnections(conn2);
+        assertEquals(1, unusedConns.size());
+        assertTrue(unusedConns.contains(conn2));
+        List usedConns = userIDPool.getUsedConnections(conn3);
+        assertEquals(1, usedConns.size());
+        assertTrue(usedConns.contains(conn3));    
+        assertEquals(3, userIDPool.getTotalConnectionCount());        
     }
     
-    public void testPoolCleanUp(){
+    public void testPoolCleanUp() throws Exception {
         SecurityContext context = createContext("x");       //$NON-NLS-1$ 
 
+        SourceConnection conn1 = singleIDPool.obtain(context);
+        SourceConnection conn2 = singleIDPool.obtain(context);
+        SourceConnection conn3 = singleIDPool.obtain(context);
+        SourceConnection conn4 = singleIDPool.obtain(context);         
+        singleIDPool.release(conn2);
+        singleIDPool.error(conn4);
+        
         try {
-            SourceConnection conn1 = singleIDPool.obtain(context);
-            SourceConnection conn2 = singleIDPool.obtain(context);
-            SourceConnection conn3 = singleIDPool.obtain(context);
-            SourceConnection conn4 = singleIDPool.obtain(context);         
-            singleIDPool.release(conn2);
-            singleIDPool.error(conn4);
-            
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e1) {
-            }
-            
-            List unusedConns = singleIDPool.getUnusedConnections(conn1);
-            assertEquals(0, unusedConns.size());
-            List usedConns = singleIDPool.getUsedConnections(conn1);
-            assertEquals(2, usedConns.size());
-            assertTrue(usedConns.contains(conn1));
-            assertTrue(usedConns.contains(conn3));   
-            assertEquals(2, singleIDPool.getTotalConnectionCount());           
-        } catch (ConnectionPoolException e) {
-            throw new MetaMatrixRuntimeException(e);
+            Thread.sleep(3000);
+        } catch (InterruptedException e1) {
         }
+        
+        List unusedConns = singleIDPool.getUnusedConnections(conn1);
+        assertEquals(0, unusedConns.size());
+        List usedConns = singleIDPool.getUsedConnections(conn1);
+        assertEquals(2, usedConns.size());
+        assertTrue(usedConns.contains(conn1));
+        assertTrue(usedConns.contains(conn3));   
+        assertEquals(2, singleIDPool.getTotalConnectionCount());           
     }
     
     public void testMultiThreading() throws Exception {

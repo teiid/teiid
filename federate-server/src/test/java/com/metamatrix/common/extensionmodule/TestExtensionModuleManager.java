@@ -80,7 +80,6 @@ public class TestExtensionModuleManager extends TestCase {
 			CurrentConfiguration.getInstance().reset();
 		} catch (ConfigurationException e) {
 		}
-		System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
 		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
         boolean deepClone = false;
         boolean makeUnmodifiable = false;

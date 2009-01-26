@@ -29,7 +29,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.data.api.ConnectorCapabilities;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.exception.ConnectorException;
@@ -46,7 +45,6 @@ public class TestYahooConnection extends TestCase {
     }
 
     public void testConstructor() throws ConnectorException {
-    	System.setProperty(CoreConstants.NO_CONFIGURATION, "");//$NON-NLS-1$
         Properties props = new Properties();
           
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
