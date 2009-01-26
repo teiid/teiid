@@ -56,9 +56,5 @@ public interface HostType extends ServiceComponentType {
      */
     public static final String HOST_PHYSICAL_ADDRESS = com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS;
     
-   
-    /**
-     * The java executable property that defines what java to run when starting a process.
-     */
-    public static final String JAVA_EXEC = "metamatrix.host.java"; //$NON-NLS-1$
+  
 } 

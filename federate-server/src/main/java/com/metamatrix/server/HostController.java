@@ -321,7 +321,13 @@ public class HostController implements HostManagement {
    }
 
    private String buildVMCommand(Properties vmprops) {
-	   String java = vmprops.getProperty(HostType.JAVA_EXEC, "java"); //$NON-NLS-1$
+	   String java = null;
+	   String java_home = System.getProperty("java.home");
+	   if (java_home != null) {
+		   java = java_home + "/bin/java";
+	   } else {
+		   java = "java";
+	   }
 	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
 	   java_opts = java_opts + " " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
 	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
