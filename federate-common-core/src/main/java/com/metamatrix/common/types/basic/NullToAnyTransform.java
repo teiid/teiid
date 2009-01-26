@@ -30,12 +30,18 @@ import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 
 /**
- * This class can be subclassed to do a simple null-->anything.  Just 
- * extend and implement getTargetType().  Incoming value must be null and 
- * outgoing value is the same.  This is purely for type purposes.
+ * This class can do a simple null-->anything.  
+ * Incoming value must be null and outgoing value is the same.  
+ * This is purely for type purposes.
  */
-public abstract class NullToAnyTransform extends AbstractTransform {
+public class NullToAnyTransform extends AbstractTransform {
 
+	private Class<?> targetType;
+	
+	public NullToAnyTransform(Class<?> targetType) {
+		this.targetType = targetType;
+	}
+	
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
@@ -48,7 +54,9 @@ public abstract class NullToAnyTransform extends AbstractTransform {
      * Type of the outgoing value.
      * @return Target type
      */
-    public abstract Class getTargetType();
+    public Class getTargetType() {
+    	return targetType;
+    }
 
 	/**
 	 * This method transforms a value of the source type into a value

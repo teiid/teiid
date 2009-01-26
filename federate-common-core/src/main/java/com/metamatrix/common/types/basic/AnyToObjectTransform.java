@@ -28,7 +28,18 @@ import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public abstract class AnyToObjectTransform extends AbstractTransform {
+public class AnyToObjectTransform extends AbstractTransform {
+	
+	private Class<?> sourceType;
+	
+	public AnyToObjectTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
+	
+	@Override
+	public Class getSourceType() {
+		return sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value

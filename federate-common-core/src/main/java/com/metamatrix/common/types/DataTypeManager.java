@@ -38,10 +38,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
-import com.metamatrix.common.types.basic.BlobToObjectTransform;
-import com.metamatrix.common.types.basic.ClobToObjectTransform;
+import com.metamatrix.common.types.basic.AnyToObjectTransform;
+import com.metamatrix.common.types.basic.NullToAnyTransform;
 import com.metamatrix.common.types.basic.ObjectToAnyTransform;
-import com.metamatrix.common.types.basic.SQLXMLToObjectTransform;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 import com.metamatrix.core.util.ArgCheck;
@@ -576,9 +575,7 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToObjectTransform());
-
+		
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBigDecimalTransform());
 		DataTypeManager
@@ -597,8 +594,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BooleanToBigDecimalTransform());
@@ -618,8 +613,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.BooleanToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BooleanToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ByteToBigDecimalTransform());
@@ -639,13 +632,9 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.ByteToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ByteToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.CharacterToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.CharacterToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ClobToStringTransform());
@@ -654,8 +643,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.DateToStringTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.DateToTimestampTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DateToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToBigDecimalTransform());
@@ -675,8 +662,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.FloatToBigDecimalTransform());
@@ -696,8 +681,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.FloatToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.FloatToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToBigDecimalTransform());
@@ -717,8 +700,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.LongToBigDecimalTransform());
@@ -738,45 +719,7 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.LongToShortTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.LongToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToObjectTransform());
-
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToBigDecimalTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToBlobTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToCharacterTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToClobTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToDateTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToObjectTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToShortTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToTimestampTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToTimeTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.NullToSQLXMLTransform());
+				
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ShortToBigDecimalTransform());
 		DataTypeManager
@@ -795,8 +738,6 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.ShortToLongTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ShortToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.StringToBigDecimalTransform());
@@ -828,9 +769,7 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.StringToTimeTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.StringToSQLXMLTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.StringToObjectTransform());
-
+		
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.SQLXMLToStringTransform());
 
@@ -840,54 +779,22 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.TimestampToStringTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.TimestampToTimeTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.TimestampToObjectTransform());
 
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.TimeToTimestampTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.TimeToStringTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.TimeToObjectTransform());
+		
+		for (Class<?> type : getAllDataTypeClasses()) {
+			if (type != DefaultDataClasses.OBJECT) {
+				DataTypeManager.addTransform(new AnyToObjectTransform(type));
+				DataTypeManager.addTransform(new ObjectToAnyTransform(type));
+			} 
+			if (type != DefaultDataClasses.NULL) {
+				DataTypeManager.addTransform(new NullToAnyTransform(type));
+			}
+		}
 
-		DataTypeManager.addTransform(new BlobToObjectTransform());
-		DataTypeManager.addTransform(new ClobToObjectTransform());
-		DataTypeManager.addTransform(new SQLXMLToObjectTransform());
-
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.STRING));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.CHAR));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.BOOLEAN));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.BYTE));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.SHORT));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.INTEGER));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.LONG));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.BIG_INTEGER));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.FLOAT));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.DOUBLE));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.BIG_DECIMAL));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.DATE));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.TIME));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.TIMESTAMP));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.BLOB));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.CLOB));
-		DataTypeManager.addTransform(new ObjectToAnyTransform(
-				DataTypeManager.DefaultDataClasses.XML));
 	}
 
 	static void loadImplicitConversions() {

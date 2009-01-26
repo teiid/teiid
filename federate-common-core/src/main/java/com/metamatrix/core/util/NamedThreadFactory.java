@@ -9,7 +9,7 @@ public class NamedThreadFactory implements ThreadFactory {
 	private String threadBaseName;
 	
 	public NamedThreadFactory(String name) {
-		this.threadBaseName = (name != null ? name : "Worker"); //$NON-NLS-1$ 
+		this.threadBaseName = (name != null ? name : "Worker_"); //$NON-NLS-1$ 
 	}
 
 	public Thread newThread(Runnable r) {

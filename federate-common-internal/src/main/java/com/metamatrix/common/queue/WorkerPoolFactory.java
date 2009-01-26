@@ -38,6 +38,7 @@ import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.core.util.NamedThreadFactory;
 
 /**
  * Creates WorkPools based upon {@link ThreadPoolExecutor}
@@ -133,23 +134,18 @@ public class WorkerPoolFactory {
 		
 	}
 	
-	public static class DefaultThreadFactory implements ThreadFactory {
-		
-		private AtomicInteger threadNumber = new AtomicInteger();
-		private String threadBaseName;
+	public static class DefaultThreadFactory extends NamedThreadFactory {
 		
 		public DefaultThreadFactory(String name) {
-			this.threadBaseName = (name != null ? name : "") + "Worker_"; //$NON-NLS-1$ //$NON-NLS-2$
+			super(name);
 		}
 
 		public Thread newThread(Runnable r) {
-			String threadName = threadBaseName + threadNumber.getAndIncrement();
+			Thread result = super.newThread(r);
 			if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_POOLING, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.New_thread", new Object[] { threadName })); //$NON-NLS-1$
+				LogManager.logTrace(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.New_thread", result.getName())); //$NON-NLS-1$
 			}
-			Thread t = new Thread(r, threadName);
-			t.setDaemon(true);
-			return t;
+			return result;
 		}
 	}
 	
