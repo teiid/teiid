@@ -27,7 +27,6 @@ package com.metamatrix.jdbc;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
