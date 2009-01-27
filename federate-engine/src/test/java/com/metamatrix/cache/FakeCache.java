@@ -24,8 +24,10 @@
 
 package com.metamatrix.cache;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,7 +77,8 @@ public class FakeCache<K, V> implements Cache<K, V> {
 		return map.values();
 	}
 
-	public void removeListener(CacheListener listener) {
+	@Override
+	public void removeListener() {
 	}
 
 	@Override
@@ -91,12 +94,13 @@ public class FakeCache<K, V> implements Cache<K, V> {
 	}
 
 	@Override
-	public Collection<Cache> getChildren() {
-		return children.values();
+	public List<Cache> getChildren() {
+		return new ArrayList<Cache>(children.values());
 	}
 
 	@Override
-	public Cache removeChild(String name) {
-		return children.remove(name);
+	public boolean removeChild(String name) {
+		Object obj = children.remove(name);
+		return obj != null;
 	}
 }

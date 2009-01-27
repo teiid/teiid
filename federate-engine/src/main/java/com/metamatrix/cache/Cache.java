@@ -25,6 +25,7 @@
 package com.metamatrix.cache;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 
@@ -113,7 +114,7 @@ public interface Cache<K, V>  {
 	 * Remove Listener to stop the updates on this Cache
 	 * @param listener
 	 */
-	void removeListener(CacheListener listener);
+	void removeListener();
 	
 	/**
      * Returns a {@link Collection} containing the data in this Cache
@@ -141,14 +142,14 @@ public interface Cache<K, V>  {
 	/**
 	 * Destroys the child from the current node; no-op if node not found
 	 * @param name
-	 * @return null if node not found; otherwise removed node returned.
+	 * @return true if removed; false otehrwise
 	 */
-	Cache removeChild(String name);
+	boolean removeChild(String name);
 	
 	
 	/**
 	 * Get child nodes under this cache node. If none found empty set is returned
 	 * @return
 	 */
-	Collection<Cache> getChildren();
+	List<Cache> getChildren();
 }

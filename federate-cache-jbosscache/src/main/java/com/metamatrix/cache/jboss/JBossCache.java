@@ -27,18 +27,11 @@ package com.metamatrix.cache.jboss;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
-import org.jboss.cache.notifications.annotation.NodeCreated;
-import org.jboss.cache.notifications.annotation.NodeModified;
-import org.jboss.cache.notifications.annotation.NodeMoved;
-import org.jboss.cache.notifications.annotation.NodeRemoved;
-import org.jboss.cache.notifications.event.NodeEvent;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheListener;
@@ -46,14 +39,11 @@ import com.metamatrix.cache.CacheListener;
 /**
  * Implementation of Cache using JBoss Cache
  */
-@org.jboss.cache.notifications.annotation.CacheListener
 public class JBossCache<K, V> implements Cache<K, V> {
 
 	private org.jboss.cache.Cache cacheStore;
 	private Fqn rootFqn;
-	private List<CacheListener> listeners;
-	private Map<String, Cache> children;
-
+	private JBossCacheListener cacheListener;
 	
 	public JBossCache(org.jboss.cache.Cache cacheStore, Fqn fqn) {
 		this.cacheStore = cacheStore;
@@ -126,35 +116,16 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 * {@inheritDoc}
 	 */
 	public synchronized void addListener(CacheListener listener) {
-		if (this.listeners == null) {
-			listeners = new ArrayList(2);
-		}
-		this.listeners.add(listener);
+		this.cacheListener = new JBossCacheListener(this.rootFqn, listener);
+		this.cacheStore.addCacheListener(this.cacheListener);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized void removeListener(CacheListener listener) {
-		if (this.listeners != null) {
-			this.listeners.remove(listener);
-		}		
-	}
-
-	
-    @NodeCreated
-	@NodeRemoved
-	@NodeModified
-	@NodeMoved
-	public synchronized void cacheChanged(NodeEvent ne) {
-    	if (listeners != null) {
-	    	Fqn fqn = ne.getFqn();
-	    	if (fqn.isChildOrEquals(rootFqn)) {
-	    		for(CacheListener listener:this.listeners) {
-	    			listener.cacheChanged();
-	    		}
-	    	}
-    	}
+	public synchronized void removeListener() {
+		this.cacheStore.removeCacheListener(this.cacheListener);
+		this.cacheListener = null;	
 	}
 
 	/**
@@ -164,12 +135,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	public Cache addChild(String name) {
 		Node node = this.cacheStore.getNode(this.rootFqn);
 		Node childNode = node.addChild(Fqn.fromString(name));
-		if (this.children == null) {
-			this.children = Collections.synchronizedMap(new HashMap<String, Cache>());
-		}
-		Cache child = new JBossCache(this.cacheStore, childNode.getFqn());
-		this.children.put(name, child);
-		return child;
+		return new JBossCache(this.cacheStore, childNode.getFqn());
 	}
 
 	/**
@@ -177,30 +143,37 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public Cache getChild(String name) {
-		return this.children.get(name);
+		Node node = this.cacheStore.getNode(this.rootFqn);
+		Node child = node.getChild(Fqn.fromString(name));
+		if (child != null) {
+			return new JBossCache(this.cacheStore, child.getFqn());
+		}
+		return null;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Collection<Cache> getChildren() {
-		if (this.children == null) {
-			return Collections.EMPTY_SET;
+	public List<Cache> getChildren() {
+		Node node = this.cacheStore.getNode(this.rootFqn);
+		Set<Node<K,V>> nodes = node.getChildren();
+		if (nodes.isEmpty()) {
+			return Collections.EMPTY_LIST;
 		}
-		return this.children.values();
+		List<Cache> children = new ArrayList<Cache>();
+		for(Node child: nodes) {
+			children.add(new JBossCache(this.cacheStore, child.getFqn()));
+		}
+		return children;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Cache removeChild(String name) {
-		if (this.children == null) {
-			return null;
-		}
+	public boolean removeChild(String name) {
 		Node node = this.cacheStore.getNode(this.rootFqn);
-		node.removeChild(Fqn.fromString(name));
-		return this.children.remove(name);
+		return node.removeChild(Fqn.fromString(name));
 	} 	
 }

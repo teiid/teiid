@@ -45,7 +45,6 @@ public class ClusteredRegistryState implements CacheListener {
 
 	private static final String VM_CONTROLLER = "VM_Controller"; //$NON-NLS-1$
 	private static final String SERVICES = "Services"; //$NON-NLS-1$
-	private static final String RESOURCE_POOL = "ResourcePool"; //$NON-NLS-1$
 	private static final String NAME = "Name"; //$NON-NLS-1$
 	
 	Cache cache;
@@ -53,7 +52,7 @@ public class ClusteredRegistryState implements CacheListener {
 	
 	@Inject
 	public ClusteredRegistryState(CacheFactory cacheFactory) {
-		this.cache = cacheFactory.get(Cache.Type.REGISTRY, new CacheConfiguration(Policy.LRU, 0, 20000));
+		this.cache = cacheFactory.get(Cache.Type.REGISTRY, new CacheConfiguration(Policy.LRU, 0, 0));
 		this.cache.addListener(this);
 	}
 	
@@ -270,15 +269,6 @@ public class ClusteredRegistryState implements CacheListener {
         }		
         return services;
 	}
-	
-	private Cache getResourcePool(String hostName, String vmName) throws CacheNodeNotFoundException {
-		Cache vmNode = getVMNode(hostName, vmName);
-        Cache services = vmNode.getChild(RESOURCE_POOL);
-        if (services == null) {
-        	services = vmNode.addChild(RESOURCE_POOL);
-        }		
-        return services;
-	}	
 	
 	protected void removeServiceBinding(String hostName, String vmName, ServiceID serviceId) {
 		try {

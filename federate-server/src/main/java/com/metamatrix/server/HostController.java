@@ -44,7 +44,6 @@ import com.metamatrix.common.config.StartupStateController;
 import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -112,11 +111,16 @@ public class HostController implements HostManagement {
         }    	
     }
     
-    private void shutdown() {
+    private void shutdown(boolean killHostController, boolean killProcesses) {
 		if (isHostRunning()) {
 			HostControllerRegistryBinding prevHost = getRunningHost();
 			try {
-				prevHost.getHostController().shutdown(prevHost.getHostName());
+				if (killHostController) {
+					prevHost.getHostController().shutdown(prevHost.getHostName());
+				}
+				else if (killProcesses) {
+					prevHost.getHostController().killServers(prevHost.getHostName(), false);
+				}
 			} catch (MetaMatrixComponentException e) {
 			}
 		}
@@ -239,6 +243,7 @@ public class HostController implements HostManagement {
         String configName = null;
         boolean startProcesses = true;
         boolean shutdown = false;
+        boolean killHostController = false;
         
         int parmIndex = args.length;
         for (int i = 0; i < parmIndex; i++) {
@@ -258,9 +263,13 @@ public class HostController implements HostManagement {
             } else if (command.equalsIgnoreCase("-help")) { //$NON-NLS-1$
                 printUsage();
                 System.exit(-1);
-            }  else if (command.equalsIgnoreCase("-shutdown")) { //$NON-NLS-1$
+            }  else if (command.equalsIgnoreCase("killHostController")) { //$NON-NLS-1$
             	shutdown = true;
-            }
+            	killHostController = true;
+            } else if (command.equalsIgnoreCase("killHost")) { //$NON-NLS-1$
+            	shutdown = true;
+            	killHostController = false;
+            } 
         }
 
 		String logMsg = "startserver "; //$NON-NLS-1$
@@ -299,7 +308,7 @@ public class HostController implements HostManagement {
             	Thread.sleep(Integer.MAX_VALUE);
             }
             else {
-            	hostController.shutdown();
+            	hostController.shutdown(killHostController, true);
             }
             
         } catch (Throwable e) {
@@ -322,11 +331,11 @@ public class HostController implements HostManagement {
 
    private String buildVMCommand(Properties vmprops) {
 	   String java = null;
-	   String java_home = System.getProperty("java.home");
+	   String java_home = System.getProperty("java.home"); //$NON-NLS-1$
 	   if (java_home != null) {
-		   java = java_home + "/bin/java";
+		   java = java_home + "/bin/java"; //$NON-NLS-1$
 	   } else {
-		   java = "java";
+		   java = "java"; //$NON-NLS-1$
 	   }
 	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
 	   java_opts = java_opts + " " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
