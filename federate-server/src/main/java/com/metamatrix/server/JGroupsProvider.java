@@ -24,7 +24,14 @@
 
 package com.metamatrix.server;
 
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
+
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.OperationsException;
 
 import org.jgroups.ChannelException;
 import org.jgroups.JChannel;
@@ -118,10 +125,24 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 		try {
 			JChannel channel=new JChannel(getChannelProperties(MESSAGE_BUS_CHANNEL));
 			Multiplexer mux = new Multiplexer(channel);
+			
+			// register the channel with the JMX server
+			try {
+				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+				ObjectName on = new ObjectName("Federate:service=JChannel,name="+MESSAGE_BUS_CHANNEL); //$NON-NLS-1$
+				mbs.registerMBean(new org.jgroups.jmx.JChannel(channel), on);
+			} catch (MalformedObjectNameException e) {
+				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, "Failed to register JChannel to JMX"); //$NON-NLS-1$
+			} catch (OperationsException e) {
+				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, "Failed to register JChannel to JMX"); //$NON-NLS-1$
+			} catch (MBeanRegistrationException e) {
+				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, "Failed to register JChannel to JMX"); //$NON-NLS-1$
+			} 
+			
 			return mux;
 		} catch (ChannelException e) {
 			throw new MetaMatrixRuntimeException(e);
-		}
+		} 
 	}
 
 	private static synchronized String getChannelProperties(String name) {

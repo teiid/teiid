@@ -64,7 +64,7 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 			// register the MBean			
 			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cache);			
 			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			ObjectName on = new ObjectName("jboss.cache:service=FederateCacheTree"); //$NON-NLS-1$
+			ObjectName on = new ObjectName("Federate:service=JBossCache,name=cache"); //$NON-NLS-1$
 			mbs.registerMBean(wrapper, on);
 			wrapper.create();
 			wrapper.start();

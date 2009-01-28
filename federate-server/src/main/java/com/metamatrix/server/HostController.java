@@ -338,7 +338,7 @@ public class HostController implements HostManagement {
 		   java = "java"; //$NON-NLS-1$
 	   }
 	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
-	   java_opts = java_opts + " " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
+	   java_opts = java_opts + " -Dcom.sun.management.jmxremote " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
 	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
 	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS, ""); //$NON-NLS-1$
 	   
