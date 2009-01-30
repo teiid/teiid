@@ -19,7 +19,7 @@
     <para>The table below lists the role of each class in the framework.</para>
     
       <table frame="all">
-        <title>Connection Pool properties</title>
+        <title>Monitored Connector Classes</title>
         <tgroup cols='3' align='left' colsep='1' rowsep='1'>
           <colspec colname='c1' colwidth="1*" />
           <colspec colname='c2' colwidth="1*" />
@@ -48,18 +48,6 @@
               <entry>
                 <para>This interface can be added to the Connector implementation to indicate that
                   the connector supports monitoring.  </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ConnectionPool</para>
-              </entry>
-              <entry>
-                <para>Class</para>
-              </entry>
-              <entry>
-                <para>This class from the connection pool framework supports monitoring and can be
-                  easily</para>
               </entry>
             </row>
             <row>
@@ -93,9 +81,7 @@
     <title>Using The Framework</title>
     <para>To support connector monitoring, your Connector implementation must extend the
       MonitoredConnector interface and implement the single getStatus() method to return a
-      ConnectionStatus.  If you are using the ConnectionPool framework, you can typically just call
-      ConnectionPool.getStatus() and return the result from the ConnectionPool, which is already
-      tracking the appropriate state.  Otherwise, you must track and return the appropriate status.
+      ConnectionStatus.
        </para>
     <para>A monitored connector will be polled for status in the Federate Enterprise Server
       (connector monitoring is not supported on Federate Query or Dimension products).  The poll

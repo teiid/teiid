@@ -172,10 +172,10 @@
       <para>The table below lists the role of each class in the framework.</para>
       
       <table frame='all'>
-        <title>Types of Execution Modes</title>
+        <title>Types Facility Classes</title>
         <tgroup cols='3' align='left' colsep='1' rowsep='1'>
           <colspec colname='c1' colwidth="1*"/>
-          <colspec colname='c2' colwidth="1*"/>
+          <colspec colname='c2' colwidth=".5*"/>
           <colspec colname='c3' colwidth="2*"/>
           <thead>      
             <row>

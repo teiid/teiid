@@ -48,10 +48,16 @@
       respective wrapper object.</para>
       
       <table frame="all">
-        <title>Connection Pool properties</title>
+        <title>Lob Types</title>
         <tgroup cols='2' align='left' colsep='1' rowsep='1'>
           <colspec colname='c1' colwidth="1*" />
-          <colspec colname='c2' colwidth="2*" />
+          <colspec colname='c2' colwidth="1*" />
+          <thead>
+            <row>
+              <entry>Java SQL Type</entry>
+              <entry>Runtime Type</entry>
+            </row>
+          </thead>
           <tbody>
             <row>
               <entry>

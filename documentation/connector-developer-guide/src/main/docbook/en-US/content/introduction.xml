@@ -88,8 +88,7 @@
             <para>Connector – starting point.</para>
           </listitem>
           <listitem>
-            <para>Connection – represents a connection to the source, which is typically pooled within
-              the Connector</para>
+            <para>Connection – represents a connection to the source.</para>
           </listitem>
           <listitem>
             <para>ConnectorCapabilities – specifies what kinds of commands your connector can

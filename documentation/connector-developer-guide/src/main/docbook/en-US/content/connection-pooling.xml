@@ -1,465 +1,379 @@
 <chapter id="connection_pooling">
-  <title>Connection Pooling</title>
-  <sect1>
-    <title>Overview</title>
-    <para>The Federate Connector API obtains and releases a connection for each command that is
-      executed with the assumption that the underlying connector will pool connections as necessary.
-       </para>
-    <para>Many enterprise information systems provide persistent connections so Federate
-      provides a connection pool framework available for your use.  This framework handles many of
-      the details of connection pooling while providing the ability to customize what the connection
-      object consists of and how that connection is created and pooled.  </para>
-    <para>The JDBC Connector provided by Federate uses the connection pooling utility.</para>
-  </sect1>
-  
-  <sect1>
-    <title>The Connection Pool Framework</title>
-    <sect2>
-    
-      <title>Framework Overview</title>
-      <para>This UML diagram shows the classes involved in the connection pool framework.  
-      </para>
-      
-      <figure id="connection-pool-framework">
-        <title>Connection Pool Framework Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/connection-pool-framework.png" />
-      </figure>
-      
-      <para>The table below lists the role of each class in the framework.</para>
-      
-      <table frame="all">
-        <title>Responsibilities of Connection Pool Classes</title>
-        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-          <colspec colname='c1' colwidth="1*" />
-          <colspec colname='c2' colwidth="1*" />
-          <colspec colname='c3' colwidth="2*" />
-          <thead>
-            <row>
-              <entry>
-                <para>Class</para>
-              </entry>
-              <entry>
-                <para>Type</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>ConnectionPool</para>
-              </entry>
-              <entry>
-                <para>Class</para>
-              </entry>
-              <entry>
-                <para>This is the primary class implementing the connection pool.  It is
-                  constructed with a SourceConnectionFactory that can provide new connections.  The
-                  pool has lifecycle methods to initialize and shutdown as well as the core
-                  behavior: obtain, release, and error methods.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SourceConnection</para>
-              </entry>
-              <entry>
-                <para>Interface</para>
-              </entry>
-              <entry>
-                <para>This interface corresponds to a physical connection to the data source.
-                   The user of this framework must implement this interface.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SourceConnection</para>
-              </entry>
-              <entry>
-                <para>Interface</para>
-              </entry>
-              <entry>
-                <para>This interface corresponds to a factory that can create SourceConnection
-                  instances.  The user of this framework must implement this interface.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ConnectorIdentity</para>
-              </entry>
-              <entry>
-                <para>Interface</para>
-              </entry>
-              <entry>
-                <para>This interface corresponds to an identifier for a connection in the pool.
-                   Changing the identity implementation changes the basis on which connections are
-                  pooled.  Connections that have equal identity objects (based on the equals()
-                  method) will be in the same pool.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>SingleIdentity</para>
-              </entry>
-              <entry>
-                <para>Class</para>
-              </entry>
-              <entry>
-                <para>This implementation of the identity class makes all connections
-                  equivalent, thus creating a single pool.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>UserIdentity</para>
-              </entry>
-              <entry>
-                <para>Class</para>
-              </entry>
-              <entry>
-                <para>This implementation of the identity class makes all connections equivalent
-                  for a particular user, thus creating a set of per-user connection pools.  </para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-    </sect2>
-    
-    <sect2>
-      <title>Using The Framework</title>
-      <para>To use the connection pooling framework, you must implement two interfaces:
-         SourceConnection and SourceConnectionFactory.  The SourceConnection interface has two
-        methods:  closeSource() and isAlive().  The closeSource() method should be implemented to
-        close the underlying physical connection.  This may be used when shutting down or shrinking
-        the pool.  The isAlive() method should be implemented to check whether the physical connection
-        is still valid.  This method should return as quickly as possible while still checking the
-        validity of the connection.</para>
-      <para>The SourceConnectionFactory interface has two important methods: createIdentity() and
-        createConnection().  The createIdentity() method is called by the pool to get an instance of
-        ConnectorIdentity for a particular SecurityContext.  The pool will use the ConnectorIdentity
-        to determine if an idle pooled connection exists.  If so, that connection will be used.  If
-        not, createConnection() will be called by the pool to obtain a connection for an identity.  
-      </para>
-      
-      <para>The following sequence diagram specifies this behavior.</para>
-      
-      <figure id="connection-identity-sequence">
-        <title>Connection Identity Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/connection-identity-sequence.png" />
-      </figure>
-    
-      <para>The implication of this behavior is that either the factory itself must have the
-        information necessary to create a connection or the implementation of ConnectorIdentity must
-        hold all information necessary to create a connection.  </para>
-      <para>The user of the connection pool must release the SourceConnection when it is no longer
-        in use.  This is done by calling release() on the ConnectionPool.  When the connection is
-        released, if it is still alive, it is returned to the pool.</para>
-      
-      <figure id="connection-release-sequence">
-        <title>Connection Release Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/connection-release-sequence.png" />
-      </figure>
-    </sect2>
-    
-    <sect2>   
-      <title>Configuring the Connection Pool</title>
-      <para>The ConnectionPool has a number of properties that can be configured.  The following
-      table lists these properties.</para>
-    
-      <table frame="all">
-        <title>Connection Pool properties</title>
-        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-          <colspec colname='c1' colwidth="1*" />
-          <colspec colname='c2' colwidth="1*" />
-          <colspec colname='c3' colwidth="2*" />
-          <thead>
-            <row>
-              <entry>
-                <para>Property</para>
-              </entry>
-              <entry>
-                <para>Default Value</para>
-              </entry>
-              <entry>
-                <para>Description</para>
-              </entry>
-            </row>          
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <para>MAX_CONNECTIONS</para>
-              </entry>
-              <entry>
-                <para>5</para>
-              </entry>
-              <entry>
-                <para>Maximum number of connections total in the pool.  This value should be
-                  greater than 0.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>MAX_CONNECTIONS_FOR_EACH_ID</para>
-              </entry>
-              <entry>
-                <para>5</para>
-              </entry>
-              <entry>
-                <para>Maximum number of connections per ConnectorIdentity object.  This value
-                  should be greater than 0.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>LIVE_AND_UNUSED_TIME</para>
-              </entry>
-              <entry>
-                <para>60</para>
-              </entry>
-              <entry>
-                <para>Maximum idle time (in seconds) before a connection is closed if shrinking
-                  is enabled.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>WAIT_FOR_SOURCE_TIME</para>
-              </entry>
-              <entry>
-                <para>120000</para>
-              </entry>
-              <entry>
-                <para>Maximum time to wait (in milliseconds) for a connection to become
-                  available.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>CLEANING_INTERVAL</para>
-              </entry>
-              <entry>
-                <para>60</para>
-              </entry>
-              <entry>
-                <para>Interval (in seconds) between checking for idle connections if shrinking
-                  is enabled.</para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>ENABLE_SHRINKING</para>
-              </entry>
-              <entry>
-                <para>true</para>
-              </entry>
-              <entry>
-                <para>Indicate whether the pool is allowed to shrink.</para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-    
-      <para />
-      <para>Each of the property names above is defined by a static constant in the ConnectionPool
-        class.  The pool is initialized by passing some or all of these properties in a
-        java.util.Properties object in the ConnectionPool.initialize() method call.  This method must
-        be called before the pool is used and may only be called once.</para>
-    </sect2>
-  </sect1>
-  
-  <sect1>
-    <title>Integrating a Pool Into Your Connector</title>
-    <para>This section provides an overview of the typical way that a ConnectionPool is
-      integrated into your connector.  In the Connector API, the Connector serves as a factory for
-      Connection objects, which should be pooled.  Thus, to integrate the ConnectionPool into your
-      Connector, the Connector should initialize and hold a reference to a ConnectionPool and every
-      Connection should hold a reference to a SourceConnection (which holds a reference to the
-      actual connection objects for your information source).  </para>
-    
-    <sect2>
-      <title>Initializing the Pool</title>
-      <para>Your connector must implement the SourceConnection and SourceConnectionFactory to
-        utilize the Connection Pool.  The ConnectionPool and SourceConnectionFactory should be created
-        when the Connector is initialized.  Typically some properties need to be passed from the
-        ConnectorEnvironment to the SourceConnectionFactory, so initialization cannot occur until this
-        point.</para>
-      <para>The following sequence diagram illustrates the initialization process:</para>
-    
-      <figure id="connector-pool-initialization">
-        <title>Connector Pool Initialization Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/connector-pool-initialization.png" />
-      </figure>
-    
-      <para>These steps occur when initializing the pool:</para>
-      <orderedlist>
-        <listitem>
-          <para>The ConnectorManager calls initialize() on the Connector and passes the
-            ConnectorEnvironment, which contains any properties needed to configure your connector.  
-          </para>
-        </listitem>
-        <listitem>
-          <para>Your Connector should initialize your implementation of SourceConnectionFactory,
-            likely using some of the properties obtained from the ConnectorEnvironment.  For example,
-            if you are creating a single pool of connections and the connection information is passed
-            as properties to your connector, those properties should be retrieved and passed to the
-            SourceConnectionFactory.</para>
-        </listitem>
-        <listitem>
-          <para>Your Connector should create an instance of the ConnectionPool using your
-            SourceConnectionFactory instance.  The Connector should maintain a reference to this pool
-            object for later use in obtaining connections.</para>
-        </listitem>
-        <listitem>
-          <para>The ConnectionPool should be initialized with any pool properties, which may be
-            hard-coded or based on values in the ConnectorEnvironment.</para>
-        </listitem>
-        <listitem>
-          <para>When the initialize() method has completed, the ConnectorManager will start your
-            Connector.</para>
-        </listitem>
-      </orderedlist>
-    </sect2>
-    
-    <sect2>
-      <title>Using the Pool</title>
-      <para>It is also important to use your ConnectionPool when creating Connections.  The
-        following sequence diagram shows the events that take place when the ConnectorManager is using
-        your Connector to process a command.</para>
-
-      <figure id="connector-pool-use">
-        <title>Connector Pool use Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/connector-pool-use.png" />
-      </figure>
-    
-      <para>These steps occur when using the pool:</para>
-      <orderedlist>
-        <listitem>
-          <para>The ConnectorManager asks for a Connection from your Connector that pertains to a
-            particular SecurityContext.</para>
-        </listitem>
-        <listitem>
-          <para>Your Connector uses the ConnectionPool to obtain a pooled SourceConnection object.
-          </para>
-        </listitem>
-        <listitem>
-          <para>The ConnectionPool returns a SourceConnection object that was either pulled from
-            the pool or created if necessary.</para>
-        </listitem>
-        <listitem>
-          <para>Your Connector creates a new Connection object using the SourceConnection object.
-          </para>
-        </listitem>
-        <listitem>
-          <para>Your Connector returns the new Connection object to the ConnectorManager.</para>
-        </listitem>
-        <listitem>
-          <para>After the ConnectorManager has used the Connection to execute a command, it
-            releases the Connection.</para>
-        </listitem>
-        <listitem>
-          <para>The Connection object should then release it’s SourceConnection back to the
-            ConnectionPool instance.  </para>
-        </listitem>
-      </orderedlist>
-    </sect2>
-  </sect1>
-  
-  <sect1>
-    <title>Customizing Pooling Behavior</title>
-    <sect2>
-    <title>Implementing a single shared pool</title>
-    <para><emphasis>SourceConnectionFactory.createIdentity()</emphasis></para>
-    <para>In the case of a connector that uses a single “application” user pool, the
-      ConnectionPool should be configured to use the SingleIdentity implementation of the
-      ConnectorIdentity interface.  In your SourceConnectionFactory implementation, the
-      createIdentity() method should always return a SingleIdentity object.  Because all
-      SingleIdentity objects are identical, you can save memory and optimize performance by caching
-      a single instance that is always returned.  </para>
-    <para><emphasis>SourceConnectionFactory.createConnection()</emphasis></para>
-    <para>Your SourceConnectionFactory implementation should be able to create an underlying
-      source connection from the connector properties.  These properties are passed in the
-      ConnectorEnvironment when the SourceConnectionFactory.setConnectorProperties() method is
-      called.  The SingleIdentity object does carry a SecurityContext but the use of the
-      SingleIdentity object indicates that all SecurityContexts should be treated equivalently, so
-      it is unlikely that the context actually carries information necessary to create a connection.</para>
-    
-    <para>Example implementation</para>
-    <programlisting><![CDATA[
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.*;
-import com.metamatrix.data.pool.*;
-
-public class MySinglePoolConnectionFactory implements SourceConnectionFactory {
-  private String user;
-  private String password;
-  private string url;
-
-public void setConnectorProperties(ConnectorEnvironment env) {
-    // Retrieve connector properties needed to connect
-    this.user = env.getProperty(“user”);
-    this.password = env.getProperty(“password”);
-    this.url = env.getProperty(“url”);
-  }
-
-  public ConnectorIdentity createIdentity(SecurityContext context) {
-    return new SingleIdentity(context);
-} 
-
-  public SourceConnection createConnection(ConnectorIdentity identity) {
-    return new MySourceConnection(
-      this.user, this.password, this.url);    
-  }
-}    
-      ]]></programlisting>       
-
-    <para />
-    </sect2>
-    
-    <sect2>
-      <title>Implementing a per-user pool</title>
-      <para><emphasis>SourceConnectionFactory.createIdentity()</emphasis></para>
-      <para>In the case of a connector that uses per-user pooling, the ConnectionPool should use the
-        UserIdentity implementation of the ConnectorIdentity interface.  The ConnectorIdentity
-        compares based on the user name, so each user will essentially have his own pool of
-        connections and the connections are NOT shared between users.  </para>
-      <para>To implement this pooling mechanism, the createIdentity() method should return a new
-        instance of the UserIdentity based on the SecurityContext.  The UserIdentity uses the user
-        name inside the context to decide whether two UserIdentity objects are equivalent.</para>
-      <para><emphasis>SourceConnectionFactory.createConnection()</emphasis></para>
-      <para>Because each UserIdentity object is specific to a particular user, the
-        createConnection() method typically uses information from the nested SecurityContext
-        (sometimes in addition to connector properties) to create the SourceConnection.  </para>
-    <para>Example implementation</para>
-
-    <programlisting><![CDATA[
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.*;
-import com.metamatrix.data.pool.*;
-
-public class MyUserPoolConnectionFactory implements SourceConnectionFactory {
-  private string url;
-
-public void setConnectorProperties(ConnectorEnvironment env) {
-    // Retrieve connector properties needed to connect
-    this.url = env.getProperty(“url”);
-  }
-
-  public ConnectorIdentity createIdentity(SecurityContext context) {
-    return new UserIdentity(context);
-} 
-
-  public SourceConnection createConnection(ConnectorIdentity identity) {
-    SecurityContext context = identity.getSecurityContext();
-    String user = context.getUser();
-    return new MySourceConnection(user, this.url);    
-  }
-}    
-      ]]></programlisting>       
-    </sect2>
-  </sect1>
+	<title>Connection Pooling</title>
+	<sect1>
+		<title>Overview</title>
+		<para>The Query Engine logically obtains and releases a connection
+			for each command that is executed.</para>
+		<para>However many enterprise sources maintain persistent
+			connections that are expensive to create. For these situaions,
+			Federate provides a transparent connection pool to reuse rather than
+			constantly release connections.  The connection pool is highly
+			configurable through configuration properties and extension APIs for
+			Connections and Connectors</para>
+		<para>Many built-in connector types take advantage of pooling,
+			including JDBC, Salesforce, and LDAP connectors.</para>
+	</sect1>
+	<sect1>
+		<title>Framework Overview</title>
+		<para>The table below lists the role of each class in the
+			framework.</para>
+		<table frame="all">
+			<title>Responsibilities of Connection Pool Classes
+			</title>
+			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' colwidth="1*" />
+				<colspec colname='c2' colwidth=".5*" />
+				<colspec colname='c3' colwidth="2*" />
+				<thead>
+					<row>
+						<entry>
+							<para>Class</para>
+						</entry>
+						<entry>
+							<para>Type</para>
+						</entry>
+						<entry>
+							<para>Description</para>
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<para>PoolAwareConnection</para>
+						</entry>
+						<entry>
+							<para>Interface</para>
+						</entry>
+						<entry>
+							<para>This interface is an extension of the Connection
+								interface and provides hooks to better interact with Connection
+								pooling.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ConnectorIdentityFactory</para>
+						</entry>
+						<entry>
+							<para>Interface</para>
+						</entry>
+						<entry>
+							<para>Defines a factory for creating ConnectorIdentities.
+								This can optionally be implemented by the concrete Connector
+								class to properly segregate Connections in the pool. If this
+								class is not implemented by the Connector, then SingleIdentity
+								support will be assumed.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ConnectorIdentity</para>
+						</entry>
+						<entry>
+							<para>Interface</para>
+						</entry>
+						<entry>
+							<para>This interface corresponds to an identifier for a
+								connection in the pool.  Changing the identity implementation
+								changes the basis on which connections are pooled.  Connections
+								that have equal identity objects (based on the equals() method)
+								will be in the same pool.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>SingleIdentity</para>
+						</entry>
+						<entry>
+							<para>Class</para>
+						</entry>
+						<entry>
+							<para>This implementation of the identity class makes all
+								connections equivalent, thus creating a single pool.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>UserIdentity</para>
+						</entry>
+						<entry>
+							<para>Class</para>
+						</entry>
+						<entry>
+							<para>This implementation of the identity class makes all
+								connections equivalent for a particular user, thus creating a
+								set of per-user connection pools.  </para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ConnectionPooling</para>
+						</entry>
+						<entry>
+							<para>Annotation</para>
+						</entry>
+						<entry>
+							<para>This optional Annotation can be used on the Connector
+								implementation class to indicate configure pooling. This can be
+								especially useful to indicate that automatic ConnectionPooing
+								should not be used regardless of the connector binding property
+								settings.</para>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</sect1>
+	<sect1>
+		<title>Using Connection Pooling</title>
+		<para>Automatic connection pooling does not require any
+			changes to basic Connector development. It can be enabled by setting
+			the Connector binding Property ConnectionPoolEnabled=true or by
+			adding the ConnectionPooling annotation, which defaults to
+			enabled=true, to the Connector implementation class. Automatic
+			Connection pooling can be disabled if either setting is false.</para>
+		<para>Connector developers can optionally utilize the
+			PoolAwareConnection and ConnectorIdentityFactory interfaces to refine
+			the Connector's interactions with Connection pooling. It is important
+			to consider providing an implementation for
+			PoolAwareConnection.isAlive to indicate that a Connection is no
+			longer viable and should be purged from the pool. Connection testing
+			is performed upon leases from the pool and optionally at a regular
+			interval that will purge idle Connections. It is also important to
+			consider having the concrete Connector class implement
+			ConnectorIdentity factory if Connections are made under more than
+			just a single identity.</para>
+	</sect1>
+	<sect1>
+		<title>The Connection Lifecycle</title>
+		<para>These steps occur when connection pooling is enabled:
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>If the Connector implements ConnectorIdentityFactory, the
+					ConnectorManager asks the Connector to generate a ConnectorIdentity
+					for the given SecurityContext, else SingleIdentity is assumed. The
+					ConnectorIdentity is then stored on the SecurityContext.</para>
+			</listitem>
+			<listitem>
+				<para>The ConnectorManager asks for a Connection from the pool
+					that pertains to the ConnectorIdentity.</para>
+			</listitem>
+			<listitem>
+				<para>The ConnectionPool returns a Connection that was either
+					pulled from the pool (and passes the isAlive check) or was created
+					by the Connector if necessary.</para>
+			</listitem>
+			<listitem>
+				<para>After the ConnectorManager has used the Connection to
+					execute a command, it releases the Connection. This call is
+					intercepted by the pool and the method
+					PoolAwareConnection.releaseCalled is invoked on the Connection
+					instead. If the Connection does not implement PoolAwareConnection,
+					it is assumed no action is needed.</para>
+			</listitem>
+			<listitem>
+				<para>When the Connection fails an isAlive check or becomes too
+					old with pool shrinking enabled, it is purged from the pool and
+					Connection.release is called.</para>
+			</listitem>
+		</orderedlist>
+		<sect2>
+			<title>XAConnection Pooling</title>
+			<para>
+				The usage of XAConnections (that provide XAResources) typically come
+				with additional limitations about how those Connections can be used
+				once they are enlisted in a transaction. When enabled, automatic
+				connection pooling will perform these additional features with
+				XAConnections:
+				<itemizedlist>
+					<listitem>
+						<para>The pool will return the same XAConnection for all
+							executions under a given transaction until that transaction
+							completes. This implies that all executions to a given
+							XAConnector under the same connection will happen serially.
+						</para>
+					</listitem>
+					<listitem>
+						<para>XAConnections enlisted in a transaction will
+							return to the pool once a transaction completes.</para>
+					</listitem>
+					<listitem>
+						<para>Two separate pools will be maintained. One for
+							Connections that have not and will not be used in a transaction,
+							and one for XAConnections that have an will be used in a
+							transaction. Each pool will be configured based upon the same set
+							of configuration properties - it is not possible to independently
+							control pool sizes, etc.</para>
+					</listitem>
+				</itemizedlist>
+			</para>
+		</sect2>
+	</sect1>
+	<sect1>
+		<title>Configuring the Connection Pool</title>
+		<para>The ConnectionPool has a number of properties that can be
+			configured via the connector binding expert properties.</para>
+		<table frame="all">
+			<title>Connection Pool Properties</title>
+			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+				<colspec colname='c1' colwidth=".5*" />
+				<colspec colname='c1' colwidth="1*" />
+				<colspec colname='c2' colwidth=".25*" />
+				<colspec colname='c3' colwidth="2*" />
+				<thead>
+					<row>
+						<entry>
+							<para>Name</para>
+						</entry>
+						<entry>
+							<para>Key</para>
+						</entry>
+						<entry>
+							<para>Default Value</para>
+						</entry>
+						<entry>
+							<para>Description</para>
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<para>Connection Pool Enabled</para>
+						</entry>
+						<entry>
+							<para>ConnectionPoolEnabled</para>
+						</entry>
+						<entry>
+							<para></para>
+						</entry>
+						<entry>
+							<para>Explicitly enables or disables connection
+								pooling.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Data Source Test Connect Interval (seconds)</para>
+						</entry>
+						<entry>
+							<para>SourceConnectionTestInterval
+							</para>
+						</entry>
+						<entry>
+							<para>600</para>
+						</entry>
+						<entry>
+							<para>How often (in seconds) to create test connections to the
+								underlying source to see if it is available.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Pool Maximum Connections</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.max_connections
+							</para>
+						</entry>
+						<entry>
+							<para>20</para>
+						</entry>
+						<entry>
+							<para>Maximum number of connections total in the pool.
+								 This value should be greater than 0.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Pool Maximum Connections for Each ID</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.max_connections_for_each_id
+							</para>
+						</entry>
+						<entry>
+							<para>20</para>
+						</entry>
+						<entry>
+							<para>Maximum number of connections per ConnectorIdentity
+								object.  This value should be greater than 0.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Pool Connection Idle Time (seconds)</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.live_and_unused_time
+							</para>
+						</entry>
+						<entry>
+							<para>60</para>
+						</entry>
+						<entry>
+							<para>Maximum idle time (in seconds) before a connection
+								is closed if shrinking is enabled.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Pool Connection Waiting Time (milliseconds)</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.wait_for_source_time
+							</para>
+						</entry>
+						<entry>
+							<para>120000</para>
+						</entry>
+						<entry>
+							<para>Maximum time to wait (in milliseconds) for a
+								connection to become available.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Pool cleaning Interval (seconds)</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.cleaning_interval
+							</para>
+						</entry>
+						<entry>
+							<para>60</para>
+						</entry>
+						<entry>
+							<para>Interval (in seconds) between checking for idle
+								connections if shrinking is enabled.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>Enable Pool Shrinking</para>
+						</entry>
+						<entry>
+							<para>com.metamatrix.data.
+							~pool.enable_shrinking
+							</para>
+						</entry>
+						<entry>
+							<para>true</para>
+						</entry>
+						<entry>
+							<para>Indicate whether the pool is allowed to shrink.
+							</para>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</sect1>
 </chapter>

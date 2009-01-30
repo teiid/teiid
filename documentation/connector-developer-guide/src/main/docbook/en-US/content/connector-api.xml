@@ -22,10 +22,8 @@
         <para>
           <emphasis>Connection</emphasis>
           - This interface represents a connection to your data source. It is used as a starting point for actual
-          command executions.  Connections provided to the Connector Manager will be obtained and closed for each
-          command execution. Typically, the Connector should pool connections to the physical source when those
-          connections are expensive to create.  Federate provides an extensible connection pool implementation
-          for your use, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
+          command executions.  Connections provided to the Connector Manager will be obtained and released for each
+          command execution. Federate provides for extensible automatic connection pooling, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
           chapter.
         </para>
       </listitem>
@@ -155,10 +153,7 @@
         lifetime of the request.  When the request has completed, the release() method will be called on the
         connection.</para>
       <para>
-        This usage presumes that the connection objects are pooled in the connector implementation.  In some cases
-        (such as when a connection is stateless) there may be no need to maintain a persistent connection. In that
-        case, connections can be created for every request and destroyed after every request.  In other cases (such
-        as when a connection is stateful and expensive to create), these connections should be pooled.  Federate
+        In cases (such as when a connection is stateful and expensive to create), connections should be pooled.  Federate
         provides an extensible connection pool for this purpose, as described in chapter
         <link linkend="connection_pooling">Connection Pooling</link>.
       </para>

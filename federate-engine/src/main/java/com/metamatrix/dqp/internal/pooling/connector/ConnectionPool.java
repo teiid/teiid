@@ -96,12 +96,10 @@ public class ConnectionPool {
      */
     public static final String ENABLE_SHRINKING = "com.metamatrix.data.pool.enable_shrinking"; //$NON-NLS-1$
     
-    public static final String CONNECTOR_IDENTITY_FACTORY = "com.metamatrix.data.pool.ConnectorIdentityFactory"; //$NON-NLS-1$
-        
     private static final String CTX_CONNECTOR = LogConstants.CTX_CONNECTOR;
 
-    static final int DEFAULT_MAX_CONNECTION = 5;
-    static final int DEFAULT_MAX_CONNECTIONS_FOR_EACH_ID = 5;
+    static final int DEFAULT_MAX_CONNECTION = 20;
+    static final int DEFAULT_MAX_CONNECTIONS_FOR_EACH_ID = 20;
     static final int DEFAULT_LIVE_AND_UNUSED_TIME = 60;
     static final int DEFAULT_WAIT_FOR_SOURCE_TIME = 120000;
     static final int DEFAULT_CLEANING_INTERVAL = 60;
