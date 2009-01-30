@@ -34,7 +34,7 @@ public class OracleUserIdentityConnectionFactory extends JDBCUserIdentityConnect
     private String queryTest = "Select 'x' from DUAL"; //$NON-NLS-1$
     
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 
 }

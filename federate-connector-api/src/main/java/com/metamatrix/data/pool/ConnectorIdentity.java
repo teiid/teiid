@@ -31,14 +31,15 @@ import com.metamatrix.data.api.SecurityContext;
 /**
  * Represents the identity of a connection in the pool.  Identities are 
  * used to determine whether two connections can be put in the same pool.
- * So, the critical method to implement when creating an identity is the 
- * {@link java.lang.Object#equals(java.lang.Object)} method.  
+ * Implementors must supply appropriate {@link java.lang.Object#equals(java.lang.Object)} and
+ * {@link java.lang.Object#hashCode()} methods.  
  */
 public interface ConnectorIdentity {
     
     /**
      * Get the security context that was used to create this identity.
      * @return The original context
+     * @deprecated see {@link SecurityContext#getConnectorIdentity()}
      */
     SecurityContext getSecurityContext();
 }

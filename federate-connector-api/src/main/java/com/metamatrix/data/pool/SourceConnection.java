@@ -32,6 +32,8 @@ import com.metamatrix.data.exception.ConnectorException;
  * All source-specific connections should implement this interface.  Typically this
  * is a holder object that can be used to do a few useful things on the source-specific 
  * connection.
+ * 
+ * @deprecated Connection pooling can be provided automatically by the Query Engine.
  */
 public interface SourceConnection {
 

@@ -26,15 +26,8 @@
  */
 package com.metamatrix.connector.jdbc.xa;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-
-import javax.transaction.RollbackException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
 
 import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.connector.jdbc.JDBCConnector;
@@ -42,149 +35,37 @@ import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.ConnectionPoolException;
-import com.metamatrix.data.pool.DisabledConnectionPool;
-import com.metamatrix.data.pool.SourceConnectionFactory;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
-
+@ConnectionPooling
 public class JDBCXAConnector extends JDBCConnector implements XAConnector{
 
-    private final class RemovalCallback implements
-                                       Synchronization {
-
-        private final TransactionContext transactionContext;
-        private final JDBCSourceXAConnection conn;
-
-        /** 
-         * @param transactionContext
-         */
-        private RemovalCallback(TransactionContext transactionContext, JDBCSourceXAConnection conn) {
-            this.transactionContext = transactionContext;
-            this.conn = conn;
-        }
-
-        public void afterCompletion(int arg0) {
-            idToConnections.remove(this.transactionContext.getTxnID());
-            synchronized (conn) {
-                conn.setInTxn(false);
-                if (!conn.isLeased()) {
-                    conn.release();
-                    environment.getLogger().logTrace("released connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
-                }
-            }
-        }
-
-        public void beforeCompletion() {}
-    }
-
-    private ConnectionPool xaPool; 
-    private Map idToConnections;
-    
-    public void stop() {        
-        if(xaPool != null) {
-            xaPool.shutDown();
-            xaPool = null;
-        }
-        super.stop();
-    }
-
     public void start() throws ConnectorException {
-        if(xaPool == null){  
-            Properties appEnvProps = environment.getProperties();          
-            String scfClassName = appEnvProps.getProperty(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory");  //$NON-NLS-1$
+        Properties appEnvProps = environment.getProperties();          
 
-            // Get and parse URL for some DataSource properties - add to connectionProps
-            final String url = appEnvProps.getProperty(JDBCPropertyNames.URL);
-            if ( url == null || url.trim().length() == 0 ) {
-                throw new ConnectorException("Missing required property: " + JDBCPropertyNames.URL); //$NON-NLS-1$
-            }
-            
-            parseURL(url, appEnvProps);
-            idToConnections = Collections.synchronizedMap(new HashMap());
-            
-            try {
-                //create xa source connection factory
-                Class scfClass = Thread.currentThread().getContextClassLoader().loadClass(scfClassName);
-                SourceConnectionFactory factory = (SourceConnectionFactory) scfClass.newInstance();           
-
-                appEnvProps.setProperty(XAJDBCPropertyNames.IS_XA, Boolean.TRUE.toString());
-                factory.initialize(environment);
-                appEnvProps.setProperty(XAJDBCPropertyNames.IS_XA, Boolean.FALSE.toString());
-
-                if(this.connectionPoolEnabled) {
-                    // If ConnectionPool is enabled, create DefaultConnectionPool
-                	xaPool = new ConnectionPool(factory);
-                } else {
-                    // If ConnectionPool is disabled, create DisabledConnectionPool                    
-                	xaPool = new DisabledConnectionPool(factory);
-                }
-                
-                xaPool.initialize(appEnvProps);
-                
-            } catch (ClassNotFoundException e1) {
-                throw new ConnectorException(e1);
-            } catch (InstantiationException e2) {
-                throw new ConnectorException(e2);
-            } catch (IllegalAccessException e3) {
-                throw new ConnectorException(e3);
-            } catch (ConnectionPoolException e4) {
-                throw new ConnectorException(e4);
-            }      
+        // Get and parse URL for some DataSource properties - add to connectionProps
+        final String url = appEnvProps.getProperty(JDBCPropertyNames.URL);
+        if ( url == null || url.trim().length() == 0 ) {
+            throw new ConnectorException("Missing required property: " + JDBCPropertyNames.URL); //$NON-NLS-1$
         }
         
-        //try a connection. Do we need to consider security context?
+        parseURL(url, appEnvProps);
+
+        super.start();
+
+        //TODO: this assumes single identity support
         Connection conn = this.getXAConnection(null, null);
         conn.release();
-        
-        super.start();
     }
     
     /*
      * @see com.metamatrix.data.api.xa.XAConnector#getXAConnection(com.metamatrix.data.api.SecurityContext)
      */
     public XAConnection getXAConnection(SecurityContext context, final TransactionContext transactionContext) throws ConnectorException {
-        JDBCSourceXAConnection conn = null;
-        
-        if(transactionContext != null){
-            synchronized (idToConnections) {
-                conn  = (JDBCSourceXAConnection)idToConnections.get(transactionContext.getTxnID());
-                if (conn != null){
-                    environment.getLogger().logTrace("Transaction " + transactionContext.getTxnID() + " already has connection, using the same connection"); //$NON-NLS-1$ //$NON-NLS-2$
-                    conn.setLeased(true);
-                    return conn;
-                }
-            }
-        }
-    
-        conn = (JDBCSourceXAConnection)xaPool.obtain(context);
-        conn.setConnectionPool(xaPool);
-
-        if (transactionContext != null) {
-        	environment.getLogger().logTrace("Obtained new connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
-            
-            synchronized (idToConnections) {                
-                try { //add a synchronization to remove the map entry
-                    transactionContext.getTransaction().registerSynchronization(new RemovalCallback(transactionContext, conn));
-                } catch (RollbackException err) {
-                    conn.release();
-                    throw new ConnectorException(err);
-                } catch (SystemException err) {
-                    conn.release();
-                    throw new ConnectorException(err);
-                }
-                idToConnections.put(transactionContext.getTxnID(), conn);
-                conn.setInTxn(true);
-                conn.setLeased(true);
-            }
-        } else {
-            conn.setLeased(true);
-        }
-                
-        return conn;
+    	return (XAConnection)this.getConnection(context);
     }
 
     /**

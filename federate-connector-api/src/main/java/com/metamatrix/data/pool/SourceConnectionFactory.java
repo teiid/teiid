@@ -34,7 +34,9 @@ import com.metamatrix.data.exception.ConnectorException;
  * The primary interface to be implemented by the pool user.  It specifies 
  * how source-specific connections are created and how identity objects 
  * are created based on a security context.  This gives control (implicitly) 
- * over how pooling is done.  
+ * over how pooling is done.
+ * 
+ * @deprecated Connection pooling can be provided automatically by the Query Engine.
  */
 public interface SourceConnectionFactory {
 

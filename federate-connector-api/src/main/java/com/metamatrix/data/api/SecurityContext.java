@@ -24,6 +24,8 @@
 
 package com.metamatrix.data.api;
 
+import com.metamatrix.data.pool.ConnectorIdentity;
+
 /**
  * The security context provides information about the user context in which
  * this query is being run.
@@ -34,5 +36,7 @@ package com.metamatrix.data.api;
  * 
  */
 public interface SecurityContext extends ExecutionContext {
+	
+	ConnectorIdentity getConnectorIdentity();
 
 }

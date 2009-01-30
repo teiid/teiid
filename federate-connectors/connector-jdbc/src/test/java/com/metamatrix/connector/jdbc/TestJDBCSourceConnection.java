@@ -76,8 +76,7 @@ public class TestJDBCSourceConnection extends TestCase {
         
         environment = EnvironmentUtility.createEnvironment(properties, false); 
         
-        strategy = new ConnectionQueryStrategy(TEST_QUERY, 300000);
-        strategy.setQueryInterval(-1);
+        strategy = new ConnectionQueryStrategy(TEST_QUERY);
     }
     
 

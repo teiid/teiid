@@ -39,10 +39,9 @@ import javax.sql.XADataSource;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
-import com.metamatrix.connector.jdbc.JDBCSourceConnection;
+import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.pool.PoolAwareConnection;
 
 /**
  * JDBCSingleIdentityDSConnectionFactory
@@ -51,13 +50,9 @@ import com.metamatrix.data.pool.SourceConnection;
  */
 public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityConnectionFactory{
     private DataSource ds;
-    private boolean isXA;
     private String resourceName;
 
     protected void verifyConnectionProperties(final Properties connectionProps) throws ConnectorException {
-        final String isXAValue = connectionProps.getProperty(XAJDBCPropertyNames.IS_XA);
-        isXA = Boolean.valueOf(isXAValue).booleanValue();
-        
         // Get the JDBC properties ...
         String dataSourceClassName = connectionProps.getProperty(JDBCPropertyNames.DRIVER_CLASS);
         String username = connectionProps.getProperty(XAJDBCPropertyNames.USER);
@@ -110,22 +105,15 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
         ds = baseDs;
     }
 
-    public SourceConnection createConnection(final ConnectorIdentity id) throws ConnectorException {
+    @Override
+    public PoolAwareConnection getConnection(SecurityContext context) throws ConnectorException {
         try{
-            if(this.isXA){
-                XAConnection conn = ((XADataSource)ds).getXAConnection();
-                Connection sqlConn = conn.getConnection();
-                if(getTransactionIsolation() != NO_ISOLATION_LEVEL_SET && getTransactionIsolation() != Connection.TRANSACTION_NONE){
-                    sqlConn.setTransactionIsolation(getTransactionIsolation());
-                }
-                JDBCSourceXAConnection jConn = new JDBCSourceXAConnection(sqlConn, conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
-                return jConn;
-            }
-            Connection conn = ds.getConnection();
+            XAConnection conn = ((XADataSource)ds).getXAConnection();
+            Connection sqlConn = conn.getConnection();
             if(getTransactionIsolation() != NO_ISOLATION_LEVEL_SET && getTransactionIsolation() != Connection.TRANSACTION_NONE){
-                conn.setTransactionIsolation(getTransactionIsolation());
+                sqlConn.setTransactionIsolation(getTransactionIsolation());
             }
-            return new JDBCSourceConnection(conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
+            return new JDBCSourceXAConnection(sqlConn, conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
         }catch(SQLException se){
             throw new ConnectorException(se);
         }

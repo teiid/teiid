@@ -26,49 +26,32 @@
  */
 package com.metamatrix.connector.jdbc;
 
-import java.util.Properties;
-
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
 import com.metamatrix.data.api.ConnectorCapabilities;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.monitor.MonitoredConnector;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.ConnectionPoolException;
-import com.metamatrix.data.pool.DisabledConnectionPool;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
+import com.metamatrix.data.pool.ConnectorIdentity;
+import com.metamatrix.data.pool.ConnectorIdentityFactory;
 
 /**
  * JDBC implementation of Connector interface.
  */
-public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapabilitiesProvider {
+@ConnectionPooling
+public class JDBCConnector implements Connector, GlobalCapabilitiesProvider, ConnectorIdentityFactory {
     protected ConnectorEnvironment environment;
-    protected boolean connectionPoolEnabled = true;
     private ConnectorLogger logger;
-    private ConnectionPool pool;
     private JDBCSourceConnectionFactory factory;
-    
-    private boolean initializedClean = false;
     
     private ConnectorCapabilities capabilities;
     
     public void initialize(ConnectorEnvironment environment) throws ConnectorException {
         logger = environment.getLogger();
         this.environment = environment;
-        
-        Properties props = environment.getProperties();
-
-        this.connectionPoolEnabled = true;
-        String connectionPoolEnabledStr = props.getProperty(ConnectorPropertyNames.CONNECTION_POOL_ENABLED); 
-        if(connectionPoolEnabledStr!=null) {
-        	this.connectionPoolEnabled = Boolean.valueOf(connectionPoolEnabledStr).booleanValue();
-        }
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
         
@@ -108,11 +91,6 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
     }
     
     public void cleanUp() {
-        if(pool != null) {
-            pool.shutDown();
-            pool = null;
-        }
-        
         //Shutdown Factory
         if(this.factory != null) {
             this.factory.shutdown();
@@ -120,36 +98,22 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
     }
 
     public void start() throws ConnectorException {
-        if(pool == null){
-            String scfClassName = environment.getProperties().getProperty(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory");  //$NON-NLS-1$
+        String scfClassName = environment.getProperties().getProperty(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory");  //$NON-NLS-1$
 
-            try {
-                //create source connection factory
-                Class scfClass = Thread.currentThread().getContextClassLoader().loadClass(scfClassName);
-                this.factory = (JDBCSourceConnectionFactory) scfClass.newInstance();
-                factory.initialize(environment);
-                
-                // If ConnectionPool is enabled, create DefaultConnectionPool
-                if(this.connectionPoolEnabled) {
-                	pool = new ConnectionPool(factory);
-                // If ConnectionPool is disabled, create DisabledConnectionPool
-                } else {
-                	pool = new DisabledConnectionPool(factory);
-                }
-                pool.initialize(environment.getProperties());
-                initializedClean = true;
-            } catch (ClassNotFoundException e1) {
-                throw new ConnectorException(e1);
-            } catch (InstantiationException e2) {
-                throw new ConnectorException(e2);
-            } catch (IllegalAccessException e3) {
-                throw new ConnectorException(e3);
-            } catch (ConnectionPoolException e4) {
-                throw new ConnectorException(e4);
-            } catch (ConnectorException e5) {
-                this.cleanUp();
-                throw e5;
-            }
+        try {
+            //create source connection factory
+            Class scfClass = Thread.currentThread().getContextClassLoader().loadClass(scfClassName);
+            this.factory = (JDBCSourceConnectionFactory) scfClass.newInstance();
+            factory.initialize(environment);
+        } catch (ClassNotFoundException e1) {
+            throw new ConnectorException(e1);
+        } catch (InstantiationException e2) {
+            throw new ConnectorException(e2);
+        } catch (IllegalAccessException e3) {
+            throw new ConnectorException(e3);
+        } catch (ConnectorException e5) {
+            this.cleanUp();
+            throw e5;
         }
 
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_started._4")); //$NON-NLS-1$
@@ -159,26 +123,16 @@ public class JDBCConnector implements Connector, MonitoredConnector, GlobalCapab
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
     public Connection getConnection(SecurityContext context) throws ConnectorException {
-        JDBCSourceConnection conn = (JDBCSourceConnection)pool.obtain(context);
-        conn.setConnectionPool(pool);
-        return conn;
+    	return factory.getConnection(context);
     }
     
-    /** 
-     * @see com.metamatrix.data.monitor.MonitoredConnector#getStatus()
-     */
-    public ConnectionStatus getStatus() {
-        if (pool != null) {
-            ConnectionStatus status = pool.getStatus();
-            if (status.aliveStatus == AliveStatus.UNKNOWN && !initializedClean) {
-                status.aliveStatus = AliveStatus.DEAD;
-            }
-            return status;
-        }
-        return new ConnectionStatus(AliveStatus.DEAD);
-    }
-
 	public ConnectorCapabilities getCapabilities() {
 		return capabilities;
+	}
+
+	@Override
+	public ConnectorIdentity createIdentity(SecurityContext context)
+			throws ConnectorException {
+		return factory.createIdentity(context);
 	}
 }

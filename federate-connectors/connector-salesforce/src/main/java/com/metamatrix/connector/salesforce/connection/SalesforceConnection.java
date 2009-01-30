@@ -39,23 +39,17 @@ import com.metamatrix.data.api.Execution;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.pool.PoolAwareConnection;
 import com.sforce.soap.partner.QueryResult;
 
-public class SalesforceConnection implements com.metamatrix.data.api.Connection {
+public class SalesforceConnection implements com.metamatrix.data.api.Connection, PoolAwareConnection {
 
 	private SalesforceCapabilities salesforceCapabilites;
 	private ConnectorEnvironment connectorEnv;
 	private ConnectionImpl connection;
-	private ConnectionPool pool;
-	private SourceConnection sourceConnection;
 	
-	public SalesforceConnection(String username, String password, URL url, ConnectorEnvironment env, 
-			ConnectionPool pool, SourceConnection srcConn) throws ConnectorException {
+	public SalesforceConnection(String username, String password, URL url, ConnectorEnvironment env) throws ConnectorException {
 		try {
-			this.pool = pool;
-			this.sourceConnection = srcConn;
 			connectorEnv = env;
 			String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities");
 			if(capabilitiesClass != null) {
@@ -134,7 +128,6 @@ public class SalesforceConnection implements com.metamatrix.data.api.Connection 
 	}
 
 	public void release() {
-		pool.release(sourceConnection);
 	}
 
 	public QueryResult query(String queryString, int maxBatchSize) throws ConnectorException {
@@ -148,9 +141,10 @@ public class SalesforceConnection implements com.metamatrix.data.api.Connection 
 	public boolean isAlive() {
 		return connection.isAlive();
 	}
-
-	public void close() {
-		//connection = null;
+	
+	@Override
+	public void connectionReleased() {
+		
 	}
 
 	public int delete(String[] ids) throws ConnectorException {

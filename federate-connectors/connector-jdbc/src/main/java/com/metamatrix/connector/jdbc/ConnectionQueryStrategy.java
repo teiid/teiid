@@ -35,77 +35,24 @@ import java.sql.Statement;
  */
 public class ConnectionQueryStrategy implements ConnectionStrategy{
     private String connTestquery;
-    private long prevTime;
-    
-    private boolean isFailed = false;
-    private int queryInterval;
         
-    public ConnectionQueryStrategy(String query, int queryInterval){
+    public ConnectionQueryStrategy(String query){
         this.connTestquery = query;
-        prevTime = System.currentTimeMillis();
-        this.queryInterval = queryInterval;
     }    
-    
-    /**
-     * Set the interval after which to run another test query.
-	 * @param interval in ms.
-     */
-    public void setQueryInterval(int queryInterval) {
-        this.queryInterval = queryInterval;
-    }
-    
     
     /**
      * @see com.metamatrix.connector.jdbc.ConnectionStrategy#isConnectionAlive()
      */
     public boolean isConnectionAlive(Connection connection) {
-        try {
+        Statement statement = null;
+    	try {
             if(connection.isClosed()){
                 return false;
             } 
-            
-            return executeTestQuery(connection);
+            statement = connection.createStatement();
+            statement.executeQuery(connTestquery);
         } catch(SQLException e) {
-            isFailed = true;
-            return false;
-        }
-    }
-    
-    
-    public boolean isConnectionFailed(Connection connection) {
-        try {
-            if(connection.isClosed()){
-                return isFailed;
-            } 
-            
-            return (! executeTestQuery(connection));
-        } catch(SQLException e) {
-            isFailed = true;
-            return true;
-        }
-    }
-
-    
-    /**
-     * Executes a test query to see if the data source is available.
-     * @param connection Should not be closed.
-     * @return whether it succeeds
-     */
-    private boolean executeTestQuery(Connection connection) {
-        Statement statement = null;
-        try {
-            long currentTime = System.currentTimeMillis();
-            //execute a test query if the interval has passed since the last query
-            if(currentTime - prevTime > queryInterval){
-                prevTime = currentTime;          
-                statement = connection.createStatement();
-                statement.executeQuery(connTestquery);
-            }
-            isFailed = false;
-            return true;
-        } catch(SQLException e) {
-           isFailed = true;
-            return false;
+        	return false;
         } finally {
             if ( statement != null ) {
                 try {
@@ -115,6 +62,7 @@ public class ConnectionQueryStrategy implements ConnectionStrategy{
                 }
             }
         }
+        return true;
     }
-
+    
 }

@@ -64,7 +64,7 @@ public class TestConnectorWorkItem extends TestCase {
 
 	static ConnectorManager getConnectorManager() {
 		ConnectorManager cm = new ConnectorManager();
-		cm.setConnector(new FakeConnector());
+		cm.setConnector(new ConnectorWrapper(new FakeConnector()));
 		cm.setTransactionService(new FakeTransactionService());
 		cm.setMetadataService(new FakeMetadataService());
 		return cm;
@@ -163,7 +163,7 @@ public class TestConnectorWorkItem extends TestCase {
 			switch (msgCount++) {
 			case 0:
 				// request more during delivery
-				((FakeConnector) manager.getConnector()).setReturnsFinalBatch(true);
+				((FakeConnector) manager.getConnector().getActualConnector()).setReturnsFinalBatch(true);
 				workItem.requestMore();
 				break;
 			case 1:
@@ -237,7 +237,7 @@ public class TestConnectorWorkItem extends TestCase {
 	public void testImplicitClose() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
 		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector();
+		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
 
 		connector.setReturnsFinalBatch(true);
 
@@ -267,7 +267,7 @@ public class TestConnectorWorkItem extends TestCase {
 	public void testAsynchBasicMore() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
 		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector();
+		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver(); 
 		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
 				request, manager, resultsReceiver);
@@ -289,7 +289,7 @@ public class TestConnectorWorkItem extends TestCase {
 	public void testAsynchKeepAlive() throws Exception {
 		AtomicRequestMessage request = createNewAtomicRequestMessage(1, 1);
 		ConnectorManager manager = getConnectorManager();
-		FakeConnector connector = (FakeConnector) manager.getConnector();
+		FakeConnector connector = (FakeConnector) manager.getConnector().getActualConnector();
 		QueueResultsReceiver resultsReceiver = new QueueResultsReceiver();
 		FakeQueuingAsynchConnectorWorkItem state = new FakeQueuingAsynchConnectorWorkItem(
 				request, manager, resultsReceiver);

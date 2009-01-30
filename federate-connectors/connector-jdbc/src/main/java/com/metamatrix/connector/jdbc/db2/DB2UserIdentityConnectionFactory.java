@@ -34,7 +34,7 @@ public class DB2UserIdentityConnectionFactory extends JDBCUserIdentityConnection
     private String queryTest = "Select 'x' from sysibm.systables where 1 = 2"; //$NON-NLS-1$
     
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 
 }

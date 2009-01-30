@@ -30,13 +30,13 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.SingleIdentity;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.data.pool.SingleIdentityFactory;
 
 /**
  * Factory to create JDBCSourceConnection for SingleIdentity.
@@ -50,6 +50,10 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
     protected ConnectionListener connectionListener = new DefaultConnectionListener();
     private ConnectorLogger logger;
 
+    public JDBCSingleIdentityConnectionFactory() {
+		super(new SingleIdentityFactory());
+	}
+    
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
         verifyConnectionProperties(env.getProperties());
@@ -57,11 +61,6 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
         // attempt to get a connection to verify that properties are valid
         testConnection();
     }
-
-    public boolean isSingleIdentity() {
-        return true;
-    }
-    
     
     protected void verifyConnectionProperties(Properties connectionProps) throws ConnectorException{
         // Find driver 
@@ -89,8 +88,8 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
     
     private void testConnection() throws ConnectorException {
         try {
-            SourceConnection connection = createConnection(createIdentity(null));
-            connection.closeSource();
+            Connection connection = getConnection(null);
+            connection.release();
         } catch (ConnectorException e) {
             SQLException ex = (SQLException)e.getCause();
             String sqlState = ex.getSQLState();
@@ -100,12 +99,8 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
             this.logger.logError(e.getMessage(), e);
         }           
     }
-    
-    public ConnectorIdentity createIdentity(SecurityContext context) throws ConnectorException {
-        return new SingleIdentity(context);
-    }
-        
-    public SourceConnection createConnection(ConnectorIdentity id) throws ConnectorException {
+            
+    public Connection getConnection(SecurityContext ctx) throws ConnectorException {
         return createJDBCConnection(driver, url, transIsoLevel, userProps);
     }
 

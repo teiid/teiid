@@ -24,58 +24,27 @@
 
 package com.metamatrix.dqp.internal.cache.connector;
 
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
+import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 
-public class CacheConnector implements Connector, XAConnector, GlobalCapabilitiesProvider {
-	private Connector actualConnector;
+public class CacheConnector extends ConnectorWrapper {
 	private ResultSetCache cache;
 	
 	public CacheConnector(Connector actualConnector, ResultSetCache cache){
-		this.actualConnector = actualConnector;
+		super(actualConnector);
 		this.cache = cache;
 	}
 
-	public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-		actualConnector.initialize(environment);
-	}
-
-	public void start() throws ConnectorException {
-		actualConnector.start();
-	}
-
-	public void stop() {
-		actualConnector.stop();
-	}
-
-	public Connection getConnection(SecurityContext context) throws ConnectorException {
-		return new CacheConnection(actualConnector.getConnection(context), cache);
+	public Connection getConnectionDirect(SecurityContext context) throws ConnectorException {
+		return new CacheConnection(getActualConnector().getConnection(context), cache);
 	}
 	
 	public ResultSetCache getCache(){
 		return cache;
 	}
 
-	public XAConnection getXAConnection(SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException {
-		if(actualConnector instanceof XAConnector){
-            return ((XAConnector)actualConnector).getXAConnection(securityContext, transactionContext);
-		}
-		return null;
-	}
-
-	public ConnectorCapabilities getCapabilities() {
-		if(actualConnector instanceof GlobalCapabilitiesProvider){
-            return ((GlobalCapabilitiesProvider)actualConnector).getCapabilities();
-		}
-		return null;
-	}
 }

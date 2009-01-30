@@ -26,7 +26,6 @@ package com.metamatrix.dqp.internal.cache.connector;
 
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorMetadata;
 import com.metamatrix.data.api.Execution;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.ProcedureExecution;
@@ -61,10 +60,6 @@ public class CacheConnection implements Connection{
 		return execution;
 	}
 
-	public ConnectorMetadata getMetadata() {
-		return actualConn.getMetadata();
-	}
-	
 	public void release() {
 		actualConn.release();
 	}

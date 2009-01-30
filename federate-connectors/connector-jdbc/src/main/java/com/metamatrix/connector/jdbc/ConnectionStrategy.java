@@ -35,8 +35,4 @@ public interface ConnectionStrategy {
      */
     boolean isConnectionAlive(Connection connection);
     
-    /**
-     * @return true if the connection has failed.  false if the connection is open, or closed without failure. 
-     */    
-    boolean isConnectionFailed(Connection connection);
 }

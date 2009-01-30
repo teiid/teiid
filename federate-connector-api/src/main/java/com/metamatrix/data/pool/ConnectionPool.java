@@ -45,10 +45,15 @@ import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.data.DataPlugin;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
 
+/**
+ * @deprecated Connection pooling can be provided automatically by the Query Engine. Set {@link ConnectionPooling#enabled()} to false 
+ * to suppress automatic pooling.
+ */
 public class ConnectionPool {
 
     /**

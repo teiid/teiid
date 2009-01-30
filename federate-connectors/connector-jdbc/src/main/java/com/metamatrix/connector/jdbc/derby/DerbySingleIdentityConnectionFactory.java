@@ -40,6 +40,6 @@ public class DerbySingleIdentityConnectionFactory extends JDBCSingleIdentityConn
      * @since 4.3
      */
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 }

@@ -48,8 +48,7 @@ public class TestConnectionQueryStrategy extends TestCase {
     }
     
     public void setUp() throws Exception {
-        strategy = new ConnectionQueryStrategy(TEST_QUERY, 300000);
-        strategy.setQueryInterval(-1);
+        strategy = new ConnectionQueryStrategy(TEST_QUERY);
         
         fakeConnection = new FakeConnection();
         connection = SimpleMock.createSimpleMock(fakeConnection, Connection.class);
@@ -76,31 +75,4 @@ public class TestConnectionQueryStrategy extends TestCase {
         
     }
     
-    /**
-     * Tests ConnectionQueryStrategy.isConnectionFailed()
-     * @since 4.3
-     */
-    public void testIsConnectionFailed() {
-        
-        //open connections should not be 'failed'
-    	fakeConnection.closed = false;      
-        assertFalse(strategy.isConnectionFailed(connection));
-        
-        //closed connections should not be 'failed' if we haven't failed yet
-        fakeConnection.closed = true;      
-        assertFalse(strategy.isConnectionFailed(connection));
-        
-        
-        
-        
-        //failed connections should be 'failed'
-        fakeConnection.closed = false;
-        fakeConnection.fail = true;
-        assertTrue(strategy.isConnectionFailed(connection));
-        
-        //closed connections should be 'failed' if we've failed
-        fakeConnection.closed = true;
-        assertTrue(strategy.isConnectionFailed(connection));
-        
-    }
 }

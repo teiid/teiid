@@ -60,7 +60,6 @@ import com.metamatrix.data.language.IQuery;
 import com.metamatrix.data.language.IQueryCommand;
 import com.metamatrix.data.language.ISetQuery;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
@@ -116,7 +115,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
-        this.isTransactional = manager.getConnector() instanceof XAConnector && message.isTransactional();
+        this.isTransactional = manager.isXa() && message.isTransactional();
         this.manager = manager;
         this.resultsReceiver = resultsReceiver;
     }

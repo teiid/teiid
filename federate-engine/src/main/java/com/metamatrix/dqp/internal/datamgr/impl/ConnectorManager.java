@@ -29,7 +29,7 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -45,6 +45,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.data.api.Connection;
@@ -52,12 +53,10 @@ import com.metamatrix.data.api.Connector;
 import com.metamatrix.data.api.ConnectorCapabilities;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.monitor.MonitoredConnector;
 import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.ResourceFinder;
@@ -66,6 +65,7 @@ import com.metamatrix.dqp.internal.cache.connector.CacheConnector;
 import com.metamatrix.dqp.internal.datamgr.CapabilitiesConverter;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
+import com.metamatrix.dqp.internal.pooling.connector.PooledConnector;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -93,15 +93,15 @@ public class ConnectorManager implements ApplicationService {
     public static final int DEFAULT_PROCESSOR_TREAD_TTL = 120000;
 
     //state constructed in start
-    private Connector connector;
-    private MonitoredConnector monitoredConnector;
+    private ConnectorWrapper connector;
     private ConnectorID connectorID;
     private WorkerPool connectorWorkerPool;
     private ResultSetCache rsCache;
 	private String connectorName;
     private int maxResultRows;
     private boolean exceptionOnMaxRows = true;
-    private boolean pooledResource;
+    private boolean synchWorkers;
+    private boolean isXa;
 
     //services acquired in start
     private MetadataService metadataService;
@@ -129,11 +129,8 @@ public class ConnectorManager implements ApplicationService {
         Thread currentThread = Thread.currentThread();
         ClassLoader threadContextLoader = currentThread.getContextClassLoader();
         try {
-        	ConnectorCapabilities caps = null;
+        	ConnectorCapabilities caps = connector.getCapabilities();
             currentThread.setContextClassLoader(connector.getClass().getClassLoader());
-            if (connector instanceof GlobalCapabilitiesProvider) {
-            	caps = ((GlobalCapabilitiesProvider)connector).getCapabilities();
-            }
             boolean global = true;
             if (caps == null) {
             	SecurityContext context = new ExecutionContextImpl(
@@ -151,7 +148,7 @@ public class ConnectorManager implements ApplicationService {
             	caps = conn.getCapabilities();
             	global = caps.getCapabilitiesScope() == ConnectorCapabilities.SCOPE.GLOBAL;
             }
-            BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), connector instanceof XAConnector);
+            BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), isXa);
             resultCaps.setScope(global?Scope.SCOPE_GLOBAL:Scope.SCOPE_PER_USER);
             return resultCaps;
         } finally {
@@ -174,7 +171,7 @@ public class ConnectorManager implements ApplicationService {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
     	
     	ConnectorWorkItem item = null;
-    	if (pooledResource) {
+    	if (synchWorkers) {
     		item = new SynchConnectorWorkItem(message, this, receiver);
     	} else {
     		item = new AsynchConnectorWorkItem(message, this, receiver);
@@ -276,10 +273,7 @@ public class ConnectorManager implements ApplicationService {
      * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
      */
     public ConnectionStatus getStatus() {
-        if (monitoredConnector != null) {
-            return this.monitoredConnector.getStatus();
-        }
-        return new ConnectionStatus(AliveStatus.UNKNOWN);
+        return this.connector.getStatus();
     }
     
     /**
@@ -329,7 +323,7 @@ public class ConnectorManager implements ApplicationService {
         
         this.maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, 0);
         this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
-        this.pooledResource = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.POOLED_RESOURCE, true);
+        this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
 
         this.started = true;
     }
@@ -346,29 +340,36 @@ public class ConnectorManager implements ApplicationService {
         if(loader == null){
             loader = getClass().getClassLoader();
         }
-        Class clazz = null;
+        Class<?> clazz = null;
         try {
             clazz = loader.loadClass(connectorClassName);
         } catch (ClassNotFoundException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
         }
-
         try {
-            this.connector = (Connector) clazz.newInstance();
-            if(this.connector instanceof XAConnector){
+            Connector c = (Connector) clazz.newInstance();
+            if(c instanceof XAConnector){
+            	this.isXa = true;
                 if (this.getTransactionService() == null) {                    
                     throw new ApplicationLifecycleException(DQPPlugin.Util.getString("no_txn_manager", connectorName)); //$NON-NLS-1$
                 }
-                
-                // add this connector as the recovery source
-                TransactionServer ts = this.getTransactionService().getTransactionServer(); 
-                ts.registerRecoverySource(connectorName, (XAConnector)this.connector);
             }
-            
-            if(this.connector instanceof MonitoredConnector) {
-                this.monitoredConnector = (MonitoredConnector)connector;
-            } 
-            wrapCacheConnector(env);
+        	c = wrapPooledConnector(c, env);
+            c = wrapCacheConnector(c, env);
+            if (c instanceof ConnectorWrapper) {
+            	this.connector = (ConnectorWrapper)c;
+            } else {
+            	this.connector = new ConnectorWrapper(c);
+            }
+            if (this.isXa) {
+                if (this.connector.supportsSingleIdentity()) {
+                	// add this connector as the recovery source
+	                TransactionServer ts = this.getTransactionService().getTransactionServer(); 
+	                ts.registerRecoverySource(connectorName, (XAConnector)this.connector);
+                } else {
+                	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.getName())); //$NON-NLS-1$	                
+                }
+            }
         } catch (InstantiationException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_instantiate_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
         } catch (IllegalAccessException e) {
@@ -397,8 +398,29 @@ public class ConnectorManager implements ApplicationService {
             currentThread.setContextClassLoader(threadContextLoader);
         }
     }
+    
+    private Connector wrapPooledConnector(Connector c, ConnectorEnvironment connectorEnv) {
+    	//the pooling annotation overrides the connector binding
+        ConnectionPooling connectionPooling = (ConnectionPooling) c.getClass().getAnnotation(ConnectionPooling.class);
+    	boolean connectionPoolPropertyEnabled = PropertiesUtils.getBooleanProperty(connectorEnv.getProperties(), ConnectorPropertyNames.CONNECTION_POOL_ENABLED, true);
+    	boolean propertySet = connectorEnv.getProperties().contains(ConnectorPropertyNames.CONNECTION_POOL_ENABLED);
+    	boolean poolingEnabled = false;
+        if (propertySet) {
+        	poolingEnabled = connectionPoolPropertyEnabled && (connectionPooling == null || connectionPooling.enabled());
+        } else {
+        	poolingEnabled = connectionPooling != null && connectionPooling.enabled();
+        }
+        if (poolingEnabled) {
+           	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Automatic connection pooling was enabled for connector " + getName()); //$NON-NLS-1$
+        	if (!this.synchWorkers) {
+            	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.asynch_worker_warning", ConnectorPropertyNames.SYNCH_WORKERS)); //$NON-NLS-1$	                
+        	}
+        	return new PooledConnector(c);
+        }         
+        return c;
+    }
 
-	private void wrapCacheConnector(ConnectorEnvironment connectorEnv) {
+	private Connector wrapCacheConnector(Connector c, ConnectorEnvironment connectorEnv) {
         //check result set cache
         Properties props = connectorEnv.getProperties();
         Properties rsCacheProps = null;
@@ -409,13 +431,14 @@ public class ConnectorManager implements ApplicationService {
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
         	try {
         		rsCache = new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
-        		connector = new CacheConnector(connector, rsCache);
+        		return new CacheConnector(c, rsCache);
 			} catch (MetaMatrixComponentException e) {
 				// this does not really affect the 
 				//function of connector, log warning for now
                 LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("DQPCORE.6")); //$NON-NLS-1$
 			}
         }
+        return c;
 	}
 
     /**
@@ -455,7 +478,7 @@ public class ConnectorManager implements ApplicationService {
         
         if ( this.connector != null ) {
 
-            if(this.connector instanceof XAConnector){
+            if(this.isXa){
                 if (this.getTransactionService() != null) {
                     TransactionServer ts = this.getTransactionService().getTransactionServer();
                     ts.removeRecoverySource(connectorName);
@@ -489,14 +512,11 @@ public class ConnectorManager implements ApplicationService {
      * this service.
      * If there are no queues, an empty Collection is returned.
      */
-    public Collection getQueueStatistics() {
+    public Collection<WorkerPoolStats> getQueueStatistics() {
         if ( this.connectorWorkerPool == null ) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-
-        Collection statList = new ArrayList(1);
-        statList.add(connectorWorkerPool.getStats());
-        return statList;
+        return Arrays.asList(connectorWorkerPool.getStats());
     }
 
     /**
@@ -504,15 +524,13 @@ public class ConnectorManager implements ApplicationService {
      * this service.
      * If there is no queue with the given name, an empty Collection is returned.
      */
-    public Collection getQueueStatistics(String name) {
+    public Collection<WorkerPoolStats> getQueueStatistics(String name) {
         if ( connectorID == null ||
              !name.equalsIgnoreCase(connectorID.getID()) ||
              connectorWorkerPool == null ) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        Collection stats = new ArrayList(2);
-        stats.add(connectorWorkerPool.getStats());
-        return stats;
+        return Arrays.asList(connectorWorkerPool.getStats());
     }
 
     /**
@@ -547,11 +565,11 @@ public class ConnectorManager implements ApplicationService {
      * manager.
      * @return the <code>Connector</code>.
      */
-    Connector getConnector() {
+    ConnectorWrapper getConnector() {
         return this.connector;
     }
     
-    void setConnector(Connector connector) {
+    void setConnector(ConnectorWrapper connector) {
     	this.connector = connector;
     }
 
@@ -598,6 +616,10 @@ public class ConnectorManager implements ApplicationService {
 
 	void setConnectorWorkerPool(WorkerPool connectorWorkerPool) {
 		this.connectorWorkerPool = connectorWorkerPool;
+	}
+	
+	public boolean isXa() {
+		return isXa;
 	}
 
 }

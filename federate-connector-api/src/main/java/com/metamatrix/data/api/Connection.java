@@ -26,13 +26,14 @@ package com.metamatrix.data.api;
 
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.data.pool.PoolAwareConnection;
 
 /**
- * <p>Represents a (typically) pooled connection to this connector.  A connection will be obtained
+ * <p>Represents a (typically) connection to this connector.  A connection will be obtained
  * from the connector for every query that is executed, then closed after the query has completed.
- * For this reason, it is recommended that if a connector needs a persistent connection, it should
- * be pooled within the connector.  A connection pooling utility for this purpose is provided 
- * in the <code>com.metamatrix.data.pool</code> package.</p>
+ * </p>
+ * <p>If pooling is enabled, see {@link PoolAwareConnection} to implement pooling specific behavior.
+ * </p>  
  */
 public interface Connection {
 
@@ -52,12 +53,6 @@ public interface Connection {
      * @return An execution object that MetaMatrix can use to execute the command
      */
     Execution createExecution( int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata ) throws ConnectorException;
-
-    /**
-     * Obtain an interface that can be used to retrieve metadata via the connector.
-     * @return An interface for metadata retrieval
-     */
-    ConnectorMetadata getMetadata();    
 
     /**
      * Release the connection.  This will be called when MetaMatrix has completed 

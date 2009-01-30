@@ -28,8 +28,8 @@ import java.sql.Driver;
 import java.util.Properties;
 
 import com.metamatrix.connector.jdbc.JDBCUserIdentityConnectionFactory;
+import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.SourceConnection;
 
 /**
  * Overrides createConnection stuff so we can fake obtaining a connection.
@@ -38,7 +38,8 @@ public class MockExampleConnectionFactory extends JDBCUserIdentityConnectionFact
 
     public void shutdown() {}
 	
-    protected SourceConnection createJDBCConnection(
+    @Override
+    protected Connection createJDBCConnection(
         Driver driver,
         String url,
         int transactionIsolationLevel,

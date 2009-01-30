@@ -32,8 +32,10 @@ import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.GlobalCapabilitiesProvider;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
 
+@ConnectionPooling(enabled=false)
 public class XMLConnector extends AbstractCachingConnector implements GlobalCapabilitiesProvider {
 	
 	public XMLConnector() {

@@ -120,5 +120,5 @@ public class ConnectorPropertyNames {
      * Indicates whether the connector represents a pooled resource.  If it does, then
      * synchronous workers will be used.
      */
-    public static final String POOLED_RESOURCE = "PooledResource"; //$NON-NLS-1$
+    public static final String SYNCH_WORKERS = "SynchWorkers"; //$NON-NLS-1$
 }

@@ -29,6 +29,8 @@ package com.metamatrix.connector.jdbc.xa;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.ConnectionEvent;
+import javax.sql.ConnectionEventListener;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.connector.jdbc.ConnectionListener;
@@ -41,73 +43,60 @@ import com.metamatrix.data.xa.api.XAConnection;
 public class JDBCSourceXAConnection extends JDBCSourceConnection implements XAConnection {
     private javax.sql.XAConnection xaConn;
     private XAResource resource;
-    private boolean isInTxn;
-    private int leaseCount=0;
+    private boolean errorOccurred;
     
     public JDBCSourceXAConnection(Connection conn, javax.sql.XAConnection xaConn, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ConnectionListener connectionListener) throws ConnectorException, SQLException {       
         super(conn, environment, connectionStrategy, connectionListener);
         this.xaConn = xaConn;
+        this.xaConn.addConnectionEventListener(new ConnectionEventListener() {
+        	@Override
+        	public void connectionClosed(ConnectionEvent event) {
+        		
+        	}
+        	@Override
+        	public void connectionErrorOccurred(ConnectionEvent event) {
+        		errorOccurred = true;
+        	}
+        });
+        this.resource = xaConn.getXAResource();
     }
     
     /**
      * @see com.metamatrix.data.xa.api.XAConnection#getXAResource()
      */
-    public synchronized XAResource getXAResource() throws ConnectorException {
-        try {
-            if (resource == null) {
-                this.resource = xaConn.getXAResource();
-            }                
-        } catch (SQLException err) {
-            throw new ConnectorException(err);
-        }
+    public XAResource getXAResource() throws ConnectorException {
         return resource;
     }
     
-    synchronized void setInTxn(boolean isInTxn) {
-        this.isInTxn = isInTxn;
-    }
-    
     public synchronized void release() {
-        this.setLeased(false);
-        if (!isLeased() && !isInTxn) {
-//            if () {
-//                this.environment.getLogger().logWarning(JDBCPlugin.Util.getString("JDBCSourceXAConnecton:Connection_still_leased")); //$NON-NLS-1$
-//            }
-            try {
-                closeSource();
-            } catch (ConnectorException e) {
-                this.environment.getLogger().logWarning(e.getMessage());
-            }
-            this.physicalConnection = null;
-            super.release();
-        }
-    }
-    
-    public synchronized boolean isLeased() {
-        return this.leaseCount > 0;
-    }    
-    
-    public synchronized void setLeased(boolean leased) {
-        if (leased) {
-            this.leaseCount++;
-        }
-        else {
-            this.leaseCount--;
-        }
-    }
-
-    /** 
-     * @see com.metamatrix.connector.jdbc.JDBCSourceConnection#getPhysicalConnection()
-     */
-    protected Connection getPhysicalConnection() throws ConnectorException {
-        if (this.physicalConnection != null) {
-            return this.physicalConnection;
-        }
+        super.release();
+        
         try {
-            this.physicalConnection = xaConn.getConnection();
-        } catch (SQLException err) {
-            throw new ConnectorException(err);
-        }
-        return this.physicalConnection;
+			this.xaConn.close();
+		} catch (SQLException e) {
+			this.environment.getLogger().logDetail("Exception while closing: " + e.getMessage());
+		}
     }
+    
+    /**
+     * XAConnection Connections should be cycled to ensure proper cleanup after the transaction.
+     */
+    @Override
+    public void connectionReleased() {
+    	super.release();
+    	try {
+			this.physicalConnection = this.xaConn.getConnection();
+		} catch (SQLException e) {
+			this.environment.getLogger().logDetail("Exception while cycling connection: " + e.getMessage());
+		}
+    }
+    
+    @Override
+    public boolean isAlive() {
+    	if (errorOccurred) {
+    		return false;
+    	}
+    	return super.isAlive();
+    }
+    
 }

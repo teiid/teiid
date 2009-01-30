@@ -33,28 +33,29 @@ import java.util.Set;
 
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.data.DataPlugin;
+import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
 
 /**
- * Class intended to accomodate cases in which credentials must be passed on a
- * per user basis to a connector.  It is proposed to work like this:
+ * Allows credentials to be passed on a per user basis to a connector.  
  *
  * A CredentialsMap object is produced based on information provided in the JDBC
  * URL.  The static method parseCredentials() is used for this purpose.
  *
- * This CredentialsMap serves as the "trusted token" Serializable in calling
- * MetaMatrix.establishSession();
+ * This CredentialMap serves as the session "trusted payload".
  *
- * A TrustedSessionToken would then be created for the session.  The getToken()
- * method for this TST would return this CredentialsMap object.
- *
- * It will be the responsibility of a driver to realize that getToken() has
- * returned a CredentialsMap, and to then accordingly call the getSystemUser()
- * and getSystemCredentials() methods.  The driver would be expected to know its
- * system name.
- *
+ * It is the responsibility of a Connector to call
+ * {@link SecurityContext#getTrustedPayload()} to retrieve the CredentialMap.
+ * 
+ * The system name should be the same as the Connector Binding Name retrieved from
+ * {@link ConnectorEnvironment#getConnectorName()}.
+ * 
  * To get the keyword/value pairs use getSystemCredentials(systemName), this will
  * return a Map that contains the properties for the specified system.
+ * 
+ * Specific user and password values can be retrieved with 
+ * getUser(systemName) and getPassword(systemName)
  */
 public class CredentialMap implements Serializable {
 	//Parsing keywords for system, user, and password.  Comparison is done

@@ -29,6 +29,7 @@ import java.io.Serializable;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.pool.ConnectorIdentity;
 
 /**
  */
@@ -60,6 +61,8 @@ public class ExecutionContextImpl implements SecurityContext {
     private boolean keepAlive = false;
     
     private boolean isTransactional;
+    
+    private ConnectorIdentity connectorIdentity;
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 
@@ -131,13 +134,13 @@ public class ExecutionContextImpl implements SecurityContext {
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
-        } else if(obj == null || ! (obj instanceof ExecutionContext)) {
+        } 
+        if(! (obj instanceof ExecutionContext)) {
             return false;
-        } else {
-            ExecutionContext other = (ExecutionContext) obj;
-            return compareWithNull(this.getRequestIdentifier(), other.getRequestIdentifier()) && 
-                    compareWithNull(this.getPartIdentifier(), other.getPartIdentifier());
-        }
+        } 
+        ExecutionContext other = (ExecutionContext) obj;
+        return compareWithNull(this.getRequestIdentifier(), other.getRequestIdentifier()) && 
+                compareWithNull(this.getPartIdentifier(), other.getPartIdentifier());
     }
 
     private boolean compareWithNull(Object obj1, Object obj2) {
@@ -167,5 +170,14 @@ public class ExecutionContextImpl implements SecurityContext {
 
 	void setTransactional(boolean isTransactional) {
 		this.isTransactional = isTransactional;
+	}
+
+	@Override
+	public ConnectorIdentity getConnectorIdentity() {
+		return this.connectorIdentity;
+	}
+	
+	public void setConnectorIdentity(ConnectorIdentity connectorIdentity) {
+		this.connectorIdentity = connectorIdentity;
 	}
 }

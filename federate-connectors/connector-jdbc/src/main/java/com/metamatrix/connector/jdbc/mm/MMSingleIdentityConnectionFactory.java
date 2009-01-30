@@ -41,7 +41,7 @@ public class MMSingleIdentityConnectionFactory extends JDBCSingleIdentityConnect
      * @since 4.3
      */
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
     
 }

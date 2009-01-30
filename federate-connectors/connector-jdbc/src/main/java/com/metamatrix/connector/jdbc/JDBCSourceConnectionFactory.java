@@ -34,9 +34,10 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.SourceConnection;
-import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.data.pool.ConnectorIdentity;
+import com.metamatrix.data.pool.ConnectorIdentityFactory;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 /**
@@ -45,28 +46,26 @@ import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
  * ways (either from connector properties, from security context, or from
  * some lookup to an external source).  
  */
-public abstract class JDBCSourceConnectionFactory implements SourceConnectionFactory {
+public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFactory {
     
     protected static final int NO_ISOLATION_LEVEL_SET = Integer.MIN_VALUE;
     
     private ConnectorEnvironment environment;
     
-    /**How often (in ms) to test that the data source is available by establishing a new connection.*/
-    protected int sourceConnectionTestInterval;
     private String deregisterType;
     
-
+    private ConnectorIdentityFactory connectorIdentityFactory;
+    
     /**
      *
      */
-    public JDBCSourceConnectionFactory() {        
+    public JDBCSourceConnectionFactory(ConnectorIdentityFactory connectorIdentityFactory) {
+    	this.connectorIdentityFactory = connectorIdentityFactory;
     }
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         this.environment = env;
         Properties props = env.getProperties();
-        String value = props.getProperty(SourceConnection.SOURCE_CONNECTION_TEST_INTERVAL, SourceConnection.DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
-        this.sourceConnectionTestInterval = (Integer.parseInt(value) * 1000);
         this.deregisterType = props.getProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSLOADER);
     }
     
@@ -107,7 +106,7 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
      * This creates a JDBC connection.
      * @throws ConnectorException  if there is an error establishing the connection.
      */
-    protected SourceConnection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
+    protected com.metamatrix.data.api.Connection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
         Connection connection = null;
 
         // Connect
@@ -180,6 +179,14 @@ public abstract class JDBCSourceConnectionFactory implements SourceConnectionFac
                 }
             }
         }
+    }
+    
+    public abstract com.metamatrix.data.api.Connection getConnection(SecurityContext context) throws ConnectorException;
+    
+    @Override
+    public ConnectorIdentity createIdentity(SecurityContext context)
+    		throws ConnectorException {
+    	return this.connectorIdentityFactory.createIdentity(context);
     }
     
 }

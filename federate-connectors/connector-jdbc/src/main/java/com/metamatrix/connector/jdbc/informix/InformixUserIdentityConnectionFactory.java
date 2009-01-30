@@ -34,7 +34,7 @@ public class InformixUserIdentityConnectionFactory extends JDBCUserIdentityConne
     private String queryTest = "select 'x' from informix.sysusers where 1=0"; //$NON-NLS-1$
     
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 
 }

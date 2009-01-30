@@ -35,20 +35,17 @@ import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorCapabilities;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ConnectorMetadata;
 import com.metamatrix.data.api.Execution;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.pool.PoolAwareConnection;
 
 /**
  * 
  */
-public class JDBCSourceConnection implements Connection, SourceConnection {
+public class JDBCSourceConnection implements Connection, PoolAwareConnection {
     protected java.sql.Connection physicalConnection;
-    private ConnectionPool pool;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
     private ConnectorCapabilities capabilities;
@@ -103,7 +100,7 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
 
         // notify the listner that coneection created
         if (this.connectionListener != null) { 
-            this.connectionListener.afterConnectionCreation(this.getPhysicalConnection(), this.environment);
+            this.connectionListener.afterConnectionCreation(this.physicalConnection, this.environment);
         }
     }
 
@@ -124,17 +121,17 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
         	case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
             case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERYCOMMAND:
             {
-                return new JDBCQueryExecution(this.getPhysicalConnection(), sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
+                return new JDBCQueryExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
             }
             case ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES:
             case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
             case ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT:                
             {
-                return new JDBCUpdateExecution(this.getPhysicalConnection(), sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);
+                return new JDBCUpdateExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);
             }
             case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
             {
-                return new JDBCProcedureExecution(this.getPhysicalConnection(), sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
+                return new JDBCProcedureExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
             }
             default:
             {
@@ -143,46 +140,7 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.data.Connection#getMetadata()
-     */
-    public ConnectorMetadata getMetadata() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public void release() {
-        pool.release(this);   
-    }
-
-    public boolean isAlive() {
-        if (connectionStrategy == null) {
-            try {
-                return !getPhysicalConnection().isClosed();
-            } catch (SQLException e) {
-                return false;
-            } catch (ConnectorException err) {
-                return false;
-            }
-        }
-        try {
-            return connectionStrategy.isConnectionAlive(getPhysicalConnection());
-        } catch (ConnectorException err) {
-            return false;
-        }
-    }
-    
-    public void setConnectionPool(ConnectionPool pool){
-        this.pool = pool;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.data.pool.SourceConnection#closeSource()
-     */
-    public void closeSource() throws ConnectorException {
-        if (this.physicalConnection == null) {
-            return;
-        }
         try {
             // notify the listener that connection being destroyed
             if (connectionListener != null) { 
@@ -190,15 +148,24 @@ public class JDBCSourceConnection implements Connection, SourceConnection {
             }
             this.physicalConnection.close();
         } catch(SQLException e) {
-            throw new ConnectorException(e);
+        	logger.logDetail("Exception during close: " + e.getMessage());
         }
     }
 
-    /** 
-     * @return Returns the physicalConnection.
-     */
-    protected java.sql.Connection getPhysicalConnection() throws ConnectorException {
-        return physicalConnection;
+    public boolean isAlive() {
+        if (connectionStrategy == null) {
+            try {
+                return !this.physicalConnection.isClosed();
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        return connectionStrategy.isConnectionAlive(this.physicalConnection);
+    }
+    
+    @Override
+    public void connectionReleased() {
+    	
     }
     
 }

@@ -44,7 +44,7 @@ public class OracleSingleIdentityConnectionFactory extends JDBCSingleIdentityCon
     private ConnectionListener connectionListener = new OracleConnectionListener();
     
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
   
     /**

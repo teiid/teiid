@@ -24,12 +24,17 @@
 
 package com.metamatrix.connector.jdbc.userpool;
 
+import com.metamatrix.data.api.Connection;
+import com.metamatrix.data.api.ConnectorCapabilities;
+import com.metamatrix.data.api.Execution;
+import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.data.pool.PoolAwareConnection;
 
 /**
  */
-public class MockSourceConnection implements SourceConnection {
+public class MockSourceConnection implements PoolAwareConnection, Connection {
 
     private String url;
     private int transLevel;
@@ -48,14 +53,6 @@ public class MockSourceConnection implements SourceConnection {
         return false;
     }
     
-    public boolean isFailed() {
-        return false;
-    }
-
-    public void closeSource() throws ConnectorException {
-
-    }
-
     public String getUrl() {
         return this.url;
     }
@@ -71,4 +68,27 @@ public class MockSourceConnection implements SourceConnection {
     public String getPassword() {
         return this.password;
     }
+
+	@Override
+	public void connectionReleased() {
+		
+	}
+
+	@Override
+	public Execution createExecution(int executionMode,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return null;
+	}
+
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return null;
+	}
+
+	@Override
+	public void release() {
+		
+	}
+    
 }

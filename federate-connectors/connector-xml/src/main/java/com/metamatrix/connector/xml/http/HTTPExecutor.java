@@ -34,6 +34,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
@@ -43,6 +44,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.util.ParameterParser;
 import org.jdom.Document;
+
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnection;
@@ -54,7 +56,6 @@ import com.metamatrix.connector.xml.base.DocumentInfo;
 import com.metamatrix.connector.xml.base.RequestGenerator;
 import com.metamatrix.connector.xml.base.RequestResponseDocumentProducer;
 import com.metamatrix.connector.xml.base.Response;
-import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;

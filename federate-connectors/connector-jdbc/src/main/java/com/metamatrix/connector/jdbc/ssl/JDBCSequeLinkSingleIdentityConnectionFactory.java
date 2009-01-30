@@ -40,7 +40,6 @@ import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.SourceConnection;
 
 public class JDBCSequeLinkSingleIdentityConnectionFactory extends
 		JDBCSingleIdentityConnectionFactory {
@@ -74,7 +73,7 @@ public class JDBCSequeLinkSingleIdentityConnectionFactory extends
         } else {
             return null;
         }
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 
     /**
@@ -82,7 +81,7 @@ public class JDBCSequeLinkSingleIdentityConnectionFactory extends
      * It overrides the functionality in abstract class com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory
      * @throws ConnectorException  if there is an error establishing the connection.
      */
-    protected SourceConnection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
+    protected com.metamatrix.data.api.Connection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
         Connection connection = null;
 
         // Connect

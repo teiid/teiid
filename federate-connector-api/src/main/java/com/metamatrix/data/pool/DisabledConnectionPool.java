@@ -39,6 +39,7 @@ import com.metamatrix.data.monitor.ConnectionStatus;
 
 /**
  * The connection pool implementation.
+ * @deprecated Connection pooling can be provided automatically by the Query Engine.
  */
 public class DisabledConnectionPool extends ConnectionPool {
 

@@ -29,7 +29,9 @@ package com.metamatrix.data.pool;
 import com.metamatrix.data.exception.ConnectorException;
 
 /**
- * This class is for exceptions occuring within the connection pool.
+ * This class is for exceptions occurring within the connection pool.
+ * 
+ * @deprecated Connection pooling can be provided automatically by the Query Engine.
  */
 public class ConnectionPoolException extends ConnectorException{
 

@@ -34,7 +34,7 @@ public class SybaseSingleIdentityConnectionFactory extends JDBCSingleIdentityCon
     private String queryTest = "Select 'x'"; //$NON-NLS-1$
     
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
     
 }

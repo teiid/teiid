@@ -33,12 +33,9 @@ import java.util.Map;
 import javax.transaction.xa.XAResource;
 
 import com.arjuna.ats.jta.recovery.XAResourceRecovery;
-
-import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
-import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 
 /** 
@@ -116,7 +113,6 @@ public class XAConnectorRecovery implements XAResourceRecovery {
     private XAConnection getNewConnection(String connectorName) throws ConnectorException {
         XAConnector connector = (XAConnector)resourceRegistry.get(connectorName);
 
-        SecurityContext context = new ExecutionContextImpl("none", "1", "internal", null, null, "internal", connectorName,"12.0.1","internal", "0", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-        return (XAConnection)connector.getXAConnection(context, null);
+        return (XAConnection)connector.getXAConnection(null, null);
     }
 }

@@ -33,6 +33,7 @@ import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
 import com.metamatrix.connector.sysadmin.util.SysAdminUtil;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -42,6 +43,7 @@ import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
  * Connector whose source is metadata index files stored in vdbs aviailable to
  * the user logged in.
  */
+@ConnectionPooling(enabled=false)
 public class IndexConnector extends ObjectConnector {
     
     private ISysAdminConnectionFactory adminFactory = null;

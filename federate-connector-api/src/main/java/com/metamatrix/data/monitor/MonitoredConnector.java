@@ -27,7 +27,7 @@ package com.metamatrix.data.monitor;
 
 
 /** 
- * An interface to provice connector monitoring.
+ * An interface to provide connector monitoring.
  */
 public interface MonitoredConnector {
 

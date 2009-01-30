@@ -24,27 +24,35 @@
 
 package com.metamatrix.connector.salesforce;
 
-import com.metamatrix.connector.salesforce.connection.impl.SalesforceSourceConnection;
-import com.metamatrix.connector.salesforce.connection.impl.SalesforceSourceConnectionFactory;
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
+import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.data.pool.ConnectorIdentity;
+import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.data.pool.CredentialMap;
+import com.metamatrix.data.pool.SingleIdentityFactory;
+import com.metamatrix.data.pool.UserIdentityFactory;
 
-public class Connector implements com.metamatrix.data.api.Connector {
+@ConnectionPooling
+public class Connector implements com.metamatrix.data.api.Connector, ConnectorIdentityFactory {
 
 	private ConnectorLogger logger;
 
 	private ConnectorEnvironment connectorEnv;
-
+	private ConnectorIdentityFactory connectorIdentityFactory;
 	private ConnectorState state;
-	
-	private ConnectionPool connPool;
-	
-	private SourceConnectionFactory connFactory;
+	private boolean singleIdentity;
+	private String username;
+	private String password;
+	private URL url;
 
 	// ///////////////////////////////////////////////////////////
 	// Connector implementation
@@ -52,10 +60,22 @@ public class Connector implements com.metamatrix.data.api.Connector {
 	public Connection getConnection(SecurityContext secContext)
 			throws ConnectorException {
 		logger.logTrace("Enter SalesforceSourceConnection.getConnection()");
-		SalesforceSourceConnection srcConnection = (SalesforceSourceConnection) connPool.obtain(secContext);
-		Connection result = srcConnection.getConnection();
+		Connection connection = null;
+		if (singleIdentity) {
+			connection = new SalesforceConnection(username, password, url, connectorEnv);
+		} else {
+			Serializable trustedPayload = secContext.getTrustedPayload();
+			if(trustedPayload instanceof CredentialMap) {
+		    	CredentialMap map = (CredentialMap) trustedPayload;
+		    	String username = map.getUser(secContext.getConnectorIdentifier());
+		    	String password = map.getPassword(secContext.getConnectorIdentifier());    		
+		    	connection = new SalesforceConnection(username, password, url, connectorEnv);
+		    } else { 
+		    	throw new ConnectorException("Unknown trusted payload type"); 
+		    }
+		}
 		logger.logTrace("Return SalesforceSourceConnection.getConnection()");
-		return result;
+		return connection;
 	}
 
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -63,14 +83,39 @@ public class Connector implements com.metamatrix.data.api.Connector {
 		this.connectorEnv = env;
 		this.logger = env.getLogger();
 		this.state = new ConnectorState(env.getProperties(), getLogger());
-		connFactory = new SalesforceSourceConnectionFactory();
-		connFactory.initialize(env);
-		connPool = new ConnectionPool(connFactory);
-		connPool.initialize(env.getProperties());
-		((SalesforceSourceConnectionFactory) connFactory).setPool(connPool);
 		getLogger().logInfo(getLogPreamble().append("Initialized").toString()); //$NON-NLS-1$
 		getLogger().logTrace(getLogPreamble()
 				.append("Initialization Properties: " + env.getProperties()).toString()); //$NON-NLS-1$
+		String urlString =  env.getProperties().getProperty("URL");
+		if(null != urlString && 0 != urlString.length()) {
+			try {
+				url = new URL(urlString);
+			} catch (MalformedURLException e) {
+				throw new ConnectorException(e, e.getMessage());
+			}
+		}
+		
+		String username = env.getProperties().getProperty("username");
+		String password =  env.getProperties().getProperty("password");
+		
+		//validate that both are empty or both have values
+		if(null == username && null == password) {
+			
+		} else if ((null == username || username.equals("")) && (null != password || !password.equals("")) ||
+				((null == password || password.equals("")) && (null != username || !username.equals("")))) {
+					String msg = Messages.getString("SalesforceSourceConnectionFactory.Invalid.username.password.pair");
+					env.getLogger().logError(msg);
+					throw new ConnectorException(msg);
+		} else if(null != username || !username.equals("")) {
+			singleIdentity = true;
+			this.password = password;
+			this.username = username;
+		}
+		if (singleIdentity) {
+			this.connectorIdentityFactory = new SingleIdentityFactory();
+		} else {
+			this.connectorIdentityFactory = new UserIdentityFactory();
+		}
 		logger.logTrace("Return SalesforceSourceConnection.initialize()");
 	}
 
@@ -107,5 +152,11 @@ public class Connector implements com.metamatrix.data.api.Connector {
 
 	public ConnectorState getState() {
 		return state;
+	}
+
+	@Override
+	public ConnectorIdentity createIdentity(SecurityContext context)
+			throws ConnectorException {
+		return this.connectorIdentityFactory.createIdentity(context);
 	}
 }

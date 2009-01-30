@@ -30,16 +30,16 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
+import com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.CredentialMap;
-import com.metamatrix.data.pool.SourceConnectionFactory;
 import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
+import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**
  */
@@ -53,12 +53,11 @@ public class TestPerUserPool extends TestCase {
     
     public void testWrongCredentials() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        SourceConnectionFactory factory = new MockExampleConnectionFactory();
+        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
         factory.initialize(env);
-        
-        ConnectorIdentity id = factory.createIdentity(createSecurityContext("pw1", false)); //$NON-NLS-1$
+        SecurityContext ctx = createSecurityContext("pw1", false, factory); //$NON-NLS-1$
         try {
-			factory.createConnection(id);
+			factory.getConnection(ctx);
 			fail("expected failure"); //$NON-NLS-1$
 		} catch (ConnectorException e) {
 			assertEquals("Unable to extract credentials from command payload or trusted session payload for per-user connection.", e.getMessage()); //$NON-NLS-1$
@@ -100,88 +99,38 @@ public class TestPerUserPool extends TestCase {
         return env;
     }
     
-    private SecurityContext createSecurityContext(String credentialsStr, boolean useMap) throws Exception {
+    private SecurityContext createSecurityContext(String credentialsStr, boolean useMap, JDBCSourceConnectionFactory factory) throws Exception {
         Serializable credentials = credentialsStr;
     	if (useMap) {
     		credentials = CredentialMap.parseCredentials(credentialsStr);
         }
     	
-    	final Serializable cred = credentials;
         // session payload
-        return new SecurityContext() {
-
-			public String getConnectionIdentifier() {
-				return null;
-			}
-
-			public String getConnectorIdentifier() {
-				return null;
-			}
-
-			public String getExecutionCountIdentifier() {
-				return null;
-			}
-
-			public Serializable getExecutionPayload() {
-				return null;
-			}
-
-			public String getPartIdentifier() {
-				return null;
-			}
-
-			public String getRequestIdentifier() {
-				return null;
-			}
-
-			public Serializable getTrustedPayload() {
-				return cred;
-			}
-
-			public String getUser() {
-				return null;
-			}
-
-			public String getVirtualDatabaseName() {
-				return null;
-			}
-
-			public String getVirtualDatabaseVersion() {
-				return null;
-			}
-
-			public void keepExecutionAlive(boolean alive) {
-			}
-
-			public boolean useResultSetCache() {
-				return false;
-			}}; 
+        ExecutionContextImpl impl = new ExecutionContextImpl(null, null, null, credentials, null, null, null, null, null, null, false);
+        impl.setConnectorIdentity(factory.createIdentity(impl));
+        return impl;
     }
     
     public void testCredentialMapInSessionPayload() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        SourceConnectionFactory factory = new MockExampleConnectionFactory();
+        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
         factory.initialize(env);
         
-        SecurityContext ctx = createSecurityContext("(system=oracle system,user=bqt2,password=mm)", true); //$NON-NLS-1$
-        ConnectorIdentity id = factory.createIdentity(ctx); 
-        assertNotNull(id);
-        MockSourceConnection conn = (MockSourceConnection)factory.createConnection(id);
+        SecurityContext ctx = createSecurityContext("(system=oracle system,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
+        MockSourceConnection conn = (MockSourceConnection)factory.getConnection(ctx);
         assertEquals("bqt2", conn.getUser()); //$NON-NLS-1$
         assertEquals("mm", conn.getPassword()); //$NON-NLS-1$
     }
     
     public void testCredentialMapMissingSystem() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        SourceConnectionFactory factory = new MockExampleConnectionFactory();
+        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
         factory.initialize(env);
 
         // Set system to "x" instead of "oracle system" which will cause no credentials to be found
-        SecurityContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true); //$NON-NLS-1$
-        ConnectorIdentity id = factory.createIdentity(ctx); 
-        assertNotNull(id);
+        SecurityContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
         try {
-            factory.createConnection(id);
+            factory.getConnection(ctx);
             fail("Expected exception when creating connection with missing system credentials"); //$NON-NLS-1$
         } catch(Exception e) {
             // expected

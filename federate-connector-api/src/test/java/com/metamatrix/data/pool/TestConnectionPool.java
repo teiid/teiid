@@ -109,10 +109,6 @@ public class TestConnectionPool extends TestCase{
                 return "1"; //$NON-NLS-1$
             }
 
-//            public SecurityContext getSecurityContext() {
-//                return null;
-//            }
-
 			public String getConnectorIdentifier() {
 				return null;
 			}
@@ -132,6 +128,11 @@ public class TestConnectionPool extends TestCase{
 		    public void keepExecutionAlive(boolean alive) {
 		    	
 		    }
+
+			@Override
+			public ConnectorIdentity getConnectorIdentity() {
+				return null;
+			}
 
         };
 

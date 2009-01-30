@@ -27,12 +27,10 @@ import java.util.Properties;
 
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectionPool;
 
 /** 
  * LDAPConnector.  This is responsible for initializing a connection pool, 
@@ -42,21 +40,14 @@ public class LDAPConnector implements Connector {
 	private ConnectorEnvironment env;
 	private ConnectorLogger logger;
 	private Properties props;
-	private ConnectionPool pool;
-	private LDAPSourceConnectionFactory ldapConnFactory;
 	
     /*
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
 	public Connection getConnection(SecurityContext ctx) throws ConnectorException {
-		if(pool != null) {
-			logger.logDetail("LDAPConnector is requesting a connection from the pool."); //$NON-NLS-1$
-			LDAPConnection ldapConn = (LDAPConnection)pool.obtain(ctx);
-			ldapConn.setConnectionPool(pool);
-			return ldapConn;
-		} 
-        final String msg = LDAPPlugin.Util.getString("LDAPConnector.getConnectionFailed"); //$NON-NLS-1$
-		throw new ConnectorException(msg); 
+        final String msg = LDAPPlugin.Util.getString("LDAPSourceConnectionFactory.creatingConnection"); //$NON-NLS-1$
+		logger.logDetail(msg); 
+		return new LDAPConnection(ctx, this.props, this.logger);
 	}
 	
     /** 
@@ -74,17 +65,7 @@ public class LDAPConnector implements Connector {
 			throw e; 
 		}
 		this.props = env.getProperties();
-		
-		// Create and initialize LDAP connection factory
-		ldapConnFactory = new LDAPSourceConnectionFactory(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, this.props, this.logger);
-		ldapConnFactory.initialize(env);
-		
-		// Create and initialize connection pool
-		pool = new ConnectionPool(ldapConnFactory);
-		pool.initialize(this.props);
 	}
-	
-
 
 	/** 
 	 * Do nothing. We do not attempt to connect to LDAP using a "test" connection,
@@ -96,12 +77,9 @@ public class LDAPConnector implements Connector {
 	public void start() throws ConnectorException {
 	}
 
-	/** Shutdown the connection pool, which closes all remaining connections.
+	/** 
 	 */
 	public void stop() {
-		if(pool!=null) {
-			pool.shutDown();
-		}
 	}
 	
 }

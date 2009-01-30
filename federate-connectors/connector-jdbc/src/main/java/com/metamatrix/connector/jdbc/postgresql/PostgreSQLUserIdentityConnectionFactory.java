@@ -40,6 +40,6 @@ public class PostgreSQLUserIdentityConnectionFactory extends JDBCUserIdentityCon
      * @since 4.3
      */
     protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest, this.sourceConnectionTestInterval);        
+        return new ConnectionQueryStrategy(queryTest);        
     }
 }

@@ -64,7 +64,7 @@ public final class TestConnectorStateManager extends TestCase {
         request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
         csm = new ConnectorManager();
         csm.setConnectorWorkerPool(Mockito.mock(WorkerPool.class));
-        csm.setConnector(new FakeConnector());
+        csm.setConnector(new ConnectorWrapper(new FakeConnector()));
     }
 
     void helpAssureOneState() {

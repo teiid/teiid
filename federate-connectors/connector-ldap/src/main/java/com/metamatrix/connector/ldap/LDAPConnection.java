@@ -39,18 +39,16 @@ import com.metamatrix.data.api.Execution;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.ConnectionPool;
-import com.metamatrix.data.pool.SourceConnection;
+import com.metamatrix.data.pool.PoolAwareConnection;
 
 /** 
  * Represents a connection to an LDAP data source. 
  */
-public class LDAPConnection implements Connection, SourceConnection {  
+public class LDAPConnection implements Connection, PoolAwareConnection {  
 
 	// Standard Connection data members
 	private ConnectorLogger logger;
 	private InitialLdapContext initCtx;
-	private ConnectionPool pool;
 	private Properties props;
 	
 	// LDAP-specific properties
@@ -67,12 +65,11 @@ public class LDAPConnection implements Connection, SourceConnection {
 
     /**
      * Constructor.
-     * @param executionMode
      * @param ctx
      * @param props
      * @param logger
      */
-	public LDAPConnection(int executionMode, ExecutionContext ctx, Properties props, ConnectorLogger logger) throws ConnectorException {
+	public LDAPConnection(ExecutionContext ctx, Properties props, ConnectorLogger logger) throws ConnectorException {
 		this.logger = logger;
 		this.props = props;
 			
@@ -233,37 +230,16 @@ public class LDAPConnection implements Connection, SourceConnection {
 	}
 	
 	/** 
-	 * Hold onto the connection pool for future use, so the connection can release itself from the pool when 
-	 * asked to do so.
-	 */
-    public void setConnectionPool(ConnectionPool pool){
-        this.pool = pool;
-    }
-    
-    /** 
-     * Releases a connection to the pool, without closing it.
-     * (non-Javadoc)
-     * @see com.metamatrix.data.api.Connection#release()
-     */
-	
-    public void release() {
-		logger.logDetail("LDAP Connection is releasing itself to the pool."); //$NON-NLS-1$
-		pool.release(this);
-	}
-	
-	/** 
 	 * Closes LDAP context, effectively closing the connection to LDAP.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.data.pool.SourceConnection#closeSource()
+	 * @see com.metamatrix.data.pool.PoolAwareConnection#closeSource()
 	 */
-	public void closeSource() throws ConnectorException {
-		//logger.logTrace("Attempting to close LDAP context connection.");
+    public void release() {
 		if(initCtx != null) {
 			try {
 				initCtx.close();
 			} catch(NamingException e) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.contextCloseError",e.getExplanation()); //$NON-NLS-1$
-				throw new ConnectorException(msg); 
+				logger.logDetail(LDAPPlugin.Util.getString("LDAPConnection.contextCloseError",e.getExplanation())); //$NON-NLS-1$
 			}
 		}
 		logger.logDetail("LDAP context has been closed."); //$NON-NLS-1$
@@ -280,11 +256,16 @@ public class LDAPConnection implements Connection, SourceConnection {
 	 * 
 	 * One possible extension is to implement a UnsolicitedNotificationListener.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.data.pool.SourceConnection#isAlive()
+	 * @see com.metamatrix.data.pool.PoolAwareConnection#isAlive()
 	 */
 	public boolean isAlive() {
 		logger.logTrace("LDAP Connection is alive."); //$NON-NLS-1$
 		return true;
+	}
+	
+	@Override
+	public void connectionReleased() {
+		
 	}
 
 }

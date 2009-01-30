@@ -27,13 +27,12 @@ package com.metamatrix.connector.jdbc;
 import java.sql.Driver;
 import java.util.Properties;
 
+import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.CredentialMap;
-import com.metamatrix.data.pool.SourceConnection;
-import com.metamatrix.data.pool.UserIdentity;
+import com.metamatrix.data.pool.UserIdentityFactory;
 
 /**
  */
@@ -45,7 +44,7 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
     private String system;
 
     public JDBCUserIdentityConnectionFactory() {
-        super();
+        super(new UserIdentityFactory());
     }
     
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -54,10 +53,6 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
         verifyConnectionProperties(env.getProperties());
     }
 
-    public boolean isSingleIdentity() {
-        return false;
-    }
-    
     protected void verifyConnectionProperties(Properties connectionProps) throws ConnectorException{
         // Find driver 
         String driverClassName = connectionProps.getProperty(JDBCPropertyNames.DRIVER_CLASS);
@@ -81,12 +76,7 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
         return this.transIsoLevel;
     }
 
-    public ConnectorIdentity createIdentity(SecurityContext context) throws ConnectorException {
-        return new UserIdentity(context);
-    }
-
-    public SourceConnection createConnection(ConnectorIdentity id) throws ConnectorException {
-        SecurityContext context = id.getSecurityContext();  
+    public Connection getConnection(SecurityContext context) throws ConnectorException {
         String[] userProperties = getUserProperties(context);
         
         Properties props = new Properties();
@@ -96,40 +86,23 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
     }
     
     protected String[] getUserProperties(SecurityContext context) throws ConnectorException {
-        // First, check the command payload for a CredentialMap - if not found, then check 
-        // the trusted payload for a CredentialMap.  If neither is a CredentialMap, then throw
-        // an exception - someone needs to subclass and override this method for their particular
-        // credential lookup strategy.
-        
-        Object commandPayload = context.getExecutionPayload();
-        if(commandPayload instanceof CredentialMap) {
-            return extractPayload((CredentialMap)commandPayload);
-        }
         
         // By default, assume the session token is a CredentialMap and pull out the user/password props
         Object trustedPayload = context.getTrustedPayload(); 
         
 		if(trustedPayload instanceof CredentialMap) {
-            return extractPayload((CredentialMap)trustedPayload);
+			CredentialMap credentials = (CredentialMap)trustedPayload;
+			String user = credentials.getUser(system);
+	        validatePropertyExists(user, CredentialMap.USER_KEYWORD);
+	                
+	        String password = credentials.getPassword(system);
+	        validatePropertyExists(password, CredentialMap.PASSWORD_KEYWORD);        
+	         
+	        return new String[] { user, password };
         }
 
         throw new ConnectorException(JDBCPlugin.Util.getString("JDBCUserIdentityConnectionFactory.Unable_to_get_credentials")); //$NON-NLS-1$
     }   
-
-    /** 
-     * @param credentialMap
-     * @return
-     * @since 4.3
-     */
-    private String[] extractPayload(CredentialMap credentials) throws ConnectorException {
-        String user = credentials.getUser(system);
-        validatePropertyExists(user, CredentialMap.USER_KEYWORD);
-                
-        String password = credentials.getPassword(system);
-        validatePropertyExists(password, CredentialMap.PASSWORD_KEYWORD);        
-         
-        return new String[] { user, password };
-    }
 
     /** 
      * @param property
