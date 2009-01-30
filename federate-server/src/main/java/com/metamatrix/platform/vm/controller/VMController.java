@@ -109,7 +109,6 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.util.VMResources;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
 import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.ResourceFinder;
@@ -139,11 +138,6 @@ import com.metamatrix.server.admin.apiimpl.TransactionAdminAPIImpl;
  */
 public abstract class VMController implements VMControllerInterface {
 
-    // Initialized TextManager with I18N namespaces
-    static {
-		VMResources.initResourceBundles();
-    }
-    
     public static final String STARTER_MAX_THREADS = "vm.starter.maxThreads"; //$NON-NLS-1$
     /**Time-to-live for threads used to start services (ms)*/    
     public static final String STARTER_TIMETOLIVE = "vm.starter.timetolive"; //$NON-NLS-1$
