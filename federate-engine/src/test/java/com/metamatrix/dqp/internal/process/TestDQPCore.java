@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeTransactionService;
 import com.metamatrix.dqp.internal.process.DQPCore.ConnectorCapabilitiesCache;
@@ -58,8 +57,17 @@ public class TestDQPCore extends TestCase {
     public TestDQPCore(String name) {
         super(name);
     }
+    
+    private DQPCore core;
 
-    private DQPCore exampleDQPCore() throws ApplicationInitializationException {
+    @Override
+    protected void setUp() throws Exception {
+        DQPWorkContext workContext = new DQPWorkContext();
+        workContext.setVdbName("bqt"); //$NON-NLS-1$
+        workContext.setVdbVersion("1"); //$NON-NLS-1$
+        workContext.setSessionId(new MetaMatrixSessionID(1));
+        DQPWorkContext.setWorkContext(workContext);
+        
         String vdbName = "bqt"; //$NON-NLS-1$
 		String vdbVersion = "1"; //$NON-NLS-1$
     	
@@ -77,23 +85,14 @@ public class TestDQPCore extends TestCase {
         vdbService.addModel(vdbName, vdbVersion, "BQT3", ModelInfo.PRIVATE, false); //$NON-NLS-1$
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
 
-        DQPCore core = new DQPCore(env);
+        core = new DQPCore(env);
         core.start(new Properties());
-        return core;
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-        DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("bqt"); //$NON-NLS-1$
-        workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionId(new MetaMatrixSessionID(1));
-        DQPWorkContext.setWorkContext(workContext);
     }
     
     @Override
     protected void tearDown() throws Exception {
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
+    	core.stop();
     }
 
     public RequestMessage exampleRequestMessage(String sql) {
@@ -164,10 +163,24 @@ public class TestDQPCore extends TestCase {
         String userName = "1"; //$NON-NLS-1$
         helpExecute(sql, userName);
     }
+
+    public void testEnvSessionId() throws Exception {
+        String sql = "SELECT env('sessionid') as SessionID"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertEquals("00000000-0000-0001-0000-000000000001", rm.getResults()[0].get(0));
+    }
+    
+    public void testEnvSessionIdMixedCase() throws Exception {
+        String sql = "SELECT env('sEsSIonId') as SessionID"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertEquals("00000000-0000-0001-0000-000000000001", rm.getResults()[0].get(0));
+    }
     
     public void testTxnAutoWrap() throws Exception {
     	String sql = "SELECT * FROM BQT1.SmallA"; //$NON-NLS-1$
-    	helpExecute(sql, "a", true); //$NON-NLS-1$
+    	helpExecute(sql, "a", 1, true); //$NON-NLS-1$
     }
     
     public void testPlanOnly() throws Exception {
@@ -182,7 +195,6 @@ public class TestDQPCore extends TestCase {
     public void testPlanningException() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.BadIdea "; //$NON-NLS-1$
         
-        DQPCore core = exampleDQPCore();
         RequestMessage reqMsg = exampleRequestMessage(sql);
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
@@ -213,7 +225,6 @@ public class TestDQPCore extends TestCase {
 	}
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
-		DQPCore core = exampleDQPCore();
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_OFF);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
@@ -234,14 +245,14 @@ public class TestDQPCore extends TestCase {
     
 
     ///////////////////////////Helper method///////////////////////////////////
-    private void helpExecute(String sql, String userName) throws Exception {
-    	helpExecute(sql, userName, false);
+    private ResultsMessage helpExecute(String sql, String userName) throws Exception {
+    	return helpExecute(sql, userName, 1, false);
     }
 
-    private void helpExecute(String sql, String userName, boolean txnAutoWrap) throws Exception {
-        DQPCore core = exampleDQPCore();
+    private ResultsMessage helpExecute(String sql, String userName, int sessionid, boolean txnAutoWrap) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql);
         DQPWorkContext.getWorkContext().setUserName(userName);
+        DQPWorkContext.getWorkContext().setSessionId(new MetaMatrixSessionID(sessionid));
         if (txnAutoWrap) {
         	reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_ON);
         }
@@ -249,5 +260,6 @@ public class TestDQPCore extends TestCase {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage results = message.get(50000, TimeUnit.MILLISECONDS);
         assertNull(results.getException());
+        return results;
     }
 }
