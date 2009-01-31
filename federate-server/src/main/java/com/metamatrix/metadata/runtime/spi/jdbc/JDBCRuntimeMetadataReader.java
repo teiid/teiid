@@ -40,6 +40,8 @@ import java.util.Properties;
 import com.metamatrix.common.jdbc.JDBCPlatform;
 import com.metamatrix.common.jdbc.syntax.ExpressionOperator;
 import com.metamatrix.common.log.I18nLogManager;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.CorePlugin;
 import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.MetadataConstants;
 import com.metamatrix.metadata.runtime.api.MetadataID;
@@ -82,7 +84,7 @@ public final class JDBCRuntimeMetadataReader {
         try{
             long uid = ((BasicVirtualDatabaseID)(virtualDatabaseID)).getUID();
             sql = JDBCTranslator.SELECT_VIRTUAL_DATABASE;
-            I18nLogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.JDBCR_0001, new Object[]{virtualDatabaseID.getFullName(), virtualDatabaseID.getVersion(), new Long(uid)});
+            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.JDBCR_0001, new Object[]{virtualDatabaseID.getFullName(), virtualDatabaseID.getVersion(), new Long(uid)});
             statement = jdbcConnection.prepareStatement(sql);
             statement.setLong(1, uid);
             if (! statement.execute()){
@@ -98,7 +100,7 @@ public final class JDBCRuntimeMetadataReader {
                 try {
                     statement.close();
                 } catch ( SQLException e ) {
-                    I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0008, e);
+                	LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, e, CorePlugin.Util.getString(ErrorMessageKeys.GEN_0008));
                 }
             }
         }
@@ -398,9 +400,9 @@ public final class JDBCRuntimeMetadataReader {
             }
         }
         if (result != null) {
-            I18nLogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.JDBCR_0002, new Object[]{result.getFullName(), result.getVersion(), new Long( ((BasicVirtualDatabaseID)result).getUID() )} );
+            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, CorePlugin.Util.getString(LogMessageKeys.JDBCR_0002, new Object[]{result.getFullName(), result.getVersion(), new Long( ((BasicVirtualDatabaseID)result).getUID() )}) );
         } else {
-            I18nLogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, LogMessageKeys.JDBCR_0003, new Object[]{fullName});
+            LogManager.logDetail(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, CorePlugin.Util.getString(LogMessageKeys.JDBCR_0003, new Object[]{fullName}));
         }
         return result;
     }

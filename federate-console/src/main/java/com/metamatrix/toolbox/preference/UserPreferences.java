@@ -491,7 +491,6 @@ public class UserPreferences implements PropertiedObject {
 		System.out.println(ToolboxPlugin.Util.getString("UserPreferences._nPrinting_user_preferences_after_saving_changes_..._n_54")); //$NON-NLS-1$
 		prefs.print(System.out);
 
-		LogManager.stop();
 		System.out.println(ToolboxPlugin.Util.getString("UserPreferences._nCompleted._55")); //$NON-NLS-1$
 	}
 }

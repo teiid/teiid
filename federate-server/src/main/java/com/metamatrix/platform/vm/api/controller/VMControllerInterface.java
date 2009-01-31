@@ -90,12 +90,6 @@ public interface VMControllerInterface {
      */
     void checkService(ServiceID serviceID);
 
-	
-    /**
-     * Return current log configuration.
-     */
-    LogConfiguration getCurrentLogConfiguration();
-
     /**
      * Set the current log configuration.
      */

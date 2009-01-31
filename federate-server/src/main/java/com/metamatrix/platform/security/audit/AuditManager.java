@@ -181,7 +181,7 @@ public final class AuditManager {
         try {
             CONFIGURATION = configFactory.getConfiguration( UNMODIFIABLE_AUDIT_PROPERTIES );
         } catch ( AuditConfigurationException e ) {
-            I18nLogManager.logWarning(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0004, e,
+            LogManager.logWarning(LogSecurityConstants.CTX_AUDIT, e,
                     PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0004));
             CONFIGURATION = new BasicAuditConfiguration();
         }
@@ -266,10 +266,10 @@ public final class AuditManager {
             try {
                 destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
                 this.auditDestinations.add(destination);
-                I18nLogManager.logInfo(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0004,
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, 
                         PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0006, e,
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
                         PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         }
@@ -281,14 +281,14 @@ public final class AuditManager {
             try {
                 destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
                 this.auditDestinations.add(destination);
-                I18nLogManager.logInfo(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0004,
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
                         PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0006, e,
+                LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
                         PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         } else {
-            I18nLogManager.logInfo(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0005,
+        	LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
                     PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0005));
         }
 
@@ -299,10 +299,10 @@ public final class AuditManager {
             try {
                 destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
                 this.auditDestinations.add(destination);
-                I18nLogManager.logInfo(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0004,
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
                         PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0006, e,
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
                         PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         }
@@ -422,7 +422,7 @@ public final class AuditManager {
         AuditManager manager = AuditManager.getInstance();  // may thread off the initialization if called first
         synchronized( manager.initializationLock ) {
             if ( ! isStopped() ) {
-                I18nLogManager.logInfo(LogSecurityConstants.CTX_AUDIT, LogMessageKeys.SEC_AUDIT_0006,
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
                         PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0006));
                 try {
                     if ( manager.workerPool != null ) {
@@ -439,7 +439,7 @@ public final class AuditManager {
                     }
                     manager.auditDestinations.clear();
                 } catch (Exception e) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0008, e,
+                    LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
                             PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0008));
                 }
                 manager.isStopped = manager.workerPool.isTerminated();

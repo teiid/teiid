@@ -28,13 +28,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.extensions.TestSetup;
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
@@ -52,24 +47,6 @@ public class TestLogManager extends TestCase {
     public TestLogManager(String name) {
         super(name);
     }
-
-	public static Test suite() {
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite(TestLogManager.class);
-		//return suite;
-        return new TestSetup(suite){
-            protected void setUp() throws Exception{
-                setUpOnce();
-            }
-            protected void tearDown() throws Exception{
-            }
-        };
-	}
-    
-	private static void setUpOnce() throws Exception {
-		CurrentConfiguration.getInstance().reset();
-		LogManager.stop();
-	}
     
     // =========================================================================
     //                         T E S T     C A S E S
@@ -79,22 +56,29 @@ public class TestLogManager extends TestCase {
      * Test for boolean isMessageToBeRecorded(String, int)
      */
     public void testIsMessageToBeRecordedStringI() {
-        assertFalse(LogManager.isMessageToBeRecorded("SomeContext", MessageLevel.CRITICAL) ); //$NON-NLS-1$
+    	String context = "SomeContext"; //$NON-NLS-1$
+    	LogManager manager = new LogManager(null);
+    	assertTrue(manager.isLoggingEnabled(context, MessageLevel.CRITICAL) ); 
+    	LogConfiguration cfg = LogManager.getInstance().getConfigurationCopy();
+        cfg.discardContext(context);
+        manager.setConfiguration(cfg);
+        assertFalse(manager.isLoggingEnabled(context, MessageLevel.CRITICAL) );
     }
 
     /**
      * Test that all msgs logged are equal and output in same order.
      */
     public void testLogMessage() throws Exception {
-        // init the LogManager (do not rely on later calls to do it)
-        LogConfiguration cfg = LogManager.getLogConfiguration();
+    	PlatformLog log = new PlatformLog();
+    	LogManager manager = new LogManager(log);
+        LogConfiguration cfg = manager.getConfigurationCopy();
         cfg.setMessageLevel( MessageLevel.INFO );
-
+        manager.setConfiguration(cfg);
+        
         ListLogger listener = new ListLogger(6);
-        PlatformLog logger = PlatformLog.getInstance();
-        logger.addListener(listener);
+        log.addListener(listener);
 
-        List sentMsgList = new ArrayList();
+        List<String> sentMsgList = new ArrayList<String>();
         sentMsgList.add("A message 1"); //$NON-NLS-1$
         sentMsgList.add("A message 2"); //$NON-NLS-1$
         sentMsgList.add("A message 3"); //$NON-NLS-1$
@@ -104,11 +88,12 @@ public class TestLogManager extends TestCase {
 
         for (Iterator iter = sentMsgList.iterator(); iter.hasNext();) {
             String msg = (String) iter.next();
-            LogManager.logInfo("SomeContext", msg); //$NON-NLS-1$
+            manager.logMessage(MessageLevel.INFO, "SomeContext", msg); //$NON-NLS-1$
         }
-
+        
         List recevedMsgList = listener.getLoggedMessages();
         assertEquals(sentMsgList, recevedMsgList);
+        log.shutdown();
     }
 
     /**

@@ -703,7 +703,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
      */
     public LogConfiguration getLogConfiguration() 
         throws AdminException {
-            return (LogConfiguration)convertToAdminObjects(LogManager.getLogConfiguration());
+            return (LogConfiguration)convertToAdminObjects(LogManager.getLogConfigurationCopy());
     }
 
     /** 

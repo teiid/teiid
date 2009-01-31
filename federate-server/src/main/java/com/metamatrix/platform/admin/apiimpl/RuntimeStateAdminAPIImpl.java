@@ -902,7 +902,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                                                      List actions) throws AuthorizationException,
                                                                   InvalidSessionException,
                                                                   MetaMatrixComponentException {
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0027);
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0027));
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
@@ -935,9 +935,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         if (vmID != null) {
             theVMID = vmID.toString();
         }
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0029, new Object[] {
-            theVMID
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0029, new Object[] {theVMID}));
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
@@ -946,7 +944,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Set App Server VM's log config if vmID == null.
         if (vmID == null) {
-            I18nLogManager.setLogConfiguration(logConfig);
+            LogManager.setLogConfiguration(logConfig);
             return;
         }
 

@@ -187,20 +187,20 @@ public class LoggingPanel extends JPanel implements ActionListener, ListSelectio
 //    }
 
     public void removeLoggingContexts(Collection contexts) {
-        LogConfiguration config = LogManager.getLogConfiguration(true);
+        LogConfiguration config = LogManager.getLogConfigurationCopy();
         config.recordAllContexts();
         config.discardContexts(contexts);
         LogManager.setLogConfiguration(config);
     }
 
     public void clearLoggingContexts() {
-        LogConfiguration config = LogManager.getLogConfiguration(true);
+        LogConfiguration config = LogManager.getLogConfigurationCopy();
         config.recordAllContexts();
         LogManager.setLogConfiguration(config);
     }
 
     public Collection getRemovedLoggingContexts() {
-        LogConfiguration config = LogManager.getLogConfiguration();
+        LogConfiguration config = LogManager.getLogConfigurationCopy();
         return config.getDiscardedContexts();
     }
 

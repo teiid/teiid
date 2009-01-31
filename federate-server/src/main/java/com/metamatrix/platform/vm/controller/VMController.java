@@ -663,14 +663,6 @@ public abstract class VMController implements VMControllerInterface {
         }
     }
 
-
-    /**
-     * Return current log configuration for this vm.
-     */
-    public LogConfiguration getCurrentLogConfiguration() {
-        return LogManager.getLogConfiguration();
-    }
-
     /**
      * Set the current log configuration for this vm.
      */

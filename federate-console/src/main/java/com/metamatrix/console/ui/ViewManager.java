@@ -110,7 +110,7 @@ public class ViewManager {
 
      public static void setLoggingPreferences() {
         UserPreferences preferences = UserPreferences.getInstance();
-        LogConfiguration config = LogManager.getLogConfiguration(true);
+        LogConfiguration config = LogManager.getLogConfigurationCopy();
         int level = Integer.parseInt(preferences.getProperties().getProperty(BasicLogConfiguration.LOG_LEVEL_PROPERTY_NAME, "3")); //$NON-NLS-1$
         config.setMessageLevel(level);
         Collection contexts = UserPreferences.getInstance().getValues(BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME, ';');

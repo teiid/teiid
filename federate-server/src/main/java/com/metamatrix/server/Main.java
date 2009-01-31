@@ -103,9 +103,6 @@ public class Main {
         // launch the server
         
 		main.launchServer();
-		
-        // stop logging
-        LogManager.stop();		
 	}
 	
 	

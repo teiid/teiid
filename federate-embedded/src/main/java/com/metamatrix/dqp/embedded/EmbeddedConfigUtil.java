@@ -70,7 +70,7 @@ public class EmbeddedConfigUtil {
                 throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("DQPComponent.Unable_to_parse_level") + logLevel);      //$NON-NLS-1$
             }            
         }
-        LogConfiguration config = LogManager.getLogConfiguration(true);
+        LogConfiguration config = LogManager.getLogConfigurationCopy();
         config.setMessageLevel(level);
         LogManager.setLogConfiguration(config);
         LogManager.logInfo("DQP", "LogManager configured with level = " + level); //$NON-NLS-1$ //$NON-NLS-2$
@@ -82,7 +82,7 @@ public class EmbeddedConfigUtil {
      * @since 4.3
      */
     public static void setDiscardedContexts(Collection contexts) {
-        LogManager.setLogConfiguration(new BasicLogConfiguration(contexts, LogManager.getLogConfiguration(false).getMessageLevel()));
+        LogManager.setLogConfiguration(new BasicLogConfiguration(contexts, LogManager.getLogConfigurationCopy().getMessageLevel()));
         LogManager.logInfo("DQP", "LogManager discarded contexts " + contexts); //$NON-NLS-1$ //$NON-NLS-2$
     }
     

@@ -24,13 +24,10 @@
 
 package com.metamatrix.common.log;
 
-import java.io.PrintStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -38,9 +35,6 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.common.log.config.DefaultLogConfigurationFactory;
 import com.metamatrix.common.log.config.LogConfigurationException;
-import com.metamatrix.common.log.config.UnmodifiableLogConfiguration;
-import com.metamatrix.common.log.format.DelimitedLogMessageFormat;
-import com.metamatrix.common.log.format.LogMessageFormat;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -57,24 +51,6 @@ import com.metamatrix.internal.core.log.PlatformLog;
  * to send any recorded messages.  Thus, the component's code that submits
  * messages does not have to be modified to alter the logging behavior of the
  * application.
- * <p>
- * The LogManager has a number of features that makes it an efficient and configurable
- * framework.  First, the methods in the LogManager that submit messages are
- * asynchronous to minimize the amount of time a client component waits for
- * the LogManager.  Within these asynchronous methods, the LogManager simply
- * checks the current logging level and, if the message level is being recorded,
- * places the submitted message in a queue and returns; one or more workers
- * in separate threads pull sumbitted messages out of the queue
- * and process them.  During processing, the contexts of each message is examined;
- * any message that is not to be recorded is simply discarded, while those that
- * are to be recorded are sent to each of the destinations.
- * <p>
- * Secondly, the LogManager's behavior can be controlled both at VM start time
- * (through System properties) and during execution (through method invocation).
- * The destinations of the LogManager must be configured at start time,
- * but the control parameters (i.e., the logging level and the contexts, see below)
- * are initially defined using the System properties at start time and optionally
- * during normal execution.
  * <p>
  * By default, all context(s) are logged by the LogManager.   The messages that
  * the LogManager actually records and sends to the destinations
@@ -172,62 +148,30 @@ public final class LogManager {
      */
     public static final String SYSTEM_ERR_FILENAME              = "metamatrix.log.systemErrFilename"; //$NON-NLS-1$
 
-    protected static final String DEFAULT_LOG_MAX_THREADS          = "1"; //$NON-NLS-1$
-    protected static final String DEFAULT_LOG_THREAD_TTL           = "600000"; //$NON-NLS-1$
+    private static LogManager INSTANCE = new LogManager(PlatformLog.getInstance());
 
-    protected static final String STANDARD_OUT_CONTEXT = LogCommonConstants.CTX_STANDARD_OUT;
-    protected static final String STANDARD_ERR_CONTEXT = LogCommonConstants.CTX_STANDARD_ERR;
-    protected static final boolean AUTO_FLUSH = true;
+    private LogConfiguration configuration;
+    private PlatformLog platformLog;
+    
+    protected LogManager(PlatformLog platformLog) {
+    	this.platformLog = platformLog;
+    	// Get the preferred LogConfiguration ...
+        try {
+            configuration = (LogConfiguration)CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration().clone();
+        } catch ( ConfigurationException e ) {
 
-    private static LogManager INSTANCE = new LogManager();
-    private static LogConfiguration CONFIGURATION = null;
-    private static LogMessageFormat MESSAGE_FORMATTER = new DelimitedLogMessageFormat();
-
-    private static boolean isStopped = true;
-    private List initializationMessages = new ArrayList();
-
-    private LogManager() {
-    }
-
-
-// the scope is changed to package level so that the I18nLogManager can
-// make the addMessageQueue call to the instance
-    static LogManager getInstance() {
-        if (CONFIGURATION == null) {
-            synchronized (INSTANCE) {
-                INSTANCE.init();
-            }
-        }
-        
-        return INSTANCE;
-    }
-
-    private void init() {
-        if ( CONFIGURATION == null ) {
-
-            // Get the preferred LogConfiguration ...
+            // Get the initial LogConfiguration from the System properties ...
             try {
-                LogConfiguration newConfig = CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration();
-                CONFIGURATION = newConfig;
-//                System.out.println("** LOGMGR LogLevel: " + newConfig.getMessageLevel());
-            } catch ( ConfigurationException e ) {
-                // e.printStackTrace(System.err);
-                // Use the initial configuration ...
-
-                // Get the initial LogConfiguration from the System properties ...
-                try {
-                    CONFIGURATION = BasicLogConfiguration.createLogConfiguration(System.getProperties());
-                } catch ( LogConfigurationException le ) {
-                    throw new MetaMatrixRuntimeException(le, ErrorMessageKeys.LOG_ERR_0005, CommonPlugin.Util.getString( ErrorMessageKeys.LOG_ERR_0005) );
-
-                }
+                configuration = BasicLogConfiguration.createLogConfiguration(System.getProperties());
+            } catch ( LogConfigurationException le ) {
+                throw new MetaMatrixRuntimeException(le, ErrorMessageKeys.LOG_ERR_0005, CommonPlugin.Util.getString( ErrorMessageKeys.LOG_ERR_0005) );
 
             }
-
-            isStopped=false;
-
-
         }
+    }
+
+    static LogManager getInstance() {
+        return INSTANCE;
     }
 
     /**
@@ -245,9 +189,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logCritical(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.CRITICAL, context, message);
-        }
+    	LogManager.getInstance().logMessage(MessageLevel.CRITICAL, context, message);
     }
 
     /**
@@ -266,9 +208,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logCritical(String context, Throwable e, String message) {
-        if (e != null) {
-            LogManager.getInstance().logMessage(MessageLevel.CRITICAL,context,e,message);
-        }
+        LogManager.getInstance().logMessage(MessageLevel.CRITICAL,context,e,message);
     }
 
     /**
@@ -284,9 +224,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logError(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.ERROR, context,message);
-        }
+        LogManager.getInstance().logMessage(MessageLevel.ERROR, context,message);
     }
 
     /**
@@ -319,9 +257,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logWarning(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.WARNING, context,message);
-        }
+        LogManager.getInstance().logMessage(MessageLevel.WARNING, context,message);
     }
 
     /**
@@ -355,9 +291,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logInfo(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.INFO, context,message);
-        }
+        LogManager.getInstance().logMessage(MessageLevel.INFO, context,message);
     }
     
     /**
@@ -372,28 +306,8 @@ public final class LogManager {
      * @param msgParts the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void logDetail(String context, Object[] msgParts) {
-        if (msgParts != null) {
-            LogManager.getInstance().logMessage(MessageLevel.DETAIL, context, msgParts);
-        }
-    }
-
-    /**
-     * Send a detail message to the log.  Such messages are moderately detailed,
-     * and help to debug typical problems in the system.  Generally, these
-     * messages are not so detailed that the big picture gets lost.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param message the log message; the message is
-     * not logged if this parameter is null
-     */
-    public static void logDetail(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.DETAIL, context,message);
-        }
+    public static void logDetail(String context, Object ... msgParts) {
+        LogManager.getInstance().logMessage(MessageLevel.DETAIL, context, msgParts);
     }
 
     /**
@@ -427,48 +341,9 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logTrace(String context, Object ... msgParts) {
-        if (msgParts != null) {
-            LogManager.getInstance().logMessage(MessageLevel.TRACE, context, msgParts);
-        }
+        LogManager.getInstance().logMessage(MessageLevel.TRACE, context, msgParts);
     }
 
-    /**
-     * Send a trace message to the log.  A trace message is the most detailed
-     * logging level, used to trace system execution for really nasty problems.
-     * At this level, logging will be so verbose that the system performance
-     * may be affected.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param message the log message; the message is
-     * not logged if this parameter is null
-     */
-    public static void logTrace(String context, String message) {
-        if (message != null) {
-            LogManager.getInstance().logMessage(MessageLevel.TRACE, context, message);
-        }
-    }
-
-    /**
-     * Send a trace message to the log.  A trace message is the most detailed
-     * logging level, used to trace system execution for really nasty problems.
-     * At this level, logging will be so verbose that the system performance
-     * may be affected.
-     * <p>
-     * Only if the log manager is configured to send such messages to the
-     * destination will the message be recorded.
-     * @param context the context for this log message (for example, the component
-     * that is generating this message).
-     * @param e the exception that is to be logged; the message is
-     * not logged if this parameter is null
-     * @param message the log message (may be null)
-     */
-    public static void logTrace(String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.TRACE,context,e,message);
-    }
-    
     /**
      * Send a trace message to the log.  A trace message is the most detailed
      * logging level, used to trace system execution for really nasty problems.
@@ -483,7 +358,7 @@ public final class LogManager {
      * not logged if this parameter is null
      * @param msgParts the individual parts of the log message (may be null)
      */
-    public static void logTrace(String context, Throwable e, Object[] msgParts) {
+    public static void logTrace(String context, Throwable e, Object ... msgParts) {
         LogManager.getInstance().logMessage(MessageLevel.TRACE,context,e,msgParts);
     }
 
@@ -499,9 +374,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, String message) {
-        if ( message != null) {
-            LogManager.getInstance().logMessage(msgLevel, context, message);
-        }
+        LogManager.getInstance().logMessage(msgLevel, context, message);
     }
 
     /**
@@ -521,89 +394,29 @@ public final class LogManager {
     }
 
     /**
-     * Send a message with the specified level to the specified print stream
-     * (i.e., <code>System.out</code> or <code>System.err</code>).
-     * <p>
-     * Only if the log manager is configured to send such messages to its
-     * destination will the message be sent to the print stream.
-     * @param stream the stream to which the message is to be written only
-     * if the LogManager is currently recording messages of the context and level.
-     * @param msg the message to print; if null, this method does nothing
-     */
-    public static void printMessage(PrintStream stream, LogMessage msg) {
-        if ( msg == null ) {
-            return;
-        }
-
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        if ( msg.getLevel() > CONFIGURATION.getMessageLevel() || stream == null ) {
-            return;
-        }
-
-        stream.println( MESSAGE_FORMATTER.formatMessage(msg) );
-    }
-
-    /**
-     * Utility method to stop (permanently or temporarily) the log manager for
-     * this VM.  This method should be called when messages to the LogManager are
-     * to be prevented, but to wait until all messages already in the LogManager
-     * are processed.  Note that this method does block until all messages
-     * are processed and until all destinations are closed.
-     * <p>
-     * This method is designed to be called by an application that wishes to
-     * exit gracefully yet have all messages sent to the log destinations.
-     */
-    public static void stop() {
-        /*
-         * jh note: If this method is only called at shutdown (which is currently the case)
-         *          we should consider omitting it, as it does nothing useful except writing
-         *          a termination message.  We may be able to omit all state from this class.
-         */
-    	LogManager.getInstance().logMessage(MessageLevel.INFO, LogCommonConstants.CTX_LOGGING, CommonPlugin.Util.getString("MSG.003.014.0013")); //$NON-NLS-1$
-        LogManager.isStopped = true;
-        LogManager.CONFIGURATION = null;
-        LogManager.MESSAGE_FORMATTER = null;
-    }
-
-    public static boolean isManagerStopped() {
-        return isStopped;
-    }
-
-
-    /**
-     * Utility method to obtain the current, unmodifiable log configuration for the LogManager.
-     * @return un unmodifiable copy of the current log configuration
-     */
-    public static LogConfiguration getLogConfiguration() {
-        getInstance();
-        return LogManager.CONFIGURATION;
-    }
-
-    /**
      * Utility method to obtain the a modifiable log configuration for the LogManager.
      * <p>After modifying the log config, user must call {@link #setLogConfiguration(LogConfiguration)} to
      * affect the logging configuration.</p>
-     * @param modifiable Indicates that user wants to modify the log configuration.
      * @return a modifiable copy of the current log configuration
      */
-    public static LogConfiguration getLogConfiguration(boolean modifiable) {
-        getInstance();
-        return new BasicLogConfiguration(LogManager.CONFIGURATION);
+    public static LogConfiguration getLogConfigurationCopy() {
+    	return getInstance().getConfigurationCopy();
     }
 
     public static void setLogConfiguration( LogConfiguration config ) {
-        if ( config != null ) {
-        	LogManager.getInstance().logMessage(MessageLevel.INFO, LogCommonConstants.CTX_LOGGING, CommonPlugin.Util.getString("MSG.003.014.0015", config)); //$NON-NLS-1$
-            if ( config instanceof UnmodifiableLogConfiguration ) {
-                UnmodifiableLogConfiguration unmodConfig = (UnmodifiableLogConfiguration) config;
-                CONFIGURATION = (LogConfiguration) unmodConfig.deepClone();
-            } else {
-                CONFIGURATION = new UnmodifiableLogConfiguration( (LogConfiguration) config.clone() );
-            }
-        }
+    	getInstance().setConfiguration(config);
     }
+    
+    public LogConfiguration getConfigurationCopy() {
+    	return (LogConfiguration)configuration.clone(); 
+	}
+	
+	public void setConfiguration(LogConfiguration config) {
+		if ( config != null ) {
+        	logMessage(MessageLevel.INFO, LogCommonConstants.CTX_LOGGING, CommonPlugin.Util.getString("MSG.003.014.0015", config)); //$NON-NLS-1$
+            configuration = (LogConfiguration) config.clone();
+        }
+	}
 
     /**
      * Utility method to identify whether a log message with the specified
@@ -614,112 +427,30 @@ public final class LogManager {
      * or false if it would be discarded by the LogManager.
      */
     public static boolean isMessageToBeRecorded(String context, int msgLevel) {
-        if ( context == null ) {
+    	return getInstance().isLoggingEnabled(context, msgLevel);
+    }
+    
+    public boolean isLoggingEnabled(String context, int msgLevel) {
+    	if ( context == null ) {
             return false;
         }
-
-        // If this manager doesn't have a configuration, then the message should
-        // not be recorded ...
-        if ( CONFIGURATION == null ) {
-            return false;
-        }
-
+                
         // If the messsage's level is greater than the logging level,
         // then the message should NOT be recorded ...
-        if ( CONFIGURATION.getMessageLevel() == MessageLevel.NONE || msgLevel <= MessageLevel.NONE ||
-             CONFIGURATION.isLevelDiscarded( msgLevel ) ) {
+        if ( configuration.getMessageLevel() == MessageLevel.NONE || msgLevel <= MessageLevel.NONE ||
+        		configuration.isLevelDiscarded( msgLevel ) || configuration.isContextDiscarded( context )) {
             return false;
         }
 
-        // If the set contains the message's context and the msgLevel is
-        // not withing the requested recording levell, then do not log
-        if ( CONFIGURATION.isContextDiscarded( context ) ) {
-            return false;
-        }
         return true;
     }
 
-    /**
-     * This method should be used only by the initialization process,
-     * as it is recorded in a special list.
-     */
-    protected void logInitMessage(int level, String context, String message) {
-        // Do NOT check the level of the message, since the CONFIGURATION object
-        // may not be completely initialized.  So, just log the initialization message ...
-        LogMessage msg = new LogMessage( context, level, new Object[] {message});
-        try {
-            this.initializationMessages.add(msg);
-        } catch ( Exception e2 ) {
-            printMessage(System.out, msg);
-            System.err.println(e2.getMessage());
-        }
+    protected void logMessage(int level, String context, Object ... msgParts) {
+    	logMessage(level, context, null, msgParts);
     }
 
-    /**
-     * This method should be used only by the initialization process,
-     * as it is recorded in a special list.
-     */
-    protected void logInitMessage(int level, String context, Throwable e, String message) {
-        // Do NOT check the level of the message, since the CONFIGURATION object
-        // may not be completely initialized.  So, just log the initialization message ...
-        LogMessage msg = new LogMessage( context, level, e, new Object[] {message});
-        try {
-            this.initializationMessages.add(msg);
-        } catch ( Exception e2 ) {
-            printMessage(System.out, msg);
-            System.err.println(e2.getMessage());
-        }
-    }
-
-    protected void logMessage(int level, String context, Object[] msgParts) {
-//        // Check quickly the level of the message:
-//        // If the messsage's level is greater than the logging level,
-//        // then the message should NOT be recorded ...
-//        if ( CONFIGURATION.isLevelDiscarded(level) ) {
-//            return;
-//        }
-		//Check the level and context message.  If the message's level is
-		//greater than the logging level or the context is one that is being
-		//discarded, then the message should not be recorded.
-		if (!LogManager.isMessageToBeRecorded(context, level)) {
-			return;
-		} 
-
-        LogMessage msg = new LogMessage( context, level, msgParts);
-            //System.out.println("Enqueuing message: " + msg.getText() ); //$NON-NLS-1$
-            forwardMessage(msg);
-    }
-
-    protected void logMessage(int level, String context, String message) {
-//        // Check quickly the level of the message:
-//        // If the messsage's level is greater than the logging level,
-//        // then the message should NOT be recorded ...
-//        if ( CONFIGURATION.isLevelDiscarded(level) ) {
-//            return;
-//        }
-		//Check the level and context message.  If the message's level is
-		//greater than the logging level or the context is one that is being
-		//discarded, then the message should not be recorded.
-		if (!LogManager.isMessageToBeRecorded(context, level)) {
-			return;
-		} 
-
-        LogMessage msg = new LogMessage( context, level, new Object[] {message});
-//            System.out.println("Enqueuing message: " + msg.getText() );
-            forwardMessage(msg);
-    }
-
-    protected void logMessage(int level, String context, Throwable e, String message) {
-		if (!LogManager.isMessageToBeRecorded(context, level)) {
-			return;
-		} 
-
-        LogMessage msg = new LogMessage( context, level, e, new Object[] {message});
-        forwardMessage(msg);
-    }
-
-    protected void logMessage(int level, String context, Throwable e, Object[] msgParts) {
-		if (!LogManager.isMessageToBeRecorded(context, level)) {
+    protected void logMessage(int level, String context, Throwable e, Object ... msgParts) {
+		if (msgParts == null || msgParts.length == 0 || !isLoggingEnabled(context, level)) {
 			return;
 		} 
 
@@ -729,7 +460,7 @@ public final class LogManager {
 
 
     protected void forwardMessage(LogMessage msg) {
-        PlatformLog.getInstance().logMessage(msg);
+        platformLog.logMessage(msg);
     }
     
     public static Object createLoggingProxy(final String loggingContext,
