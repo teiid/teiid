@@ -36,6 +36,7 @@ import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
+import com.metamatrix.platform.security.membership.service.AuthenticationToken;
 import com.metamatrix.platform.service.api.ServiceInterface;
 
 /**
@@ -84,7 +85,7 @@ public interface MembershipServiceInterface extends ServiceInterface {
      * @throws MetaMatrixSecurityException if there is an error within this
      * service or during communicating with the underlying service provider
      */
-    Serializable authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName)
+    AuthenticationToken authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName)
     throws MembershipServiceException;
 
     /**

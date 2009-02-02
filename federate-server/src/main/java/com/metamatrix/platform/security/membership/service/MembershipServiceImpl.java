@@ -288,7 +288,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @throws MetaMatrixSecurityException
      * @throws MembershipServiceException 
      */
-    public Serializable authenticateUser(String username, Credentials credential, Serializable trustedPayload, String applicationName) {
+    public AuthenticationToken authenticateUser(String username, Credentials credential, Serializable trustedPayload, String applicationName) {
         
         LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
         

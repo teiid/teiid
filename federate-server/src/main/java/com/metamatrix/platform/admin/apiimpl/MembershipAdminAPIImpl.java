@@ -97,8 +97,8 @@ public class MembershipAdminAPIImpl extends SubSystemAdminAPIImpl implements Mem
      * @see com.metamatrix.platform.admin.api.MembershipAdminAPI#authenticateUser(java.lang.String, com.metamatrix.platform.security.api.Credentials, java.io.Serializable, java.lang.String)
      *
      */
-    public Serializable authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName) throws MetaMatrixComponentException, MembershipServiceException {
-        return membAdmin.authenticateUser(username, credential, trustePayload, applicationName);
+    public boolean authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName) throws MetaMatrixComponentException, MembershipServiceException {
+        return membAdmin.authenticateUser(username, credential, trustePayload, applicationName).isAuthenticated();
     }
 
     public synchronized MetaMatrixPrincipal getUserPrincipal(String principalName) throws AuthorizationException,

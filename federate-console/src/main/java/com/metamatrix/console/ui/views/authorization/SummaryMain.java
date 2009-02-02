@@ -31,7 +31,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -61,7 +60,6 @@ import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
 import com.metamatrix.platform.admin.api.MembershipAdminAPI;
 import com.metamatrix.platform.security.api.Credentials;
-import com.metamatrix.platform.security.membership.service.SuccessfulAuthenticationToken;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.CheckBox;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
@@ -472,8 +470,7 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
     		
 			final MembershipAdminAPI membershipAPI = ModelManager.getMembershipAPI(this.connection );
 	        try {
-	            final Serializable result = membershipAPI.authenticateUser(this.connection.getUser(), new Credentials(currentPass), null, null);
-	            if(! (result instanceof SuccessfulAuthenticationToken) ) {
+	            if(! membershipAPI.authenticateUser(this.connection.getUser(), new Credentials(currentPass), null, null) ) {
 	    			String title = ConsolePlugin.Util.getString("SummaryMain.authErrorDialog.title"); //$NON-NLS-1$
 	    			String msg = ConsolePlugin.Util.getString("SummaryMain.authErrorDialog.msg"); //$NON-NLS-1$
 	                StaticUtilities.displayModalDialogWithOK(title, msg);

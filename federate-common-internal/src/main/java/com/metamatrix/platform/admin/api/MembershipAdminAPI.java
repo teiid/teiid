@@ -58,7 +58,7 @@ public interface MembershipAdminAPI extends SubSystemAdminAPI {
     MultipleRequestConfirmation getGroupPrincipals(Collection groupNames)
     throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException, MetaMatrixSecurityException;
     
-    Serializable authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName) 
+    boolean authenticateUser(String username, Credentials credential, Serializable trustePayload, String applicationName) 
     throws MetaMatrixComponentException, MembershipServiceException;
 
 }
