@@ -48,6 +48,7 @@ import com.metamatrix.data.language.IElement;
 import com.metamatrix.data.language.IExpression;
 import com.metamatrix.data.language.IInsert;
 import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.data.language.ISetClause;
 import com.metamatrix.data.language.IUpdate;
 import com.metamatrix.data.metadata.runtime.MetadataID;
 import com.metamatrix.data.metadata.runtime.MetadataObject;
@@ -281,9 +282,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	private void executeUpdate()
 			throws ConnectorException {
 
-		// all objects in this list are ICompareCriteria for each
-		// change per MM Connector API
-		List updateList = ((IUpdate)command).getChanges();
+		List<ISetClause> updateList = ((IUpdate)command).getChanges().getClauses();
 		ICriteria criteria = ((IUpdate)command).getCriteria();
 
 		// since we have the exact same processing rules for criteria
@@ -301,7 +300,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// be performed separately using Context.rename()), we will
 		// need to account for this in determining this list size. 
 		ModificationItem[] updateMods = new ModificationItem[updateList.size()];
-		ICompareCriteria compareCriteria;
 		IElement leftElement;
 		IExpression rightExpr;
 		String nameLeftElement;
@@ -311,15 +309,15 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// side and an IExpression on the right, per the Connector
 		// API).
 		for (int i=0; i < updateList.size(); i++) {
-			compareCriteria = (ICompareCriteria)updateList.get(i);
+			ISetClause setClause = updateList.get(i);
 			// trust that connector API is right and left side
 			// will always be an IElement
-			leftElement = (IElement)compareCriteria.getLeftExpression();
+			leftElement = setClause.getSymbol();
 			// call utility method to get NameInSource/Name for element
 			nameLeftElement = getNameFromElement(leftElement);
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
-			rightExpr = compareCriteria.getRightExpression();
+			rightExpr = setClause.getValue();
 			if (!(rightExpr instanceof ILiteral)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new ConnectorException(msg);

@@ -66,6 +66,8 @@ import com.metamatrix.data.language.IScalarSubquery;
 import com.metamatrix.data.language.ISearchedCaseExpression;
 import com.metamatrix.data.language.ISelect;
 import com.metamatrix.data.language.ISelectSymbol;
+import com.metamatrix.data.language.ISetClause;
+import com.metamatrix.data.language.ISetClauseList;
 import com.metamatrix.data.language.ISetQuery;
 import com.metamatrix.data.language.ISubqueryCompareCriteria;
 import com.metamatrix.data.language.ISubqueryInCriteria;
@@ -82,7 +84,6 @@ import com.metamatrix.data.visitor.framework.AbstractLanguageVisitor;
 public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLReservedWords {
    
     private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$    
-    private static final int MAX_ALIAS_LENGTH = 0;
 
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
@@ -1106,22 +1107,23 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         buffer.append(SPACE)
               .append(SET)
               .append(SPACE);
-        for (final Iterator iterator = obj.getChanges().iterator(); iterator.hasNext();) {
-            final ICompareCriteria element = (ICompareCriteria)iterator.next();
-            buffer.append(getElementShortName((IElement)element.getLeftExpression()));
-            buffer.append(SPACE).append(EQ).append(SPACE);
-            append(element.getRightExpression());
-            if (iterator.hasNext()) {
-                buffer.append(COMMA);
-                buffer.append(SPACE);
-            }
-        } 
+        append(obj.getChanges()); 
         if (obj.getCriteria() != null) {
             buffer.append(SPACE)
                   .append(WHERE)
                   .append(SPACE);
             append(obj.getCriteria());
         }
+    }
+    
+    public void visit(ISetClauseList obj) {
+    	append(obj.getClauses());
+    }
+    
+    public void visit(ISetClause clause) {
+        buffer.append(getElementShortName(clause.getSymbol()));
+        buffer.append(SPACE).append(EQ).append(SPACE);
+        append(clause.getValue());
     }
     
     public void visit(ISetQuery obj) {
@@ -1183,11 +1185,4 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         this.metadata = metadata;        
     }
     
-    protected int getMaxSelectAliasLength() {
-        return this.MAX_ALIAS_LENGTH;
-    }
-    
-    protected int getMaxTableAliasLength() {
-        return this.MAX_ALIAS_LENGTH;
-    }     
 }

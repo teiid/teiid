@@ -27,8 +27,6 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.List;
 
 import com.metamatrix.data.language.*;
-import com.metamatrix.data.language.ICompoundCriteria;
-import com.metamatrix.data.language.ILanguageFactory;
 import com.metamatrix.data.metadata.runtime.MetadataID;
 
 /**
@@ -281,7 +279,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createUpdate(com.metamatrix.data.language.IGroup, java.util.List, com.metamatrix.data.language.ICriteria)
      */
-    public IUpdate createUpdate(IGroup group, List updates, ICriteria criteria) {
+    public IUpdate createUpdate(IGroup group, ISetClauseList updates, ICriteria criteria) {
         return new UpdateImpl(group, updates, criteria);
     }
 
@@ -299,4 +297,14 @@ public class LanguageFactoryImpl implements ILanguageFactory {
         queryImpl.setLimit(limit);
         return queryImpl;
     }
+
+	@Override
+	public ISetClause createSetClause(IElement symbol, IExpression value) {
+		return new SetClauseImpl(symbol, value);
+	}
+
+	@Override
+	public ISetClauseList createSetClauseList(List<ISetClause> clauses) {
+		return new SetClauseListImpl(clauses);
+	}
 }

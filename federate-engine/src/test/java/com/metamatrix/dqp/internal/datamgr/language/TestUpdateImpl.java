@@ -24,12 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.language.ICompareCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -66,12 +64,9 @@ public class TestUpdateImpl extends TestCase {
     }
 
     public void testGetChanges() throws Exception {
-        List changes = example().getChanges();
+        List changes = example().getChanges().getClauses();
         assertNotNull(changes);
         assertEquals(4, changes.size());
-        for (Iterator i = changes.iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof ICompareCriteria);
-        }
     }
 
     public void testGetCriteria() throws Exception {

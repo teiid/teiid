@@ -26,8 +26,6 @@
  */
 package com.metamatrix.connector.jdbc.util;
 
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -37,7 +35,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,12 +49,8 @@ import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.basic.BasicBatch;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILiteral;
 import com.metamatrix.data.language.IParameter;
 import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.language.IUpdate;
 import com.metamatrix.data.metadata.runtime.Element;
 import com.metamatrix.data.metadata.runtime.MetadataID;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
@@ -186,64 +179,14 @@ public class JDBCExecutionHelper {
                 batch.setLast();
             }
 
-        } catch (ConnectorException e) {
-            throw e;
         } catch (SQLException e) {
-//            ConnectorLogManager.logError(null, null, e,
-//                    "Unexpected exception while translating results: " + e.getMessage());
             throw new ConnectorException(e,
                     JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
-        } catch (Throwable e) {
-            throw new ConnectorException(
-                e,
-                JDBCPlugin.Util.getString("JDBCTranslator.Unknown_error_translating_results___9", e.getMessage())); //$NON-NLS-1$
         }
         
         return batch;
     }
     
-    /**
-     * Modify the original params list to remove the resolved parameters, only the byte[],
-     * Blob and Clob get left.
-     * @param command ICommand
-     * @param sql Translated sql string
-     * @throws SQLException
-     */
-    public static List setParametersForUpdateLOB(ICommand command){
-        List modifyParams = null;
-        if (command instanceof IInsert) {
-            List originalParams = ((IInsert)command).getValues();
-            modifyParams = new LinkedList(originalParams);
-            // remove all non-lob and non-stream/bytes[] params
-            Iterator iter = modifyParams.iterator();
-            while(iter.hasNext()){
-                ILiteral param = (ILiteral) iter.next();
-                Object literalValue = param.getValue();
-                if (literalValue == null || (!List.class.isAssignableFrom(literalValue.getClass()) 
-                                && !Blob.class.isAssignableFrom(literalValue.getClass())
-                                && !Clob.class.isAssignableFrom(literalValue.getClass()))) {
-                    iter.remove();
-                }
-            }
-            
-        } else if (command instanceof IUpdate) {
-            List originalParams = ((IUpdate)command).getChanges();
-            modifyParams = new LinkedList(originalParams);
-            // remove all resolved CompareCriteria
-            Iterator iter = modifyParams.iterator();
-            while(iter.hasNext()){
-                ICompareCriteria param = (ICompareCriteria)iter.next();
-                Object right = ((ILiteral)param.getRightExpression()).getValue();                
-                if (right == null || (!List.class.isAssignableFrom(right.getClass()) && !Blob.class.isAssignableFrom(right.getClass())
-                    && !Clob.class.isAssignableFrom(right.getClass()))) {
-                    iter.remove();
-                }
-            }  
-        }                
-        
-        return modifyParams;    
-    } 
-
     /**
      * @param parameters List of IParameter
      * @param sql

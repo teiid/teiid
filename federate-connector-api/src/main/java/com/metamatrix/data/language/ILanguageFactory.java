@@ -315,10 +315,24 @@ public interface ILanguageFactory {
     /**
      * Create new UPDATE command
      * @param group Group being updated
-     * @param updates List of ICompareCriteria specifying updates
+     * @param updates
      * @param criteria Criteria to use, may be null
      * @return New IUpdate
      */
-    IUpdate createUpdate(IGroup group, List updates, ICriteria criteria);
+    IUpdate createUpdate(IGroup group, ISetClauseList updates, ICriteria criteria);
     
+    /**
+     * Creates a new SetClauseList
+     * @param clauses
+     * @return
+     */
+    ISetClauseList createSetClauseList(List<ISetClause> clauses);
+    
+    /**
+     * Creates a new SetClause
+     * @param symbol
+     * @param value
+     * @return
+     */
+    ISetClause createSetClause(IElement symbol, IExpression value);
 }

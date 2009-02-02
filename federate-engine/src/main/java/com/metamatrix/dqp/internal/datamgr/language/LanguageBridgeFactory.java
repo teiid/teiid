@@ -63,6 +63,8 @@ import com.metamatrix.data.language.IQuery;
 import com.metamatrix.data.language.IQueryCommand;
 import com.metamatrix.data.language.ISearchedCaseExpression;
 import com.metamatrix.data.language.ISelect;
+import com.metamatrix.data.language.ISetClause;
+import com.metamatrix.data.language.ISetClauseList;
 import com.metamatrix.data.language.ISetQuery;
 import com.metamatrix.data.language.ISubqueryCompareCriteria;
 import com.metamatrix.data.language.ISubqueryInCriteria;
@@ -99,6 +101,7 @@ import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetClause;
+import com.metamatrix.query.sql.lang.SetClauseList;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.StoredProcedure;
@@ -618,13 +621,21 @@ public class LanguageBridgeFactory {
 
     /* Update */
     IUpdate translate(Update update) throws MetaMatrixComponentException {
-        List translatedChanges = new ArrayList();
-        for (SetClause clause : update.getChangeList().getClauses()) {
-            translatedChanges.add(new CompareCriteriaImpl(translate(clause.getSymbol()), translate(clause.getValue()), ICompareCriteria.EQ));
-        }
         return new UpdateImpl(translate(update.getGroup()),
-                              translatedChanges,
+                              translate(update.getChangeList()),
                               translate(update.getCriteria()));
+    }
+    
+    ISetClauseList translate(SetClauseList setClauseList) throws MetaMatrixComponentException {
+    	List<ISetClause> clauses = new ArrayList<ISetClause>(setClauseList.getClauses().size());
+    	for (SetClause setClause : setClauseList.getClauses()) {
+    		clauses.add(translate(setClause));
+    	}
+    	return new SetClauseListImpl(clauses);
+    }
+    
+    ISetClause translate(SetClause setClause) throws MetaMatrixComponentException {
+    	return new SetClauseImpl(translate(setClause.getSymbol()), translate(setClause.getValue()));
     }
 
     /* Delete */

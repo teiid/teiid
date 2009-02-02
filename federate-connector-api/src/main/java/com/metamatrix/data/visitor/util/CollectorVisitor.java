@@ -25,8 +25,6 @@
 package com.metamatrix.data.visitor.util;
 
 import java.util.*;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import com.metamatrix.data.language.*;
 import com.metamatrix.data.visitor.framework.DelegatingHierarchyVisitor;
@@ -297,6 +295,16 @@ public class CollectorVisitor implements LanguageObjectVisitor {
     }
     
     public void visit(ISetQuery obj) {
+        checkInstance(obj);
+    }
+    
+    @Override
+    public void visit(ISetClauseList obj) {
+        checkInstance(obj);
+    }
+    
+    @Override
+    public void visit(ISetClause obj) {
         checkInstance(obj);
     }
 

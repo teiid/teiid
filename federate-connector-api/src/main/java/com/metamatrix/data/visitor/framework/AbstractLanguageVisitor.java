@@ -115,5 +115,6 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(ISubqueryInCriteria obj) {}
     public void visit(IUpdate obj) {}
     public void visit(ISetQuery obj) {}
-
+    public void visit(ISetClauseList obj) {}
+    public void visit(ISetClause obj) {}
 }

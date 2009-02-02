@@ -373,6 +373,29 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         }
     }
     
+    @Override
+    public void visit(ISetClauseList obj) {
+        if (preVisitor != null) {
+            preVisitor.visit(obj);
+        }
+        super.visit(obj);
+        if (postVisitor != null) {
+            postVisitor.visit(obj);
+        }
+
+    }
+    
+    @Override
+    public void visit(ISetClause obj) {
+        if (preVisitor != null) {
+            preVisitor.visit(obj);
+        }
+        super.visit(obj);
+        if (postVisitor != null) {
+            postVisitor.visit(obj);
+        }
+    }
+        
     /** 
      * This utility method can be used to execute the behaviorVisitor in a pre-order walk
      * of the language objects.  "Pre-order" in this case means that the visit method of the 

@@ -24,7 +24,6 @@
 package com.metamatrix.connector.salesforce.execution;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -34,9 +33,9 @@ import org.apache.axis.message.MessageElement;
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.execution.visitors.UpdateVisitor;
 import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICompareCriteria;
 import com.metamatrix.data.language.IElement;
 import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.data.language.ISetClause;
 import com.metamatrix.data.language.IUpdate;
 import com.metamatrix.data.metadata.runtime.Element;
 
@@ -52,14 +51,11 @@ public class UpdateExecutionImpl {
 
 		if (null != Ids && Ids.length > 0) {
 			List<MessageElement> elements = new ArrayList<MessageElement>();
-			List<ICompareCriteria> changes = update.getChanges();
-			Iterator<ICompareCriteria> iter = changes.iterator();
-			while (iter.hasNext()) {
-				ICompareCriteria criteria = iter.next();
-				IElement element = (IElement) criteria.getLeftExpression();
+			for (ISetClause clause : update.getChanges().getClauses()) {
+				IElement element = clause.getSymbol();
 				Element column = (Element) parent.getMetadata().getObject(
 						element.getMetadataID());
-				String val = ((ILiteral) criteria.getRightExpression())
+				String val = ((ILiteral) clause.getValue())
 						.toString();
 				MessageElement messageElem = new MessageElement(new QName(
 						column.getNameInSource()), Util.stripQutes(val));

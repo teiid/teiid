@@ -24,48 +24,10 @@
 
 package com.metamatrix.data.language;
 
+import java.util.List;
 
-/**
- * Represents an UPDATE command in the language objects.
- */
-public interface IUpdate extends ICommand {
+public interface ISetClauseList extends ILanguageObject {
 
-    /**
-     * Get group that is being inserted into.
-     * @return Insert group
-     */
-    IGroup getGroup();
-
-    /**
-     * Get list of changes that should occur in the UPDATE - every
-     * change is of the form "element = expression".
-     * @return ISetClauseList
-     */
-    ISetClauseList getChanges();
-
-    /** 
-     * Get criteria that is being used with the delete - may be null
-     * @return Criteria, may be null
-     */
-    ICriteria getCriteria();
-    
-    /**
-     * Set group that is being inserted into.
-     * @param group Insert group
-     */
-    void setGroup(IGroup group);
-
-    /**
-     * Set list of changes that should occur in the UPDATE - every
-     * change is of the form "element = expression".
-     * @param changes
-     */
-    void setChanges(ISetClauseList changes);
-
-    /** 
-     * Set criteria that is being used with the delete - may be null
-     * @param criteria Criteria, may be null
-     */
-    void setCriteria(ICriteria criteria);
-    
+	List<ISetClause> getClauses();
+	
 }

@@ -36,6 +36,7 @@ import com.metamatrix.data.language.ILikeCriteria;
 import com.metamatrix.data.language.ILiteral;
 import com.metamatrix.data.language.IScalarSubquery;
 import com.metamatrix.data.language.ISearchedCaseExpression;
+import com.metamatrix.data.language.ISetClause;
 import com.metamatrix.data.language.ISubqueryCompareCriteria;
 import com.metamatrix.data.visitor.framework.HierarchyVisitor;
 
@@ -127,6 +128,12 @@ final class BindValueVisitor extends HierarchyVisitor {
     public void visit(IInsert obj) {
         replaceWithBinding = true;
         visitNodes(obj.getValues());
+    }
+    
+    @Override
+    public void visit(ISetClause obj) {
+        replaceWithBinding = true;
+        visitNode(obj.getValue());
     }
 
     public void visit(ILiteral obj) {

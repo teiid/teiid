@@ -24,20 +24,19 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import java.util.List;
-
 import com.metamatrix.data.language.ICriteria;
 import com.metamatrix.data.language.IGroup;
+import com.metamatrix.data.language.ISetClauseList;
 import com.metamatrix.data.language.IUpdate;
 import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
 
 public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     
-    private IGroup group = null;
-    private List changes = null;
-    private ICriteria criteria = null;
+    private IGroup group;
+    private ISetClauseList changes;
+    private ICriteria criteria;
     
-    public UpdateImpl(IGroup group, List changes, ICriteria criteria) {
+    public UpdateImpl(IGroup group, ISetClauseList changes, ICriteria criteria) {
         this.group = group;
         this.changes = changes;
         this.criteria = criteria;
@@ -53,7 +52,7 @@ public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     /**
      * @see com.metamatrix.data.language.IUpdate#getChanges()
      */
-    public List getChanges() {
+    public ISetClauseList getChanges() {
         return changes;
     }
 
@@ -78,10 +77,7 @@ public class UpdateImpl extends BaseLanguageObject implements IUpdate {
         this.group = group;
     }
 
-    /* 
-     * @see com.metamatrix.data.language.IUpdate#setChanges(java.util.List)
-     */
-    public void setChanges(List changes) {
+    public void setChanges(ISetClauseList changes) {
         this.changes = changes;
     }
 

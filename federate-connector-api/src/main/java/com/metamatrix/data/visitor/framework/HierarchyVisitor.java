@@ -37,6 +37,7 @@ import com.metamatrix.data.language.IFunction;
 import com.metamatrix.data.language.IGroup;
 import com.metamatrix.data.language.IGroupBy;
 import com.metamatrix.data.language.IInCriteria;
+import com.metamatrix.data.language.IInlineView;
 import com.metamatrix.data.language.IInsert;
 import com.metamatrix.data.language.IIsNullCriteria;
 import com.metamatrix.data.language.IJoin;
@@ -52,6 +53,8 @@ import com.metamatrix.data.language.IScalarSubquery;
 import com.metamatrix.data.language.ISearchedCaseExpression;
 import com.metamatrix.data.language.ISelect;
 import com.metamatrix.data.language.ISelectSymbol;
+import com.metamatrix.data.language.ISetClause;
+import com.metamatrix.data.language.ISetClauseList;
 import com.metamatrix.data.language.ISetQuery;
 import com.metamatrix.data.language.ISubqueryCompareCriteria;
 import com.metamatrix.data.language.ISubqueryInCriteria;
@@ -229,10 +232,25 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     
     public void visit(IUpdate obj) {
         visitNode(obj.getGroup());
-        visitNodes(obj.getChanges());
+        visitNode(obj.getChanges());
         visitNode(obj.getCriteria());
     }
-
+    
+    @Override
+    public void visit(IInlineView obj) {
+    	visitNode(obj.getQuery());
+    }
+    
+    @Override
+    public void visit(ISetClauseList obj) {
+    	visitNodes(obj.getClauses());
+    }
+    
+    @Override
+    public void visit(ISetClause obj) {
+    	visitNode(obj.getSymbol());
+    	visitNode(obj.getValue());
+    }
 
     public void reset() {
 
