@@ -131,7 +131,7 @@ public class MetaDataProcessor {
         }
         
         if(preparedSql == null) {
-        	RequestWorkItem workItem = requestManager.getRequestWorkItem(requestID, true);
+        	RequestWorkItem workItem = requestManager.getRequestWorkItem(requestID);
             return getMetadataForCommand(workItem.getOriginalCommand());
         } 
         return obtainMetadataForPreparedSql(preparedSql, workContext.getConnectionID(), allowDoubleQuotedVariable);

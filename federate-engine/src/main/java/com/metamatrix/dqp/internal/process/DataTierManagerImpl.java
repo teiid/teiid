@@ -84,7 +84,7 @@ public class DataTierManagerImpl implements DataTierManager {
 
 	public TupleSource registerRequest(Object processorId, Command command,
 			String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId, true);
+		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
         DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorID(), workItem);
         tupleSource.open();
@@ -94,7 +94,7 @@ public class DataTierManagerImpl implements DataTierManager {
 	private AtomicRequestMessage createRequest(Object processorId,
 			Command command, String modelName, String connectorBindingId, int nodeID)
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {
-		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId, true);
+		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
 		
 	    RequestMessage request = workItem.requestMsg;
 		// build the atomic request based on original request + context info

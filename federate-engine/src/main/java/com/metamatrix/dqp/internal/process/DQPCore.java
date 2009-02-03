@@ -265,7 +265,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         }
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
-		RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(reqID), true);
+		RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(reqID));
 		workItem.requestMore(batchFirst, batchLast, resultsFuture.getResultsReceiver());
 		return resultsFuture;
 	}
@@ -314,7 +314,7 @@ public class DQPCore extends Application implements ClientSideDQP {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }   
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(requestId), true);
+        RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(requestId));
         workItem.removeLobStream(lobRequestId);
         ResultsFuture<Void> resultsFuture = new ResultsFuture<Void>();
         resultsFuture.getResultsReceiver().receiveResults(null);
@@ -327,7 +327,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request for next Lob chunk with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }  
-        RequestWorkItem workItem = getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(requestId), true);
+        RequestWorkItem workItem = getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(requestId));
         ResultsFuture<LobChunk> resultsFuture = new ResultsFuture<LobChunk>();
         workItem.processLobChunkRequest(streamId, lobRequestId, resultsFuture.getResultsReceiver());
         return resultsFuture;
@@ -347,24 +347,16 @@ public class DQPCore extends Application implements ClientSideDQP {
         workItem.requestAtomicRequestCancel(nodeID);
     }
     
-    RequestWorkItem getRequestWorkItem(RequestID reqID, boolean requestExpected) throws MetaMatrixProcessingException {
+    RequestWorkItem getRequestWorkItem(RequestID reqID) throws MetaMatrixProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
-    	
-    	if (requestExpected && result == null) {
+    	if (result == null) {
     		throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_cancelled.", reqID));//$NON-NLS-1$
     	}
     	return result;
     }
     
 	RequestWorkItem safeGetWorkItem(Object processorID) {
-		// Create atomic query request from command
-		RequestWorkItem workItem = null;
-		try {
-			workItem = getRequestWorkItem((RequestID)processorID, false);
-		} catch (MetaMatrixProcessingException e) {
-			//won't happen
-		}
-		return workItem;
+    	return this.requests.get((RequestID)processorID);
 	}
 
     /**
@@ -414,8 +406,6 @@ public class DQPCore extends Application implements ClientSideDQP {
 	                cancelRequest(reqId);
 	            } catch (MetaMatrixComponentException err) {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
-	            } catch (MetaMatrixProcessingException err) {
-	            	LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
 				}
 	        }
         }
@@ -440,8 +430,8 @@ public class DQPCore extends Application implements ClientSideDQP {
         }
     }
 
-    public void cancelRequest(RequestID requestID)
-        throws MetaMatrixProcessingException, MetaMatrixComponentException {
+    public boolean cancelRequest(RequestID requestID)
+        throws MetaMatrixComponentException {
         
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
@@ -449,18 +439,16 @@ public class DQPCore extends Application implements ClientSideDQP {
         
         boolean markCancelled = false;
         
-        RequestWorkItem workItem = getRequestWorkItem(requestID, false);
+        RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
         	markCancelled = workItem.requestCancel();
-        	
-        	if (markCancelled) {
-                logMMCommand(workItem.requestMsg, false, true, 0);
-        	}
         }
-        
-        if (!markCancelled) {
-            throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
-        }
+    	if (markCancelled) {
+            logMMCommand(workItem.requestMsg, false, true, 0);
+    	} else {
+    		LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
+    	}
+        return markCancelled;
     }
     
 	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException {
@@ -475,12 +463,12 @@ public class DQPCore extends Application implements ClientSideDQP {
      * Close the request with given ID 
      * @param requestID
      */
-    void closeRequest(RequestID requestID) throws MetaMatrixProcessingException {
+    void closeRequest(RequestID requestID) {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
         }
         
-        RequestWorkItem workItem = getRequestWorkItem(requestID, false);
+        RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
         	workItem.requestClose();
         } else {

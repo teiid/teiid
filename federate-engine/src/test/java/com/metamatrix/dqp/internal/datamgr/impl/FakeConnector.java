@@ -31,7 +31,6 @@ import javax.transaction.xa.XAResource;
 
 import junit.framework.Assert;
 
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
@@ -47,10 +46,14 @@ import com.metamatrix.data.basic.BasicConnectorCapabilities;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.IQueryCommand;
 import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.data.monitor.ConnectionStatus;
+import com.metamatrix.data.monitor.MonitoredConnector;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
-public class FakeConnector implements Connector, XAConnector {
+public class FakeConnector implements Connector, XAConnector, MonitoredConnector {
 	private static final int BATCH_SIZE = 5;
 	
 	private class QueryCommandBasicCapabilities extends
@@ -193,6 +196,11 @@ public class FakeConnector implements Connector, XAConnector {
 	}
 	public void setSimulatedBatchRetrievalTime(long simulatedBatchRetrievalTime) {
 		this.simulatedBatchRetrievalTime = simulatedBatchRetrievalTime;
+	}
+	
+	@Override
+	public ConnectionStatus getStatus() {
+		return new ConnectionStatus(AliveStatus.DEAD);
 	}
 
 }

@@ -38,6 +38,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeTransactionService;
 import com.metamatrix.dqp.internal.process.DQPCore.ConnectorCapabilitiesCache;
+import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
@@ -222,6 +223,10 @@ public class TestDQPCore extends TestCase {
     
 	public void testLookupVisibility() throws Exception {
 		helpTestVisibilityFails("select lookup('bqt3.smalla', 'intkey', 'stringkey', '?')"); //$NON-NLS-1$
+	}
+	
+	public void testCancel() throws Exception {
+		assertFalse(this.core.cancelRequest(new RequestID(1)));
 	}
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
