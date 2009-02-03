@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.jar.Manifest;
 
 import junit.framework.TestCase;
@@ -223,5 +224,43 @@ public final class TestZipFileUtil extends TestCase {
     }     
     
     
+    public void testFind() throws Exception {
+    	String jarname = PATH + "/extensionmodule/testjar.jar";
+        final File file = new File(jarname);
+        assertTrue(file.exists());
+        
+        
+        List<String> found = ZipFileUtil.find(file, "Class.class$", false);
+        assertNotNull(found);
+        assertTrue(!found.isEmpty());
+        
+        
+    }  
+    
+    public void testFindIgnoreCase() throws Exception {
+    	String jarname = PATH + "/extensionmodule/testjar.jar";
+        final File file = new File(jarname);
+        assertTrue(file.exists());
+        
+        
+        List<String> found = ZipFileUtil.find(file, "class.class$", true);
+        assertNotNull(found);
+        assertTrue(!found.isEmpty());
+        
+        
+    }     
+    
+    public void testNotFind() throws Exception {
+    	String jarname = PATH + "/extensionmodule/testjar.jar";
+        final File file = new File(jarname);
+        assertTrue(file.exists());
+        
+        
+        List<String> found = ZipFileUtil.find(file, "^Class.class", false);
+        assertNotNull(found);
+        assertTrue(found.isEmpty());
+        
+        
+    }     
     
 }

@@ -41,6 +41,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -660,6 +662,59 @@ public final class ZipFileUtil {
         
         return null;
     }
+    
+    /**
+     * Will find all entries in the jar based on the expression specified and based on
+     * if case is ignored.
+     * 
+     * @param zipFile
+     *            The zip file from which the find will be performed.
+     * @param regexExpression
+     *            The regex expression supported by {@link java.util.regex}
+     * @param ignoreCase
+     *            Indicates whether the case of an entry in the jar file should be ignored when finding the match.           
+     * @return List of entry names that were found to match the regex expression
+     * @throws IOException
+     *             If an I/O error occurs reading the zip file.
+     * @test {@link TestZipFileUtil#testFind()}
+     * @test {@link TestZipFileUtil#testFindIgnoreCase()}
+     * @test {@link TestZipFileUtil#testNotFind()}
+     * @since 6.0
+     */
+    public static List<String> find(final File zipFile,
+                                 final String regexExpression,
+                                 boolean ignoreCase)  throws IOException {
+        ArgCheck.isNotNull(zipFile);
+        ArgCheck.isNotNull(regexExpression);
+
+        Pattern pattern = null;
+        if (ignoreCase) {
+        	pattern = Pattern.compile(regexExpression, Pattern.CASE_INSENSITIVE);
+        } else {
+        	pattern = Pattern.compile(regexExpression);
+        }
+        List<String> finds = new ArrayList();
+            final ZipFile zipFileZip = new ZipFile(zipFile);
+            FileInputStream fis = null;
+            ZipInputStream in = null;
+            try {
+                fis = new FileInputStream(zipFile);
+                in = new ZipInputStream(fis);
+                for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
+                	Matcher matcher = pattern.matcher(entry.getName());
+                	if (matcher.find()) {
+                		finds.add(entry.getName());
+                	}
+                	
+                }
+            } finally {
+                // Close input streams so we can later replace specified file with temp file
+                zipFileZip.close();
+                cleanup(in);
+                cleanup(fis);
+            }
+         return finds;
+    }    
     
     /**
      * Attempts to obtain the manifest file from the specified file, which
