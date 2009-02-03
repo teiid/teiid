@@ -24,6 +24,14 @@
 
 package com.metamatrix.cache.jboss;
 
+import java.lang.management.ManagementFactory;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.OperationsException;
+
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
@@ -32,6 +40,8 @@ import org.jboss.cache.eviction.FIFOConfiguration;
 import org.jboss.cache.eviction.LFUConfiguration;
 import org.jboss.cache.eviction.LRUConfiguration;
 import org.jboss.cache.eviction.MRUConfiguration;
+import org.jboss.cache.jmx.CacheJmxWrapper;
+import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,10 +56,23 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 public class JBossCacheFactory implements CacheFactory {
 	private org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
+	private ObjectName jmxName;
 	
 	@Inject
 	public JBossCacheFactory(org.jboss.cache.Cache cacheStore) {
-		this.cacheStore = cacheStore;
+		try {
+			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cacheStore);			
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			this.jmxName = new ObjectName("Federate:service=JBossCache,name=cache"); //$NON-NLS-1$
+			mbs.registerMBean(wrapper, this.jmxName);
+			wrapper.create();
+			wrapper.start();
+			this.cacheStore =  wrapper.getCache();
+		} catch (OperationsException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}  catch (MBeanRegistrationException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
 	}
 
 	/**
@@ -98,7 +121,15 @@ public class JBossCacheFactory implements CacheFactory {
 	}    
 	
 	public void destroy() {
-		this.cacheStore.destroy();
-		this.destroyed = true;
+		try {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			mbs.unregisterMBean(this.jmxName);
+		} catch (InstanceNotFoundException e) {
+		} catch (MBeanRegistrationException e) {
+		} finally {
+			this.cacheStore.destroy();
+			this.destroyed = true;
+		}
 	}	
+	
 }

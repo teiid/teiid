@@ -24,15 +24,8 @@
 
 package com.metamatrix.jdbc;
 
-import java.lang.management.ManagementFactory;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
-import org.jboss.cache.jmx.CacheJmxWrapper;
-import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -41,26 +34,7 @@ import com.google.inject.Singleton;
 class CacheProvider implements Provider<org.jboss.cache.Cache> {
 
 	public Cache get() {
-		Cache cache = DefaultCacheFactory.getInstance().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
-
-		try {
-			// register the MBean			
-			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cache);			
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			ObjectName on = new ObjectName("jboss.cache:service=MetaMatrixCacheTree"); //$NON-NLS-1$
-			mbs.registerMBean(wrapper, on);
-			wrapper.create();
-			wrapper.start();
-			
-			return wrapper.getCache();			
-		} catch (Exception e) {
-			// log me?? and ignore?
-			e.printStackTrace();
-			
-			// start the original object
-			cache.create();
-			cache.start();
-		}
+		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		return cache;
 	}
 }

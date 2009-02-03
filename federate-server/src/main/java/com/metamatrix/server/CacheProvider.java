@@ -24,16 +24,9 @@
 
 package com.metamatrix.server;
 
-import java.lang.management.ManagementFactory;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
 import org.jboss.cache.config.Configuration;
-import org.jboss.cache.jmx.CacheJmxWrapper;
-import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 import org.jgroups.Channel;
 
 import com.google.inject.Inject;
@@ -58,25 +51,6 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 		// getting events about joining the cluster
 		if (channel.isConnected()) {
 			channel.disconnect();
-		}
-
-		try {
-			// register the MBean			
-			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cache);			
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			ObjectName on = new ObjectName("Federate:service=JBossCache,name=cache"); //$NON-NLS-1$
-			mbs.registerMBean(wrapper, on);
-			wrapper.create();
-			wrapper.start();
-			
-			return wrapper.getCache();			
-		} catch (Exception e) {
-			// log me?? and ignore?
-			e.printStackTrace();
-			
-			// start the original object
-			cache.create();
-			cache.start();
 		}
 		return cache;
 	}
