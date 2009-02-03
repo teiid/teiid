@@ -22,27 +22,32 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package com.metamatrix.data.xa.api;
 
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.ConnectorException;
+import javax.transaction.Transaction;
 
-
-public interface XAConnector extends Connector{
+/**
+ * Tracks the context of the transaction.
+ */
+public interface TransactionContext {
     
-    /**
-     * Obtain a connection with the connector. The connection must have XAResource in
-     * order to participate in distributed transaction. The connection typically is associated
-     * with a particular security context. The connection is assumed to be pooled in 
-     * the underlying source if pooling is necessary - the connection will be closed 
-     * when execution has completed against it.  
-     * @param securityContext The context of the current MetaMatrix user that will be using this connection
-     * @param transactionContext The context of the transaction under which the connection will be used. May be null.
-     * @return A Connection, created by the Connector
-     * @throws ConnectorException If an error occurred obtaining a connection
+    public static final int TRANSACTION_GLOBAL = 0;
+    public static final int TRANSACTION_LOCAL = 1;
+    public static final int TRANSACTION_REQUEST = 2;
+    public static final int TRANSACTION_BLOCK = 3;
+    public static final int TRANSACTION_NONE = 4;
+    
+    public boolean isInTransaction();
+    
+    /** 
+     * @return Returns the transaction.
      */
-    XAConnection getXAConnection( SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException;
+    public Transaction getTransaction();
 
+    /** 
+     * @return Returns the txnID.
+     */
+    public String getTxnID();
+    
+    public int getTransactionType();
 }

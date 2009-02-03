@@ -29,8 +29,8 @@ package com.metamatrix.connector.object.extension.value;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import com.metamatrix.connector.jdbc.extension.ValueTranslator;
 import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.data.api.ValueTranslator;
 import com.metamatrix.data.exception.ConnectorException;
 
 /**

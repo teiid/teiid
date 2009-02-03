@@ -51,6 +51,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.message.RequestID;
@@ -195,10 +196,8 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
      */
     public void cancelQuery(RequestID requestID, boolean shouldRollback)
         throws InvalidRequestIDException, MetaMatrixComponentException {
-    	try {
-			this.dqp.cancelRequest(requestID);
-		} catch (MetaMatrixProcessingException e) {
-			throw new InvalidRequestIDException(e, e.getMessage());
+    	if (!this.dqp.cancelRequest(requestID)) {
+			throw new InvalidRequestIDException(DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
 		}
     }
     

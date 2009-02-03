@@ -29,7 +29,6 @@ package com.metamatrix.connector.jdbc.xa;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.connector.jdbc.JDBCConnector;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.core.util.StringUtil;
@@ -37,6 +36,7 @@ import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 

@@ -40,7 +40,6 @@ import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
@@ -263,8 +262,6 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         
         try {
 			this.manager.getDQP().cancelRequest(id);
-		} catch (MetaMatrixProcessingException e) {
-			throw new AdminProcessingException(e);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}

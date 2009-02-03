@@ -28,9 +28,9 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.connector.jdbc.extension.impl.BasicValueTranslator;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.TypeFacility;
+import com.metamatrix.data.basic.BasicValueTranslator;
 import com.metamatrix.data.exception.ConnectorException;
 
 

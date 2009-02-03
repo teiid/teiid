@@ -36,9 +36,9 @@ import java.util.Properties;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.ConnectorIdentityFactory;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 /**
  * Represents a base class for a JDBC source connection factory.  Subclasses

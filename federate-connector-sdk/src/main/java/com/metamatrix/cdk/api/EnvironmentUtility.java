@@ -30,7 +30,7 @@ import java.util.Properties;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 

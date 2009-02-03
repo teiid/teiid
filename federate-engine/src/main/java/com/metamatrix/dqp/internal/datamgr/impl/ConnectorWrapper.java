@@ -24,7 +24,6 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
 import com.metamatrix.data.api.ConnectorCapabilities;
@@ -38,6 +37,7 @@ import com.metamatrix.data.monitor.MonitoredConnector;
 import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.ConnectorIdentityFactory;
 import com.metamatrix.data.pool.SingleIdentity;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
 
@@ -105,10 +105,14 @@ public class ConnectorWrapper implements XAConnector, GlobalCapabilitiesProvider
 	}
 	
 	@Override
-	public ConnectionStatus getStatus() {
+	public final ConnectionStatus getStatus() {
 		if(actualConnector instanceof MonitoredConnector){
             return ((MonitoredConnector)actualConnector).getStatus();
 		}
+		return getStatusDirect();
+	}
+
+	protected ConnectionStatus getStatusDirect() {
 		return new ConnectionStatus(AliveStatus.UNKNOWN);
 	}
 	

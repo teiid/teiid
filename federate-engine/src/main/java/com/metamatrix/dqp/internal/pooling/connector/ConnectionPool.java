@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.data.DataPlugin;
@@ -54,6 +53,7 @@ import com.metamatrix.data.monitor.ConnectionStatus;
 import com.metamatrix.data.pool.ConnectorIdentity;
 import com.metamatrix.data.pool.SingleIdentity;
 import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.util.LogConstants;
@@ -124,8 +124,8 @@ public class ConnectionPool {
     private int testConnectInterval;
     private ConnectorWrapper connectionFactory;
 
-    private Map idConnections = new HashMap();
-    private Map reverseIdConnections = new IdentityHashMap();
+    private Map<ConnectorIdentity, ConnectionsForId> idConnections = new HashMap<ConnectorIdentity, ConnectionsForId>();
+    private Map<ConnectionWrapper, ConnectorIdentity> reverseIdConnections = new IdentityHashMap<ConnectionWrapper, ConnectorIdentity>();
 
     private Timer cleaningThread;
     
@@ -302,7 +302,7 @@ public class ConnectionPool {
     }
 
     private void updateStateWithNewConnection(ConnectorIdentity id,
-                                              PoolAwareConnection connection,
+                                              ConnectionWrapper connection,
                                               int idSize) {
         Collection ids = null;
         
@@ -429,7 +429,6 @@ public class ConnectionPool {
         if (poolStatus.equals(AliveStatus.UNKNOWN) && lastConnectionAttemptFailed) {
             poolStatus = AliveStatus.DEAD;
         }
-        
         
         //never set the status of "UserIdentity" connectors to DEAD.
         if (poolStatus.equals(AliveStatus.DEAD) && (!connectionFactory.supportsSingleIdentity())) {
@@ -566,8 +565,12 @@ public class ConnectionPool {
         
     //for testing purpose
     final List<ConnectionWrapper> getUsedConnections(PoolAwareConnection connection) {
-        ConnectorIdentity id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
-        ConnectionsForId connLists = (ConnectionsForId) this.idConnections.get(id);
+    	ConnectorIdentity id = null;
+    	ConnectionsForId connLists = null;
+    	synchronized (this.lock) {
+            id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
+            connLists = (ConnectionsForId) this.idConnections.get(id);
+		}
         if ( connLists != null ) {
         	synchronized (connLists) {
             	return new ArrayList<ConnectionWrapper>(connLists.used);
@@ -578,8 +581,12 @@ public class ConnectionPool {
 
     //for testing purpose
     final List<ConnectionWrapper> getUnusedConnections(PoolAwareConnection connection) {
-        ConnectorIdentity id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
-        ConnectionsForId connLists = (ConnectionsForId) this.idConnections.get(id);
+    	ConnectorIdentity id = null;
+    	ConnectionsForId connLists = null;
+    	synchronized (this.lock) {
+            id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
+            connLists = (ConnectionsForId) this.idConnections.get(id);
+		}
         if ( connLists != null ) {
         	synchronized (connLists) {
             	return new ArrayList<ConnectionWrapper>(connLists.unused);

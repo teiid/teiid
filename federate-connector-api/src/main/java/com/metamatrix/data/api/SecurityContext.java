@@ -25,18 +25,28 @@
 package com.metamatrix.data.api;
 
 import com.metamatrix.data.pool.ConnectorIdentity;
+import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.data.pool.SingleIdentity;
 
 /**
  * The security context provides information about the user context in which
  * this query is being run.
  * 
- * As of 4.2, the SecurityContext is a sub-interface of ExecutionContext such that 
- * both interfaces contain all of the methods from the prior independent interfaces.
- * Thus, these interfaces can now be used interchangeably.   
+ * As of 4.2, the SecurityContext is a sub-interface of ExecutionContext such
+ * that both interfaces contain all of the methods from the prior independent
+ * interfaces. Thus, these interfaces can now be used interchangeably.
  * 
  */
 public interface SecurityContext extends ExecutionContext {
-	
+
+	/**
+	 * Get the {@link ConnectorIdentity} created by the Connector's {@link
+	 * ConnectorIdentityFactory}
+	 * 
+	 * @return the {@link ConnectorIdentity} or {@link SingleIdentity} if the
+	 * 	Connector does not implement {@link ConnectorIdentityFactory}
+	 * @since 6.0
+	 */
 	ConnectorIdentity getConnectorIdentity();
 
 }

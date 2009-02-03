@@ -24,18 +24,41 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.extension;
+package com.metamatrix.data.basic;
 
+import com.metamatrix.data.DataPlugin;
 import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.data.api.TypeFacility;
+import com.metamatrix.data.api.ValueTranslator;
 import com.metamatrix.data.exception.ConnectorException;
 
 /**
+ * BasicValueTranslator can translate between types using the standard {@link TypeFacility}
+ * transformations.
  */
-public interface ValueTranslator {
+public class BasicValueTranslator implements ValueTranslator {
+    private Class sourceType;
+    private Class targetType;
+    private TypeFacility typeFacility;
     
-    Class getSourceType();
-    
-    Class getTargetType();
-    
-    Object translate(Object value, ExecutionContext context) throws ConnectorException;
+	public BasicValueTranslator(Class sourceType, Class targetType, TypeFacility typeFacility) {
+		this.sourceType = sourceType;
+		this.targetType = targetType;
+		this.typeFacility = typeFacility;
+	}
+	
+    public Class getSourceType() {
+        return this.sourceType;
+    }
+
+    public Class getTargetType() {
+        return this.targetType;
+    }
+
+    public Object translate(Object value, ExecutionContext context) throws ConnectorException {
+    	if (typeFacility.hasTransformation(sourceType, targetType)) {
+    		return typeFacility.transformValue(value, sourceType, targetType);
+    	}
+    	throw new ConnectorException(DataPlugin.Util.getString("ValueTranslator.no_tranfrom_found", new Object[] {this.sourceType, this.targetType}));
+    }
 }

@@ -28,8 +28,8 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 import javax.transaction.xa.XAResource;
 
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnector;
 
 public interface TransactionServer {

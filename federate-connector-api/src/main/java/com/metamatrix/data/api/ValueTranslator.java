@@ -22,32 +22,21 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.xa;
+/*
+ */
+package com.metamatrix.data.api;
 
-import javax.transaction.Transaction;
+import com.metamatrix.data.exception.ConnectorException;
 
 /**
- * Tracks the context of the transaction.
+ * A ValueTranslator knows how to convert an object value of a given source type
+ * into a target type.
  */
-public interface TransactionContext {
+public interface ValueTranslator {
     
-    public static final int TRANSACTION_GLOBAL = 0;
-    public static final int TRANSACTION_LOCAL = 1;
-    public static final int TRANSACTION_REQUEST = 2;
-    public static final int TRANSACTION_BLOCK = 3;
-    public static final int TRANSACTION_NONE = 4;
+    Class getSourceType();
     
-    public boolean isInTransaction();
+    Class getTargetType();
     
-    /** 
-     * @return Returns the transaction.
-     */
-    public Transaction getTransaction();
-
-    /** 
-     * @return Returns the txnID.
-     */
-    public String getTxnID();
-    
-    public int getTransactionType();
+    Object translate(Object value, ExecutionContext context) throws ConnectorException;
 }

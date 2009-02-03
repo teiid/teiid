@@ -47,9 +47,9 @@ import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.language.ICommand;
 import com.metamatrix.data.language.IParameter;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 
 /**
  */

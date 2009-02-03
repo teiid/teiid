@@ -34,8 +34,8 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.TypeFacility;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 /**

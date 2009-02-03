@@ -36,9 +36,9 @@ import com.metamatrix.data.api.ConnectorLogger;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.api.TypeFacility;
 import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.language.ILanguageFactory;
 import com.metamatrix.data.pool.CredentialMap;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**

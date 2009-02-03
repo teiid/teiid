@@ -42,9 +42,9 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import com.metamatrix.common.xa.MMXid;
-import com.metamatrix.common.xa.TransactionContext;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.transaction.TransactionServer;

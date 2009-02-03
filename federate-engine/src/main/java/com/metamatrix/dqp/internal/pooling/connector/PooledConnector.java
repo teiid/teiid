@@ -33,20 +33,15 @@ import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 
-import com.metamatrix.common.xa.TransactionContext;
-import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.SecurityContext;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.data.xa.api.XAConnection;
 import com.metamatrix.data.xa.api.XAConnector;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 
 /**
@@ -168,7 +163,7 @@ public class PooledConnector extends ConnectorWrapper {
 	}
 
 	@Override
-	public ConnectionStatus getStatus() {
+	public ConnectionStatus getStatusDirect() {
 		return pool.getStatus();
 	}
 	

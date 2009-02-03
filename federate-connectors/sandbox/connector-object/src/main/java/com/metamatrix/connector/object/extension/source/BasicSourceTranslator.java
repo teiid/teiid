@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-import com.metamatrix.connector.jdbc.extension.ValueTranslator;
 import com.metamatrix.connector.object.ObjectPropertyNames;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
@@ -42,6 +41,7 @@ import com.metamatrix.data.api.Batch;
 import com.metamatrix.data.api.ConnectorEnvironment;
 import com.metamatrix.data.api.ExecutionContext;
 import com.metamatrix.data.api.TypeFacility;
+import com.metamatrix.data.api.ValueTranslator;
 import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.data.language.ICommand;
 import com.metamatrix.data.language.IProcedure;

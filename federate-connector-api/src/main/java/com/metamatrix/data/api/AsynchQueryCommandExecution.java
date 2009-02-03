@@ -36,7 +36,7 @@ import com.metamatrix.data.language.IQueryCommand;
  * yet.  The connector manager will guarantee that calls to the nextBatch() method for a particular
  * query never overlap.
  *  
- * @since 4.3.3
+ * @since 6.0
  */
 public interface AsynchQueryCommandExecution extends Execution, BatchedExecution {
 
