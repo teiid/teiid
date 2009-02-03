@@ -16,9 +16,12 @@ package com.metamatrix.core.util;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -974,4 +977,54 @@ public final class StringUtil {
     private static boolean isBasicLatinChar(char c) {
         return c <= '\u007F';
     }   
+    
+    /**
+     * Convert the given value to specified type. 
+     * @param value
+     * @param type
+     * @return
+     */
+    public static <T> T valueOf(String value, Class<T> type){
+    	
+    	if(type == String.class) {
+    		return (T) value;
+    	}
+    	else if(type == Boolean.class || type == Boolean.TYPE) {
+    		return (T) Boolean.valueOf(value);
+    	}
+    	else if (type == Integer.class || type == Integer.TYPE) {
+    		return (T) Integer.valueOf(value);
+    	}
+    	else if (type == Float.class || type == Float.TYPE) {
+    		return (T) Float.valueOf(value);
+    	}
+    	else if (type == Double.class || type == Double.TYPE) {
+    		return (T) Double.valueOf(value);
+    	}
+    	else if (type == Long.class || type == Long.TYPE) {
+    		return (T) Long.valueOf(value);
+    	}
+    	else if (type == Short.class || type == Short.TYPE) {
+    		return (T) Short.valueOf(value);
+    	}
+    	else if (type.isAssignableFrom(List.class)) {
+    		return (T)new ArrayList<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
+    	}
+    	else if (type == Void.class) {
+    		return null;
+    	}
+    	else if (type.isAssignableFrom(Map.class)) {
+    		List<String> l = Arrays.asList(value.split(",")); //$NON-NLS-1$
+    		Map m = new HashMap<String, String>();
+    		for(String key: l) {
+    			int index = key.indexOf('=');
+    			if (index != -1) {
+    				m.put(key.substring(0, index), key.substring(index+1));
+    			}
+    		}
+    		return (T)m;
+    	}
+
+    	throw new IllegalArgumentException("Conversion from String to "+ type.getName() + " is not supported"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

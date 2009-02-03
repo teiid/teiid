@@ -26,6 +26,7 @@ package com.metamatrix.core.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -386,5 +387,26 @@ public class TestStringUtil extends TestCase {
     	assertEquals("/foo", StringUtil.getFirstToken("/foo./bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	assertEquals("bar", StringUtil.getFirstToken(StringUtil.getLastToken("/foo/bar.vdb", "/"), "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     	assertEquals("vdb", StringUtil.getLastToken("/foo/bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    public void testValueOf() {
+    	assertEquals(Integer.valueOf(21), StringUtil.valueOf("21", Integer.class)); //$NON-NLS-1$
+    	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$    	
+    	assertEquals("Foo", StringUtil.valueOf("Foo", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(Float.valueOf(10.12f), StringUtil.valueOf("10.12", Float.class)); //$NON-NLS-1$
+    	assertEquals(Double.valueOf(121.123), StringUtil.valueOf("121.123", Double.class)); //$NON-NLS-1$
+    	assertEquals(Long.valueOf(12334567L), StringUtil.valueOf("12334567", Long.class)); //$NON-NLS-1$
+    	assertEquals(Short.valueOf((short)21), StringUtil.valueOf("21", Short.class)); //$NON-NLS-1$
+    	
+    	List list = StringUtil.valueOf("foo,bar,x,y,z", List.class); //$NON-NLS-1$
+    	assertEquals(5, list.size());
+    	assertTrue(list.contains("foo")); //$NON-NLS-1$
+    	assertTrue(list.contains("x")); //$NON-NLS-1$
+    	
+    	Map m = StringUtil.valueOf("foo=bar,x=,y=z", Map.class); //$NON-NLS-1$
+    	assertEquals(3, m.size());
+    	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(m.get("x"), ""); //$NON-NLS-1$ //$NON-NLS-2$
+    	
     }
 }

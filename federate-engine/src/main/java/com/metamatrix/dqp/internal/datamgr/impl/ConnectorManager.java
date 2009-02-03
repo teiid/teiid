@@ -29,6 +29,9 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +51,7 @@ import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.data.api.Connection;
 import com.metamatrix.data.api.Connector;
 import com.metamatrix.data.api.ConnectorCapabilities;
@@ -148,6 +152,7 @@ public class ConnectorManager implements ApplicationService {
             	caps = conn.getCapabilities();
             	global = caps.getCapabilitiesScope() == ConnectorCapabilities.SCOPE.GLOBAL;
             }
+            caps = (ConnectorCapabilities) Proxy.newProxyInstance(currentThread.getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.props));
             BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), isXa);
             resultCaps.setScope(global?Scope.SCOPE_GLOBAL:Scope.SCOPE_PER_USER);
             return resultCaps;
@@ -621,5 +626,26 @@ public class ConnectorManager implements ApplicationService {
 	public boolean isXa() {
 		return isXa;
 	}
-
+	
+	/**
+	 * Overloads the connector capabilities with one defined in the connector binding properties
+	 */
+    static final class CapabilitesOverloader implements InvocationHandler {
+    	ConnectorCapabilities caps; 
+    	Properties properties;
+    	
+    	CapabilitesOverloader(ConnectorCapabilities caps, Properties properties){
+    		this.caps = caps;
+    		this.properties = properties;
+    	}
+    	
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			String value = this.properties.getProperty(method.getName());
+			if (value == null || value.trim().length() == 0 || (args != null && args.length != 0)) {
+				return method.invoke(this.caps, args);
+			}
+			return StringUtil.valueOf(value, method.getReturnType());
+		}
+	}
 }

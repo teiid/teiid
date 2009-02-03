@@ -35,16 +35,21 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.data.pool.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
-import com.metamatrix.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
+import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeMetadataService;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 
 /**
  * JUnit test for TestConnectorManagerImpl
@@ -99,6 +104,28 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.executeRequest(receiver, request);
         assertNotNull(receiver.getResults().poll(1000, TimeUnit.MILLISECONDS));
         cm.stop();
+    }
+    
+    public void testConnectorCapabilitiesOverride() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+    	startConnectorManager(cm, helpGetAppProps());
+
+    	AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
+    	
+    	SourceCapabilities caps = cm.getCapabilities(request.getRequestID(), null, Mockito.mock(DQPWorkContext.class));
+    	assertFalse(caps.supportsCapability(Capability.QUERY_WHERE_EXISTS));
+    	assertFalse(caps.supportsCapability(Capability.QUERY_EXCEPT));
+
+    	
+    	ConnectorManager cmnew = new ConnectorManager();
+    	Properties props = helpGetAppProps();
+    	props.setProperty("supportsExistsCriteria", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+    	props.setProperty("supportsExcept", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+    	startConnectorManager(cmnew, props);
+
+    	SourceCapabilities capsnew = cmnew.getCapabilities(request.getRequestID(), null, Mockito.mock(DQPWorkContext.class));
+    	assertTrue(capsnew.supportsCapability(Capability.QUERY_WHERE_EXISTS));
+    	assertTrue(capsnew.supportsCapability(Capability.QUERY_EXCEPT));
     }
 
 	private void startConnectorManager(ConnectorManager cm, Properties props)
