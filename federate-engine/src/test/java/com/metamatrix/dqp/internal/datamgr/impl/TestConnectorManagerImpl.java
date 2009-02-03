@@ -42,8 +42,8 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.data.internal.ConnectorPropertyNames;
 import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.pool.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
+import com.metamatrix.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.service.DQPServiceNames;
