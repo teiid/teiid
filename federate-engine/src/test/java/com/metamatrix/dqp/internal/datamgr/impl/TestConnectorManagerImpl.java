@@ -38,7 +38,8 @@ import junit.framework.TestCase;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.classloader.NonDelegatingClassLoader;
-import com.metamatrix.dqp.internal.datamgr.ConnectorPropertyNames;
+import com.metamatrix.data.internal.ConnectorPropertyNames;
+import com.metamatrix.data.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import com.metamatrix.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -131,6 +132,16 @@ public final class TestConnectorManagerImpl extends TestCase {
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeSourceConnectionFactory.class.getName());
         startConnectorManager(cm, props);
         assertFalse(cm.isXa());
+        cm.stop();
+    }
+    
+    public void testMonitoredConnector() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+        Properties props = new Properties();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
+        props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, this.getClass().getClassLoader());
+        startConnectorManager(cm, props);
+        assertTrue(cm.getStatus().getStatus() == AliveStatus.DEAD);
         cm.stop();
     }
     
