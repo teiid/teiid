@@ -194,6 +194,11 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     public int getRadix(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         return 0;
     }
+
+	@Override
+	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+		return null;
+	}    
     
     public int getScale(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         return 0;

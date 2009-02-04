@@ -252,6 +252,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 			QueryMetadataException {
 		return actualMetadata.getRadix(elementID);
 	}
+	
+	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+		return actualMetadata.getFormat(elementID);
+	}   	
 
 	public int getScale(Object elementID) throws MetaMatrixComponentException,
 			QueryMetadataException {

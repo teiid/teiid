@@ -133,5 +133,14 @@ public class ElementImpl extends TypeModelImpl implements Element {
         }
     }
 
-
+	@Override
+	public String getFormat() throws ConnectorException {
+        try {
+            return getMetadata().getFormat(getActualID());
+        } catch(QueryMetadataException e) {
+            throw new ConnectorException(e);
+        } catch(MetaMatrixComponentException e) {
+            throw new ConnectorException(e);            
+        }
+	}  
 }

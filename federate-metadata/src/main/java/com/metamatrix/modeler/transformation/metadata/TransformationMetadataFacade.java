@@ -392,6 +392,10 @@ public class TransformationMetadataFacade implements QueryMetadataInterface {
         return this.metadata.getRadix(elementID);
     }
     
+	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+		return this.metadata.getFormat(elementID);
+	}   	
+    
     public int getScale(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         return this.metadata.getScale(elementID);
     }

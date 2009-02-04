@@ -239,6 +239,16 @@ public interface QueryMetadataInterface {
      */
     int getRadix(Object elementID)
         throws MetaMatrixComponentException, QueryMetadataException;        
+    
+    /**
+     * Get the element's format
+     * @param elementID The element ID
+     * @return The format of the element
+     * @throws QueryMetadataException Metadata implementation detected a problem during the request
+     * @throws MetaMatrixComponentException Unexpected internal system problem during request
+     */
+    String getFormat(Object elementID)
+        throws MetaMatrixComponentException, QueryMetadataException;        
 
     /**
      * Get the number of distinct values for this column.  Negative values (typically -1)

@@ -95,5 +95,10 @@ public interface Element extends MetadataObject, TypeModel {
      */
     String getNativeType() throws ConnectorException;
     
-    
+    /**
+     * Get the Format property
+     * @return
+     * @throws ConnectorException
+     */
+    String getFormat() throws ConnectorException;    
 }

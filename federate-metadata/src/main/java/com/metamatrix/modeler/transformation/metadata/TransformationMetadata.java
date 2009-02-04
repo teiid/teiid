@@ -1175,6 +1175,14 @@ public abstract class TransformationMetadata extends BasicQueryMetadata {
         }
     }
     
+	public String getFormat(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
+        if(elementID instanceof ColumnRecord) {
+            return ((ColumnRecord) elementID).getFormat();
+        } else {
+            throw createInvalidRecordTypeException(elementID);            
+        }
+	}       
+    
     public int getScale(final Object elementID) throws MetaMatrixComponentException, QueryMetadataException {
         if(elementID instanceof ColumnRecord) {
             return ((ColumnRecord) elementID).getScale();

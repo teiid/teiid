@@ -39,7 +39,7 @@ import com.metamatrix.data.language.ISelectSymbol;
 public class TestElement extends TestCase {
 
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
-
+    Properties props;
     /**
      * @param name
      */
@@ -71,7 +71,7 @@ public class TestElement extends TestCase {
     throws Exception {
             
         Element element = getElement(fullGroupName, elementShortName, transUtil);           
-        assertEquals(nameInSource, element.getNameInSource()); //$NON-NLS-1$
+        assertEquals(nameInSource, element.getNameInSource()); 
         assertEquals(defaultValue, element.getDefaultValue());
         assertEquals(minValue, element.getMinimumValue());
         assertEquals(maxValue, element.getMaximumValue());
@@ -90,8 +90,8 @@ public class TestElement extends TestCase {
         assertEquals(modeledPrimitiveType, element.getModeledPrimitiveType());
         
                
-//        Properties extProps = element.getProperties();
-//        assertEquals(expectedProps, extProps);
+        Properties extProps = element.getProperties();
+        assertEquals(expectedProps, extProps);
     }
     
     public void testElement1() throws Exception {
@@ -110,7 +110,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
@@ -122,7 +122,7 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestDefaultValue",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$            
+            null,                          // name in source      
             "1000",                         // default value //$NON-NLS-1$
             null,                           // minimum value
             null,                           // maximum value            
@@ -133,7 +133,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -145,7 +145,7 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestMinMaxValue",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
             "500",                       // minimum value //$NON-NLS-1$
             "25000",                        // maximum value             //$NON-NLS-1$
@@ -156,7 +156,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -168,10 +168,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestAutoIncrement",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             Long.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -179,7 +179,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             true,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#integer",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -191,10 +191,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestCaseSensitive",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
             Element.NULLABLE,               // nullable            
@@ -202,25 +202,22 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             false,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
             );
     }   
     
-    public void testElement6() throws Exception {
-        Properties props = new Properties();
-        props.setProperty("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+    public void testElement6() throws Exception {        
         helpTestElement(
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestExtensionProp",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -240,10 +237,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestTable",  // group name       //$NON-NLS-1$  
             "TestDataType",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value            
             String.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -251,7 +248,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.metamatrix.com/XMLSchema/DataSets/Books/BookDatatypes#PublicationYear",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#gYear",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#gYear"                             // modeled primitive type   //$NON-NLS-1$
@@ -263,10 +260,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestSearchableColumns",  // group name       //$NON-NLS-1$  
             "TestUnsearchable",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value
+            null,                        // maximum value            
             Integer.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -274,7 +271,7 @@ public class TestElement extends TestCase {
             Element.NOT_SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -286,10 +283,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestSearchableColumns",  // group name       //$NON-NLS-1$  
             "TestSearchableLike",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
             Element.NULLABLE,               // nullable            
@@ -297,7 +294,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE_LIKE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
@@ -309,10 +306,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestSearchableColumns",  // group name       //$NON-NLS-1$  
             "TestSearchableComparable",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -320,7 +317,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE_COMPARE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -332,10 +329,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestSearchableColumns",  // group name       //$NON-NLS-1$  
             "TestSearchable",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source 
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             String.class,                   // java type
             10,                             // length
             Element.NULLABLE,               // nullable            
@@ -343,7 +340,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
@@ -355,10 +352,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestNullableColumns",  // group name       //$NON-NLS-1$  
             "TestNullable",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source   
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value             
             Integer.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -366,7 +363,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
@@ -378,10 +375,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestNullableColumns",  // group name       //$NON-NLS-1$  
             "TestNotNullable",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value
+            null,                        // maximum value  
             String.class,                   // java type
             10,                             // length
             Element.NOT_NULLABLE,               // nullable            
@@ -389,7 +386,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
@@ -401,10 +398,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestNullableColumns",  // group name       //$NON-NLS-1$  
             "TestNullableUnknown",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value  
             String.class,                   // java type
             10,                             // length
             Element.NULLABLE_UNKNOWN,               // nullable            
@@ -412,7 +409,7 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#string",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#anySimpleType",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#string"                             // modeled primitive type   //$NON-NLS-1$
@@ -424,10 +421,10 @@ public class TestElement extends TestCase {
             "ConnectorMetadata.TestCatalog.TestSchema.TestTable2",  // group name       //$NON-NLS-1$  
             "TestCol",             // element name     //$NON-NLS-1$ 
             CONNECTOR_METADATA_UTILITY,     // translation utility
-            null,                          // name in source   //$NON-NLS-1$
+            null,                          // name in source  
             null,                          // default value
-            null,                       // minimum value //$NON-NLS-1$
-            null,                        // maximum value             //$NON-NLS-1$
+            null,                       // minimum value 
+            null,                        // maximum value 
             Integer.class,                   // java type
             0,                             // length
             Element.NULLABLE,               // nullable            
@@ -435,11 +432,17 @@ public class TestElement extends TestCase {
             Element.SEARCHABLE,             // searchable
             false,                          // auto incremented
             true,                          // case sensitive
-            new Properties(),                // extension properties
+            props,                // extension properties
             "http://www.w3.org/2001/XMLSchema#int",                             // modeled type   //$NON-NLS-1$
             "http://www.w3.org/2001/XMLSchema#long",                             // modeled base type   //$NON-NLS-1$ 
             "http://www.w3.org/2001/XMLSchema#decimal"                             // modeled primitive type   //$NON-NLS-1$
             );
         
-    }                     
+    }
+
+	@Override
+	protected void setUp() throws Exception {
+        props = new Properties();
+        props.setProperty("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
+	}                     
 }
