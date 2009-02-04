@@ -33,7 +33,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -82,12 +81,7 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN)) {
-            return false;
-        }
-        
-        // Capabilities checked out or didn't exist - check against metadata
-        return metadata.modelSupports(modelID, SupportConstants.Model.JOIN);
+        return caps.supportsCapability(Capability.QUERY_FROM_JOIN);
     }
 
     public static boolean supportsSelfJoins(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -131,12 +125,7 @@ public class CapabilitiesUtil {
             return false;
         }
         
-        if(joinType.equals(JoinType.JOIN_FULL_OUTER) && ! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER_FULL)) {
-            return false;                     
-        }
-        
-        // Capabilities checked out or didn't exist - check against metadata
-        return metadata.modelSupports(modelID, SupportConstants.Model.OUTER_JOIN);
+        return !joinType.equals(JoinType.JOIN_FULL_OUTER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER_FULL);
     }
 
     public static boolean supportsAggregates(List groupCols, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -275,12 +264,7 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        if(! caps.supportsCapability(Capability.QUERY_SELECT_DISTINCT)) {
-            return false;
-        }            
-        
-        // Capabilities checked out or didn't exist - check against metadata
-        return metadata.modelSupports(modelID, SupportConstants.Model.DISTINCT);
+        return caps.supportsCapability(Capability.QUERY_SELECT_DISTINCT);
     }
 
     public static boolean supportsSelectLiterals(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -306,12 +290,7 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        if(! caps.supportsCapability(Capability.QUERY_ORDERBY)) {
-            return false;
-        }            
-        
-        // Capabilities checked out or didn't exist - check against metadata
-        return metadata.modelSupports(modelID, SupportConstants.Model.ORDER_BY);
+        return caps.supportsCapability(Capability.QUERY_ORDERBY);        
     }
 
     public static boolean supportsJoinExpression(Object modelID, List joinCriteria, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -533,5 +512,18 @@ public class CapabilitiesUtil {
         String modelName = metadata.getFullName(modelID);
         return capFinder.findCapabilities(modelName);
     }
+
+    public static boolean requiresCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    throws QueryMetadataException, MetaMatrixComponentException {
+		
+        if (metadata.isVirtualModel(modelID)){
+            return false;
+        }
+
+        // Find capabilities
+        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
+
+        return caps.supportsCapability(Capability.REQUIRES_CRITERIA);
+	}
 
 }

@@ -335,22 +335,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 
 	// --------------------- Implement OptimizerMetadata -------------------
 
-	public boolean modelSupports(Object modelID, int supportConstant)
-        throws MetaMatrixComponentException, QueryMetadataException {
-	
-        if(modelID instanceof TempMetadataID) {
-            switch(supportConstant) {
-                case SupportConstants.Model.DISTINCT:       return true;
-                case SupportConstants.Model.JOIN:           return true;
-                case SupportConstants.Model.NO_CRITERIA:    return true;
-                case SupportConstants.Model.ORDER_BY:       return true;
-                case SupportConstants.Model.OUTER_JOIN:     return true;
-            }                
-            return false;
-        }
-   		return this.actualMetadata.modelSupports(modelID, supportConstant);
-    }
-	
 	public boolean elementSupports(Object elementID, int supportConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
 		

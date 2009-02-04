@@ -106,7 +106,6 @@ public class TestLimit extends TestCase {
     private static FakeMetadataFacade exampleMetadata() {
         // Create models
         FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
-        pm1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject vm1 = FakeMetadataFactory.createVirtualModel("vm1");  //$NON-NLS-1$
 
         // Create physical groups
@@ -765,7 +764,7 @@ public class TestLimit extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         String sql = "select * from (SELECT e1 as x FROM pm1.g1 order by x LIMIT 700) y where x = 1";//$NON-NLS-1$
-        String[] expectedSql = new String[] {"SELECT e1 FROM pm1.g1"};//$NON-NLS-1$ 
+        String[] expectedSql = new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"};//$NON-NLS-1$ 
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                       null, capFinder, expectedSql, true);  
@@ -784,7 +783,7 @@ public class TestLimit extends TestCase {
                                         0,      // PlanExecution
                                         1,      // Project
                                         1,      // Select
-                                        1,      // Sort
+                                        0,      // Sort
                                         0       // UnionAll
         }, NODE_TYPES);
     }
@@ -795,7 +794,7 @@ public class TestLimit extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         String sql = "select * from (SELECT e1 as x FROM pm1.g1 order by x LIMIT 10, 700) y where x = 1";//$NON-NLS-1$
-        String[] expectedSql = new String[] {"SELECT e1 FROM pm1.g1"};//$NON-NLS-1$ 
+        String[] expectedSql = new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"};//$NON-NLS-1$ 
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                       null, capFinder, expectedSql, true);  
@@ -814,7 +813,7 @@ public class TestLimit extends TestCase {
                                         0,      // PlanExecution
                                         1,      // Project
                                         1,      // Select
-                                        1,      // Sort
+                                        0,      // Sort
                                         0       // UnionAll
         }, NODE_TYPES);
     }
@@ -864,6 +863,30 @@ public class TestLimit extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, expectedSql, true);  
 
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN, NODE_TYPES);
+    }
+    
+    public void testSortWithLimitInlineView() {
+        String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0, c_1"}); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
     }
 
 }

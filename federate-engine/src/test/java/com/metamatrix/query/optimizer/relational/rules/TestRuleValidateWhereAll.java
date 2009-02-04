@@ -26,27 +26,19 @@ package com.metamatrix.query.optimizer.relational.rules;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.query.optimizer.relational.GenerateCanonical;
-import com.metamatrix.query.optimizer.relational.PlanHints;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestRuleValidateWhereAll extends TestCase {
     
-    private static final FakeMetadataFacade METADATA = FakeMetadataFactory.example1();
-    private static final QueryParser PARSER = new QueryParser();
-
     public TestRuleValidateWhereAll(String name) {
         super(name);
     }
@@ -65,34 +57,43 @@ public class TestRuleValidateWhereAll extends TestCase {
     public void testHasNoCriteria3() {
         assertEquals("Got incorrect answer checking for no criteria", true, RuleValidateWhereAll.hasNoCriteria(new Query())); //$NON-NLS-1$
     }
-
-    private PlanHints buildHints(String command) throws QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryPlannerException {
-        Command query = PARSER.parseCommand(command);
-        PlanHints planHints = new PlanHints();
-        
-        QueryResolver.resolveCommand(query, METADATA);
-        GenerateCanonical.generatePlan(query, planHints, METADATA);
-        return planHints;
+    
+	private FakeCapabilitiesFinder getWhereAllCapabilities() {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.REQUIRES_CRITERIA, true);
+        capFinder.addCapabilities("pm1", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+        capFinder.addCapabilities("pm6", caps); //$NON-NLS-1$
+		return capFinder;
+	}    
+	
+    public void testDefect21982_3() {
+        TestOptimizer.helpPlan(
+                 "SELECT * FROM vm1.g38",   //$NON-NLS-1$
+                 FakeMetadataFactory.example1Cached(),
+                 null, getWhereAllCapabilities(),
+                 new String[0],
+                 false);       
     }
     
-    public void testWhereAll_noValidationNeeded() throws Exception {
-        PlanHints planHints =  buildHints("SELECT * FROM pm1.g1");   //$NON-NLS-1$
-        assertFalse(planHints.needsWhereAllValidation);
-    } 
-    
-    public void testWhereAll_validationNeeded() throws Exception  {
-        PlanHints planHints =  buildHints("SELECT * FROM pm6.g1");   //$NON-NLS-1$
-        assertTrue(planHints.needsWhereAllValidation);
+    public void testWhereAll1() {
+    	TestOptimizer.helpPlan(
+            "SELECT * FROM pm6.g1",   //$NON-NLS-1$
+            FakeMetadataFactory.example1Cached(),
+            null, getWhereAllCapabilities(),
+            new String[0],
+            false);
     }    
 
-    public void testWhereAll2__validationNeeded() throws Exception  {
-        PlanHints planHints = buildHints("SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1");   //$NON-NLS-1$
-        assertTrue(planHints.needsWhereAllValidation);
+    public void testWhereAll2() throws Exception {
+    	TestOptimizer.helpPlan(
+            "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1",   //$NON-NLS-1$
+            FakeMetadataFactory.example1Cached(),
+            null, getWhereAllCapabilities(),
+            new String[] {
+                "SELECT g_0.e1 AS c_0 FROM pm6.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" //$NON-NLS-1$ //$NON-NLS-2$
+            },
+            ComparisonMode.EXACT_COMMAND_STRING);
     }    
-        
-    public void testWhereAll_virtual_noValidation() throws Exception  {
-        PlanHints planHints = buildHints("SELECT * FROM vm1.g38");   //$NON-NLS-1$
-        assertFalse(planHints.needsWhereAllValidation);
-    }
-    
+
 }

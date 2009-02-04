@@ -280,11 +280,6 @@
         described in Chapter <link linkend="command_language">Command Language</link>.
       </para>
       
-      <para>NOTE:        Currently, the Federate Connector API only supports synchronous queries, meaning
-        that the execute() method is expected to block until results are available. In the future, the Connector
-        API may be expanded to also cover asynchronous queries where a response is returned at a later time over a
-        message bus, socket, or other asynchronous messaging framework.</para>
-        
       <para>The following diagram represents the typical sequence of events when executing a query:</para>
       
       <figure id="query-execution-sequence">

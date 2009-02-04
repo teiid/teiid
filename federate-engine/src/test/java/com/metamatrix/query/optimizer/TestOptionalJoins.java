@@ -41,8 +41,8 @@ public class TestOptionalJoins extends TestCase {
     }
     
     public void testOptionalJoinNode1_1() { 
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1,pm1.g2.e1  FROM pm1.g1, /* optional */ pm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g2.e1 FROM pm1.g2"} ); //$NON-NLS-1$//$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1,pm2.g2.e1  FROM pm1.g1, /* optional */ pm2.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm2.g2.e1 FROM pm2.g2"} ); //$NON-NLS-1$//$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -66,26 +66,9 @@ public class TestOptionalJoins extends TestCase {
     
     public void testOptionalJoinNode2() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, /* optional */ pm1.g2, pm1.g3", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$//$NON-NLS-2$
+            new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g3 AS g_1"} ); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            1,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
     }
     
     public void testOptionalJoinNode3() { 
@@ -93,13 +76,11 @@ public class TestOptionalJoins extends TestCase {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testOptionalJoinNode3_1() { 
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1, pm1.g2.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g2.e1 FROM pm1.g2"} ); //$NON-NLS-1$//$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1, pm2.g2.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm2.g2 on pm1.g1.e1 = pm2.g2.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -126,56 +107,20 @@ public class TestOptionalJoins extends TestCase {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testOptionalJoinNode5() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN /* optional */ pm1.g3 on pm1.g1.e1 = pm1.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$//$NON-NLS-2$
+            new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
     }
     
     public void testOptionalJoinNode6() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$//$NON-NLS-2$
+            new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
     }
     
     public void testOptionalJoinNode7() { 
@@ -183,8 +128,6 @@ public class TestOptionalJoins extends TestCase {
             new String[] {"SELECT pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testOptionalJoinNode8() { 
@@ -192,8 +135,6 @@ public class TestOptionalJoins extends TestCase {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testOptionalJoinNode9() { 
@@ -201,8 +142,6 @@ public class TestOptionalJoins extends TestCase {
             new String[] {"SELECT pm1.g2.e1 FROM pm1.g2"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
     public void testOptionalJoinNode10() { 
@@ -261,7 +200,7 @@ public class TestOptionalJoins extends TestCase {
      */
     public void testOptionalJoinNode14() throws Exception { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT ve1 FROM vm1.g4", FakeMetadataFactory.example4(), //$NON-NLS-1$
-            new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -342,46 +281,29 @@ public class TestOptionalJoins extends TestCase {
     
     public void testOptionalJoinWithIntersection() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3 inner join (select pm1.g1.e2 as y from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1) AS x on pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g3.e2, pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] {"SELECT g_0.e1 FROM pm1.g3 AS g_0, pm1.g1 AS g_1, pm1.g2 AS g_2 WHERE (g_0.e2 = g_1.e2) AND (g_1.e1 = g_2.e1)"} ); //$NON-NLS-1$ 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    public void testOptionalJoinWithNestedOrderBy() { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3 inner join (select pm1.g2.e1, pm1.g1.e2 as y from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1 order by pm1.g2.e1 limit 10000) AS x on pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1 ORDER BY c_1"} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            3,      // Access
+            2,      // Access
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
             0,      // Join
-            2,      // MergeJoin
+            1,      // MergeJoin
             0,      // Null
             0,      // PlanExecution
             1,      // Project
             0,      // Select
             0,      // Sort
-            0       // UnionAll
-        });    
-        
-        TestOptimizer.checkSubPlanCount(plan, 0);
-    }
-    
-    public void testOptionalJoinWithNestedOrderBy() { 
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3 inner join (select pm1.g2.e1, pm1.g1.e2 as y from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1 order by pm1.g2.e1 limit 10000) AS x on pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g3.e2, pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            3,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // Join
-            2,      // MergeJoin
-            0,      // Null
-            0,      // PlanExecution
-            2,      // Project
-            0,      // Select
-            1,      // Sort
             0       // UnionAll
         });    
         
@@ -393,17 +315,17 @@ public class TestOptionalJoins extends TestCase {
      */
     public void testOptionalJoinWithGroupingOverAllColumns() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3, (select max(pm1.g1.e4) y from /* optional */ pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1) AS x where pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e1, pm1.g1.e4 FROM pm1.g1", "SELECT pm1.g3.e2, pm1.g3.e1 FROM pm1.g3"} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] {"SELECT g_0.e2, g_0.e1 FROM pm1.g3 AS g_0", "SELECT g_0.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            3,      // Access
+            2,      // Access
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
-            2,      // Grouping
+            1,      // Grouping
             0,      // Join
-            2,      // MergeJoin
+            1,      // MergeJoin
             0,      // Null
             0,      // PlanExecution
             3,      // Project
@@ -468,7 +390,7 @@ public class TestOptionalJoins extends TestCase {
     
     public void testOptionalJoinWithDupRemoval() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT a.e1 from (SELECT distinct pm1.g1.e1, x.y FROM pm1.g1, /* optional */ (select e2 as y, e3 || 'x' as z from pm1.g1 ORDER BY z) AS x where pm1.g1.e2=x.y) as a", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT e2 FROM pm1.g1", "SELECT g1__1.e2, g1__1.e1 FROM pm1.g1 AS g1__1"} ); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"} ); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -498,52 +420,18 @@ public class TestOptionalJoins extends TestCase {
 		ProcessorPlan plan = TestOptimizer
 				.helpPlan(
 						"SELECT distinct pm1.g1.e1 from pm1.g1, pm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-						new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }); //$NON-NLS-1$
+						new String[] { "SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1" }); //$NON-NLS-1$
 
-		TestOptimizer.checkNodeTypes(plan, new int[] { 
-				2, // Access
-				0, // DependentAccess
-				0, // DependentSelect
-				0, // DependentProject
-				1, // DupRemove
-				0, // Grouping
-				1, // Join
-				0, // MergeJoin
-				0, // Null
-				0, // PlanExecution
-				1, // Project
-				0, // Select
-				0, // Sort
-				0 // UnionAll
-				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
     
     public void testOptionalJoinWithoutHint_outerJoin() {
 		ProcessorPlan plan = TestOptimizer
 				.helpPlan(
 						"SELECT distinct pm1.g1.e2 from pm1.g1 left outer join pm1.g2 on (pm1.g1.e1 = pm1.g2.e1)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-						new String[] { "SELECT g_0.e2 FROM pm1.g1 AS g_0" }); //$NON-NLS-1$
+						new String[] { "SELECT DISTINCT g_0.e2 FROM pm1.g1 AS g_0" }); //$NON-NLS-1$
 
-		TestOptimizer.checkNodeTypes(plan, new int[] { 
-				1, // Access
-				0, // DependentAccess
-				0, // DependentSelect
-				0, // DependentProject
-				1, // DupRemove
-				0, // Grouping
-				0, // Join
-				0, // MergeJoin
-				0, // Null
-				0, // PlanExecution
-				0, // Project
-				0, // Select
-				0, // Sort
-				0 // UnionAll
-				});
-
-		TestOptimizer.checkSubPlanCount(plan, 0);
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
     
     public void testOptionalJoinWithoutHint_aggregate() {
@@ -579,17 +467,17 @@ public class TestOptionalJoins extends TestCase {
 		ProcessorPlan plan = TestOptimizer
 				.helpPlan(
 						"SELECT pm1.g1.e3, avg(pm1.g1.e2) from pm1.g1 left outer join pm1.g2 on (pm1.g1.e1 = pm1.g2.e1) group by pm1.g1.e3", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-						new String[] { "SELECT g_0.e1, g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0" }); //$NON-NLS-1$
+						new String[] { "SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1" }); //$NON-NLS-1$
 
 		TestOptimizer.checkNodeTypes(plan, new int[] { 
-				2, // Access
+				1, // Access
 				0, // DependentAccess
 				0, // DependentSelect
 				0, // DependentProject
 				0, // DupRemove
 				1, // Grouping
 				0, // Join
-				1, // MergeJoin
+				0, // MergeJoin
 				0, // Null
 				0, // PlanExecution
 				1, // Project

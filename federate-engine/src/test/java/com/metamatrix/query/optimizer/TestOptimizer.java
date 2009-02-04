@@ -47,6 +47,7 @@ import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -66,6 +67,7 @@ import com.metamatrix.query.processor.relational.MergeJoinStrategy;
 import com.metamatrix.query.processor.relational.NestedLoopJoinStrategy;
 import com.metamatrix.query.processor.relational.NullNode;
 import com.metamatrix.query.processor.relational.PlanExecutionNode;
+import com.metamatrix.query.processor.relational.ProjectIntoNode;
 import com.metamatrix.query.processor.relational.ProjectNode;
 import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
@@ -159,19 +161,34 @@ public class TestOptimizer extends TestCase {
         return caps;    
     }
     
-    public static CapabilitiesFinder getGenericFinder() {
+    public static CapabilitiesFinder getGenericFinder(boolean supportsJoins) {
+    	final BasicSourceCapabilities caps = getTypicalCapabilities();
+    	if (!supportsJoins) {
+	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
+		    caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+    	}
         CapabilitiesFinder finder = new CapabilitiesFinder() {
-            private SourceCapabilities caps = getTypicalCapabilities();
             public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
                 return caps;
             }
         };
         return finder;
     }
+    
+    public static CapabilitiesFinder getGenericFinder() {
+    	return getGenericFinder(true);
+    }
 
 	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic) {
 		return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, SHOULD_SUCCEED);
 	}
+	
+	public static ProcessorPlan helpPlan(String sql,
+			FakeMetadataFacade md, String[] expected,
+			CapabilitiesFinder capFinder,
+			ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+		return helpPlan(sql, md, null, capFinder, expected, mode);
+	}    
 	
 	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic, ComparisonMode mode) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
         return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, mode);
@@ -446,8 +463,6 @@ public class TestOptimizer extends TestCase {
 		// Create models
 		FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
         FakeMetadataObject pm2 = FakeMetadataFactory.createPhysicalModel("pm2"); //$NON-NLS-1$
-        pm2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        pm2.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
 		FakeMetadataObject vm1 = FakeMetadataFactory.createVirtualModel("vm1");	 //$NON-NLS-1$
 
 		// Create physical groups
@@ -757,47 +772,14 @@ public class TestOptimizer extends TestCase {
 	
 	public void testQueryMultiSourceVirtual() { 
 		ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g2.e1, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2",  //$NON-NLS-1$
-			    			"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"} ); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
+			new String[] { "SELECT g_0.e1, g_0.e2, g_1.e3, g_1.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
 
 	public void testPhysicalVirtualJoinWithCriteria() { 
 		ProcessorPlan plan = helpPlan("SELECT vm1.g2.e1 from vm1.g2, pm1.g3 where vm1.g2.e1=pm1.g3.e1 and vm1.g2.e2 > 0", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g3.e1 FROM pm1.g3", //$NON-NLS-1$
-			    		    "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 > 0",  //$NON-NLS-1$
-			    		    "SELECT pm1.g2.e1 FROM pm1.g2" } ); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            3,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            2,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
+			new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_2.e1) AND (g_0.e1 = g_1.e1) AND (g_0.e2 > 0)" } ); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
     
     public void testQueryWithExpression() { 
@@ -827,10 +809,11 @@ public class TestOptimizer extends TestCase {
 
 	// ############################# TESTS ON EXAMPLE 1 ############################
 	
-    public void testCopyInAcrossJoin() {
-        ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and pm1.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 IN ('a', 'b')", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 IN ('a', 'b')" }); //$NON-NLS-1$
+    public void testCopyInAcrossJoin() throws Exception {
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0", //$NON-NLS-1$
+        				   "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -849,33 +832,33 @@ public class TestOptimizer extends TestCase {
         }); 
     }
 
-    public void testCopyMatchAcrossJoin() {
-        helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and pm1.g1.e1 LIKE '%1'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 LIKE '%1'", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 LIKE '%1'" }); //$NON-NLS-1$
+    public void testCopyMatchAcrossJoin() throws Exception {
+        helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 LIKE '%1'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0", //$NON-NLS-1$
+        					"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
  
-    public void testCopyOrAcrossJoin() {
+    public void testCopyOrAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and (pm1.g1.e1 = 'abc' OR pm1.g1.e1 = 'def')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e1 = 'def')", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e1 = 'def')" }); //$NON-NLS-1$
+                            "SELECT pm1.g2.e1 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e1 = 'def')" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
  
-    public void testCopyMultiElementCritAcrossJoin() {
+    public void testCopyMultiElementCritAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and pm1.g1.e2=pm1.g2.e2 and (pm1.g1.e1 = 'abc' OR pm1.g1.e2 = 5)", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)" }); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCantCopyAcrossJoin1() {
+    public void testCantCopyAcrossJoin1() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and concat(pm1.g1.e1, pm1.g1.e2) = 'abc'", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2" }); //$NON-NLS-1$
+                            "SELECT pm1.g2.e1 FROM pm1.g2" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
 
-    public void testCantCopyAcrossJoin2() {
+    public void testCantCopyAcrossJoin2() throws Exception {
         helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 where pm1.g1.e1=pm1.g2.e1 and (pm1.g1.e1 = 'abc' OR pm1.g1.e2 = 5)", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2" }); //$NON-NLS-1$
+                            "SELECT pm1.g2.e1 FROM pm1.g2" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$
     }
 
     public void testPushingCriteriaThroughFrame1() { 
@@ -884,10 +867,10 @@ public class TestOptimizer extends TestCase {
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
-    public void testPushingCriteriaThroughFrame2() { 
+    public void testPushingCriteriaThroughFrame2() throws Exception { 
     	helpPlan("select * from vm1.g1, vm1.g3 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g3.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'",  //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughFrame3() { 
@@ -927,7 +910,7 @@ public class TestOptimizer extends TestCase {
 	// expression in a subquery of the union
     public void testPushingCriteriaThroughUnion5() { 
     	helpPlan("select e1 from vm1.u3 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'abc'" } ); //$NON-NLS-1$
+			new String[] { "SELECT DISTINCT e1 FROM pm1.g1 WHERE e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     /** defect #4956 */
@@ -1036,10 +1019,10 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
 
-    public void testSimpleCrossJoin1() {
+    public void testSimpleCrossJoin1() throws Exception {
         helpPlan("select pm1.g1.e1 FROM pm1.g1, pm1.g2", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
-                "SELECT pm1.g2.e1 FROM pm1.g2" } );     //$NON-NLS-1$
+                "SELECT pm1.g2.e1 FROM pm1.g2" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING );     //$NON-NLS-1$
     }
 
     public void testSimpleCrossJoin2() {
@@ -1054,11 +1037,11 @@ public class TestOptimizer extends TestCase {
                
     }
 
-    public void testMultiSourceCrossJoin() {
+    public void testMultiSourceCrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                 "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
-                "SELECT pm1.g3.e1 FROM pm1.g3" } );     //$NON-NLS-1$
+                "SELECT pm1.g3.e1 FROM pm1.g3" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING );     //$NON-NLS-1$
     }
 
     public void testSingleSourceCrossJoin() {
@@ -1068,8 +1051,8 @@ public class TestOptimizer extends TestCase {
 
     public void testSelfJoins() {
         helpPlan("select pm2.g1.e1 FROM pm2.g1 JOIN pm2.g1 AS x ON pm2.g1.e1=x.e1", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1 FROM pm2.g1", //$NON-NLS-1$
-                "SELECT x.e1 FROM pm2.g1 AS x" } );     //$NON-NLS-1$
+            new String[] { "SELECT pm2.g1.e1 FROM pm2.g1 order by e1", //$NON-NLS-1$
+                "SELECT x.e1 FROM pm2.g1 AS x order by e1" } );     //$NON-NLS-1$
     }
 
     public void testDefect5282_1() {
@@ -1087,10 +1070,10 @@ public class TestOptimizer extends TestCase {
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
     
-    public void testDepJoinHintBaseline() {
+    public void testDepJoinHintBaseline() throws Exception {
         ProcessorPlan plan = helpPlan("select * FROM vm1.g4", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2" } ); //$NON-NLS-1$
+                            "SELECT pm1.g2.e1 FROM pm1.g2" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1130,7 +1113,7 @@ public class TestOptimizer extends TestCase {
     
     public void testDefect6517() {
         helpPlan("select count(*) from vm1.g5", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" });     //$NON-NLS-1$
+            new String[] { "SELECT DISTINCT pm1.g1.e1 FROM pm1.g1" });     //$NON-NLS-1$
     }
     
     public void testDefect5283() {        
@@ -1139,17 +1122,7 @@ public class TestOptimizer extends TestCase {
                             "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
     }
     
-    public void testManyJoinsUnderThreshold() {
-        helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4, pm1.g5 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1", //$NON-NLS-1$
-            example1(), 
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1 FROM pm1.g2",  //$NON-NLS-1$
-                            "SELECT pm1.g3.e1 FROM pm1.g3",  //$NON-NLS-1$
-                            "SELECT pm1.g4.e1 FROM pm1.g4", //$NON-NLS-1$
-                            "SELECT pm1.g5.e1 FROM pm1.g5" } ); //$NON-NLS-1$
-    }
-
-    public void testManyJoinsOverThreshold() {
+    public void testManyJoinsOverThreshold() throws Exception {
         long begin = System.currentTimeMillis();
         helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4, pm1.g5, pm1.g6, pm1.g7, pm1.g8, pm1.g1 AS x, pm1.g2 AS y WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1 AND pm1.g5.e1=pm1.g6.e1 AND pm1.g6.e1=pm1.g7.e1 AND pm1.g7.e1=pm1.g8.e1", //$NON-NLS-1$
             example1(), 
@@ -1162,10 +1135,10 @@ public class TestOptimizer extends TestCase {
                             "SELECT pm1.g7.e1 FROM pm1.g7", //$NON-NLS-1$
                             "SELECT pm1.g8.e1 FROM pm1.g8", //$NON-NLS-1$
                             "SELECT x.e1 FROM pm1.g1 AS x", //$NON-NLS-1$
-                            "SELECT y.e1 FROM pm1.g2 AS y" } ); //$NON-NLS-1$
+                            "SELECT y.e1 FROM pm1.g2 AS y" }, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
                             
         long elapsed = System.currentTimeMillis() - begin;   
-        assertTrue("Did not plan many join query in reasonable time frame: " + elapsed + " ms", elapsed < 5000); //$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue("Did not plan many join query in reasonable time frame: " + elapsed + " ms", elapsed < 4000); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testAggregateWithoutGroupBy() {
@@ -1231,11 +1204,11 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testAllJoinsInSingleClause() {
+    public void testAllJoinsInSingleClause() throws Exception {
         ProcessorPlan plan = helpPlan("select pm1.g1.e1 FROM pm1.g1 join (pm1.g2 right outer join pm1.g3 on pm1.g2.e1=pm1.g3.e1) on pm1.g1.e1=pm1.g3.e1", example1(),  //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1",  //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
-                            "SELECT pm1.g3.e1 FROM pm1.g3" }); //$NON-NLS-1$
+                            "SELECT pm1.g3.e1 FROM pm1.g3" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             3,      // Access
             0,      // DependentAccess
@@ -1283,24 +1256,8 @@ public class TestOptimizer extends TestCase {
 
     public void testSubquery2() {
         ProcessorPlan plan = helpPlan("Select e1, a from (select e1 FROM pm1.g1) AS x, (select e1 as a FROM pm1.g2) AS y WHERE x.e1=y.a", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
-            				"SELECT e1 FROM pm1.g2" }); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
 
 	public void testSubquery3() {
@@ -1634,9 +1591,9 @@ public class TestOptimizer extends TestCase {
         }); 
     }
     
-    public void testNotPushDistinct() {
+    public void testNotPushDistinct() throws Exception {
         ProcessorPlan plan = helpPlan("select distinct e1 from pm1.g1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" }, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
@@ -1753,24 +1710,9 @@ public class TestOptimizer extends TestCase {
 
     public void testNestedSubquery() {
         ProcessorPlan plan = helpPlan("SELECT IntKey, LongNum FROM (SELECT IntKey, LongNum FROM (SELECT IntKey, LongNum, DoubleNum FROM BQT2.SmallA ) AS x ) AS y ORDER BY IntKey", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
-            new String[] { "SELECT IntKey, LongNum FROM BQT2.SmallA" }); //$NON-NLS-1$
+            new String[] { "SELECT IntKey, LongNum FROM BQT2.SmallA order by intkey" }); //$NON-NLS-1$
 
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        });                                    
+        checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
 
     /** Tests a user's order by is pushed to the source */
@@ -1783,33 +1725,9 @@ public class TestOptimizer extends TestCase {
     
     /** Tests an order by is not pushed to source due to join */
     public void testDontPushOrderByWithJoin() {
-        ProcessorPlan plan = helpPlan("SELECT pm3.g1.e1 FROM pm3.g1, pm3.g2 WHERE pm3.g1.e1 = pm3.g2.e1 ORDER BY pm3.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY pm3.g1.e1", //$NON-NLS-1$
-                           "SELECT pm3.g2.e1 FROM pm3.g2 ORDER BY pm3.g2.e1"}); //$NON-NLS-1$
-
-        checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        });                                
-    }    
-
-    /** Tests an order by is not pushed to source due to join */
-    public void testDontPushOrderByWithJoin2() {
-        ProcessorPlan plan = helpPlan("SELECT pm3.g1.e1 FROM pm3.g1 INNER JOIN pm3.g2 ON pm3.g1.e1 = pm3.g2.e1 ORDER BY pm3.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT pm3.g1.e1 FROM pm3.g1 ORDER BY pm3.g1.e1", //$NON-NLS-1$
-                           "SELECT pm3.g2.e1 FROM pm3.g2 ORDER BY pm3.g2.e1"}); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 INNER JOIN pm2.g2 ON pm3.g1.e1 = pm2.g2.e1 ORDER BY pm3.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e1", //$NON-NLS-1$
+                           "SELECT pm2.g2.e1 FROM pm2.g2 ORDER BY pm2.g2.e1"}); //$NON-NLS-1$
 
         checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -1842,29 +1760,12 @@ public class TestOptimizer extends TestCase {
     
     /** 
      * Tests that query transformation order by is discarded by
-     * user order by, and that user order by is discarded because
-     * physical model does not support joins
      */
     public void testPushOrderByThroughFrame2() {
         ProcessorPlan plan = helpPlan("SELECT e1, e2 FROM vm1.g1 ORDER BY e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 order by e2"}); //$NON-NLS-1$
 
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        });                                    
+        checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }    
 
     /** 
@@ -1930,9 +1831,9 @@ public class TestOptimizer extends TestCase {
             "WHERE BQT3.MediumB.IntKey < 1500",  //$NON-NLS-1$
             FakeMetadataFactory.exampleBQTCached(),
             new String[] { 
-                "SELECT BQT3.MediumB.IntKey FROM BQT3.MediumB WHERE BQT3.MediumB.IntKey < 1500", //$NON-NLS-1$
-                "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey < 1500", //$NON-NLS-1$
-                "SELECT BQT2.MediumB.IntKey FROM BQT2.MediumB WHERE BQT2.MediumB.IntKey < 1500" }); //$NON-NLS-1$
+                "SELECT BQT3.MediumB.IntKey FROM BQT3.MediumB WHERE BQT3.MediumB.IntKey < 1500 order by intkey", //$NON-NLS-1$
+                "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey < 1500 order by intkey", //$NON-NLS-1$
+                "SELECT BQT2.MediumB.IntKey FROM BQT2.MediumB WHERE BQT2.MediumB.IntKey < 1500 order by intkey" }); //$NON-NLS-1$
                 
         checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -1977,51 +1878,12 @@ public class TestOptimizer extends TestCase {
             0       // UnionAll
         });                                    
     }    
-    
-    public void testWhereAll1() {
-        helpPlan(
-            "SELECT * FROM pm6.g1",   //$NON-NLS-1$
-            FakeMetadataFactory.example1Cached(),
-            null, null,
-            new String[0],
-            false);
-    }    
-
-    public void testWhereAll2() throws Exception {
-        helpPlan(
-            "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1",   //$NON-NLS-1$
-            FakeMetadataFactory.example1Cached(),
-            null, null,
-            new String[] {
-                "SELECT g_0.e1 FROM pm6.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" //$NON-NLS-1$ //$NON-NLS-2$
-            },
-            ComparisonMode.EXACT_COMMAND_STRING);
-    }    
-        
-    public void testDefect21982_3() {
-        helpPlan(
-                 "SELECT * FROM vm1.g38",   //$NON-NLS-1$
-                 FakeMetadataFactory.example1Cached(),
-                 null, null,
-                 new String[0],
-                 false);       
-    }    
-
+            
     public void testCantPushJoin1() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-         
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1, b.e2 FROM pm1.g1 a, pm1.g2 b WHERE a.e1 = b.e1",  //$NON-NLS-1$
-            metadata,
-            null, capFinder,
+            FakeMetadataFactory.example1Cached(),
+            null, TestOptimizer.getGenericFinder(false),
             new String[] {"SELECT a.e1 FROM pm1.g1 AS a", "SELECT b.e1, b.e2 FROM pm1.g2 AS b"}, //$NON-NLS-1$ //$NON-NLS-2$
             SHOULD_SUCCEED );
 
@@ -2044,21 +1906,10 @@ public class TestOptimizer extends TestCase {
     }
 
     public void testCantPushJoin2() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-
-        // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-         
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1, b.e2 FROM pm1.g1 a, pm1.g2 b, pm2.g1 c WHERE a.e1 = b.e1 AND b.e1 = c.e1",  //$NON-NLS-1$
-            metadata,
-            null, capFinder,
+            FakeMetadataFactory.example1Cached(),
+            null, TestOptimizer.getGenericFinder(false),
             new String[] {"SELECT a.e1 FROM pm1.g1 AS a",  //$NON-NLS-1$
                            "SELECT b.e1, b.e2 FROM pm1.g2 AS b", //$NON-NLS-1$
                            "SELECT c.e1 FROM pm2.g1 AS c"}, //$NON-NLS-1$
@@ -2091,9 +1942,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1, b.e2 FROM pm1.g1 a, pm1.g1 b WHERE a.e1 = b.e1",  //$NON-NLS-1$
@@ -2114,9 +1963,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT a.e1 AS x, concat(a.e2, b.e2) AS y FROM pm1.g1 a, pm1.g1 b WHERE a.e1 = b.e1",  //$NON-NLS-1$
@@ -2151,10 +1998,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1 FROM pm1.g1 RIGHT OUTER JOIN pm1.g2 ON pm1.g1.e1 = pm1.g2.e1",  //$NON-NLS-1$
@@ -2169,16 +2013,12 @@ public class TestOptimizer extends TestCase {
     public void testPushOuterJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1 FROM pm1.g1 RIGHT OUTER JOIN pm1.g2 ON pm1.g1.e1 = pm1.g2.e1",  //$NON-NLS-1$
@@ -2216,10 +2056,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1 FROM pm1.g1 RIGHT OUTER JOIN pm1.g2 ON pm1.g1.e1 = pm1.g2.e1 || 'x'",  //$NON-NLS-1$
@@ -2648,8 +2485,7 @@ public class TestOptimizer extends TestCase {
     }
     
     public void testQueryManyJoin() { 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1 FROM pm1.g1 JOIN ((pm1.g2 JOIN pm1.g3 ON pm1.g2.e1=pm1.g3.e1) JOIN pm1.g4 ON pm1.g3.e1=pm1.g4.e1) ON pm1.g1.e1=pm1.g4.e1",  //$NON-NLS-1$
             metadata,
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4 WHERE (pm1.g1.e1 = pm1.g4.e1) AND (pm1.g3.e1 = pm1.g4.e1) AND (pm1.g2.e1 = pm1.g3.e1)"} ); //$NON-NLS-1$
@@ -2657,8 +2493,7 @@ public class TestOptimizer extends TestCase {
     }
     
     public void testPushSelectDistinct() { 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        metadata.getStore().findObject("pm3", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = helpPlan("SELECT DISTINCT e1 FROM pm3.g1",  //$NON-NLS-1$
             metadata,
             new String[] { "SELECT DISTINCT e1 FROM pm3.g1"} ); //$NON-NLS-1$
@@ -2872,9 +2707,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT e1, lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY e1",  //$NON-NLS-1$
@@ -2900,9 +2733,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT e1, lower(e1) AS x FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY x",  //$NON-NLS-1$
@@ -2928,9 +2759,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT e1, x FROM (SELECT e1, lower(e1) AS x FROM pm1.g1 WHERE upper(e1) = 'X') AS z ORDER BY x",  //$NON-NLS-1$
@@ -2955,9 +2784,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
@@ -2982,9 +2809,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2, pm1.g3 WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND pm1.g1.e1 = concat(pm1.g3.e1, 'a') AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
@@ -3025,9 +2850,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = helpPlan(
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2, (SELECT e1 AS x FROM pm1.g3) AS g WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND pm1.g1.e1 = concat(g.x, 'a') AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
@@ -3097,10 +2920,7 @@ public class TestOptimizer extends TestCase {
     }    
 
     public void testDefect9827() { 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject obj = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan("SELECT intkey, c FROM (SELECT DISTINCT b.intkey, b.intnum, a.stringkey AS c FROM bqt1.smalla AS a, bqt1.smallb AS b WHERE a.INTKEY = b.INTKEY) AS x ORDER BY x.intkey", metadata, //$NON-NLS-1$
             new String[] {"SELECT DISTINCT b.intkey, b.intnum, a.stringkey FROM bqt1.smalla AS a, bqt1.smallb AS b WHERE a.INTKEY = b.INTKEY"} ); //$NON-NLS-1$
@@ -3837,9 +3657,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3869,9 +3687,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3891,14 +3707,10 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1));
     
@@ -3935,14 +3747,10 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -3981,13 +3789,9 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-//        FakeMetadataObject obj = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-//        obj.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -4009,52 +3813,6 @@ public class TestOptimizer extends TestCase {
             0       // UnionAll
         });         
     }
-
-    /** Model doesn't support order by, should be a sort node on each side of merge join*/
-    public void testUseMergeJoin6(){
-        // Create query
-        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
-
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-//        FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-//        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
-        FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
-    
-        ProcessorPlan plan = helpPlan(sql, metadata,  
-            null, capFinder,
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g2.e1 FROM pm1.g2" }, SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
-        checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });         
-    } 
     
     /** one side of join supports order by, the other doesn't*/
     public void testUseMergeJoin7(){
@@ -4066,17 +3824,15 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -4113,17 +3869,15 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject model = metadata.getStore().findObject("pm2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -4170,9 +3924,7 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject model2 = metadata.getStore().findObject("pm2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model2.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -4218,7 +3970,6 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -4257,9 +4008,6 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -4306,14 +4054,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject model1 = metadata.getStore().findObject("bqt1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
- 
-        FakeMetadataObject model2 = metadata.getStore().findObject("bqt2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model2.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-     
-        ProcessorPlan plan = helpPlan(sql, metadata,  
+        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
             null, capFinder,
             new String[] { "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey",  //$NON-NLS-1$
                             "SELECT BQT2.SmallB.IntKey FROM BQT2.SmallB ORDER BY BQT2.SmallB.IntKey" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
@@ -4351,9 +4092,7 @@ public class TestOptimizer extends TestCase {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject model1 = metadata.getStore().findObject("bqt1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -4411,8 +4150,6 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, false);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -4420,8 +4157,6 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -4541,14 +4276,14 @@ public class TestOptimizer extends TestCase {
     // SELECT * FROM (SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT DISTINCT IntNum FROM BQT1.SmallA) AS x WHERE IntKey = 0
     public void testCase1649() {
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT DISTINCT IntKey FROM BQT1.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA) AS x WHERE IntKey = 0", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
-            new String[] { "SELECT IntKey FROM BQT1.SmallA WHERE IntKey = 0", "SELECT IntNum FROM BQT1.SmallA WHERE IntNum = 0"  }); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT DISTINCT IntKey FROM BQT1.SmallA WHERE IntKey = 0", "SELECT IntNum FROM BQT1.SmallA WHERE IntNum = 0"  }); //$NON-NLS-1$ //$NON-NLS-2$
 
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
-            1,      // DupRemove
+            0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
             0,      // MergeJoinStrategy
@@ -4656,14 +4391,14 @@ public class TestOptimizer extends TestCase {
     public void testCountStarOverSelectDistinct() {
         ProcessorPlan plan = helpPlan("SELECT COUNT(*) FROM (SELECT DISTINCT IntNum, Intkey FROM bqt1.smalla) AS x", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
                                       new String[] { 
-                                          "SELECT IntNum, Intkey FROM bqt1.smalla" }); //$NON-NLS-1$ 
+                                          "SELECT DISTINCT IntNum, Intkey FROM bqt1.smalla" }); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         1,      // Access
                                         0,      // DependentAccess
                                         0,      // DependentSelect
                                         0,      // DependentProject
-                                        1,      // DupRemove
+                                        0,      // DupRemove
                                         1,      // Grouping
                                         0,      // NestedLoopJoinStrategy
                                         0,      // MergeJoinStrategy
@@ -4739,12 +4474,7 @@ public class TestOptimizer extends TestCase {
             expectedSql = new String[] { "SELECT IntKey FROM BQT1.SmallA", "SELECT IntKey FROM BQT1.SmallB" };  //$NON-NLS-1$//$NON-NLS-2$
         }
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject obj = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql, metadata, 
                                       null, capFinder, expectedSql, SHOULD_SUCCEED);  
@@ -5032,9 +4762,6 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE); //$NON-NLS-1$
-
         ProcessorPlan plan = helpPlan("(SELECT IntKey FROM BQT1.SmallA ORDER BY IntKey) UNION ALL SELECT IntKey FROM BQT1.SmallB", FakeMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
                                       null, capFinder, 
                                       new String[] {"SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT IntKey FROM BQT1.SmallB"},  //$NON-NLS-1$ 
@@ -5054,8 +4781,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         ProcessorPlan plan = helpPlan("SELECT DISTINCT IntKey FROM BQT1.SmallA UNION ALL SELECT IntKey FROM BQT1.SmallB", metadata,  //$NON-NLS-1$
                                       null, capFinder, 
@@ -5744,10 +5470,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);        
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         String sql = "SELECT t.intkey FROM (SELECT a.IntKey FROM bqt1.smalla a left outer join bqt1.smallb b on a.intkey=b.intkey, bqt1.smalla x) as t full outer JOIN bqt1.smallb c on t.intkey = c.intkey"; //$NON-NLS-1$
 
@@ -6186,11 +5909,7 @@ public class TestOptimizer extends TestCase {
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6236,11 +5955,7 @@ public class TestOptimizer extends TestCase {
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6526,11 +6241,7 @@ public class TestOptimizer extends TestCase {
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6584,11 +6295,7 @@ public class TestOptimizer extends TestCase {
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6651,11 +6358,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6771,11 +6474,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(sql,           
                                       metadata,
@@ -6837,10 +6536,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         String sql = "SELECT intkey, x FROM (select intkey, intkey x from bqt1.smalla) z ORDER BY x, intkey"; //$NON-NLS-1$
 
@@ -6873,10 +6569,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         String sql = "SELECT vqt.smallb.a12345 FROM vqt.smallb ORDER BY vqt.smallb.a12345"; //$NON-NLS-1$
 
@@ -6907,10 +6600,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum) as EXPR, bqt1.smalla.stringKey as EXPR_1 FROM bqt1.smalla  ORDER BY EXPR, EXPR_1"; //$NON-NLS-1$
 
@@ -6941,10 +6631,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         String sql = "SELECT CONCAT(bqt1.smalla.stringKey, bqt1.smalla.stringNum), bqt1.smalla.stringKey as EXPR_1 FROM bqt1.smalla ORDER BY EXPR_1"; //$NON-NLS-1$
 
@@ -6972,10 +6659,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         String sql = "SELECT b1.intkey from (bqt1.SmallA a1 cross join bqt1.smalla a2 cross join bqt1.mediuma b1) " +    //$NON-NLS-1$ 
             " left outer join bqt1.mediumb b2 on b1.intkey = b2.intkey"; //$NON-NLS-1$         
@@ -7007,10 +6691,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         String sql = "SELECT bqt1.SmallA.intkey from (bqt1.SmallA inner join (" //$NON-NLS-1$         
             + "SELECT BAD.intkey from bqt1.SmallB as BAD left outer join bqt1.MediumB on BAD.intkey = bqt1.MediumB.intkey) as X on bqt1.SmallA.intkey = X.intkey) inner join bqt1.MediumA on X.intkey = bqt1.MediumA.intkey"; //$NON-NLS-1$
@@ -7025,9 +6706,6 @@ public class TestOptimizer extends TestCase {
     public void testCase3367() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
 
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
@@ -7052,10 +6730,7 @@ public class TestOptimizer extends TestCase {
      */
     public void testCase3778() {
     	
-    	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);   
+    	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -7075,7 +6750,7 @@ public class TestOptimizer extends TestCase {
     /** 
      * Ensures that order by expressions are not repeated when multiple criteria span a merge join 
      */ 
-    public void testCase3832() { 
+    public void testCase3832() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true); 
@@ -7090,10 +6765,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$ 
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$ 
          
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT(); 
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$ 
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE); 
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE); 
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
          
         String sql = "select bqt1.smalla.intkey from bqt1.smalla, bqt2.smalla, bqt2.smallb where bqt1.smalla.intkey = bqt2.smalla.intkey and bqt1.smalla.intkey = bqt2.smallb.intkey and bqt2.smalla.stringkey = bqt2.smallb.stringkey"; //$NON-NLS-1$ 
          
@@ -7102,9 +6774,9 @@ public class TestOptimizer extends TestCase {
                  null, 
                  capFinder, 
                  new String[] { 
-                     "SELECT bqt2.smallb.intkey, bqt2.smalla.intkey FROM bqt2.smalla, bqt2.smallb WHERE bqt2.smalla.stringkey = bqt2.smallb.stringkey", //$NON-NLS-1$ 
-                     "SELECT bqt1.smalla.intkey FROM bqt1.smalla ORDER BY bqt1.smalla.intkey"}, //$NON-NLS-1$ 
-                 SHOULD_SUCCEED); 
+                     "SELECT bqt2.smallb.intkey AS c_0, bqt2.smalla.intkey AS c_1 FROM bqt2.smalla, bqt2.smallb WHERE bqt2.smalla.stringkey = bqt2.smallb.stringkey ORDER BY c_0, c_1", //$NON-NLS-1$ 
+                     "SELECT bqt1.smalla.intkey AS c_0 FROM bqt1.smalla ORDER BY c_0"}, //$NON-NLS-1$ 
+                 ComparisonMode.EXACT_COMMAND_STRING); 
              
     } 
     
@@ -7146,9 +6818,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true); 
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$ 
          
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT(); 
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT2", FakeMetadataObject.MODEL); //$NON-NLS-1$ 
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE); 
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached(); 
          
         String sql = "SELECT * from (select '1' as test, intkey from bqt2.smalla) foo, (select '2' as test, intkey from bqt2.smalla) foo2 where foo.intkey = foo2.intkey"; //$NON-NLS-1$ 
          
@@ -7161,7 +6831,7 @@ public class TestOptimizer extends TestCase {
     } 
     
     public static FakeMetadataFacade createInlineViewMetadata(FakeCapabilitiesFinder capFinder) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
@@ -7178,15 +6848,6 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
-        
-        FakeMetadataObject obj = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        
-        FakeMetadataObject obj1 = metadata.getStore().findObject("BQT2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj1.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
-        obj1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         
         return metadata;
     }
@@ -7425,9 +7086,6 @@ public class TestOptimizer extends TestCase {
     public void testCase4263() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
@@ -7449,9 +7107,6 @@ public class TestOptimizer extends TestCase {
     public void testCase4263b() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
@@ -7459,7 +7114,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
@@ -7489,9 +7144,6 @@ public class TestOptimizer extends TestCase {
     public void testCase4279() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
@@ -7518,9 +7170,6 @@ public class TestOptimizer extends TestCase {
     public void testCase4306() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
@@ -7593,12 +7242,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                                       metadata,
@@ -7631,10 +7275,7 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,        
                                       metadata,
@@ -7695,11 +7336,8 @@ public class TestOptimizer extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
-        
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                                       metadata,
                                       null, capFinder,
@@ -7770,13 +7408,7 @@ public class TestOptimizer extends TestCase {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        FakeMetadataObject g2 = metadata.getStore().findObject("BQT2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g2.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = helpPlan(
             "SELECT A.IntKey, B.IntKey FROM BQT1.SmallA A LEFT OUTER JOIN BQT2.MediumB B ON A.IntKey = B.IntKey",  //$NON-NLS-1$
@@ -7825,9 +7457,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         String sql = "select b from (select distinct booleanvalue b, intkey from bqt1.smalla) as x"; //$NON-NLS-1$
         
@@ -7863,10 +7493,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         String sql = "SELECT a.intkey as stringkey, b.stringkey as key2 from bqt1.smalla a, bqt1.smallb b where a.intkey = b.intkey order by stringkey"; //$NON-NLS-1$ 
          
@@ -7952,29 +7579,16 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    public void testSelectIntoWithDistinct() {
+    public void testSelectIntoWithDistinct() throws Exception {
         String sql = "select distinct e1 into #temp from pm1.g1"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT e1 FROM pm1.g1"}); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            1,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+        
+        checkNodeTypes(plan, new int[] {1}, new Class[] {ProjectIntoNode.class});
     }
     
     /**
@@ -7991,9 +7605,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject g1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         String sql = "select pm1.g1.e1 from pm1.g1, (select * from pm1.g2) y where (pm1.g1.e1 = y.e1) and exists (select e2 from pm1.g2 where e1 = y.e1) and exists (select e3 from pm1.g2 where e1 = y.e1)"; //$NON-NLS-1$
         
@@ -8039,9 +7651,7 @@ public class TestOptimizer extends TestCase {
     }
         
     public void testCase6181() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -8169,7 +7779,6 @@ public class TestOptimizer extends TestCase {
     	helpPlan(sql, FakeMetadataFactory.exampleBQT(), new String[] {});
     }
     
-    // ################################## TEST SUITE ################################
+	private static final boolean DEBUG = false;
 
-    private static final boolean DEBUG = false;    
 }

@@ -52,6 +52,7 @@ public class TestDependentJoins extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false); //fake data manager doesn't support order by
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
@@ -440,9 +441,7 @@ public class TestDependentJoins extends TestCase {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = fakeMetadata.getStore().findObject("pm4", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
         
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
@@ -461,6 +460,7 @@ public class TestDependentJoins extends TestCase {
     public void testCase5130() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "select a.intkey from bqt1.smalla a, bqt1.smallb b where concat(a.stringkey, 't') = b.stringkey option makedep a"; //$NON-NLS-1$ 
@@ -505,6 +505,7 @@ public class TestDependentJoins extends TestCase {
     public void testCase5130a() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
@@ -593,9 +594,7 @@ public class TestDependentJoins extends TestCase {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = fakeMetadata.getStore().findObject("pm6", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
 
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -709,9 +708,7 @@ public class TestDependentJoins extends TestCase {
 
         // Slightly modify metadata to set max set size to just a few rows - this
         // will allow us to test the dependent overflow case
-        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
-        FakeMetadataObject obj = fakeMetadata.getStore().findObject("pm4", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1Cached();
 
         Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);

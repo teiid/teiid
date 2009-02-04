@@ -325,11 +325,6 @@ public class RelationalPlanner implements CommandPlanner {
     public static RuleStack buildRules(PlanHints hints) {
         RuleStack rules = new RuleStack();
 
-        if (hints.needsWhereAllValidation) {
-            rules.push(RuleConstants.VALIDATE_WHERE_ALL);
-        }
-        rules.push(RuleConstants.ACCESS_PATTERN_VALIDATION);
-        
         rules.push(RuleConstants.COLLAPSE_SOURCE);
 
         if(hints.hasJoin) {

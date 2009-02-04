@@ -151,15 +151,7 @@ public class FakeMetadataObject implements Comparable, Serializable {
 	
 		// Model properties
         public static final String PLAN = "plan";                     // object - query plan //$NON-NLS-1$
-		public static final String NO_CRITERIA = "supNoCriteria";     // Boolean //$NON-NLS-1$
-		public static final String JOIN = "supJoin";                  // Boolean //$NON-NLS-1$
 		public static final String UPDATE = "supUpdate";              // Boolean //$NON-NLS-1$
-		public static final String OUTER_JOIN = "supOuterJoin";       // Boolean //$NON-NLS-1$
-        public static final String DISTINCT = "supDistinct";          // Boolean //$NON-NLS-1$
-        public static final String ORDER_BY = "supOrderBy";           // Boolean //$NON-NLS-1$
-        public static final String SINGLE_GROUP_SELECT = "supSingleGroupSelect";// Boolean //$NON-NLS-1$
-        public static final String LEAF_SELECT = "supLeafSelect";     // Boolean //$NON-NLS-1$
-        public static final String BLACK_BOX_JOIN = "supBlackBoxJoin";// Boolean //$NON-NLS-1$
         public static final String MAX_SET_SIZE = "maxSetSize";       // Integer //$NON-NLS-1$
 
         // Group properties

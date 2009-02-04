@@ -371,7 +371,11 @@ public interface SourceCapabilities {
         /**
          * @since 6.0.0 indicates the source supports XA transactions
          */
-        TRANSACTIONS_XA
+        TRANSACTIONS_XA,
+        /**
+         * @since 6.0.0 indicates support for where all
+         */
+        REQUIRES_CRITERIA
     }
 
     public enum Scope {

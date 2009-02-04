@@ -24,23 +24,23 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
-import java.util.Iterator;
-import java.util.Stack;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
+import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.SetQuery;
+import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -68,37 +68,14 @@ public final class RuleValidateWhereAll implements OptimizerRule {
 			QueryMetadataException,
 			MetaMatrixComponentException {
 
+		for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
+            Object modelID = RuleRaiseAccess.getModelIDFromAccess(node, metadata);
 
-		//All nodes will be pushed onto stack,
-		//then checked for validity as they are popped
-		Stack nodes = new Stack();
-		nodes.push(plan);
-		while (!nodes.isEmpty()){
-			PlanNode node = (PlanNode)nodes.pop();
-
-			if (node.getType()==NodeConstants.Types.ACCESS){
-
-                Object modelID = RuleRaiseAccess.getModelIDFromAccess(node, metadata);
-
-                if(modelID != null) {
-                    boolean supportsWhereAll = metadata.modelSupports(modelID, SupportConstants.Model.NO_CRITERIA);
-                    if(! supportsWhereAll) {
-                        // This model does not support queries without a criteria, so we must check for that
-                        boolean hasNoCriteria = hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST));
-
-                        if(hasNoCriteria) {
-                            String modelName = metadata.getFullName(modelID);
-                            throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0024, modelName));
-                        }
-                    }
-                }
-			}
-
-			//Push children onto the stack
-			Iterator children = node.getChildren().iterator();
-			while (children.hasNext()) {
-				nodes.push(children.next());
-			}
+            if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
+            		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
+                String modelName = metadata.getFullName(modelID);
+                throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0024, modelName));
+            }
 		}
 
 		return plan;
@@ -110,11 +87,21 @@ public final class RuleValidateWhereAll implements OptimizerRule {
      * @return
      */
     static boolean hasNoCriteria(Command command) {
-        if(command instanceof Query) {
+    	if(command instanceof Query) {
             Query query = (Query) command;
-            if (query.getCriteria() == null) {
-                return true;
-            }
+            return query.getCriteria() == null;
+        }
+        if (command instanceof Delete) {
+        	Delete query = (Delete) command;
+            return query.getCriteria() == null;
+        }
+        if (command instanceof Update) {
+        	Update query = (Update) command;
+            return query.getCriteria() == null;
+        }
+        if (command instanceof SetQuery) {
+        	SetQuery query = (SetQuery)command;
+        	return hasNoCriteria(query.getLeftQuery()) || hasNoCriteria(query.getRightQuery());
         }
         return false;
     }

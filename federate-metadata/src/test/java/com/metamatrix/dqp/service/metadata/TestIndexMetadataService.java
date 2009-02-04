@@ -113,10 +113,6 @@ public class TestIndexMetadataService extends TestCase {
 
     public void testGetElementIDsInGroupID() throws Exception {
         Object groupID = getGroupID();
-        Object modelID = metadata.getModelID(groupID);
-
-        metadata.modelSupports(modelID, SupportConstants.Model.NO_CRITERIA);
-        metadata.modelSupports(modelID, SupportConstants.Model.OUTER_JOIN);
 
         List eIDs = metadata.getElementIDsInGroupID(groupID);
         assertEquals(4, eIDs.size());

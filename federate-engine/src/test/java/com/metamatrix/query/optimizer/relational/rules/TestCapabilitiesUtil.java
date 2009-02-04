@@ -27,12 +27,15 @@ package com.metamatrix.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.query.optimizer.capabilities.*;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -40,8 +43,16 @@ import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
-import com.metamatrix.query.sql.symbol.*;
-import com.metamatrix.query.unittest.*;
+import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.ExpressionSymbol;
+import com.metamatrix.query.sql.symbol.Function;
+import com.metamatrix.query.sql.symbol.ScalarSubquery;
+import com.metamatrix.query.unittest.FakeMetadataFacade;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
+import com.metamatrix.query.unittest.FakeMetadataObject;
 
 /**
  */
@@ -55,9 +66,9 @@ public class TestCapabilitiesUtil extends TestCase {
         super(name);
     }
     
-    public void helpTestSupportsSelfJoin(boolean supportsSelfJoin, boolean supportsGroupAlias, boolean expectedValue) {
+    public void helpTestSupportsSelfJoin(boolean supportsSelfJoin, boolean supportsGroupAlias, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
 
         // Set up capabilities
@@ -68,46 +79,37 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelfJoins(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsSelfJoins(modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
     
-    public void testSupportsSelfJoin1() {
+    public void testSupportsSelfJoin1() throws Exception {
         helpTestSupportsSelfJoin(false, true, false);
     }
 
-    public void testSupportsSelfJoin2() {
+    public void testSupportsSelfJoin2() throws Exception {
         helpTestSupportsSelfJoin(true, false, false);
     }
 
-    public void testSupportsSelfJoin3() {
+    public void testSupportsSelfJoin3() throws Exception {
         helpTestSupportsSelfJoin(true, true, true);
     }
 
-    public void testSupportsSelfJoin4() {        
+    public void testSupportsSelfJoin4() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelfJoins(modelID, metadata, new DefaultCapabilitiesFinder());
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsSelfJoins(modelID, metadata, new DefaultCapabilitiesFinder());
+        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }
 
     
-    public void helpTestSupportsOuterJoin(boolean metadataSupportsOuterJoin, boolean capsSupportsOuterJoin, boolean capsSupportsFullOuterJoin, JoinType joinType, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
+    public void helpTestSupportsOuterJoin(boolean capsSupportsOuterJoin, boolean capsSupportsFullOuterJoin, JoinType joinType, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.OUTER_JOIN, new Boolean(metadataSupportsOuterJoin));
         
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -123,32 +125,27 @@ public class TestCapabilitiesUtil extends TestCase {
     
     // Test where capabilities don't support outer joins
     public void testSupportsOuterJoinFail1() throws Exception {        
-        helpTestSupportsOuterJoin(true, false, false, JoinType.JOIN_RIGHT_OUTER, false); 
+        helpTestSupportsOuterJoin(false, false, JoinType.JOIN_RIGHT_OUTER, false); 
     }
 
-    // Test where capabilities support outer joins but metadata does not
-    public void testSupportsOuterJoinFail2() throws Exception {        
-        helpTestSupportsOuterJoin(false, true, false, JoinType.JOIN_RIGHT_OUTER, false); 
-    }
-    
     // Test where capabilities don't support full outer joins 
     public void testSupportsOuterJoinFail3() throws Exception {        
-        helpTestSupportsOuterJoin(true, true, false, JoinType.JOIN_FULL_OUTER, false); 
+        helpTestSupportsOuterJoin(true, false, JoinType.JOIN_FULL_OUTER, false); 
     }
 
     // Test where capabilities support outer joins 
     public void testSupportsOuterJoin1() throws Exception {        
-        helpTestSupportsOuterJoin(true, true, false, JoinType.JOIN_RIGHT_OUTER, true); 
+        helpTestSupportsOuterJoin(true, false, JoinType.JOIN_RIGHT_OUTER, true); 
     }
 
     // Test where capabilities support full outer joins 
     public void testSupportsOuterJoin2() throws Exception {        
-        helpTestSupportsOuterJoin(true, true, true, JoinType.JOIN_FULL_OUTER, true); 
+        helpTestSupportsOuterJoin(true, true, JoinType.JOIN_FULL_OUTER, true); 
     }
 
-    public void helpTestSupportsAggregates(boolean capsSupportsAggregates, boolean supportsFunctionInGroupBy, List groupCols) {
+    public void helpTestSupportsAggregates(boolean capsSupportsAggregates, boolean supportsFunctionInGroupBy, List groupCols) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Set up capabilities
@@ -159,37 +156,29 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", capsSupportsAggregates, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", capsSupportsAggregates, actual); //$NON-NLS-1$
     }
     
     // Test where capabilities supports aggregates
-    public void testSupportsAggregates1() {        
+    public void testSupportsAggregates1() throws Exception {        
         helpTestSupportsAggregates(true, true, null); 
     }
     
     // Test where capabilities don't support aggregates
-    public void testSupportsAggregates2() {        
+    public void testSupportsAggregates2() throws Exception {        
         helpTestSupportsAggregates(false, true, null); 
     }
 
     // Test where no capabilities exist
-    public void testSupportsAggregates3() {        
+    public void testSupportsAggregates3() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsAggregates(null, modelID, metadata, new DefaultCapabilitiesFinder());
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsAggregates(null, modelID, metadata, new DefaultCapabilitiesFinder());
+        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }
     
     /**
@@ -197,7 +186,7 @@ public class TestCapabilitiesUtil extends TestCase {
      * be called supports expression in group by.  Thus the example below
      * is not supported.
      */
-    public void testSupportsFunctionInGroupBy() {
+    public void testSupportsFunctionInGroupBy() throws Exception {
         Function f = new Function("concat", new Expression[] { new Constant("a"), new Constant("b") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ExpressionSymbol expr = new ExpressionSymbol("e", f); //$NON-NLS-1$
         List cols = new ArrayList();
@@ -205,9 +194,9 @@ public class TestCapabilitiesUtil extends TestCase {
         helpTestSupportsAggregates(false, false, cols);
     }
 
-    public void helpTestSupportsAggregateFunction(SourceCapabilities caps, AggregateSymbol aggregate, boolean expectedValue) {
+    public void helpTestSupportsAggregateFunction(SourceCapabilities caps, AggregateSymbol aggregate, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Set up capabilities
@@ -215,16 +204,12 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsAggregateFunction(modelID, aggregate, metadata, finder);
-            assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsAggregateFunction(modelID, aggregate, metadata, finder);
+        assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
     
     // Test where capabilities don't support aggregate functions
-    public void testSupportsAggregate1() {        
+    public void testSupportsAggregate1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         
@@ -234,7 +219,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
     
     // Test where capabilities don't support COUNT
-    public void testSupportsAggregate2() {        
+    public void testSupportsAggregate2() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -246,7 +231,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT(*)
-    public void testSupportsAggregate3() {        
+    public void testSupportsAggregate3() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -258,7 +243,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT(*)
-    public void testSupportsAggregate4() {        
+    public void testSupportsAggregate4() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -270,7 +255,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT
-    public void testSupportsAggregate5() {        
+    public void testSupportsAggregate5() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -282,7 +267,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support only COUNT
-    public void testSupportsAggregate6() {        
+    public void testSupportsAggregate6() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -294,7 +279,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support SUM
-    public void testSupportsAggregate7() {        
+    public void testSupportsAggregate7() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, false);
@@ -305,7 +290,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support SUM
-    public void testSupportsAggregate8() {        
+    public void testSupportsAggregate8() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
@@ -316,7 +301,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support AVG
-    public void testSupportsAggregate9() {        
+    public void testSupportsAggregate9() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, false);
@@ -327,7 +312,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support AVG
-    public void testSupportsAggregate10() {        
+    public void testSupportsAggregate10() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
@@ -338,7 +323,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support MIN
-    public void testSupportsAggregate11() {        
+    public void testSupportsAggregate11() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, false);
@@ -349,7 +334,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support MIN
-    public void testSupportsAggregate12() {        
+    public void testSupportsAggregate12() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
@@ -360,7 +345,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities don't support MAX
-    public void testSupportsAggregate13() {        
+    public void testSupportsAggregate13() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, false);
@@ -371,7 +356,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support MAX
-    public void testSupportsAggregate14() {        
+    public void testSupportsAggregate14() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -382,7 +367,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
     
     // Test where capabilities don't support DISTINCT
-    public void testSupportsAggregate15() {        
+    public void testSupportsAggregate15() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -394,7 +379,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities support DISTINCT
-    public void testSupportsAggregate16() {        
+    public void testSupportsAggregate16() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -405,9 +390,9 @@ public class TestCapabilitiesUtil extends TestCase {
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
 
-    public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) {
+    public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Set up capabilities
@@ -415,16 +400,12 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsScalarFunction(modelID, function, metadata, finder);
-            assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsScalarFunction(modelID, function, metadata, finder);
+        assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
 
     // Test where capabilities don't support scalar functions
-    public void testSupportsScalar1() {        
+    public void testSupportsScalar1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.FUNCTION, false);
 
@@ -433,7 +414,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities doesn't support function
-    public void testSupportsScalar3() {        
+    public void testSupportsScalar3() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("now", false); //$NON-NLS-1$
@@ -443,7 +424,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where capabilities do support function
-    public void testSupportsScalar4() {        
+    public void testSupportsScalar4() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("now", true); //$NON-NLS-1$
@@ -453,7 +434,7 @@ public class TestCapabilitiesUtil extends TestCase {
     }    
 
     // Test where function is unknown
-    public void testSupportsScalar5() {        
+    public void testSupportsScalar5() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.FUNCTION, true);
 
@@ -461,11 +442,10 @@ public class TestCapabilitiesUtil extends TestCase {
         helpTestSupportsScalar(caps, func, false);        
     }    
 
-    public void testSupportsDistinct1() {        
+    public void testSupportsDistinct1() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -473,20 +453,13 @@ public class TestCapabilitiesUtil extends TestCase {
         sourceCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true); 
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
-        // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", true, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        assertTrue(CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder));
     }    
 
-    public void testSupportsDistinct2() {        
+    public void testSupportsDistinct2() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -495,40 +468,14 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsDistinct3() {        
+    public void testSupportsOrderBy1() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.FALSE);
-
-        // Set up capabilities
-        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities sourceCaps = new BasicSourceCapabilities();
-        sourceCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true); 
-        finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
-
-        // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
-    }    
-
-    public void testSupportsOrderBy1() {        
-        // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -537,19 +484,14 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsOrderBy(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", true, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsOrderBy(modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", true, actual); //$NON-NLS-1$
     }    
 
-    public void testSupportsOrderBy2() {        
+    public void testSupportsOrderBy2() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -558,36 +500,11 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsOrderBy(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsOrderBy(modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsOrderBy3() {        
-        // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.FALSE);
-
-        // Set up capabilities
-        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities sourceCaps = new BasicSourceCapabilities();
-        sourceCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true); 
-        finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
-
-        // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsOrderBy(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
-    }    
-
-    public void helpTestSupportsScalarSubquery(boolean supportsScalarSubquery, ScalarSubquery subquery, FakeMetadataFacade metadata, boolean expectedValue) {
+    public void helpTestSupportsScalarSubquery(boolean supportsScalarSubquery, ScalarSubquery subquery, FakeMetadataFacade metadata, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
         // Set up metadata
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
 
@@ -598,12 +515,8 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, subquery, metadata, finder);
-            assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, subquery, metadata, finder);
+        assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
     
     private ScalarSubquery exampleSubquery1(FakeMetadataFacade metadata) {
@@ -620,37 +533,32 @@ public class TestCapabilitiesUtil extends TestCase {
         }
     }
 
-    public void testSupportsScalarSubquery1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    public void testSupportsScalarSubquery1() throws Exception {
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ScalarSubquery ss = exampleSubquery1(metadata);
         helpTestSupportsScalarSubquery(false, ss, metadata, false);
     }
 
-    public void testSupportsScalarSubquery2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+    public void testSupportsScalarSubquery2() throws Exception {
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ScalarSubquery ss = exampleSubquery1(metadata);
         helpTestSupportsScalarSubquery(true, ss, metadata, true);
     }
 
-    public void testSupportsScalarSubquery3() {        
+    public void testSupportsScalarSubquery3() throws Exception {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, exampleSubquery1(metadata), metadata, new DefaultCapabilitiesFinder());
-            assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, exampleSubquery1(metadata), metadata, new DefaultCapabilitiesFinder());
+        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }
 
-    public void helpTtestSupportsUnion(boolean supports) {        
+    public void helpTestSupportsUnion(boolean supports) throws QueryMetadataException, MetaMatrixComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.FALSE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -659,27 +567,22 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSetOp(modelID, Operation.UNION, metadata, finder);
-            assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsSetOp(modelID, Operation.UNION, metadata, finder);
+        assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsUnionTrue() {
-        helpTtestSupportsUnion(true);
+    public void testSupportsUnionTrue() throws Exception {
+        helpTestSupportsUnion(true);
     }
 
-    public void testSupportsUnionFalse() {
-        helpTtestSupportsUnion(false);
+    public void testSupportsUnionFalse() throws Exception {
+        helpTestSupportsUnion(false);
     }
 
-    public void helpTtestSupportsLiterals(boolean supports) {        
+    public void helpTestSupportsLiterals(boolean supports) throws QueryMetadataException, MetaMatrixComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.FALSE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -688,27 +591,22 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, finder);
-            assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, finder);
+        assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsLiteralsTrue() {
-        helpTtestSupportsLiterals(true);
+    public void testSupportsLiteralsTrue() throws Exception {
+        helpTestSupportsLiterals(true);
     }
 
-    public void testSupportsLiteralsFalse() {
-        helpTtestSupportsLiterals(false);
+    public void testSupportsLiteralsFalse() throws Exception {
+        helpTestSupportsLiterals(false);
     }
 
-    public void helpTtestSupportsCaseExpression(boolean supports, boolean searched) {        
+    public void helpTtestSupportsCaseExpression(boolean supports, boolean searched) throws QueryMetadataException, MetaMatrixComponentException {        
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        modelID.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.FALSE);
 
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -721,32 +619,28 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        try { 
-            boolean actual = false;
-            if(searched) {
-                actual = CapabilitiesUtil.supportsSearchedCaseExpression(modelID, metadata, finder);
-            } else {
-                actual = CapabilitiesUtil.supportsCaseExpression(modelID, metadata, finder);                
-            }
-            assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
-        } catch(MetaMatrixException e) {
-            fail(e.getMessage());
-        }        
+        boolean actual = false;
+        if(searched) {
+            actual = CapabilitiesUtil.supportsSearchedCaseExpression(modelID, metadata, finder);
+        } else {
+            actual = CapabilitiesUtil.supportsCaseExpression(modelID, metadata, finder);                
+        }
+        assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     
-    public void testSupportsCaseTrue() {
+    public void testSupportsCaseTrue() throws Exception {
         helpTtestSupportsCaseExpression(true, false);
     }
 
-    public void testSupportsCaseFalse() {
+    public void testSupportsCaseFalse() throws Exception {
         helpTtestSupportsCaseExpression(false, false);
     }
 
-    public void testSupportsSearchedCaseTrue() {
+    public void testSupportsSearchedCaseTrue() throws Exception {
         helpTtestSupportsCaseExpression(true, true);
     }
 
-    public void testSupportsSearchedCaseFalse() {
+    public void testSupportsSearchedCaseFalse() throws Exception {
         helpTtestSupportsCaseExpression(false, true);
     }
     
@@ -761,7 +655,7 @@ public class TestCapabilitiesUtil extends TestCase {
 
     public void testSupportRowLimit() throws Exception {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         // Set up capabilities
         FakeCapabilitiesFinder finder = getFinder(Capability.ROW_LIMIT, false);
@@ -775,7 +669,7 @@ public class TestCapabilitiesUtil extends TestCase {
     
     public void testSupportRowOffset() throws Exception {
         // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         // Set up capabilities
         FakeCapabilitiesFinder finder = getFinder(Capability.ROW_OFFSET, false);

@@ -629,23 +629,8 @@ public abstract class TransformationMetadata extends BasicQueryMetadata {
     public boolean modelSupports(final Object modelID, final int modelConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ModelRecord.class, modelID);
-        ModelRecord modelRecord = (ModelRecord) modelID;
 
         switch(modelConstant) {
-            case SupportConstants.Model.JOIN:
-                return modelRecord.supportsJoin();
-            case SupportConstants.Model.DISTINCT:
-                return modelRecord.supportsDistinct();
-            case SupportConstants.Model.ORDER_BY:
-                return modelRecord.supportsOrderBy();
-            case SupportConstants.Model.OUTER_JOIN:
-                return modelRecord.supportsOuterJoin();
-            case SupportConstants.Model.NO_CRITERIA:
-                return modelRecord.supportsWhereAll();
-            case SupportConstants.Model.BLACK_BOX_JOIN:
-            case SupportConstants.Model.LEAF_SELECT:
-            case SupportConstants.Model.SINGLE_GROUP_SELECT:
-                return false;
             default:
                 throw new UnsupportedOperationException(RuntimeMetadataPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + modelConstant); //$NON-NLS-1$
         }        

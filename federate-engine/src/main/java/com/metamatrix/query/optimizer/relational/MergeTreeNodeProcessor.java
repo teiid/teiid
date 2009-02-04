@@ -240,9 +240,6 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
                 parentHints.makeNotDepGroups.addAll(childHints.makeNotDepGroups);
             }    
         }  
-        if(childHints.needsWhereAllValidation) {
-            parentHints.needsWhereAllValidation = true;
-        }
         if(childHints.hasLimit) {
             parentHints.hasLimit = true;
         }

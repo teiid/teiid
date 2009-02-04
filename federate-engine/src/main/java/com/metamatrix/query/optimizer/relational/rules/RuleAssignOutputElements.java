@@ -220,28 +220,29 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             // Reset the outputColumns for this source node to be all columns for the virtual group
             SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
             return symbolMap.getKeys();
-            
-        // an ordered limit requires all sort columns
-        } else if (root.getFirstChild().getType() == NodeConstants.Types.TUPLE_LIMIT
-            && root.getFirstChild().getFirstChild().getType() == NodeConstants.Types.SORT) {
-            
-            //reset the output elements to be the output columns + what's required by the sort
-            PlanNode sort = root.getFirstChild().getFirstChild();
-            
-            List sortOrder = (List)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-            List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
-            
-            SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-            
-            List<ElementSymbol> symbolOrder = symbolMap.getKeys();
-            
-            for (final Iterator iterator = sortOrder.iterator(); iterator.hasNext();) {
-                final Expression expr = (Expression)iterator.next();
-                int index = topCols.indexOf(expr);
-                ElementSymbol symbol = symbolOrder.get(index);
-                if (!outputElements.contains(symbol)) {
-                    outputElements.add(symbol);
-                }
+        } 
+    	PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
+		if (limit == null) {
+			return outputElements;
+		}
+        //reset the output elements to be the output columns + what's required by the sort
+		PlanNode sort = NodeEditor.findNodePreOrder(limit, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
+        if (sort == null) {
+        	return outputElements;
+        }
+        List sortOrder = (List)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+        List<SingleElementSymbol> topCols = FrameUtil.findTopCols(sort);
+        
+        SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        
+        List<ElementSymbol> symbolOrder = symbolMap.getKeys();
+        
+        for (final Iterator iterator = sortOrder.iterator(); iterator.hasNext();) {
+            final Expression expr = (Expression)iterator.next();
+            int index = topCols.indexOf(expr);
+            ElementSymbol symbol = symbolOrder.get(index);
+            if (!outputElements.contains(symbol)) {
+                outputElements.add(symbol);
             }
         }
         return outputElements;

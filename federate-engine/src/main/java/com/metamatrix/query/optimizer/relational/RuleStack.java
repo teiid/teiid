@@ -34,6 +34,10 @@ public class RuleStack {
         rules.addFirst(rule);
     }
     
+    public void addLast(OptimizerRule rule) {
+    	rules.addLast(rule);
+    }
+    
     public OptimizerRule pop() { 
         if(rules.isEmpty()) { 
             return null;

@@ -106,13 +106,9 @@ public class FakeMetadataFactory {
 		FakeMetadataObject pm1 = createPhysicalModel("pm1"); //$NON-NLS-1$
 		FakeMetadataObject pm2 = createPhysicalModel("pm2"); //$NON-NLS-1$
         FakeMetadataObject pm3 = createPhysicalModel("pm3"); //allows push of SELECT DISTINCT //$NON-NLS-1$
-        pm3.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
-        pm3.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         FakeMetadataObject pm4 = createPhysicalModel("pm4"); //all groups w/ access pattern(s) //$NON-NLS-1$
 		FakeMetadataObject pm5 = createPhysicalModel("pm5"); //all groups w/ access pattern(s); model supports join //$NON-NLS-1$
-		pm5.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject pm6 = createPhysicalModel("pm6"); //model does not support where all //$NON-NLS-1$
-        pm6.putProperty(FakeMetadataObject.Props.NO_CRITERIA, Boolean.FALSE);
 		FakeMetadataObject vm1 = createVirtualModel("vm1");	 //$NON-NLS-1$
 		FakeMetadataObject vm2 = createVirtualModel("vm2");	 //$NON-NLS-1$
         FakeMetadataObject tm1 = createVirtualModel("tm1"); //$NON-NLS-1$
@@ -1731,9 +1727,6 @@ public class FakeMetadataFactory {
 		FakeMetadataObject pm3 = createPhysicalModel("pm3"); //$NON-NLS-1$
         FakeMetadataObject pm4 = createPhysicalModel("pm4"); //$NON-NLS-1$
 		FakeMetadataObject vm1 = createVirtualModel("vm1");	 //$NON-NLS-1$
-        pm1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        pm2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        pm3.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
 
 		// Create physical groups
 		FakeMetadataObject pm1g1 = createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
@@ -2062,14 +2055,9 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleBQT() { 
         // Create models
         FakeMetadataObject bqt1 = createPhysicalModel("BQT1"); //$NON-NLS-1$
-        bqt1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject bqt2 = createPhysicalModel("BQT2"); //$NON-NLS-1$
-        bqt2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        bqt2.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
         FakeMetadataObject bqt3 = createPhysicalModel("BQT3"); //$NON-NLS-1$
-        bqt3.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject lob = createPhysicalModel("LOB"); //$NON-NLS-1$
-        bqt3.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);        
         FakeMetadataObject vqt = createVirtualModel("VQT"); //$NON-NLS-1$
         
         // Create physical groups
@@ -2331,7 +2319,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleUQT() { 
         // Create models
         FakeMetadataObject uqt2 = createPhysicalModel("UQT2"); //$NON-NLS-1$
-        uqt2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
 
         // Create physical groups
         FakeMetadataObject uqt2UpdateA = createPhysicalGroup("UQT2.UpdateA", uqt2); //$NON-NLS-1$
@@ -2387,7 +2374,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleLOB() { 
         // Create models
         FakeMetadataObject lib = createPhysicalModel("Blob"); //$NON-NLS-1$
-        lib.putProperty(FakeMetadataObject.Props.JOIN, Boolean.FALSE);
 
         // Create physical groups
         FakeMetadataObject library = createPhysicalGroup("LOB_TESTING_ONE", lib, true); //$NON-NLS-1$
@@ -2414,7 +2400,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleStream(boolean isStream) { 
         // Create models
         FakeMetadataObject lib = createPhysicalModel("Blob");  //$NON-NLS-1$
-        lib.putProperty(FakeMetadataObject.Props.JOIN, Boolean.FALSE);
 
         // Create physical groups
         FakeMetadataObject library = null;
@@ -2444,7 +2429,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleBytes() { 
         // Create models
         FakeMetadataObject lib = createPhysicalModel("Blob");  //$NON-NLS-1$
-        lib.putProperty(FakeMetadataObject.Props.JOIN, Boolean.FALSE);
 
         // Create physical groups
         FakeMetadataObject library = createPhysicalGroup("BYTE_EXAMPLE", lib, true); //$NON-NLS-1$
@@ -2470,7 +2454,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleText() { 
         // Create models
         FakeMetadataObject lib = createPhysicalModel("Text"); //$NON-NLS-1$
-        lib.putProperty(FakeMetadataObject.Props.JOIN, Boolean.FALSE);
 
         // Create physical groups
         FakeMetadataObject library = createPhysicalGroup("Text.Library", lib, true); //$NON-NLS-1$
@@ -2735,7 +2718,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleSymphony() { 
         // Create models
         FakeMetadataObject model = createPhysicalModel("COMPLEX"); //$NON-NLS-1$
-        model.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         
         // Create physical groups
         FakeMetadataObject sales_g = createPhysicalGroup("COMPLEX.sales", model); //$NON-NLS-1$
@@ -2770,9 +2752,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleSystemPhysical() { 
         // Create models
         FakeMetadataObject systemPhysical = createPhysicalModel("SystemPhysical"); //$NON-NLS-1$
-        systemPhysical.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        systemPhysical.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        systemPhysical.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         
         // Create physical groups
         FakeMetadataObject rtVirtualDbs = createPhysicalGroup("SystemPhysical.RT_VIRTUAL_DBS", systemPhysical); //$NON-NLS-1$
@@ -3414,9 +3393,6 @@ public class FakeMetadataFactory {
     public static FakeMetadataFacade exampleBusObj() { 
         // Create db2 tables
         FakeMetadataObject db2Model = createPhysicalModel("db2model"); //$NON-NLS-1$
-        db2Model.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        db2Model.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        db2Model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         
         FakeMetadataObject db2Table = createPhysicalGroup("db2model.DB2_TABLE", db2Model); //$NON-NLS-1$
         List db2Elements = createElements(db2Table, 
@@ -3445,9 +3421,6 @@ public class FakeMetadataFactory {
 
         // Create oracle tables 
         FakeMetadataObject oraModel = createPhysicalModel("oraclemodel"); //$NON-NLS-1$
-        oraModel.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        oraModel.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        oraModel.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
 
         FakeMetadataObject oraTable = createPhysicalGroup("oraclemodel.Oracle_table", oraModel); //$NON-NLS-1$
         List oracleElements = createElements(oraTable, 
@@ -3470,9 +3443,6 @@ public class FakeMetadataFactory {
 
         // Create sql server tables 
         FakeMetadataObject msModel = createPhysicalModel("msmodel"); //$NON-NLS-1$
-        msModel.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        msModel.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        msModel.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
 
         FakeMetadataObject timeTable = createPhysicalGroup("msmodel.TIME", msModel); //$NON-NLS-1$
         timeTable.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(120));
@@ -3545,9 +3515,6 @@ public class FakeMetadataFactory {
     public static void addAggregateTablesToModel(String modelName, FakeMetadataStore store) {
         // Create db2 tables
         FakeMetadataObject model = createPhysicalModel(modelName); 
-        model.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        model.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        model.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         
         FakeMetadataObject orders = createPhysicalGroup(modelName + ".order", model); //$NON-NLS-1$
         orders.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(1000000));
@@ -4052,11 +4019,7 @@ public class FakeMetadataFactory {
 	public static FakeMetadataObject createPhysicalModel(String name) {
 		FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.MODEL);
 		obj.putProperty(FakeMetadataObject.Props.IS_VIRTUAL, Boolean.FALSE);		
-		obj.putProperty(FakeMetadataObject.Props.NO_CRITERIA, Boolean.TRUE);
-		obj.putProperty(FakeMetadataObject.Props.JOIN, Boolean.FALSE);
 		obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.TRUE);
-		obj.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.FALSE);
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.FALSE);
 		return obj;	
 	}
 	

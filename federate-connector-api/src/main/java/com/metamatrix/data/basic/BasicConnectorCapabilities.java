@@ -452,4 +452,9 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     public boolean useAnsiJoin() {
     	return false;
     }
+
+    @Override
+    public boolean requiresCriteria() {
+    	return false;
+    }
 }

@@ -53,9 +53,6 @@ public final class PlanHints {
     // flag indicating that the plan has a grouping node somewhere
     public boolean hasAggregates = false;
         
-    // flag to indicate that model requires a critiria
-    public boolean needsWhereAllValidation = false;
-    
     // List of groups that should not be dependent
     public List makeNotDepGroups = null;
     

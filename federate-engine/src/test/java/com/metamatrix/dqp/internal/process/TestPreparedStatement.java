@@ -53,7 +53,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestPreparedStatement extends TestCase{
 	
@@ -152,10 +151,7 @@ public class TestPreparedStatement extends TestCase{
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject bqt1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$  
-        bqt1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
-        bqt1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         List values = new ArrayList();
         values.add(new Integer(0));

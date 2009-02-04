@@ -169,8 +169,6 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
     
     public void testMultiReplacementWithOrderBy() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleMultiBinding();
-        FakeMetadataObject obj = metadata.getStore().findObject("MultiModel", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
 
         final String userSql = "SELECT * FROM MultiModel.Phys order by a"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
@@ -215,8 +213,6 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
     
     public void testMultiDependentJoin() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleMultiBinding();
-        FakeMetadataObject obj = metadata.getStore().findObject("MultiModel", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
         
         final String userSql = "SELECT a.a FROM MultiModel.Phys a inner join MultiModel.Phys b makedep on (a.a = b.a) order by a"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$

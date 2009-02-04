@@ -37,7 +37,6 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
@@ -577,45 +576,34 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			if(modelID == null) {
                 
 				// Check that model supports join
-                if(CapabilitiesUtil.supportsJoins(accessModelID, metadata, capFinder)) {
-					// Check that if join is outer, model supports it
-					
-                    if(type.isOuter() && !CapabilitiesUtil.supportsOuterJoin(accessModelID, type, metadata, capFinder)) {
-					   //join is outer and model does not support
-					   return null;
-					}
+                if(!CapabilitiesUtil.supportsJoins(accessModelID, metadata, capFinder)) {
+                	return null;
+                }
+				// Check that if join is outer, model supports it
 				
-					// Check that model supports join expressions 
-					if(crits != null && !crits.isEmpty()) {
-                        // Check whether has expression
-                        boolean hasExpression = false; 
-						Iterator critIter = crits.iterator();
-						while(critIter.hasNext()) { 
-                                Criteria crit = (Criteria) critIter.next();
-                            if(FunctionCollectorVisitor.getFunctions(crit, false).size() > 0) {
-                                hasExpression = true;
-                                break;
-                            }
-						}
-                        
-                        // If expression was found and capabilities don't support, abort this join
-                        if(hasExpression && ! CapabilitiesUtil.supportsJoinExpression(accessModelID, crits, metadata, capFinder)) {
-                            return null;
-                        }
-                    }
-
-                    if (metadata.modelSupports(accessModelID, SupportConstants.Model.SINGLE_GROUP_SELECT)){
-                        //Elements from more than one group are projected - don't raise access
-                        return null;
-                    }
-                     
-                    if (metadata.modelSupports(accessModelID, SupportConstants.Model.LEAF_SELECT)){
-                        return null;
-                    }
-				} else {
-					// Doesn't support join
-					return null;
+                if(type.isOuter() && !CapabilitiesUtil.supportsOuterJoin(accessModelID, type, metadata, capFinder)) {
+				   //join is outer and model does not support
+				   return null;
 				}
+			
+				// Check that model supports join expressions 
+				if(crits != null && !crits.isEmpty()) {
+                    // Check whether has expression
+                    boolean hasExpression = false; 
+					Iterator critIter = crits.iterator();
+					while(critIter.hasNext()) { 
+                            Criteria crit = (Criteria) critIter.next();
+                        if(FunctionCollectorVisitor.getFunctions(crit, false).size() > 0) {
+                            hasExpression = true;
+                            break;
+                        }
+					}
+                    
+                    // If expression was found and capabilities don't support, abort this join
+                    if(hasExpression && ! CapabilitiesUtil.supportsJoinExpression(accessModelID, crits, metadata, capFinder)) {
+                        return null;
+                    }
+                }
 				
 				modelID = accessModelID;
 				

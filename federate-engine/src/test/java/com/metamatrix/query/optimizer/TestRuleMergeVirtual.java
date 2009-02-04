@@ -34,7 +34,6 @@ import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.processor.relational.SortNode;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestRuleMergeVirtual extends TestCase {
     
@@ -64,14 +63,14 @@ public class TestRuleMergeVirtual extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       FakeMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {
-                                          "SELECT e1, MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT DISTINCT e1, MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
-            1,      // DupRemove
+            0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
             0,      // MergeJoinStrategy
@@ -94,9 +93,7 @@ public class TestRuleMergeVirtual extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        pm1.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, capFinder,
@@ -113,9 +110,7 @@ public class TestRuleMergeVirtual extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        pm1.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, capFinder,
@@ -201,9 +196,7 @@ public class TestRuleMergeVirtual extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        pm1.putProperty(FakeMetadataObject.Props.DISTINCT, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, capFinder,
@@ -374,10 +367,7 @@ public class TestRuleMergeVirtual extends TestCase {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
-        g1.putProperty(FakeMetadataObject.Props.OUTER_JOIN, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
 
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
@@ -390,8 +380,13 @@ public class TestRuleMergeVirtual extends TestCase {
     public void testSortAliasWithSameName() throws Exception { 
         String sql = "select e1 from (select distinct pm1.g1.e1 as e1 from pm1.g1) x order by e1"; //$NON-NLS-1$
 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
-        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         SortNode node = (SortNode)plan.getRootNode();
         assertTrue("Alias was not accounted for in sort node", node.getElements().containsAll(node.getSortElements()));

@@ -226,17 +226,6 @@ public final class GenerateCanonical {
                 hints.hasCriteria = true;
     		}
 
-            // set hint as to if the model mandates a where clause
-    		for (GroupSymbol group : plan.getGroups()) {
-                if (!metadata.isVirtualGroup(group.getMetadataID())) {
-                    Object modelID = metadata.getModelID(group.getMetadataID());
-                    hints.needsWhereAllValidation = !(metadata.modelSupports(modelID, SupportConstants.Model.NO_CRITERIA));
-                    if (hints.needsWhereAllValidation) {
-                        break;
-                    }
-                }
-            }
-
     		// Attach grouping node on top
     		if(query.getGroupBy() != null || query.getHaving() != null || !AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), false).isEmpty()) {
     			plan = attachGrouping(plan, query, hints);

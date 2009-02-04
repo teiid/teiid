@@ -475,4 +475,10 @@ public interface ConnectorCapabilities {
      */
     boolean useAnsiJoin();
     
+    /**
+     * Whether the source supports queries without criteria.
+     * @since 6.0
+     */
+    boolean requiresCriteria();
+    
 }

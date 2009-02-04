@@ -922,6 +922,7 @@ int count = visitor.getCount();
       <sect2>
         <title>Command Form</title>
         <para>The method ConnectorCapabilities.useAnsiJoin() should return true if the Connector prefers the use of ANSI style join structure for INNER and CROSS joins that are pushed down.</para>
+        <para>The method ConnectorCapabilities.requiresCriteria() should return true if the Connector requires criteria for any Query, Update, or Delete.  This is a replacement for the model support property "Where All".</para>
       </sect2>
       
       <sect2>

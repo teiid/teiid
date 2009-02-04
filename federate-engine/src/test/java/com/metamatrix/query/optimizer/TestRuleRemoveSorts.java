@@ -26,6 +26,7 @@ package com.metamatrix.query.optimizer;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -115,26 +116,11 @@ public class TestRuleRemoveSorts extends TestCase {
     } 
     
     /** Order by is not removed */
-    public void testOrderByWithLimit() {
+    public void testOrderByWithLimit() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT e1, e2 FROM pm1.g1 order by e1 limit 10) x", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT e1, e2 FROM pm1.g1"}); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        });                                    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
 
 }

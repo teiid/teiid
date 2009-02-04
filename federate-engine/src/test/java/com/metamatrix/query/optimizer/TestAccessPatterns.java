@@ -96,7 +96,7 @@ public class TestAccessPatterns extends TestCase {
      */
     public void testNodesBothHaveAccessPatterns1() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm4.g1.e1 from pm4.g1, pm4.g2 where pm4.g2.e5 = 'abc' and pm4.g1.e1 = pm4.g2.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE g_0.e5 = 'abc'"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE g_0.e5 = 'abc'"}, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         TestDependentJoins.checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
     }
 
@@ -107,7 +107,7 @@ public class TestAccessPatterns extends TestCase {
      */
     public void testNodesBothHaveAccessPatterns1a() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm4.g1.e1 from pm4.g2, pm4.g1 where pm4.g2.e1 = pm4.g1.e1 and pm4.g2.e5 = 'abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE g_0.e5 = 'abc'"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE g_0.e5 = 'abc'"}, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         TestDependentJoins.checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
     }
 
@@ -115,9 +115,9 @@ public class TestAccessPatterns extends TestCase {
      * Self join - tests that both access nodes are satisfied by the select
      * criteria (therefore merge join should be used)
      */
-    public void testSelfJoinAccessPatterns() {
+    public void testSelfJoinAccessPatterns() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm4.g1.e1 from pm4.g1, pm4.g1 as g1A where pm4.g1.e1 = 'abc' and g1A.e1 = 'abc' and pm4.g1.e2 = g1A.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT g1A.e2 FROM pm4.g1 AS g1A WHERE g1A.e1 = 'abc'", "SELECT pm4.g1.e2, pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT g1A.e2 FROM pm4.g1 AS g1A WHERE g1A.e1 = 'abc'", "SELECT pm4.g1.e2, pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -174,7 +174,7 @@ public class TestAccessPatterns extends TestCase {
     public void testAccessPatternPartialMatch() throws Exception {
         TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g2 where pm1.g1.e1 = pm4.g2.e1 and pm4.g2.e2 = 123", //$NON-NLS-1$
             FakeMetadataFactory.example1Cached(),
-            new String[] { "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE (g_0.e2 = 123) AND (g_0.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT g_0.e1 FROM pm4.g2 AS g_0 WHERE (g_0.e2 = 123) AND (g_0.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -280,7 +280,7 @@ public class TestAccessPatterns extends TestCase {
 						new String[] {
 								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$ 
 								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
-								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
+								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
     }
 
 }

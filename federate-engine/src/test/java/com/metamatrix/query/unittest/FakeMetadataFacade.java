@@ -204,55 +204,10 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
 	public boolean modelSupports(Object modelID, int supportConstant)
         throws MetaMatrixComponentException, QueryMetadataException {
 		ArgCheck.isInstanceOf(FakeMetadataObject.class, modelID);
-		FakeMetadataObject model = (FakeMetadataObject) modelID;
-		Boolean supports = null;
 		switch(supportConstant) {
-			case SupportConstants.Model.DISTINCT:
-				supports = (Boolean) model.getProperty(FakeMetadataObject.Props.DISTINCT);
-                if(supports == null) {
-                    supports = Boolean.FALSE;
-                }
-				break;
-			case SupportConstants.Model.JOIN:
-				supports = (Boolean) model.getProperty(FakeMetadataObject.Props.JOIN);
-                if(supports == null) {
-                    supports = Boolean.FALSE;
-                }
-				break;
-			case SupportConstants.Model.NO_CRITERIA:
-				supports = (Boolean) model.getProperty(FakeMetadataObject.Props.NO_CRITERIA);
-                if(supports == null) {
-                    supports = Boolean.TRUE;
-                }
-				break;
-			case SupportConstants.Model.ORDER_BY:
-				supports = (Boolean) model.getProperty(FakeMetadataObject.Props.ORDER_BY);
-				break;
-			case SupportConstants.Model.OUTER_JOIN:
-				supports = (Boolean) model.getProperty(FakeMetadataObject.Props.OUTER_JOIN);
-				break;
-            case SupportConstants.Model.SINGLE_GROUP_SELECT:
-                supports = (Boolean) model.getProperty(FakeMetadataObject.Props.SINGLE_GROUP_SELECT);
-                if(supports == null) {
-                    supports = Boolean.FALSE;
-                }
-                break;
-            case SupportConstants.Model.LEAF_SELECT:
-                supports = (Boolean) model.getProperty(FakeMetadataObject.Props.LEAF_SELECT);
-                if(supports == null) {
-                    supports = Boolean.FALSE;
-                }
-                break;
-            case SupportConstants.Model.BLACK_BOX_JOIN:
-                supports = (Boolean) model.getProperty(FakeMetadataObject.Props.BLACK_BOX_JOIN);
-                if(supports == null) {
-                    supports = Boolean.FALSE;
-                }
-                break;
 			default:
 				throw new QueryMetadataException("Unknown model support constant: " + supportConstant); //$NON-NLS-1$
 		}
-		return supports.booleanValue();
 	}
 
     public boolean groupSupports(Object groupID, int groupConstant)

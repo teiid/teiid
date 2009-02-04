@@ -30,15 +30,6 @@ public class SupportConstants {
 	
 	public static class Model {
 		private Model() {}
-        
-        public static final int DISTINCT = 1;              
-		public static final int JOIN = 2;
-        public static final int NO_CRITERIA = 3;                   
-        public static final int ORDER_BY = 5;      
-		public static final int OUTER_JOIN = 6;
-        public static final int SINGLE_GROUP_SELECT = 10; //SAP
-        public static final int LEAF_SELECT = 11;         //SAP
-        public static final int BLACK_BOX_JOIN = 12;      //SAP
 	}
 
 	public static class Group {

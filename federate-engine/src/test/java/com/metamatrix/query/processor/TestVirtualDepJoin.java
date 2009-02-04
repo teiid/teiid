@@ -254,6 +254,7 @@ public class TestVirtualDepJoin extends TestCase {
         Command command = TestProcessor.helpParse(sql);   
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, setPushdown);    
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
@@ -394,7 +395,7 @@ public class TestVirtualDepJoin extends TestCase {
         // Run query 
         TestProcessor.helpProcess(plan, context, dataManager, expected); 
         
-        assertEquals(new HashSet<String>(Arrays.asList("SELECT g_0.id, g_0.first, g_0.last FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles'", "SELECT g_0.id, g_0.amount FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100")), //$NON-NLS-1$ //$NON-NLS-2$  
+        assertEquals(new HashSet<String>(Arrays.asList("SELECT g_0.id AS c_0, g_0.amount AS c_1 FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100 ORDER BY c_0", "SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0")), //$NON-NLS-1$ //$NON-NLS-2$  
                      dataManager.getQueries());
     }    
     
@@ -651,8 +652,8 @@ public class TestVirtualDepJoin extends TestCase {
         finder.addCapabilities("test", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, finder, 
-                                                    new String[] {"SELECT g_0.e0, g_0.e1 FROM test.\"group\" AS g_0 WHERE (g_0.e0 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>))", //$NON-NLS-1$ 
-                                                                  "SELECT g_0.e2 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2')"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[] {"SELECT g_0.e2 AS c_0 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2') ORDER BY c_0", //$NON-NLS-1$
+        														  "SELECT g_0.e0 AS c_0, g_0.e1 AS c_1, g_0.e0 AS c_2 FROM test.\"group\" AS g_0 WHERE (g_0.e0 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>)) ORDER BY c_2, c_1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -665,7 +666,7 @@ public class TestVirtualDepJoin extends TestCase {
             1,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            1,      // Project
             0,      // Select
             0,      // Sort
             0       // UnionAll

@@ -32,16 +32,10 @@ import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.relational.JoinNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
-import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.navigator.PreOrderNavigator;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 
 
 public class TestRuleRaiseNull extends TestCase {
@@ -331,10 +325,9 @@ public class TestRuleRaiseNull extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataObject bqt2 = metadata.getStore().findObject("BQT2", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        bqt2.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "select intkey from bqt1.smalla where 1 = 0 union all select intnum from bqt2.smalla order by intkey"; //$NON-NLS-1$
         
@@ -378,24 +371,9 @@ public class TestRuleRaiseNull extends TestCase {
     public void testRaiseNullWithExcept() {
         String sql = "select e1 from pm1.g1 except select e2 from pm1.g2 where 1 = 0"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0"}); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[]{"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            1,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
     public void testRaiseNullWithIntersect() {
@@ -427,55 +405,16 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select intkey from bqt2.smalla union select intkey from bqt2.smalla where 1 = 0"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT intkey FROM bqt2.smalla"}); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            1,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
+                                                    new String[]{"SELECT DISTINCT intkey FROM bqt2.smalla"}); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
     public void testRaiseNullWithUnionAndAliases() {
         String sql = "select pm1.g1.e1 from pm1.g1, (select e1 from pm1.g1 where (1 = 0) union all select e1 as x from pm1.g2) x where pm1.g1.e1 <> x.e1"; //$NON-NLS-1$
         
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
-                                                    new String[]{"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT e1 FROM pm1.g2"}); //$NON-NLS-1$ //$NON-NLS-2$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            1,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
-        
-        JoinNode join = (JoinNode)plan.getRootNode().getChildren()[0];
-        Criteria crit = join.getJoinCriteria();
-        LanguageVisitor visitor = new LanguageVisitor() {
-            public void visit(AliasSymbol obj) {
-                fail("there should be no alias symbols in the criteria"); //$NON-NLS-1$
-            }
-        };
-        PreOrderNavigator.doVisit(crit, visitor);
+                                                    new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 <> g_1.e1"}); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
 }

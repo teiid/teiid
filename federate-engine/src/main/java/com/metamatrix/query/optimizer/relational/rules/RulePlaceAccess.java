@@ -73,19 +73,19 @@ public final class RulePlaceAccess implements
 
         Set<String> groups = OptimizerContext.getOptimizerContext().getGroups();
 
-        boolean foundAccessPatterns = false;
+        boolean[] addtionalRules = new boolean[2];
 
         for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
-
-            foundAccessPatterns |= addAccessNode(metadata, sourceNode);
+            addAccessNode(metadata, sourceNode, capFinder, addtionalRules);
             addAlias(sourceNode, groups, metadata);
         }
 
-        // Simplify the rule stack by removing the access pattern validation rule if no access patterns exist
-        if (!foundAccessPatterns) {
-            rules.remove(RuleConstants.ACCESS_PATTERN_VALIDATION);
+        if (addtionalRules[0]) {
+            rules.addLast(RuleConstants.ACCESS_PATTERN_VALIDATION);
         }
-
+        if (addtionalRules[1]) {
+            rules.addLast(RuleConstants.VALIDATE_WHERE_ALL);
+        }
         return plan;
     }
 
@@ -98,8 +98,8 @@ public final class RulePlaceAccess implements
      * @throws QueryMetadataException
      * @throws MetaMatrixComponentException
      */
-    private boolean addAccessNode(QueryMetadataInterface metadata,
-                                  PlanNode sourceNode) throws QueryMetadataException,
+    private void addAccessNode(QueryMetadataInterface metadata,
+                                  PlanNode sourceNode, CapabilitiesFinder finder, boolean[] additionalRules) throws QueryMetadataException,
                                                       MetaMatrixComponentException {
         boolean isInsert = false;
         Object req = sourceNode.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
@@ -134,13 +134,21 @@ public final class RulePlaceAccess implements
             sourceNode.addAsParent(accessNode);
 
             apNode = accessNode;
+            
+            // set hint as to if the model mandates a where clause
+    		for (GroupSymbol group : accessNode.getGroups()) {
+                Object modelID = metadata.getModelID(group.getMetadataID());
+                if (CapabilitiesUtil.requiresCriteria(modelID, metadata, finder)) {
+                	additionalRules[1] = true;
+                	break;
+                }
+            }
         }
 
         // Add access pattern(s), if any, as property of access node
         if (!isInsert && addAccessPatternsProperty(apNode, metadata)) {
-            return true;
+            additionalRules[0] = true;
         }
-        return false;
     }
 
     /**

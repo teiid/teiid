@@ -63,6 +63,7 @@ import com.metamatrix.query.optimizer.FakeFunctionMetadataSource;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.TestRuleRaiseNull;
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.AllCapabilities;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -2479,11 +2480,8 @@ public class TestProcessor extends TestCase {
     private static FakeMetadataFacade virtualBQT() {
         // Create models
         FakeMetadataObject bqt1 = FakeMetadataFactory.createPhysicalModel("BQT1"); //$NON-NLS-1$
-        bqt1.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject bqt2 = FakeMetadataFactory.createPhysicalModel("BQT2"); //$NON-NLS-1$
-        bqt2.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject bqt3 = FakeMetadataFactory.createPhysicalModel("BQT3"); //$NON-NLS-1$
-        bqt3.putProperty(FakeMetadataObject.Props.JOIN, Boolean.TRUE);
         FakeMetadataObject vqt = FakeMetadataFactory.createVirtualModel("BQT_V"); //$NON-NLS-1$
         FakeMetadataObject vqt2 = FakeMetadataFactory.createVirtualModel("BQT2_V"); //$NON-NLS-1$
         
@@ -4789,9 +4787,7 @@ public class TestProcessor extends TestCase {
                dataManager = hardCoded;
            }
             
-           FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-           metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.valueOf(pushDown)); //$NON-NLS-1$
-           metadata.getStore().findObject("pm2", FakeMetadataObject.MODEL).putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.valueOf(pushDown)); //$NON-NLS-1$
+           FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
            FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
            BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
            caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, pushDown);    
@@ -5994,10 +5990,7 @@ public class TestProcessor extends TestCase {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
-
-        FakeMetadataObject g1 = metadata.getStore().findObject("BQT1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.ORDER_BY, Boolean.TRUE);
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,         
                                       metadata,
@@ -7171,13 +7164,18 @@ public class TestProcessor extends TestCase {
         
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (SELECT g_0.e1 FROM pm1.g3 AS g_1)", expected); //$NON-NLS-1$
+        dataManager.addData("SELECT DISTINCT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (SELECT g_0.e1 FROM pm1.g3 AS g_1)", expected); //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        capFinder.addCapabilities("pm1", new AllCapabilities()); //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         Command command = helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
@@ -7283,7 +7281,7 @@ public class TestProcessor extends TestCase {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { null}),
@@ -7299,7 +7297,7 @@ public class TestProcessor extends TestCase {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { Boolean.FALSE}),
@@ -7309,7 +7307,7 @@ public class TestProcessor extends TestCase {
         sampleData1(manager);
         helpProcess(plan, manager, expected);
         //note that the e1 column is not used in the source query
-        assertEquals("SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", (String)manager.getQueries().iterator().next()); //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e3, pm1.g1.e2 FROM pm1.g1", (String)manager.getQueries().iterator().next()); //$NON-NLS-1$
     }
     
     public void testSortWithLimit2() {
@@ -7561,10 +7559,14 @@ public class TestProcessor extends TestCase {
      * Here a merge join will be used since there is at least one equi join predicate.
      * TODO: this can be optimized further
      */
-    public void testCase6193_1() { 
+    public void testCase6193_1() throws Exception { 
         // Create query 
         String sql = "select a.INTKEY, b.intkey from bqt1.smalla a LEFT OUTER JOIN bqt2.SMALLA b on a.intkey=b.intkey and a.intkey=5 where a.intkey <10 "; //$NON-NLS-1$
         
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        capFinder.addCapabilities("BQT2", caps);
+
         // Create expected results
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(0), null }),
@@ -7585,7 +7587,7 @@ public class TestProcessor extends TestCase {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
-                                                    new String[] {"SELECT b.intkey FROM bqt2.SMALLA AS b", "SELECT a.intkey FROM bqt1.smalla AS a WHERE a.intkey < 10"}); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT b.intkey FROM bqt2.SMALLA AS b", "SELECT a.intkey FROM bqt1.smalla AS a"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -7599,7 +7601,7 @@ public class TestProcessor extends TestCase {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             0       // UnionAll
         });
@@ -7611,7 +7613,7 @@ public class TestProcessor extends TestCase {
     /**
      * Here a merge join will be used since there is at least one equi join predicate.
      */
-    public void testCase6193_2() { 
+    public void testCase6193_2() throws Exception { 
         // Create query 
         String sql = "select a.e2, b.e2 from pm1.g1 a LEFT OUTER JOIN pm1.g2 b on a.e4=b.e4 and (a.e2+b.e2)=4 order by a.e2"; //$NON-NLS-1$
         
@@ -7631,7 +7633,7 @@ public class TestProcessor extends TestCase {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
-                                                    new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -7658,7 +7660,7 @@ public class TestProcessor extends TestCase {
      * Here a merge join will be used since there is at least one equi join predicate.
      * The inner merge join is also a dependent join
      */
-    public void testCase6193_3() { 
+    public void testCase6193_3() throws Exception { 
         // Create query 
         String sql = "select a.x, b.y from (select 4 x union select 1) a LEFT OUTER JOIN (select (a.e2 + b.e2) y from pm1.g1 a LEFT OUTER JOIN pm1.g2 b on a.e4=b.e4) b on (a.x = b.y)"; //$NON-NLS-1$
         
@@ -7674,7 +7676,7 @@ public class TestProcessor extends TestCase {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
-                                                    new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT a.e4, a.e2 FROM pm1.g1 AS a", "SELECT b.e4, b.e2 FROM pm1.g2 AS b"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -7858,7 +7860,7 @@ public class TestProcessor extends TestCase {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         
         List[] expected = new List[] { 
             Arrays.asList(null, null),
