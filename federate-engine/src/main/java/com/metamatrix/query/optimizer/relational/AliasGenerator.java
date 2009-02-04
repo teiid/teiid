@@ -27,6 +27,7 @@ package com.metamatrix.query.optimizer.relational;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.LanguageVisitor;
@@ -52,67 +53,100 @@ import com.metamatrix.query.sql.util.SymbolMap;
 
 /**
  * Adds safe (generated) aliases to the source command
+ * 
+ * The structure is a little convoluted:
+ * AliasGenerator - structure navigator, alters the command by adding alias symbols
+ * NamingVisitor - changes the output names of Element and Group symbols
+ * SQLNamingContext - a hierarchical context for tracking Element and Group names
  */
 public class AliasGenerator extends PreOrderNavigator {
     
-    private static class SQLNamingContext {
-        SQLNamingContext parent;
-        
-        Map<String, Map<String, String>> elementMap = new HashMap<String, Map<String, String>>();
-        Map<String, String> groupNames = new HashMap<String, String>();
-        Map<String, String> currentSymbolNames = new HashMap<String, String>();
-        
-        boolean aliasColumns = false;
-        
-        public SQLNamingContext(SQLNamingContext parent) {
-            this.parent = parent;
-        }
-        
-        public String getElementName(String group, String name) {
-            if (group == null) {
-                return currentSymbolNames.get(name.toUpperCase());
-            }
-            Map<String, String> elements = this.elementMap.get(group);
-            if (elements == null) {
-                if (parent == null) {
-                    return null;
-                }
-                return parent.getElementName(group, name);
-            }
-            return elements.get(name);
-        }
-        
-        public void updateElementMap(String group) {
-            this.parent.elementMap.put(group.toUpperCase(), currentSymbolNames);
-        }
-        
-        public String getGroupName(String group) {
-            String groupName = groupNames.get(group);
-            if (groupName == null) {
-                if (parent == null) {
-                    return null;
-                }
-                return parent.getGroupName(group);
-            }
-            return groupName;
-        }
-    }
-    
     private static class NamingVisitor extends LanguageVisitor {
-        
+
+        private class SQLNamingContext {
+            SQLNamingContext parent;
+            
+            Map<String, Map<String, String>> elementMap = new HashMap<String, Map<String, String>>();
+            Map<String, String> groupNames = new HashMap<String, String>();
+            Map<SingleElementSymbol, String> currentSymbols;
+            
+            boolean aliasColumns = false;
+            
+            public SQLNamingContext(SQLNamingContext parent) {
+                this.parent = parent;
+            }
+            
+            public String getElementName(SingleElementSymbol symbol, boolean renameGroup) {
+            	String name = null;
+            	if (currentSymbols != null) {
+            		name = currentSymbols.get(symbol);
+                	if (name != null) {
+                		if (renameGroup && symbol instanceof ElementSymbol) {
+            				renameGroup(((ElementSymbol)symbol).getGroupSymbol());
+            			}
+                		return name;
+                	}
+            	}
+            	if (!(symbol instanceof ElementSymbol)) {
+            		return null;
+            	}
+            	ElementSymbol element = (ElementSymbol)symbol;
+            	Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getCanonicalName());
+            	if (elements != null) {
+            		name = elements.get(element.getShortCanonicalName());
+            		if (name != null) {
+            			if (renameGroup) {
+            				renameGroup(element.getGroupSymbol());
+            			}
+            			return name;
+            		}
+                }
+                if (parent != null) {
+                	name = parent.getElementName(symbol, renameGroup);
+                	if (name != null) {
+                		return name;
+                	}
+                }
+            	if (renameGroup) {
+    				renameGroup(element.getGroupSymbol());
+    			}
+            	return null;
+            }
+            
+            public void renameGroup(GroupSymbol obj) {
+                if (aliasGroups) {
+                    String definition = obj.getNonCorrelationName();
+                    String newAlias = getGroupName(obj.getCanonicalName());
+                    if (newAlias == null) {
+                        return;
+                    }
+                    obj.setOutputName(newAlias);
+                    obj.setOutputDefinition(definition);
+                } else if(obj.getDefinition() != null) {
+                    obj.setOutputName(obj.getDefinition());
+                    obj.setOutputDefinition(null);
+                }
+            }
+                    
+            private String getGroupName(String group) {
+                String groupName = groupNames.get(group);
+                if (groupName == null) {
+                    if (parent == null) {
+                        return null;
+                    }
+                    return parent.getGroupName(group);
+                }
+                return groupName;
+            }
+        }
+    	
         private SQLNamingContext namingContext = new SQLNamingContext(null);
-        private boolean aliasGroups;
+        boolean aliasGroups;
         
         public NamingVisitor(boolean aliasGroups) {
             this.aliasGroups = aliasGroups;
         }
-        
-        public void visit(Reference obj) {
-            if (obj.getExpression() instanceof ElementSymbol) {
-                visit((ElementSymbol)obj.getExpression());
-            }
-        }
-        
+                
         /** 
          * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.symbol.ElementSymbol)
          */
@@ -122,11 +156,7 @@ public class AliasGenerator extends PreOrderNavigator {
             if(group == null) {
                 return;
             }
-            String elemShortName = obj.getShortCanonicalName();
-            
-            visit(group);
-            
-            String newName = namingContext.getElementName(group.getCanonicalName(), elemShortName);
+            String newName = namingContext.getElementName(obj, true);
             
             if (newName == null) {
                 newName = ElementSymbol.getShortName(obj.getOutputName());
@@ -141,18 +171,7 @@ public class AliasGenerator extends PreOrderNavigator {
          */
         @Override
         public void visit(GroupSymbol obj) {
-            if (aliasGroups) {
-                String definition = obj.getNonCorrelationName();
-                String newAlias = this.namingContext.getGroupName(obj.getCanonicalName());
-                if (newAlias == null) {
-                    return;
-                }
-                obj.setOutputName(newAlias);
-                obj.setOutputDefinition(definition);
-            } else if(obj.getDefinition() != null) {
-                obj.setOutputName(obj.getDefinition());
-                obj.setOutputDefinition(null);
-            }
+        	this.namingContext.renameGroup(obj);
         }
         
         public void createChildNamingContext(boolean aliasColumns) {
@@ -191,7 +210,7 @@ public class AliasGenerator extends PreOrderNavigator {
     
     public void visit(Select obj) {
         List selectSymbols = obj.getSymbols();
-                        
+        HashMap<SingleElementSymbol, String> symbols = new HashMap<SingleElementSymbol, String>(selectSymbols.size());                
         for (int i = 0; i < selectSymbols.size(); i++) {
             SingleElementSymbol symbol = (SingleElementSymbol)selectSymbols.get(i);
             
@@ -215,7 +234,7 @@ public class AliasGenerator extends PreOrderNavigator {
                 newSymbol = (SingleElementSymbol)expr; 
             }
                         
-            visitor.namingContext.currentSymbolNames.put(symbol.getShortCanonicalName(), newAlias);
+            symbols.put(symbol, newAlias);
             if (visitor.namingContext.aliasColumns && needsAlias) {
                 newSymbol = new AliasSymbol(symbol.getShortName(), newSymbol);
                 newSymbol.setOutputName(newAlias);
@@ -224,11 +243,12 @@ public class AliasGenerator extends PreOrderNavigator {
         }
         
         super.visit(obj);
+        visitor.namingContext.currentSymbols = symbols; 
     }
 
     private boolean needsAlias(String newAlias,
                                ElementSymbol symbol) {
-        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(visitor.namingContext.getElementName(symbol.getGroupSymbol().getCanonicalName(), symbol.getShortCanonicalName()));
+        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(visitor.namingContext.getElementName(symbol, false));
     }
     
     /**
@@ -249,7 +269,11 @@ public class AliasGenerator extends PreOrderNavigator {
     public void visit(SubqueryFromClause obj) {
         visitor.createChildNamingContext(true);
         obj.getCommand().acceptVisitor(this);
-        visitor.namingContext.updateElementMap(obj.getName().toUpperCase());
+        Map<String, String> viewGroup = new HashMap<String, String>();
+        for (Entry<SingleElementSymbol, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
+        	viewGroup.put(entry.getKey().getShortCanonicalName(), entry.getValue());
+        }
+        visitor.namingContext.parent.elementMap.put(obj.getName().toUpperCase(), viewGroup);
         visitor.removeChildNamingContext();
         obj.getGroupSymbol().setOutputName(recontextGroup(obj.getGroupSymbol(), true));
     }
@@ -304,9 +328,10 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     public void visit(OrderBy obj) {
+    	//add/correct aliases if necessary
         for (int i = 0; i < obj.getVariableCount(); i++) {
             SingleElementSymbol element = obj.getVariable(i);
-            String name = visitor.namingContext.getElementName(null, element.getShortCanonicalName());
+            String name = visitor.namingContext.getElementName(element, false);
             boolean needsAlias = true;
             
             Expression expr = SymbolMap.getExpression(element);
@@ -323,5 +348,21 @@ public class AliasGenerator extends PreOrderNavigator {
             }
             element.setOutputName(name);
         }
+        
+        super.visit(obj);
+        
+        //we prefer to use the short name
+        for (int i = 0; i < obj.getVariableCount(); i++) {
+        	SingleElementSymbol element = obj.getVariable(i);
+        	if (element instanceof ElementSymbol) {
+        		element.setOutputName(SingleElementSymbol.getShortName(element.getOutputName()));
+        	}
+        }
     }
+    
+    public void visit(Reference obj) {
+    	//we need to follow references to correct correlated variables
+        visitNode(obj.getExpression());
+    }
+
 }

@@ -106,4 +106,34 @@ public class TestAliasGenerator extends TestCase {
         helpTest(sql, expected, true, FakeMetadataFactory.example1Cached());
     }
     
+    public void testDuplicateShortElementName() throws Exception {
+    	String sql = "select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 order by pm1.g1.e1, pm1.g2.e1"; //$NON-NLS-1$
+        String expected = "SELECT g_0.e1 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 ORDER BY c_0, c_1"; //$NON-NLS-1$
+        helpTest(sql, expected, true, FakeMetadataFactory.example1Cached());
+    }
+    
+    public void testCorrelatedRefernce() throws Exception {
+    	String sql = "select intnum, stringnum from (select intnum, stringnum from bqt1.smallb) b where intnum in (select b.stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
+        String expected = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intnum AS c_0, g_0.stringnum AS c_1 FROM bqt1.smallb AS g_0) AS v_0 WHERE v_0.c_0 IN (SELECT (v_0.c_1 || v_1.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_1)"; //$NON-NLS-1$
+        helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
+    }
+
+    public void testCorrelatedRefernce1() throws Exception {
+    	String sql = "select intnum, stringnum from bqt1.smallb where intnum in (select stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
+        String expected = "SELECT g_0.intnum, g_0.stringnum FROM bqt1.smallb AS g_0 WHERE g_0.intnum IN (SELECT (g_0.stringnum || v_0.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_0)"; //$NON-NLS-1$
+        helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
+    }
+    
+    public void testGroupAliasNotSupported() throws Exception {
+    	String sql = "select b.intkey from bqt1.smalla b"; //$NON-NLS-1$
+        String expected = "SELECT bqt1.smalla.intkey FROM bqt1.smalla"; //$NON-NLS-1$
+        helpTest(sql, expected, false, FakeMetadataFactory.exampleBQTCached());
+    }
+    
+    public void testUnionAliasing() throws Exception {
+    	String sql = "SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.SmallA.IntKey AS c_0 FROM BQT1.SmallA UNION ALL SELECT BQT1.SmallA.IntNum AS c_0 FROM BQT1.SmallA"; //$NON-NLS-1$
+        helpTest(sql, expected, false, FakeMetadataFactory.exampleBQTCached());
+    }
+
 }
