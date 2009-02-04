@@ -82,6 +82,9 @@ public class SimpleMock extends MixinProxy {
 	}
 
 	public static <T> T createSimpleMock(Object baseInstance, Class<T> clazz) {
+		if (baseInstance instanceof Object[]) {
+			return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {clazz}, new SimpleMock((Object[])baseInstance));
+		}
 		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {clazz}, new SimpleMock(new Object[] {baseInstance}));
 	}
 	
