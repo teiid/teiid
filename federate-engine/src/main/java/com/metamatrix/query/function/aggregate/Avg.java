@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -55,7 +56,12 @@ public class Avg extends Sum {
      * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String)
      */
     public void initialize(Class dataType) {
-        super.initialize(dataType);
+        if (dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)
+            || dataType.equals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL)) {
+            this.accumulatorType = BIG_DECIMAL;
+        } else {
+            this.accumulatorType = DOUBLE;
+        }
     }
 
     public void reset() {
@@ -94,9 +100,10 @@ public class Avg extends Sum {
                 } catch(ArithmeticException e) {
                     throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0048, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0048, sum, new Integer(count)));
                 }
-        }
+            default:
+                throw new AssertionError("unknown accumulator type"); //$NON-NLS-1$
 
-        return null;
+        }
     }
 
 }

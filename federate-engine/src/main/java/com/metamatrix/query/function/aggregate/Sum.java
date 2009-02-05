@@ -45,7 +45,7 @@ public class Sum implements AggregateFunction {
     protected static final int BIG_INTEGER = 2;
     protected static final int BIG_DECIMAL = 3;
     
-    private int accumulatorType = LONG;
+    protected int accumulatorType = LONG;
     
     private Object sum = null;
 

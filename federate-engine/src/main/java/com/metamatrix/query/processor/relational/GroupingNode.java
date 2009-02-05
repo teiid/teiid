@@ -210,8 +210,11 @@ public class GroupingNode extends RelationalNode {
 
                     if(aggSymbol.isDistinct()) {
                         functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID(), getBatchSize());
+                        functions[i].initialize(aggSymbol.getExpression().getType());
                     }
-
+                    else {
+                       functions[i].initialize(aggSymbol.getType());                            
+                    }
                     functions[i] = new NullFilter(functions[i]);
                     functions[i].initialize(aggSymbol.getType());
                 }
