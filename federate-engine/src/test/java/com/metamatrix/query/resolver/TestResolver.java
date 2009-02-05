@@ -70,6 +70,7 @@ import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.Insert;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SPParameter;
@@ -3037,8 +3038,8 @@ public class TestResolver extends TestCase {
         helpCheckSelect(resolvedQuery, new String[] { "y" }); //$NON-NLS-1$
     }        
     
-    public void testUnaliasedOrderByFails() {
-        helpResolveException("SELECT pm1.g1.e1 a, pm1.g1.e1 b FROM pm1.g1 ORDER BY pm1.g1.e1", "Element 'pm1.g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+    public void testUnaliasedOrderBySucceeds() {
+        helpResolve("SELECT pm1.g1.e1 a, pm1.g1.e1 b FROM pm1.g1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$
     }
 
     /** 
@@ -4638,6 +4639,38 @@ public class TestResolver extends TestCase {
         SetQuery command = (SetQuery)helpResolve(sql);
         
         assertEquals(1, command.getSubCommands().size());
+    }
+    public void testOrderBy_J658a() {
+        Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2, e3 as x, (5+2) as y FROM pm1.g1 ORDER BY e3"); //$NON-NLS-1$
+        OrderBy orderBy = resolvedQuery.getOrderBy();
+        int[] expectedPositions = new int[] {2};
+        helpTestOrderBy(orderBy, expectedPositions);
+    }
+
+	private void helpTestOrderBy(OrderBy orderBy, int[] expectedPositions) {
+		assertEquals(expectedPositions.length, orderBy.getVariableCount());
+        for (int i = 0; i < expectedPositions.length; i++) {
+        	ElementSymbol symbol = (ElementSymbol)orderBy.getVariable(i);
+        	TempMetadataID tid = (TempMetadataID)symbol.getMetadataID();
+        	assertEquals(expectedPositions[i], tid.getPosition());
+        }
+	}
+    public void testOrderBy_J658b() {
+        Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2, e3 as x, (5+2) as y FROM pm1.g1 ORDER BY e2, e3 "); //$NON-NLS-1$
+        helpTestOrderBy(resolvedQuery.getOrderBy(), new int[] {1, 2});
+    }
+    public void testOrderBy_J658c() {
+        Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as y FROM pm1.g1 ORDER BY x, e3 "); //$NON-NLS-1$
+        helpTestOrderBy(resolvedQuery.getOrderBy(), new int[] {1, 2});    
+    }
+    
+    // ambiguous, should fail
+    public void testOrderBy_J658d() {
+        helpResolveException("SELECT pm1.g1.e1, e2 as x, e3 as x FROM pm1.g1 ORDER BY x, e1 ", "Element 'x' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    public void testOrderBy_J658e() {
+        Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as e2 FROM pm1.g1 ORDER BY x, e2 "); //$NON-NLS-1$
+        helpTestOrderBy(resolvedQuery.getOrderBy(), new int[] {1, 2});
     }
    
 }

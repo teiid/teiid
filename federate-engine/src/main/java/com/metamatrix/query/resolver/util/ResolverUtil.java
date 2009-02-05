@@ -263,7 +263,7 @@ public class ResolverUtil {
         List elements = orderBy.getVariables();
         Iterator elementIter = elements.iterator();
 
-        // Walk through elements
+        // Walk through elements of order by
         while(elementIter.hasNext()){
             ElementSymbol symbol = (ElementSymbol) elementIter.next();
             SingleElementSymbol matchedSymbol = null;
@@ -276,34 +276,42 @@ public class ResolverUtil {
                 throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
             }
 
+            // construct the array of short names of the SELECT columns (once only)
             if(knownShortNames == null) {
                 knownShortNames = new String[knownElements.size()];
+
                 for(int i=0; i<knownElements.size(); i++) {
                     SingleElementSymbol knownSymbol = (SingleElementSymbol) knownElements.get(i);
                     if (knownSymbol instanceof ExpressionSymbol) {
                         continue;
                     }
+                    
                     String name = knownSymbol.getShortName();
                     //special check for uuid element symbols
                     if (knownSymbol instanceof ElementSymbol && knownSymbol.getShortName().equalsIgnoreCase(knownSymbol.getName())) {
                         name = metadata.getShortElementName(metadata.getFullName((((ElementSymbol)knownSymbol).getMetadataID())));
                     }  
+                    
                     knownShortNames[i] = name;
                 }
             }
-
+            // walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
             for(int i=0; i<knownShortNames.length; i++) {
-                if(shortName.equalsIgnoreCase(knownShortNames[i])) {
+            	if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
                     if (groupPart != null) {
                         Object knownSymbol = knownElements.get(i);
                         if(knownSymbol instanceof ElementSymbol) {
                             ElementSymbol knownElement = (ElementSymbol) knownSymbol;
                             GroupSymbol group = knownElement.getGroupSymbol();
+                            
+                            // skip this one if the two short names are not from the same group
                             if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
                                 continue;
                             }
                         }
                     }
+                    
+                    // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
                     if(matchedSymbol != null) {
                         throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
                     }
@@ -311,7 +319,7 @@ public class ResolverUtil {
                 }
             }
                         
-            // this clause is handle the order by clause like 
+            // this clause handles the order by clause like  
             // select foo from bar order by "1"; where 1 is foo. 
             if (matchedSymbol == null && StringUtil.isDigits(symbolName)) {
                 int elementOrder = Integer.valueOf(symbolName).intValue() - 1;
@@ -334,10 +342,11 @@ public class ResolverUtil {
                 // Didn't find it by full name or short name, so try resolving
                 // and retrying by full name - this will work for uuid case
                 try {
-                    ResolverVisitor.resolveLanguageObject(symbol, null, metadata);
+                	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, metadata);
                 } catch(QueryResolverException e) {
-                    // ignore
+                	throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()) );
                 }
+
                 matchedSymbol = findMatchingElementByID(symbol, knownElements);
             }
                         
@@ -363,7 +372,12 @@ public class ResolverUtil {
         Object groupID = symbol.getGroupSymbol().getMetadataID();
 
         for(int i=0; i<knownElements.size(); i++) {
-            Object knownSymbol = knownElements.get(i);
+            SingleElementSymbol selectSymbol = (SingleElementSymbol)knownElements.get(i);
+            SingleElementSymbol knownSymbol = null;
+            if(selectSymbol instanceof AliasSymbol) {
+            	knownSymbol = ((AliasSymbol)selectSymbol).getSymbol();
+            }
+
             if(knownSymbol instanceof ElementSymbol) {
                 ElementSymbol knownElement = (ElementSymbol) knownSymbol;
                 Object knownElementID = knownElement.getMetadataID();
@@ -371,7 +385,7 @@ public class ResolverUtil {
                 if(elementID.equals(knownElementID)) {
                     Object knownGroupID = knownElement.getGroupSymbol().getMetadataID();
                     if(groupID.equals(knownGroupID)) {
-                        return knownElement;
+                        return selectSymbol;
                     }
                 }
             }
