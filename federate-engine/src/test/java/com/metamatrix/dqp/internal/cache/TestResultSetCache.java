@@ -31,6 +31,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
+import com.metamatrix.common.buffer.impl.SizeUtility;
 
 public class TestResultSetCache extends TestCase{
 
@@ -221,7 +222,9 @@ public class TestResultSetCache extends TestCase{
     	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
     	CacheResults result = new CacheResults(results, 1, true);
     	cache.setResults(id1, result, "req1" );  //$NON-NLS-1$
-    	assertEquals(248000000, result.getSize());
+    	
+        int size = (SizeUtility.IS_64BIT ? 296000000 : 256000000);
+    	assertEquals(size, result.getSize());
     }
     
     public void testSetDifferentReqID() throws Exception{

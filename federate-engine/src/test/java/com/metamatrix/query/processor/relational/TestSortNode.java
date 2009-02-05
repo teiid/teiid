@@ -38,6 +38,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.processor.relational.NodeTestUtil.TestableBufferManagerImpl;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -47,7 +48,7 @@ import com.metamatrix.query.util.CommandContext;
 public class TestSortNode extends TestCase {
     
     public static final int BATCH_SIZE = 100;
-    public static final int INT_BATCH_SIZE = 6016; //the size of 100 integers
+    public static final int INT_BATCH_SIZE = TestSortNode.getIntBatchSize(); //the size of 100 integers    
     
     /**
      * Constructor for TestSortNode.
@@ -103,6 +104,17 @@ public class TestSortNode extends TestCase {
                 }
             }
         }
+    }
+
+    public static int getIntBatchSize() {
+        List[] expected = new List[] { 
+                Arrays.asList(new Object[] { new Integer(0) }), //$NON-NLS-1$ //$NON-NLS-2$
+           };     
+        
+        String[] types = { "integer" };     //$NON-NLS-1$
+
+        int size = (int)SizeUtility.getBatchSize( types, expected ) * BATCH_SIZE;
+        return size;
     }
     
     /*

@@ -24,15 +24,20 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.*;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
 /**
  */
@@ -101,53 +106,62 @@ public class TestSizeUtility extends TestCase {
         long actualSize = SizeUtility.getSize(obj);
         assertEquals("Got unexpected size: ", expectedSize, actualSize); //$NON-NLS-1$
     }
+    
+    public void testBitness() {
+
+        if ( SizeUtility.IS_64BIT ) {
+            assertEquals("Got unexpected reference size: ", 8, SizeUtility.REFERENCE_SIZE); //$NON-NLS-1$
+        } else {
+            assertEquals("Got unexpected reference size: ", 4, SizeUtility.REFERENCE_SIZE); //$NON-NLS-1$
+        }
+    }
 
     public void testGetSizeNull() {
         helpTestGetStaticSize(null, 0);
     }
 
     public void testGetSizeChar() {
-        helpTestGetStaticSize(new Character('a'), 16);
+        helpTestGetStaticSize(new Character('a'), 20);
     }
 
     public void testGetSizeBoolean() {
-        helpTestGetStaticSize(Boolean.TRUE, 16);
+        helpTestGetStaticSize(Boolean.TRUE, 20);
     }
 
     public void testGetSizeByte() {
-        helpTestGetStaticSize(new Byte((byte)0), 16);
+        helpTestGetStaticSize(new Byte((byte)0), 20);
     }
 
     public void testGetSizeShort() {
-        helpTestGetStaticSize(new Short((short)0), 16);
+        helpTestGetStaticSize(new Short((short)0), 20);
     }
 
     public void testGetSizeInteger() {
-        helpTestGetStaticSize(new Integer(0), 16);
+        helpTestGetStaticSize(new Integer(0), 20);
     }
 
     public void testGetSizeLong() {
-        helpTestGetStaticSize(new Long(0l), 16);
+        helpTestGetStaticSize(new Long(0l), 20);
     }
     
     public void testGetSizeFloat() {
-        helpTestGetStaticSize(new Float(0), 16);
+        helpTestGetStaticSize(new Float(0), 20);
     }
 
     public void testGetSizeDouble() {
-        helpTestGetStaticSize(new Double(0), 16);
+        helpTestGetStaticSize(new Double(0), 20);
     }
 
     public void testGetSizeTimestamp() {
-        helpTestGetStaticSize(new Timestamp(12301803), 24);
+        helpTestGetStaticSize(new Timestamp(12301803), 32);
     }
 
     public void testGetSizeDate() {
-        helpTestGetStaticSize(new Date(12301803), 24);
+        helpTestGetStaticSize(new Date(12301803), 32);
     }
 
     public void testGetSizeTime() {
-        helpTestGetStaticSize(new Time(12301803), 24);
+        helpTestGetStaticSize(new Time(12301803), 32);
     }
 
     public void testGetSizeEmptyString() {
@@ -173,7 +187,8 @@ public class TestSizeUtility extends TestCase {
     public void testGetSizeRow1() {
         List row = new ArrayList(1);
         row.add(new Integer(0));
-        helpTestGetStaticSize(row, 96);
+     	 int size = (SizeUtility.IS_64BIT ? 140 : 100);
+         helpTestGetStaticSize(row, size);
     }
     
     public void testGetSizeRow2() {
@@ -182,7 +197,9 @@ public class TestSizeUtility extends TestCase {
         row.add(new Integer(101));
         row.add(Boolean.TRUE);
         row.add(new Double(1091203.00));
-        helpTestGetStaticSize(row, 144);
+//        helpTestGetStaticSize(row, 160);
+        int size = (SizeUtility.IS_64BIT ? 200 : 160);
+        helpTestGetStaticSize(row, size);
     }
     
     public void testGetSizeRows1() {
@@ -198,7 +215,8 @@ public class TestSizeUtility extends TestCase {
         row2.add(new Integer(0));
         row2.add(new Integer(100));
 
-        helpTestGetStaticSize(new List[] { row1, row2 }, 248);
+        int size = (SizeUtility.IS_64BIT ? 352 : 264);
+        helpTestGetStaticSize(new List[] { row1, row2 }, size);
     }
    
     static class MyClass implements Serializable{
@@ -331,10 +349,12 @@ public class TestSizeUtility extends TestCase {
         String[] types = {"string", "integer", "boolean", "double", "string", "integer"};     //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$//$NON-NLS-6$
 
         long actualSize = SizeUtility.getSize(expected);
-        assertEquals("Got unexpected size: ", 2440, actualSize); //$NON-NLS-1$
+        int size = (SizeUtility.IS_64BIT ? 2920 : 2616);
+        assertEquals("Got unexpected size: ", size, actualSize); //$NON-NLS-1$
 
+        size = (SizeUtility.IS_64BIT ? 3096 : 2792);
         actualSize = SizeUtility.getBatchSize(types, expected);
-        assertEquals("Got unexpected size: ", 2440, actualSize); //$NON-NLS-1$        
+        assertEquals("Got unexpected size: ", size, actualSize); //$NON-NLS-1$        
     }
     
     public void testResultSet2() {
@@ -354,10 +374,12 @@ public class TestSizeUtility extends TestCase {
         
         String[] types = {"string", "integer", "boolean", "double", "string", "integer"};     //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$//$NON-NLS-6$
 
+        int size = (SizeUtility.IS_64BIT ? 2900 : 2596);
         long actualSize = SizeUtility.getSize(expected);
-        assertEquals("Got unexpected size: ", 2424, actualSize); //$NON-NLS-1$
+        assertEquals("Got unexpected size: ", size, actualSize); //$NON-NLS-1$
 
+        size = (SizeUtility.IS_64BIT ? 3096 : 2792);
         actualSize = SizeUtility.getBatchSize(types, expected);
-        assertEquals("Got unexpected size: ", 2440, actualSize); //$NON-NLS-1$        
+        assertEquals("Got unexpected size: ", size, actualSize); //$NON-NLS-1$        
     }
 }

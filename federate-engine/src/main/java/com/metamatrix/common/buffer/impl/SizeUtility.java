@@ -47,6 +47,10 @@ import com.metamatrix.core.util.Assertion;
  */
 public final class SizeUtility {
     private static final int DEFAULT_BUFFER_SIZE = 4096;
+	public static final boolean IS_64BIT = System.getProperty("sun.arch.data.model", "32").indexOf("64") != -1; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+//	public static final boolean IS_64BIT = true;
+	public static final int REFERENCE_SIZE = IS_64BIT?8:4;
+    
     
     /**
      * Constructor for SizeUtility - utility class, can't construct
@@ -74,10 +78,9 @@ public final class SizeUtility {
         int rowLength = data.length;
     
         // Array overhead for row array
-        long size = 16 + alignMemory(rowLength * 4); 
+        long size = 16 + alignMemory(rowLength * REFERENCE_SIZE); 
         // array overhead for all the columns ( 8 object overhead + 4 ref + 4 int)
-        size += (rowLength * (32 + alignMemory(colLength * 4))); 
-        
+        size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE)));         
         for (int col = 0; col < colLength; col++) {
             Class type = DataTypeManager.getDataTypeClass(types[col]);
                         
@@ -89,13 +92,15 @@ public final class SizeUtility {
                     || type == DataTypeManager.DefaultDataClasses.LONG
                     || type == DataTypeManager.DefaultDataClasses.FLOAT
                     || type == DataTypeManager.DefaultDataClasses.DOUBLE) {
-                size += (16*rowLength);                
+            	size += (20*rowLength); 
             } else if (type == DataTypeManager.DefaultDataClasses.DATE
                     || type == DataTypeManager.DefaultDataClasses.TIME
                     || type == DataTypeManager.DefaultDataClasses.TIMESTAMP) { 
                 	// Even though Timestamp contains an extra int, these are 
                 	// the same size because of rounding                                                                               // though
-                size += (24*rowLength);                
+                size += (32*rowLength);            
+            } else if (type == DataTypeManager.DefaultDataClasses.NULL) {
+            	//do nothing
             }
             else {
                 for (int row = 0; row < rowLength; row++) {
@@ -126,11 +131,11 @@ public final class SizeUtility {
             type == DataTypeManager.DefaultDataClasses.LONG ||
             type == DataTypeManager.DefaultDataClasses.FLOAT ||
             type == DataTypeManager.DefaultDataClasses.DOUBLE) {
-                return 16;
+                return 20;
         } else if (type == DataTypeManager.DefaultDataClasses.DATE ||
                    type == DataTypeManager.DefaultDataClasses.TIME ||
                    type == DataTypeManager.DefaultDataClasses.TIMESTAMP) { // Even though Timestamp contains an extra int, these are the same size because of rounding
-            return 24;
+            return 32;
         } else if(type == DataTypeManager.DefaultDataClasses.STRING) {
             int length = ((String)obj).length();
             if (length > 0) {
@@ -149,8 +154,7 @@ public final class SizeUtility {
                 int arraySize = arrayList.size();
                 int maxEnsuredSize = (arraySize < 10) ? 10 : arraySize * 3 / 2; // assuming default size
                 total += 24 /*4(char[] ref) + 4(int) + 16 (array overhead)*/
-                         +alignMemory(maxEnsuredSize * 4); /*number of references held in the array*/
-                if (arraySize > 0) {
+                         +alignMemory(maxEnsuredSize * REFERENCE_SIZE); /*number of references held in the array*/                if (arraySize > 0) {
                     for (int i = 0; i < arraySize; i++) {
                         total += SizeUtility.getSize(arrayList.get(i));
                     }
@@ -160,11 +164,11 @@ public final class SizeUtility {
                 int arraySize = arrayList.size();
                 int maxEnsuredSize = (arraySize < 10) ? 10 : arraySize * 2; // assuming default size, default capacity growth
                 total += 16 // 4(Object[] ref) + 4 (int capacity) + 4 (int capIncrement), rounded
-                         + alignMemory(maxEnsuredSize * 4); // Array overhead
+                         + alignMemory(maxEnsuredSize * REFERENCE_SIZE); // Array overhead
             } else { // Assume java.util.Arrays.ArrayList
                 List list = (List)obj;
                 int arraySize = list.size();
-                total += 16 + alignMemory(arraySize * 4); // For the Object[]
+                total += 16 + alignMemory(arraySize * REFERENCE_SIZE); // For the Object[]                
                 if (arraySize > 0) {
                     for (int i = 0; i < arraySize; i++) {
                         total += SizeUtility.getSize(list.get(i));
@@ -193,7 +197,7 @@ public final class SizeUtility {
                 56 + alignMemory(4 + (bitLength >> 3)); // Same as above calculation
         } else if(type.isArray() && !type.getComponentType().isPrimitive()) {
             Object[] rows = (Object[]) obj;
-            long total = 16 + alignMemory(rows.length * 4); // Array overhead
+            long total = 16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
             for(int i=0; i<rows.length; i++) {
                 total += SizeUtility.getSize(rows[i]);
             }
