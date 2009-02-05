@@ -7971,6 +7971,33 @@ public class TestProcessor extends TestCase {
         //we expect 2 queries, 1 for the outer and 1 for the subquery
         assertEquals(2, dataManager.getCommandHistory().size());
     }
+
+
+    public void testCase186260() {
+        /*
+         * This case revealed that an expression like "COUNT( DISTINCT e1 )", where the type of e1 is 
+         * anything but integer, was not handled properly.  We tried to use "integer" (the type of the
+         * COUNT expression) to work with the e1 tuples.
+         */
+        // Create query 
+        String sql = "SELECT COUNT(DISTINCT pm1.g2.e1), COUNT(DISTINCT pm1.g3.e1) FROM pm1.g2, pm1.g3"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(3), new Integer(3) }),
+        };    
+    
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+        
+        // Run query
+        helpProcess(plan, dataManager, expected);
+    }
+    
     
     private static final boolean DEBUG = false;
 }
