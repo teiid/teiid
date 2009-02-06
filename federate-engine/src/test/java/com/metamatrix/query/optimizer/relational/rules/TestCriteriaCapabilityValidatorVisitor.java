@@ -400,7 +400,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
         caps.setFunctionSupport("rand", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
+        helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, false, false); //$NON-NLS-1$
     }
 
     
