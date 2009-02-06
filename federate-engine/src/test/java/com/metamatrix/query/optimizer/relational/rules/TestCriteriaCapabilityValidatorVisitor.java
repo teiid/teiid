@@ -55,8 +55,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     public void helpTestVisitor(String sql, Object modelID, FakeMetadataFacade metadata, CapabilitiesFinder capFinder, boolean isValid, boolean expectException) {
         try {
-            QueryParser parser = new QueryParser();
-            Criteria criteria = parser.parseCriteria(sql);
+            Criteria criteria = QueryParser.getQueryParser().parseCriteria(sql);
             
             QueryResolver.resolveCriteria(criteria, metadata);
                         
@@ -92,7 +91,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     
     // has all capabilities
     public void testCompareCriteriaSuccess() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -107,7 +106,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have where capability
     public void testCompareCriteriaCapFail1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -122,7 +121,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have compare capability
     public void testCompareCriteriaCapFail2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -137,7 +136,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have = capability
     public void testCompareCriteriaOpCapFail1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -152,7 +151,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     
     // does not have <> capability
     public void testCompareCriteriaOpCapFail2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -167,7 +166,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have < capability
     public void testCompareCriteriaOpCapFail3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -182,7 +181,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have <= capability
     public void testCompareCriteriaOpCapFail4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -197,7 +196,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have > capability
     public void testCompareCriteriaOpCapFail5() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -212,7 +211,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have >= capability
     public void testCompareCriteriaOpCapFail6() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -244,7 +243,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // no caps
     public void testCompareCriteriaNoCaps() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -253,7 +252,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     public void testCompoundCriteriaAnd1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -268,7 +267,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testCompoundCriteriaAnd2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -283,7 +282,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testCompoundCriteriaAnd4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -292,7 +291,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testCompoundCriteriaOr1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -307,7 +306,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testCompoundCriteriaOr2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -322,7 +321,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testCompoundCriteriaOr4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -331,7 +330,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testScalarFunction1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -351,7 +350,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
      *  
      */ 
     public void testScalarFunction2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -367,11 +366,10 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     /**
-     * since curtime is command deterministic, it will pushed down
-     * if the capabilities don't support it
+     * since curtime is non-deterministic and not supported, it will not be pushed down.
      */
     public void testScalarFunction2a() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -383,12 +381,31 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
         caps.setFunctionSupport("curtime", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        helpTestVisitor("curtime() = '{t'10:00:00'}", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
+        helpTestVisitor("curtime() = '{t'10:00:00'}", modelID, metadata, capFinder, false, false); //$NON-NLS-1$
     }
     
+    /**
+     * since rand is command deterministic and not supported, it will be evaluated
+     */
+    public void testScalarFunction2b() {
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setFunctionSupport("rand", true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
+    }
+
     
     public void testIsNull1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -401,7 +418,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testIsNull2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -414,7 +431,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testIsNull3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -438,7 +455,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     public void testIsNull5() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -451,7 +468,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testIsNull6() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -465,7 +482,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // has all capabilities
     public void testMatchCriteriaSuccess() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -480,7 +497,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have escape char capability
     public void testMatchCriteriaSuccess2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -495,7 +512,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // Test for NOT LIKE
     public void testMatchCriteriaSuccess3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -510,7 +527,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have compare capability
     public void testMatchCriteriaCapFail1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -525,7 +542,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have escape char capability
     public void testMatchCriteriaCapFail2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -557,7 +574,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // no caps
     public void testMatchCriteriaNoCaps() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -566,7 +583,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }    
 
     public void testMatchCriteriaNoCrit() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -580,7 +597,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testNotCriteria1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -595,7 +612,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testNotCriteria2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -610,7 +627,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testSetCriteria1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -623,7 +640,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testSetCriteria2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -636,7 +653,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testSetCriteria3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -660,7 +677,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testSetCriteria6() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -674,7 +691,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     
     //Test for success NOT IN
     public void testSetCriteria7() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -687,7 +704,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     public void testSetCriteria8() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -701,7 +718,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     public void testSetCriteria9() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -715,7 +732,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testSubquerySetCriteria() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
                 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -730,7 +747,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     
     // has all capabilities
     public void testSubqueryCompareCriteriaSuccess() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -748,7 +765,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have where capability
     public void testSubqueryCompareCriteriaCapFail1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -763,7 +780,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have compare capability
     public void testSubqueryCompareCriteriaCapFail2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -778,7 +795,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have subquery capability
     public void testSubqueryCompareCriteriaFail3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -796,7 +813,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have quantified subquery comparison capability
     public void testSubqueryCompareCriteriaFail4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -814,7 +831,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have quantified subquery comparison capability for ANY
     public void testSubqueryCompareCriteriaFail5() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -833,7 +850,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have quantified subquery comparison capability for ALL
     public void testSubqueryCompareCriteriaFail6() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -852,7 +869,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have = capability
     public void testSubqueryCompareCriteriaOpCapFail1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -867,7 +884,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     
     // does not have <> capability
     public void testSubqueryCompareCriteriaOpCapFail2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -882,7 +899,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have < capability
     public void testSubqueryCompareCriteriaOpCapFail3() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -897,7 +914,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have <= capability
     public void testSubqueryCompareCriteriaOpCapFail4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -912,7 +929,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have > capability
     public void testSubqueryCompareCriteriaOpCapFail5() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -927,7 +944,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
 
     // does not have >= capability
     public void testSubqueryCompareCriteriaOpCapFail6() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -958,7 +975,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testExistsCriteria1() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -971,7 +988,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testExistsCriteria2() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -984,7 +1001,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testExistsCriteria4() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -997,7 +1014,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
 
     public void testExistsCriteria5() {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         Object modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();

@@ -253,13 +253,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         // With Seed
         FunctionMethod rand = new FunctionMethod("rand", QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                           new FunctionParameter[] {new FunctionParameter("seed", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rand_arg")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), FunctionMethod.NONDETERMINISTIC );                 //$NON-NLS-1$ //$NON-NLS-2$
         rand.setNullDependent(true);
         functions.add(rand);
         // Without Seed
         functions.add( new FunctionMethod("rand", QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                           new FunctionParameter[] {}, 
-                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), FunctionMethod.COMMAND_DETERMINISTIC ) ); //$NON-NLS-1$ //$NON-NLS-2$                
+                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), FunctionMethod.NONDETERMINISTIC ) ); //$NON-NLS-1$ //$NON-NLS-2$                
     }
 
 	private void addDoubleFunction(String name, String description) {
