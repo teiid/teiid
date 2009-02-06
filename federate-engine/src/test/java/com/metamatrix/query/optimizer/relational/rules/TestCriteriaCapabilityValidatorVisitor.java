@@ -366,7 +366,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
     }
     
     /**
-     * since curtime is non-deterministic and not supported, it will not be pushed down.
+     * since curtime is command deterministic and not supported, it will be evaluated
      */
     public void testScalarFunction2a() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -381,11 +381,11 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
         caps.setFunctionSupport("curtime", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        helpTestVisitor("curtime() = '{t'10:00:00'}", modelID, metadata, capFinder, false, false); //$NON-NLS-1$
+        helpTestVisitor("curtime() = '{t'10:00:00'}", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
     }
     
     /**
-     * since rand is command deterministic and not supported, it will be evaluated
+     * since rand is non-deterministic and not supported, it will be evaluated for every row
      */
     public void testScalarFunction2b() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -397,7 +397,7 @@ public class TestCriteriaCapabilityValidatorVisitor extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("rand", true); //$NON-NLS-1$
+        caps.setFunctionSupport("rand", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, true, false); //$NON-NLS-1$

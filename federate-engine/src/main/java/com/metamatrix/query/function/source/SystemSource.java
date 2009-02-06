@@ -356,11 +356,15 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Sqrt_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
+    /**
+     * Date functions a marked as command deterministic, since we prefer pre-evaluation rather than row-by-row
+     * evaluation.
+     */
     private void addConstantDateFunction(String name, String description, String methodName, String returnType) {
         functions.add(
             new FunctionMethod(name, description, DATETIME, FUNCTION_CLASS, methodName,
                 new FunctionParameter[] {},
-                new FunctionParameter("result", returnType, description), FunctionMethod.NONDETERMINISTIC ) );                 //$NON-NLS-1$
+                new FunctionParameter("result", returnType, description), FunctionMethod.COMMAND_DETERMINISTIC ) );                 //$NON-NLS-1$
     }
 
     private void addDateFunction(String name, String methodName, String dateDesc, String timestampDesc, String returnType) {
