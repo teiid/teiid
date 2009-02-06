@@ -32,6 +32,7 @@ import org.jgroups.Channel;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 @Singleton
 class CacheProvider implements Provider<org.jboss.cache.Cache> {
@@ -39,13 +40,17 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 	@Inject
 	ChannelProvider channelProvider;
 	
+	@Inject
+	@Named(com.metamatrix.server.Configuration.CLUSTERNAME)
+	String channelName;
+	
 	public Cache get() {
 		Channel channel = this.channelProvider.get(ChannelProvider.ChannelID.CACHE);
 		
 		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		Configuration config = cache.getConfiguration();
 		config.getRuntimeConfig().setChannel(channel);
-		config.setClusterName(channel.getClusterName());
+		config.setClusterName(this.channelName);
 		
 		// if the channel is already in connected state then cache is not 
 		// getting events about joining the cluster

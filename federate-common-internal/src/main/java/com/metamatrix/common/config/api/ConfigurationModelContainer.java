@@ -40,17 +40,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
  * The persistent layer will build this container 
  */
 public interface ConfigurationModelContainer extends Cloneable {
-    
-    public static final String DEFAULT_SYSTEM_NAME = "Default"; //$NON-NLS-1$
-
-
-    /**
-     *  Returns the name of the MetaMatrix system.
-     * @return String System Name
-     * @since 4.3
-     */
-    String getSystemName();
-    
+        
     Configuration getConfiguration();
     
     ConfigurationID getConfigurationID();

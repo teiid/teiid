@@ -312,7 +312,7 @@ public class HostController implements HostManagement {
             }
             
         } catch (Throwable e) {
-            LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0011));//$NON-NLS-1$
+            LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0011));//$NON-NLS-1$
             System.exit(1);
         }
     }
@@ -324,7 +324,7 @@ public class HostController implements HostManagement {
 	}    
     
    private Process startDeployVM( String vmName, String hostName, Properties vmprops) {
-	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM " + vmName + "on host"+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
+	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM " + vmName + " on host"+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
        String command = buildVMCommand(vmprops);
        return execCommand(command);
    }

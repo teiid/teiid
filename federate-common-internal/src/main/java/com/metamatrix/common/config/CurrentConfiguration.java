@@ -77,6 +77,8 @@ public final class CurrentConfiguration {
 
     public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
+    public static final String CLUSTER_NAME = "metamatrix.cluster.name"; //$NON-NLS-1$
+
     
     private static final String DOT_STR = "."; //$NON-NLS-1$
     
@@ -96,9 +98,9 @@ public final class CurrentConfiguration {
     private CurrentConfiguration() {
     }
     
-    public String getSystemName() throws ConfigurationException {
-        
-        return getConfigurationModel().getSystemName();
+    public String getClusterName() throws ConfigurationException {
+        Properties props = getResourceProperties(ResourceNames.JGROUPS);
+        return props.getProperty(CLUSTER_NAME, "Federate-Cluster"); //$NON-NLS-1$
     }
 
     /**

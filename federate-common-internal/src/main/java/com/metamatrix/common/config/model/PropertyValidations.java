@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.core.util.StringUtil;
 
@@ -42,7 +43,7 @@ public class PropertyValidations  {
     
    
     public static final String UDP_MCAST_ADDR_PROPERTY = "udp.mcast_addr"; //$NON-NLS-1$
-    public static final String SYSTEM_NAME = ConfigurationModelContainerImpl.SYSTEM_NAME_PROPERTY; 
+    public static final String SYSTEM_NAME = CurrentConfiguration.CLUSTER_NAME; 
 
     private static final String MULTICAST_PORT_FORMAT = "224.255.255.255"; //$NON-NLS-1$
    

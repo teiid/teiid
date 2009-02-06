@@ -75,7 +75,7 @@ public class JGroupsMessageBus implements MessageBus {
 	
 	private RpcDispatcher rpcDispatcher;
 	
-	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker, String clusterName) throws ChannelException {
+	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker, final String clusterName) throws ChannelException {
 		Channel c = channelProvider.get(ChannelProvider.ChannelID.RPC);
 		
 		if (c == null || !c.isOpen()) {
@@ -97,7 +97,7 @@ public class JGroupsMessageBus implements MessageBus {
 			@Override
 			public void viewAccepted(View view) {
 				super.viewAccepted(view);
-				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, view + "is added"); //$NON-NLS-1$
+				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, view + "is added to cluster:" + clusterName); //$NON-NLS-1$
 			}
 		};
 		

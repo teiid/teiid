@@ -65,8 +65,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ConfigurationModelContainerImpl implements ConfigurationModelContainer, Serializable {
 
-    public static final String SYSTEM_NAME_PROPERTY = "metamatrix.cluster.name"; //$NON-NLS-1$
-
     private BasicConfiguration configuration=null;
 
     private transient ConfigurationObjectEditorHelper editor = null;
@@ -81,20 +79,7 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
     public ConfigurationModelContainerImpl() {
 
     }
-    
-    public String getSystemName()  {
-        String systemName = null;
-        try {           
-        	systemName = this.getConfiguration().getProperty(SYSTEM_NAME_PROPERTY);
-        } catch (Exception e) {     
-        } finally {
-	 		if (systemName == null) {
-        		systemName= ConfigurationModelContainer.DEFAULT_SYSTEM_NAME;
-  			}
-        }
-        return systemName;
-    }    
-    
+        
     public ConfigurationModelContainerImpl(ArrayList configObjects) throws ConfigurationException {
         this.setConfigurationObjects(configObjects);
     }       

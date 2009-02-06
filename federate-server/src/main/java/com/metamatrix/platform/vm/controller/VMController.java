@@ -258,7 +258,7 @@ public abstract class VMController implements VMControllerInterface {
      * @throws ConfigurationException 
      */
     private void registerILogonAPI() throws ConfigurationException, ServiceException {
-    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getSystemName()), LogCommonConstants.CTX_LOGON);
+    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getClusterName()), LogCommonConstants.CTX_LOGON);
     }    
 
 	private void addShutdownHook() {

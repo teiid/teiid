@@ -207,6 +207,9 @@ public class ConnectionInfo {
         return false;
     }    
     
+    public String getClusterName() {
+    	return connection.getLogonResult().getClusterName();
+    }
     
     /**
      * Get a ServerIConnection.

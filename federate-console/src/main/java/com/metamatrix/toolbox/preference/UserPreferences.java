@@ -399,9 +399,7 @@ public class UserPreferences implements PropertiedObject {
 			new UnmodifiableProperties(userPrefProperties);
 
 		// Try to load the user preferences from the specified file ...
-		userPrefFileName =
-			configProperties.getProperty(
-				USER_PREFERENCES_DEFINITION_FILE_PROPERTY_NAME);
+		userPrefFileName = configProperties.getProperty(USER_PREFERENCES_DEFINITION_FILE_PROPERTY_NAME, System.getProperty("prefFile", "console_pref.properties")); //$NON-NLS-1$ //$NON-NLS-2$
 		LogManager.logDetail(LOG_CONTEXT, ToolboxPlugin.Util.getString("UserPreferences.User_preferences_file_set_to___21") + userPrefFileName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 		if (userPrefFileName == null || userPrefFileName.length() == 0) {
 			LogManager.logInfo(LOG_CONTEXT, ToolboxPlugin.Util.getString("UserPreferences.User_preferences_filename_is_invalid_or_not_specified_23")); //$NON-NLS-1$

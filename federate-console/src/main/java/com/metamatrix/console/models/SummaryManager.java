@@ -74,7 +74,7 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
     }
     
     public String getSystemName() throws Exception {
-        return ModelManager.getConfigurationManager(getConnection()).getConfigModel(Configuration.NEXT_STARTUP_ID).getSystemName();
+        return getConnection().getClusterName();
     }
 
 

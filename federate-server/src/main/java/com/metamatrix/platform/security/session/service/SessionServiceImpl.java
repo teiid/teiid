@@ -130,7 +130,7 @@ public class SessionServiceImpl extends AbstractService implements
         Properties nextProperties = config.getProperties();
         this.sessionMaxLimit = PropertiesUtils.getIntProperty(nextProperties, MAX_ACTIVE_SESSIONS, 0);
         this.sessionTimeLimit = PropertiesUtils.getIntProperty(nextProperties, SESSION_TIME_LIMIT, 0) * 60000;
-        this.clusterName = CurrentConfiguration.getInstance().getSystemName();
+        this.clusterName = CurrentConfiguration.getInstance().getClusterName();
         this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
