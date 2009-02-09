@@ -75,9 +75,10 @@ public class Main {
 
         Host host = null;
         try {
-			host = CurrentConfiguration.getInstance().findHost(hostName);        
+			host = CurrentConfiguration.getInstance().getHost(hostName);        
 		} catch (ConfigurationException e) {
 		}
+		
 		if (host == null) {
 		    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5", hostName)); //$NON-NLS-1$
 		    System.exit(-1);

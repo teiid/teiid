@@ -48,9 +48,12 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
@@ -1335,37 +1338,26 @@ public class ServiceManager {
     public static void main(String[] args) throws Exception {
 
         String command = ""; //$NON-NLS-1$ 
-        String configName = null; 
 		boolean exit = false;
 
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equalsIgnoreCase("-config") ) { //$NON-NLS-1$ 
-                if (++i == args.length) {
-                	printNoviceUsage();
-                    System.exit(-1);
-                } else {
-                    configName = args[i];
-                }
-            } 
-            else {
-            	exit = true;
-            	command = command + args[i] + " "; //$NON-NLS-1$
-            }
+        	exit = true;
+        	command = command + args[i] + " "; //$NON-NLS-1$
         }
 
         Host host = null;
-        if (configName == null) {
-            configName = VMNaming.getDefaultConfigName();
-        	host = CurrentConfiguration.getInstance().findHost(configName);
-        	if (host == null) {
-        		System.out.println("Failed to find the host name in the configuration; please use -config option to set the hostname"); //$NON-NLS-1$
-        		System.exit(-1);
-        	}
-        }
+        try {
+			host = CurrentConfiguration.getInstance().getDefaultHost();      
+		} catch (ConfigurationException e) {
+		}
+
+        if (host == null) {
+        	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001)); //$NON-NLS-1$
+            System.exit(-1);
+        }          
         
         VMNaming.setup(host.getFullName(), host.getHostAddress(), host.getBindAddress());
         
-
         try {
 			ServiceManager manager = loadServiceManager(host);
 			manager.run(command,exit);

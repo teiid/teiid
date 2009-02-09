@@ -122,7 +122,7 @@ public class TestCurrentConfiguration extends BaseTest {
                                                                 
             CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.getInstance().getHost();
+            Host host = CurrentConfiguration.getInstance().getDefaultHost();
             
             if (!host.getFullName().equals("DummyHost")) { //$NON-NLS-1$
                 fail("DummyHost host was not the default host in the configuration");//$NON-NLS-1$
@@ -146,7 +146,7 @@ public class TestCurrentConfiguration extends BaseTest {
                                                                 
             CurrentConfiguration.getInstance().performSystemInitialization(true); 
 
-            Host host = CurrentConfiguration.getInstance().findHost("slwxp141.quadrian.com"); //$NON-NLS-1$
+            Host host = CurrentConfiguration.getInstance().getHost("slwxp141.quadrian.com"); //$NON-NLS-1$
             
             if (host == null) { 
                 fail(" host was not found in configuration");//$NON-NLS-1$
@@ -160,78 +160,6 @@ public class TestCurrentConfiguration extends BaseTest {
         
             printMsg("Completed testFindHostByFullyQualifiedName"); //$NON-NLS-1$        
     }   
-    
-    public void testFindHostByShortName() {
-        
-        printMsg("Starting testFindHostByShortName");       //$NON-NLS-1$
-
-        try {
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Host host = CurrentConfiguration.getInstance().findHost("slwxp141"); //$NON-NLS-1$
-            
-            if (host == null) { 
-                fail(" host was not found in configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        
-            printMsg("Completed testFindHostByShortName"); //$NON-NLS-1$        
-    }   
-    
-    public void testFindHostByPhysicalAddress() {
-        
-        printMsg("Starting testFindHostByPhysicalAddress");       //$NON-NLS-1$
-
-        try {
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Host host = CurrentConfiguration.getInstance().findHost("dummyhost.quadrian.com"); //$NON-NLS-1$
-            
-            if (host == null) { 
-                fail("host was not found in configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        
-            printMsg("Completed testFindHostByPhysicalAddress"); //$NON-NLS-1$        
-    }      
-    
-    public void testFindHostByBindingAddress() {
-        
-        printMsg("Starting testFindHostByBindingAddress");       //$NON-NLS-1$
-
-        try {
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Host host = CurrentConfiguration.getInstance().findHost("192.168.10.166"); //$NON-NLS-1$
-            
-            if (host == null) { 
-                fail("host was not found in configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        
-            printMsg("Completed testFindHostByBindingAddress"); //$NON-NLS-1$        
-    }       
     
     public void test30SystemInitialization() {
         

@@ -98,7 +98,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
-        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getInstance().getProperties(), new Long(getID().getID()), CurrentConfiguration.getInstance().getHost(), VMNaming.getVMName());
+        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getInstance().getProperties(), new Long(getID().getID()), CurrentConfiguration.getInstance().getDefaultHost(), VMNaming.getVMName());
         dqp = new DQPCore();
         dqp.start(configSource);
     }

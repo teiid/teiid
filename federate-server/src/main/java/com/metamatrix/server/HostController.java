@@ -51,6 +51,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
@@ -234,13 +235,8 @@ public class HostController implements HostManagement {
         System.out.println(msg);
     }
     
-    /**
-     * Optional arg; portNum
-     * if exists then hostController listens on portNum
-     * else hostController reads in hostPort from CurrentConfiguration.getInstance().
-     */
+
     public static void main(String args[]) {
-        String configName = null;
         boolean startProcesses = true;
         boolean shutdown = false;
         boolean killHostController = false;
@@ -248,18 +244,8 @@ public class HostController implements HostManagement {
         int parmIndex = args.length;
         for (int i = 0; i < parmIndex; i++) {
             String command = args[i];
-            if (command.equalsIgnoreCase("-config") ) { //$NON-NLS-1$ 
-                i++;
-                if (i == parmIndex) {
-                    printUsage();
-                    System.exit(-1);
-                } else {
-                    configName = args[i];
-                }
-                
-            } else if (command.equalsIgnoreCase("-noprocesses")) { //$NON-NLS-1$
+            if (command.equalsIgnoreCase("-noprocesses")) { //$NON-NLS-1$
                 startProcesses = false;
-                
             } else if (command.equalsIgnoreCase("-help")) { //$NON-NLS-1$
                 printUsage();
                 System.exit(-1);
@@ -278,24 +264,16 @@ public class HostController implements HostManagement {
 		}
 
         try {
-            // if the hostname was not passed, then add the hostname
-            // to the logmsg to let the user know which hostname
-            // is being used, for informational purposes
-            if (configName == null) {
-                configName = VMNaming.getDefaultConfigName();
-                logMsg += "resolved config " + configName;  //$NON-NLS-1$
-            } 
-            
             LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,logMsg);
            
             Host host = null;
             try {
-    			host = CurrentConfiguration.getInstance().findHost(configName);        
+    			host = CurrentConfiguration.getInstance().getDefaultHost();      
     		} catch (ConfigurationException e) {
     		}
 
             if (host == null) {
-            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001, configName)); //$NON-NLS-1$
+            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001)); //$NON-NLS-1$
                 System.exit(-1);
             }        
 
