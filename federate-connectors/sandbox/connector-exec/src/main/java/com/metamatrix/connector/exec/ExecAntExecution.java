@@ -47,6 +47,7 @@ import org.apache.tools.ant.taskdefs.PumpStreamHandler;
 import org.apache.tools.ant.types.Commandline.Argument;
 
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.OSPlatformUtil;
 import com.metamatrix.core.util.Assertion;
@@ -94,9 +95,10 @@ public class ExecAntExecution implements SynchQueryExecution {
 	static {
 		String hosttempdir = ".";//$NON-NLS-1$
 		try {
-			if (CurrentConfiguration.getInstance().getHost() != null) {
-				INSTALL_DIR = CurrentConfiguration.getInstance().getHost().getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
-				hosttempdir = CurrentConfiguration.getInstance().getHost().getTempDirectory();
+			Host host = CurrentConfiguration.getInstance().getDefaultHost();
+			if ( host != null) {
+				INSTALL_DIR = host.getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
+				hosttempdir = host.getTempDirectory();
 			} 
 			TEMPDIR = new TempDirectory(hosttempdir,System.currentTimeMillis(), random.nextLong());
 		} catch (Exception e) {

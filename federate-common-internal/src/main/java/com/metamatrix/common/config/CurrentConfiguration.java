@@ -26,17 +26,13 @@ package com.metamatrix.common.config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -44,11 +40,8 @@ import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.config.reader.PropertiesConfigurationReader;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * <p>
@@ -78,9 +71,7 @@ public final class CurrentConfiguration {
     public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
     public static final String CLUSTER_NAME = "metamatrix.cluster.name"; //$NON-NLS-1$
-
-    
-    private static final String DOT_STR = "."; //$NON-NLS-1$
+    private static final String CONFIGURATION_NAME= "configuration.name"; //$NON-NLS-1$
     
 	private CurrentConfigurationReader reader;
     private Properties bootstrapProperties;
@@ -214,182 +205,20 @@ public final class CurrentConfiguration {
         return getReader().getConfigurationModel().getProductTypes();
     }
       
-     /**
-     * Returns the full Host impl for a HostID.  <i>Optional method.</i>
-     * This will be implemented server-side, but not necessarily client-side.
-     * @param hostID ID of the Host that is wanted
-     * @return the full Host object
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service, or if there is no object
-     * for the given ID.
-     * @throws UnsupportedOperationException if this method is not implemented
-     * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
-     * implementation
-     */
-    public Host getHost(HostID hostID) throws ConfigurationException{
-        return getHost(hostID.getFullName());
-    }
-
-    /**
-     * Returns the Host for the specified Host name.  <i>Optional method.</i>
-     * This will be implemented server-side, but not necessarily client-side.
-     * @param host name of the Host that is wanted
-     * @return the Host 
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service, or if there is no object
-     * for the given ID.
-     * @throws UnsupportedOperationException if this method is not implemented
-     * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
-     * implementation
-     */
-    private Host getHost(String name) throws ConfigurationException{
-        return getReader().getConfigurationModel().getHost(name);
-    } 
-    
-    /**
-     * Call to find a host.  The hostName passed in can be any of the
-     * the following:
-     * <li>The fully qualified host name</li>
-     * <li>The short name of the fully qualified host name</li>
-     * <li>The IP address of box</li>
-     * <li>The bind address defined in the host properties</li>
-     * <li>The general reference of localhost</li>
-     * 
-     * The order of resolution will be as follows:
-     * <li>hostName matches to configured host name</li>
-     * <li>resolve hostName to an InetAddress and use its' full host name to match configured host(s)</li>
-     * <li>resolve hostName to an InetAddress and use its' short host name to match configured host(s)</li>
-     * <li>In cases where the <code>hostName</code> represents the short name and will not resolve to a longer name, 
-     *     convert the <code>Host</code> full name to the short name to try to match.</li>
-     * <li>match hostname to the physical address for a configurated host</li>  
-     * <li>match hostname to the bindaddress for a configurated host</li>  
-     * 
-     * @param hostName
-     * @return Host
-     * @throws ConfigurationException 
-     * @throws Exception
-     * @since 4.3
-     */
-    public Host findHost(String hostName) throws ConfigurationException  {
-        Host h = null;
-        
-        try {
-            // first try to match the host by what was passed before
-            // substituting something else
-            h = getHost(hostName);
-            if (h != null) {
-                return h;
-            }
-            
-            
-            if( hostName.equalsIgnoreCase("localhost")) { //$NON-NLS-1$
-                hostName = InetAddress.getLocalHost().getHostName();
-                h = getHost(hostName);
-                if (h != null) {
-                    return h;
-                } 
-            }
-            
-                            
-            // the hostName could be an IP address that we'll use to try to 
-            // resolve back to the actuall host name
-            InetAddress inetAddress = InetAddress.getByName(hostName);           
-
-            // try using the fully qualified host name
-            
-            h = getHost(inetAddress.getCanonicalHostName());
-            if (h != null) {
-                return h;
-            }
-            
-            h = getHost(inetAddress.getHostName());            
-            if (h != null) {
-                return h;
-            }
-            
-            // get short name
-            String shortName = StringUtil.getFirstToken(inetAddress.getCanonicalHostName(),DOT_STR);
-            h = getHost(shortName);
-            if (h != null) {
-                return h;
-            }           
-            // try the address
-              h = getHost(inetAddress.getHostAddress());
-              
-              if (h != null) {
-                  return h;
-              }            
-            
-        } catch (Exception e) {
-            // do nothing
-        }
-        
-        Collection hosts = getConfigurationModel().getHosts();
-        
-        // 2nd try to match 
-        try {
-
-            // if the host name passed in is the short name,
-            // then try to match to the Host short name
-            
-            Iterator hi = hosts.iterator(); 
-            while (hi.hasNext()) {
-                h = (Host) hi.next();
-                String shortname = StringUtil.getFirstToken(h.getFullName(), DOT_STR);
-                if (shortname.equalsIgnoreCase(hostName)) {
-                    return h;
-                }
-    
-            }     
-            
-            String shortName = StringUtil.getFirstToken(NetUtils.getInstance().getInetAddress().getCanonicalHostName(), DOT_STR); 
-            h = getHost(shortName);
-            if (h != null) {
-                return h;
-            }            
-        } catch (Exception e) {
-            // do nothing
-        }
-        
-        // try to match based on the host physical or the bind address
-        Iterator hostIter = hosts.iterator(); 
-         
-        while (hostIter.hasNext()) {
-            h = (Host) hostIter.next();
-             
-            if (h.getHostAddress() != null && h.getHostAddress().equalsIgnoreCase(hostName)) {
-                return h;
-            } else if (h.getBindAddress() != null && h.getBindAddress().equalsIgnoreCase(hostName)) {
-                return h;
-            }
-
-        }
-        
-        
-        return null;
-
-    }    
-    
     /**
      * Returns the Host based on the current running machine. 
      * @return the full Host object
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service, or if there is no object
      * for the given ID.
-     * @throws UnknownHostException if the NetUtils cannot derive the current host name
-     * @throws UnsupportedOperationException if this method is not implemented
-     * by the {@link com.metamatrix.common.config.reader.CurrentConfigurationReader}
-     * implementation
      */
-    public Host getHost() throws ConfigurationException, UnknownHostException{
-        // use the logicalHostName firstt, because this would be set if this
-        // is called within a running VM (i.e., hostcontroller, vmcontroller)
-        // otherwise use localhost
-        Host host = findHost(VMNaming.getConfigName());
-        if (host == null) {
-            host = findHost("localhost");//$NON-NLS-1$
-        }
-        return host;
+    public Host getDefaultHost() throws ConfigurationException {
+    	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME);
+        return getReader().getConfigurationModel().getHost(name);
+    }  
+
+    public Host getHost(String name) throws ConfigurationException {
+        return getReader().getConfigurationModel().getHost(name);
     }  
     
     /**
