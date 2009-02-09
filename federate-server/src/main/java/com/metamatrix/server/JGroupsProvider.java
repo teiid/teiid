@@ -46,7 +46,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * This class contains a collection of utilities for managing JGroups objects.
@@ -56,7 +55,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
 	// Default Multicast Property values
 	private static final String DEFAULT_UDP_MCAST_SUPPORTED = "true"; //$NON-NLS-1$
-	private static final String DEFAULT_UDP_MCAST_ADDR_PREFIX = "224.224.223."; //$NON-NLS-1$
+	private static final String DEFAULT_UDP_MCAST_ADDR_PREFIX = "224."; //$NON-NLS-1$
 	private static final String DEFAULT_UDP_MCAST_PORT = "5555"; //$NON-NLS-1$
 	private static final String ALL_INTERFACES_ADDR = "0.0.0.0"; //$NON-NLS-1$
 
@@ -144,13 +143,10 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
 		    String udpMulticastAddress = configProps.getProperty(UDP_MCAST_ADDR_PROPERTY);
 		    if (udpMulticastAddress == null || udpMulticastAddress.length() == 0) {
-		        // use the last node of the local machine address as the last node
-		        // of the DEFAULT address.
-		        String lastNode = StringUtil.getLastToken(bindAddress, ".");//$NON-NLS-1$
-		        
+		    	String currentAddr = VMNaming.getBindAddress(); 
+		        String lastNode = currentAddr.substring(0, currentAddr.indexOf('.'));
 		        udpMulticastAddress = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
 		    }
-
 		
 			if (udpMulticastSupported.equalsIgnoreCase("true")) { //$NON-NLS-1$
 	            if (multicastOnAllInterfaces) {
