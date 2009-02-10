@@ -64,7 +64,7 @@ public class MetaMatrixCoreException extends Exception {
     
     @Override
     public synchronized Throwable initCause(Throwable cause) {
-    	if (this.realCause != this)
+    	if (this.realCause != null)
             throw new IllegalStateException("Can't overwrite cause"); //$NON-NSL-1$
         if (cause == this)
             throw new IllegalArgumentException("Self-causation not permitted"); //$NON-NSL-1$

@@ -19,5 +19,16 @@ public class TestMetaMatrixCoreException extends TestCase {
 		assertEquals("foo", mmce.getMessage());
 		assertEquals("java.sql.BatchUpdateException: foo", mmce.getCause().getMessage());
 	}
+	
+	public void testInitCause() throws Exception {
+		MetaMatrixCoreException mmce = new MetaMatrixCoreException();
+		mmce.initCause(new Exception());
+		try {
+			mmce.initCause(new Exception());
+			fail();
+		} catch (IllegalStateException e) {
+			
+		}
+	}
 
 }
