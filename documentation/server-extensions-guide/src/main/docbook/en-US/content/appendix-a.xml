@@ -19,7 +19,7 @@
       instance will be active on each MMProcess with a Membership Service.  </para>
     <para />
     <para>NOTE: Since the Membership Service cannot be restarted changes to membership domain configurations
-      require bouncing the Federate Server before taking effect.  It follows also that if a custom membership is
+      require bouncing the Teiid Server before taking effect.  It follows also that if a custom membership is
       not written to recover gracefully from connectivity or other environmental issues a server restart is
       required to re-initialize the membership domain.</para>
   </sect1>

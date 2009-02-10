@@ -4,40 +4,40 @@
   <title>Download</title>
   <para>
     You need to download the binaries for
-    <ulink url="/projects/federate/Download.html">Federate Embedded</ulink>
+    <ulink url="/projects/federate/Download.html">Teiid Embedded</ulink>
     . Note that there are three different artifacts are available for download.
   </para>
   <orderedlist>
     <listitem>
-      <para>Federate Source - contains all the source code for all modules</para>
+      <para>Teiid Source - contains all the source code for all modules</para>
     </listitem>
     <listitem>
-      <para>Federate Binary - contains all the binary code for all modules</para>
+      <para>Teiid Binary - contains all the binary code for all modules</para>
     </listitem>
     <listitem>
-      <para>Federate Embedded Kit - contains only required modules and their required 3rd party
+      <para>Teiid Embedded Kit - contains only required modules and their required 3rd party
         dependencies</para>
     </listitem>
   </orderedlist>
   <para>
     For this Quick Start, download the
-    <emphasis>Federate Embedded Kit</emphasis>
+    <emphasis>Teiid Embedded Kit</emphasis>
     and extract this tar/zip file to a directory you can access.
   </para>
-  <para>In the expanded directory, you will find "federate-${version}-embedded.jar", which is the main binary jar
-    file for Federate Embedded, and the "lib" and "extension" directories containing supporting 3rd party binaries
-    required to execute Federate Embedded. Later sections describe installing these artifacts.</para>
+  <para>In the expanded directory, you will find "Teiid-${version}-embedded.jar", which is the main binary jar
+    file for Teiid Embedded, and the "lib" and "extension" directories containing supporting 3rd party binaries
+    required to execute Teiid Embedded. Later sections describe installing these artifacts.</para>
   <note>
     <para>
-      Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Federate relies upon
-      the user supplying their own JDBC drivers in the deployment. Federate Embedded
+      Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon
+      the user supplying their own JDBC drivers in the deployment. Teiid Embedded
       has been tested extensively with
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
        If you have access to these JDBC drivers, we recommend their use.
     </para>
     <!-- 
     <para>Free open source software JDBC drivers for MySQL, Postgres,and Derby are included in the "lib" folder as the LGPL
-      license permits them to be included with the Federate Embedded kit.</para>
+      license permits them to be included with the Teiid Embedded kit.</para>
     -->
   </note>
 </chapter>

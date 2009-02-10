@@ -4,7 +4,7 @@
   <sect1>
     <title>Overview</title>
     <para>Once you have written and compiled the code for your connector, there are several
-      steps to deploy your connector to a Federate Server:</para>
+      steps to deploy your connector to a Teiid Server:</para>
     <itemizedlist>
       <listitem>
         <para>Creating a Connector Type Definition file that defines the properties required
@@ -19,7 +19,7 @@
           file and the Extension Modules.</para>
       </listitem>
       <listitem>
-        <para>Importing the Connector Archive file in the Federate Console.</para>
+        <para>Importing the Connector Archive file in the Teiid Console.</para>
       </listitem>
       <listitem>
         <para>Creating a Connector Binding using your Connector Type.</para>
@@ -30,8 +30,8 @@
    
   <sect1>
     <title>Connector Type Definition File</title>
-    <para>A Connector Type Definition file defines a connector in the Federate Server.  The
-      Connector Type Definition file defines some key properties that allow the Federate Server to
+    <para>A Connector Type Definition file defines a connector in the Teiid Server.  The
+      Connector Type Definition file defines some key properties that allow the Teiid Server to
       use your connector as well as specifying other properties your connector might need.  </para>
     <para>A Connector Type Definition file is in XML format and typically has the extension “.cdk”.
        It defines a default name for the connector type, the properties expected by the connector,
@@ -43,7 +43,7 @@
     
     <sect2>
       <title>Required Properties</title>
-      <para>The Connector API requires the following properties for the Federate Server to load
+      <para>The Connector API requires the following properties for the Teiid Server to load
       and use your connector.</para>
       <table frame='all'>
         <title>Required Connector Properties</title>        
@@ -102,9 +102,9 @@
       <para>Most connectors will require some initialization parameters to connect to the
         underlying enterprise information system.  These properties can be defined in the Connector
         Type Definition file along with their default values and other property metadata.  The actual
-        property values can be changed when the connector is deployed in the Federate Console.</para>
+        property values can be changed when the connector is deployed in the Teiid Console.</para>
       <para>Each connector property carries with it several attributes that are used by the
-        Federate Console to integrate the connector seamlessly into the Federate Server.</para>
+        Teiid Console to integrate the connector seamlessly into the Teiid Server.</para>
       
       <table frame='all'>
         <title>All Properties</title>        
@@ -160,7 +160,7 @@
             </entry>
             <entry>
               <para>A short description that is displayed as a tooltip of the property in the
-                Federate Console.</para>
+                Teiid Console.</para>
             </entry>
           </row>
           <row>
@@ -298,17 +298,17 @@
     
     <sect2>
       <title>Extension Modules</title>
-      <para>Extension Modules are used in the Federate Server to store code that extends
-        the Federate Server in a central managed location.  Extension Module JAR files are stored in
-        the repository database and all Federate processes access this database to obtain extension
+      <para>Extension Modules are used in the Teiid Server to store code that extends
+        the Teiid Server in a central managed location.  Extension Module JAR files are stored in
+        the repository database and all Teiid processes access this database to obtain extension
         code.  Custom connector code is typically deployed as extension models.</para>
     </sect2>
     <sect2 id="understanding_classpath">
       <title>Understanding the Connector Classpath</title>
       <para>Each connector is started in an isolated classloader instance. This classloader loads
-        classes via the Federate Extension Modules before loading classes from the Federate system
+        classes via the Teiid Extension Modules before loading classes from the Teiid system
         classpath. Ideally, all of your connector classes should be loaded from extension modules,
-        which are configured in the Federate Console.  </para>
+        which are configured in the Teiid Console.  </para>
       <para>The ConnectorClasspath property of your connector defines the extension module jars
         that are included in your connector’s classpath.  The connector classpath is defined as a
         semi-colon delimited list of extension modules.  Extension module jar files must be prefixed
@@ -320,7 +320,7 @@
   <sect1>
     <title>Connector Archive File</title>
     <para>The Connector Archive file is a bundled version of all files needed by this Connector
-      to execute in the Federate server. This file includes the Connector Type Definition file and
+      to execute in the Teiid server. This file includes the Connector Type Definition file and
       all the Extension Modules required by the Connector to create a connector archive file (CAF)..
     </para>
     <itemizedlist>
@@ -357,13 +357,13 @@
     <title>Importing the Connector Archive</title>
     
     <sect2>
-    <title>Into Federate Server</title>
-    <para>To use a new connector type definition in the Federate Server, the Connector Archive
-      file must be imported in the Federate Console or using the Admin API.  To perform this task,
+    <title>Into Teiid Server</title>
+    <para>To use a new connector type definition in the Teiid Server, the Connector Archive
+      file must be imported in the Teiid Console or using the Admin API.  To perform this task,
       perform the following steps:</para>
     <orderedlist>
       <listitem>
-        <para>Start the Federate Console and connect to your Federate Server.</para>
+        <para>Start the Teiid Console and connect to your Teiid Server.</para>
       </listitem>
       <listitem>
         <para>Select Connector Types from the tree at the left of the Console.  This will
@@ -416,12 +416,12 @@
     
     <sect2>
       <title>In Console</title>
-     <para>To actually use your connector in the Federate System, you must create a Connector
+     <para>To actually use your connector in the Teiid System, you must create a Connector
       Binding that specifies the specific property values for an instance of the Connector Type.  To
       create a Connector Binding, perform the following steps:</para>
       <orderedlist>
         <listitem>
-          <para>Start the Federate Console and connect to your Federate Server.</para>
+          <para>Start the Teiid Console and connect to your Teiid Server.</para>
         </listitem>
         <listitem>
           <para>Select Connector Bindings from the tree at the left of the Console.  This will
@@ -446,12 +446,12 @@
         <listitem>
           <para>In Step 3, you are given the opportunity to set the enabled state of the new binding
             in each PSC.  Typically, no modifications need to be made.  For more information, see the
-            Federate Console User’s Guide.  Click the Finish button to complete the wizard and
+            Teiid Console User’s Guide.  Click the Finish button to complete the wizard and
             create your connector binding.  The Connector Binding list now displays your new connector
             binding.  </para>
         </listitem>
       </orderedlist>
-      <para>To actually start your connector binding, please consult the Federate Console User’s
+      <para>To actually start your connector binding, please consult the Teiid Console User’s
         Guide for detailed information.</para>
     </sect2>
     
@@ -466,7 +466,7 @@
       <para>Also, note that the bindings specified in the Designer tool are automatically bundled
       into the VDB for deployment, so if there are any properties that needs to be changed from
       development environment to the production environment, those properties need to be modified
-      when a VDB is deployed to the Federate Server using the Console to correct resources.</para>
+      when a VDB is deployed to the Teiid Server using the Console to correct resources.</para>
     </sect2>
   </sect1>
 </chapter>

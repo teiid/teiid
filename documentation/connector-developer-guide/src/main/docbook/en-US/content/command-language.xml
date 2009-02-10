@@ -3,7 +3,7 @@
   
   <sect1>
     <title>Language Interfaces</title>
-    <para>Federate sends commands to your connector in object form. The interfaces for these objects are all defined in the com.metamatrix.data.language package. These interfaces can be combined to represent any possible command that Federate may send to the connector. However, it is possible to notify the Federate Server that your connector can only accept certain kinds of commands via the ConnectorCapabilities class. See the section on using <link linkend="connector_capabilities">Connector Capabilities</link> for more information.</para>
+    <para>Teiid sends commands to your connector in object form. The interfaces for these objects are all defined in the com.metamatrix.data.language package. These interfaces can be combined to represent any possible command that Teiid may send to the connector. However, it is possible to notify the Teiid Server that your connector can only accept certain kinds of commands via the ConnectorCapabilities class. See the section on using <link linkend="connector_capabilities">Connector Capabilities</link> for more information.</para>
     <para>The language interfaces all extend from the main interface, ILanguageObject. They are composed in a tree where each node is a language object that has zero or more child language objects of types that are dependent on the current node.</para>
     <para>All commands sent to your connector are in the form of these language trees, where the root of the tree is a subclass of ICommand. ICommand has several sub-interfaces, namely: IQuery, IInsert, IUpdate, IDelete, and IProcedure.  These represent the query in SQL form. Important components of these commands are expressions, criteria, and joins, which are examined in closer detail below.</para>
     
@@ -188,17 +188,17 @@
             <row>
               <entry><para>ConnectorEnvironment</para></entry>
               <entry><para>Interface</para></entry>
-              <entry><para>This interface (provided by Federate) is a factory to obtain the TypeFacility instance for the connector using the getTypeFacility() method.</para></entry>
+              <entry><para>This interface (provided by Teiid) is a factory to obtain the TypeFacility instance for the connector using the getTypeFacility() method.</para></entry>
             </row>
             <row>
               <entry><para>TypeFacility</para></entry>
               <entry><para>Interface</para></entry>
-              <entry><para>This interface has two methods that support data type transformation.  Generally,transformations exist for all valid implicit and explicit data type transformations in the Federate query engine.  </para></entry>
+              <entry><para>This interface has two methods that support data type transformation.  Generally,transformations exist for all valid implicit and explicit data type transformations in the Teiid query engine.  </para></entry>
             </row>
             <row>
               <entry><para>TypeFacility.RUNTIME_TYPES</para></entry>
               <entry><para>Interface</para></entry>
-              <entry><para>This is an inner interface of TypeFacility that defines constants for all Federate runtime data types.  All IExpression instances define a data type based on this set of types.  These constants are often needed in understanding or creating language interfaces.</para></entry>
+              <entry><para>This is an inner interface of TypeFacility that defines constants for all Teiid runtime data types.  All IExpression instances define a data type based on this set of types.  These constants are often needed in understanding or creating language interfaces.</para></entry>
             </row>
           </tbody>
         </tgroup>
@@ -216,7 +216,7 @@
     
   <sect1>
     <title>Runtime Metadata</title>
-    <para>Federate uses a library of metadata, known as “runtime metadata” for each virtual database that is deployed in the Federate Server. The runtime metadata is a subset of metadata as defined by models in the Federate models that compose the virtual database.  </para>
+    <para>Teiid uses a library of metadata, known as “runtime metadata” for each virtual database that is deployed in the Teiid Server. The runtime metadata is a subset of metadata as defined by models in the Teiid models that compose the virtual database.  </para>
     <para>Connectors can access runtime metadata by using the interfaces defined in com.metamatrix.data.metadata.runtime.  This class defines interfaces representing a MetadataID, a MetadataObject, and ways to navigate those IDs and objects.</para>
 
     <sect2>
@@ -277,7 +277,7 @@ Properties props = group.getProperties();
     </sect2>
     <sect2>
       <title>Provided Visitors</title>
-      <para>The SQLStringVisitor is a special visitor that can traverse a tree of language interfaces and output the equivalent Federate SQL.  This visitor can be used to print language objects for debugging and logging.  The SQLStringVisitor does not use the HierarchyVisitor described in the last section; it provides both iteration and processing type functionality in a single custom visitor.    </para>
+      <para>The SQLStringVisitor is a special visitor that can traverse a tree of language interfaces and output the equivalent Teiid SQL.  This visitor can be used to print language objects for debugging and logging.  The SQLStringVisitor does not use the HierarchyVisitor described in the last section; it provides both iteration and processing type functionality in a single custom visitor.    </para>
       <para>The CollectorVisitor is a handy utility to collect all language objects of a certain type in a tree. Some additional helper methods exist to do common tasks such as retrieving all elements in a tree, retrieving all groups in a tree, and so on.  </para>
     </sect2>
     <sect2>
@@ -304,12 +304,12 @@ int count = visitor.getCount();
   </sect1>
   <sect1 id="connector_capabilities">
     <title>Connector Capabilities</title>
-    <para>All connectors must return a ConnectorCapabilities class from the Connection.getCapabilities() method. This class is used by the Connector Manager to determine what kinds of commands the connector is capable of executing. A basic implementation of the ConnectorCapabilities interface is supplied at com.metamatrix.data.basic.BasicConnectorCapabilities. This capabilities class specifies that the connector only executes queries and does not support any capability. Federate recommends that you extend this class and override the necessary methods to specify which capabilities your connector supports.  </para>
+    <para>All connectors must return a ConnectorCapabilities class from the Connection.getCapabilities() method. This class is used by the Connector Manager to determine what kinds of commands the connector is capable of executing. A basic implementation of the ConnectorCapabilities interface is supplied at com.metamatrix.data.basic.BasicConnectorCapabilities. This capabilities class specifies that the connector only executes queries and does not support any capability. Teiid recommends that you extend this class and override the necessary methods to specify which capabilities your connector supports.  </para>
     
     <sect2>
       <title>Capability Scope</title>
       <para>The method ConnectorCapabilities.getScope() specifies the scope of a capabilities set. Currently, two scope modes are defined in ConnectorCapabilities.SCOPE: global and per user. Specifying the scope as global means that the capabilities are the same for all connections to this source. Specifying the scope as per user means that the capabilities are potentially different for each user, so capabilities cannot be cached between users.</para>
-      <para>The per user mode is significantly slower and usually not necessary, therefore Federate recommends using the global mode if capabilities of a source are the same across all connections. The BasicConnectorCapabilities implementation specifies global scope.</para>
+      <para>The per user mode is significantly slower and usually not necessary, therefore Teiid recommends using the global mode if capabilities of a source are the same across all connections. The BasicConnectorCapabilities implementation specifies global scope.</para>
     </sect2>
     <sect2>
       <title>Execution Modes</title>
@@ -927,7 +927,7 @@ int count = visitor.getCount();
       
       <sect2>
         <title>Scalar Functions</title>
-        <para>The method ConnectorCapabilities.getSupportedFunctions() can be used to specify which scalar functions the connector supports.  The set of possible functions is based on the set of functions supported by Federate.  This set can be found in the Query Support Booklet documentation.  If the connector states that it supports a function, it must support all type combinations and overloaded forms of that function.</para>
+        <para>The method ConnectorCapabilities.getSupportedFunctions() can be used to specify which scalar functions the connector supports.  The set of possible functions is based on the set of functions supported by Teiid.  This set can be found in the Query Support Booklet documentation.  If the connector states that it supports a function, it must support all type combinations and overloaded forms of that function.</para>
         <para>There are five operators that can also be specified in the supported function list: +, -, *, /, and ||.</para>
       </sect2>
 

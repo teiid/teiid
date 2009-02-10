@@ -23,14 +23,14 @@
           <emphasis>Connection</emphasis>
           - This interface represents a connection to your data source. It is used as a starting point for actual
           command executions.  Connections provided to the Connector Manager will be obtained and released for each
-          command execution. Federate provides for extensible automatic connection pooling, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
+          command execution. Teiid provides for extensible automatic connection pooling, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
           chapter.
         </para>
       </listitem>
       <listitem>
         <para>
           <emphasis>ConnectorCapabilities</emphasis>
-          - This interface allows a connector to describe the execution capabilities of the connector. Federate
+          - This interface allows a connector to describe the execution capabilities of the connector. Teiid
           provides a base implementation of this class called BasicConnectorCapabilities.  You can either extend
           this basic implementation or implement your own implementation.
         </para>
@@ -46,12 +46,12 @@
       <listitem>
         <para>
           <emphasis>Batch</emphasis>
-          - This interface represents a batch of results being sent to the Federate Server from the custom
-          connector. Federate provides a default implementation of this class called BasicBatch.
+          - This interface represents a batch of results being sent to the Teiid Server from the custom
+          connector. Teiid provides a default implementation of this class called BasicBatch.
         </para>
       </listitem>
     </itemizedlist>
-    <para>The most important interfaces provided by Federate to the connector are the following:</para>
+    <para>The most important interfaces provided by Teiid to the connector are the following:</para>
     <itemizedlist>
       <listitem>
         <para>
@@ -62,7 +62,7 @@
       <listitem>
         <para>
           <emphasis>ConnectorLogger</emphasis>
-          – an interface for writing logging information to Federate logs.
+          – an interface for writing logging information to Teiid logs.
         </para>
       </listitem>
       <listitem>
@@ -90,19 +90,19 @@
       <itemizedlist>
         <listitem>
           <para>Configuration properties – name / value pairs as provided by the connector binding in
-            the Federate Console</para>
+            the Teiid Console</para>
         </listitem>
         <listitem>
           <para>Logging – ConnectorLogger interface allows a Connector to log messages and errors to
-            Federate’s log files.</para>
+            Teiid’s log files.</para>
         </listitem>
         <listitem>
-          <para>Runtime metadata – access to the runtime metadata of the model deployed in the Federate
+          <para>Runtime metadata – access to the runtime metadata of the model deployed in the Teiid
             Server for your physical source</para>
         </listitem>
         <listitem>
           <para>Large object replacement – ability to stream the results of large values (such as blobs and
-            clobs) through the Federate system</para>
+            clobs) through the Teiid system</para>
         </listitem>
         <listitem>
           <para>Type facility – an interface defining runtime datatypes and type conversion facility.</para>
@@ -113,7 +113,7 @@
       <title>Starting and Stopping</title>
       <para>Other methods on the connector allow the Connector Manager to start() or stop() the connector.
         Typically the connector is started or stopped in response to system startup, system shutdown, or an
-        administrator changing these states on connector bindings in the Federate Console or through Admin API. A
+        administrator changing these states on connector bindings in the Teiid Console or through Admin API. A
         connector should perform whatever actions are necessary in these methods to create or destroy all connector
         states, including connections to the actual physical source.</para>
     </sect2>
@@ -141,10 +141,10 @@
         </listitem>
       </itemizedlist>
       <para>The trusted token is used to pass security information specific to your application through the
-        Federate Server. The client can pass the trusted token when they connect via JDBC. This token is then
+        Teiid Server. The client can pass the trusted token when they connect via JDBC. This token is then
         passed to the Membership Service and may be created, replaced, or modified at that time. In some cases, you
         may wish to provide a customer Membership Service implementation to handle security needs specific to your
-        organization. For more information on implementing a custom Membership Service, contact Federate
+        organization. For more information on implementing a custom Membership Service, contact Teiid
         technical support.</para>
     </sect2>
     <sect2>
@@ -153,7 +153,7 @@
         lifetime of the request.  When the request has completed, the release() method will be called on the
         connection.</para>
       <para>
-        In cases (such as when a connection is stateful and expensive to create), connections should be pooled.  Federate
+        In cases (such as when a connection is stateful and expensive to create), connections should be pooled.  Teiid
         provides an extensible connection pool for this purpose, as described in chapter
         <link linkend="connection_pooling">Connection Pooling</link>.
       </para>
@@ -293,9 +293,9 @@
         to true.</para>
         
       <para>The maxBatchSize parameter passed to the nextBatch method corresponds to the Connector Batch Size
-        that can be set on a system-wide bases in the Federate Console (under System Properties in the buffer
+        that can be set on a system-wide bases in the Teiid Console (under System Properties in the buffer
         section..)  The Connector Batch Size should typically be set in conjunction with the Processor Batch Size
-        from the same category.  For more information on these parameters, see the Federate Console User Guide.
+        from the same category.  For more information on these parameters, see the Teiid Console User Guide.
       </para>
     </sect2>
     <sect2>
@@ -371,13 +371,13 @@
     </sect2>
     <sect2>
       <title>Command Cancellation</title>
-      <para>Commands submitted to Federate may be aborted in several scenarios:</para>
+      <para>Commands submitted to Teiid may be aborted in several scenarios:</para>
       <itemizedlist>
         <listitem>
           <para>Client cancellation via the JDBC API (or other client APIs)</para>
         </listitem>
         <listitem>
-          <para>Administrative cancellation via the Federate Console or Admin API</para>
+          <para>Administrative cancellation via the Teiid Console or Admin API</para>
         </listitem>
         <listitem>
           <para>Clean-up during session termination</para>
@@ -386,11 +386,11 @@
           <para>Clean-up if a query fails during processing</para>
         </listitem>
       </itemizedlist>
-      <para>In these cases, if the command being executed on the connector has not yet finished, Federate will
+      <para>In these cases, if the command being executed on the connector has not yet finished, Teiid will
         call the cancel() method on the execution interface in a separate thread from the thread that may be
         blocked calling the execute() method.</para>
       <para>Your connector implementation may choose to do nothing in response to this cancellation message. In
-        this instance, Federate will call close() on the execution object after current synchronous processing
+        this instance, Teiid will call close() on the execution object after current synchronous processing
         has completed. Implementing the cancel() method allows for faster termination of queries being processed
         and may allow the underlying data source to terminate its operations faster as well.</para>
     </sect2>

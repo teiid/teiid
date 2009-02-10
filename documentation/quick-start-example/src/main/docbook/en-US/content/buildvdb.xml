@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="designer">
-  <title>Using Federate Designer to build a VDB</title>
+  <title>Using Teiid Designer to build a VDB</title>
   <sect1>
-    <title>Download Federate Designer</title>
+    <title>Download Teiid Designer</title>
     <para>
-      The Federate Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
-      download Federate Designer
+      The Teiid Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
+      download Teiid Designer
       <ulink url="/projects/federatedesigner.html">here</ulink>
-      Once downloaded, please follow the installation instructions. Start the Federate Designer and return here to continue
+      Once downloaded, please follow the installation instructions. Start the Teiid Designer and return here to continue
       building the VDB.
     </para>
   </sect1>

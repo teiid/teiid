@@ -5,7 +5,7 @@
   <sect1>
     <title>Default Connection Properties</title>
     <para>The file "connection.properties" in the installation directory of the MMAdmin defines the default
-      connection properties with which user can connect to Federate system. The following  properties can be
+      connection properties with which user can connect to Teiid system. The following  properties can be
       defined using this file</para>
     <programlisting><![CDATA[
 server.host = <server host name or ip address>
@@ -15,7 +15,7 @@ user.password = <password>
 vdb.name = <vdb name>    
       ]]></programlisting>
     <para>When properties file is found, a call to "connect()" without any input parameters, will connect to
-      the Federate system using the properties defined in properties file. However, user can always pass in
+      the Teiid system using the properties defined in properties file. However, user can always pass in
       parameters in the connect method to connect to a same or different server than one mentioned in the
       “connection.properties”.  Look all the all the different connect methods using the “help()” method.  </para>
     <para>Note that it is not secure to leave the passwords in clear text, as defined above. Please take
@@ -28,7 +28,7 @@ vdb.name = <vdb name>
   </sect1>
   <sect1>
     <title>Handling Multiple Connections</title>
-    <para>Using MMAdmin, user can actively manage more than one connection to a single or multiple Federate
+    <para>Using MMAdmin, user can actively manage more than one connection to a single or multiple Teiid
       systems. For example, two separate connections can be maintained, one to the development server and one to
       the integration server at the same time. This is possible because MMAdmin supports a feature called named
       connections. </para>

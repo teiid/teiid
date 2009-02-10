@@ -6,7 +6,7 @@
 			for each command that is executed.</para>
 		<para>However many enterprise sources maintain persistent
 			connections that are expensive to create. For these situaions,
-			Federate provides a transparent connection pool to reuse rather than
+			Teiid provides a transparent connection pool to reuse rather than
 			constantly release connections.  The connection pool is highly
 			configurable through configuration properties and extension APIs for
 			Connections and Connectors</para>

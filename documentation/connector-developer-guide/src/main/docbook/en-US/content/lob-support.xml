@@ -1,6 +1,6 @@
 <chapter id="lob_support">
   <title>Handling Large Objects</title>
-  <para>This chapter examines how to use facilities provided by the Federate Connector API to
+  <para>This chapter examines how to use facilities provided by the Teiid Connector API to
     use large objects such as blobs, clobs, and xml in your connector.</para>
   
   <sect1>
@@ -8,16 +8,16 @@
   
     <sect2>
       <title>Data Types</title>
-      <para>Federate supports three large object runtime data types:  blob, clob, and xml.
+      <para>Teiid supports three large object runtime data types:  blob, clob, and xml.
          A blob is a “binary large object”, a clob is a “character large object”, and “xml” is a “xml
         document”.  Columns modeled as a blob, clob, or xml are treated similarly by the connector
         framework to support memory-safe streaming.  </para>
     </sect2>
     <sect2>
       <title>Why Use Large Object Support?</title>
-      <para>The Federate Server allows a Connector to return a large object through the
-        Federate Connector API by just returning a reference to the actual large object.  The
-        Federate Server or JDBC Driver can then access the data via a stream rather than retrieving
+      <para>The Teiid Server allows a Connector to return a large object through the
+        Teiid Connector API by just returning a reference to the actual large object.  The
+        Teiid Server or JDBC Driver can then access the data via a stream rather than retrieving
         the data all at once.  This is useful for several reasons:</para>
       <orderedlist>
         <listitem>
@@ -31,7 +31,7 @@
             always use the large object data.</para>
         </listitem>
         <listitem>
-          <para>Allows the passing of arbitrarily large data values within a fixed Federate
+          <para>Allows the passing of arbitrarily large data values within a fixed Teiid
             memory usage.  </para>
         </listitem>
       </orderedlist>
@@ -127,9 +127,9 @@ batch.addRow(columnValues);
       
     <para>The SQLXML interface allows large xml documents to
       be processed by the server without creating memory issues. XML Source Connectors also use this
-      interface to supply documents to the Federate XQuery engine.</para>
+      interface to supply documents to the Teiid XQuery engine.</para>
     <para>A new, and important, limitation of using the LOB type objects introduced in the 5.5
-      version of the Federate Server is that streaming is not supported from remote connectors. This
+      version of the Teiid Server is that streaming is not supported from remote connectors. This
       is an issue in clustered environments if connectors intended to return LOBs are deployed on only
       a subset of the hosts or in failover situations. The most appropriate workaround to this
       limitation is to deploy connectors intended to return LOBs on each host in the cluster. There is
@@ -138,8 +138,8 @@ batch.addRow(columnValues);
   
   <sect1>
     <title>Inserting or Updating Large Objects</title>
-    <para>The Federate JDBC API also allows the insertion or update of large objects.  However,
-      the JDBC API does not currently stream large objects on insert or update.  So, the Federate
+    <para>The Teiid JDBC API also allows the insertion or update of large objects.  However,
+      the JDBC API does not currently stream large objects on insert or update.  So, the Teiid
       JDBC API will read all of the data and pass it back to the connector in a single materialized
       value.  </para>
     <para>In these cases LOBs will be passed to the Connector in the language objects as an

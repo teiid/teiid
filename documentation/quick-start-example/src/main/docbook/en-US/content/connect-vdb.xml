@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="OpenConnection">
   <title>Connecting to a VDB through JDBC</title>
-  <para>At this point you have deployed Federate Embedded and your VDB. Now it's time to connect the sample application
+  <para>At this point you have deployed Teiid Embedded and your VDB. Now it's time to connect the sample application
    to this VDB, issue SQL queries, and view the returned, integrated data. Note that
     this process is no different than connecting to any other JDBC source.</para>
   <sect1>
@@ -10,7 +10,7 @@
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
       connect to your VDB all you need is URL and any additional optional properties that you would like to set
-      such as log file, number of threads etc. Currently the Federate Embedded is not associated with any user
+      such as log file, number of threads etc. Currently the Teiid Embedded is not associated with any user
       authentication system, so user-id and password are not required. The JDBC connection is supported through
       <emphasis>"com.metamatrix.jdbc.EmbeddedDriver"</emphasis>
       driver requires the URL syntax of
@@ -76,25 +76,25 @@
        <ulink url="/project/federate/datasource-properties">data source properties</ulink>.</para>       
   </sect1>
   <sect1>
-  <title>Testing Your Federate Embedded Deployment</title>
-  <para>The Federate Embedded installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
+  <title>Testing Your Teiid Embedded Deployment</title>
+  <para>The Teiid Embedded installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
   To execute this demonstration, follow these steps:</para> 
   <orderedlist numeration="arabic">
     <listitem><para>Ensure Derby is running</para></listitem>
-    <listitem><para>Change to the /examples/portfolio directory within your Federate Embedded installation</para></listitem>
+    <listitem><para>Change to the /examples/portfolio directory within your Teiid Embedded installation</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
     <para>The sample query, "select * from CustomerAccount", queries the view model and, from that, queries the two underlying
     data sources: one relational, one file-based. All the sample Java class does is connect to the VDB, issue the query, 
-    and print the results. Federate Embedded does the "heavy lifting". 
+    and print the results. Teiid Embedded does the "heavy lifting". 
     (For the complete code used in this example, look in the "examples/portfolio" directory.)</para>
     <para>
     You are encouraged to experiment with queries that go beyond the simple "select * from CustomerAccount". Additionally,
     there is a sample Yahoo connector that returns stock market data. It can be used in place of the text file so the 
-    market data is more timely. Go to the Federate Connector Sandbox projects for more information. 
+    market data is more timely. Go to the Teiid Connector Sandbox projects for more information. 
    </para>
      
-  <para>If your application is Web based, you can also deploy Federate Embedded in an application server 
+  <para>If your application is Web based, you can also deploy Teiid Embedded in an application server 
   and treat it as any other JDBC source by creating a connection pool with the 
   <emphasis>com.metamatrix.jdbc.EmbeddedDataSource</emphasis> and assigning it a JNDI name. 
   Refer to <ulink url="/project/federate/deployments">deployment to application server</ulink> for more information</para>

@@ -24,7 +24,7 @@
         <para>What is different between "connect(&lt;url&gt;)" method and "connectAsAdmin()"?</para>
       </question>
       <answer>
-        <para>Connect connects to the Federate system using a VDB name, so you should be able to run any SQL command which is based on that VDB along with Admin method calls. If you use "connectAsAdmin" then you can run all the admin calls but you can not run any SQL commands, and you do not need a VDB to connect to the Federate system.</para>
+        <para>Connect connects to the Teiid system using a VDB name, so you should be able to run any SQL command which is based on that VDB along with Admin method calls. If you use "connectAsAdmin" then you can run all the admin calls but you can not run any SQL commands, and you do not need a VDB to connect to the Teiid system.</para>
       </answer>
     </qandaentry>
 

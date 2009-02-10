@@ -5,10 +5,10 @@
   <sect1>
     <title>Portfolio Application Explained</title>
     <para>
-      To demonstrate how Federate Designer and Federate Embedded work together, follow these steps to build a simple
+      To demonstrate how Teiid Designer and Teiid Embedded work together, follow these steps to build a simple
       portfolio valuation virtual database. The investor's portfolio information is stored in a Derby database and
       "current" stock prices are stored in a delimited text file. When completed, a single query will cause
-      Federate Embedded to access the relational and non-relational sources, calculate the portfolio values, and
+      Teiid Embedded to access the relational and non-relational sources, calculate the portfolio values, and
       return the results. Here are some of key points to consider as you build this example:
       <itemizedlist>
         <listitem>
@@ -19,7 +19,7 @@
         </listitem>
         <listitem>
           <para>Imagine how much more complete this would be if you replaced the text file with a connection
-            to a financial Web site. (Hint: You can with Federate Embedded and a custom connector.)</para>
+            to a financial Web site. (Hint: You can with Teiid Embedded and a custom connector.)</para>
         </listitem>
       </itemizedlist>
     </para>
@@ -45,7 +45,7 @@
       </listitem>
       <listitem>
         <para>
-          <link linkend="step-4">Step-4: Deploy the VDB in Federate Embedded</link>
+          <link linkend="step-4">Step-4: Deploy the VDB in Teiid Embedded</link>
         </para>
       </listitem>
       <listitem>

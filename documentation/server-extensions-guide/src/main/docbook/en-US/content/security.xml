@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="custom_security">
-  <title>Federate Security</title>
+  <title>Teiid Security</title>
   <sect1>
-    <title>Federate Security</title>
+    <title>Teiid Security</title>
     <sect2>
       <title>Introduction</title>
-      <para>The Federate system provides a range of built-in and extensible security features to enable the
+      <para>The Teiid system provides a range of built-in and extensible security features to enable the
         secure access of data.  </para>
       <para />
       <para>For more detailed information see the:</para>
@@ -21,7 +21,7 @@
         </listitem>
         <listitem>
           <para>Web Services Guide – for information on how to secure web service
-            access to Federate</para>
+            access to Teiid</para>
         </listitem>
         <listitem>
           <para>Client Developers Guide – for information on how to authenticate
@@ -38,7 +38,7 @@
         identity of the user can be discerned from the trusted payload or another mechanism.  In any case it is up
         to the installed membership domains to actually determine whether a user can be authenticated.</para>
       <para />
-      <para>NOTE: All passwords or security credentials that are passed through the Federate system will
+      <para>NOTE: All passwords or security credentials that are passed through the Teiid system will
         either be encrypted or sent of an encrypted transport by default.</para>
     </sect2>
     <sect2>
@@ -46,15 +46,15 @@
       <para>Authorization is split into three areas of concern.  Admin roles, repository roles, and
         data roles can be managed in the Console to enforce authorization of administrative tasks, the MetaBase
         repository, and enterprise data respectively.  A role is simply a collection of permissions and a
-        collection of entitled principals.  Currently the Federate security system only allows principals that
+        collection of entitled principals.  Currently the Teiid security system only allows principals that
         represent groups to be assigned to a role. The set of available groups are determined by the installed
         membership domains.</para>
     </sect2>
   </sect1>
   <sect1>
     <title> Membership Domains</title>
-    <para>Membership domains are at the core of Federate’s security system and bridge the gap between
-      Federate and an external security system.  A membership domain provides:</para>
+    <para>Membership domains are at the core of Teiid’s security system and bridge the gap between
+      Teiid and an external security system.  A membership domain provides:</para>
     <itemizedlist>
       <listitem>
         <para>User authentication</para>
@@ -71,9 +71,9 @@
       determine role membership, and to enforce roles.</para>
     <para>
       There are multiple types of membership domains that allow for connectivity to different security systems.
-       A Federate server environment can be configured with multiple membership domains (there can be multiple
+       A Teiid server environment can be configured with multiple membership domains (there can be multiple
       instances of a given membership domain type).  Each membership domain instance must be assigned a unique
-      domain name in the Federate system.  The domain name can be used to fully qualify user names to
+      domain name in the Teiid system.  The domain name can be used to fully qualify user names to
       authenticate only against that domain.  The format for a qualified name is
       <ulink url="mailto:username@domain">username@domainname.</ulink>
     </para>
@@ -88,7 +88,7 @@
       server log with appropriate levels of severity.</para>
     <sect2>
       <title>Built-in Membership Domains</title>
-      <para>The Federate System provides LDAP and File membership domain types.  </para>
+      <para>The Teiid System provides LDAP and File membership domain types.  </para>
       <para>The LDAP membership domain provides flexible integration with a variety of LDAP servers through JNDI
         (Java Naming and Directory Interface).  Enterprise environments with an LDAP compliant directory server
         should attempt to utilize the built-in LDAP membership domain before attempting to create a custom
@@ -96,13 +96,13 @@
       <para>The File membership domain utilizes a simple set of text files to authenticate users and to define
         their groups.  Please note however that the File membership domain is not intended for production use.
       </para>
-      <para>Instructions for configuring both of these can be found in the Federate Console Guide.</para>
+      <para>Instructions for configuring both of these can be found in the Teiid Console Guide.</para>
       <para>Support will be added for additional membership domains with subsequent releases.</para>
     </sect2>
     <sect2>
       <title>Custom Membership Domains</title>
       <para>In circumstances not covered by a built-in membership domain, a custom membership domain allows the
-        Federate security system to interact seamlessly with other enterprise security providers.  </para>
+        Teiid security system to interact seamlessly with other enterprise security providers.  </para>
       <para>Java development is required to implement a custom membership domain.  The API and a full example
         are covered in the following chapters of this document.</para>
     </sect2>

@@ -6,13 +6,13 @@
   Note there are two steps involved in this deployment:</para>
   <orderedlist>
     <listitem>
-      <para>Deploying Federate Embedded</para>
+      <para>Deploying Teiid Embedded</para>
     </listitem>
     <listitem>
       <para>Deploying VDB</para>
     </listitem>
   </orderedlist>
-  <para> Federate Embedded is typically used in one of two manners:</para>
+  <para> Teiid Embedded is typically used in one of two manners:</para>
   <itemizedlist>
     <listitem>
       <para>
@@ -26,18 +26,18 @@
     </listitem>
   </itemizedlist>
   <para />
-  <para>This example deploys Federate Embedded as a stand-alone Java application. The sample deployment is shown below.
-  You can find more details about deploying to application servers on the Federate web-site</para>
+  <para>This example deploys Teiid Embedded as a stand-alone Java application. The sample deployment is shown below.
+  You can find more details about deploying to application servers on the Teiid web-site</para>
   <para />
   <sect1 id="stand-alone-deployment">
     <title>Stand-alone Application Deployment</title>
-    <para>Copy the "federate-${version}-embedded.jar" and all dependent jars in "lib" directory in your Java
+    <para>Copy the "Teiid-${version}-embedded.jar" and all dependent jars in "lib" directory in your Java
       application's classpath along with your VDB. If your application is already using the any of dependent jars
       defined in "lib" directory you can safely ignore adding that jar file to the classpath. Make sure the that
       the versions match</para>
     <orderedlist>
       <listitem>
-        <para>Add "federate-${version}-embedded.jar" to your application classpath</para>
+        <para>Add "Teiid-${version}-embedded.jar" to your application classpath</para>
       </listitem>
       <listitem>
         <para>Add all the dependent jar files in the "lib" directory to your application's classpath. If your

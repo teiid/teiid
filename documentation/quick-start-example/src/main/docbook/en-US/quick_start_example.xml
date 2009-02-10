@@ -30,8 +30,8 @@
 ]>
 <book>
   <bookinfo>
-    <title>Federate - Scalable Information Integration</title>
-    <subtitle>Federate Embedded Quick Start Example</subtitle>
+    <title>Teiid - Scalable Information Integration</title>
+    <subtitle>Teiid Embedded Quick Start Example</subtitle>
     <releaseinfo>&versionNumber;
     </releaseinfo>
     <productnumber>&versionNumber;
@@ -39,10 +39,10 @@
     <issuenum>1</issuenum>
     <mediaobject>
       <imageobject role="fo">
-        <imagedata fileref="images/federate_logo.png" align="center" />
+        <imagedata fileref="images/logo.png" align="center" />
       </imageobject>
       <imageobject role="html">
-        <imagedata fileref="images/federate_logo.png" depth="3cm" />
+        <imagedata fileref="images/logo.png" depth="3cm" />
       </imageobject>
     </mediaobject>
     <copyright>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="introduction">
-  <title>Introduction Federate Admin Shell</title>
+  <title>Introduction Teiid Admin Shell</title>
   <sect1>
     <title>Introduction to MMAdmin</title>
     <para>
-      MMAdmin is a script based programing environment that enables user to access, monitor and control Federate
+      MMAdmin is a script based programing environment that enables user to access, monitor and control Teiid
       Server and MMQuery environments. This tool is built using programming language called BeanShell (
       <ulink url="http://beanshell.org/">http://beanshell.org</ulink>
       ). MMAdmin can be used in ad-hoc scripting, or to run pre-defined scripts. It is not a graphical tool; it's a
@@ -17,8 +17,8 @@
           management. Under the covers it is a fully functional Java programming environment.</para>
       </listitem>
       <listitem>
-        <para>It is an Administrative tool. The user can connect to a running Federate Server and invoke any of
-          the Admin API methods, such as "addVDB" or "stopConnector", to control Federate System just like using
+        <para>It is an Administrative tool. The user can connect to a running Teiid Server and invoke any of
+          the Admin API methods, such as "addVDB" or "stopConnector", to control Teiid System just like using
           Console. Since, this is script driven, these tasks can be automated and re-run at a later time.</para>
       </listitem>
       <listitem>
@@ -43,7 +43,7 @@
     <sect2>
       <title>Where can you find MMAdmin?</title>
       Where can you find MMAdmin
-      <para>MMAdmin is bundled with the Federate under “tools” package. Download and unzip this
+      <para>MMAdmin is bundled with the Teiid under “tools” package. Download and unzip this
         file to any directory using WinZip or tar command. Once you have unzipped the file, in root directory
         you will find “mmadmin” executable script to invoke the tool.</para>
       <para>Windows: Double click or execute "mmadmin.cmd"</para>

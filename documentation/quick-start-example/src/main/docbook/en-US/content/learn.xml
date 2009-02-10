@@ -10,20 +10,20 @@
       physical data sources. The physical sources can be JDBC sources, delimited text files, spreadsheets
       or even Web services.</para>
     <para>Your JDBC application references the virtual (logical) schema defined in this VDB. When tables, or
-      other objects, in the VDB's models are queried, the Federate query engine interprets the virtual schema,
+      other objects, in the VDB's models are queried, the Teiid query engine interprets the virtual schema,
       makes the appropriate calls to the actual physical sources, combines and translates them as requested, and
       returns the top level results to the application.</para>
   </sect1>
   <sect1>
-    <title>What is Federate Embedded?</title>
-    <para> Federate Embedded is a container for deploying your VDB. Before you can access your data in a federated
-      manner, use the Federate Modeler to build a VDB. This picture shows the relationship between the tools
+    <title>What is Teiid Embedded?</title>
+    <para> Teiid Embedded is a container for deploying your VDB. Before you can access your data in a federated
+      manner, use the Teiid Modeler to build a VDB. This picture shows the relationship between the tools
       involved.</para>
     <figure id="lifecycle">
       <title>Lifecycle of Events</title>
       <graphic align="center" scale="100" fileref="../images/steps.png" />
     </figure>
-    <para>The Federate Designer tool lets you define physical data sources by importing the required metadata
+    <para>The Teiid Designer tool lets you define physical data sources by importing the required metadata
       (schema) from these sources. Once the metadata is imported, use the Designer to build a virtual data model.
       The collection of physical and logical models form a virtual schema. Once the user has completed the models,
       the Modeler is used to package them in a Virtual Database, or VDB. So, a VDB can be further defined as a
