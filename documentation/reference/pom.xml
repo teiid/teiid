@@ -8,8 +8,8 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>reference</artifactId>
   <packaging>jdocbook</packaging>
-  <name>Federate Reference</name>
-  <description>The Federate reference manual</description>
+  <name>Teiid Reference</name>
+  <description>The Teiid reference manual</description>
   <build>
     <plugins>
       <plugin>
@@ -31,7 +31,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <sourceDocumentName>Federate_Reference.xml</sourceDocumentName>
+          <sourceDocumentName>Reference.xml</sourceDocumentName>
           <imageResource>
             <directory>${basedir}/src/main/docbook/en-US</directory>
             <excludes>
@@ -45,7 +45,7 @@
             <format>
               <formatName>pdf</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-              <finalName>federate_reference.pdf</finalName>
+              <finalName>teiid_reference.pdf</finalName>
             </format>
             <!-- <format>
               <formatName>html_single</formatName>

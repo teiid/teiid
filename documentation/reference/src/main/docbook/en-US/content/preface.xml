@@ -2,13 +2,13 @@
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <preface>
   <title>Preface</title>
-  <para> Federate offers a highly scalable and high performance solution
+  <para> Teiid offers a highly scalable and high performance solution
     to information integration. By allowing integrated and enriched data
     to be consumed relationally or as XML over multiple protocols,
-    Federate simplifies data access for developers and consuming
+    Teiid simplifies data access for developers and consuming
     applications.</para>
   <para> Commercial development support, production support, and
-    training for Federate is available through JBoss Inc. Federate is a
+    training for Teiid is available through JBoss Inc. Teiid is a
     Professional Open Source project and a critical component of the
     JBoss Enterprise Data Services Platform.</para>
 </preface>

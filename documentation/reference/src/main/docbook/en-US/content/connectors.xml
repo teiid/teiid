@@ -148,7 +148,7 @@
   </sect1>
   <sect1>
     <title>Source Security</title>
-    <para> Federate can use the security mechanisms of individual data
+    <para> Teiid can use the security mechanisms of individual data
       sources during execution.</para>
     <para>The use of source security is driven off the credentials
       JDBC property.</para>

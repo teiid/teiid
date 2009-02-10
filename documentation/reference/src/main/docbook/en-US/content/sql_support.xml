@@ -3,18 +3,18 @@
 <chapter id="sql_support">
   <title>SQL Support</title>
   <para>
-    Federate supports SQL for issuing queries and for defining view
+    Teiid supports SQL for issuing queries and for defining view
     transformations; see also Procedure Language<!-- TODO:link -->
     for how SQL is used in virtual procedures and update procedures.
   </para>
   <para>
-    Federate provides nearly all of the functionality of SQL-92 DML.
+    Teiid provides nearly all of the functionality of SQL-92 DML.
     SQL-99 and later features are constantly being added based upon
     community need. The following does not attempt to cover SQL
-    exhaustively, but rather highlights SQL's usage within Federate. See
+    exhaustively, but rather highlights SQL's usage within Teiid. See
     the
     <link linkend="grammar">grammar</link>
-    for the exact form of SQL accepted by Federate.
+    for the exact form of SQL accepted by Teiid.
   </para>
   <sect1 id="identifiers">
     <title>Identifiers</title>
@@ -48,11 +48,11 @@
       <listitem>
         <para> Because different data sources organize tables in different
           ways, some prepending catalog or schema or user information,
-          Federate allows the 'table_spec' to be a dot-delimited construct.
+          Teiid allows the 'table_spec' to be a dot-delimited construct.
         </para>
       </listitem>
       <listitem>
-        <para> Identifiers are not case-sensitive in Federate.</para>
+        <para> Identifiers are not case-sensitive in Teiid.</para>
       </listitem>
       <listitem>
         <para>The separate parts of an identifier can be quoted, with double quotes. This is not required, but some tools do this automatically. Quotes establish another level of grouping, in addition to the dot delimiters. Quotes should not be used in such a way that the table specification, which may itself have multiple parts, is split between two quoted sections.</para>
@@ -110,7 +110,7 @@
       SELECT, FROM (if specifying join criteria, WHERE, GROUP BY, HAVING.
       However you currently cannot use expressions in an ORDER BY clause.</para>
     <itemizedlist>
-      <para>Federate supports the following types of expressions:
+      <para>Teiid supports the following types of expressions:
       </para>
       <listitem>
         <para><link linkend="columnidentifiers">Column identifiers</link></para>
@@ -195,7 +195,7 @@
       <title>Aggregate Functions</title>
       <para>Aggregate functions take sets of values from a group produced by an explicit or implicit GROUP BY and return a single scalar value computed from the group.</para>
       <itemizedlist>
-        <para>Federate supports the following aggregate functions:</para>
+        <para>Teiid supports the following aggregate functions:</para>
         <listitem>
           <para>COUNT(*) – count the number of values (including nulls and duplicates) in a group</para>
         </listitem>
@@ -238,7 +238,7 @@
     <sect2 id="case">
       <title>Case and searched case</title>
       <para>
-      Federate supports two forms of the CASE expression which allows conditional logic in a scalar expression.
+      Teiid supports two forms of the CASE expression which allows conditional logic in a scalar expression.
       </para>
       <itemizedlist>
         <para>Supported forms:
@@ -579,7 +579,7 @@
   </sect1>
   <sect1 id="temp_tables">
     <title>Temp Tables</title>
-    <para>Federate supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
+    <para>Teiid supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
     </para>
     <para>
       Temp tables can be defined implicitly by referencing them in a
@@ -660,7 +660,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
     <sect2 id="select_clause">
       <title>SELECT Clause</title>
       <para>
-      SQL queries start with the SELECT keyword and are often referred to as "SELECT statements". Federate supports most of the standard SQL query constructs.
+      SQL queries start with the SELECT keyword and are often referred to as "SELECT statements". Teiid supports most of the standard SQL query constructs.
       </para>
       <para>
         Usage:
@@ -787,7 +787,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>The order by columns must be of a comparable type.</para>
         </listitem>
         <listitem>
-          <para>If an order by is used in an inline view or view definition without a limit clause, it will be removed by the Federate optimizer.
+          <para>If an order by is used in an inline view or view definition without a limit clause, it will be removed by the Teiid optimizer.
           </para>
         </listitem>
       </itemizedlist>
@@ -828,7 +828,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>The INTO clause is logically applied last in processing, after the ORDER BY and LIMIT clauses.</para>
         </listitem>
         <listitem>
-          <para>Federate's support for SELECT INTO is similar to
+          <para>Teiid's support for SELECT INTO is similar to
             MS SQL Server. The target of the INTO clause is a table where
             the result of the rest select command will be inserted. SELECT
             INTO should not be used UNION query.</para>
@@ -838,7 +838,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
     <sect2 id="option_clause">
       <title>OPTION Clause</title>
       <para>
-      The OPTION keyword denotes options the user can pass in with the command. These options are Federate-specific and not covered by any SQL specification.  
+      The OPTION keyword denotes options the user can pass in with the command. These options are Teiid-specific and not covered by any SQL specification.  
       </para>
       <para>
         Usage:
@@ -878,7 +878,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
   </sect1>
   <sect1 id="set_operations">
     <title>Set Operations</title>
-    <para>Federate supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
+    <para>Teiid supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
     <para>
       Usage:
       <synopsis label="Usage">command (UNION|INTERSECT|EXCEPT) [ALL] command [ORDER BY...]</synopsis>

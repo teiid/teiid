@@ -3,16 +3,16 @@
 <chapter id="transaction_support">
 	<title>Transaction Support</title>
 	<para>
-		Federate utilizes XA transactions for both participating in global
+		Teiid utilizes XA transactions for both participating in global
 		transactions and for demarcating its own local and command scoped
 		transactions.
 		<ulink url="http://www.jboss.org/jbosstm/">JBoss Transactions</ulink>
-		is used by Federate as its internal transaction manager. See
+		is used by Teiid as its internal transaction manager. See
 		<ulink url="http://www.jboss.org/jbosstm/docs/index.html"> this documentation</ulink>
 		for the advanced features provided by JBoss Transactions.
 	</para>
 	<table>
-		<title>Federate Transaction Scopes</title>
+		<title>Teiid Transaction Scopes</title>
 		<tgroup cols="2">
 			<thead>
 				<row>
@@ -38,7 +38,7 @@
 				</row>
 				<row>
 					<entry>Global</entry>
-					<entry>Federate participates in a global transaction as an
+					<entry>Teiid participates in a global transaction as an
 						XA Resource.</entry>
 				</row>
 			</tbody>
@@ -95,7 +95,7 @@
 			</tgroup>
 		</table>
 		<para>The concept of command safety with respect to a transaction
-			is determined by Federate based upon command type and available
+			is determined by Teiid based upon command type and available
 			metadata. Whenever any INSERT, UPDATE, DELETE, or EXECUTE (with
 			update count greater than 0) command is detected and the success or
 			failure of that command is not the same as the user level command,
@@ -150,13 +150,13 @@
 				</tbody>
 			</tgroup>
 		</table>
-		<para> By default Federate will calculate the updating model count for
+		<para> By default Teiid will calculate the updating model count for
 			a user query (which may be composed of many subcommands) given the
 			above table. Thus a command with a single update as a subcommand may
 			still require a transaction if the update is not tied to the success
 			of the command.</para>
 		<para>
-			Explicit values for updating model count may be set using Federate
+			Explicit values for updating model count may be set using Teiid
 			Designer and directly in the
 			<link linkend="dynamic_sql">dynamic SQL command</link>
 			.
@@ -188,7 +188,7 @@
 					<para>
 						Global - the XAResource interface provided by an XAConnection is
 						used to control the transaction. Note that XAConnections are
-						available only if Federate is consumed through its XADataSource,
+						available only if Teiid is consumed through its XADataSource,
 						<classname>com.metamatrix.jdbc.MMDataSource
 						</classname>
 						. JEE containers or data access APIs typically control XA
@@ -236,7 +236,7 @@
 			</listitem>
 			<listitem>
 				<para>Since the client transaction isolation level is not used,
-					Federate internally assumes a level of READ_COMMITTED. This implies
+					Teiid internally assumes a level of READ_COMMITTED. This implies
 					that explicit transactions are not required for user level commands
 					performing multiple reads.</para>
 			</listitem>

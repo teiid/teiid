@@ -5,7 +5,7 @@
 ]>
 <chapter id="federated_planning">
   <title>Federated Planning</title>
-  <para>Federate at its core is a federated relational query
+  <para>Teiid at its core is a federated relational query
     engine. This query engine allows you to treat all of your data
     sources as one virtual database and access them in a single SQL
     query. This allows you to focus on building your application, not on
@@ -36,10 +36,10 @@
         <para>
           Logical plan optimization - the rewritten canonical SQL is
           converted into a logical plan for in-depth optimization. The
-          Federate optimizer is predominantly rule-based. Based upon the
+          Teiid optimizer is predominantly rule-based. Based upon the
           query structure and hints a certain rule set will be applied.
           These rules may trigger in turn trigger the execution of more
-          rules. Within several rules, Federate also takes advantage of
+          rules. Within several rules, Teiid also takes advantage of
           costing information. The logical plan optimization steps can
           be seen by using the
           <link linkend="option_clause">OPTION DEBUG</link>
@@ -141,11 +141,11 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         decomposing the user level query into source queries that
         perform as much work as possible on their respective source
         system. Pushdown analysis requires knowledge of source system
-        capabilities, which is provided to Federate though the Connector
+        capabilities, which is provided to Teiid though the Connector
         API. Any work not performed at the source is then processed in
         Federate's relational engine.</para>
       <para>
-        Based upon capabilities, Federate will manipulate the query plan
+        Based upon capabilities, Teiid will manipulate the query plan
         to ensure that each source performs as much joining, filtering,
         grouping, etc. as possible. In may cases, such as with join
         ordering, planning is a combination of
@@ -176,7 +176,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         by the query planner based on &access_pattern;, hints, and
         costing information.</para>
       <para>
-        Federate supports the MAKEDEP and MAKENOTDEP hints. Theses are
+        Teiid supports the MAKEDEP and MAKENOTDEP hints. Theses are
         can be placed in either the
         <link linkend="option_clause">OPTION clause</link>
         or directly in the
@@ -206,7 +206,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     </sect2>
     <sect2>
       <title>Projection Minimization</title>
-      <para> Federate ensures that each pushdown query only projects the
+      <para> Teiid ensures that each pushdown query only projects the
         symbols required for processing the user query. This is
         especially helpful when querying through large intermediate view
         layers.</para>
@@ -220,7 +220,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     </sect2>
     <sect2 id="optional_join">
       <title>Optional Join</title>
-      <para>The optional join hint indicates to the Federate
+      <para>The optional join hint indicates to the 
         optimizer that a join clause should be omitted if none of its
         columns are used in either user criteria or output columns in
         the result. This hint is typically only used in view layers
@@ -248,7 +248,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <sect2 id="standard_relational_techniques">
       <title>Standard Relational Techniques</title>
       <para>
-        Federate also incorporates many standard relational techniques
+        Teiid also incorporates many standard relational techniques
         to ensure efficient query plans.
         <itemizedlist>
           <listitem>
@@ -280,7 +280,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <title>Federated Failure Modes</title>
     <sect2>
       <title>Partial Results</title>
-      <para>Federate provides the capability to obtain "partial
+      <para>Teiid provides the capability to obtain "partial
         results" in the event of data source unavailability. This is
         especially useful when unioning information from multiple
         sources, or when doing a left outer join, where you are
@@ -300,7 +300,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           partialResultsMode=true on a JDBC URL. In either case, partial
           results mode may be overridden on a per-query basis by setting
           the execution property on the Statement. To set this property,
-          cast to the Federate Statement JDBC API extension interface
+          cast to the Teiid Statement JDBC API extension interface
           <classname>com.metamatrix.jdbc.api.Statement
           </classname>
         </para>
@@ -326,7 +326,7 @@ mmStatement.setExecutionProperty(
           propagated to the query processor, where it will become a
           warning in the result set.</para>
         <warning>
-          <para> Since Federate supports multi-source cursoring, it is
+          <para> Since Teiid supports multi-source cursoring, it is
             possible that the unavailability of a data source will not
             be determined until after the first batch of results have
             been returned to the client. This can happen in the case of
@@ -408,7 +408,7 @@ PlanNode queryPlan = mmstatement.getPlanDescription();
 System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
       </example>
       <para>The query plan is made available automatically in several
-        of Federate's tools.</para>
+        of Teiid's tools.</para>
     </sect2>
     <sect2>
       <title>Analyzing a Query Plan</title>
@@ -695,7 +695,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
           <para>The GenerateCanonical class generates the initial (or
             “canonical” plan).  This plan is based on the typical logical order
             that a SQL query gets executed.  A SQL select query has the following
-            possible clauses (all but SELECT are optional in Federate):  SELECT,
+            possible clauses (all but SELECT are optional):  SELECT,
             FROM, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT.  These clauses are
             logically executed in the following order:</para>
           <orderedlist>
@@ -872,7 +872,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
 
         <para>This plan tree must have the criteria remain above the join,
           since the outer join may be introducing null values itself.  This will
-          be true regardless of which version of Federate is used.</para>
+          be true regardless of which version of Teiid is used.</para>
         </listitem>
         <listitem>
         <para>RulePushNonJoinCriteria – this rule will push criteria out of
@@ -911,7 +911,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
           within that set.  More than likely it will be sent to the source in
           the non-ANSI multi-join syntax and will be optimized by the
           database).  Third it will use costing information to determine the
-          best left-linear ordering of joins performed in Federate.  This
+          best left-linear ordering of joins performed in the processing engine.  This
           third step will do an exhaustive search for 6 or less join sources
           and is heuristically driven by join selectivity for 7 or more
           sources.</para>
@@ -1070,7 +1070,7 @@ System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
     <sect2>
       <title>XQuery Planner</title>
       <para>XQuery planning uses the embedded Saxon XQuery
-        engine to compile the query.  There is no direct optimization by Federate.</para>
+        engine to compile the query.  There is no direct optimization by Teiid.</para>
     </sect2>
   </sect1>
 </chapter>

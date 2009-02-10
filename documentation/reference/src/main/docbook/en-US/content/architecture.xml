@@ -74,11 +74,11 @@
     <title>Data Management</title>
     <sect2>
       <title>Cursoring and Batching</title>
-      <para> Federate cursors all results, regardless of whether they
+      <para> Teiid cursors all results, regardless of whether they
         are from one source or many sources, and regardless of what type
         of processing (joins, unions, etc.) have been performed on the
         results.</para>
-      <para>Federate processes results in batches. A batch is
+      <para>Teiid processes results in batches. A batch is
         simply a set of records. The number of rows in a batch is
         determined by the buffer system properties Processor Batch Size
         (within query engine) and Connector Batch Size (created at
@@ -171,7 +171,7 @@
     </sect2>
     <sect2>
       <title>Timeouts</title>
-      <para>Timeouts in Federate are managed on the client-side,
+      <para>Timeouts in Teiid are managed on the client-side,
         in the JDBC API (which underlies both SOAP and ODBC access).
         Timeouts are only relevant for the first record returned. If the
         first record has not been received by the client within the

@@ -5,7 +5,7 @@
   <sect1 id="procedure_language">
     <title>Procedure Language</title>
     <para>
-      Federate supports a procedural language for defining
+      Teiid supports a procedural language for defining
       <link linkend="virtual_procedures">virtual procedures</link>
       . These are similar to stored procedures in relational database
       management systems. You can use this language to define the
@@ -263,7 +263,7 @@ END</synopsis>
   </sect1>
   <sect1 id="virtual_procedures">
     <title>Virtual Procedures</title>
-    <para>Virtual procedures are defined using the Federate
+    <para>Virtual procedures are defined using the Teiid
       procedural language. A virtual procedure has zero or more input
       parameters, and a result set return type. Virtual procedures
       support the ability to execute queries and other SQL commands,
@@ -404,7 +404,7 @@ END
     <para>
       Virtual tables are abstractions above physical sources. They typically
       union or join information from multiple tables, often from multiple
-      data sources or other views. Federate can perform update operations
+      data sources or other views. Teiid can perform update operations
       against virtual tables. Update commands - INSERT, UPDATE, or DELETE -
       against a virtual table require logic to define how the tables and
       views integrated by the virtual table are affected by each type of
@@ -469,7 +469,7 @@ END</synopsis>
       </sect3>
       <sect3 id="rowsupdated_variable">
         <title>ROWS_UPDATED Variable</title>
-        <para> Federate returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
+        <para> Teiid returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
           the virtual table. Your procedure must set the value that returns
           when an application executes an update command against the virtual
           table, which triggers invocation of the update procedure. For

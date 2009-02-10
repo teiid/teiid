@@ -4,7 +4,7 @@
 	<title>XML SELECT Command</title>
 	<sect1>
 		<title>Overview</title>
-		<para>XML documents can be dynamically constructed by Federate. The
+		<para>XML documents can be dynamically constructed by Teiid. The
 			structure of the document is defined by a document model, which is
 			generally created from a schema. The document model is bound to
 			relevant SQL statements through mapping classes. See the Designer
