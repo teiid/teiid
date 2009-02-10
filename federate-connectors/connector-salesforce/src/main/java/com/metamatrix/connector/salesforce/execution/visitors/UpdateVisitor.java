@@ -25,9 +25,9 @@ package com.metamatrix.connector.salesforce.execution.visitors;
 
 import java.util.Iterator;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 

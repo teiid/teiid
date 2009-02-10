@@ -25,15 +25,10 @@
 package com.metamatrix.data.visitor.util;
 
 import java.util.*;
-import java.util.Collection;
-import java.util.Set;
 
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ILanguageObject;
+import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.visitor.util.CollectorVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.*;
-import com.metamatrix.dqp.internal.datamgr.language.ElementImpl;
-import com.metamatrix.dqp.internal.datamgr.language.GroupImpl;
 
 import junit.framework.TestCase;
 

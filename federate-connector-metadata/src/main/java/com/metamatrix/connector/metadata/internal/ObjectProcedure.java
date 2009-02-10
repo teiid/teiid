@@ -31,21 +31,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IMetadataReference;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IMetadataReference;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 

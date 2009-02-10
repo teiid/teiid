@@ -30,8 +30,8 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * created by JChoate on Jun 27, 2005

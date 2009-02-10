@@ -24,12 +24,9 @@
 
 package com.metamatrix.connector.yahoo;
 
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.exception.ConnectorException;
 
-/**
- * Starting point for the Loopback connector.
- */
 public class YahooConnector implements Connector {
 
     private ConnectorEnvironment env;
@@ -46,29 +43,29 @@ public class YahooConnector implements Connector {
     /* 
      * @see com.metamatrix.data.Connector#initialize(com.metamatrix.data.ConnectorEnvironment)
      */
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
+    @Override
+    public void start(ConnectorEnvironment environment) throws ConnectorException {
         this.env = environment;
     }
 
     /* 
      * @see com.metamatrix.data.Connector#stop()
      */
+    @Override
     public void stop() {
-        // nothing to do
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connector#start()
-     */
-    public void start() {
         // nothing to do
     }
 
     /* 
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    @Override
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
         return new YahooConnection(env);
     }
-
+    
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return CAPABILITIES;
+	}
 }

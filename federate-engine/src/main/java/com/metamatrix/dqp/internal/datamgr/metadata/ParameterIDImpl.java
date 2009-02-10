@@ -25,12 +25,10 @@
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
 import java.util.*;
-import java.util.Iterator;
-import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.MetadataID;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**

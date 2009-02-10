@@ -33,10 +33,10 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.TypeFacilityImpl;
 import com.metamatrix.dqp.internal.datamgr.language.LiteralImpl;
@@ -60,7 +60,7 @@ public class TestJDBCExecutionHelper extends TestCase{
         expectedResults[1] = DataTypeManager.DefaultDataClasses.INTEGER;
         ISelect select = new SelectImpl(symbols, false);        
         IQuery query = new QueryImpl(select, null, null, null, null, null);
-        Class[] results = JDBCExecutionHelper.getColumnDataTypes(query);  
+        Class[] results = query.getColumnTypes();  
         assertEquals( results[0], expectedResults[0]);
         assertEquals( results[1], expectedResults[1]);     
     }

@@ -43,6 +43,9 @@ import javax.jms.TextMessage;
 
 import org.jdom.Document;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.AsynchronousDocumentProducer;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
@@ -56,9 +59,6 @@ import com.metamatrix.connector.xml.base.XMLExtractor;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class JMSRequestExecutor implements AsynchronousDocumentProducer , MessageListener {
 

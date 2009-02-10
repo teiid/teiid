@@ -28,10 +28,10 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.basic.BasicValueTranslator;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.basic.BasicValueTranslator;
+import com.metamatrix.connector.exception.ConnectorException;
 
 
 /** 

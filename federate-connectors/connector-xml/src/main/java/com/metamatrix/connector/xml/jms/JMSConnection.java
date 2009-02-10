@@ -37,24 +37,24 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.connector.xml.jms.Messages;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
-public class JMSConnection implements XMLConnection {
+public class JMSConnection extends BasicConnection implements XMLConnection {
 
-	SecurityContext secCtx;
+	ExecutionContext secCtx;
 	ConnectorEnvironment connectorEnv;
 	CachingConnector connector;
 	private JMSXMLConnectorState state;
@@ -66,7 +66,7 @@ public class JMSConnection implements XMLConnection {
 	private String password;
 	private String userName;
 		
-	public JMSConnection(CachingConnector connector, SecurityContext secCtx, ConnectorEnvironment connectorEnv) throws ConnectorException{
+	public JMSConnection(CachingConnector connector, ExecutionContext secCtx, ConnectorEnvironment connectorEnv) throws ConnectorException{
 		super();
 		this.connector = connector;
 		this.secCtx = secCtx;
@@ -138,46 +138,21 @@ public class JMSConnection implements XMLConnection {
 	private boolean usingCredentials() {
 		return (userName != null && password != null);
 	}
-
-	public ConnectorCapabilities getCapabilities() {
-		return state.getConnectorCapabilities();
-	}
-
-	public Execution createExecution(int executionMode,
-			ExecutionContext exeCtx, RuntimeMetadata metadata)
+	
+	@Override
+	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-        try {
-            Execution retVal = null;
-            String errKey = null;        
-    		switch(executionMode) {
-            	case ConnectorCapabilities.EXECUTION_MODE.ASYNCH_QUERY: 
-            		retVal = new JMSExecution(this, metadata, exeCtx, connectorEnv, connector.getLogger());
-            		break;
-            	case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-            		errKey = Messages.getString("XMLConnectionImpl.update.not.supported");
-            		break;
-            	case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-            		errKey = Messages.getString("XMLConnectionImpl.no.xml.procedures");
-            		break;
-            	case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-            	default:
-            		errKey = Messages.getString("XMLConnectionImpl.invalid.execution.mode");
-            }
-    		if (errKey != null) {			
-    			throw new ConnectorException(errKey);
-    		}
-    		return retVal;		
-        }
-        catch (RuntimeException e) {
-        	throw new ConnectorException(e);
-        }
+		return new JMSExecution((IQuery)command, this, metadata, executionContext, this.connectorEnv, connector.getLogger());
 	}
 
-	public ConnectorMetadata getMetadata() {
+	@Override
+	public ConnectorCapabilities getCapabilities() {
 		return null;
 	}
 
-	public void release() {
+	@Override
+	public void close() {
 		try {
 			jmsConnection.close();
 		} catch (JMSException e) {

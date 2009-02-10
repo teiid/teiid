@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * Implmentation of text connector.

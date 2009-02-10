@@ -26,7 +26,7 @@
  */
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
-import com.metamatrix.data.metadata.runtime.Procedure;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 
 /**
  */

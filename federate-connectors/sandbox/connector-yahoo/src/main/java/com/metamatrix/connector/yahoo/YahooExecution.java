@@ -24,23 +24,42 @@
 
 package com.metamatrix.connector.yahoo;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
 
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.metadata.runtime.*;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Represents the execution of a command.
  */
-public class YahooExecution implements SynchQueryExecution {
+public class YahooExecution implements ResultSetExecution {
     public static final String HTTP_PROXY_HOST = "HttpProxyHost"; //$NON-NLS-1$
     public static final String HTTP_PROXY_PORT = "HttpProxyPort"; //$NON-NLS-1$
 
@@ -54,12 +73,12 @@ public class YahooExecution implements SynchQueryExecution {
     private ConnectorEnvironment env;
     private RuntimeMetadata metadata;
     private IQuery command;
-    private int maxBatchSize;
     
     // Execution state
     List results;
     int[] neededColumns;
     int returnIndex = 0;
+    private IQuery query;
 
     private String previousHttpProxyHost;
     private String previousHttpProxyPort;
@@ -67,18 +86,17 @@ public class YahooExecution implements SynchQueryExecution {
     /**
      * 
      */
-    public YahooExecution(ConnectorEnvironment env, RuntimeMetadata metadata) {
+    public YahooExecution(IQuery query, ConnectorEnvironment env, RuntimeMetadata metadata) {
         this.env = env;
         this.metadata = metadata;
+        this.query = query;
     }
     
     /* 
      * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
      */
-    public void execute(IQuery query, int maxBatchSize) throws ConnectorException {
-        this.command = query;
-        this.maxBatchSize = maxBatchSize;
-
+    @Override
+    public void execute() throws ConnectorException {
         // Log our command
         env.getLogger().logTrace("Yahoo executing command: " + command); //$NON-NLS-1$
 
@@ -90,7 +108,6 @@ public class YahooExecution implements SynchQueryExecution {
         
         // Determine needed columns in results
         this.neededColumns = getNeededColumns(query.getSelect(), this.metadata);        
-        
     }    
 
     static String translateIntoUrl(IQuery query) throws ConnectorException {
@@ -250,22 +267,14 @@ public class YahooExecution implements SynchQueryExecution {
         return cols;
     }
 
-    /* 
-     * @see com.metamatrix.data.SynchExecution#nextBatch(int)
-     */
-    public Batch nextBatch() throws ConnectorException {
-        BasicBatch batch = new BasicBatch();
-        
-        while(returnIndex < results.size() && batch.getRowCount() < maxBatchSize) {
-            List row = (List) results.get(returnIndex);
-            batch.addRow(projectRow(row, neededColumns));
-            returnIndex++;
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+        if (returnIndex < results.size()) {
+            List row = (List) results.get(returnIndex++);
+            return projectRow(row, neededColumns);
         }
         
-        if(returnIndex >= results.size()) {
-            batch.setLast();
-        }
-        return batch;
+        return null;
     }
 
 
@@ -286,6 +295,7 @@ public class YahooExecution implements SynchQueryExecution {
     /* 
      * @see com.metamatrix.data.Execution#close()
      */
+    @Override
     public void close() throws ConnectorException {
         // nothing to do
     }
@@ -293,6 +303,7 @@ public class YahooExecution implements SynchQueryExecution {
     /* 
      * @see com.metamatrix.data.Execution#cancel()
      */
+    @Override
     public void cancel() throws ConnectorException {
 
     }

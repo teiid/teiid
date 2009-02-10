@@ -27,7 +27,7 @@ package com.metamatrix.connector.jdbc;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 /**
  */
@@ -43,13 +43,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
      */
     public List getSupportedFunctions() {
@@ -57,7 +50,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#getMaxInCriteriaSize()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#getMaxInCriteriaSize()
      * @since 4.2
      */
     public int getMaxInCriteriaSize() {
@@ -314,13 +307,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteriaAny()
-     */
-    public boolean supportsQuantifiedCompareCriteriaAny() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsScalarFunctions()
      */
     public boolean supportsScalarFunctions() {
@@ -363,7 +349,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsInlineViews()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsInlineViews()
      */
     public boolean supportsInlineViews() {
         return false;
@@ -374,21 +360,21 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return true;
     }
     
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsUnionOrderBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
      */
     public boolean supportsUnionOrderBy() {
         return true;
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsSetQueryOrderBy()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsSetQueryOrderBy()
      */
     @Override
     public boolean supportsSetQueryOrderBy() {
@@ -396,17 +382,20 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsUnions()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnions()
      */
     public boolean supportsUnions() {
         return true;
     }
     
-    /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsXATransactions()
-     */
-    public boolean supportsXATransactions() {
-        return false;
+    @Override
+    public boolean supportsBulkInsert() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsBatchedUpdates() {
+    	return true;
     }
 
 }

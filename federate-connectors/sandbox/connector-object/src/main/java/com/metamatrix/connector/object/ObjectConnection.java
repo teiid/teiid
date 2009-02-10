@@ -25,29 +25,29 @@
 package com.metamatrix.connector.object;
 
 
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.extension.IObjectSource;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.SourceConnection;
 
 /**
  * Implementation of Connection interface for Object connection.
  */
-public class ObjectConnection implements Connection, SourceConnection{
+public class ObjectConnection extends BasicConnection implements PoolAwareConnection {
     
 //    private static final String DEFAULT_TRANSLATOR = "com.metamatrix.connector.object.extension.source.BasicSourceTranslator";//$NON-NLS-1$
     
-    private ConnectorCapabilities capabilities;
     private ISourceTranslator translator;
     private IObjectSource api;
 
@@ -73,29 +73,7 @@ public class ObjectConnection implements Connection, SourceConnection{
         try {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             
-            this.capabilities = ObjectConnectorUtil.createCapabilities(environment, loader);
-            
             this.translator = ObjectConnectorUtil.createTranslator(environment, loader);
-// 
-//            //create ResultsTranslator
-//            String className = environment.getProperties().getProperty(ObjectPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS);  //$NON-NLS-1$
-//            if (className == null) {
-//                this.logger.logInfo( ObjectPlugin.Util.getString("ObjectConnection.Property_{0}_is_not_defined_use_default", new Object[] {ObjectPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, DEFAULT_TRANSLATOR} )); //$NON-NLS-1$
-//                className = DEFAULT_TRANSLATOR;
-//            }
-//            
-//            Class sourceTransClass = loader.loadClass(className);
-//            translator = (ISourceTranslator) sourceTransClass.newInstance();
-//            translator.initialize(environment);           
-//
-////            //create Capabilities
-////            className = environment.getProperties().getProperty(ObjectPropertyNames.EXT_CAPABILITY_CLASS);  //$NON-NLS-1$
-////            if(className == null){
-////                throw new ConnectorException(ObjectPlugin.Util.getString("ObjectConnection.Property_{0}_is_required,_but_not_defined_1", ObjectPropertyNames.EXT_CAPABILITY_CLASS)); //$NON-NLS-1$
-////            }
-////            Class capabilitiesClass = loader.loadClass(className);
-////            capabilities = (ConnectorCapabilities) capabilitiesClass.newInstance();           
-//            
         } catch (ClassNotFoundException e1) {
             throw new ConnectorException(e1);
         } catch (InstantiationException e2) {
@@ -107,48 +85,18 @@ public class ObjectConnection implements Connection, SourceConnection{
               
     }
     
-    /**
-     * Create soap execution.
-     * @param command ICommand containing the query 
-     */
-    public Execution createExecution( int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata )throws ConnectorException {
-
-
-         switch(executionMode) {
-            case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-            {
-                throw new ConnectorException(ObjectPlugin.Util.getString("ObjectConnection.Only_procedures_are_supported")); //$NON-NLS-1$")
-            }
-            case ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES:
-            case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-            case ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT:                
-            {
-                throw new ConnectorException(ObjectPlugin.Util.getString("ObjectConnection.Updates_not_supported")); //$NON-NLS-1$")
-            }
-            case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-            {
-                return new ObjectProcedureExecution(getObjectSource(), translator, metadata, env);
-            }
-            default:
-            {
-                throw new ConnectorException(ObjectPlugin.Util.getString("ObjectConnection.Only_procedures_are_supported")); //$NON-NLS-1$ 
-            } 
-         }
-    }
-    
-    /**
-     * Get the metadata of the source the connector is connected to.
-     * @return ConnectorMetadata
-     */
-    public ConnectorMetadata getMetadata() { 
-        return null;  
+    @Override
+    public ProcedureExecution createProcedureExecution(IProcedure command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new ObjectProcedureExecution(command, getObjectSource(), translator, metadata, env);
     }
     
     /* 
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return capabilities;
+        return null;
     }  
     
     
@@ -164,14 +112,13 @@ public class ObjectConnection implements Connection, SourceConnection{
      * @see com.metamatrix.data.pool.SourceConnection#closeSource()
      * @since 4.2
      */
-    public void closeSource() { 
+    public void close() { 
         try {
             api.closeSource();
         } catch(Exception e) {
             
         }
         
-        capabilities=null;
         translator=null;
         logger =null;
         api=null;
@@ -186,14 +133,9 @@ public class ObjectConnection implements Connection, SourceConnection{
         return api.isAlive();
     }
 
-    /** 
-     * @see com.metamatrix.data.api.Connection#release()
-     * @since 4.3
-     */
-    public void release() {
-    }   
-
-    
-
+    @Override
+    public void closeCalled() {
+    	
+    }
     
 }

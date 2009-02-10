@@ -31,10 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
 
 /**
  */
@@ -87,7 +87,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
     
     /**
      * Subclass should override this method as needed.
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         return function;
@@ -95,7 +95,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
 
     /**
      * Subclass should override this method as needed.
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      */
     public List translate(IFunction function) {
         List objs = new ArrayList();

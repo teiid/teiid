@@ -28,9 +28,9 @@ import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.Parameter;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
@@ -99,7 +99,7 @@ public class ParameterImpl extends TypeModelImpl implements Parameter {
     }
 
     /** 
-     * @see com.metamatrix.data.metadata.runtime.TypeModel#getNullability()
+     * @see com.metamatrix.connector.metadata.runtime.TypeModel#getNullability()
      * @since 4.3
      */
     public int getNullability() throws ConnectorException {

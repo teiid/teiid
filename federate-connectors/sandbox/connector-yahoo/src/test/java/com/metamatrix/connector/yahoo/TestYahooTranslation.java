@@ -27,8 +27,8 @@ package com.metamatrix.connector.yahoo;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IQuery;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IQuery;
 
 public class TestYahooTranslation extends TestCase {
 	

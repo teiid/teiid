@@ -26,19 +26,11 @@ package com.metamatrix.connector.exec;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 /**
  */
 public class ExecCapabilities extends BasicConnectorCapabilities {
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        return executionMode == ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY;
-    }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()

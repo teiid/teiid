@@ -31,20 +31,23 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.ldap.InitialLdapContext;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /** 
  * Represents a connection to an LDAP data source. 
  */
-public class LDAPConnection implements Connection, PoolAwareConnection {  
+public class LDAPConnection extends BasicConnection implements PoolAwareConnection {  
 
 	// Standard Connection data members
 	private ConnectorLogger logger;
@@ -59,9 +62,6 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 	private String ldapAdminUserDN;
 	private String ldapAdminUserPass;
 	private String ldapTxnTimeoutInMillis;
-	private int ldapMaxCriteria;
-	private LDAPConnectorCapabilities myCaps;
-	
 
     /**
      * Constructor.
@@ -73,18 +73,7 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 		this.logger = logger;
 		this.props = props;
 			
-		// Get properties for initial connection.
-		try {
-			parseProperties(props);
-		} catch(ConnectorException ce1) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.propertyFileParseFailed"); //$NON-NLS-1$
-			logger.logError(msg); 
-			throw new ConnectorException(ce1, msg); 
-		}
 		
-		// Create and configure capabilities class.
-		myCaps = new LDAPConnectorCapabilities();
-		myCaps.setInCriteriaSize(ldapMaxCriteria);
 		
 		// Create initial LDAP connection.
 		try {
@@ -94,6 +83,8 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 			throw new ConnectorException(ce, msg);
 		}
 		logger.logDetail("LDAP Connection has been newly created."); //$NON-NLS-1$
+		
+		parseProperties(props);
 	}
 	
     /**
@@ -120,19 +111,6 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 		// LDAP Txn Timeout in Milliseconds
 		if((ldapTxnTimeoutInMillis = props.getProperty(LDAPConnectorPropertyNames.LDAP_TXN_TIMEOUT_IN_MILLIS)) == null) {
 			// If unset, leave it at null, since we will default to TCP timeout value.
-		}
-		// LDAP Max In Criteria
-		String ldapMaxCriteriaStr = props.getProperty(LDAPConnectorPropertyNames.LDAP_MAX_CRITERIA);
-		if(ldapMaxCriteriaStr!=null) {
-			try {
-				ldapMaxCriteria = Integer.parseInt(ldapMaxCriteriaStr);
-			} catch (NumberFormatException ex) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaParseError"); //$NON-NLS-1$
-	            throw new ConnectorException(msg);
-			}
-		} else {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaPropNotFound"); //$NON-NLS-1$
-            throw new ConnectorException(msg);
 		}
 	}
 	
@@ -183,58 +161,32 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 		return initContext;
 	}
 	
-	/** 
-	 * Create an execution object. 
-	 * 
-	 * Sun- and AD-specific implementations may extend this method and
-	 * create their own execution classes, which may make use of advanced features
-	 * that are specific to the platform, such as paging.
-	 * @see com.metamatrix.data.api.Connection#createExecution(int, com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-	 * @param executionMode the execution mode
-	 * @param ctx the Execution Context
-	 * @param rm the RuntimeMetadata
-	 * @return Execution object
-	 */
-	public Execution createExecution(int executionMode, ExecutionContext ctx,RuntimeMetadata rm) throws ConnectorException {
-		switch(executionMode) { 
-			case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-			{
-				return new LDAPSyncQueryExecution(executionMode, ctx, rm, this.logger, this.initCtx, this.props);
-			}
-			case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-			{
-				return new LDAPUpdateExecution(executionMode, ctx, rm, this.logger, this.initCtx);
-			}
-			default:
-			{
-	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.unsupportedExecMode"); //$NON-NLS-1$
-				throw new ConnectorException(msg);
-			}
-		}
-	}
-
-	/** 
-	 * Get the LDAP Connector capabilites
-	 * @return ConnectorCapabilities
-	 */
-	public ConnectorCapabilities getCapabilities() {
-		return myCaps;
-	}
-
-	/** 
-	 * Get the LDAP Connector metadata, returns null.
-	 * @return ConnectorMetadata
-	 */
-	public ConnectorMetadata getMetadata() {
-		return null;
+	@Override
+	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new LDAPSyncQueryExecution((IQuery)command, executionContext, metadata, this.logger, this.initCtx, this.props);
 	}
 	
+	@Override
+	public UpdateExecution createUpdateExecution(ICommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new LDAPUpdateExecution(command, executionContext, metadata, this.logger, this.initCtx);
+	}
+	
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return null;
+	}
+
 	/** 
 	 * Closes LDAP context, effectively closing the connection to LDAP.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.data.pool.PoolAwareConnection#closeSource()
+	 * @see com.metamatrix.connector.pool.PoolAwareConnection#closeSource()
 	 */
-    public void release() {
+	@Override
+    public void close() {
 		if(initCtx != null) {
 			try {
 				initCtx.close();
@@ -256,16 +208,17 @@ public class LDAPConnection implements Connection, PoolAwareConnection {
 	 * 
 	 * One possible extension is to implement a UnsolicitedNotificationListener.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.data.pool.PoolAwareConnection#isAlive()
+	 * @see com.metamatrix.connector.pool.PoolAwareConnection#isAlive()
 	 */
+	@Override
 	public boolean isAlive() {
 		logger.logTrace("LDAP Connection is alive."); //$NON-NLS-1$
 		return true;
 	}
 	
 	@Override
-	public void connectionReleased() {
+	public void closeCalled() {
 		
 	}
-
+	
 }

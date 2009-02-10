@@ -26,7 +26,7 @@ package com.metamatrix.dqp.internal.datamgr;
 
 import java.util.*;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -93,8 +93,8 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_INTERSECT, srcCaps.supportsIntersect());
         tgtCaps.setCapabilitySupport(Capability.QUERY_EXCEPT, srcCaps.supportsExcept());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, srcCaps.supportsSetQueryOrderBy());
-        tgtCaps.setCapabilitySupport(Capability.BULK_INSERT , srcCaps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT));
-        tgtCaps.setCapabilitySupport(Capability.BATCHED_UPDATES, srcCaps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES));
+        tgtCaps.setCapabilitySupport(Capability.BULK_INSERT , srcCaps.supportsBulkInsert());
+        tgtCaps.setCapabilitySupport(Capability.BATCHED_UPDATES, srcCaps.supportsBatchedUpdates());
         tgtCaps.setCapabilitySupport(Capability.FUNCTION, srcCaps.supportsScalarFunctions());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, srcCaps.supportsFunctionsInGroupBy());
         tgtCaps.setCapabilitySupport(Capability.ROW_LIMIT, srcCaps.supportsRowLimit());

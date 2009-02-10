@@ -35,8 +35,12 @@ import org.jdom.input.SAXBuilder;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.SecureConnectorState;
-import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.file.FileConnectorState;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 import com.metamatrix.connector.xml.jms.JMSConnectorState;
@@ -45,12 +49,6 @@ import com.metamatrix.connector.xml.soap.SOAPConnectorStateImpl;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
 import com.metamatrix.connector.xmlsource.soap.SoapConnectorProperties;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 /**
  * created by JChoate on Jun 16, 2005
  *
@@ -80,7 +78,7 @@ public class ProxyObjectFactory {
         return env;
      }
     
-    public static SecurityContext getDefaultSecurityContext() {
+    public static ExecutionContext getDefaultSecurityContext() {
         return EnvironmentUtility.createSecurityContext("MetaMatrixAdmin");
     }
     
@@ -238,7 +236,7 @@ public class ProxyObjectFactory {
         XMLConnector conn;
         try {
             conn = new XMLConnector();
-            conn.initialize(getDefaultTestConnectorEnvironment());
+            conn.start(getDefaultTestConnectorEnvironment());
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             conn = null;
@@ -250,7 +248,7 @@ public class ProxyObjectFactory {
         XMLConnector conn;
         try {
             conn = new XMLConnector();
-            conn.initialize(getHTTPTestConnectorEnvironment(props));
+            conn.start(getHTTPTestConnectorEnvironment(props));
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             conn = null;
@@ -261,7 +259,7 @@ public class ProxyObjectFactory {
     public static XMLConnectionImpl getDefaultXMLConnection() {
         XMLConnectionImpl connection;
         try {
-            SecurityContext ctx = getDefaultSecurityContext();
+            ExecutionContext ctx = getDefaultSecurityContext();
             connection = (XMLConnectionImpl) getDefaultXMLConnector().getConnection(ctx);           
         } catch (ConnectorException ce) {
             connection = null;
@@ -274,7 +272,7 @@ public class ProxyObjectFactory {
     private static XMLConnectionImpl getHTTPXMLConnection(Properties props) {
     	XMLConnectionImpl connection;
         try {
-            SecurityContext ctx = getDefaultSecurityContext();
+            ExecutionContext ctx = getDefaultSecurityContext();
             connection = (XMLConnectionImpl) getDefaultHTTPConnector(props).getConnection(ctx);           
         } catch (ConnectorException ce) {
             connection = null;
@@ -284,25 +282,25 @@ public class ProxyObjectFactory {
         return connection;
 	}
     
-    public static XMLExecutionImpl getDefaultXMLExecution(String vdbPath) {
+    public static XMLExecutionImpl getDefaultXMLExecution(IQuery command, String vdbPath) {
         try {
             ExecutionContext context = getDefaultExecutionContext();
             ConnectorEnvironment env = getDefaultTestConnectorEnvironment();
 			
             RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-            return new XMLExecutionImpl(ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
+            return new XMLExecutionImpl(command, ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
         } catch (NullPointerException ne) {
             return null;
         }
     }
     
-    public static XMLExecutionImpl getXMLExecution(String vdbPath, String requestID, String partID) {
+    public static XMLExecutionImpl getXMLExecution(IQuery command, String vdbPath, String requestID, String partID) {
        try {
            ExecutionContext context = getExecutionContext(requestID, partID);
            ConnectorEnvironment env = getDefaultTestConnectorEnvironment();
             
            RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-           return new XMLExecutionImpl(ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
+           return new XMLExecutionImpl(command, ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
        } catch (NullPointerException ne) {
            return null;
        }
@@ -344,30 +342,6 @@ public class ProxyObjectFactory {
         return docFolder;
     }
     
-    public static XMLExecution getDefaultXMLExecution(String vdbPath, Properties props) {
-        try {
-            ExecutionContext context = getDefaultExecutionContext();
-            ConnectorEnvironment env = getDefaultTestConnectorEnvironment(props);
-			
-            RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-            return new XMLExecutionImpl(getDefaultXMLConnection(), meta, context, env);
-        } catch (NullPointerException ne) {
-            return null;
-        }
-    }
-
-	public static XMLExecution getHTTPXMLExecution(String vdbPath, Properties props) {
-		try {
-            ExecutionContext context = getDefaultExecutionContext();
-            ConnectorEnvironment env = getDefaultTestConnectorEnvironment(props);
-			
-            RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-            return new XMLExecutionImpl(getHTTPXMLConnection(props), meta, context, env);
-        } catch (NullPointerException ne) {
-            return null;
-        }
-	}
-
 	public static ConnectorEnvironment getDefaultTestConnectorEnvironment(Properties props) {        
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         return env;

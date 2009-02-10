@@ -24,9 +24,9 @@
 
 package com.metamatrix.connector.jdbc.extension.impl;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILanguageFactory;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
 
 /**
  * Common logic for Substring modifiers requiring 3 parameters

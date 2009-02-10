@@ -28,8 +28,8 @@ import java.util.Map;
 import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.query.unittest.QueryMetadataInterfaceBuilder;
 
 

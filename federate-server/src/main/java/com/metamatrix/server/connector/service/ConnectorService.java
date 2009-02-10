@@ -72,13 +72,13 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ReflectionHelper;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager;
@@ -318,17 +318,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     protected void closeService() throws ApplicationLifecycleException {
         waitForServiceToClear();
         if ( connectorMgr != null ) {
-            try {
-                Object[] params = new Object[] {connectorMgrName};
-                LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("ConnectorService.Shuting_down_connectorMgr", params)); //$NON-NLS-1$
-                connectorMgr.stop();
-            } catch (ApplicationLifecycleException e) {
-                Object[] params = new Object[]{connectorMgrName, e.getMessage()};
-                String msg = ServerPlugin.Util.getString("ConnectorService.Unable_to_shutdown_connectorMgr", params); //$NON-NLS-1$
-                throw new ApplicationLifecycleException(msg);
-            } finally {
-                connectorMgr = null;
-            }
+            killService();
         }
     }
 

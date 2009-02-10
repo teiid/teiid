@@ -27,24 +27,24 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.language.IOrderBy;
-import com.metamatrix.data.language.ISelectSymbol;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.ISelectSymbol;
 
-public abstract class QueryCommandImpl extends BaseLanguageObject implements com.metamatrix.data.language.IQueryCommand {
+public abstract class QueryCommandImpl extends BaseLanguageObject implements com.metamatrix.connector.language.IQueryCommand {
 
     private IOrderBy orderBy = null;
     private ILimit limit = null;
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getOrderBy()
+     * @see com.metamatrix.connector.language.IQuery#getOrderBy()
      */
     public IOrderBy getOrderBy() {
         return orderBy;
     }
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getLimit()
+     * @see com.metamatrix.connector.language.IQuery#getLimit()
      */
     public ILimit getLimit() {
         return limit;

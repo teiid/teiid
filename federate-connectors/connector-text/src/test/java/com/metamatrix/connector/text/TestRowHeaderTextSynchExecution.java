@@ -26,7 +26,7 @@ package com.metamatrix.connector.text;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 
 public class TestRowHeaderTextSynchExecution extends TestCase {

@@ -24,10 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IExistsCriteria;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IExistsCriteria;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

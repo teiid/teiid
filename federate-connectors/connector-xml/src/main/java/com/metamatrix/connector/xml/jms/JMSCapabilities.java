@@ -27,7 +27,6 @@
 package com.metamatrix.connector.xml.jms;
 
 import com.metamatrix.connector.xml.base.XMLCapabilities;
-import com.metamatrix.data.api.ConnectorCapabilities;
 
 public class JMSCapabilities extends XMLCapabilities {
 
@@ -35,8 +34,4 @@ public class JMSCapabilities extends XMLCapabilities {
 		super();
 	}
 	
-	public final boolean supportsExecutionMode(int executionMode) {
-        return (executionMode == ConnectorCapabilities.EXECUTION_MODE.ASYNCH_QUERY);        
-    }
-
 }

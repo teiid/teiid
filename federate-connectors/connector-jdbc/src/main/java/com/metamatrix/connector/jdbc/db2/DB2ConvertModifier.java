@@ -27,11 +27,11 @@ package com.metamatrix.connector.jdbc.db2;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.language.*;
+import com.metamatrix.connector.language.*;
 
 /**
  */

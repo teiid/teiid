@@ -261,7 +261,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsExcept()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -269,7 +269,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsIntersect()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

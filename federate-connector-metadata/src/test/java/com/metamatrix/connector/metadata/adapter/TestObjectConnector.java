@@ -24,22 +24,23 @@
 
 package com.metamatrix.connector.metadata.adapter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+
 import junit.framework.TestCase;
+
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.QueryMetadataInterfaceBuilder;
@@ -141,8 +142,7 @@ public class TestObjectConnector extends TestCase {
         ConnectorEnvironment environment = new ConnectorEnvironmentImpl(properties, null, null);
 
         try {
-            connector.initialize(environment);
-            connector.start();
+            connector.start(environment);
             Connection connection = connector.getConnection(null);
             QueryMetadataInterface metadata = metadataBuilder.getQueryMetadata();
             CommandBuilder commandBuilder = new CommandBuilder(metadata);
@@ -150,8 +150,8 @@ public class TestObjectConnector extends TestCase {
 
             RuntimeMetadata runtimeMetadata = metadataBuilder.getRuntimeMetadata();
             ExecutionContext execContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-            final SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, execContext, runtimeMetadata);
-            ExecutionThread executeThread = new ExecutionThread(execution, command);
+            ResultSetExecution execution = (ResultSetExecution) connection.createExecution(command, execContext, runtimeMetadata);
+            ExecutionThread executeThread = new ExecutionThread(execution);
             executeThread.start();
             execution.cancel();
             try {
@@ -160,7 +160,6 @@ public class TestObjectConnector extends TestCase {
 
             }
             if (executeThread.exception != null) {
-                executeThread.exception.printStackTrace();
                 assertTrue(executeThread.exception instanceof ConnectorException);
             }
         } catch (ConnectorException e) {
@@ -177,8 +176,7 @@ public class TestObjectConnector extends TestCase {
         ConnectorEnvironment environment = new ConnectorEnvironmentImpl(properties, null, null);
 
         try {
-            connector.initialize(environment);
-            connector.start();
+            connector.start(environment);
             Connection connection = connector.getConnection(null);
             QueryMetadataInterface metadata = metadataBuilder.getQueryMetadata();
             CommandBuilder commandBuilder = new CommandBuilder(metadata);
@@ -186,10 +184,14 @@ public class TestObjectConnector extends TestCase {
 
             RuntimeMetadata runtimeMetadata = metadataBuilder.getRuntimeMetadata();
             ExecutionContext execContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-            SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, execContext, runtimeMetadata);
-            execution.execute(command, 100);
-            Batch batch = execution.nextBatch();
-            return batch.getResults();
+            ResultSetExecution execution = (ResultSetExecution) connection.createExecution(command, execContext, runtimeMetadata);
+            execution.execute();
+            List<List> results = new ArrayList<List>();
+            List row = null;
+            while ((row = execution.next()) != null) {
+            	results.add(row);
+            }
+            return (List[])results.toArray(new List[0]);
         } catch (ConnectorException e) {
             throw new MetaMatrixRuntimeException(e);
         }
@@ -205,18 +207,16 @@ public class TestObjectConnector extends TestCase {
     }
 
     private static class ExecutionThread extends Thread {
-        private SynchQueryExecution execution;
-        private IQuery command;
+        private ResultSetExecution execution;
         private Throwable exception;
 
-        private ExecutionThread(SynchQueryExecution execution, IQuery command) {
+        private ExecutionThread(ResultSetExecution execution) {
             this.execution = execution;
-            this.command = command;
         }
         public void run() {
             try {
-                execution.execute(command, 100);
-                execution.nextBatch();
+                execution.execute();
+                execution.next();
             } catch (Throwable t) {
                 exception = t;
             }

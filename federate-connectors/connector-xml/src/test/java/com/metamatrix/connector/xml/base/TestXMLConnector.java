@@ -30,17 +30,17 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.file.FileConnectorState;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 
 public class TestXMLConnector extends TestCase {
     
     private ConnectorEnvironment m_env;
-    private SecurityContext m_secCtx;
+    private ExecutionContext m_secCtx;
     
 	public TestXMLConnector() {
 		super();
@@ -63,7 +63,7 @@ public class TestXMLConnector extends TestCase {
         //init test environment
         XMLConnector connector = new XMLConnector();          
         try {        
-        	connector.initialize(m_env);
+        	connector.start(m_env);
             assertNotNull("state is null", connector.getState());
             XMLConnectorState state = connector.getState();
             Properties testFileProps = ProxyObjectFactory.getDefaultFileProps();
@@ -83,25 +83,16 @@ public class TestXMLConnector extends TestCase {
         
     }
     
-    
-    
-    public void testStart() {
+    public void testStart() throws Exception {
         XMLConnector connector = new XMLConnector();
-        try {
-         connector.initialize(m_env);
-         connector.start();
-        } catch (ConnectorException ex) {
-         ex.printStackTrace();
-         fail(ex.getMessage());
-        }
+         connector.start(m_env);
     }
     
     public void testStop() {
      XMLConnector connector = new XMLConnector();
      
      try {
-      connector.initialize(m_env);
-      connector.start();
+      connector.start(m_env);
       
      } catch (ConnectorException ex) {
       ex.printStackTrace();
@@ -116,8 +107,7 @@ public class TestXMLConnector extends TestCase {
     	XMLConnector connector = new XMLConnector();
                         
         try {
-         connector.initialize(m_env);
-         connector.start();
+         connector.start(m_env);
          XMLConnectionImpl conn = (XMLConnectionImpl) connector.getConnection(m_secCtx);
          assertNotNull("XMLConnectionImpl is null", conn);
          
@@ -169,7 +159,7 @@ public class TestXMLConnector extends TestCase {
             	}
             }
     	    ConnectorEnvironment env = EnvironmentUtility.createEnvironment(testFileProps);
-    		connector.initialize(env);
+    		connector.start(env);
     		fail("connector should have failed on get state");
     	} catch (ConnectorException e) {
     		assertTrue(true);
@@ -180,8 +170,7 @@ public class TestXMLConnector extends TestCase {
         XMLConnector connector = new XMLConnector();
         
         try {
-            connector.initialize(m_env);
-            connector.start();
+            connector.start(m_env);
             assertNotNull(connector.getLogger());
             connector.getLogger().logInfo("Logger is properly initialized");
         } catch (ConnectorException ex) {
@@ -196,8 +185,7 @@ public class TestXMLConnector extends TestCase {
         XMLConnector connector = new XMLConnector();
         
         try {
-            connector.initialize(m_env);
-            connector.start();
+            connector.start(m_env);
             assertNotNull("the cache is null", connector.getCache());
             connector.getLogger().logInfo("cache is properly initialized");
         } catch (ConnectorException ex) {

@@ -29,21 +29,21 @@ package com.metamatrix.connector.jdbc.oracle;
 import java.sql.Time;
 import java.util.Iterator;
 
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILanguageObject;
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISetQuery.Operation;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISetQuery.Operation;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 
 /**
  */
@@ -84,7 +84,7 @@ public class OracleSQLConversionVisitor extends SQLConversionVisitor {
     }
     
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IGroup)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IGroup)
      */
     protected boolean useAsInGroupAlias(){
         return false;
@@ -93,7 +93,7 @@ public class OracleSQLConversionVisitor extends SQLConversionVisitor {
     /**
      * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
      *  
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
      * @since 5.0
      */
     protected String replaceElementName(String group, String element) {        
@@ -173,7 +173,7 @@ public class OracleSQLConversionVisitor extends SQLConversionVisitor {
      * Implementation note: An IGroup will be used for the Sequence name, and an IElement will be used
      * for the Sequence operation (i.e. "nextVal").
      * This nasty kludge is brought to you by Tier 3.
-     * @see com.metamatrix.connector.jdbc.extension.SQLConversionVisitor#visit(com.metamatrix.data.language.IInsert)
+     * @see com.metamatrix.connector.jdbc.extension.SQLConversionVisitor#visit(com.metamatrix.connector.language.IInsert)
      * @since 4.3
      */
     public void visit(IInsert obj) {
@@ -256,7 +256,7 @@ public class OracleSQLConversionVisitor extends SQLConversionVisitor {
     }
     
     /** 
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#appendSetOperation(com.metamatrix.data.language.ISetQuery.Operation)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#appendSetOperation(com.metamatrix.connector.language.ISetQuery.Operation)
      */
     @Override
     protected void appendSetOperation(Operation operation) {

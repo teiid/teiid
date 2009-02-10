@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IAggregate;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class AggregateImpl extends BaseLanguageObject implements IAggregate {
     
@@ -43,28 +43,28 @@ public class AggregateImpl extends BaseLanguageObject implements IAggregate {
     }
 
     /**
-     * @see com.metamatrix.data.language.IAggregate#getName()
+     * @see com.metamatrix.connector.language.IAggregate#getName()
      */
     public String getName() {
         return this.aggName;
     }
 
     /**
-     * @see com.metamatrix.data.language.IAggregate#isDistinct()
+     * @see com.metamatrix.connector.language.IAggregate#isDistinct()
      */
     public boolean isDistinct() {
         return this.isDistinct;
     }
 
     /**
-     * @see com.metamatrix.data.language.IAggregate#getExpression()
+     * @see com.metamatrix.connector.language.IAggregate#getExpression()
      */
     public IExpression getExpression() {
         return this.expression;
     }
     
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

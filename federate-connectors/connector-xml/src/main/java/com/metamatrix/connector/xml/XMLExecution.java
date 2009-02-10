@@ -24,10 +24,10 @@
 
 package com.metamatrix.connector.xml;
 
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
 
 public interface XMLExecution extends Execution {
 	

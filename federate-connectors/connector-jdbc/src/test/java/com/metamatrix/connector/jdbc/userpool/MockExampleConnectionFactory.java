@@ -27,9 +27,9 @@ package com.metamatrix.connector.jdbc.userpool;
 import java.sql.Driver;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCUserIdentityConnectionFactory;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Overrides createConnection stuff so we can fake obtaining a connection.

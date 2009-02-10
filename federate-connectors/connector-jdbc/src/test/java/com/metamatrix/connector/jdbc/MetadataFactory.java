@@ -28,7 +28,7 @@ import junit.framework.Assert;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.language.ICommand;
 
 public class MetadataFactory {
 	

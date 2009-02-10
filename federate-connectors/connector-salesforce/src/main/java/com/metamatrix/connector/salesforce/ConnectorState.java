@@ -27,8 +27,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public class ConnectorState {
 	

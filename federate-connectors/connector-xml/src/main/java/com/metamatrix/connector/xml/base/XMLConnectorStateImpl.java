@@ -27,13 +27,13 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 public abstract class XMLConnectorStateImpl implements Cloneable,
         XMLConnectorState {

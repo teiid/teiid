@@ -35,7 +35,7 @@ import org.jdom.input.SAXBuilder;
 import org.xml.sax.XMLFilter;
 import org.xml.sax.XMLReader;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public class TestLargeTextExtractingXmlFilter extends TestCase {
 	

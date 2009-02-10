@@ -24,10 +24,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IExpression;
+import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.query.sql.symbol.*;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 import junit.framework.TestCase;
 

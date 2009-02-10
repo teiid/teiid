@@ -30,22 +30,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.language.ILikeCriteria;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.Group;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  * 

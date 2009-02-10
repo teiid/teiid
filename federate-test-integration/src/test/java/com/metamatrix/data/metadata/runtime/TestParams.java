@@ -31,9 +31,12 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.TypeModel;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
 
 
 /** 

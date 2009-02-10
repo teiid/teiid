@@ -26,7 +26,7 @@ package com.metamatrix.dqp.spi;
 
 import java.util.Properties;
 
-import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.service.TrackingService;
 
 /** 

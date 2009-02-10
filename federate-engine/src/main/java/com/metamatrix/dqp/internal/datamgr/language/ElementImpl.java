@@ -24,10 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ElementImpl extends BaseLanguageObject implements IElement {
 
@@ -44,21 +44,21 @@ public class ElementImpl extends BaseLanguageObject implements IElement {
     }
     
     /**
-     * @see com.metamatrix.data.language.IElement#getName()
+     * @see com.metamatrix.connector.language.IElement#getName()
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * @see com.metamatrix.data.language.IElement#getGroup()
+     * @see com.metamatrix.connector.language.IElement#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.data.language.IMetadataReference#getMetadataID()
+     * @see com.metamatrix.connector.language.IMetadataReference#getMetadataID()
      */
     public MetadataID getMetadataID() {
         return metadataID;
@@ -69,7 +69,7 @@ public class ElementImpl extends BaseLanguageObject implements IElement {
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

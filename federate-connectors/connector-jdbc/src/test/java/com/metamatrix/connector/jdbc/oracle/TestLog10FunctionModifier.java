@@ -27,10 +27,10 @@ package com.metamatrix.connector.jdbc.oracle;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.visitor.util.SQLStringVisitor;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  */

@@ -25,12 +25,7 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.data.api.AsynchQueryCommandExecution;
-import com.metamatrix.data.api.AsynchQueryExecution;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 
@@ -42,21 +37,11 @@ public class AsynchConnectorWorkItem extends ConnectorWorkItem {
     }
     
     @Override
-    protected void handleBatch(Batch batch) throws ConnectorException,
-    		CommunicationException {
-    	if(batch.getRowCount() == 0 && !batch.isLast() && (execution instanceof AsynchQueryExecution || execution instanceof AsynchQueryCommandExecution)) {                
-        	long delay = 0;
-        	if (execution instanceof AsynchQueryExecution) {
-        		delay = ((AsynchQueryExecution)execution).getPollInterval();
-        	} else {
-        		delay = ((AsynchQueryCommandExecution)execution).getPollInterval();        		
-        	}
-			this.manager.scheduleTask(this, delay);
-        } else {
-        	super.handleBatch(batch);
-        }
+    protected boolean dataNotAvailable(long delay) {
+    	this.manager.scheduleTask(this, delay);
+    	return false;
     }
-
+    
 	@Override
     protected void resumeProcessing() {
     	this.manager.reenqueueRequest(this);

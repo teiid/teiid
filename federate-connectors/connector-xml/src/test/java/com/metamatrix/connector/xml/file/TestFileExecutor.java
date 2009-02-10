@@ -33,6 +33,15 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.MockXMLExecution;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.OutputXPathDesc;
@@ -41,15 +50,6 @@ import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.base.XMLExecutionImpl;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -222,12 +222,10 @@ public class TestFileExecutor extends TestCase {
     		FileConnectorState state = new FileConnectorState();
     	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
-    	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getStateCollegeVDBLocation());
-    	
-    		final int maxBatch = 50;
-			exec.execute(ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(),
-					"select Company_id from Company"), maxBatch);
-		
+    	IQuery query = ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(),
+		"select Company_id from Company");
+    	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(query, ProxyObjectFactory.getStateCollegeVDBLocation());
+			exec.execute();
         	FileExecutor executor = new FileExecutor(state, exec);
 	    	XMLDocument[] docs = executor.getXMLResponse(0).getDocuments();
 	    	assertEquals(1, docs.length);
@@ -244,11 +242,10 @@ public class TestFileExecutor extends TestCase {
     	FileConnectorState state = new FileConnectorState();
     	state.setLogger(new SysLogger(false));
     	state.setState(getEnv(ProxyObjectFactory.getDefaultFileProps()));
-    	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getStateCollegeVDBLocation());
-    	
-    		final int maxBatch = 50;
-			exec.execute(ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(),
-					"select Company_id from Company"), maxBatch);
+    	IQuery query = ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(),
+		"select Company_id from Company");
+    	XMLExecutionImpl exec = ProxyObjectFactory.getDefaultXMLExecution(query, ProxyObjectFactory.getStateCollegeVDBLocation());
+			exec.execute();
 			FileExecutor executor = new FileExecutor(state, exec);
 	    	XMLDocument[] docs = executor.getXMLResponse(0).getDocuments();
 	    	assertEquals(1, docs.length);

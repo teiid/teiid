@@ -24,23 +24,11 @@
 
 package com.metamatrix.connector.object;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 /**
  */
 public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
-
-    
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        if(executionMode == ConnectorCapabilities.EXECUTION_MODE.PROCEDURE) { 
-            return true;
-        }
-        return false;
-    }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsAndCriteria()

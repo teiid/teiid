@@ -27,13 +27,14 @@ package com.metamatrix.connector.xmlsource.file;
 import java.io.File;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xmlsource.XMLSourceConnection;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -55,21 +56,20 @@ public class FileConnection extends XMLSourceConnection {
         super(env);
         connect();
     }
-    
-    /** 
-     * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#createExecution(com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    protected Execution createExecution(ExecutionContext executionContext, RuntimeMetadata metadata) 
-        throws ConnectorException {
-        return new FileExecution(this.env, metadata, executionContext, getXMLDirectory());
+
+    @Override
+    public ProcedureExecution createProcedureExecution(IProcedure command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+        return new FileExecution(command, this.env, metadata, executionContext, getXMLDirectory());
     }
 
     /** 
      * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#release()
      */
-    public void release() {
+    public void close() {
         disconnect();
-        super.release();        
+        super.close();        
     }
     
     /**

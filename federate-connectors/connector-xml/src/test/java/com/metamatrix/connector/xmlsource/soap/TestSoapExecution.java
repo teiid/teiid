@@ -37,18 +37,17 @@ import junit.framework.TestSuite;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
 import com.metamatrix.connector.xmlsource.soap.service.WebServiceServer;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
 
 
 /** 
@@ -546,8 +545,7 @@ public class TestSoapExecution extends TestCase {
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, new SysLogger(false));        
 
         SoapConnection conn = new SoapConnection(env);
-        RuntimeMetadata metadata = new FakeRuntimeMetadata(procName);            
-        ProcedureExecution exec = (ProcedureExecution)conn.createExecution(2, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        RuntimeMetadata metadata = new FakeRuntimeMetadata(procName);
         ILanguageFactory fact = env.getLanguageFactory();
         List parameters = new ArrayList();
         if (args != null && args.length > 0) {
@@ -557,15 +555,13 @@ public class TestSoapExecution extends TestCase {
             }
         }
         IProcedure procedure = fact.createProcedure("AnyNAME", parameters, null); //$NON-NLS-1$
-        exec.execute(procedure, 1000);
-        
-        Batch b = exec.nextBatch();
-        
-        // make sure we have only one row
-        assertEquals(1, b.getRowCount());
 
-        // and it is last one
-        assertTrue(b.isLast());
+        ProcedureExecution exec = (ProcedureExecution)conn.createExecution(procedure, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        exec.execute();
+        
+        List result = exec.next();
+        assertNotNull(result);
+        assertNull(exec.next());
         
         try {
             exec.getOutputValue(getReturnParameter());
@@ -574,8 +570,7 @@ public class TestSoapExecution extends TestCase {
         }
 
         // get the result set
-        List[] lists = b.getResults();        
-        SQLXML xml = (SQLXML)lists[0].get(0);
+        SQLXML xml = (SQLXML)result.get(0);
         assertNotNull(xml);
         String xmlString = xml.getString();
         if (expected != null) {

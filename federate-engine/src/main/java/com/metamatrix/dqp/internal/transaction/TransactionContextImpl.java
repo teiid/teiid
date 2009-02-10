@@ -36,8 +36,8 @@ import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.xa.api.TransactionContext;
 import com.metamatrix.dqp.DQPPlugin;
 
 class TransactionContextImpl implements
@@ -123,7 +123,7 @@ class TransactionContextImpl implements
     }
 
     /** 
-     * @see com.metamatrix.data.xa.api.TransactionContext#getTransactionTimeout()
+     * @see com.metamatrix.connector.xa.api.TransactionContext#getTransactionTimeout()
      */
     int getTransactionTimeout() {
         return this.transactionTimeout;

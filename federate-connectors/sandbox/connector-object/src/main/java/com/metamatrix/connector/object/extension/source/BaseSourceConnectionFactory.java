@@ -26,15 +26,15 @@
  */
 package com.metamatrix.connector.object.extension.source;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.ObjectConnection;
+import com.metamatrix.connector.object.SourceConnectionFactory;
 import com.metamatrix.connector.object.extension.IObjectSource;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.SingleIdentity;
-import com.metamatrix.data.pool.SourceConnection;
-import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.SingleIdentity;
 
 /**
  * Represents a base factory class for the creation of the source connection.  Subclasses
@@ -62,10 +62,10 @@ public abstract class BaseSourceConnectionFactory implements SourceConnectionFac
 
     
     /** 
-     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(com.metamatrix.data.pool.ConnectorIdentity)
+     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(com.metamatrix.connector.pool.ConnectorIdentity)
      * @since 4.3
      */
-    public final SourceConnection createConnection(ConnectorIdentity id) throws ConnectorException {
+    public final Connection createConnection(ConnectorIdentity id) throws ConnectorException {
 
         // must pass the factory to the object source because the factory
         // is used to close the connection
@@ -82,17 +82,8 @@ public abstract class BaseSourceConnectionFactory implements SourceConnectionFac
      * @see com.metamatrix.data.pool.SourceConnectionFactory#createIdentity(com.metamatrix.data.api.SecurityContext)
      * @since 4.3
      */
-    public ConnectorIdentity createIdentity(SecurityContext context) throws ConnectorException {
+    public ConnectorIdentity createIdentity(ExecutionContext context) throws ConnectorException {
         return new SingleIdentity(context);
     }
-
-    /** 
-     * @see com.metamatrix.data.pool.SourceConnectionFactory#isSingleIdentity()
-     * @since 4.3
-     */
-    public boolean isSingleIdentity() {
-        return true;
-    }
     
-
 }

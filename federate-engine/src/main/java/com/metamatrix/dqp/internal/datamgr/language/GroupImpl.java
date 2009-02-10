@@ -24,10 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
 
 public class GroupImpl extends BaseLanguageObject implements IGroup {
 
@@ -42,21 +42,21 @@ public class GroupImpl extends BaseLanguageObject implements IGroup {
     }
 
     /**
-     * @see com.metamatrix.data.language.IGroup#getContext()
+     * @see com.metamatrix.connector.language.IGroup#getContext()
      */
     public String getContext() {
         return context;
     }
 
     /**
-     * @see com.metamatrix.data.language.IGroup#getDefinition()
+     * @see com.metamatrix.connector.language.IGroup#getDefinition()
      */
     public String getDefinition() {
         return this.definition;
     }
 
     /**
-     * @see com.metamatrix.data.language.IMetadataReference#getMetadataID()
+     * @see com.metamatrix.connector.language.IMetadataReference#getMetadataID()
      */
     public MetadataID getMetadataID() {
         return metadataID;
@@ -67,7 +67,7 @@ public class GroupImpl extends BaseLanguageObject implements IGroup {
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

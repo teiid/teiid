@@ -26,11 +26,11 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
-import com.metamatrix.data.pool.UserIdentity;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
+import com.metamatrix.connector.pool.UserIdentity;
 
 /**
  */
@@ -39,7 +39,7 @@ public class FakeUserIdentityConnectionFactory extends FakeSourceConnectionFacto
     /* 
      * @see com.metamatrix.data.pool.SourceConnectionFactory#createIdentity(com.metamatrix.data.SecurityContext)
      */
-    public ConnectorIdentity createIdentity(SecurityContext context) throws ConnectorException {
+    public ConnectorIdentity createIdentity(ExecutionContext context) throws ConnectorException {
         if (context == null) {
         	return null;
         }

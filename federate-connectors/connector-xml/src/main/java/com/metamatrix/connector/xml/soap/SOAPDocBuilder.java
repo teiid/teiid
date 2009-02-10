@@ -37,13 +37,13 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.Namespace;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
 import com.metamatrix.connector.xml.base.Response;
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.jms.JMSSOAPConnectorState;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class SOAPDocBuilder {
 

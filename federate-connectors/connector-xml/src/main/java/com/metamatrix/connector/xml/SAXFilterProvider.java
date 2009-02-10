@@ -28,7 +28,7 @@ package com.metamatrix.connector.xml;
 
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public interface SAXFilterProvider {
 	

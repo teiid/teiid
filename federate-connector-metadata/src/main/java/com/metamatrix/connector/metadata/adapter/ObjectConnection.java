@@ -24,77 +24,59 @@
 
 package com.metamatrix.connector.metadata.adapter;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.MetadataProcedureExecution;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Adapter to make object processing code comply with the standard connector API.
  */
-public class ObjectConnection implements Connection {
+public class ObjectConnection extends BasicConnection {
 
-    private ConnectorEnvironment environment;
-    private SecurityContext securityContext;
+    private ExecutionContext executionContext;
     private ObjectConnector connector;
 
-    public ObjectConnection(final ConnectorEnvironment environment, final SecurityContext context, ObjectConnector connector){
-        this.securityContext = context;
-        this.environment = environment;
+    public ObjectConnection(final ConnectorEnvironment environment, final ExecutionContext context, ObjectConnector connector){
+        this.executionContext = context;
         this.connector = connector;
     }
 
-    /* 
-     * @see com.metamatrix.data.Connection#createSynchExecution(com.metamatrix.data.language.ICommand, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    public Execution createExecution(final int executionMode, final ExecutionContext executionContext, final RuntimeMetadata metadata) {
-        switch(executionMode) {
-            case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-                return new ObjectSynchExecution(metadata, this);
-            case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-                return new ObjectProcedureExecution(metadata, this, environment);
-            default:
-                return null;
-        }
+    @Override
+    public ResultSetExecution createResultSetExecution(IQueryCommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new ObjectSynchExecution((IQuery)command, metadata, this);
+    }
+    
+    @Override
+    public ProcedureExecution createProcedureExecution(IProcedure command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new MetadataProcedureExecution(command, metadata, getMetadataObjectSource());
     }
     
     protected IObjectSource getMetadataObjectSource() throws ConnectorException {
-        return connector.getMetadataObjectSource(securityContext);
+        return connector.getMetadataObjectSource(executionContext);
     }
     
-    protected Object getSysAdminobjectSource() throws ConnectorException {
-        return connector.getSysAdminObjectSource(securityContext);
-    }
-
-    
-
-    /* 
-     * @see com.metamatrix.data.Connection#getMetadata()
-     */
-    public ConnectorMetadata getMetadata() {
-        return null;
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connection#close()
-     */
-    public void release() {
-        environment = null;
-        securityContext = null;
-        connector = null;
-
-    }
-
     /* 
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return ObjectConnectorCapabilities.getInstance();
+        return null;
+    }
+    
+    @Override
+    public void close() {
     }
 }

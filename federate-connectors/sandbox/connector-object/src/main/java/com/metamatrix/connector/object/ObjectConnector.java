@@ -24,75 +24,40 @@
 
 package com.metamatrix.connector.object;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.SourceConnection;
-import com.metamatrix.data.pool.SourceConnectionFactory;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 
 /**
  * Implmentation of the connector interface.
  */
-public class ObjectConnector implements Connector {
-    
-
-    // used when connection pooling is not used @see usePooling
-    private SourceConnection connection = null;
-    private SourceConnectionFactory factory=null;
+public class ObjectConnector implements Connector, ConnectorIdentityFactory {
     
     private ConnectorLogger logger;
     private ConnectorEnvironment env;
     private boolean start = false;
-    private boolean usePooling = false;
-
+    private SourceConnectionFactory factory;
+    private ConnectorCapabilities capabilities;
 
     /**
      * Initialization with environment.
      */
-    public void initialize( ConnectorEnvironment environment ) throws ConnectorException {
+    public void start( ConnectorEnvironment environment ) throws ConnectorException {
         logger = environment.getLogger();
         this.env = environment;
 
-        // License checking for Text Connector
-//        final boolean licensed = LicenseChecker.hasValidProductLicense(MetaMatrixProductNames.ConnectorProduct.TEXT,
-//                                                                MetaMatrixProductNames.VERSION_NUMBER,
-//                                                                false);
-//        if ( ! licensed ) {
-//            Object[] params = new Object[] {MetaMatrixProductNames.ConnectorProduct.TEXT};
-//            final String msg = SystemPlugin.Util.getString("SystemConnector.No_license_found_for_{0}", params); //$NON-NLS-1$
-//            final ConnectorException e = new ConnectorException(msg);
-//            logger.logError(msg, e);
-//            throw e;
-//        }
-        
         try {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
+            this.capabilities = ObjectConnectorUtil.createCapabilities(environment, loader);
             factory = ObjectConnectorUtil.createFactory(this.env, loader);
-//            String scfClassName = env.getProperties().getProperty(ObjectPropertyNames.EXT_CONNECTION_FACTORY_CLASS);  //$NON-NLS-1$
-//            if (scfClassName == null) {
-//                String msg = ObjectPlugin.Util.getString("ObjectConnector.General.Property_{0}_is_required", ObjectPropertyNames.EXT_CONNECTION_FACTORY_CLASS);//$NON-NLS-1$
-//                logger.logError(msg);
-//                throw new ConnectorException(msg);
-//            }
-//            
-//            //create source connection factory
-//            Class scfClass = this.getClass().getClassLoader().loadClass(scfClassName);
-//            factory = (SourceConnectionFactory) scfClass.newInstance();
-//            factory.initialize(environment);
-
-//            //create pool
-//            pool = new ConnectionPool(factory);
-//            pool.initialize(environment.getProperties());
-
-//            factory.initialize(env);
-            
-           
-         } catch (ClassNotFoundException e1) {
+	     } catch (ClassNotFoundException e1) {
             throw new ConnectorException(e1);
         } catch (InstantiationException e2) {
             throw new ConnectorException(e2);
@@ -103,7 +68,8 @@ public class ObjectConnector implements Connector {
         //test connection
         getConnection(null);
 
-        logger.logInfo(ObjectPlugin.Util.getString("ObjectConnector.Connector_initialized_1"));//$NON-NLS-1$
+        start = true;
+        logger.logInfo(ObjectPlugin.Util.getString("ObjectConnector.Connector_started_4"));//$NON-NLS-1$
     }
 
     public void stop() {
@@ -111,48 +77,32 @@ public class ObjectConnector implements Connector {
             return;
         }
 
-        if (!usePooling) {
-            try {
-                connection.closeSource();
-            } catch (ConnectorException err) {
-            }
-        }
-        connection = null;
-        factory = null;   
         env = null;
         start = false;
         
         logger.logInfo(ObjectPlugin.Util.getString("ObjectConnector.Connector_stopped_3"));//$NON-NLS-1$
         
         logger = null;
-
-
     }
-
-    public void start() throws ConnectorException {
-  //           if(pool == null){
-        
-        start = true;
-        logger.logInfo(ObjectPlugin.Util.getString("ObjectConnector.Connector_started_4"));//$NON-NLS-1$
-    } 
-
     
     /* 
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(final SecurityContext context) throws ConnectorException {
-        if (!usePooling) {
-            return (Connection) createConnection(context); 
-        }
-        return null;
+    @Override
+    public Connection getConnection(final ExecutionContext context) throws ConnectorException {
+        return factory.createConnection(factory.createIdentity(context));
+    }    
+    
+    @Override
+    public ConnectorCapabilities getCapabilities() {
+    	return capabilities;
     }
-   
-    protected SourceConnection createConnection(SecurityContext context) throws ConnectorException {
-        if (connection == null) {
-            connection = factory.createConnection(factory.createIdentity(context));
-        }
-        return connection;
-        }    
+    
+    @Override
+    public ConnectorIdentity createIdentity(ExecutionContext context)
+    		throws ConnectorException {
+    	return factory.createIdentity(context);
+    }
     
 }
 

@@ -29,9 +29,11 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IQuery;
 
 /**
  */

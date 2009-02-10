@@ -33,15 +33,15 @@ import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 
 /**
@@ -74,7 +74,7 @@ public class PooledConnector extends ConnectorWrapper {
 				idToConnections.remove(this.transactionContext.getTxnID());
 				conn.setInTxn(false);
 				if (!conn.isLeased()) {
-					conn.release();
+					conn.close();
 				}
 			}
 			environment.getLogger().logTrace("released connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
@@ -99,14 +99,14 @@ public class PooledConnector extends ConnectorWrapper {
 	}
 
 	@Override
-	public void initialize(ConnectorEnvironment environment)
+	public void start(ConnectorEnvironment environment)
 			throws ConnectorException {
 		Properties p = environment.getProperties();
 		pool.initialize(p);
 		if (xaPool != null) {
 			xaPool.initialize(p);
 		}
-		super.initialize(environment);
+		super.start(environment);
 	}
 	
 	@Override
@@ -119,13 +119,13 @@ public class PooledConnector extends ConnectorWrapper {
 	}
 
 	@Override
-	public Connection getConnectionDirect(SecurityContext context)
+	public Connection getConnectionDirect(ExecutionContext context)
 			throws ConnectorException {
 		return pool.obtain(context);
 	}
 
 	@Override
-	public XAConnection getXAConnectionDirect(SecurityContext securityContext,
+	public XAConnection getXAConnectionDirect(ExecutionContext executionContext,
 			TransactionContext transactionContext) throws ConnectorException {
         ConnectionWrapper conn = null;
         
@@ -140,7 +140,7 @@ public class PooledConnector extends ConnectorWrapper {
 			}
         }
     
-        conn = xaPool.obtain(securityContext, transactionContext, true);
+        conn = xaPool.obtain(executionContext, transactionContext, true);
         conn.lease();
         if (transactionContext != null) {
         	environment.getLogger().logTrace("Obtained new connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
@@ -148,10 +148,10 @@ public class PooledConnector extends ConnectorWrapper {
             try { //add a synchronization to remove the map entry
                 transactionContext.getTransaction().registerSynchronization(new RemovalCallback(transactionContext, conn));
             } catch (RollbackException err) {
-                conn.release();
+                conn.close();
                 throw new ConnectorException(err);
             } catch (SystemException err) {
-                conn.release();
+                conn.close();
                 throw new ConnectorException(err);
             }
 	        conn.setInTxn(true);

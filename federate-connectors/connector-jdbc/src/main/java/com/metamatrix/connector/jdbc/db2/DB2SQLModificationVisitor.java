@@ -24,8 +24,8 @@
 
 package com.metamatrix.connector.jdbc.db2;
 
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 
 /**

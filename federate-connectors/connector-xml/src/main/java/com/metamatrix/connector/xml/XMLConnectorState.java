@@ -25,11 +25,11 @@
 
 package com.metamatrix.connector.xml;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public interface XMLConnectorState extends BaseXMLConnectorState {
 
@@ -68,7 +68,7 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 	public abstract IQueryPreprocessor getPreprocessor();
 
 	public abstract Connection getConnection(CachingConnector connector,
-			SecurityContext context, ConnectorEnvironment environment)
+			ExecutionContext context, ConnectorEnvironment environment)
 			throws ConnectorException;
 
 	public String getPluggableInputStreamFilterClass();

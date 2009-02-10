@@ -28,13 +28,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
 
 /**
  */
 public interface IConnectorHost {
-    public void setBatchSize(int batchSize);
 
     public Properties getConnectorEnvironmentProperties();
 

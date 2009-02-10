@@ -26,10 +26,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.ISearchedCaseExpression;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SearchedCaseExpressionImpl extends BaseLanguageObject implements ISearchedCaseExpression {
 
@@ -45,35 +45,35 @@ public class SearchedCaseExpressionImpl extends BaseLanguageObject implements IS
         this.type = type;
     }
     /**
-     * @see com.metamatrix.data.language.ISearchedCaseExpression#getElseExpression()
+     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getElseExpression()
      */
     public IExpression getElseExpression() {
         return elseExpression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ISearchedCaseExpression#getThenExpression(int)
+     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getThenExpression(int)
      */
     public IExpression getThenExpression(int index) {
         return (IExpression)thenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.data.language.ISearchedCaseExpression#getWhenCount()
+     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getWhenCount()
      */
     public int getWhenCount() {
         return whenExpressions.size();
     }
 
     /**
-     * @see com.metamatrix.data.language.ISearchedCaseExpression#getWhenCriteria(int)
+     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getWhenCriteria(int)
      */
     public ICriteria getWhenCriteria(int index) {
         return (ICriteria)whenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

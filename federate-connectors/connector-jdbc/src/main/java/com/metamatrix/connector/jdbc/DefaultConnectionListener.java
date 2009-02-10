@@ -28,7 +28,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorEnvironment;
 
 /**
  * A default connection listener object, on a given connection factory. 

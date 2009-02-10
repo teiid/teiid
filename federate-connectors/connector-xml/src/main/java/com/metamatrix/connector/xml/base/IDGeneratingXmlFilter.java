@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 class IDGeneratingXmlFilter extends XMLFilterImpl
 {

@@ -26,8 +26,8 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 
 /**
  */
@@ -140,7 +140,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageFactory#createBulkInsert(com.metamatrix.data.language.IGroup, java.util.List, java.util.List)
+     * @see com.metamatrix.connector.language.ILanguageFactory#createBulkInsert(com.metamatrix.connector.language.IGroup, java.util.List, java.util.List)
      */
     public IBulkInsert createBulkInsert(IGroup group, List columns, List rows) {
         return new BulkInsertImpl(group, columns, rows);

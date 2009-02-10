@@ -34,13 +34,13 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 import com.metamatrix.connector.xml.http.Messages;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * The RequestResponseDocumentProducer is responsible for executing a single instance of a request permutation
@@ -153,7 +153,7 @@ public abstract class RequestResponseDocumentProducer implements DocumentProduce
 				try {
 					Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(getState().getPluggableInputStreamFilterClass());
 					Constructor ctor = pluggableFilter.getConstructor(
-							new Class[] { java.io.InputStream.class, com.metamatrix.data.api.ConnectorLogger.class});
+							new Class[] { java.io.InputStream.class, com.metamatrix.connector.api.ConnectorLogger.class});
 					filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
 				} catch (Exception cnf) {
 					throw new ConnectorException(cnf);

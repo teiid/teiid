@@ -26,8 +26,7 @@ package com.metamatrix.connector.salesforce;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 public class SalesforceCapabilities extends BasicConnectorCapabilities {
 	
@@ -39,16 +38,6 @@ public class SalesforceCapabilities extends BasicConnectorCapabilities {
     	maxInCriteriaSize = size;
     }
     
-    public int getCapabilitiesScope() {
-        return ConnectorCapabilities.SCOPE.GLOBAL;
-    }
-
-    
-    public boolean supportsExecutionMode(int executionMode) {
-        return (executionMode == ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY);        
-    }
-
-   
     public List getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.add("includes");

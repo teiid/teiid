@@ -27,7 +27,7 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Collections;
 import java.util.Iterator;
 
-import com.metamatrix.data.language.IParameter;
+import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.*;

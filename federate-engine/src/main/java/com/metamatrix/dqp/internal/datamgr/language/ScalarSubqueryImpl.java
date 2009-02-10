@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.language.IScalarSubquery;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

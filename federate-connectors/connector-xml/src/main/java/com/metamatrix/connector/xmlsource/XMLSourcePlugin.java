@@ -25,8 +25,9 @@
 package com.metamatrix.connector.xmlsource;
 
 import java.util.ResourceBundle;
+
+import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.core.BundleUtil;
-import com.metamatrix.data.api.ConnectorLogger;
 
 /**
  * For logging purposes

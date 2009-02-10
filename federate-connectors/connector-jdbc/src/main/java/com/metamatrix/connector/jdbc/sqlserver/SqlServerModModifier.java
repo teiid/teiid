@@ -24,11 +24,11 @@
 
 package com.metamatrix.connector.jdbc.sqlserver;
 
+import com.metamatrix.connector.api.TypeFacility.RUNTIME_TYPES;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.data.api.TypeFacility.RUNTIME_TYPES;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILanguageFactory;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
 
 public class SqlServerModModifier extends AliasModifier {
 

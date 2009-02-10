@@ -24,7 +24,7 @@
 
 package com.metamatrix.connector.xml.base;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 
 public class LargeOrSmallString

@@ -26,7 +26,7 @@ package com.metamatrix.connector.xml.base;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public class TestStringBackedValueReference extends TestCase {
 

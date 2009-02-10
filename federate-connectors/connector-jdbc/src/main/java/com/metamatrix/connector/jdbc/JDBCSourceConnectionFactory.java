@@ -33,12 +33,12 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 
 /**
  * Represents a base class for a JDBC source connection factory.  Subclasses
@@ -106,7 +106,7 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
      * This creates a JDBC connection.
      * @throws ConnectorException  if there is an error establishing the connection.
      */
-    protected com.metamatrix.data.api.Connection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
+    protected com.metamatrix.connector.api.Connection createJDBCConnection(Driver driver, String url, int transactionIsolationLevel, Properties userProps) throws ConnectorException {
         Connection connection = null;
 
         // Connect
@@ -181,10 +181,10 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
         }
     }
     
-    public abstract com.metamatrix.data.api.Connection getConnection(SecurityContext context) throws ConnectorException;
+    public abstract com.metamatrix.connector.api.Connection getConnection(ExecutionContext context) throws ConnectorException;
     
     @Override
-    public ConnectorIdentity createIdentity(SecurityContext context)
+    public ConnectorIdentity createIdentity(ExecutionContext context)
     		throws ConnectorException {
     	return this.connectorIdentityFactory.createIdentity(context);
     }

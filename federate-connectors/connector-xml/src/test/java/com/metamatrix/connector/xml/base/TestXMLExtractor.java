@@ -32,8 +32,8 @@ import junit.framework.TestCase;
 import org.jdom.Document;
 
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public class TestXMLExtractor extends TestCase {
 	

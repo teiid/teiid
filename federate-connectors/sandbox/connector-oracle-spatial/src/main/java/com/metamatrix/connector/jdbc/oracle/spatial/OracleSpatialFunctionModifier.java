@@ -27,9 +27,9 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 import java.util.List;
 
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILiteral;
 
 public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
 

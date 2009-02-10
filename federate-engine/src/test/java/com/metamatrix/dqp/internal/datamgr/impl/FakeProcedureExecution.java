@@ -24,30 +24,28 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
 
 final class FakeProcedureExecution implements ProcedureExecution {
 
-    int batchNum = 0;
     int resultSetSize;
+    int rowNum;
 
     public FakeProcedureExecution(int resultSetSize) {
         this.resultSetSize = resultSetSize;
     }
     
-    public void execute(IProcedure procedure,
-                        int maxBatchSize) throws ConnectorException {
+    @Override
+    public void execute() throws ConnectorException {
+    	
     }
-
+    
     public Object getOutputValue(IParameter parameter) throws ConnectorException {
         return new Integer(parameter.getIndex());
     }
@@ -57,18 +55,14 @@ final class FakeProcedureExecution implements ProcedureExecution {
 
     public void cancel() throws ConnectorException {
     }
-
-    public Batch nextBatch() throws ConnectorException {
-        List row = Arrays.asList(new Object[resultSetSize]);
-        List results = new ArrayList();
-        
-        results.add(row);
-        
-        Batch batch = new BasicBatch(results);
-        if (batchNum == 1) {
-            batch.setLast();
-        }
-        batchNum++;
-        return batch;
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (rowNum == 1) {
+    		return null;
+    	}
+    	rowNum++;
+    	return Arrays.asList(new Object[resultSetSize]);
     }
+
 }

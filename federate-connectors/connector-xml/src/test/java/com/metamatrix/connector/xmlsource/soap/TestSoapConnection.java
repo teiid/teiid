@@ -30,9 +30,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 
 /** 
@@ -57,21 +57,16 @@ public class TestSoapConnection extends TestCase{
         props.setProperty("wsdl", wsdlFile.toURL().toString()); //$NON-NLS-1$  
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         
-        try {
-            SoapConnection conn = new SoapConnection(env);
-            assertTrue(conn.isConnected());
-            assertEquals("StockQuotes", conn.service.getServiceName().getLocalPart()); //$NON-NLS-1$
-            assertTrue("Operation Not Found", conn.operationsMap.containsKey("GetQuote")); //$NON-NLS-1$ //$NON-NLS-2$
-            assertFalse("Operation Should Not have Found", conn.operationsMap.containsKey("GetQuoteX")); //$NON-NLS-1$ //$NON-NLS-2$
-            assertEquals(4, conn.operationsMap.size());            
-            
-            // release connection
-            conn.release();
-            assertFalse(conn.isConnected());
-        } catch (ConnectorException e) {
-            e.printStackTrace();
-            fail(e.getMessage()); 
-        }
+        SoapConnection conn = new SoapConnection(env);
+        assertTrue(conn.isConnected());
+        assertEquals("StockQuotes", conn.service.getServiceName().getLocalPart()); //$NON-NLS-1$
+        assertTrue("Operation Not Found", conn.operationsMap.containsKey("GetQuote")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertFalse("Operation Should Not have Found", conn.operationsMap.containsKey("GetQuoteX")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(4, conn.operationsMap.size());            
+        
+        // release connection
+        conn.close();
+        assertFalse(conn.isConnected());
     }
     
     public void testFindOperation() throws Exception {
@@ -80,14 +75,8 @@ public class TestSoapConnection extends TestCase{
         props.setProperty("wsdl", wsdlFile.toURL().toString()); //$NON-NLS-1$  
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         
-        try {
-            SoapConnection conn = new SoapConnection(env);
-            ServiceOperation operation = conn.findOperation("GetQuote"); //$NON-NLS-1$
-            if (operation == null) {
-                fail("failed to find the operation"); //$NON-NLS-1$
-            }
-        }catch(ConnectorException e) {
-            fail();
-        }        
+        SoapConnection conn = new SoapConnection(env);
+        ServiceOperation operation = conn.findOperation("GetQuote"); //$NON-NLS-1$
+        assertNotNull("failed to find the operation", operation); //$NON-NLS-1$
     }    
 }

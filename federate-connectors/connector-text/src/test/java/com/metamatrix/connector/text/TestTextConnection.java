@@ -30,9 +30,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  */
@@ -52,7 +52,7 @@ public class TestTextConnection extends TestCase {
         
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
-        txr.initialize(env);
+        txr.start(env);
         TextConnection conn = (TextConnection)txr.getConnection(null);
         
         Map actualProps = conn.metadataProps;
@@ -70,7 +70,7 @@ public class TestTextConnection extends TestCase {
         
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
-    	txr.initialize(env);
+    	txr.start(env);
     }
 
     /**
@@ -86,7 +86,7 @@ public class TestTextConnection extends TestCase {
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
         try {
-        	txr.initialize(env);
+        	txr.start(env);
         	fail("expected exception"); //$NON-NLS-1$
         } catch (ConnectorException e) {
             String m1 = "Error parsing property string text.library2.location"; //$NON-NLS-1$
@@ -112,7 +112,7 @@ public class TestTextConnection extends TestCase {
         
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector txr = new TextConnector();
-    	txr.initialize(env);
+    	txr.start(env);
     }
 
 }

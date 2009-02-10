@@ -28,11 +28,11 @@ package com.metamatrix.connector.jdbc.extension;
 
 import java.util.Map;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

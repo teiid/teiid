@@ -24,14 +24,14 @@
 
 package com.metamatrix.connector.object.extension.command;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IMetadataReference;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IMetadataReference;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 

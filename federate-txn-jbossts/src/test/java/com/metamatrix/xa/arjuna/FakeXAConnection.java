@@ -26,13 +26,13 @@ package com.metamatrix.xa.arjuna;
 
 import javax.transaction.xa.XAResource;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.xa.api.XAConnection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.xa.api.XAConnection;
 
 class FakeXAConnection implements XAConnection {
     String name;
@@ -44,19 +44,18 @@ class FakeXAConnection implements XAConnection {
         this.name = name;
         this.resource = new FakeXAResource(name);
     }
-    
-    public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) 
-        throws ConnectorException {
-        return null;
+    @Override
+    public Execution createExecution(ICommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return null;
+    }
+    @Override
+    public void close() {
+    	this.released = true;
     }
     public ConnectorCapabilities getCapabilities() {
         return null;
-    }
-    public ConnectorMetadata getMetadata() {
-        return null;
-    }
-    public void release() {
-        this.released = true;
     }
     
     public String getResourceName() {

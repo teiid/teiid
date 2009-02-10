@@ -37,7 +37,7 @@ import com.metamatrix.connector.jdbc.JDBCCapabilities;
 public class MMCapabilities extends JDBCCapabilities {
     
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#getSupportedFunctions()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#getSupportedFunctions()
      * @since 4.3
      */
     public List getSupportedFunctions() {
@@ -145,7 +145,7 @@ public class MMCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

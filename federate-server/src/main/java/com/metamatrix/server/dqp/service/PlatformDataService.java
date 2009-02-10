@@ -42,10 +42,10 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
 import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;

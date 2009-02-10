@@ -64,7 +64,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;

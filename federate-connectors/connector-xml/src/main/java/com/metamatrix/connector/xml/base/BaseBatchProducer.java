@@ -27,41 +27,36 @@ package com.metamatrix.connector.xml.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public class BaseBatchProducer {
 
-    public BaseBatchProducer() {
-        super();
+	private List allResultsList;
+	private ExecutionInfo info;
+	private ExecutionContext exeCtx;
+	private ConnectorEnvironment connectorEnv;
+    private int currentReturnIndex = 0;
+	
+    public BaseBatchProducer(List allResultsList, ExecutionInfo info, ExecutionContext exeCtx,
+            ConnectorEnvironment connectorEnv) {
+    	this.allResultsList = allResultsList;
+    	this.info = info;
+    	this.exeCtx = exeCtx;
+    	this.connectorEnv = connectorEnv;
     }
-
-    public static int currentReturnIndex = 0;
-    
-    public static int getCurrentReturnIndex() {
-        return currentReturnIndex;
-    }
-    
-    public static Batch createBatch(List allResultsList, int returnIndex,
-            int maxBatch, ExecutionInfo info, ExecutionContext exeCtx,
-            ConnectorEnvironment connectorEnv) throws ConnectorException {
-        Batch batch = new BasicBatch();
+        
+    public List createRow() throws ConnectorException {
         if(!allResultsList.isEmpty()) {
             ArrayList firstColumn = (ArrayList) allResultsList.get(0);
-            while (returnIndex < firstColumn.size()
-                    && batch.getRowCount() < maxBatch) {
+            while (currentReturnIndex < firstColumn.size()) {
                 ArrayList row = new ArrayList();
                 boolean addRowToCollector = true;
                 for (int colNum = 0; colNum < allResultsList.size(); colNum++) {
-                    Object resultObj;
-                    ArrayList result;
-                    Object valueObj;
-                    resultObj = allResultsList.get(colNum);
-                    result = (ArrayList) resultObj;
-                    valueObj = result.get(returnIndex);
+                    Object resultObj = allResultsList.get(colNum);
+                    ArrayList result = (ArrayList) resultObj;
+                    Object valueObj = result.get(currentReturnIndex++);
                     LargeOrSmallString value = (LargeOrSmallString) valueObj;
                     if (!(addRowToCollector = passesCriteriaCheck(info
                             .getCriteria(), value, colNum, exeCtx, connectorEnv))) {
@@ -70,13 +65,11 @@ public class BaseBatchProducer {
                     setColumnValue(colNum, value, row, info, exeCtx, connectorEnv);
                 }
                 if (addRowToCollector) {
-                    batch.addRow(row);
+                    return row;
                 }
-                returnIndex++;
             }
         }
-        currentReturnIndex = returnIndex;
-        return batch;
+        return null;
     }
 
     /**
@@ -89,7 +82,7 @@ public class BaseBatchProducer {
      * @return
      * @throws ConnectorException
      */
-    private static boolean passesCriteriaCheck(List criteriaPairs,
+    private boolean passesCriteriaCheck(List criteriaPairs,
             LargeOrSmallString value, int colNum, ExecutionContext exeCtx,
             ConnectorEnvironment connectorEnv) throws ConnectorException {
         // Need to test this code
@@ -112,7 +105,7 @@ public class BaseBatchProducer {
      * @param row
      * @throws ConnectorException
      */
-    private static void setColumnValue(int colNum, LargeOrSmallString value,
+    private void setColumnValue(int colNum, LargeOrSmallString value,
             ArrayList row, ExecutionInfo info, ExecutionContext exeCtx,
             ConnectorEnvironment connectorEnv) throws ConnectorException {
         if (colNum < info.getColumnCount()) {

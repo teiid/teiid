@@ -32,13 +32,13 @@ import java.util.Properties;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.Messages;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Contains the data needed to create the SOAP Envelope around an XML Document.

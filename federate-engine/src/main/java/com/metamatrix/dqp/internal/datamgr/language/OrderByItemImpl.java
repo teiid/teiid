@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IOrderByItem;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class OrderByItemImpl extends BaseLanguageObject implements IOrderByItem {
     
@@ -41,21 +41,21 @@ public class OrderByItemImpl extends BaseLanguageObject implements IOrderByItem 
     }
 
     /**
-     * @see com.metamatrix.data.language.IOrderByItem#getName()
+     * @see com.metamatrix.connector.language.IOrderByItem#getName()
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * @see com.metamatrix.data.language.IOrderByItem#getDirection()
+     * @see com.metamatrix.connector.language.IOrderByItem#getDirection()
      */
     public boolean getDirection() {
         return direction;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

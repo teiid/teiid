@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class FunctionImpl extends BaseLanguageObject implements IFunction {
 
@@ -41,21 +41,21 @@ public class FunctionImpl extends BaseLanguageObject implements IFunction {
     }
     
     /**
-     * @see com.metamatrix.data.language.IFunction#getName()
+     * @see com.metamatrix.connector.language.IFunction#getName()
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * @see com.metamatrix.data.language.IFunction#getParameters()
+     * @see com.metamatrix.connector.language.IFunction#getParameters()
      */
     public IExpression[] getParameters() {
         return parameters;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

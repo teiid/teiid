@@ -29,9 +29,9 @@ package com.metamatrix.connector.xml.cache;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * 

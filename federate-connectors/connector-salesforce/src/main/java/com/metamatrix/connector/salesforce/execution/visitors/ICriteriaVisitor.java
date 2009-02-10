@@ -23,7 +23,7 @@
  */
 package com.metamatrix.connector.salesforce.execution.visitors;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public interface ICriteriaVisitor {
 

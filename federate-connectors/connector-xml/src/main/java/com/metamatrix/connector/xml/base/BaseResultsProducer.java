@@ -51,10 +51,11 @@ import org.jdom.Namespace;
 import org.jdom.Text;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
+
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.http.Messages;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 /**
  * Converts a Response into an List containing results based upon the metadata
  * from the ExecutionInfo. Elements of the List are List that each contain all

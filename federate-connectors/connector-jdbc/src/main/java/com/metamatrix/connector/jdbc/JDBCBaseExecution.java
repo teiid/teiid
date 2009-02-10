@@ -33,14 +33,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.pool.ConnectorIdentity;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.pool.ConnectorIdentity;
 
 /**
  */
@@ -227,6 +227,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.createStatement();
+        statement.setFetchSize(context.getBatchSize());
         setMaxRows(statement);
         return statement;
     }
@@ -237,6 +238,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.prepareCall(sql);
+        statement.setFetchSize(context.getBatchSize());
         setMaxRows(statement);
         return (CallableStatement)statement;
     }
@@ -247,6 +249,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.prepareStatement(sql);
+        statement.setFetchSize(context.getBatchSize());
         setMaxRows(statement);
         return (PreparedStatement)statement;
     }

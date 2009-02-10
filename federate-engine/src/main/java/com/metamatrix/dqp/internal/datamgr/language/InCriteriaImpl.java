@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class InCriteriaImpl extends BaseLanguageObject implements IInCriteria {
 
@@ -42,28 +42,28 @@ public class InCriteriaImpl extends BaseLanguageObject implements IInCriteria {
         this.negated = negated;
     }
     /**
-     * @see com.metamatrix.data.language.IInCriteria#getLeftExpression()
+     * @see com.metamatrix.connector.language.IInCriteria#getLeftExpression()
      */
     public IExpression getLeftExpression() {
         return leftExpression;
     }
 
     /**
-     * @see com.metamatrix.data.language.IInCriteria#getRightExpressions()
+     * @see com.metamatrix.connector.language.IInCriteria#getRightExpressions()
      */
     public List getRightExpressions() {
         return rightExpressions;
     }
 
     /**
-     * @see com.metamatrix.data.language.IInCriteria#isNegated()
+     * @see com.metamatrix.connector.language.IInCriteria#isNegated()
      */
     public boolean isNegated() {
         return this.negated;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

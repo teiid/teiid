@@ -24,7 +24,7 @@
 
 package com.metamatrix.dqp.service;
 
-import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
 
 

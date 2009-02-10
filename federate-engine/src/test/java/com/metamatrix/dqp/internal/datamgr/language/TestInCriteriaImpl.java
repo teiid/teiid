@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.query.sql.lang.SetCriteria;
 
 import junit.framework.TestCase;

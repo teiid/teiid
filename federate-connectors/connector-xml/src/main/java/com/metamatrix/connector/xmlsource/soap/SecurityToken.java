@@ -39,9 +39,9 @@ import org.apache.ws.security.handler.WSHandlerConstants;
 import org.apache.ws.security.message.token.UsernameToken;
 import org.apache.ws.security.util.Base64;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.ConnectorEnvironment;
 
 /**
  * Security provider for calling the Web Service 

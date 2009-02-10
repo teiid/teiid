@@ -24,8 +24,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 
 /** 
@@ -41,7 +41,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
         this.rowLimit = rowLimit;
     }
     /** 
-     * @see com.metamatrix.data.language.ILimit#getRowLimit()
+     * @see com.metamatrix.connector.language.ILimit#getRowLimit()
      * @since 4.3
      */
     public int getRowLimit() {
@@ -49,7 +49,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
     }
 
     /** 
-     * @see com.metamatrix.data.language.ILimit#getRowOffset()
+     * @see com.metamatrix.connector.language.ILimit#getRowOffset()
      * @since 4.3
      */
     public int getRowOffset() {
@@ -57,7 +57,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
     }
 
     /** 
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.framework.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.connector.visitor.framework.LanguageObjectVisitor)
      * @since 4.3
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {

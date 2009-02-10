@@ -27,16 +27,15 @@ package com.metamatrix.connector.metadata;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.ObjectProcedure;
 import com.metamatrix.connector.metadata.internal.ObjectProcedureProcessor;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -46,39 +45,48 @@ public class MetadataProcedureExecution implements ProcedureExecution {
 
     private final RuntimeMetadata metadata;
     private final ObjectProcedureProcessor processor;
-
-    private int maxBatchSize;
+    private IProcedure proc;
     private ObjectProcedure procedure;
     private Iterator queryResults;
- 
+    private volatile boolean cancel;
 
     /** 
      * @param metadata
      * @param objectSource
      * @since 4.2
      */
-    public MetadataProcedureExecution(final RuntimeMetadata metadata, final IObjectSource objectSource) {
+    public MetadataProcedureExecution(final IProcedure procedure, final RuntimeMetadata metadata, final IObjectSource objectSource) {
         this.metadata = metadata;
         this.processor = new ObjectProcedureProcessor(objectSource);
+        this.proc = procedure;
     }
-
-    /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#execute(com.metamatrix.data.language.IProcedure, int)
-     * @since 4.2
-     */
-    public void execute(final IProcedure procedure, final int maxBatchSize) throws ConnectorException {
-        
-        this.procedure = new ObjectProcedure(metadata, procedure);
-        this.maxBatchSize = maxBatchSize;
+    
+    @Override
+    public void execute() throws ConnectorException {
+        this.procedure = new ObjectProcedure(metadata, proc);
         this.queryResults = processor.process(this.procedure);
         if(this.procedure.getResultSetNameInSource() == null) {
         	queryResults = null;
         }
     }
- 
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (cancel) {
+            throw new ConnectorException(MetadataConnectorPlugin.Util.getString("ObjectSynchExecution.closed")); //$NON-NLS-1$
+        }
+    	if(this.queryResults == null) {
+        	return null;
+        }
+    	int count = 0;
+    	if (queryResults.hasNext()) {
+    		return (List)queryResults.next();
+    	}
+    	return null;
+    }
 
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
+     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
      * @since 4.2
      */
     public Object getOutputValue(final IParameter parameter) throws ConnectorException {
@@ -90,41 +98,18 @@ public class MetadataProcedureExecution implements ProcedureExecution {
     }
 
     /** 
-     * @see com.metamatrix.data.api.Execution#cancel()
+     * @see com.metamatrix.connector.api.Execution#cancel()
      * @since 4.2
      */
     public void cancel() throws ConnectorException {
-        throwAwayResults();        
+    	cancel = true;
     }
 
     /** 
-     * @see com.metamatrix.data.api.Execution#close()
+     * @see com.metamatrix.connector.api.Execution#close()
      * @since 4.2
      */
     public void close() throws ConnectorException {
-        throwAwayResults();        
     }
 
-    private void throwAwayResults() {
-        queryResults = null;
-    }
-
-    /** 
-     * @see com.metamatrix.data.api.BatchedExecution#nextBatch()
-     * @since 4.2
-     */
-    public Batch nextBatch() throws ConnectorException {
-        if(this.queryResults == null) {
-        	return null;
-        }
-    	int count = 0;
-        BasicBatch result = new BasicBatch();
-        while (queryResults.hasNext() && count++ < maxBatchSize) {
-        	result.addRow((List)queryResults.next());
-        }
-        if (!queryResults.hasNext()) {
-            result.setLast();
-        }
-        return result;
-    }
 }

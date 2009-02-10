@@ -29,7 +29,7 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.language.IElement;
+import com.metamatrix.connector.language.IElement;
 import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 

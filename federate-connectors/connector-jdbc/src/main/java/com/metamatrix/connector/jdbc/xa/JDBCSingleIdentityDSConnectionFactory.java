@@ -36,12 +36,12 @@ import javax.sql.DataSource;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  * JDBCSingleIdentityDSConnectionFactory
@@ -106,7 +106,7 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
     }
 
     @Override
-    public PoolAwareConnection getConnection(SecurityContext context) throws ConnectorException {
+    public PoolAwareConnection getConnection(ExecutionContext context) throws ConnectorException {
         try{
             XAConnection conn = ((XADataSource)ds).getXAConnection();
             Connection sqlConn = conn.getConnection();

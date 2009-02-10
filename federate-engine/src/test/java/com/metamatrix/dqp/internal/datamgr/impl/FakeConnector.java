@@ -31,83 +31,71 @@ import javax.transaction.xa.XAResource;
 
 import junit.framework.Assert;
 
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.SynchQueryCommandExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.monitor.MonitoredConnector;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.monitor.MonitoredConnector;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnector;
 
 public class FakeConnector implements Connector, XAConnector, MonitoredConnector {
-	private static final int BATCH_SIZE = 5;
-	
-	private class QueryCommandBasicCapabilities extends
-			BasicConnectorCapabilities {
-		@Override
-		public boolean supportsExecutionMode(int executionMode) {
-			return executionMode == ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERYCOMMAND;
-		}
-	}
+	private static final int RESULT_SIZE = 5;
 	
 	private boolean executeBlocks;
     private boolean nextBatchBlocks;
     private boolean returnsFinalBatch;
     private boolean driverThrowsExceptionOnCancel;
     private long simulatedBatchRetrievalTime = 1000L;
-	
-    public Connection getConnection(com.metamatrix.data.api.SecurityContext context) throws ConnectorException {
+    private ClassLoader classloader;
+    
+    @Override
+    public Connection getConnection(com.metamatrix.connector.api.ExecutionContext context) throws ConnectorException {
         return new FakeConnection();
     }
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {}
-    public void start() throws ConnectorException {}
+    @Override
+    public void start(ConnectorEnvironment environment)
+    		throws ConnectorException {
+    	
+    }
+    @Override
     public void stop() {}
-	public XAConnection getXAConnection(SecurityContext securityContext,
+    @Override
+	public XAConnection getXAConnection(ExecutionContext executionContext,
 			TransactionContext transactionContext) throws ConnectorException {
 		return new FakeXAConnection();
 	}
 	
-    private final class FakeConnection implements Connection {
+    private class FakeConnection implements Connection {
         public boolean released = false;
-        public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+        public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
             return new FakeBlockingExecution(executionContext);
         }
-        public ConnectorCapabilities getCapabilities() {return new QueryCommandBasicCapabilities();}
-        public ConnectorMetadata getMetadata() {return null;}
-        public void release() {
+        public ConnectorCapabilities getCapabilities() {
+        	return new BasicConnectorCapabilities();
+        }
+        public void close() {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;
         }
     }
     
-    private final class FakeXAConnection implements XAConnection {
+    private final class FakeXAConnection extends FakeConnection implements XAConnection {
         public boolean released = false;
-        public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
-            return new FakeBlockingExecution(executionContext);
-        }
-        public ConnectorCapabilities getCapabilities() {
-            return new QueryCommandBasicCapabilities() {
-                public boolean supportsXATransactions() {
-                    return true;
-                }
-            };
-        }
-        public ConnectorMetadata getMetadata() {return null;}
-        public void release() {
+
+        public void close() {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;
         }
@@ -117,9 +105,10 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
 		}
     }   
     
-    private final class FakeBlockingExecution implements SynchQueryCommandExecution {
+    private final class FakeBlockingExecution implements ResultSetExecution {
         private boolean closed = false;
         private boolean cancelled = false;
+        private int rowCount;
         ExecutionContext ec;
         public FakeBlockingExecution(ExecutionContext ec) {
             this.ec = ec;
@@ -127,6 +116,9 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
         public void execute(IQueryCommand query, int maxBatchSize) throws ConnectorException {
             if (executeBlocks) {
                 waitForCancel();
+            }
+            if (classloader != null) {
+            	Assert.assertSame(classloader, Thread.currentThread().getContextClassLoader());
             }
         }
         public synchronized void cancel() throws ConnectorException {
@@ -137,23 +129,21 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
             Assert.assertFalse("The execution should not be closed more than once", closed); //$NON-NLS-1$
             closed = true;
         }
-        public Batch nextBatch() throws ConnectorException {
-            if (nextBatchBlocks) {
+        @Override
+        public void execute() throws ConnectorException {
+            
+        }
+        @Override
+        public List next() throws ConnectorException, DataNotAvailableException {
+        	if (nextBatchBlocks) {
                 waitForCancel();
             }
-            List[] rows = new List[BATCH_SIZE];
-            for (int i = 0; i < rows.length; i++) {
-                Integer[] row = new Integer[1];
-                row[0] = new Integer(i);
-                rows[i] = Arrays.asList(row);
+            if (this.rowCount >= RESULT_SIZE || returnsFinalBatch) {
+            	return null;
             }
-            BasicBatch batch = new BasicBatch(Arrays.asList(rows));
-            if (returnsFinalBatch) {
-                batch.setLast();
-            }
-            return batch;
+            this.rowCount++;
+            return Arrays.asList(this.rowCount - 1);
         }
-        
         private synchronized void waitForCancel() throws ConnectorException {
             try {
                 this.wait(simulatedBatchRetrievalTime);
@@ -203,4 +193,12 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
 		return new ConnectionStatus(AliveStatus.DEAD);
 	}
 
+	public void setClassloader(ClassLoader classloader) {
+		this.classloader = classloader;
+	}
+	
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return null;
+	}
 }

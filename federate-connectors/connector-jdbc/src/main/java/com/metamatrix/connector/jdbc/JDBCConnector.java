@@ -26,38 +26,28 @@
  */
 package com.metamatrix.connector.jdbc;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 
 /**
  * JDBC implementation of Connector interface.
  */
 @ConnectionPooling
-public class JDBCConnector implements Connector, GlobalCapabilitiesProvider, ConnectorIdentityFactory {
+public class JDBCConnector implements Connector, ConnectorIdentityFactory {
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
     private JDBCSourceConnectionFactory factory;
     
     private ConnectorCapabilities capabilities;
     
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-        logger = environment.getLogger();
-        this.environment = environment;
-        
-        logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
-        
-        capabilities = createCapabilities(environment, Thread.currentThread().getContextClassLoader()); 
-    }
-
 	static ConnectorCapabilities createCapabilities(ConnectorEnvironment environment, ClassLoader loader)
 			throws ConnectorException {
 		//create Capabilities
@@ -97,7 +87,15 @@ public class JDBCConnector implements Connector, GlobalCapabilitiesProvider, Con
         }
     }
 
-    public void start() throws ConnectorException {
+    @Override
+    public void start(ConnectorEnvironment environment)
+    		throws ConnectorException {
+    	logger = environment.getLogger();
+        this.environment = environment;
+        
+        logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
+        
+        capabilities = createCapabilities(environment, Thread.currentThread().getContextClassLoader());
         String scfClassName = environment.getProperties().getProperty(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory");  //$NON-NLS-1$
 
         try {
@@ -122,16 +120,17 @@ public class JDBCConnector implements Connector, GlobalCapabilitiesProvider, Con
     /*
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
     	return factory.getConnection(context);
     }
-    
+
+    @Override
 	public ConnectorCapabilities getCapabilities() {
 		return capabilities;
 	}
 
 	@Override
-	public ConnectorIdentity createIdentity(SecurityContext context)
+	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
 		return factory.createIdentity(context);
 	}

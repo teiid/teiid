@@ -31,6 +31,16 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompoundCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.IIsNullCriteria;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataInCriteria;
@@ -38,16 +48,6 @@ import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICompoundCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.language.IIsNullCriteria;
-import com.metamatrix.data.language.ILikeCriteria;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IQuery;
 import com.metamatrix.query.sql.lang.MatchCriteria.PatternTranslator;
 
 

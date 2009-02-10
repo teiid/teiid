@@ -26,232 +26,19 @@
  */
 package com.metamatrix.connector.jdbc.util;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import com.metamatrix.connector.jdbc.JDBCPlugin;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.ValueRetriever;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.api.ValueTranslator;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.basic.BasicValueTranslator;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.api.ValueTranslator;
+import com.metamatrix.connector.basic.BasicValueTranslator;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  */
 public class JDBCExecutionHelper {
 
-    /**
-     * Return datatypes for projected columns.
-     * @param command
-     * @return Array of datatype class.
-     */
-    public static Class[] getColumnDataTypes(ICommand command) {
-        Class[] dataTypes = null;
-        if(command instanceof IQueryCommand){
-            return ((IQueryCommand)command).getColumnTypes();
-        }
-        return dataTypes;
-    }
-    
-    /**
-     * Create batch for an update.
-     * @param updateCount
-     * @return Created batch.
-     */
-    public static Batch createBatch(int updateCount) {
-        Batch batch = new BasicBatch();
-        List row = new ArrayList(1);
-        row.add(new Integer(updateCount));
-        batch.addRow(row);
-        batch.setLast();
-        return batch;
-    }
-
-    /**
-     * Create batch for a query.
-     * @param results
-     * @param columnDataTypes
-     * @param maxBatchSize
-     * @return
-     */
-    public static Batch createBatch(ResultSet results, Class[] columnDataTypes, int maxBatchSize, boolean trimStrings, ResultsTranslator resultsTranslator, ExecutionContext context, Calendar calendar, TypeFacility typeFacility) throws ConnectorException {
-        Batch batch = new BasicBatch();
-        if(results == null){
-            return batch;
-        }
-        
-        // Build up list of flags on whether to trim strings
-        boolean[] trimColumn = new boolean[columnDataTypes.length];     // defaults to false
-        int[] nativeTypes = new int[columnDataTypes.length];
-        try {
-            ResultSetMetaData rsmd = results.getMetaData();
-            for(int i=0; i<columnDataTypes.length; i++) {
-            	
-            	nativeTypes[i] = rsmd.getColumnType(i+1);
-            	if ((nativeTypes[i] == Types.BLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.BLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))
-						|| (nativeTypes[i] == Types.CLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.CLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))) {
-					context.keepExecutionAlive(true);
-				}
-            	
-                if(columnDataTypes[i].equals(String.class)) {
-                    if(trimStrings || nativeTypes[i] == Types.CHAR) {
-                        trimColumn[i] = true;
-                    } 
-                }
-            }
-        } catch(SQLException e) {
-            throw new ConnectorException(e.getMessage());
-        }
-
-        // Reusable list of transformations for the types, lazily loaded
-        boolean[] transformKnown = new boolean[columnDataTypes.length];
-        ValueTranslator[] transforms = new ValueTranslator[columnDataTypes.length];
-
-        // Move the result data to the query results
-        List vals = null;
-        int numCols = columnDataTypes.length;
-        int rowCnt = 0;
-        List valueTranslators = resultsTranslator.getValueTranslators(); 
-        ValueRetriever valueRetriever = resultsTranslator.getValueRetriever();
-        
-        try {
-            while (rowCnt < maxBatchSize) {
-                if (results.next()) {
-                //while (results.next() && rowCnt <= maxBatchSize) {
-                    // New row for result set
-                    vals = new ArrayList(numCols);
-    
-                    for (int i = 0; i < numCols; i++) {
-                        // Convert from 0-based to 1-based
-                        Object value = valueRetriever.retrieveValue(results, i+1, columnDataTypes[i], nativeTypes[i], calendar, typeFacility);
-                        if(value != null) {
-                            // Determine transformation if unknown
-                            if(! transformKnown[i]) {
-                                Class valueType = value.getClass();
-                                if(!columnDataTypes[i].isAssignableFrom(valueType)) {
-                                    transforms[i] = determineTransformation(valueType, columnDataTypes[i], valueTranslators, resultsTranslator.getTypefacility());
-                                }
-                                transformKnown[i] = true;
-                            }
-    
-                            // Transform value if necessary
-                            if(transforms[i] != null) {
-                                value = transforms[i].translate(value, context);
-                            }
-                                                        
-                            // Trim string column if necessary
-                            if(trimColumn[i]) {
-                                value = trimString((String) value);
-                            }
-                        }
-                        vals.add(value); 
-                    }
-    
-                    // Add a row to the result set and  set the local variable to determine if more rows should be read
-                    batch.addRow(vals);
-                    rowCnt++;
-                } else {
-                    break;
-                }
-            }
-
-            if(rowCnt < maxBatchSize){
-                //no more row then set last batch
-                batch.setLast();
-            }
-
-        } catch (SQLException e) {
-            throw new ConnectorException(e,
-                    JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
-        }
-        
-        return batch;
-    }
-    
-    /**
-     * @param parameters List of IParameter
-     * @param sql
-     * @return Map of IParameter to index in sql.
-     */
-    public static Map createParameterIndexMap(List parameters, String sql) {
-        if(parameters == null || parameters.isEmpty()){
-            return Collections.EMPTY_MAP;
-        }
-        Map paramsIndexes = new HashMap();
-        int index  = 1;
-        
-        //return parameter, if there is any,  is the first parameter
-        Iterator iter = parameters.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.RETURN){
-                paramsIndexes.put(param, new Integer(index++));
-                break;
-            }
-        }
-                      
-        iter = parameters.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() != IParameter.RESULT_SET && param.getDirection() != IParameter.RETURN){
-                paramsIndexes.put(param, new Integer(index++));
-            }
-        }
-        return paramsIndexes;
-    }
-
-    /**
-     * @param results
-     * @return
-     */
-    public static Class[] getColumnDataTypes(List params, RuntimeMetadata metadata) throws ConnectorException {
-        if (params != null) { 
-            IParameter resultSet = null;
-            Iterator iter = params.iterator();
-            while(iter.hasNext()){
-                IParameter param = (IParameter)iter.next();
-                if(param.getDirection() == IParameter.RESULT_SET){
-                    resultSet = param;
-                    break;
-                }
-            }
-
-            if(resultSet != null){
-                List columnMetadata = null;
-                columnMetadata = resultSet.getMetadataID().getChildIDs();
-
-                int size = columnMetadata.size();
-                Class[] coulmnDTs = new Class[size];
-                for(int i =0; i<size; i++ ){
-                    MetadataID mID = (MetadataID)columnMetadata.get(i);
-                    Object mObj = metadata.getObject(mID);
-                    coulmnDTs[i] = ((Element)mObj).getJavaType();
-                }
-                return coulmnDTs;
-            }
-
-        }
-        return new Class[0];
-    }
     
     public static Object convertValue(Object value, Class expectedType, List valueTranslators, TypeFacility typeFacility, boolean trimStrings, ExecutionContext context) throws ConnectorException {
         if(expectedType.isAssignableFrom(value.getClass())){
@@ -260,7 +47,7 @@ public class JDBCExecutionHelper {
         ValueTranslator translator = determineTransformation(value.getClass(), expectedType, valueTranslators, typeFacility);
         Object result = translator.translate(value, context);
         if(trimStrings && result instanceof String){
-            result = ((String)result).trim();
+            result = trimString((String)result);
         }
         return result;
     }
@@ -270,7 +57,7 @@ public class JDBCExecutionHelper {
      * @param expectedType
      * @return Transformation between actual and expected type
      */
-    protected static ValueTranslator determineTransformation(Class actualType, Class expectedType, List valueTranslators, TypeFacility typeFacility) throws ConnectorException {
+    public static ValueTranslator determineTransformation(Class actualType, Class expectedType, List valueTranslators, TypeFacility typeFacility) throws ConnectorException {
         ValueTranslator valueTranslator = null;
         
         //check valueTranslators first
@@ -292,14 +79,14 @@ public class JDBCExecutionHelper {
         }
         return valueTranslator;
     }
-        
+    
     /**
      * Expects string to never be null 
      * @param value Incoming value
      * @return Right trimmed value  
      * @since 4.2
      */
-    static String trimString(String value) {
+    public static String trimString(String value) {
         for(int i=value.length()-1; i>=0; i--) {
             if(value.charAt(i) != ' ') {
                 // end of trim, return what's left
@@ -310,4 +97,5 @@ public class JDBCExecutionHelper {
         // All spaces, so trim it all
         return ""; //$NON-NLS-1$        
     }
+        
 }

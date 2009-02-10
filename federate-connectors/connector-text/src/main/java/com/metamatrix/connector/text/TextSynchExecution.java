@@ -39,36 +39,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IFrom;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.Group;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * The essential part that executes the query. It keeps all the execution
  * states.
  */
-public class TextSynchExecution implements SynchQueryExecution {
+public class TextSynchExecution implements ResultSetExecution {
     // Command to be executed
     private IQuery cmd;
-
-    // Max batch size to use
-    private int maxBatchSize;
 
     private TextConnection txtConn;
 
@@ -97,8 +93,6 @@ public class TextSynchExecution implements SynchQueryExecution {
     // current Reader object
     private BufferedReader currentreader = null;
 
-    
-
     // Line num in the text file
     private int lineNum = 0;
 
@@ -115,25 +109,27 @@ public class TextSynchExecution implements SynchQueryExecution {
     private List headerRow = null;
     
     //whether this execution is canceled
-    private boolean canceled;
+    private volatile boolean canceled;
     
     private int rowsProduced = 0;
+
+	private int[] cols;
 
     /**
      * Constructor.
      * @param cmd
      * @param txtConn
      */
-    public TextSynchExecution(Connection txtConn, RuntimeMetadata metadata) {
+    public TextSynchExecution(IQuery query, Connection txtConn, RuntimeMetadata metadata) {
         this.txtConn = (TextConnection)txtConn;
         this.rm = metadata;
         this.logger = this.txtConn.env.getLogger();
         this.metadataProps = this.txtConn.metadataProps;
+        this.cmd = query;
     }
 
-    public void execute(IQuery query, int maxBatchSize) throws ConnectorException {
-        this.cmd = query;
-        this.maxBatchSize = maxBatchSize;
+    @Override
+    public void execute() throws ConnectorException {
         //translate request
         Object translatedRequest = translateRequest(cmd);
 
@@ -142,118 +138,97 @@ public class TextSynchExecution implements SynchQueryExecution {
 
         // translate results
         translateResults(response, cmd);
+
+        cols = getSelectCols(cmd.getSelect().getSelectSymbols());
     }
-
-    /**
-     * Get next batch based on designated max batch size.
-     * @param maxBatchSize intValue indicating max batch size
-     * @return Batch containing the results
-     * @throws ConnectorException 
-     */
-    public Batch nextBatch() throws ConnectorException {
-        Batch fetchedBatch = new BasicBatch();
-        if(!canceled) {
-            IQuery query = cmd;
-            ISelect select = query.getSelect();
-            
-            String location = null;
-            try {
-                // Get list of columns to select
-                int[] cols = getSelectCols(select.getSelectSymbols());
-                Class[] types = getSelectTypes(select.getSelectSymbols());
     
-                location = groupProps.getProperty(TextPropertyNames.LOCATION);
-                String delimiter = groupProps.getProperty(TextPropertyNames.DELIMITER);
-                String qualifier = groupProps.getProperty(TextPropertyNames.QUALIFIER);
-                String topLines = groupProps.getProperty(TextPropertyNames.HEADER_LINES);
-
-                // set hasQualifier flag
-                boolean hasQualifier = false;
-                if (qualifier != null && qualifier.length() > 0) {
-                    hasQualifier = true;
-                }
-                
-                int numTop = 0;
-                if(topLines != null) {
-                    numTop = Integer.parseInt(topLines);
-                }
-                
-                
-                // Walk through records, finding matches
-                int rowsAddedToBatch = 0;
-
-                while(rowsAddedToBatch < maxBatchSize) {
-                    
-                    BufferedReader br = getCurrentReader();
-                    if (br == null) {
-                        // if no reader available, then exit
-                        fetchedBatch.setLast();
-                        break;                        
-                    }
-                
-                    String line = br.readLine();
-                    
-                    // Hit the end of file or the file is empty then
-                    // try next reader
-                    if(line == null) {
-                        advanceToNextReader();
-                        lineNum = 0;
-                        continue;
-                    }
-
-                    // check if we have a qualifier defined
-                    // if yes check that all qualifiers have been terminated
-                    // if not then append the next line (if available)
-                    if (hasQualifier) {
-                        while (StringUtil.occurrences(line, qualifier)%2!=0) {
-                            String nextLine = br.readLine();
-                            if (nextLine != null) {
-                                line = line + StringUtil.LINE_SEPARATOR + nextLine;
-                            } else {
-                                Object[] params = new Object[] { line }; 
-                                                                
-                                String msg = TextPlugin.Util.getString("TextSynchExecution.Text_has_no_determined_ending_qualifier", params); //$NON-NLS-1$
-                                logger.logError(msg);
-                                           
-                                throw new ConnectorException( msg); 
-                                
-//                                break;
-                            }
-                        }
-                    }
-                    lineNum++;
-                    
-                    //Skip blank lines and any remaining header lines
-                    if ( line.length() == 0 || numTop >= lineNum ) continue;
-    
-                    // Get record from file for one row
-                    List record = getRecord(line, delimiter, qualifier, colWidths);
-    
-                    ++rowsProduced;
-                    // Save selected columns into query results
-                    
-                    if (this.useModeledColumnCntedit && record.size() != numModeledColumns) {
-                        Object[] params = new Object[] { new Integer(numModeledColumns), new Integer(record.size()) };
-                        String msg = TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", params); //$NON-NLS-1$
-                        logger.logError(msg);
-                        throw new ConnectorException( msg); 
-                    } 
-                        
-                    saveResult(fetchedBatch, record, cols, types);
-                    // Defect 13368 - Ignore the number of lines read per batch. Instead, attempt to add upto maxBatchSize rows to the batch.
-                    // Increment the number of rows in the batch
-                    rowsAddedToBatch++;
-                }
-            } catch(ConnectorException ce) {
-                throw ce;
-    
-            } catch(Throwable e) {
-                Object[] params = new Object[] { location, e.getMessage() };
-                logger.logError(TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", params), e); //$NON-NLS-1$
-                throw new ConnectorException(e, "Error while reading text file: "+location); //$NON-NLS-1$
-            }
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+        if (canceled) {
+        	throw new ConnectorException("Execution cancelled"); //$NON-NLS-1$
         }
-        return fetchedBatch;
+        IQuery query = cmd;
+        
+        Class[] types = query.getColumnTypes();
+
+        String location = groupProps.getProperty(TextPropertyNames.LOCATION);
+        String delimiter = groupProps.getProperty(TextPropertyNames.DELIMITER);
+        String qualifier = groupProps.getProperty(TextPropertyNames.QUALIFIER);
+        String topLines = groupProps.getProperty(TextPropertyNames.HEADER_LINES);
+
+        // set hasQualifier flag
+        boolean hasQualifier = false;
+        if (qualifier != null && qualifier.length() > 0) {
+            hasQualifier = true;
+        }
+        
+        int numTop = 0;
+        if(topLines != null) {
+            numTop = Integer.parseInt(topLines);
+        }
+        
+        try {
+	        while (true) {
+		        BufferedReader br = getCurrentReader();
+		        if (br == null) {
+		        	return null;                        
+		        }
+		    
+		        String line = br.readLine();
+		        
+		        // Hit the end of file or the file is empty then
+		        // try next reader
+		        if(line == null) {
+		            advanceToNextReader();
+		            lineNum = 0;
+		            continue;
+		        }
+	
+		        // check if we have a qualifier defined
+		        // if yes check that all qualifiers have been terminated
+		        // if not then append the next line (if available)
+		        if (hasQualifier) {
+		            while (StringUtil.occurrences(line, qualifier)%2!=0) {
+		                String nextLine = br.readLine();
+		                if (nextLine != null) {
+		                    line = line + StringUtil.LINE_SEPARATOR + nextLine;
+		                } else {
+		                    Object[] params = new Object[] { line }; 
+		                                                    
+		                    String msg = TextPlugin.Util.getString("TextSynchExecution.Text_has_no_determined_ending_qualifier", params); //$NON-NLS-1$
+		                    logger.logError(msg);
+		                               
+		                    throw new ConnectorException( msg); 
+		                }
+		            }
+		        }
+		        lineNum++;
+		        
+		        //Skip blank lines and any remaining header lines
+		        if ( line.length() == 0 || numTop >= lineNum ) continue;
+		
+		        // Get record from file for one row
+		        List record = getRecord(line, delimiter, qualifier, colWidths);
+		
+		        ++rowsProduced;
+		        // Save selected columns into query results
+		        
+		        if (this.useModeledColumnCntedit && record.size() != numModeledColumns) {
+		            Object[] params = new Object[] { new Integer(numModeledColumns), new Integer(record.size()) };
+		            String msg = TextPlugin.Util.getString("TextSynchExecution.Input_column_cnt_incorrect", params); //$NON-NLS-1$
+		            logger.logError(msg);
+		            throw new ConnectorException( msg); 
+		        } 
+		            
+		        return getRow(record, cols, types);
+	        }
+        } catch(ConnectorException ce) {
+            throw ce;
+        } catch(Throwable e) {
+            Object[] params = new Object[] { location, e.getMessage() };
+            logger.logError(TextPlugin.Util.getString("TextSynchExecution.Error_reading_text_file", params), e); //$NON-NLS-1$
+            throw new ConnectorException(e, "Error while reading text file: "+location); //$NON-NLS-1$
+        }
     }
     
     /**
@@ -273,11 +248,9 @@ public class TextSynchExecution implements SynchQueryExecution {
      */
     private BufferedReader getCurrentReader() throws ConnectorException {
 		if (currentreader == null && readerQueueIndex < readerQueue.size()) {
-			synchronized(readerQueue){
-                // reader queue index is advanced only by the nextReader()
-                // method.  Don't do it here.
-                currentreader = (BufferedReader)readerQueue.get(readerQueueIndex);
-            }
+            // reader queue index is advanced only by the nextReader()
+            // method.  Don't do it here.
+            currentreader = (BufferedReader)readerQueue.get(readerQueueIndex);
 
 			/* Retrieve connector properties so that we can find a 
 			 * header row if necessary.
@@ -390,24 +363,11 @@ public class TextSynchExecution implements SynchQueryExecution {
             }
         }
         readerQueue.clear();
-        canceled = true;
         logger.logInfo("TextSynchExecution is successfully closed.");              //$NON-NLS-1$
     }
 
     public void cancel() {
-        if (readerQueue.size() > 0) {
-            for (Iterator it=readerQueue.iterator(); it.hasNext();) {
-                BufferedReader br = (BufferedReader) it.next();
-                try {
-                    br.close();
-                } catch (IOException err) {
-                }
-                    
-            }
-        }
-        readerQueue.clear();
-        canceled = true;
-        logger.logInfo("TextSynchExecution is cancelled on command."); //$NON-NLS-1$
+    	canceled = true;
     }
 
     /**
@@ -596,7 +556,7 @@ public class TextSynchExecution implements SynchQueryExecution {
  
     }
     
-    private synchronized void addReader(String fileName, File datafile) throws IOException {
+    private void addReader(String fileName, File datafile) throws IOException {
         
         FileInputStream fis = new FileInputStream(datafile);
         InputStreamReader inSR = new InputStreamReader(fis);
@@ -627,25 +587,6 @@ public class TextSynchExecution implements SynchQueryExecution {
     }
 
     /**
-     * Get list of types for each column.
-     * @param vars List of DataNodeIDs
-     * @return Column types corresponding to vars
-     */
-    private Class[] getSelectTypes(List vars) throws ConnectorException{
-        Class[] types = new Class[vars.size()];
-        for(int i=0; i<vars.size(); i++) {
-            ISelectSymbol symbol = (ISelectSymbol) vars.get(i);
-            try {
-                Element element = getElementFromSymbol(symbol);
-                types[i] = element.getJavaType();
-            } catch(ConnectorException e) {
-                throw new ConnectorException(e);
-            }
-        }
-        return types;
-    }
-
-    /**
      * Get column number in Source by ISelectSymbol
      * 
      * An Element is created from the symbol and this method
@@ -660,8 +601,8 @@ public class TextSynchExecution implements SynchQueryExecution {
     }
 
     /**
-     * Helper method for getting runtime {@link com.metamatrix.data.metadata.runtime.Element} from a
-     * {@link com.metamatrix.data.language.ISelectSymbol}.
+     * Helper method for getting runtime {@link com.metamatrix.connector.metadata.runtime.Element} from a
+     * {@link com.metamatrix.connector.language.ISelectSymbol}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */
@@ -909,7 +850,7 @@ public class TextSynchExecution implements SynchQueryExecution {
      * @param columns Columns to save in results
      * @param types Class of all columns' types
      */
-    private void saveResult(Batch batch, List record, int[] columns, Class[] types) throws ConnectorException {
+    private List getRow(List record, int[] columns, Class[] types) throws ConnectorException {
         List newRecord = new ArrayList(columns.length);
         for(int i=0; i<columns.length; i++) {
             int column = columns[i];
@@ -917,7 +858,7 @@ public class TextSynchExecution implements SynchQueryExecution {
             Class type = types[i];
             newRecord.add(convertString(value, type));
         }
-        batch.addRow(newRecord);
+        return newRecord;
     }
 
     /**

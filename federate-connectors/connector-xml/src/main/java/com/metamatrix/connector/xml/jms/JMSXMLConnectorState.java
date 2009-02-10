@@ -31,14 +31,14 @@ import java.util.Properties;
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.base.SecureConnectorStateImpl;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * This class is responsible for getting the configuration data from the binding and asserting
@@ -384,7 +384,7 @@ public class JMSXMLConnectorState extends SecureConnectorStateImpl implements JM
 		this.connectionRetryCount = connectionRetryCount;
 	}
 
-	public Connection getConnection(CachingConnector connector, SecurityContext context, ConnectorEnvironment environment) throws ConnectorException {
+	public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
 		return new JMSConnection(connector, context, environment);
 	}
 

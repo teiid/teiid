@@ -31,24 +31,23 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 
 import com.metamatrix.common.util.TimestampWithTimezone;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.api.ValueTranslator;
+import com.metamatrix.connector.basic.BasicValueTranslator;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
+import com.metamatrix.connector.visitor.util.SQLReservedWords;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.api.ValueTranslator;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.basic.BasicValueTranslator;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.visitor.util.SQLReservedWords;
 
 /**
  */
@@ -157,22 +156,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
     }    
     
     /**
-     * Create batch for a stored procedure.
-     * @param results
-     * @param columnDataTypes
-     * @param statement
-     * @param maxBatchSize
-     * @return Created batch.
-     */
-    public static Batch createBatch(List spResults, IObjectCommand command, int maxBatchSize, boolean trimStrings, ISourceTranslator resultsTranslator, ExecutionContext context)  throws ConnectorException {
-        //Class[] columnDataTypes
-        Batch batch = new BasicBatch();
-        transferResults(batch, spResults, command, maxBatchSize, true, trimStrings, resultsTranslator, context);
-        return batch;
-    }
-    
-   
-    /**
      * Transfer results for Stored Procedure.
      * @param batch The target batch
      * @param spResults The original stored procedure results in format of <List<List>>
@@ -181,14 +164,13 @@ public class ObjectExecutionHelper implements SQLReservedWords {
      * @param setLastBatch flag indicating set the last batch or not
      * @throws ConnectorException
      */
-    protected static void transferResults(Batch batch, List spResults, IObjectCommand command, int maxBatchSize, boolean setLastBatch, boolean trimStrings, ISourceTranslator resultsTranslator, ExecutionContext context) throws ConnectorException{
+    public static List transferResults(List spResults, IObjectCommand command, boolean trimStrings, ISourceTranslator resultsTranslator, ExecutionContext context) throws ConnectorException{
         Class[] columnTypes = command.getResultColumnTypes();
 
+        List batch = new ArrayList(spResults.size());
         ValueTranslator transform = null;
         
         // Move the result data to the query results
-        int rowCnt = 0;
-        int rsize = spResults.size();
         TimeZone dbmsTimeZone = resultsTranslator.getDatabaseTimezone();  
 
         Calendar cal = null;
@@ -196,97 +178,78 @@ public class ObjectExecutionHelper implements SQLReservedWords {
             cal = Calendar.getInstance(dbmsTimeZone);
         }        
         try {
-            while (rowCnt < maxBatchSize) {
-                if (rowCnt < rsize) {
-                                        
-                    Object value =  spResults.get(rowCnt);
+        	for (Object value : spResults) {
+        		if (value == null) {
+        			batch.add(Arrays.asList(null));
+        			continue;
+        		}
+                Class valueType = value.getClass();
+
+                int javaType = TypeFacility.getSQLTypeFromRuntimeType(valueType.getClass());
+                if (javaType == Types.JAVA_OBJECT) {
                     
-                        if(value != null) {
-                            Class valueType = value.getClass();
+                    if (value instanceof Collection || value instanceof List) {
+                        // bypass transformation
+                    } else {
+                        transform = determineTransformation(valueType, valueType, resultsTranslator);
+                    
+                        value = transform.translate(value, context);
+                    }
+                    
+                    if (value != null) {
+                        if (value instanceof List ) {
+                            List vt = (List) value;
+                            
+                            List lresults = new ArrayList(1);
+                            lresults.add(vt);
+                            
+                            transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
+                            
+                        } else if (value instanceof Collection) { 
+                            List vt = new ArrayList((Collection) value);
+                            List lresults = new ArrayList(1);
+                            lresults.add(vt);
+                            
+                            transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
+                            
+                           
+                        } else {
+                            List vt = new ArrayList(1);
+                            vt.add(value);
+                            
+                            List lresults = new ArrayList(1);
+                            lresults.add(vt);
+                            
+                            transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
+                        }
+                        
+                    } else {
+                        batch.add(Arrays.asList(value));
+                    }
+                } 
+                else {
+                    
+                    // if the result is a primitive, non-java
+                    // object, then there should only be
+					// one column type
+					transform = determineTransformation(valueType,columnTypes[0], resultsTranslator);
 
-                            int javaType = TypeFacility.getSQLTypeFromRuntimeType(valueType.getClass());
-                            if (javaType == Types.JAVA_OBJECT) {
-                                
-                                if (value instanceof Collection || value instanceof List) {
-                                    // bypass transformation
-                                } else {
-                                    transform = determineTransformation(valueType, valueType, resultsTranslator);
-                                
-                                    value = transform.translate(value, context);
-                                }
-                                
-                                if (value != null) {
-                                    if (value instanceof List ) {
-                                        List vt = (List) value;
-                                        
-                                        List lresults = new ArrayList(1);
-                                        lresults.add(vt);
-                                        
-                                        transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
-                                        
-                                    } else if (value instanceof Collection) { 
-                                        List vt = new ArrayList((Collection) value);
-                                        List lresults = new ArrayList(1);
-                                        lresults.add(vt);
-                                        
-                                        transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
-                                        
-                                       
-                                    } else {
-                                        List vt = new ArrayList(1);
-                                        vt.add(value);
-                                        
-                                        List lresults = new ArrayList(1);
-                                        lresults.add(vt);
-                                        
-                                        transferObjectResults(batch, lresults, command, trimStrings, resultsTranslator,  context) ;
-                                    }
-                                    
-                                } else {
-                                    List l = new ArrayList(1);
-                                    l.add(value);
-                                    batch.addRow(l);
-                                }
-                                
+					// Transform value if necessary
+					if (transform != null) {
+						value = transform.translate(value, context);
+					} else {
+						// Convert time zone if necessary
+						value = modifyTimeZone(value, dbmsTimeZone, cal);
+					}
 
-                            } 
-                            else {
-                                
-	                            // if the result is a primitive, non-java
-	                            // object, then there should only be
-								// one column type
-								transform = determineTransformation(valueType,columnTypes[0], resultsTranslator);
-	
-								// Transform value if necessary
-								if (transform != null) {
-									value = transform.translate(value, context);
-								} else {
-									// Convert time zone if necessary
-									value = modifyTimeZone(value, dbmsTimeZone, cal);
-								}
-	
-								// Trim string column if necessary
-								if (trimStrings && (value instanceof String)) {
-									// if(trimColumn[i]) {
-									value = trimString((String) value);
-								}
-								
-								List l = new ArrayList(1);
-								l.add(value);
-								batch.addRow(l);
-                            }
-                            rowCnt++;
-                        } 
-                } else {
-                    break;
+					// Trim string column if necessary
+					if (trimStrings && (value instanceof String)) {
+						// if(trimColumn[i]) {
+						value = trimString((String) value);
+					}
+                    batch.add(Arrays.asList(value));
                 }
-            }
-            
-            if( (rowCnt == maxBatchSize || rowCnt == rsize) && setLastBatch){
-                // no more row then set last batch
-                batch.setLast();
-            }
-
+            } 
         } catch (ConnectorException e) {
             throw e;
         } catch (Throwable e) {
@@ -294,9 +257,10 @@ public class ObjectExecutionHelper implements SQLReservedWords {
                 e,
                 ObjectPlugin.Util.getString("ObjectExecutionHelper.Unknown_error_translating_results___9", e.getMessage())); //$NON-NLS-1$
         }
+        return batch;
     }  
     
-    protected static void transferObjectResults(Batch batch, List spResults, IObjectCommand command, boolean trimStrings, ISourceTranslator resultsTranslator, ExecutionContext context) throws ConnectorException{
+    protected static void transferObjectResults(List batch, List spResults, IObjectCommand command, boolean trimStrings, ISourceTranslator resultsTranslator, ExecutionContext context) throws ConnectorException{
         Class[] columnTypes = command.getResultColumnTypes();
 
         // Build up list of flags on whether to trim strings
@@ -360,7 +324,7 @@ public class ObjectExecutionHelper implements SQLReservedWords {
                     }
 
                     // Add a row to the result set and  set the local variable to determine if more rows should be read
-                    batch.addRow(vals);
+                    batch.add(vals);
                     rowCnt++;
                 } 
 

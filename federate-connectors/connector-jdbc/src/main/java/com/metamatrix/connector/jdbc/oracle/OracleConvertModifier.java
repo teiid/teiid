@@ -27,22 +27,22 @@ package com.metamatrix.connector.jdbc.oracle;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IScalarSubquery;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */
@@ -61,7 +61,7 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
     /**
      * Intentially return null, rely on the SQLStringVisitor being used by caller
      * (Oracle or Oracle8 SQLConversionVisitor (SQLConversionVisitor))
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      */
     public List translate(IFunction function) {
         return null;

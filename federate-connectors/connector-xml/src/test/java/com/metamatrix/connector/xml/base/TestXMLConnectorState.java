@@ -30,15 +30,15 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -122,7 +122,7 @@ public class TestXMLConnectorState extends TestCase {
 		}
 
 
-		public Connection getConnection(CachingConnector connector, SecurityContext context, ConnectorEnvironment environment) throws ConnectorException {
+		public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
 			// TODO Auto-generated method stub
 			return null;
 		}

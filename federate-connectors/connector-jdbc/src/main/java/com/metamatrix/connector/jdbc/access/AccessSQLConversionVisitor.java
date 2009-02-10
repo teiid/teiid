@@ -29,8 +29,8 @@ package com.metamatrix.connector.jdbc.access;
 import java.sql.Time;
 
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
 
 public class AccessSQLConversionVisitor extends SQLConversionVisitor{
     

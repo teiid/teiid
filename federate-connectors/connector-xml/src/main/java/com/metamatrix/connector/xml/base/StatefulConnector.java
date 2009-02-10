@@ -26,16 +26,12 @@
 
 package com.metamatrix.connector.xml.base;
 
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 public interface StatefulConnector extends Connector {
-
-	public abstract void initialize(ConnectorEnvironment environment)
-			throws ConnectorException;
 
 	public abstract ConnectorLogger getLogger();
 

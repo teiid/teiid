@@ -24,19 +24,15 @@
 
 package com.metamatrix.connector.xmlsource;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * A Base XML Connection to an XML Source
  */
-public abstract class XMLSourceConnection implements Connection {
+public abstract class XMLSourceConnection extends BasicConnection {
 
     protected ConnectorEnvironment env;
     protected boolean connected = false;
@@ -50,49 +46,19 @@ public abstract class XMLSourceConnection implements Connection {
     }
 
     /**
-     * Create Execution object which can execute the request. 
-     * @see com.metamatrix.data.api.Connection#createExecution(int, com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) 
-        throws ConnectorException {
-        
-        if (XMLSourceCapabilities.INSTANCE.supportsExecutionMode(executionMode)) {
-            XMLSourcePlugin.logDetail(env.getLogger(), "creating_execution"); //$NON-NLS-1$
-            return createExecution(executionContext, metadata);
-        }
-        throw new ConnectorException(XMLSourcePlugin.Util.getString("execution_mode_not_supported", new Object[] {new Integer(executionMode)})); //$NON-NLS-1$
-    }
-
-    /**  
-     * @see com.metamatrix.data.api.Connection#getMetadata()
-     */
-    public ConnectorMetadata getMetadata() {
-        return new XMLSourceConnectorMetadata();
-    }
-
-
-    /**
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return XMLSourceCapabilities.INSTANCE;
+        return null;
     }
     
     /** 
-     * @see com.metamatrix.data.api.Connection#release()
+     * @see com.metamatrix.connector.api.Connection#release()
      */
-    public void release() {            
+    public void close() {            
         XMLSourcePlugin.logInfo(this.env.getLogger(), "Connection_closed"); //$NON-NLS-1$
     }
     
-    /**
-     * Connection specific implementation. 
-     * @param executionContext
-     * @param metadata
-     * @return
-     */
-    protected abstract Execution createExecution (ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException;
-        
     /**
      * Check if the connection is active. 
      * @return true if active; false otherwise

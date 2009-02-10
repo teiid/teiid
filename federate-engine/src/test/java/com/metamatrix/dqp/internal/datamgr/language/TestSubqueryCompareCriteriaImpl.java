@@ -24,10 +24,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ISubqueryCompareCriteria;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.*;
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;

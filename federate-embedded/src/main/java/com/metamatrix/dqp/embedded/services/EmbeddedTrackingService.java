@@ -29,7 +29,7 @@ import java.util.Properties;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.data.api.ExecutionContext;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.query.sql.lang.Command;
 

@@ -27,23 +27,30 @@ package com.metamatrix.connector.jdbc;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.extension.ValueRetriever;
 import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  */
@@ -60,7 +67,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
      * @param logger
      * @param props
      */
-    public JDBCProcedureExecution(
+    public JDBCProcedureExecution(ICommand command,
         Connection connection,
         SQLTranslator sqlTranslator,
         ResultsTranslator resultsTranslator,
@@ -68,16 +75,14 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         Properties props, RuntimeMetadata metadata,
         ExecutionContext context,
         ConnectorEnvironment env) {
-        super(connection, sqlTranslator, resultsTranslator, logger, props, context, env);
+        super(command, connection, sqlTranslator, resultsTranslator, logger, props, context, env);
         this.metadata = metadata;
     }
 
-    /* 
-     * @see com.metamatrix.data.ProcedureExecution#execute(com.metamatrix.data.language.IExecute, int)
-     */
-    public void execute(IProcedure procedure, int maxBatchSize) throws ConnectorException {
-        this.maxBatchSize = maxBatchSize;  
-        columnDataTypes = JDBCExecutionHelper.getColumnDataTypes(procedure.getParameters(), metadata);
+    @Override
+    public void execute() throws ConnectorException {
+    	IProcedure procedure = (IProcedure)command;
+        columnDataTypes = getColumnDataTypes(procedure.getParameters(), metadata);
 
         //translate command
         TranslatedCommand translatedComm = translateCommand(procedure);
@@ -87,7 +92,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         try{
             if(translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT){
                 //create parameter index map
-                parameterIndexMap = JDBCExecutionHelper.createParameterIndexMap(procedure.getParameters(), sql);
+                parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
                 CallableStatement cstmt = getCallableStatement(sql);
                 results = resultsTranslator.executeStoredProcedure(cstmt, translatedComm);
                 if (cstmt.getWarnings() != null) {
@@ -104,6 +109,72 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             // Defect 15316 - always unroll SQLExceptions
             throw new ConnectorException(e);
         }           
+    }
+    
+    /**
+     * @param results
+     * @return
+     */
+    public static Class[] getColumnDataTypes(List params, RuntimeMetadata metadata) throws ConnectorException {
+        if (params != null) { 
+            IParameter resultSet = null;
+            Iterator iter = params.iterator();
+            while(iter.hasNext()){
+                IParameter param = (IParameter)iter.next();
+                if(param.getDirection() == IParameter.RESULT_SET){
+                    resultSet = param;
+                    break;
+                }
+            }
+
+            if(resultSet != null){
+                List columnMetadata = null;
+                columnMetadata = resultSet.getMetadataID().getChildIDs();
+
+                int size = columnMetadata.size();
+                Class[] coulmnDTs = new Class[size];
+                for(int i =0; i<size; i++ ){
+                    MetadataID mID = (MetadataID)columnMetadata.get(i);
+                    Object mObj = metadata.getObject(mID);
+                    coulmnDTs[i] = ((Element)mObj).getJavaType();
+                }
+                return coulmnDTs;
+            }
+
+        }
+        return new Class[0];
+    }
+    
+    /**
+     * @param parameters List of IParameter
+     * @param sql
+     * @return Map of IParameter to index in sql.
+     */
+    public static Map createParameterIndexMap(List parameters, String sql) {
+        if(parameters == null || parameters.isEmpty()){
+            return Collections.EMPTY_MAP;
+        }
+        Map paramsIndexes = new HashMap();
+        int index  = 1;
+        
+        //return parameter, if there is any,  is the first parameter
+        Iterator iter = parameters.iterator();
+        while(iter.hasNext()){
+            IParameter param = (IParameter)iter.next();
+            if(param.getDirection() == IParameter.RETURN){
+                paramsIndexes.put(param, new Integer(index++));
+                break;
+            }
+        }
+                      
+        iter = parameters.iterator();
+        while(iter.hasNext()){
+            IParameter param = (IParameter)iter.next();
+            if(param.getDirection() != IParameter.RESULT_SET && param.getDirection() != IParameter.RETURN){
+                paramsIndexes.put(param, new Integer(index++));
+            }
+        }
+        return paramsIndexes;
     }
         
     /* 

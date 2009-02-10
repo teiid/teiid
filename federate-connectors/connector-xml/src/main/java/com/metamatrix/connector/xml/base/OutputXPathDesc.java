@@ -26,9 +26,10 @@
 package com.metamatrix.connector.xml.base;
 
 import java.text.MessageFormat;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.metadata.runtime.Element;
+
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.metadata.runtime.Element;
 
 
 /**

@@ -29,11 +29,11 @@ package com.metamatrix.connector.object.extension;
 import java.util.List;
 import java.util.TimeZone;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Specify source-specific behavior for translating results.

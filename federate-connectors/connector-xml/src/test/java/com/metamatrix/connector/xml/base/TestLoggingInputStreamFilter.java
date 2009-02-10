@@ -30,7 +30,7 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public class TestLoggingInputStreamFilter extends TestCase {
 

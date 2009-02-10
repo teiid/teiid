@@ -51,13 +51,14 @@ import org.apache.axis.wsdl.symbolTable.ServiceEntry;
 import org.apache.axis.wsdl.symbolTable.SymTabEntry;
 import org.apache.axis.wsdl.symbolTable.SymbolTable;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xmlsource.XMLSourceConnection;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -78,12 +79,12 @@ public class SoapConnection extends XMLSourceConnection {
         super(env);
         connect();
     }
-
-    /** 
-     * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#createExecution(com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    protected Execution createExecution(ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {        
-        return new SoapExecution(this.env, metadata, executionContext, this);
+    
+    @Override
+    public ProcedureExecution createProcedureExecution(IProcedure command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+        return new SoapExecution(command, this.env, metadata, executionContext, this);
     }
 
     /** 
@@ -96,9 +97,9 @@ public class SoapConnection extends XMLSourceConnection {
     /** 
      * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#release()
      */
-    public void release() {
+    public void close() {
         disconnect();
-        super.release();        
+        super.close();        
     }
     
     void connect() throws ConnectorException {

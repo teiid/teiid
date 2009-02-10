@@ -33,13 +33,15 @@ import com.metamatrix.common.buffer.BufferManagerPropertyNames;
  * including both properties that are set and some that are derived.
  */
 public class BufferConfig {
+	
+	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 1000;
 
     // Configuration 
     private long totalAvailableMemory = 100000000;
     private int groupUsePercentage = 80;
     private int activeMemoryThreshold = 75;
     private int managementInterval = 500;
-    private int connectorBatchSize = 1000;
+    private int connectorBatchSize = DEFAULT_CONNECTOR_BATCH_SIZE;
     //private int processorBatchSize = 500;
     private int processorBatchSize = 100;
     private String bufferStorageDirectory = "../buffer"; //$NON-NLS-1$

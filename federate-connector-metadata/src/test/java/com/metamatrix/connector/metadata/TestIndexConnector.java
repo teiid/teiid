@@ -36,22 +36,19 @@ import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.TestConnectorHost;
 import com.metamatrix.connector.metadata.internal.TestObjectQueryProcessor;
-import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -68,8 +65,7 @@ public class TestIndexConnector extends TestCase {
 
     public void test() throws Exception {
         IndexConnector connector = new IndexConnector();
-        connector.initialize(helpGetConnectorEnvironment());
-        connector.start();
+        connector.start(helpGetConnectorEnvironment());
         Connection connection = connector.getConnection(helpGetSecurityContext());
         QueryMetadataInterface metadata = FakeQueryMetadata.getQueryMetadata();
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
@@ -77,24 +73,17 @@ public class TestIndexConnector extends TestCase {
 
         RuntimeMetadata runtimeMetadata = TestObjectQueryProcessor.getRuntimeMetadata();
         ExecutionContext envContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, envContext, runtimeMetadata); 
-        execution.execute(command, 2);
-        Batch batch = execution.nextBatch();
-        assertFalse(batch.isLast());
-        assertEquals(2, batch.getResults().length);
-        batch = execution.nextBatch();
-        assertFalse(batch.isLast());
-        assertEquals(2, batch.getResults().length);
-        batch = execution.nextBatch();
-        assertTrue(batch.isLast());
-        assertEquals(1, batch.getResults().length);
+        ResultSetExecution execution = (ResultSetExecution)connection.createExecution(command, envContext, runtimeMetadata);            
+        execution.execute();
+        int i = getSize(execution);
+        assertEquals(5, i);
         execution.close();
     }
     
     public void testBatches() throws Exception {
         ObjectConnector connector = new ObjectConnector() {
 
-            public IObjectSource getMetadataObjectSource(SecurityContext context) {
+            public IObjectSource getMetadataObjectSource(ExecutionContext context) {
                 return new IObjectSource() {
 					public Collection getObjects(String groupName, Map criteria) {
 						return Collections.nCopies(30, 1);
@@ -102,18 +91,9 @@ public class TestIndexConnector extends TestCase {
                 };
             }
 
-            /** 
-             * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getSysAdminObjectSource(com.metamatrix.data.api.SecurityContext)
-             * @since 4.3
-             */
-            protected ISysAdminSource getSysAdminObjectSource(SecurityContext context) throws ConnectorException {
-                return null;
-            }
-                        
         };
 
-        connector.initialize(helpGetConnectorEnvironment());
-        connector.start();
+        connector.start(helpGetConnectorEnvironment());
         Connection connection = connector.getConnection(helpGetSecurityContext());
         QueryMetadataInterface metadata = FakeQueryMetadata.getQueryMetadata();
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
@@ -121,24 +101,25 @@ public class TestIndexConnector extends TestCase {
 
         RuntimeMetadata runtimeMetadata = TestObjectQueryProcessor.getRuntimeMetadata();
         ExecutionContext envContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$            
-        SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, envContext, runtimeMetadata);            
-        execution.execute(command, 10);
-        Batch batch = execution.nextBatch();
-        assertFalse(batch.isLast());
-        assertEquals(10, batch.getResults().length);
-        batch = execution.nextBatch();
-        assertFalse(batch.isLast());
-        assertEquals(10, batch.getResults().length);
-        batch = execution.nextBatch();
-        assertTrue(batch.isLast());
-        assertEquals(10, batch.getResults().length);
+        ResultSetExecution execution = (ResultSetExecution)connection.createExecution(command, envContext, runtimeMetadata);            
+        execution.execute();
+        int i = getSize(execution);
+        assertEquals(30, i);
         execution.close();
     }
+
+	private int getSize(ResultSetExecution execution)
+			throws ConnectorException, DataNotAvailableException {
+		int i = 0;
+        while (execution.next() != null) {
+        	i++;
+        }
+		return i;
+	}
     
     public void testPropertyFileLoading() throws Exception {
         IndexConnector connector = new IndexConnector();
-        connector.initialize(helpGetConnectorEnvironment());
-        connector.start();
+        connector.start(helpGetConnectorEnvironment());
         Connection connection = connector.getConnection(helpGetSecurityContext());
         QueryMetadataInterface metadata = FakeQueryMetadata.getQueryMetadata();
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
@@ -146,10 +127,9 @@ public class TestIndexConnector extends TestCase {
 
         RuntimeMetadata runtimeMetadata = TestObjectQueryProcessor.getRuntimeMetadata();
         ExecutionContext envContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, envContext, runtimeMetadata);            
-        execution.execute(command, 3);
-        Batch batch = execution.nextBatch();
-        assertTrue(batch.isLast());
+        ResultSetExecution execution = (ResultSetExecution)connection.createExecution(command, envContext, runtimeMetadata);            
+        execution.execute();
+        assertNotNull(execution.next());
         execution.close();
     }
     
@@ -183,7 +163,7 @@ public class TestIndexConnector extends TestCase {
         return new ConnectorEnvironmentImpl(new Properties(), null, applicationEnvironment);
     }
     
-    private SecurityContext helpGetSecurityContext() {
+    private ExecutionContext helpGetSecurityContext() {
         return new ExecutionContextImpl("testname", "1", null, null, null, null, null, null, null, null, false); //$NON-NLS-1$ //$NON-NLS-2$
     }
     /* 

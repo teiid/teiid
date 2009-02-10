@@ -24,16 +24,17 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IProcedure;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
@@ -81,6 +82,7 @@ public class TestConnectorWorkItem extends TestCase {
 				"SELECT BQT1.SmallA.INTKEY FROM BQT1.SmallA", EXAMPLE_BQT)); //$NON-NLS-1$
 		request.setRequestID(new RequestID(requestid));
 		request.setConnectorID(new ConnectorID("testing")); //$NON-NLS-1$
+		request.setFetchSize(5);
 		return request;
 	}
 
@@ -93,25 +95,17 @@ public class TestConnectorWorkItem extends TestCase {
 		IProcedure proc = (IProcedure) new LanguageBridgeFactory(EXAMPLE_BQT)
 				.translate(command);
 
-		Batch batch = ConnectorWorkItem.getNextProcedureBatch(exec, proc);
+		ProcedureBatchHandler pbh = new ProcedureBatchHandler(proc, exec);
 
-		assertTrue(!batch.isLast());
-		assertEquals(batch.getRowCount(), 1);
-		assertEquals(batch.getResults()[0].size(), total_columns);
+		assertEquals(total_columns, pbh.padRow(Arrays.asList(null, null)).size());
 
-		Batch batch1 = ConnectorWorkItem.getNextProcedureBatch(exec, proc);
-
-		assertTrue(batch1.isLast());
-
-		// check that the parameter has been added
-		assertEquals(2, batch1.getRowCount());
-
+		List<List> params = pbh.getOutputRows();
+		
 		// check the parameter value
-		assertEquals(new Integer(3), batch1.getResults()[1].get(2));
+		assertEquals(new Integer(3), params.get(0).get(2));
 
 		try {
-			ConnectorWorkItem.getNextProcedureBatch(new FakeProcedureExecution(
-					1), proc);
+			pbh.padRow(Arrays.asList(1));
 			fail("Expected exception from resultset mismatch"); //$NON-NLS-1$
 		} catch (ConnectorException err) {
 			assertEquals(
@@ -217,7 +211,8 @@ public class TestConnectorWorkItem extends TestCase {
 				receiver);
 		receiver.workItem = state;
 		Thread t = runRequest(state);
-		t.join();
+		t.join(0);
+		assertFalse(t.isAlive());
 		if (receiver.exception != null) {
 			throw receiver.exception;
 		}

@@ -42,9 +42,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.base.XMLDocument;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * 

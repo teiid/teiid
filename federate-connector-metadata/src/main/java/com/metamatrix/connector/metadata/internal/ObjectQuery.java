@@ -29,24 +29,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IMetadataReference;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IMetadataReference;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * Reads a simple SQL parse tree to determine the table being queried, the columns being selected, and the criteria

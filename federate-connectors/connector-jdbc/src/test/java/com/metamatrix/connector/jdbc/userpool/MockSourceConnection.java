@@ -24,13 +24,14 @@
 
 package com.metamatrix.connector.jdbc.userpool;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  */
@@ -70,12 +71,7 @@ public class MockSourceConnection implements PoolAwareConnection, Connection {
     }
 
 	@Override
-	public void connectionReleased() {
-		
-	}
-
-	@Override
-	public Execution createExecution(int executionMode,
+	public Execution createExecution(ICommand command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
 		return null;
@@ -87,7 +83,12 @@ public class MockSourceConnection implements PoolAwareConnection, Connection {
 	}
 
 	@Override
-	public void release() {
+	public void close() {
+		
+	}
+
+	@Override
+	public void closeCalled() {
 		
 	}
     

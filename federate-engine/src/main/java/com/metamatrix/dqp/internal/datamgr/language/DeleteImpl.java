@@ -24,10 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class DeleteImpl extends BaseLanguageObject implements IDelete {
 
@@ -39,21 +39,21 @@ public class DeleteImpl extends BaseLanguageObject implements IDelete {
         this.criteria = criteria;
     }
     /**
-     * @see com.metamatrix.data.language.IDelete#getGroup()
+     * @see com.metamatrix.connector.language.IDelete#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.data.language.IDelete#getCriteria()
+     * @see com.metamatrix.connector.language.IDelete#getCriteria()
      */
     public ICriteria getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

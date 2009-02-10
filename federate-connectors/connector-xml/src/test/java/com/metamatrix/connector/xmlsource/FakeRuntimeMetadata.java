@@ -26,10 +26,10 @@ package com.metamatrix.connector.xmlsource;
 
 import java.util.Properties;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class FakeRuntimeMetadata implements RuntimeMetadata {
     String fileName;

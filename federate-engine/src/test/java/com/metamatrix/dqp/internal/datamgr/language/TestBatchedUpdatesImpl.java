@@ -29,9 +29,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.IUpdate;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 
 

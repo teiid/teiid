@@ -37,19 +37,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.extension.ValueRetriever;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IParameter;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IParameter;
 
 /**
  */
@@ -305,18 +304,13 @@ public class BasicResultsTranslator implements ResultsTranslator {
 
     public TimeZone getDatabaseTimezone() {
         return this.dbmsTimeZone;
-    }       
+    }    
     
-    /** 
-     * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#modifyBatch(com.metamatrix.data.api.Batch, com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.language.ICommand)
-     * @since 4.2
-     */
-    public Batch modifyBatch(Batch batch,
-                             ExecutionContext context,
-                             ICommand command) {
-        return batch;
+    @Override
+    public List modifyRow(List batch, ExecutionContext context, ICommand command) {
+    	return batch;
     }
-
+    
 	public int getMaxResultRows() {
 		return maxResultRows;
 	}

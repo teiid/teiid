@@ -26,8 +26,8 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IFrom;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class FromImpl extends BaseLanguageObject implements IFrom {
 
@@ -38,14 +38,14 @@ public class FromImpl extends BaseLanguageObject implements IFrom {
     }
     
     /**
-     * @see com.metamatrix.data.language.IFrom#getItems()
+     * @see com.metamatrix.connector.language.IFrom#getItems()
      */
     public List getItems() {
         return items;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

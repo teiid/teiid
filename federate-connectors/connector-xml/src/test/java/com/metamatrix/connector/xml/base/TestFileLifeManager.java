@@ -29,7 +29,7 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorEnvironment;
 
 public class TestFileLifeManager extends TestCase {
 
@@ -46,7 +46,7 @@ public class TestFileLifeManager extends TestCase {
 		XMLConnector conn = new XMLConnector();
 		ConnectorEnvironment env = ProxyObjectFactory.getDefaultTestConnectorEnvironment();		
 		try {
-			conn.initialize(env);
+			conn.start(env);
 			theFile.createNewFile();
 			FileLifeManager mgr = new FileLifeManager(theFile, conn.getLogger());
 			mgr.createRandomAccessFile();
@@ -79,7 +79,7 @@ public class TestFileLifeManager extends TestCase {
 		XMLConnector conn = new XMLConnector();
 		ConnectorEnvironment env = ProxyObjectFactory.getDefaultTestConnectorEnvironment();		
 		try {
-			conn.initialize(env);
+			conn.start(env);
 			theFile.createNewFile();
 			FileLifeManager mgr = new FileLifeManager(theFile, conn.getLogger());
 			mgr.createRandomAccessFile();
@@ -127,7 +127,7 @@ public class TestFileLifeManager extends TestCase {
 		XMLConnector connector = new XMLConnector();
 		ConnectorEnvironment env = ProxyObjectFactory.getDefaultTestConnectorEnvironment();		
 		try {
-			connector.initialize(env);
+			connector.start(env);
 			FileLifeManager mgr = new FileLifeManager(theFile, connector.getLogger());
 			assertTrue(mgr.doesMatch(filePath));
 			assertFalse(mgr.doesMatch("foodle"));
@@ -145,7 +145,6 @@ public class TestFileLifeManager extends TestCase {
 		File theFile = new File(filePath);
 		try {
 			FileLifeManager mgr = new FileLifeManager(theFile, null);
-			long length = mgr.getLength();
 			assertEquals(theFile.length(), mgr.getLength());
 		} catch (IOException ioe) {
 			ioe.printStackTrace();

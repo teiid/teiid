@@ -26,9 +26,9 @@ package com.metamatrix.connector.yahoo;
 
 import java.util.*;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */

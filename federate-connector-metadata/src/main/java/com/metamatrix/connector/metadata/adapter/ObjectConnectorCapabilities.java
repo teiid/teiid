@@ -27,8 +27,8 @@ package com.metamatrix.connector.metadata.adapter;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 /**
  * Describes the capabilities of the object connector, which are few.
@@ -43,19 +43,6 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
 
     private ObjectConnectorCapabilities() {
     }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(final int executionMode) {
-        switch(executionMode) {
-            case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-            case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-                return true;
-            default:
-                return false;
-        }
-    }    
 
     /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAndCriteria()
@@ -79,7 +66,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsLikeCriteria()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsLikeCriteria()
      * @since 4.3
      */
     public boolean supportsLikeCriteria() {
@@ -94,7 +81,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsScalarFunctions()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsScalarFunctions()
      * @since 4.3
      */
     public boolean supportsScalarFunctions() {
@@ -102,7 +89,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#getSupportedFunctions()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#getSupportedFunctions()
      * @since 4.3
      */
     public List getSupportedFunctions() {
@@ -119,7 +106,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsLikeCriteriaEscapeCharacter()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsLikeCriteriaEscapeCharacter()
      * @since 5.0
      */
     public boolean supportsLikeCriteriaEscapeCharacter() {

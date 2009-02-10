@@ -26,16 +26,16 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  */
@@ -64,7 +64,7 @@ public class FakeSourceConnectionFactory implements Connector {
         }
 
 		@Override
-		public Execution createExecution(int executionMode,
+		public Execution createExecution(ICommand command,
 				ExecutionContext executionContext, RuntimeMetadata metadata)
 				throws ConnectorException {
 			return null;
@@ -76,33 +76,33 @@ public class FakeSourceConnectionFactory implements Connector {
 		}
 
 		@Override
-		public void release() {
+		public void close() {
 			
 		}
 		
 		@Override
-		public void connectionReleased() {
+		public void closeCalled() {
 			
 		}
     }
 
 	@Override
-	public Connection getConnection(SecurityContext context)
+	public Connection getConnection(ExecutionContext context)
 			throws ConnectorException {
 		return new FakeSourceConnection(connCnt++);
 	}
 
 	@Override
-	public void initialize(ConnectorEnvironment environment)
-			throws ConnectorException {
-	}
-
-	@Override
-	public void start() throws ConnectorException {
+	public void start(ConnectorEnvironment environment) throws ConnectorException {
 	}
 
 	@Override
 	public void stop() {
+	}
+	
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return null;
 	}
 
 }

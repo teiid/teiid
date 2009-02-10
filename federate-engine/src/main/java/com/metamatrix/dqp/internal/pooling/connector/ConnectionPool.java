@@ -42,19 +42,19 @@ import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.connector.DataPlugin;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.PoolAwareConnection;
+import com.metamatrix.connector.pool.SingleIdentity;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.DataPlugin;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.SingleIdentity;
-import com.metamatrix.data.pool.PoolAwareConnection;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.util.LogConstants;
 
@@ -199,8 +199,8 @@ public class ConnectionPool {
         return startTime + this.waitForSourceTime - System.currentTimeMillis();
     }
     
-    public ConnectionWrapper obtain(SecurityContext securityContext) throws ConnectionPoolException {
-    	return this.obtain(securityContext, null, false);
+    public ConnectionWrapper obtain(ExecutionContext executionContext) throws ConnectionPoolException {
+    	return this.obtain(executionContext, null, false);
     }
 
     /**
@@ -209,7 +209,7 @@ public class ConnectionPool {
      * @return Connection from the pool.
      * @throws ConnectionPoolException if there is any error occurred.
      */
-    public ConnectionWrapper obtain(SecurityContext securityContext, TransactionContext transactionContext, boolean xa) throws ConnectionPoolException {
+    public ConnectionWrapper obtain(ExecutionContext executionContext, TransactionContext transactionContext, boolean xa) throws ConnectionPoolException {
     	if ( shuttingDownPool ) {
             throw new ConnectionPoolException(DataPlugin.Util.getString("ConnectionPool.No_connection_pool_available._8")); //$NON-NLS-1$
         }
@@ -217,11 +217,11 @@ public class ConnectionPool {
         long startTime = System.currentTimeMillis();
 
         ConnectorIdentity id = null;
-        if (securityContext != null) {
-        	id = securityContext.getConnectorIdentity();
+        if (executionContext != null) {
+        	id = executionContext.getConnectorIdentity();
         }
         if (id == null) {
-        	id = new SingleIdentity(securityContext);
+        	id = new SingleIdentity(executionContext);
         }
                 
         LogManager.logTrace(CTX_CONNECTOR, new Object[] {"Obtaining connection for id", id}); //$NON-NLS-1$ 
@@ -274,7 +274,7 @@ public class ConnectionPool {
 
             //at this point we've made a best effort to ensure we've used existing connections.
             //allow a new connection to be created outside of locking.
-            ConnectionWrapper connection = createConnection(securityContext, transactionContext, xa);
+            ConnectionWrapper connection = createConnection(executionContext, transactionContext, xa);
             
             int idSize = 0;
             
@@ -341,7 +341,7 @@ public class ConnectionPool {
         }
     }
 
-    private ConnectionWrapper createConnection(SecurityContext id, TransactionContext transactionContext, boolean xa) throws ConnectionPoolException {
+    private ConnectionWrapper createConnection(ExecutionContext id, TransactionContext transactionContext, boolean xa) throws ConnectionPoolException {
     	ConnectionWrapper sourceConnection = null;
         try {
         	Connection connection = null;
@@ -551,7 +551,7 @@ public class ConnectionPool {
             this.reverseIdConnections.remove(connection);
         }
     	try {
-            connection.close();
+            connection.getConnection().close();
         
             //log that we removed a connection
             if (LogManager.isMessageToBeRecorded(CTX_CONNECTOR, MessageLevel.TRACE)) {

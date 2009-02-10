@@ -30,14 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */
@@ -70,7 +70,7 @@ public class BasicSQLTranslator implements SQLTranslator {
 
     /**
      * Subclass should override this methods to modify the command if necessary.
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#modifyCommand(com.metamatrix.data.language.ICommand, com.metamatrix.data.ExecutionContext)
+     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#modifyCommand(com.metamatrix.connector.language.ICommand, com.metamatrix.data.ExecutionContext)
      */
     public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
         return command;

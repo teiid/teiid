@@ -64,7 +64,6 @@ import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.TestRuleRaiseNull;
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
-import com.metamatrix.query.optimizer.capabilities.AllCapabilities;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;

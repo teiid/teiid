@@ -26,7 +26,7 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.sql.ResultSet;
 
-import com.metamatrix.data.language.IParameter;
+import com.metamatrix.connector.language.IParameter;
 
 import junit.framework.TestCase;
 

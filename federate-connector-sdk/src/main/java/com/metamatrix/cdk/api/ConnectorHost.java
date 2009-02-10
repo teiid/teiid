@@ -30,39 +30,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.cdk.CdkPlugin;
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.data.api.AsynchQueryCommandExecution;
-import com.metamatrix.data.api.AsynchQueryExecution;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.BatchedExecution;
-import com.metamatrix.data.api.BatchedUpdatesExecution;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.SynchQueryCommandExecution;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.api.UpdateExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.language.ISetQuery;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
+import com.metamatrix.dqp.internal.datamgr.language.BatchedUpdatesImpl;
 import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 
 /**
@@ -71,21 +56,15 @@ import com.metamatrix.metadata.runtime.VDBMetadataFactory;
  * Can be used for testing a connector.
  */
 public class ConnectorHost implements IConnectorHost {
-	private static final int DEFAULT_BATCH_SIZE = 2;
 
     private Connector connector;
     private TranslationUtility util;
     private ConnectorEnvironment connectorEnvironment;
     private ApplicationEnvironment applicationEnvironment;
-    private SecurityContext securityContext;
+    private ExecutionContext executionContext;
     private Properties connectorEnvironmentProperties;
 
-    private List resultList;
-
-    private int batchSize = DEFAULT_BATCH_SIZE;
     private boolean connectorStarted = false;
-    
-    private int batchCount = 0;
     
     /**
      * Create a new environment to test a connector.
@@ -126,13 +105,8 @@ public class ConnectorHost implements IConnectorHost {
     }
 
     private void startConnector() throws ConnectorException {
-        connector.initialize(connectorEnvironment);
-        connector.start();
+        connector.start(connectorEnvironment);
         connectorStarted = true;
-    }
-
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
     }
 
     public Properties getConnectorEnvironmentProperties() {
@@ -155,7 +129,7 @@ public class ConnectorHost implements IConnectorHost {
     }
     
     public void setSecurityContext(String vdbName, String vdbVersion, String userName, Serializable trustedPayload, Serializable executionPayload) {          
-        this.securityContext = new ExecutionContextImpl(vdbName, vdbVersion, userName, trustedPayload, executionPayload, "Connection", "Connector<CDK>", "Request", "1", "0", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$  
+        this.executionContext = new ExecutionContextImpl(vdbName, vdbVersion, userName, trustedPayload, executionPayload, "Connection", "Connector<CDK>", "Request", "1", "0", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$  
     }
     
     public List executeCommand(String query) throws ConnectorException {
@@ -170,7 +144,7 @@ public class ConnectorHost implements IConnectorHost {
             return executeCommand(connection, command, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.release();
+                connection.close();
             }
         }
     }
@@ -186,7 +160,7 @@ public class ConnectorHost implements IConnectorHost {
             return executeCommand(connection, command, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.release();
+                connection.close();
             }
         }
     }
@@ -195,62 +169,13 @@ public class ConnectorHost implements IConnectorHost {
         throws ConnectorException {
 
         ExecutionContext execContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        if(command instanceof IQuery) {
-            if(connection.getCapabilities().supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY)) {
-                SynchQueryExecution execution = (SynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY, execContext, runtimeMetadata);
-                execution.execute((IQuery)command, batchSize);
-                readResultsFromExecution(execution);
-                execution.close();                
-            } else if (connection.getCapabilities().supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.ASYNCH_QUERY)) {
-                AsynchQueryExecution execution = (AsynchQueryExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.ASYNCH_QUERY, execContext, runtimeMetadata);
-                execution.executeAsynch((IQuery)command, batchSize);
-                long pollInterval = execution.getPollInterval();
-                readResultsFromAsynchExecution(execution, pollInterval);
-                execution.close();                
-            } else {
-                executeQueryCommand(connection, (IQueryCommand)command, runtimeMetadata, execContext);
-            }
-        } else if (command instanceof ISetQuery) {
-            executeQueryCommand(connection,(IQueryCommand) command, runtimeMetadata, execContext);
-        } else if(command instanceof IInsert || command instanceof IUpdate || command instanceof IDelete) {
-            UpdateExecution execution = (UpdateExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.UPDATE, execContext, runtimeMetadata);
+        
+        Execution exec = connection.createExecution(command, execContext, runtimeMetadata);
+        exec.execute();
+        List results = readResultsFromExecution(exec);
+        exec.close();                
 
-            int updated = execution.execute(command);
-
-            Batch batch = new BasicBatch();
-            batch.addRow(Arrays.asList(new Object[] { new Integer(updated) }));
-            batch.setLast();
-
-            resetResults();
-            addBatchToResults(batch);
-
-            execution.close();
-        } else {
-            ProcedureExecution execution = (ProcedureExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.PROCEDURE, execContext, runtimeMetadata);
-            execution.execute((IProcedure)command, batchSize);
-            readResultsFromExecution(execution);
-            execution.close();
-        }
-
-        return resultList;
-    }
-
-    private void executeQueryCommand(Connection connection,
-                                     IQueryCommand command,
-                                     RuntimeMetadata runtimeMetadata,
-                                     ExecutionContext execContext) throws ConnectorException {
-        if(connection.getCapabilities().supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERYCOMMAND)) {
-            SynchQueryCommandExecution execution = (SynchQueryCommandExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERYCOMMAND, execContext, runtimeMetadata);
-            execution.execute(command, batchSize);
-            readResultsFromExecution(execution);
-            execution.close();                
-        } else {
-            AsynchQueryCommandExecution execution = (AsynchQueryCommandExecution) connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.ASYNCH_QUERYCOMMAND, execContext, runtimeMetadata);
-            execution.executeAsynch(command, batchSize);
-            long pollInterval = execution.getPollInterval();
-            readResultsFromAsynchExecution(execution, pollInterval);
-            execution.close();                
-        }
+        return results;
     }
 
     public int[] executeBatchedUpdates(String[] updates) throws ConnectorException {
@@ -268,67 +193,48 @@ public class ConnectorHost implements IConnectorHost {
             return executeBatchedUpdates(connection, commands, runtimeMetadata);
         } finally {
             if (connection != null) {
-                connection.release();
+                connection.close();
             }
         }
     }
     
     public int[] executeBatchedUpdates(Connection connection, ICommand[] commands, RuntimeMetadata runtimeMetadata) throws ConnectorException {
-        BatchedUpdatesExecution execution = null;
-        try {
-            ExecutionContext execContext = EnvironmentUtility.createExecutionContext("100", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-            execution = (BatchedUpdatesExecution)connection.createExecution(ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES, execContext, runtimeMetadata);
-            int[] counts = execution.execute(commands);
-            return counts;
-        } finally {
-            if (execution != null) {
-                execution.close();
-            }
-        }
+    	List<List> result = executeCommand(connection, new BatchedUpdatesImpl(Arrays.asList(commands)), runtimeMetadata);
+    	int[] counts = new int[result.size()];
+    	for (int i = 0; i < counts.length; i++) {
+    		counts[i] = ((Integer)result.get(i).get(0)).intValue();
+    	}
+    	return counts;
     }
     
-    private void readResultsFromExecution(BatchedExecution execution) throws ConnectorException {
-    	Batch batch = execution.nextBatch();
-        if (batch == null) {
-            throw new ConnectorException(CdkPlugin.Util.getString("ConnectorHostImpl.Execution_must_return_next_batch._1")); //$NON-NLS-1$
-        }
-        resetResults();
-
-        addBatchToResults(batch);
-        while (!batch.isLast()) {
-            batch = execution.nextBatch();
-            addBatchToResults(batch);
-        }
-    }
-
-    private void readResultsFromAsynchExecution(BatchedExecution execution, long pollInterval) throws ConnectorException {
-        resetResults();
-
-        boolean last = false;
-        while (! last) {
-            Batch batch = execution.nextBatch();
-            if(batch != null) {
-                addBatchToResults(batch);
-                last = batch.isLast();
-            }     
-            
-            // sleep before poll
-            try {
-                Thread.sleep(pollInterval);                
-            } catch(InterruptedException e) {
-                // ignore and cycle again
-            }
-        }
-    }
-
-    private void resetResults() {
-    	batchCount = 0;
-        resultList = new ArrayList();
-    }
-
-    private void addBatchToResults(Batch batch) {
-    	batchCount++;
-        resultList.addAll(Arrays.asList(batch.getResults()));
+    private List<List> readResultsFromExecution(Execution execution) throws ConnectorException {
+    	List<List> results = new ArrayList<List>();
+    	while (true) {
+	    	try {
+		    	if (execution instanceof ResultSetExecution) {
+		    		ResultSetExecution rs = (ResultSetExecution)execution;
+		    		List result = null;
+		    		while ((result = rs.next()) != null) {
+		    			results.add(result);
+		    		}
+		    		break;
+		    	} else {
+		    		UpdateExecution rs = (UpdateExecution)execution;
+		    		int[] result = rs.getUpdateCounts();
+		    		for (int i = 0; i < result.length; i++) {
+		    			results.add(Arrays.asList(result[i]));
+		    		}
+		    		break;
+		    	}
+	    	} catch (DataNotAvailableException e) {
+	    		try {
+					Thread.sleep(e.getRetryDelay());
+				} catch (InterruptedException e1) {
+					throw new ConnectorException(e1);
+				}
+	    	}
+    	}
+    	return results;
     }
 
     private RuntimeMetadata getRuntimeMetadata() {
@@ -340,11 +246,7 @@ public class ConnectorHost implements IConnectorHost {
     }
 
     private Connection getConnection() throws ConnectorException {
-        Connection connection = connector.getConnection(securityContext);
+        Connection connection = connector.getConnection(executionContext);
         return connection;
     }
-
-	public int getBatchCount() {
-		return batchCount;
-	}
 }

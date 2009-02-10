@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IFromItem;
-import com.metamatrix.data.language.IJoin;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IFromItem;
+import com.metamatrix.connector.language.IJoin;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class JoinImpl extends BaseLanguageObject implements IJoin {
 
@@ -44,35 +44,35 @@ public class JoinImpl extends BaseLanguageObject implements IJoin {
         this.criteria = criteria;
     }
     /**
-     * @see com.metamatrix.data.language.IJoin#getLeftItem()
+     * @see com.metamatrix.connector.language.IJoin#getLeftItem()
      */
     public IFromItem getLeftItem() {
         return leftItem;
     }
 
     /**
-     * @see com.metamatrix.data.language.IJoin#getRightItem()
+     * @see com.metamatrix.connector.language.IJoin#getRightItem()
      */
     public IFromItem getRightItem() {
         return rightItem;
     }
 
     /**
-     * @see com.metamatrix.data.language.IJoin#getJoinType()
+     * @see com.metamatrix.connector.language.IJoin#getJoinType()
      */
     public int getJoinType() {
         return this.joinType;
     }
 
     /**
-     * @see com.metamatrix.data.language.IJoin#getCriteria()
+     * @see com.metamatrix.connector.language.IJoin#getCriteria()
      */
     public List getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -124,7 +124,7 @@ public class SqlServerCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

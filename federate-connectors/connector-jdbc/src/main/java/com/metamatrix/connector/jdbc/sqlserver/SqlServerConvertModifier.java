@@ -30,9 +30,7 @@ import java.util.List;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.*;
 
 /**
  * Sql Server based Convert modifier, taken from Sybase, so far they are same

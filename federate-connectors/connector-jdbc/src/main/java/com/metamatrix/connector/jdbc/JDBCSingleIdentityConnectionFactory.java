@@ -30,13 +30,12 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
-import com.metamatrix.data.pool.SingleIdentityFactory;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.pool.SingleIdentityFactory;
 
 /**
  * Factory to create JDBCSourceConnection for SingleIdentity.
@@ -89,7 +88,7 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
     private void testConnection() throws ConnectorException {
         try {
             Connection connection = getConnection(null);
-            connection.release();
+            connection.close();
         } catch (ConnectorException e) {
             SQLException ex = (SQLException)e.getCause();
             String sqlState = ex.getSQLState();
@@ -100,7 +99,7 @@ public class JDBCSingleIdentityConnectionFactory extends JDBCSourceConnectionFac
         }           
     }
             
-    public Connection getConnection(SecurityContext ctx) throws ConnectorException {
+    public Connection getConnection(ExecutionContext ctx) throws ConnectorException {
         return createJDBCConnection(driver, url, transIsoLevel, userProps);
     }
 

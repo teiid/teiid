@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public class ExecutionRecord implements Record {
 

@@ -24,11 +24,11 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.ISetClauseList;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.ISetClauseList;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     
@@ -43,28 +43,28 @@ public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     }
 
     /**
-     * @see com.metamatrix.data.language.IUpdate#getGroup()
+     * @see com.metamatrix.connector.language.IUpdate#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.data.language.IUpdate#getChanges()
+     * @see com.metamatrix.connector.language.IUpdate#getChanges()
      */
     public ISetClauseList getChanges() {
         return changes;
     }
 
     /**
-     * @see com.metamatrix.data.language.IUpdate#getCriteria()
+     * @see com.metamatrix.connector.language.IUpdate#getCriteria()
      */
     public ICriteria getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

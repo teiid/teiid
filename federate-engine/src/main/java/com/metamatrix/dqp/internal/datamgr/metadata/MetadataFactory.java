@@ -30,9 +30,9 @@ import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.*;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.*;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 

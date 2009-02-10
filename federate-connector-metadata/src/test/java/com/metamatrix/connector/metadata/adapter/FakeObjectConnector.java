@@ -28,10 +28,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class FakeObjectConnector extends ObjectConnector {
         private SimpleFakeObjectSource fakeObjectSource;
@@ -46,23 +45,13 @@ public class FakeObjectConnector extends ObjectConnector {
         
         
         /** 
-         * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getMetadataObjectSource(com.metamatrix.data.api.SecurityContext)
+         * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getMetadataObjectSource(com.metamatrix.connector.api.ExecutionContext)
          * @since 4.3
          */
-        protected IObjectSource getMetadataObjectSource(SecurityContext context) throws ConnectorException {
+        protected IObjectSource getMetadataObjectSource(ExecutionContext context) throws ConnectorException {
             return fakeObjectSource;
         }
 
-        /** 
-         * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getSysAdminObjectSource(com.metamatrix.data.api.SecurityContext)
-         * @since 4.3
-         */
-        protected ISysAdminSource getSysAdminObjectSource(SecurityContext context) throws ConnectorException {
-            return null;
-        }
-      
-        
-        
     }
 
     class SimpleFakeObjectSource implements IObjectSource {

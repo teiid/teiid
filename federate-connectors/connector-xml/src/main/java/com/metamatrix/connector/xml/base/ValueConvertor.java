@@ -29,11 +29,11 @@ package com.metamatrix.connector.xml.base;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.Element;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.Element;
 
 public class ValueConvertor {
 

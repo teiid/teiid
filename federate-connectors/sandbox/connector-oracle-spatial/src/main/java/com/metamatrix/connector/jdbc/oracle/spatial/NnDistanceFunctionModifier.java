@@ -26,8 +26,8 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
 
 
 /** 

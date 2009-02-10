@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareCriteria {
 
@@ -40,21 +40,21 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
         this.operator = operator;
     }
     /**
-     * @see com.metamatrix.data.language.ICompareCriteria#getLeftExpression()
+     * @see com.metamatrix.connector.language.ICompareCriteria#getLeftExpression()
      */
     public IExpression getLeftExpression() {
         return leftExpression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ICompareCriteria#getRightExpression()
+     * @see com.metamatrix.connector.language.ICompareCriteria#getRightExpression()
      */
     public IExpression getRightExpression() {
         return rightExpression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ICompareCriteria#getOperator()
+     * @see com.metamatrix.connector.language.ICompareCriteria#getOperator()
      */
     public int getOperator() {
         return this.operator;
@@ -82,7 +82,7 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
     }
     
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

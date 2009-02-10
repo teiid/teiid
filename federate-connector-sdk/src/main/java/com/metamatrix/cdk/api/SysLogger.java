@@ -26,7 +26,7 @@ package com.metamatrix.cdk.api;
 
 import java.util.Date;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 /**
  * ConnectorLogger that prints output to System.out.

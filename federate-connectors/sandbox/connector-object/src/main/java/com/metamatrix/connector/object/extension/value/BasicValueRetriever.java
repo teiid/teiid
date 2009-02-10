@@ -35,11 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.ObjectSourceMethodManager;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.IValueRetriever;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Retrieve objects by using getObject() for everything.  

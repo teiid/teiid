@@ -27,8 +27,8 @@ package com.metamatrix.connector.jdbc.util;
 import java.util.*;
 
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */
@@ -83,7 +83,7 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IFunction)
      */
     public void visit(IFunction obj) {
         super.visit(obj);
@@ -96,7 +96,7 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
     }    
     
     /** 
-     * @see com.metamatrix.data.visitor.framework.HierarchyVisitor#visit(com.metamatrix.data.language.IGroupBy)
+     * @see com.metamatrix.connector.visitor.framework.HierarchyVisitor#visit(com.metamatrix.connector.language.IGroupBy)
      * @since 4.3
      */
     public void visit(IGroupBy obj) {
@@ -128,7 +128,7 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
     }
 
     /**
-     * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(com.metamatrix.data.language.IInsert)
+     * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(com.metamatrix.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
         super.visit(obj);

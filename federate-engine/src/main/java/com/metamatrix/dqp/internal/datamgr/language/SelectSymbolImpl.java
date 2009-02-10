@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbol {
 
@@ -39,7 +39,7 @@ public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbo
         this.expression = expression;
     }
     /**
-     * @see com.metamatrix.data.language.ISelectSymbol#hasAlias()
+     * @see com.metamatrix.connector.language.ISelectSymbol#hasAlias()
      */
     public boolean hasAlias() {
         return hasAlias;
@@ -50,21 +50,21 @@ public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbo
     }
     
     /**
-     * @see com.metamatrix.data.language.ISelectSymbol#getOutputName()
+     * @see com.metamatrix.connector.language.ISelectSymbol#getOutputName()
      */
     public String getOutputName() {
         return name;
     }
 
     /**
-     * @see com.metamatrix.data.language.ISelectSymbol#getExpression()
+     * @see com.metamatrix.connector.language.ISelectSymbol#getExpression()
      */
     public IExpression getExpression() {
         return expression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

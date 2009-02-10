@@ -28,13 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */

@@ -32,10 +32,10 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.index.MetadataInCriteria;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;

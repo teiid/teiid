@@ -24,8 +24,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ILanguageObject;
-import com.metamatrix.data.visitor.util.SQLStringVisitor;
+import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  */

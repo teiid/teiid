@@ -36,6 +36,9 @@ import java.util.ArrayList;
 
 import org.jdom.Document;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.NamedDocumentExecutor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
@@ -49,9 +52,6 @@ import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.base.XMLExtractor;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class FileExecutor implements DocumentProducer, NamedDocumentExecutor {
 
@@ -182,7 +182,7 @@ public class FileExecutor implements DocumentProducer, NamedDocumentExecutor {
     	try {
     		Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(m_state.getPluggableInputStreamFilterClass());
     		Constructor ctor = pluggableFilter.getConstructor(
-    				new Class[] { java.io.InputStream.class, com.metamatrix.data.api.ConnectorLogger.class});
+    				new Class[] { java.io.InputStream.class, com.metamatrix.connector.api.ConnectorLogger.class});
     		filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
     	} catch (Exception cnf) {
     		throw new ConnectorException(cnf);

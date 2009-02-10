@@ -25,8 +25,8 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import com.metamatrix.common.types.*;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  */

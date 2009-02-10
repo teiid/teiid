@@ -26,7 +26,7 @@ package com.metamatrix.connector.jdbc;
 
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorCapabilities;
 
 /**
  * This is a "simple" capabilities class that allows criteria but no 
@@ -153,23 +153,8 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
         return true;
     }
 
-    
-    
-    
-    
-    
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        if(executionMode == ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY) {
-            return true;
-        }
-        return false;
-    }
-
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsSelectLiterals()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsSelectLiterals()
      * @since 4.2
      */
     public boolean supportsSelectLiterals() {
@@ -355,7 +340,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     /**
      * Return null to indicate no functions are supported.
      * @return null 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#getSupportedFunctions()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#getSupportedFunctions()
      */
     public List getSupportedFunctions() {
         return null;
@@ -377,7 +362,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsUnionOrderBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
      * @since 4.2
      */
     public boolean supportsUnionOrderBy() {
@@ -385,7 +370,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
     
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsUnions()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnions()
      * @since 4.2
      */
     public boolean supportsUnions() {

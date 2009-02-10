@@ -30,12 +30,12 @@ import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class InsertVisitor extends CriteriaVisitor {
 

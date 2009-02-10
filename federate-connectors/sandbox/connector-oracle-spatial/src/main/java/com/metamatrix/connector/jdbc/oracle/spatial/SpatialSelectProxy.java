@@ -29,8 +29,8 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 
 import java.util.List;
 
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SpatialSelectProxy implements
                                ISelect,

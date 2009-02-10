@@ -25,9 +25,9 @@
 package com.metamatrix.connector.jdbc.db2;
 
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.IFromItem;
-import com.metamatrix.data.language.IJoin;
-import com.metamatrix.data.language.ILimit;
+import com.metamatrix.connector.language.IFromItem;
+import com.metamatrix.connector.language.IJoin;
+import com.metamatrix.connector.language.ILimit;
 
 /** 
  * @since 4.3
@@ -40,7 +40,7 @@ public class DB2SQLConversionVisitor extends SQLConversionVisitor {
     
     /**
      * Convert limit clause to DB2 ...FETCH FIRST rowlimit ROWS ONLY syntax
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IQuery)
+     * @see com.metamatrix.connector.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IQuery)
      * @since 5.0 SP1
      */
     public void visit(ILimit obj) {
@@ -72,7 +72,7 @@ public class DB2SQLConversionVisitor extends SQLConversionVisitor {
     }
     
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IJoin)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IJoin)
      */
     public void visit(IJoin obj) {
         final int type = obj.getJoinType();

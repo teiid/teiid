@@ -28,21 +28,22 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
+import com.metamatrix.connector.pool.CredentialMap;
+import com.metamatrix.connector.pool.SingleIdentityFactory;
+import com.metamatrix.connector.pool.UserIdentityFactory;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
-import com.metamatrix.data.pool.CredentialMap;
-import com.metamatrix.data.pool.SingleIdentityFactory;
-import com.metamatrix.data.pool.UserIdentityFactory;
 
 @ConnectionPooling
-public class Connector implements com.metamatrix.data.api.Connector, ConnectorIdentityFactory {
+public class Connector implements com.metamatrix.connector.api.Connector, ConnectorIdentityFactory {
 
 	private ConnectorLogger logger;
 
@@ -53,11 +54,12 @@ public class Connector implements com.metamatrix.data.api.Connector, ConnectorId
 	private String username;
 	private String password;
 	private URL url;
+	private SalesforceCapabilities salesforceCapabilites;
 
 	// ///////////////////////////////////////////////////////////
 	// Connector implementation
 	// ///////////////////////////////////////////////////////////
-	public Connection getConnection(SecurityContext secContext)
+	public Connection getConnection(ExecutionContext secContext)
 			throws ConnectorException {
 		logger.logTrace("Enter SalesforceSourceConnection.getConnection()");
 		Connection connection = null;
@@ -78,10 +80,11 @@ public class Connector implements com.metamatrix.data.api.Connector, ConnectorId
 		return connection;
 	}
 
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
-		env.getLogger().logTrace("Enter SalesforceSourceConnection.initialize()");
-		this.connectorEnv = env;
+	@Override
+	public void start(ConnectorEnvironment env) throws ConnectorException {
 		this.logger = env.getLogger();
+		this.connectorEnv = env;
+		getLogger().logInfo(getLogPreamble().append("Started").toString()); //$NON-NLS-1$
 		this.state = new ConnectorState(env.getProperties(), getLogger());
 		getLogger().logInfo(getLogPreamble().append("Initialized").toString()); //$NON-NLS-1$
 		getLogger().logTrace(getLogPreamble()
@@ -116,11 +119,24 @@ public class Connector implements com.metamatrix.data.api.Connector, ConnectorId
 		} else {
 			this.connectorIdentityFactory = new UserIdentityFactory();
 		}
-		logger.logTrace("Return SalesforceSourceConnection.initialize()");
-	}
+		
+		String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities", SalesforceCapabilities.class.getName());
+    	try {
+    		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(capabilitiesClass);
+    		salesforceCapabilites = (SalesforceCapabilities) clazz.newInstance();
+		} catch (Exception e) {
+			throw new ConnectorException(e, "Unable to load Capabilities Class");
+		}
+		try {
+			String inLimitString = env.getProperties().getProperty("InLimit", Integer.toString(-1));
+			int inLimit = Integer.decode(inLimitString).intValue();
+			salesforceCapabilites.setMaxInCriteriaSize(inLimit);
+		} catch (NumberFormatException e) {
+			throw new ConnectorException(Messages.getString("SalesforceConnection.bad.IN.value"));
+		}
 
-	public void start() throws ConnectorException {
-		getLogger().logInfo(getLogPreamble().append("Started").toString()); //$NON-NLS-1$
+		
+		logger.logTrace("Return SalesforceSourceConnection.initialize()");
 	}
 
 	public void stop() {
@@ -155,8 +171,13 @@ public class Connector implements com.metamatrix.data.api.Connector, ConnectorId
 	}
 
 	@Override
-	public ConnectorIdentity createIdentity(SecurityContext context)
+	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
 		return this.connectorIdentityFactory.createIdentity(context);
+	}
+	
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return salesforceCapabilites;
 	}
 }

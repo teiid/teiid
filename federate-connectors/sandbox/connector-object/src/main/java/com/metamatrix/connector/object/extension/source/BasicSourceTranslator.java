@@ -30,6 +30,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.api.ValueTranslator;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.ObjectPropertyNames;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
@@ -37,15 +44,6 @@ import com.metamatrix.connector.object.extension.IValueRetriever;
 import com.metamatrix.connector.object.extension.command.ProcedureCommand;
 import com.metamatrix.connector.object.extension.value.BasicValueRetriever;
 import com.metamatrix.connector.object.extension.value.JavaUtilDateValueTranslator;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.api.ValueTranslator;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  */
@@ -102,17 +100,7 @@ public class BasicSourceTranslator implements ISourceTranslator {
     }       
     
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#modifyBatch(com.metamatrix.data.api.Batch, com.metamatrix.data.api.ExecutionContext, com.metamatrix.data.language.ICommand)
-     * @since 4.2
-     */
-    public Batch modifyBatch(Batch batch,
-                             ExecutionContext context,
-                             ICommand command) {
-        return batch;
-    }
-    
-    /** 
-     * @see com.metamatrix.connector.object.extension.ISourceTranslator#createObjectCommand(com.metamatrix.data.metadata.runtime.RuntimeMetadata, com.metamatrix.data.language.IProcedure)
+     * @see com.metamatrix.connector.object.extension.ISourceTranslator#createObjectCommand(com.metamatrix.connector.metadata.runtime.RuntimeMetadata, com.metamatrix.connector.language.IProcedure)
      * @since 4.3
      */
     public IObjectCommand createObjectCommand(RuntimeMetadata metadata,

@@ -28,11 +28,10 @@ package com.metamatrix.connector.jdbc.informix;
 
 import java.util.*;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.impl.*;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

@@ -29,17 +29,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IBaseInCriteria;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.LanguageUtil;
-import com.metamatrix.data.metadata.runtime.Element;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IBaseInCriteria;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.LanguageUtil;
+import com.metamatrix.connector.metadata.runtime.Element;
 
 /**
  * @author BLotenberg

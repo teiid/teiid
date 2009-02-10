@@ -30,9 +30,9 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.pool.UserIdentity;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.pool.UserIdentity;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
@@ -69,7 +69,7 @@ public class TestConnectionPool extends TestCase{
         userIDPool.shutDown();
     }
         
-    public static SecurityContext createContext(final String user, boolean userIdentity) {
+    public static ExecutionContext createContext(final String user, boolean userIdentity) {
     	ExecutionContextImpl context = new ExecutionContextImpl(null, null, user, null, null, null, null, null, null, null, false);
     	if (userIdentity) {
     		context.setConnectorIdentity(new UserIdentity(context));
@@ -79,7 +79,7 @@ public class TestConnectionPool extends TestCase{
     
     //=== tests ===//
     public void testPoolUsingSingleIdentity() throws Exception {
-        SecurityContext context = createContext("x", false);//$NON-NLS-1$
+        ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
         ConnectionWrapper conn1 = singleIDPool.obtain(context);
         ConnectionWrapper conn2 = singleIDPool.obtain(context);
@@ -159,7 +159,7 @@ public class TestConnectionPool extends TestCase{
     }
 
     public void testMessageWhenPoolMaxedOutPerIdentity() throws Exception {
-        SecurityContext context = createContext("x", false);//$NON-NLS-1$
+        ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
         // Max out the pool - 5 connections for same ID
         for(int i=0; i<5; i++) {
@@ -189,7 +189,7 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
         singleIDPool.initialize(poolProperties);
         
-        SecurityContext context = createContext("x", false);//$NON-NLS-1$
+        ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
         singleIDPool.obtain(context);
         
@@ -204,8 +204,8 @@ public class TestConnectionPool extends TestCase{
     }
 
     public void testPoolUsingUserIdentity() throws Exception {
-        SecurityContext context1 = createContext("Jack", true); //$NON-NLS-1$
-        SecurityContext context2 = createContext("Tom", true); //$NON-NLS-1$
+        ExecutionContext context1 = createContext("Jack", true); //$NON-NLS-1$
+        ExecutionContext context2 = createContext("Tom", true); //$NON-NLS-1$
         userIDPool.obtain(context1);
         ConnectionWrapper conn2 = userIDPool.obtain(context1);
         ConnectionWrapper conn3 = userIDPool.obtain(context2);
@@ -223,7 +223,7 @@ public class TestConnectionPool extends TestCase{
     }
     
     public void testPoolCleanUp() throws Exception {
-        SecurityContext context = createContext("x", false);       //$NON-NLS-1$ 
+        ExecutionContext context = createContext("x", false);       //$NON-NLS-1$ 
 
         ConnectionWrapper conn1 = singleIDPool.obtain(context);
         ConnectionWrapper conn2 = singleIDPool.obtain(context);
@@ -269,8 +269,8 @@ public class TestConnectionPool extends TestCase{
         
         assertEquals(EXCEPTIONS.toString(), 0, EXCEPTIONS.size());
         
-        SecurityContext context1 = createContext("Jack", true); //$NON-NLS-1$
-        SecurityContext context2 = createContext("Tom", true); //$NON-NLS-1$
+        ExecutionContext context1 = createContext("Jack", true); //$NON-NLS-1$
+        ExecutionContext context2 = createContext("Tom", true); //$NON-NLS-1$
 
         //List unusedConns1 = pool.getUnusedConneections(id1);
         List usedConns1 = userIDPool.getUsedConnections(userIDPool.obtain(context1));
@@ -334,8 +334,8 @@ public class TestConnectionPool extends TestCase{
         }
         
         public void run(){
-            SecurityContext context1 = createContext("Jack", true); //$NON-NLS-1$
-            SecurityContext context2 = createContext("Tom", true); //$NON-NLS-1$
+            ExecutionContext context1 = createContext("Jack", true); //$NON-NLS-1$
+            ExecutionContext context2 = createContext("Tom", true); //$NON-NLS-1$
             try {
             	ConnectionWrapper conn = null;
                 

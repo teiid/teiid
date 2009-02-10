@@ -30,7 +30,10 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.metamatrix.data.xa.api.TransactionContext;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.impl.BufferConfig;
+import com.metamatrix.common.buffer.impl.BufferManagerImpl;
+import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.query.sql.lang.Command;
@@ -74,7 +77,7 @@ public class AtomicRequestMessage implements Serializable {
 	private Command command;
 
 	// results fetch size
-	private int fetchSize;
+	private int fetchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
 
 	// The time when the command was created by the client
 	private Date submittedTimestamp;
@@ -156,6 +159,9 @@ public class AtomicRequestMessage implements Serializable {
 	}
 
 	public void setFetchSize(int fetchSize) {
+		if (fetchSize < 1) {
+			throw new IllegalArgumentException("fetch size must be positive");
+		}
 		this.fetchSize = fetchSize;
 	}   
 

@@ -30,11 +30,11 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.MetadataFactory;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.language.ICommand;
 
 /**
  */

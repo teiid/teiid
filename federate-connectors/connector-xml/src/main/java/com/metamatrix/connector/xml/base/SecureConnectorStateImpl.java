@@ -28,10 +28,10 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.SecureConnectorState;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Encapsulates the loading of the TrustDeserializerClass for connector 

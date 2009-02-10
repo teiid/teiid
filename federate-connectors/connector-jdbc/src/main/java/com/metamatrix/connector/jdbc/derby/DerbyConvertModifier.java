@@ -27,11 +27,11 @@ package com.metamatrix.connector.jdbc.derby;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.language.*;
+import com.metamatrix.connector.language.*;
 
 /**
  */
@@ -46,7 +46,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
     }
 
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      * @since 5.0
      */
     public List translate(IFunction function) {

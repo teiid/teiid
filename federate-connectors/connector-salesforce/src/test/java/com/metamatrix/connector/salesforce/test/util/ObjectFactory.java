@@ -28,10 +28,10 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.connector.salesforce.ConnectorState;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.pool.CredentialMap;
 
 public class ObjectFactory {
 
@@ -95,11 +95,11 @@ public class ObjectFactory {
 		return props;
 	}
 
-	public static SecurityContext getDefaultSecurityContext() {
+	public static ExecutionContext getDefaultSecurityContext() {
 		return EnvironmentUtility.createSecurityContext("MetaMatrixAdmin");
 	}
 	
-	public static SecurityContext getTokenSecurityContext() {
+	public static ExecutionContext getTokenSecurityContext() {
 		CredentialMap cMap = getCredentialMap();
 		return EnvironmentUtility.createSecurityContext("Foo","1", "MetaMatrixAdmin", cMap);
 	}

@@ -33,24 +33,23 @@ import java.util.Map;
 
 import org.apache.axis.message.MessageElement;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.SelectVisitor;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
-public class QueryExecutionImpl implements SynchQueryExecution {
+public class QueryExecutionImpl implements ResultSetExecution {
 
 	private SalesforceConnection connection;
 
@@ -76,14 +75,19 @@ public class QueryExecutionImpl implements SynchQueryExecution {
 	private String logPreamble;
 	
 	private Map<String,Integer> fieldMap;
+	
+	private IQueryCommand query;
+	
+	private int i;
 
-	public QueryExecutionImpl(SalesforceConnection connection,
+	public QueryExecutionImpl(IQueryCommand command, SalesforceConnection connection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		this.connection = connection;
 		this.metadata = metadata;
 		this.context = context;
 		this.connectorEnv = connectorEnv;
+		this.query = command;
 
 		connectionIdentifier = context.getConnectionIdentifier();
 		connectorIdentifier = context.getConnectorIdentifier();
@@ -99,64 +103,39 @@ public class QueryExecutionImpl implements SynchQueryExecution {
 		connectorEnv.getLogger().logInfo(Messages.getString("SalesforceQueryExecutionImpl.close"));
 	}
 
-	public void execute(IQuery query, int maxBatchSize)
-			throws ConnectorException {
-			connectorEnv.getLogger().logInfo(
-					getLogPreamble() + "Incoming Query: " + query.toString());
-			visitor = new SelectVisitor(metadata);
-			visitor.visitNode(query);
-			String finalQuery;
-			finalQuery = visitor.getQuery().trim();
-			connectorEnv.getLogger().logInfo(
-					getLogPreamble() + "Executing Query: " + finalQuery);
-			
-			if(maxBatchSize > 2000) {
-				maxBatchSize = 2000;
-				connectorEnv.getLogger().logInfo(
-						getLogPreamble() + Messages.getString("SalesforceQueryExecutionImpl.reduced.batch.size"));
-			}
-			
-			results = connection.query(finalQuery, maxBatchSize);
+	@Override
+	public void execute() throws ConnectorException {
+		connectorEnv.getLogger().logInfo(
+				getLogPreamble() + "Incoming Query: " + query.toString());
+		visitor = new SelectVisitor(metadata);
+		visitor.visitNode(query);
+		String finalQuery;
+		finalQuery = visitor.getQuery().trim();
+		connectorEnv.getLogger().logInfo(
+				getLogPreamble() + "Executing Query: " + finalQuery);
+		
+		results = connection.query(finalQuery, this.context.getBatchSize());
 	}
-
-
-	public Batch nextBatch() throws ConnectorException {
-		BasicBatch batch = new BasicBatch();
-		try {
-			if (null == results || results.getSize() < 1 ) {
-				batch.setLast();
-			} else {
-				long beforeBatchCreation = System.currentTimeMillis();
-				for (int i = 0; i < results.getRecords().length; i++) {
-					SObject sObject = results.getRecords(i);
-					org.apache.axis.message.MessageElement[] fields = sObject.get_any();
-					if (null == fieldMap) {
-						logAndMapFields(fields);
-					}
-					List<Object> row = extractRowFromFields(sObject, fields);
-					batch.addRow(row);
+	
+	@Override
+	public List next() throws ConnectorException, DataNotAvailableException {
+		while (results != null) {
+			if (i < results.getSize()) {
+				SObject sObject = results.getRecords(i);
+				org.apache.axis.message.MessageElement[] fields = sObject.get_any();
+				if (null == fieldMap) {
+					logAndMapFields(fields);
 				}
-
-				connectorEnv.getLogger()
-						.logTrace(getLogPreamble() + "BatchCreation elapsed time"
-								+ (System.currentTimeMillis() - beforeBatchCreation));
-				if (results.isDone()) { // no more batches on sf.
-					results = null;
-					batch.setLast();
-				} else {
-					long beforeQueryMore = System.currentTimeMillis();
-					results = connection.queryMore(results.getQueryLocator());
-					connectorEnv.getLogger()
-						.logTrace(getLogPreamble() + "QueryMore elapsed time"
-								+ (System.currentTimeMillis() - beforeQueryMore));
-				}
-
+				return extractRowFromFields(sObject, fields);
 			}
-		} catch (Throwable t) {
-			throw new ConnectorException(t);
+	
+			if (results.isDone()) { // no more batches on sf.
+				results = null;
+				break;
+			} 
+			results = connection.queryMore(results.getQueryLocator());
 		}
-		connectorEnv.getLogger().logInfo(getLogPreamble() + "Batch size = " + batch.getRowCount());
-		return batch;
+		return null;
 	}
 
 	private List<Object> extractRowFromFields(SObject sObject, MessageElement[] fields) throws ConnectorException {

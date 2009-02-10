@@ -26,8 +26,8 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IBatchedUpdates;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IBatchedUpdates;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 
 /** 
@@ -42,7 +42,7 @@ public class BatchedUpdatesImpl extends BaseLanguageObject implements
     }
     
     /** 
-     * @see com.metamatrix.data.language.IBatchedUpdates#getUpdateCommands()
+     * @see com.metamatrix.connector.language.IBatchedUpdates#getUpdateCommands()
      * @since 4.2
      */
     public List getUpdateCommands() {
@@ -50,7 +50,7 @@ public class BatchedUpdatesImpl extends BaseLanguageObject implements
     }
 
     /** 
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.framework.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.connector.visitor.framework.LanguageObjectVisitor)
      * @since 4.2
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {

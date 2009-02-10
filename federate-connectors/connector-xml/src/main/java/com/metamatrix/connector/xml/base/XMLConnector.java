@@ -25,45 +25,30 @@
 
 package com.metamatrix.connector.xml.base;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.AbstractCachingConnector;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
 
 @ConnectionPooling(enabled=false)
-public class XMLConnector extends AbstractCachingConnector implements GlobalCapabilitiesProvider {
+public class XMLConnector extends AbstractCachingConnector {
 	
 	public XMLConnector() {
 		super();          
 	}
 
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
-        try {
-    		super.initialize(env);	
-            getLogger().logInfo("XML Connector Framework: connector has been initialized"); //$NON-NLS-1$
-            getLogger().logTrace("XML Connector Framework: connector init properties: " + getEnvironment().getProperties()); //$NON-NLS-1$
-        }
-        catch (RuntimeException e) {
-        	throw new ConnectorException(e);
-        }
+	@Override
+	public void start(ConnectorEnvironment env) throws ConnectorException {
+		super.start(env);	
+        getLogger().logInfo("XML Connector Framework: connector has been started"); //$NON-NLS-1$
+        getLogger().logTrace("XML Connector Framework: connector init properties: " + getEnvironment().getProperties()); //$NON-NLS-1$
 	}
 
-
-	public void start() throws ConnectorException {
-        try {
-        	getLogger().logInfo("XML Connector Framework: connector has been started"); //$NON-NLS-1$
-        }
-        catch (RuntimeException e) {
-            throw new ConnectorException(e);
-        }
-	}
-
-
+	@Override
 	public void stop() {
 		super.stop();
 		ConnectorLogger logger = getLogger();
@@ -72,20 +57,14 @@ public class XMLConnector extends AbstractCachingConnector implements GlobalCapa
 		}
 	}
 
-
-	public Connection getConnection(SecurityContext context) throws ConnectorException {
-        try {
-    		if (m_state == null) {
-    			throw new ConnectorException(Messages.getString("XMLConnector.state.not.set")); //$NON-NLS-1$
-    		}
-    		return m_state.getConnection(this, context, getEnvironment());//new XMLConnectionImpl(this, context, getEnvironment());
-        }
-        catch (RuntimeException e) {
-            throw new ConnectorException(e);
-        }
+	public Connection getConnection(ExecutionContext context) throws ConnectorException {
+		if (m_state == null) {
+			throw new ConnectorException(Messages.getString("XMLConnector.state.not.set")); //$NON-NLS-1$
+		}
+		return m_state.getConnection(this, context, getEnvironment());//new XMLConnectionImpl(this, context, getEnvironment());
 	}
 
 	public ConnectorCapabilities getCapabilities() {
-		return XMLCapabilities.INSTANCE;
+		return getState().getConnectorCapabilities();
 	}
 }

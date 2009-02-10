@@ -32,8 +32,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * 

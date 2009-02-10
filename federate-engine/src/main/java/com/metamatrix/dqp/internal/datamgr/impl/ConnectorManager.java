@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,7 +41,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
+import javax.transaction.xa.XAResource;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -50,27 +52,27 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.api.ConnectorAnnotations.SynchronousWorkers;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
-import com.metamatrix.dqp.internal.cache.connector.CacheConnector;
 import com.metamatrix.dqp.internal.datamgr.CapabilitiesConverter;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.pooling.connector.PooledConnector;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
+import com.metamatrix.dqp.internal.transaction.TransactionProvider;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -88,7 +90,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Scope;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
- * The <code>ConnectorManager</code> manages a {@link com.metamatrix.data.api.Connector Connector}
+ * The <code>ConnectorManager</code> manages a {@link com.metamatrix.connector.api.Connector Connector}
  * and its associated workers' state.
  */
 public class ConnectorManager implements ApplicationService {
@@ -121,10 +123,15 @@ public class ConnectorManager implements ApplicationService {
     private Timer timer;
     
     private Properties props;
+	private ClassLoader classloader;
     
     public void initialize(Properties props) {
     	this.props = props;
     }
+    
+    public ClassLoader getClassloader() {
+		return classloader;
+	}
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {
         Connection conn = null;
@@ -134,10 +141,10 @@ public class ConnectorManager implements ApplicationService {
         ClassLoader threadContextLoader = currentThread.getContextClassLoader();
         try {
         	ConnectorCapabilities caps = connector.getCapabilities();
-            currentThread.setContextClassLoader(connector.getClass().getClassLoader());
+            currentThread.setContextClassLoader(classloader);
             boolean global = true;
             if (caps == null) {
-            	SecurityContext context = new ExecutionContextImpl(
+            	ExecutionContext context = new ExecutionContextImpl(
                         message.getVdbName(),
                         message.getVdbVersion(),
                         message.getUserName(),
@@ -150,15 +157,15 @@ public class ConnectorManager implements ApplicationService {
 
             	conn = connector.getConnection(context);
             	caps = conn.getCapabilities();
-            	global = caps.getCapabilitiesScope() == ConnectorCapabilities.SCOPE.GLOBAL;
+            	global = false;
             }
-            caps = (ConnectorCapabilities) Proxy.newProxyInstance(currentThread.getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.props));
+            caps = (ConnectorCapabilities) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ConnectorCapabilities.class}, new CapabilitesOverloader(caps, this.props));
             BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, getName(), isXa);
             resultCaps.setScope(global?Scope.SCOPE_GLOBAL:Scope.SCOPE_PER_USER);
             return resultCaps;
         } finally {
         	if ( conn != null ) {
-                conn.release();
+                conn.close();
             }
             currentThread.setContextClassLoader(threadContextLoader);
         }
@@ -204,13 +211,7 @@ public class ConnectorManager implements ApplicationService {
     	if (workItem == null) {
     		return; //already closed
     	}
-        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-        try {
-        	Thread.currentThread().setContextClassLoader(this.connector.getClass().getClassLoader());
-    	    workItem.requestMore();
-        } finally {
-        	Thread.currentThread().setContextClassLoader(contextloader);
-        }
+	    workItem.requestMore();
     }
     
     public void cancelRequest(AtomicRequestID requestId) {
@@ -220,7 +221,7 @@ public class ConnectorManager implements ApplicationService {
     	}
         ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
         try {
-        	Thread.currentThread().setContextClassLoader(this.connector.getClass().getClassLoader());
+        	Thread.currentThread().setContextClassLoader(classloader);
     	    workItem.requestCancel();
         } finally {
         	Thread.currentThread().setContextClassLoader(contextloader);
@@ -232,13 +233,7 @@ public class ConnectorManager implements ApplicationService {
     	if (workItem == null) {
     		return; //already closed
     	}
-        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-        try {
-        	Thread.currentThread().setContextClassLoader(this.connector.getClass().getClassLoader());
-    	    workItem.requestClose();
-        } finally {
-        	Thread.currentThread().setContextClassLoader(contextloader);
-        }
+	    workItem.requestClose();
     }
         
     /**
@@ -278,7 +273,13 @@ public class ConnectorManager implements ApplicationService {
      * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
      */
     public ConnectionStatus getStatus() {
-        return this.connector.getStatus();
+        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
+        try {
+        	Thread.currentThread().setContextClassLoader(classloader);
+            return this.connector.getStatus();
+        } finally {
+        	Thread.currentThread().setContextClassLoader(contextloader);
+        }
     }
     
     /**
@@ -306,12 +307,14 @@ public class ConnectorManager implements ApplicationService {
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Missing_required_property", new Object[]{ConnectorPropertyNames.CONNECTOR_CLASS, connectorName})); //$NON-NLS-1$
         }
 
+        int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
+        int threadTTL = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.THREAD_TTL, DEFAULT_PROCESSOR_TREAD_TTL);
+
+        connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads, threadTTL);
+
         // Create the Connector env
         Properties clonedProps = PropertiesUtils.clone(props);
-        ConnectorEnvironment connectorEnv = new ConnectorEnvironmentImpl(clonedProps, new DefaultConnectorLogger(connectorID), env);
-
-        // Initialize and start the connector
-        initStartConnector(connectorName, connectorEnv);
+        ConnectorEnvironment connectorEnv = new ConnectorEnvironmentImpl(clonedProps, new DefaultConnectorLogger(connectorID), env, connectorWorkerPool);
 
         // Get the metadata service
         this.metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
@@ -321,14 +324,12 @@ public class ConnectorManager implements ApplicationService {
 
         this.tracker = (TrackingService) env.findService(DQPServiceNames.TRACKING_SERVICE);
 
-        int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
-        int threadTTL = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.THREAD_TTL, DEFAULT_PROCESSOR_TREAD_TTL);
-
-        connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads, threadTTL);
-        
         this.maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, 0);
         this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
-        this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
+    	this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
+
+        // Initialize and start the connector
+        initStartConnector(connectorName, connectorEnv);
 
         this.started = true;
     }
@@ -340,27 +341,30 @@ public class ConnectorManager implements ApplicationService {
      */
     private void initStartConnector(String connectorName, ConnectorEnvironment env) throws ApplicationLifecycleException {
         String connectorClassName = env.getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
-        // Create connector instance...
-        ClassLoader loader = (ClassLoader)props.get(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER);
-        if(loader == null){
-            loader = getClass().getClassLoader();
+        classloader = (ClassLoader)props.get(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER);
+        if(classloader == null){
+            classloader = getClass().getClassLoader();
         }
-        Class<?> clazz = null;
+        Thread currentThread = Thread.currentThread();
+        ClassLoader threadContextLoader = currentThread.getContextClassLoader();
         try {
-            clazz = loader.loadClass(connectorClassName);
-        } catch (ClassNotFoundException e) {
-            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
-        }
-        try {
-            Connector c = (Connector) clazz.newInstance();
+        	currentThread.setContextClassLoader(classloader);
+        	Class<?> clazz = classloader.loadClass(connectorClassName);
+
+        	Connector c = (Connector) clazz.newInstance();
             if(c instanceof XAConnector){
             	this.isXa = true;
                 if (this.getTransactionService() == null) {                    
                     throw new ApplicationLifecycleException(DQPPlugin.Util.getString("no_txn_manager", connectorName)); //$NON-NLS-1$
                 }
             }
+            if (this.synchWorkers) {
+                SynchronousWorkers synchWorkerAnnotation = (SynchronousWorkers) c.getClass().getAnnotation(SynchronousWorkers.class);
+            	if (synchWorkerAnnotation != null) {
+            		this.synchWorkers = synchWorkerAnnotation.enabled();
+            	}
+            }
         	c = wrapPooledConnector(c, env);
-            c = wrapCacheConnector(c, env);
             if (c instanceof ConnectorWrapper) {
             	this.connector = (ConnectorWrapper)c;
             } else {
@@ -369,38 +373,40 @@ public class ConnectorManager implements ApplicationService {
             if (this.isXa) {
                 if (this.connector.supportsSingleIdentity()) {
                 	// add this connector as the recovery source
+					final XAConnection xaConn = ((XAConnector)connector).getXAConnection(null, null);
+
 	                TransactionServer ts = this.getTransactionService().getTransactionServer(); 
-	                ts.registerRecoverySource(connectorName, (XAConnector)this.connector);
+	                ts.registerRecoverySource(connectorName, new TransactionProvider.XAConnectionSource() {
+
+	                	@Override
+	                	public XAResource getXAResource() throws SQLException {
+	                		try {
+								return xaConn.getXAResource();
+							} catch (ConnectorException e) {
+								throw new SQLException(e);
+							}
+	                	}
+	                	
+	                	@Override
+	                	public void close() {
+	                		xaConn.close();
+	                	}
+	                });
                 } else {
                 	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.getName())); //$NON-NLS-1$	                
                 }
             }
+            this.connector.start(env);
         } catch (InstantiationException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_instantiate_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
         } catch (IllegalAccessException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_access_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
-        }
-        
-        // Defect 17536 - Set the thread-context classloader to the non-delegating classloader when calling methods on the connector.
-        Thread currentThread = Thread.currentThread();
-        ClassLoader threadContextLoader = currentThread.getContextClassLoader();
-        try {
-            currentThread.setContextClassLoader(loader);
-            // Initialize connector instance...
-            try {
-                this.connector.initialize(env);
-            } catch (ConnectorException e) {
-                throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_to_initialize", new Object[]{connectorClassName})); //$NON-NLS-1$
-            }
-    
-            //start connector
-            try {
-                this.connector.start();
-            } catch (ConnectorException e) {
-                throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_start_Connector", new Object[] {this.getConnectorID(), e.getMessage()})); //$NON-NLS-1$
-            }    
+        } catch (ClassNotFoundException e) {
+            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
+        } catch (ConnectorException e) {
+            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_start_Connector", new Object[] {this.getConnectorID(), e.getMessage()})); //$NON-NLS-1$
         } finally {
-            currentThread.setContextClassLoader(threadContextLoader);
+        	currentThread.setContextClassLoader(threadContextLoader);
         }
     }
     
@@ -424,27 +430,6 @@ public class ConnectorManager implements ApplicationService {
         }         
         return c;
     }
-
-	private Connector wrapCacheConnector(Connector c, ConnectorEnvironment connectorEnv) {
-        //check result set cache
-        Properties props = connectorEnv.getProperties();
-        Properties rsCacheProps = null;
-        if(Boolean.valueOf(props.getProperty(ConnectorPropertyNames.USE_RESULTSET_CACHE, "false")).booleanValue()){ //$NON-NLS-1$
-        	rsCacheProps = new Properties();
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, "0")); //$NON-NLS-1$
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, "0")); //$NON-NLS-1$
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-        	try {
-        		rsCache = new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
-        		return new CacheConnector(c, rsCache);
-			} catch (MetaMatrixComponentException e) {
-				// this does not really affect the 
-				//function of connector, log warning for now
-                LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("DQPCORE.6")); //$NON-NLS-1$
-			}
-        }
-        return c;
-	}
 
     /**
      * Queries the Connector Manager, if it already has been started. 
@@ -493,7 +478,7 @@ public class ConnectorManager implements ApplicationService {
             Thread currentThread = Thread.currentThread();
             ClassLoader threadContextLoader = currentThread.getContextClassLoader();
             try {
-                currentThread.setContextClassLoader(connector.getClass().getClassLoader());
+                currentThread.setContextClassLoader(classloader);
                 this.connector.stop();
             } finally {
                 currentThread.setContextClassLoader(threadContextLoader);

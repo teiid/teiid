@@ -35,9 +35,9 @@ import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILanguageFactory;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**

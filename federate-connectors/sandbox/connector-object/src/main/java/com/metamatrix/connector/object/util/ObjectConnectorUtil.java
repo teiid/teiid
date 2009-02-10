@@ -26,19 +26,19 @@ package com.metamatrix.connector.object.util;
 
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IMetadataReference;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.ObjectPropertyNames;
+import com.metamatrix.connector.object.SourceConnectionFactory;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IMetadataReference;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.SourceConnectionFactory;
 
 
 /** 

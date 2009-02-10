@@ -38,10 +38,10 @@ import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.vdb.api.VDBFile;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.ResultsIterator;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.data.exception.ConnectorException;
 
 
 /**

@@ -32,8 +32,8 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.IAggregate;
-import com.metamatrix.data.language.ILimit;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.ILimit;
 
 /**
  */
@@ -70,7 +70,7 @@ class PostgreSQLConversionVisitor extends SQLConversionVisitor {
      * Postgres doesn't provide min/max(boolean), so this conversion writes a min(booleanval) as 
      * CASE MIN(CASE B.BooleanValue WHEN TRUE THEN 1 ELSE 0 END) WHEN 1 THEN TRUE ELSE FALSE END
      * TODO: This conversion implementation does not handle null values in the boolean column.
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IAggregate)
+     * @see com.metamatrix.connector.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IAggregate)
      * @since 4.3
      */
     public void visit(IAggregate obj) {
@@ -105,7 +105,7 @@ class PostgreSQLConversionVisitor extends SQLConversionVisitor {
 
     /**
      * Convert limit clause to PostgreSQL ...[LIMIT rowlimit] [OFFSET offset] syntax
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IQuery)
+     * @see com.metamatrix.connector.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IQuery)
      * @since 5.0 SP1
      */
     public void visit(ILimit obj) {

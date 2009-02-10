@@ -29,7 +29,7 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.util.LogConstants;
 

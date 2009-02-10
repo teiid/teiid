@@ -29,8 +29,8 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
 
 /**
  */
@@ -49,7 +49,7 @@ public class TestTextConnector extends TestCase {
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector connector = new TextConnector();
         // Init license checker with class, non-GUI notifier and don't exitOnFailure
-        connector.initialize(env);
+        connector.start(env);
         return connector;
     }
     

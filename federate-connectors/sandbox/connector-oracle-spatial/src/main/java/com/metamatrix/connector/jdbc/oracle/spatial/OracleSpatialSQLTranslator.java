@@ -29,16 +29,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.visitor.util.CollectorVisitor;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
 public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
 

@@ -26,49 +26,32 @@ package com.metamatrix.connector.salesforce.connection;
 import java.net.URL;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.connector.salesforce.Messages;
-import com.metamatrix.connector.salesforce.SalesforceCapabilities;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
 import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdateExecutionParent;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
 import com.sforce.soap.partner.QueryResult;
 
-public class SalesforceConnection implements com.metamatrix.data.api.Connection, PoolAwareConnection {
+public class SalesforceConnection extends BasicConnection implements PoolAwareConnection {
 
-	private SalesforceCapabilities salesforceCapabilites;
 	private ConnectorEnvironment connectorEnv;
 	private ConnectionImpl connection;
 	
 	public SalesforceConnection(String username, String password, URL url, ConnectorEnvironment env) throws ConnectorException {
 		try {
 			connectorEnv = env;
-			String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities");
-			if(capabilitiesClass != null) {
-	        	try {
-	        		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(capabilitiesClass);
-	        		salesforceCapabilites = (SalesforceCapabilities) clazz.newInstance();
-				} catch (Exception e) {
-					throw new ConnectorException(e, "Unable to load Capabilities Class");
-				}
-	        } else {
-	        	throw new ConnectorException("Capabilities Class name not found");
-	        }
-			try {
-				String inLimitString = env.getProperties().getProperty("InLimit");
-				int inLimit = Integer.decode(inLimitString).intValue();
-				salesforceCapabilites.setMaxInCriteriaSize(inLimit);
-			} catch (NumberFormatException e) {
-				throw new ConnectorException(Messages.getString("SalesforceConnection.bad.IN.value"));
-			}
 			
 			long pingInterval = 5000;
 			try {
@@ -90,47 +73,37 @@ public class SalesforceConnection implements com.metamatrix.data.api.Connection,
 			}
 		}
 	}
-
-	public Execution createExecution(int executionMode, ExecutionContext context, 
-			RuntimeMetadata metadata) throws ConnectorException {
-		try {
-			Execution retVal = null;
-			String errKey = null;
-			switch (executionMode) {
-			case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-				retVal = new QueryExecutionImpl(this, metadata, context, connectorEnv);
-				break;
-			case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-				retVal = new UpdateExecutionParent(this, metadata, context, connectorEnv);
-				break;
-			case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-				errKey = Messages.getString("SalesforceConnection.procedures.not.supported");
-				break;
-			default:
-				errKey = Messages
-						.getString("SalesforceConnection.invalid.execution.mode");
-			}
-			if (errKey != null) {
-				throw new ConnectorException(errKey);
-			}
-			return retVal;
-		} catch (RuntimeException e) {
-			throw new ConnectorException(e);
-		}
+	
+	@Override
+	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new QueryExecutionImpl(command, this, metadata, executionContext, connectorEnv);
 	}
+	
+	@Override
+	public UpdateExecution createUpdateExecution(ICommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new UpdateExecutionParent(command, this, metadata, executionContext, connectorEnv);
 
+	}
+	
+	@Override
 	public ConnectorCapabilities getCapabilities() {
-		return this.salesforceCapabilites;
-	}
-
-	public ConnectorMetadata getMetadata() {
 		return null;
 	}
 
-	public void release() {
+	@Override
+	public void close() {
 	}
 
 	public QueryResult query(String queryString, int maxBatchSize) throws ConnectorException {
+		if(maxBatchSize > 2000) {
+			maxBatchSize = 2000;
+			connectorEnv.getLogger().logInfo(
+					Messages.getString("SalesforceQueryExecutionImpl.reduced.batch.size"));
+		}
 		return connection.query(queryString, maxBatchSize);
 	}
 
@@ -138,12 +111,13 @@ public class SalesforceConnection implements com.metamatrix.data.api.Connection,
 		return connection.queryMore(queryLocator);
 	}
 	
+	@Override
 	public boolean isAlive() {
 		return connection.isAlive();
 	}
 	
 	@Override
-	public void connectionReleased() {
+	public void closeCalled() {
 		
 	}
 

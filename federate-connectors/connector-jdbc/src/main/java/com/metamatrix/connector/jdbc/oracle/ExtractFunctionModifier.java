@@ -29,8 +29,8 @@ import java.util.List;
 
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
 
 /**
  * Convert the YEAR/MONTH/DAY etc. function into an equivalent Oracle function.  

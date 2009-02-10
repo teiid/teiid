@@ -5,9 +5,9 @@ import java.lang.reflect.Constructor;
 
 import org.apache.commons.httpclient.HttpMethodBase;
 
+import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
-import com.metamatrix.data.api.ConnectorLogger;
 
 public class FilteringHTTPSender extends CommonsHTTPSender {
 
@@ -29,7 +29,7 @@ public class FilteringHTTPSender extends CommonsHTTPSender {
 		
 		Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(state.getPluggableInputStreamFilterClass());
 		Constructor ctor = pluggableFilter.getConstructor(
-			new Class[] { java.io.InputStream.class, com.metamatrix.data.api.ConnectorLogger.class});
+			new Class[] { java.io.InputStream.class, com.metamatrix.connector.api.ConnectorLogger.class});
 		result = (InputStream) ctor.newInstance(new Object[] {result, logger});
 		return result;
 	}

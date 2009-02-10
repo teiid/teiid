@@ -52,33 +52,33 @@ import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 import javax.naming.NamingException;
 
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IAggregate;
-import com.metamatrix.data.language.ICaseExpression;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICompoundCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExistsCriteria;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFromItem;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.language.ILikeCriteria;
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IOrderBy;
-import com.metamatrix.data.language.IOrderByItem;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IScalarSubquery;
-import com.metamatrix.data.language.ISearchedCaseExpression;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.Group;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.ICaseExpression;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompoundCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExistsCriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFromItem;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Utility class which translates a SQL query into an LDAP search.
@@ -657,8 +657,8 @@ public class IQueryToLdapSearchParser {
 	}
 	
     /**
-     * Helper method for getting runtime {@link com.metamatrix.data.metadata.runtime.Element} from a
-     * {@link com.metamatrix.data.language.ISelectSymbol}.
+     * Helper method for getting runtime {@link com.metamatrix.connector.metadata.runtime.Element} from a
+     * {@link com.metamatrix.connector.language.ISelectSymbol}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */

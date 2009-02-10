@@ -24,9 +24,9 @@
 package com.metamatrix.connector.salesforce.execution;
 
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.salesforce.execution.visitors.InsertVisitor;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IInsert;
 
 public class InsertExecutionImpl {
 

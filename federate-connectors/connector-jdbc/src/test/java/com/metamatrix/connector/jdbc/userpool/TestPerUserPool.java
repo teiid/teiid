@@ -29,16 +29,15 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.pool.CredentialMap;
+import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**
@@ -55,7 +54,7 @@ public class TestPerUserPool extends TestCase {
         ConnectorEnvironment env = initConnectorEnvironment();
         JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
         factory.initialize(env);
-        SecurityContext ctx = createSecurityContext("pw1", false, factory); //$NON-NLS-1$
+        ExecutionContext ctx = createSecurityContext("pw1", false, factory); //$NON-NLS-1$
         try {
 			factory.getConnection(ctx);
 			fail("expected failure"); //$NON-NLS-1$
@@ -73,33 +72,13 @@ public class TestPerUserPool extends TestCase {
         connProps.put(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleUserIdentityConnectionFactory"); //$NON-NLS-1$
         connProps.put(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator"); //$NON-NLS-1$
         connProps.put(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator"); //$NON-NLS-1$
-        ConnectorEnvironment env = new ConnectorEnvironment() {
-
-			public String getConnectorName() {
-				return "oracle system"; //$NON-NLS-1$
-			}
-
-			public ILanguageFactory getLanguageFactory() {
-				return null;
-			}
-
-			public ConnectorLogger getLogger() {
-				return null;
-			}
-
-			public Properties getProperties() {
-				return connProps;
-			}
-
-			public TypeFacility getTypeFacility() {
-				return null;
-			}
-        	
-        };
+        ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
+        Mockito.stub(env.getConnectorName()).toReturn("oracle system"); //$NON-NLS-1$
+        Mockito.stub(env.getProperties()).toReturn(connProps);
         return env;
     }
     
-    private SecurityContext createSecurityContext(String credentialsStr, boolean useMap, JDBCSourceConnectionFactory factory) throws Exception {
+    private ExecutionContext createSecurityContext(String credentialsStr, boolean useMap, JDBCSourceConnectionFactory factory) throws Exception {
         Serializable credentials = credentialsStr;
     	if (useMap) {
     		credentials = CredentialMap.parseCredentials(credentialsStr);
@@ -116,7 +95,7 @@ public class TestPerUserPool extends TestCase {
         JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
         factory.initialize(env);
         
-        SecurityContext ctx = createSecurityContext("(system=oracle system,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
+        ExecutionContext ctx = createSecurityContext("(system=oracle system,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
         MockSourceConnection conn = (MockSourceConnection)factory.getConnection(ctx);
         assertEquals("bqt2", conn.getUser()); //$NON-NLS-1$
         assertEquals("mm", conn.getPassword()); //$NON-NLS-1$
@@ -128,7 +107,7 @@ public class TestPerUserPool extends TestCase {
         factory.initialize(env);
 
         // Set system to "x" instead of "oracle system" which will cause no credentials to be found
-        SecurityContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
+        ExecutionContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
         try {
             factory.getConnection(ctx);
             fail("Expected exception when creating connection with missing system credentials"); //$NON-NLS-1$

@@ -24,7 +24,7 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
 

@@ -28,19 +28,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFrom;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 

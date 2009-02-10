@@ -24,10 +24,10 @@
 
 package com.metamatrix.connector.metadata.internal;
 
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

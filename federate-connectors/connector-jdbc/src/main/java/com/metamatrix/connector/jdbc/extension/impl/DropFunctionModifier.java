@@ -26,7 +26,7 @@ package com.metamatrix.connector.jdbc.extension.impl;
 
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.data.language.*;
+import com.metamatrix.connector.language.*;
 
 /**
  * This FunctionModifier will cause this function to be dropped by replacing the function

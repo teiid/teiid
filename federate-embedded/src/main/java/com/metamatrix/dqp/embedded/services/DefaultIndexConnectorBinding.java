@@ -32,8 +32,8 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
 import com.metamatrix.common.namedobject.BaseID;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
 
 
 /** 

@@ -26,7 +26,7 @@ package com.metamatrix.connector.jdbc;
 
 import java.sql.Connection;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorEnvironment;
 
 /**
  * Connection listner for the life cycle events for the connection 

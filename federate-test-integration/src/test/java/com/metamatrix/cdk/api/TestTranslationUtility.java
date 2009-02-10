@@ -26,13 +26,13 @@ package com.metamatrix.cdk.api;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 public class TestTranslationUtility extends TestCase {
 

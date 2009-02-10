@@ -25,29 +25,24 @@
 package com.metamatrix.connector.exec;
 import java.util.List;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
-/**
- * Implementation of Connection interface for soap connection.
- */
-public class ExecConnection implements Connection {
+public class ExecConnection extends BasicConnection {
     
     ConnectorEnvironment env;
     
     // Connector logger
     ConnectorLogger logger;
     private List exclusionList;
-    
-    // Capabilities
-    private ConnectorCapabilities capabilities;
     
     /**
      * Constructor.
@@ -56,42 +51,25 @@ public class ExecConnection implements Connection {
     ExecConnection(ConnectorEnvironment env, List exclusionThese) throws ConnectorException {
         this.env = env;
         this.logger = env.getLogger();
-        this.capabilities = new ExecCapabilities();
         this.exclusionList = exclusionThese;
-        // initialize the metadata properties that will be used to access the text file
-        init();
     }
     
-    /**
-     * Create text execution.
-     * @param command ICommand containing the query 
-     */
-    public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata)
-    {
-//        return new ExecExecution(env, metadata, logger, exclusionList);
-        return new ExecAntExecution(env, metadata, logger, exclusionList);
-
+    @Override
+    public ResultSetExecution createResultSetExecution(IQueryCommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+        return new ExecAntExecution((IQuery)command, env, metadata, logger, exclusionList);
     }
 
-    /**
-     * Get the metadata of the source the connector is connected to.
-     * @return ConnectorMetadata
-     */
-    public ConnectorMetadata getMetadata() { 
-        return null;  
-    }
-
-    public void release(){
+    @Override
+    public void close() {
         logger.logDetail("Exec Connection is successfully closed."); //$NON-NLS-1$
-    }
-
-    private void init() throws ConnectorException {
     }
 
     /* 
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return this.capabilities;
+    	return null;
     }     
 }

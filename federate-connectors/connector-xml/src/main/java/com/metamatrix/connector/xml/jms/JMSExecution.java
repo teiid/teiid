@@ -35,6 +35,14 @@ import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLExecution;
@@ -46,17 +54,8 @@ import com.metamatrix.connector.xml.base.QueryAnalyzer;
 import com.metamatrix.connector.xml.base.Response;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
-import com.metamatrix.data.api.AsynchQueryExecution;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
-public class JMSExecution implements AsynchQueryExecution, XMLExecution {
+public class JMSExecution implements ResultSetExecution, XMLExecution {
 
 	JMSConnection connection; 
 	RuntimeMetadata metadata;
@@ -66,15 +65,15 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
 	ConnectorLogger logger;
 	List requestExecutors;
 	private int requestNumber = 0;
-	List allResultsList;
-	private int m_maxBatch;
 	
 	//Timout variables;
 	long executeStartTime;
 	long receiveTimeoutDuration;
 	private ExecutionInfo executionInfo;
+	private IQuery query;
+    private BaseBatchProducer batchProducer;
 	
-	public JMSExecution(JMSConnection connection, RuntimeMetadata metadata, ExecutionContext exeCtx, 
+	public JMSExecution(IQuery query, JMSConnection connection, RuntimeMetadata metadata, ExecutionContext exeCtx, 
 			ConnectorEnvironment connectorEnv, ConnectorLogger logger) throws ConnectorException {
 		super();
 		this.connection = connection;
@@ -83,7 +82,7 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
 		this.connectorEnv = connectorEnv;
 		this.logger = logger;
 		this.receiveTimeoutDuration = ((JMSConnectorState)connection.getState()).getReceiveTimeout();
-		allResultsList = new ArrayList();
+		this.query = query;
 		try {
 			session = connection.getJMSSession();
 		} catch (JMSException e) {
@@ -92,6 +91,7 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
 	}
 
 	// Start AsynchQueryExecution implementation
+	@Override
 	public void close() throws ConnectorException {
 		try {
 			if(session.getTransacted()) {
@@ -104,6 +104,7 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
 		}
 	}
 
+	@Override
 	public void cancel() throws ConnectorException {
 		try {
             if(session.getTransacted()) {
@@ -115,26 +116,14 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
 		}
 	}
 
-	public long getPollInterval() {
-		long retval;
-		if(timedOut()) {
-			retval = 0;
-		} else {
-			// TODO : make a real implemetation;
-			retval = 100; 
-		}
-		return retval;
-	}
-	
     /**
      * Analyzes the Query and breaks it into multipl requests if needed.  Creates a 
      * JMSRequestExecutor for each request that creates and sends the request if
      * needed.  RequestExecutors are save in a List and accesses in next
      * Batch()
      */
-	public void executeAsynch(IQuery query, int maxBatchSize) throws ConnectorException {
+	public void execute() throws ConnectorException {
 		setExecuteStartTime(Calendar.getInstance().getTimeInMillis());
-		m_maxBatch = maxBatchSize;
 		QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, connection.getQueryPreprocessor(),
 				logger, exeCtx, connectorEnv);
         executionInfo = analyzer.getExecutionInfo();
@@ -149,48 +138,41 @@ public class JMSExecution implements AsynchQueryExecution, XMLExecution {
             incrementRequestNumber();
         }
 	}
-
-    
-	public Batch nextBatch() throws ConnectorException {
-		
-		List unfinishedExecutors = new ArrayList();
-		Iterator executors = requestExecutors.iterator();
-		boolean haveResults = false;
-        while(executors.hasNext()){
-			JMSRequestExecutor executor = (JMSRequestExecutor) executors.next();
-			int responseCount = executor.getDocumentCount();
-			for(int i = 0; i < responseCount; i++){
-				if(executor.hasResponse()) {
-					Response response = executor.getXMLResponse(0);
-	                if(connection.getState() instanceof SOAPConnectorState) {
-	                	SOAPDocBuilder.removeEnvelope((SOAPConnectorState)connection.getState(), response);
-	                }
-					IDocumentCache cache = connection.getConnector().getStatementCache();
-	        		BaseResultsProducer resProducer = new BaseResultsProducer(cache, logger);
-	                List responseResultList = resProducer.getResult(executionInfo, response);
-                    allResultsList = BaseResultsProducer.combineResults(responseResultList, allResultsList);
-                    haveResults = true;
-				} else {
-					unfinishedExecutors.add(executor);
+	
+	@Override
+	public List next() throws ConnectorException, DataNotAvailableException {
+		while (true) {
+			if (this.batchProducer == null) {
+				Iterator executors = requestExecutors.iterator();
+				while(this.batchProducer == null && executors.hasNext()){
+					JMSRequestExecutor executor = (JMSRequestExecutor) executors.next();
+					if(executor.hasResponse()) {
+						executors.remove();
+						Response response = executor.getXMLResponse(0);
+		                if(connection.getState() instanceof SOAPConnectorState) {
+		                	SOAPDocBuilder.removeEnvelope((SOAPConnectorState)connection.getState(), response);
+		                }
+						IDocumentCache cache = connection.getConnector().getStatementCache();
+		        		BaseResultsProducer resProducer = new BaseResultsProducer(cache, logger);
+		                List responseResultList = resProducer.getResult(executionInfo, response);
+		                this.batchProducer = new BaseBatchProducer(responseResultList, executionInfo, exeCtx, connectorEnv);
+					}
 				}
-
+			}
+			
+			if (this.batchProducer != null) {
+				List row = batchProducer.createRow();
+				if (row != null) {
+					return row;
+				}
+				this.batchProducer = null;
+			} else if( timedOut() ) {
+	        	logger.logInfo("Timed out");
+	        	return null;
+			} else {
+				throw new DataNotAvailableException(100);
 			}
 		}
-		requestExecutors = unfinishedExecutors;
-        
-        Batch batch = new BasicBatch();
-		if(haveResults) {
-            batch = BaseBatchProducer.createBatch(allResultsList, 0,
-                    m_maxBatch, executionInfo, exeCtx, connectorEnv);
-            allResultsList.clear();
-			if(requestExecutors.isEmpty()) {
-                batch.setLast();
-            }
-		} else if( timedOut() ) {
-        	logger.logInfo("Timed out");
-			batch.setLast();
-		}
-		return batch;
 	}
 	// End AsynchQueryExecution implementation
 	

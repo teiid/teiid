@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILiteral;
 
 
 public class DerbyTimestampFunctionModifier extends BasicFunctionModifier {
@@ -40,7 +40,7 @@ public class DerbyTimestampFunctionModifier extends BasicFunctionModifier {
     }
 
 /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      * @since 4.3
      */
     public List translate(IFunction function) {

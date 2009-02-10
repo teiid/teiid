@@ -30,8 +30,8 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 import java.util.Iterator;
 
 import com.metamatrix.connector.jdbc.oracle.OracleSQLConversionVisitor;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
 
 public class OracleSpatialConversionVisitor extends OracleSQLConversionVisitor {
 

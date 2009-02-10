@@ -39,22 +39,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.language.IBulkInsert;
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.language.ILanguageObject;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.visitor.util.SQLStringVisitor;
+import com.metamatrix.connector.language.IBulkInsert;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  * This visitor takes an ICommand and does DBMS-specific conversion on it
@@ -87,7 +87,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IInsert)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
         this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
@@ -155,7 +155,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IUpdate)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IUpdate)
      */
     public void visit(IUpdate obj) {
         this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
@@ -163,7 +163,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IQuery)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IQuery)
      */
     public void visit(IQuery obj) {
         this.execType = TranslatedCommand.EXEC_TYPE_QUERY;
@@ -171,7 +171,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IProcedure)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IProcedure)
      */
     public void visit(IProcedure obj) {
         this.execType = TranslatedCommand.EXEC_TYPE_EXECUTE;
@@ -184,7 +184,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IDelete)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IDelete)
      */
     public void visit(IDelete obj) {
         this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
@@ -192,7 +192,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IFunction)
      */
     public void visit(IFunction obj) {
         if(this.modifiers != null) {
@@ -219,7 +219,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#visit(com.metamatrix.data.language.ILiteral)
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.ILiteral)
      */
     public void visit(ILiteral obj) {
         if (this.stmtType == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT && obj.isBindValue()) {

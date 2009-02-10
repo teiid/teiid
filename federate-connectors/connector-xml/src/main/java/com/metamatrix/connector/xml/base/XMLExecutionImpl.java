@@ -30,22 +30,21 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
-public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
+public class XMLExecutionImpl implements ResultSetExecution, XMLExecution {
 
     private XMLConnectionImpl m_conn;
 
@@ -57,19 +56,17 @@ public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
 
     private RuntimeMetadata m_metadata;
 
-    private int m_maxBatch;
-    
-    private int resultSize = 0;
-
     private ExecutionInfo m_info;
 
     private List m_resultList;
 
-	private int returnIndex;
+	private IQuery query;
+    private BaseBatchProducer batchProducer;
 
-    public XMLExecutionImpl(XMLConnectionImpl conn, RuntimeMetadata metadata,
+    public XMLExecutionImpl(IQuery query, XMLConnectionImpl conn, RuntimeMetadata metadata,
             ExecutionContext exeContext, ConnectorEnvironment connectorEnv) {
-        setConnection(conn);
+    	this.query = query;
+    	setConnection(conn);
         m_metadata = metadata;
         m_logger = m_conn.getState().getLogger();
         m_resultList = null;
@@ -86,114 +83,52 @@ public class XMLExecutionImpl implements SynchQueryExecution, XMLExecution {
     /*
      * Beginning of SynchQueryExecution implementation.
      */
-
-    public void execute(IQuery query, int maxBatchSize)
+    public void execute()
             throws ConnectorException {
-        try {
-        	XMLConnectorState state = m_conn.getState();
-        	m_maxBatch = maxBatchSize;
-            
-            QueryAnalyzer analyzer = new QueryAnalyzer(query, m_metadata, state.getPreprocessor(), m_logger, exeContext, connectorEnv);
-            m_info = analyzer.getExecutionInfo();
-            List requestPerms = analyzer.getRequestPerms();
-            
-            //Initialize the result and execute each request. 
-            m_resultList = new ArrayList();
-            int invocationCount = 0;
-            for (Iterator iter = requestPerms.iterator(); iter.hasNext(); ) {
-                List criteriaListForOnePerm = Arrays.asList((CriteriaDesc[])iter.next());
-                m_info.setParameters(criteriaListForOnePerm);
-                DocumentProducer requestExecutor = (DocumentProducer) state.makeExecutor(this);
-                Response response = requestExecutor.getXMLResponse(invocationCount);
-                IDocumentCache cache = m_conn.getConnector().getStatementCache();
-        		BaseResultsProducer resProducer = new BaseResultsProducer(cache, getLogger());
-                List resultList = resProducer.getResult(m_info, response);
-                // Who's idea was it to arrange the data by field and then by row, instead
-                // of the other way round?
-                m_resultList = BaseResultsProducer.combineResults(resultList, m_resultList);
-                ++invocationCount;
-            }
-            if(!m_resultList.isEmpty()) {
-                List columnResult = (List)m_resultList.get(0);
-                if(!columnResult.isEmpty()) {
-                    resultSize = columnResult.size();
-                }
-            }
+    	XMLConnectorState state = m_conn.getState();
+        
+        QueryAnalyzer analyzer = new QueryAnalyzer(query, m_metadata, state.getPreprocessor(), m_logger, exeContext, connectorEnv);
+        m_info = analyzer.getExecutionInfo();
+        List requestPerms = analyzer.getRequestPerms();
+        
+        //Initialize the result and execute each request. 
+        m_resultList = new ArrayList();
+        int invocationCount = 0;
+        for (Iterator iter = requestPerms.iterator(); iter.hasNext(); ) {
+            List criteriaListForOnePerm = Arrays.asList((CriteriaDesc[])iter.next());
+            m_info.setParameters(criteriaListForOnePerm);
+            DocumentProducer requestExecutor = (DocumentProducer) state.makeExecutor(this);
+            Response response = requestExecutor.getXMLResponse(invocationCount);
+            IDocumentCache cache = m_conn.getConnector().getStatementCache();
+    		BaseResultsProducer resProducer = new BaseResultsProducer(cache, getLogger());
+            List resultList = resProducer.getResult(m_info, response);
+            // Who's idea was it to arrange the data by field and then by row, instead
+            // of the other way round?
+            m_resultList = BaseResultsProducer.combineResults(resultList, m_resultList);
+            ++invocationCount;
         }
-        catch (RuntimeException e) {
-        	throw new ConnectorException(e);
-        }
+        this.batchProducer = new BaseBatchProducer(m_resultList, this.m_info, this.exeContext, this.connectorEnv);
     }
-
-    public Batch nextBatch() throws ConnectorException {
-        try {
-            Batch batch = new BasicBatch();
-            if (m_resultList == null) {
-                batch.setLast();
-                return batch;
-            }
-            exeContext.keepExecutionAlive(true);
-            BaseBatchProducer batchProducer = new BaseBatchProducer();
-            batch = batchProducer.createBatch(m_resultList, this.returnIndex, this.m_maxBatch,
-                    this.m_info, this.exeContext, this.connectorEnv);
-            batchProducer.getCurrentReturnIndex();
-            returnIndex = batchProducer.getCurrentReturnIndex();
-            testBatchForLast(returnIndex, resultSize, batch);
-            return batch;
-        }
-        catch (RuntimeException e) {
-            throw new ConnectorException(e);
-        }
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+        exeContext.keepExecutionAlive(true);
+        return batchProducer.createRow();
     }
 
 	public void close() throws ConnectorException {
-        try {
-          m_conn.getConnector().deleteCacheItems(exeContext.getRequestIdentifier(),
-            		exeContext.getPartIdentifier(),exeContext.getExecutionCountIdentifier());
-          m_logger.logTrace("XMLExecution closed for ConnectionIdentifier " + 
-            		exeContext.getConnectionIdentifier() + " and PartIdentifier " +
-            		exeContext.getPartIdentifier());
-        }
-        catch (RuntimeException e) {
-        	m_logger.logTrace("Exception while closing ExecutiontImpl: " + e.getMessage());
-            throw new ConnectorException(e);
-        }
+	  m_conn.getConnector().deleteCacheItems(exeContext.getRequestIdentifier(),
+	    		exeContext.getPartIdentifier(),exeContext.getExecutionCountIdentifier());
+	  m_logger.logTrace("XMLExecution closed for ConnectionIdentifier " + 
+	    		exeContext.getConnectionIdentifier() + " and PartIdentifier " +
+	    		exeContext.getPartIdentifier());
     }
 
     public void cancel() throws ConnectorException {
-        try {
-            //no impl
-        }
-        catch (RuntimeException e) {
-            throw new ConnectorException(e);
-        }
     }
     
 	/*
 	 * End of SynchQueryExecution implementation.
-	 */
-    
-
-	/*
-	 * Beginning of Batch handling functions.
-	 */
-    
-    /**
-     * Flags the batch as complete if the current size of the result is as large
-     * or larger than the expected size.
-     * @param currentSize
-     * @param totalSize
-     * @param testBatch
-     */
-    private void testBatchForLast(int currentSize, int totalSize,
-            Batch testBatch) {
-        if (currentSize >= totalSize) {
-            testBatch.setLast();
-        }
-    }
-    
-	/*
-	 * End of Batch handling functions.
 	 */
     
 	/*

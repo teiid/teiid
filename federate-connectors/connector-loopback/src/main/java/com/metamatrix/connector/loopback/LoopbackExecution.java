@@ -32,34 +32,25 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import com.metamatrix.data.api.AsynchQueryCommandExecution;
-import com.metamatrix.data.api.AsynchQueryExecution;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.api.SynchQueryCommandExecution;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.api.UpdateExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IBulkInsert;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Represents the execution of a command.
  */
-public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQueryCommandExecution, UpdateExecution, ProcedureExecution, SynchQueryExecution, AsynchQueryExecution {
+public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
     private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
 
@@ -67,14 +58,12 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
     private ConnectorEnvironment env;
 //    private RuntimeMetadata metadata;
     private ICommand command;
-    private int maxBatchSize;
-
     
     // Configuration
     private int rowsNeeded = 1;
     private int waitTime = 0;
     private boolean error = false;
-    private int pollInterval = 1000;
+    private int pollInterval = -1;
         
     // Execution state
     private Random randomNumber = new Random(System.currentTimeMillis());
@@ -82,27 +71,17 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
     private boolean waited = false;
     private int rowsReturned = 0;
     private boolean asynch = false;
-
+    
     /**
      * 
      */
-    public LoopbackExecution(ConnectorEnvironment env, RuntimeMetadata metadata) {
+    public LoopbackExecution(ICommand command, ConnectorEnvironment env, RuntimeMetadata metadata) {
         this.env = env;
-//        this.metadata = metadata;
+        this.command = command;
     }
-
-    /** 
-     * @see com.metamatrix.data.api.AsynchQueryExecution#getPollInterval()
-     * @since 4.3
-     */
-    public long getPollInterval() {
-        return this.pollInterval;
-    }
-
-    /* 
-     * @see com.metamatrix.data.SynchExecution#nextBatch(int)
-     */
-    public Batch nextBatch() throws ConnectorException {
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
         // Wait on first batch if necessary
         if(waitTime > 0 && !waited) {
             // Wait a random amount of time up to waitTime milliseconds
@@ -112,9 +91,9 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
                 // If we're asynch and the wait time was longer than the poll interval,
                 // then just say we don't have results instead
                 if(randomTimeToWait > pollInterval) {
-                    //System.out.println(System.currentTimeMillis() + ": nextBatch(): no data yet, returning empty batch");                
-                    return new BasicBatch(Collections.EMPTY_LIST);
-                } // else return results as normal
+                	waited = true;
+                    throw new DataNotAvailableException(randomTimeToWait);
+                } 
             } else {    
                 try {
                     Thread.sleep(randomTimeToWait);
@@ -124,29 +103,32 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
             }
         }
                 
-        BasicBatch batch = new BasicBatch();
-        while(rowsReturned < rowsNeeded && batch.getRowCount() < maxBatchSize) {
-            batch.addRow(row);
+        if(rowsReturned < rowsNeeded) {
             rowsReturned++;            
+            return row;
         }
         
-        if(rowsReturned >= rowsNeeded) {
-            batch.setLast();
-        }
-        
-        //System.out.println(System.currentTimeMillis() + ": nextBatch(): returning batch with " + batch.getRowCount() + " rows");                
-        return batch;
+        return null;
     }
 
     /* 
      * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
      */
-    public void execute(IQueryCommand query, int maxBatchSize) throws ConnectorException {
-        this.command = query;
-        this.maxBatchSize = maxBatchSize;
-
-        // Log our command
-        env.getLogger().logTrace("Loopback executing command: " + query); //$NON-NLS-1$
+    @Override
+    public void execute() throws ConnectorException {
+        // Get poll interval
+        String pollIntervalString = env.getProperties().getProperty(LoopbackProperties.POLL_INTERVAL);              //$NON-NLS-1$
+        if (pollIntervalString != null) {
+        	asynch = true;
+	        try {
+	            pollInterval = Integer.parseInt(pollIntervalString);
+	        } catch (Exception e) {
+	            throw new ConnectorException("Invalid " + LoopbackProperties.POLL_INTERVAL + "=" + pollIntervalString); //$NON-NLS-1$ //$NON-NLS-2$
+	        }       
+        }
+        
+    	// Log our command
+        env.getLogger().logTrace("Loopback executing command: " + command); //$NON-NLS-1$
 
         // Get error mode
         String errorString = env.getProperties().getProperty(LoopbackProperties.ERROR, "false"); //$NON-NLS-1$
@@ -170,70 +152,29 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
         } catch (Exception e) {
             throw new ConnectorException("Invalid " + LoopbackProperties.ROW_COUNT + "=" + rowCountString); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        if (query.getLimit() != null && query.getLimit().getRowLimit() > 0 && query.getLimit().getRowLimit() < rowsNeeded) {
-            rowsNeeded = query.getLimit().getRowLimit();
+        
+        if (command instanceof IQueryCommand) {
+            IQueryCommand queryCommand = (IQueryCommand)command;
+            if (queryCommand.getLimit() != null) {
+            	this.rowsNeeded = queryCommand.getLimit().getRowLimit();
+            }
         }
         
         // Prepare for execution
         List types = determineOutputTypes(this.command);
         this.row = createDummyRow(types);        
     }
-
-    /* 
-     * @see com.metamatrix.data.UpdateExecution#execute(com.metamatrix.data.language.ICommand)
-     */
-    public int execute(ICommand command) throws ConnectorException {
-        // Log our command
-        env.getLogger().logTrace("Loopback executing command: " + command); //$NON-NLS-1$
-                
-        return 0;  
-    }
-
-    /**
-     * @see com.metamatrix.data.api.UpdateExecution#execute(com.metamatrix.data.language.IBulkInsert)
-     */
-    public int execute(IBulkInsert command) throws ConnectorException {
-        env.getLogger().logTrace("Loopback executing command: " + command); //$NON-NLS-1$
-        return 0;
-    }
     
-    /* 
-     * @see com.metamatrix.data.ProcedureExecution#execute(com.metamatrix.data.language.IExecute)
-     */
-    public void execute(IProcedure procedure, int maxBatchSize) throws ConnectorException {
-        this.command = procedure;
-        this.maxBatchSize = maxBatchSize;
-
-        // Log our command
-        env.getLogger().logTrace("Loopback executing command: " + procedure); //$NON-NLS-1$
-        
-        // Prepare for execution
-        List types = determineOutputTypes(this.command);
-        this.row = createDummyRow(types);        
-    }
-
-    /** 
-     * @see com.metamatrix.data.api.AsynchQueryExecution#executeAsynch(com.metamatrix.data.language.IQuery, int)
-     * @since 4.3
-     */
-    public void executeAsynch(IQueryCommand query,
-                              int maxBatchSize) throws ConnectorException {
-
-        this.asynch = true;
-        execute(query, maxBatchSize);
-        
-        // Get poll interval
-        String pollIntervalString = env.getProperties().getProperty(LoopbackProperties.POLL_INTERVAL, "1000");              //$NON-NLS-1$
-        try {
-            pollInterval = Integer.parseInt(pollIntervalString);
-        } catch (Exception e) {
-            throw new ConnectorException("Invalid " + LoopbackProperties.POLL_INTERVAL + "=" + pollIntervalString); //$NON-NLS-1$ //$NON-NLS-2$
-        }       
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException,
+    		ConnectorException {
+    	return new int [] {0};
     }
 
     /* 
      * @see com.metamatrix.data.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
      */
+    @Override
     public Object getOutputValue(IParameter parameter) throws ConnectorException {
         return null;
     }
@@ -241,6 +182,7 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
     /* 
      * @see com.metamatrix.data.Execution#close()
      */
+    @Override
     public void close() throws ConnectorException {
         // nothing to do
     }
@@ -248,13 +190,12 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
     /* 
      * @see com.metamatrix.data.Execution#cancel()
      */
+    @Override
     public void cancel() throws ConnectorException {
 
     }
 
     private List determineOutputTypes(ICommand command) throws ConnectorException {            
-        
-
         // Get select columns and lookup the types in metadata
         if(command instanceof IQueryCommand) {
             IQueryCommand query = (IQueryCommand) command;
@@ -355,15 +296,5 @@ public class LoopbackExecution implements SynchQueryCommandExecution, AsynchQuer
             return getVariableString(10);
         }
     }
-
-	public void execute(IQuery query, int maxBatchSize)
-			throws ConnectorException {
-		this.execute((IQueryCommand)query, maxBatchSize);
-	}
-
-	public void executeAsynch(IQuery query, int maxBatchSize)
-			throws ConnectorException {
-		this.executeAsynch((IQueryCommand)query, maxBatchSize);
-	}
 
 }

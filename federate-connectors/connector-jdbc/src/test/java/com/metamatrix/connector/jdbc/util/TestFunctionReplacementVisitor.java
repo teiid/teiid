@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.connector.jdbc.MetadataFactory;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.language.ICommand;
 
 /**
  */

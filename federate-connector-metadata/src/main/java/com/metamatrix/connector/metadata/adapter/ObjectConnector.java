@@ -24,47 +24,38 @@
 
 package com.metamatrix.connector.metadata.adapter;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Adapter to expose the object processing logic via the standard connector API.
  */
-public abstract class ObjectConnector implements Connector, GlobalCapabilitiesProvider {
+public abstract class ObjectConnector implements Connector {
     private ConnectorEnvironment environment;
     
     public ConnectorCapabilities getCapabilities() {
     	return ObjectConnectorCapabilities.getInstance();
     }
     
-    /* 
-     * @see com.metamatrix.data.Connector#initialize(com.metamatrix.data.ConnectorEnvironment)
-     */
-    public void initialize(final ConnectorEnvironment environment) throws ConnectorException {
+    @Override
+    public void start(final ConnectorEnvironment environment) throws ConnectorException {
         this.environment = environment;
     }
 
-    /* 
-     * @see com.metamatrix.data.Connector#stop()
-     */
+    @Override
     public void stop() {
 
     }
 
     /* 
-     * @see com.metamatrix.data.Connector#start()
-     */
-    public void start() {
-
-    }
-        
-
-    /* 
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(final SecurityContext context) throws ConnectorException {
+    public Connection getConnection(final ExecutionContext context) throws ConnectorException {
         return new ObjectConnection(environment, context, this);
     }
     
@@ -81,18 +72,6 @@ public abstract class ObjectConnector implements Connector, GlobalCapabilitiesPr
      * @throws ConnectorException
      * @since 4.3
      */
-    protected abstract IObjectSource getMetadataObjectSource(final SecurityContext context) throws ConnectorException ;
-    
-    /**
-     * When a SystemAdmin query is being executed, this method will be called to obtain the object source.
-     * It is delayed until it is known if its a SystemAdmin query or a Metadata query.     
-     * @param environment
-     * @param context
-     * @return
-     * @throws ConnectorException
-     * @since 4.3
-     */
-    
-    protected abstract ISysAdminSource getSysAdminObjectSource(final SecurityContext context) throws ConnectorException;
+    protected abstract IObjectSource getMetadataObjectSource(final ExecutionContext context) throws ConnectorException ;
     
 }

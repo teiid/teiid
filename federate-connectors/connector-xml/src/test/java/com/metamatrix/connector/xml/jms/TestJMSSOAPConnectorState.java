@@ -33,10 +33,10 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 import com.metamatrix.connector.xml.soap.SOAPConnectorStateImpl;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class TestJMSSOAPConnectorState extends TestCase {
 

@@ -31,11 +31,12 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 import java.util.Properties;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.language.ILanguageFactory;
+import com.metamatrix.common.queue.WorkerPool;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 /**
@@ -48,28 +49,34 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     private ConnectorLogger logger;
     private Properties properties;
     private ApplicationEnvironment env;
+    private WorkerPool workerPool;
     
+    
+    public ConnectorEnvironmentImpl(Properties connectorProperties, ConnectorLogger logger, ApplicationEnvironment env) {
+    	this(connectorProperties, logger, env, null);
+    }
     /**
      * ctor  
      * @param connectorProperties - Properties required for this Connector
      * @param logger - Logger to be used by the Connector
      * @param env - Connector Environment.
      */
-    public ConnectorEnvironmentImpl(Properties connectorProperties, ConnectorLogger logger, ApplicationEnvironment env) {
+    public ConnectorEnvironmentImpl(Properties connectorProperties, ConnectorLogger logger, ApplicationEnvironment env, WorkerPool workerPool) {
         this.properties = connectorProperties;
         this.logger = logger;
         this.env = env;
+        this.workerPool = workerPool;
     }
     
     /**  
-     * @see com.metamatrix.data.api.ConnectorEnvironment#getProperties()
+     * @see com.metamatrix.connector.api.ConnectorEnvironment#getProperties()
      */
     public Properties getProperties() {
         return this.properties;
     }
 
     /**  
-     * @see com.metamatrix.data.api.ConnectorEnvironment#getConnectorName() 
+     * @see com.metamatrix.connector.api.ConnectorEnvironment#getConnectorName() 
      */
     public String getConnectorName() {
         return this.properties.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME);
@@ -104,9 +111,19 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     }
 
     /**  
-     * @see com.metamatrix.data.api.ConnectorEnvironment#getTypeFacility()
+     * @see com.metamatrix.connector.api.ConnectorEnvironment#getTypeFacility()
      */
     public TypeFacility getTypeFacility() {
         return TYPE_FACILITY;
-    }               
+    }
+
+	@Override
+	public void execute(Runnable arg0) {
+		if (this.workerPool != null) {
+			this.workerPool.execute(arg0);
+		} else {
+			arg0.run();
+		}
+		
+	}               
 }

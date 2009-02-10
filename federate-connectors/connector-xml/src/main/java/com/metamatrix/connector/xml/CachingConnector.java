@@ -26,9 +26,9 @@
 
 package com.metamatrix.connector.xml;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.base.StatefulConnector;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
-import com.metamatrix.data.exception.ConnectorException;
 
 public interface CachingConnector extends StatefulConnector {
 

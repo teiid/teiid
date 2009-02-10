@@ -36,34 +36,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICompoundCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IFrom;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IInlineView;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IOrderBy;
-import com.metamatrix.data.language.IOrderByItem;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.language.ISetQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.visitor.util.CollectorVisitor;
-import com.metamatrix.data.visitor.util.SQLStringVisitor;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompoundCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IInlineView;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISetQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.visitor.util.CollectorVisitor;
+import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  */
@@ -92,7 +92,7 @@ public class OracleSQLTranslator extends BasicSQLTranslator {
     }
 
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator#modifyCommand(com.metamatrix.data.language.ICommand, com.metamatrix.data.api.ExecutionContext)
+     * @see com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator#modifyCommand(com.metamatrix.connector.language.ICommand, com.metamatrix.connector.api.ExecutionContext)
      * @since 5.0
      */
     public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {

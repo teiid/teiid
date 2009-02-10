@@ -31,13 +31,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.visitor.util.CollectorVisitor;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
 /**
  * This is a utility class used to translate an ICommand using a SQLConversionVisitor.

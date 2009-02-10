@@ -28,7 +28,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public class PluggableInputStreamFilterImpl extends FilterInputStream {
 	

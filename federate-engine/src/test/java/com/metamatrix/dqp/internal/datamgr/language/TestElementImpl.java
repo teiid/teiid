@@ -27,9 +27,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.dqp.internal.datamgr.metadata.TestMetadataFactory;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataObject;

@@ -28,8 +28,8 @@ package com.metamatrix.connector.xml;
 
 import java.io.Serializable;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 public interface TrustedPayloadHandler {
 	

@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.net.URL;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.metadata.runtime.VDBMetadataFactory;

@@ -25,16 +25,11 @@
 package com.metamatrix.connector.metadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.connector.sysadmin.extension.ISysAdminConnectionFactory;
-import com.metamatrix.connector.sysadmin.extension.ISysAdminSource;
-import com.metamatrix.connector.sysadmin.util.SysAdminUtil;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
@@ -46,24 +41,10 @@ import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 @ConnectionPooling(enabled=false)
 public class IndexConnector extends ObjectConnector {
     
-    private ISysAdminConnectionFactory adminFactory = null;
-    
-    public void initialize(final ConnectorEnvironment environment) throws ConnectorException {
-        super.initialize(environment);
-        
-        // Only if running in a MetaMatrix Server VM is the ServerAdmin feature enabled.
-        String isServerVM = VMNaming.getVMName();
-        if (isServerVM != null && isServerVM.length() > 0) {
-            adminFactory = SysAdminUtil.createFactory(environment, this.getClass().getClassLoader());
-        }
-    }
-    
-    
-
     /** 
-     * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getObjectSource(com.metamatrix.data.api.ConnectorEnvironment, com.metamatrix.data.api.SecurityContext)
+     * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getObjectSource(com.metamatrix.connector.api.ConnectorEnvironment, com.metamatrix.connector.api.ExecutionContext)
      */
-    protected IObjectSource getMetadataObjectSource(final SecurityContext context) throws ConnectorException {
+    protected IObjectSource getMetadataObjectSource(final ExecutionContext context) throws ConnectorException {
         ConnectorEnvironmentImpl internalEnvironment = (ConnectorEnvironmentImpl) this.getEnvironment();
         // lookup indesService
         IndexSelectorSource metadataService = (IndexSelectorSource) internalEnvironment.findResource(DQPServiceNames.METADATA_SERVICE);
@@ -75,10 +56,4 @@ public class IndexConnector extends ObjectConnector {
 		}
     }
     
-    protected ISysAdminSource getSysAdminObjectSource(final SecurityContext context) throws ConnectorException {  
-        if (adminFactory == null) {
-            throw new ConnectorException(MetadataConnectorPlugin.Util.getString("IndexConnector.SysAdmin_feature_not_available")); //$NON-NLS-1$            
-        }
-        return adminFactory.getObjectSource( context);
-    }
 }

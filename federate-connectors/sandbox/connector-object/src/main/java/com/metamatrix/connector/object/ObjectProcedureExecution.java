@@ -24,22 +24,20 @@
 
 package com.metamatrix.connector.object;
 
-import java.util.Collections;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.IObjectSource;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.connector.object.util.ObjectExecutionHelper;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -55,18 +53,19 @@ public class ObjectProcedureExecution implements ProcedureExecution {
     private List results = null;
     
     private ISourceTranslator translator=null;
-    private int maxBatchSize;
     
     private IObjectCommand objectProcedure;
     
     // Derived from properties
     protected boolean trimString;
-
+    private IProcedure procedure;
+    private int index;
     
-    public ObjectProcedureExecution(IObjectSource sourceapi, 
+    public ObjectProcedureExecution(IProcedure procedure, IObjectSource sourceapi, 
                                     ISourceTranslator translator, 
                                     RuntimeMetadata metadata,  
                                     ConnectorEnvironment environment) {    
+    	this.procedure = procedure;
         this.metadata = metadata;
         this.logger = environment.getLogger();
         this.api = sourceapi;
@@ -83,32 +82,30 @@ public class ObjectProcedureExecution implements ProcedureExecution {
     
     
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#execute(com.metamatrix.data.language.IProcedure, int)
+     * @see com.metamatrix.connector.api.ProcedureExecution#execute(com.metamatrix.connector.language.IProcedure, int)
      * @since 4.2
      */
-    public void execute(IProcedure procedure,
-                        int maxBatchSize) throws ConnectorException {
-        this.maxBatchSize = maxBatchSize;
+    public void execute() throws ConnectorException {
         objectProcedure = translator.createObjectCommand(metadata, procedure);
         
         results = api.getObjects(objectProcedure);
 
-    }  
-    
-   
-    public Batch nextBatch() throws ConnectorException {
-        if (results != null && results.size() > 0) {
-            return ObjectExecutionHelper.createBatch(results, objectProcedure, maxBatchSize, trimString, this.translator, null);
+        if (results != null) {
+        	results = ObjectExecutionHelper.transferResults(results, objectProcedure, trimString, this.translator, null);
         }
-        Batch result = new BasicBatch(Collections.EMPTY_LIST);
-        result.setLast();
-        
-        return result;
+    }  
+
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (results == null || index >= results.size()) {
+    		return null;
+    	}
+        return (List)results.get(index++);
     }    
     
    
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
+     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
      * @since 4.2
      */
     public Object getOutputValue(IParameter parameter) throws ConnectorException {

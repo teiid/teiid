@@ -30,10 +30,10 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 import com.metamatrix.connector.xml.base.XMLExecutionImpl;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -77,10 +77,9 @@ public class TestFileConnectorState extends TestCase {
     	state.setLogger(new SysLogger(false));
     	try {
     		state.setState(EnvironmentUtility.createEnvironment(props));
-        	XMLExecutionImpl exen = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getStateCollegeVDBLocation());
-        	final int maxBatch = 50;
-			exen.execute(ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(), 
-					"select Company_id from Company"), maxBatch);
+        	XMLExecutionImpl exen = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(), 
+			"select Company_id from Company"), ProxyObjectFactory.getStateCollegeVDBLocation());
+			exen.execute();
 			DocumentProducer exec = (DocumentProducer) state.makeExecutor(exen);
 	    	assertNotNull(exec);
 		} catch (ConnectorException e1) {

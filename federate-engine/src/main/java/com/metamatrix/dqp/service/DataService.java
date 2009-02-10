@@ -33,7 +33,7 @@ import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -120,7 +120,7 @@ public interface DataService extends ApplicationService {
     
     /**
      * Get the State of the connector binding name 
-     * @return {@link com.metamatrix.data.monitor.AliveStatus}
+     * @return {@link com.metamatrix.connector.monitor.AliveStatus}
      * @throws MetaMatrixComponentException
      * @since 4.3
      */

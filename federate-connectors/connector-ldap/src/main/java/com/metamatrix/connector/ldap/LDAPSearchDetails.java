@@ -32,7 +32,7 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 /**
  * Utility class used to maintain the details of a particular LDAP search,

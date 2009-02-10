@@ -128,7 +128,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
 
     /**
      * Derby supports only SearchedCaseExpression, not CaseExpression. 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCaseExpressions()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsCaseExpressions()
      * @since 5.0
      */
     public boolean supportsCaseExpressions() {
@@ -137,7 +137,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     
     /**
      * Derby supports only left and right outer joins. 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsFullOuterJoins()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFullOuterJoins()
      * @since 5.0
      */
     public boolean supportsFullOuterJoins() {
@@ -146,7 +146,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     
     /**
      * Inline views (subqueries in the FROM clause) are supported. 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsInlineViews()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsInlineViews()
      * @since 4.3
      */
     public boolean supportsInlineViews() {
@@ -155,7 +155,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     
     /**
      * UNION is supported, but not UNIONs with a final ORDER BY. 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsUnionOrderBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
      * @since 5.0
      */
     public boolean supportsUnionOrderBy() {
@@ -168,7 +168,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsExcept()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -176,7 +176,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsIntersect()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

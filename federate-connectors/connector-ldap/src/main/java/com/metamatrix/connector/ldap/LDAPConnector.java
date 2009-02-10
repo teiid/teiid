@@ -25,38 +25,46 @@ package com.metamatrix.connector.ldap;
 
 import java.util.Properties;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /** 
- * LDAPConnector.  This is responsible for initializing a connection pool, 
+ * LDAPConnector.  This is responsible for initializing 
  * a connection factory, and obtaining connections to LDAP.
  */
 public class LDAPConnector implements Connector {
 	private ConnectorEnvironment env;
 	private ConnectorLogger logger;
 	private Properties props;
+	private LDAPConnectorCapabilities myCaps;
+	private int ldapMaxCriteria;
+
+
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return myCaps;
+	}
 	
     /*
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-	public Connection getConnection(SecurityContext ctx) throws ConnectorException {
+	public Connection getConnection(ExecutionContext ctx) throws ConnectorException {
         final String msg = LDAPPlugin.Util.getString("LDAPSourceConnectionFactory.creatingConnection"); //$NON-NLS-1$
 		logger.logDetail(msg); 
 		return new LDAPConnection(ctx, this.props, this.logger);
 	}
 	
     /** 
-     * Initialize the connection pool and SourceConnectionFactory, providing appropriate properties
-	 * to both.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.data.api.Connector#initialize(com.metamatrix.data.api.ConnectorEnvironment)
+	 * @see com.metamatrix.connector.api.Connector#initialize(com.metamatrix.connector.api.ConnectorEnvironment)
 	 */
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+	@Override
+	public void start(ConnectorEnvironment env) throws ConnectorException {
 		this.env = env;
 		this.logger = this.env.getLogger();
 		if(logger == null) {
@@ -65,20 +73,30 @@ public class LDAPConnector implements Connector {
 			throw e; 
 		}
 		this.props = env.getProperties();
+		
+		// Get properties for initial connection.
+		// LDAP Max In Criteria
+		String ldapMaxCriteriaStr = props.getProperty(LDAPConnectorPropertyNames.LDAP_MAX_CRITERIA);
+		if(ldapMaxCriteriaStr!=null) {
+			try {
+				ldapMaxCriteria = Integer.parseInt(ldapMaxCriteriaStr);
+			} catch (NumberFormatException ex) {
+	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaParseError"); //$NON-NLS-1$
+	            throw new ConnectorException(msg);
+			}
+		} else {
+            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaPropNotFound"); //$NON-NLS-1$
+            throw new ConnectorException(msg);
+		}
+		
+		// Create and configure capabilities class.
+		myCaps = new LDAPConnectorCapabilities();
+		myCaps.setInCriteriaSize(ldapMaxCriteria);
 	}
 
 	/** 
-	 * Do nothing. We do not attempt to connect to LDAP using a "test" connection,
-	 * but this functionality could be added here, if needed. The test connection information
-	 * must be added as a connector binding property.
-	 * (non-Javadoc)
-	 * @see com.metamatrix.data.api.Connector#start()
 	 */
-	public void start() throws ConnectorException {
-	}
-
-	/** 
-	 */
+	@Override
 	public void stop() {
 	}
 	

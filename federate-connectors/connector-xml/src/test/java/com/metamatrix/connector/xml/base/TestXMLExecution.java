@@ -24,13 +24,12 @@
 
 package com.metamatrix.connector.xml.base;
 
+import java.util.List;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.xml.XMLConnection;
-import com.metamatrix.connector.xml.XMLExecution;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
 
 /**
  * created by JChoate on Jun 16, 2005
@@ -57,50 +56,14 @@ public class TestXMLExecution extends TestCase {
         checkVdbPath();
     }
     
-    public void testInit() {        
-        
-        XMLExecution execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        assertNotNull("XMLExecutionImpl is null", execution);
-    }
-
-    public void testExecute() {
-        
-        XMLExecutionImpl execution = ProxyObjectFactory.getXMLExecution(m_vdbPath, "oh", "no");
+    public void testNext() {
         String queryString = "select Company_id from Company where Company_id is not null order by Company_id";
         IQuery query = ProxyObjectFactory.getDefaultIQuery(m_vdbPath, queryString);
-        final int maxBatch = 1000;
-        try {
-            execution.execute(query, maxBatch);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-    
-    }
-
-    public void testEmptyNextBatch() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        try {
-            Batch batch = execution.nextBatch();
-            assertNotNull("The batch is null", batch);
-            assertEquals(0, batch.getRowCount());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
-    }
-    
-    public void testNextBatch() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
+        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(query, m_vdbPath);
         assertNull(execution.getInfo());
-        String queryString = "select Company_id from Company where Company_id is not null order by Company_id";
-        IQuery query = ProxyObjectFactory.getDefaultIQuery(m_vdbPath, queryString);
-        final int maxBatch = 1000;
         try {
-            execution.execute(query, maxBatch);
-            Batch batch = execution.nextBatch();
-            assertNotNull("Batch is null", batch);
-            assertTrue(batch.getRowCount() > 0);
+            execution.execute();
+            assertNotNull(execution.next());
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             fail(ce.getMessage());
@@ -108,16 +71,14 @@ public class TestXMLExecution extends TestCase {
     }
     
     public void testNextBatchExceedSize() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        assertNull(execution.getInfo());
         String queryString = "select Name from Employee where Name in ('george')";
         IQuery query = ProxyObjectFactory.getDefaultIQuery(m_vdbPath, queryString);
-        final int maxBatch = 1;
+        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(query, m_vdbPath);
+        assertNull(execution.getInfo());
         try {
-            execution.execute(query, maxBatch);
-            Batch batch = execution.nextBatch();
-            assertNotNull("Batch is null", batch);
-            assertTrue(batch.getRowCount() > 0);
+            execution.execute();
+            List result = execution.next();
+            assertNotNull("Batch is null", result);
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             fail(ce.getMessage());
@@ -125,63 +86,27 @@ public class TestXMLExecution extends TestCase {
     }   
 
     public void testNextBatchMultiCriteria() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        assertNull(execution.getInfo());
         String queryString = "select state, zip From Conference where Company_id in ('Widgets Inc.') and Department_id in ('QA')";
         IQuery query = ProxyObjectFactory.getDefaultIQuery(m_vdbPath, queryString);
-        final int maxBatch = 1;
+    	XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(query, m_vdbPath);
+        assertNull(execution.getInfo());
         try {
-            execution.execute(query, maxBatch);
-            Batch batch = execution.nextBatch();
-            assertNotNull("Batch is null", batch);
-            assertTrue("The query results are the wrong size", batch.getRowCount() > 0);
+            execution.execute();
+            List result = execution.next();
+            assertNotNull("Batch is null", result);
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             fail(ce.getMessage());
         }
     }     
     
-    public void testClose() {
-        XMLExecution execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        try {
-            execution.close();          
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-    }
-
-    public void testCancel() {
-        XMLExecution execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-         try {
-            execution.cancel();            
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-    }
-
-    public void testGetConnection() {
-        XMLExecution execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        XMLConnection conn = execution.getConnection();
-        assertNotNull("XMLConnectionImpl is null", conn);
-    }
-
-    public void testSetConnection() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        XMLConnectionImpl conn = ProxyObjectFactory.getDefaultXMLConnection();
-        execution.setConnection(conn);
-        assertEquals(conn, execution.getConnection());
-    }
-
     public void testGetInfo() {
-        XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(m_vdbPath);
-        assertNull(execution.getInfo());
         String queryString = "select Company_id from Company where Company_id is not null order by Company_id";
         IQuery query = ProxyObjectFactory.getDefaultIQuery(m_vdbPath, queryString);
-        final int maxBatch = 1000;        
+    	XMLExecutionImpl execution = ProxyObjectFactory.getDefaultXMLExecution(query, m_vdbPath);
+        assertNull(execution.getInfo());
         try {
-            execution.execute(query, maxBatch);
+            execution.execute();
         } catch (ConnectorException ce) {
             ce.printStackTrace();
             fail(ce.getMessage());

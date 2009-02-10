@@ -31,8 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.dqp.message.ParameterInfo;

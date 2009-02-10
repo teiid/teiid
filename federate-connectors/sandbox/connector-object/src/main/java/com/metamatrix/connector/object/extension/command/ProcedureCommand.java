@@ -31,15 +31,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.Element;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 

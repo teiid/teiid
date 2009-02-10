@@ -24,16 +24,18 @@
 
 package com.metamatrix.connector.yahoo;
 
-import com.metamatrix.data.api.*;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Serves as a connection for the Yahoo connector.  Since there is no actual
  * connection, this "connection" doesn't really have any state.  
  */
-public class YahooConnection implements Connection {
-
-    private static final ConnectorCapabilities CAPABILITIES = new YahooCapabilities();
+public class YahooConnection extends BasicConnection {
 
     private ConnectorEnvironment env;
 
@@ -48,28 +50,21 @@ public class YahooConnection implements Connection {
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return CAPABILITIES;
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connection#createSynchExecution(com.metamatrix.data.language.ICommand, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) {
-        return new YahooExecution(env, metadata);
-    }
-
-    /* 
-     * @see com.metamatrix.data.Connection#getMetadata()
-     */
-    public ConnectorMetadata getMetadata() {
-        // Don't support
         return null;
     }
+    
+    @Override
+    public ResultSetExecution createResultSetExecution(IQueryCommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new YahooExecution((IQuery)command, env, metadata);
+    }
+    
 
     /* 
      * @see com.metamatrix.data.Connection#close()
      */
-    public void release() {
+    public void close() {
         // nothing to do
     }
 

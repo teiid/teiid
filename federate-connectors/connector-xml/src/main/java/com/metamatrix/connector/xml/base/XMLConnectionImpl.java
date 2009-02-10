@@ -27,22 +27,23 @@ package com.metamatrix.connector.xml.base;
 
 import java.io.Serializable;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SecureConnectorState;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
-public class XMLConnectionImpl implements XMLConnection {
+public class XMLConnectionImpl extends BasicConnection implements XMLConnection {
 
 	private CachingConnector connector;
 
@@ -58,7 +59,7 @@ public class XMLConnectionImpl implements XMLConnection {
 
 	private TrustedPayloadHandler payloadHandler;
 
-	public XMLConnectionImpl(CachingConnector connector, SecurityContext context,
+	public XMLConnectionImpl(CachingConnector connector, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) throws ConnectorException {
 		this.connector = connector;
 		this.connectorEnv = connectorEnv;
@@ -73,45 +74,19 @@ public class XMLConnectionImpl implements XMLConnection {
 	///////////////////////////////////////////////////////////////
 	//Connection API Implementation
 	public ConnectorCapabilities getCapabilities() {
-		return connector.getState().getConnectorCapabilities();
-	}
-
-	public Execution createExecution(int executionMode,
-			ExecutionContext context, RuntimeMetadata metadata)
-			throws ConnectorException {
-		try {
-			Execution retVal = null;
-			String errKey = null;
-			switch (executionMode) {
-			case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-				retVal = new XMLExecutionImpl(this, metadata, context, connectorEnv);
-				break;
-			case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-				errKey = Messages
-						.getString("XMLConnectionImpl.update.not.supported");
-				break;
-			case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-				errKey = Messages.getString("XMLConnectionImpl.no.xml.procedures");
-				break;
-			default:
-				errKey = Messages
-						.getString("XMLConnectionImpl.invalid.execution.mode");
-			}
-			if (errKey != null) {
-				throw new ConnectorException(errKey);
-			}
-			return retVal;
-		} catch (RuntimeException e) {
-			throw new ConnectorException(e);
-		}
-
-	}
-
-	public ConnectorMetadata getMetadata() {
 		return null;
 	}
+	
+	@Override
+	public ResultSetExecution createResultSetExecution(IQueryCommand command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new XMLExecutionImpl((IQuery)command, this, metadata, executionContext, connectorEnv);
+	}
 
-	public void release() {
+
+	@Override
+	public void close() {
 		logger.logTrace("XMLConnection released for RequestIdentifier " + 
 				getQueryId());
 	}

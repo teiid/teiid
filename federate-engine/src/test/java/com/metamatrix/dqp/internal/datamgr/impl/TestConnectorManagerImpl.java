@@ -39,9 +39,8 @@ import org.mockito.Mockito;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
-import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import com.metamatrix.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
@@ -137,16 +136,6 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.start(env);
 	}
     
-    //classloader problem for connector that uses getContextClassLoader()
-    //to load class
-    public void testDefect19049() throws Exception {
-    	helpTestDefect19049(new URLClassLoader(new URL[] {this.getClass().getResource("/fakeConnector/testconn.jar")} )); //$NON-NLS-1$ 
-    }
-    
-    public void testDefect19049_1() throws Exception {
-    	helpTestDefect19049(new NonDelegatingClassLoader(new URL[] {this.getClass().getResource("/fakeConnector/testconn.jar")} ));//$NON-NLS-1$
-    }
-    
     public void testIsXA() throws Exception {
     	ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
@@ -172,12 +161,15 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.stop();
     }
     
-    private void helpTestDefect19049(ClassLoader loader) throws Exception {
+    public void testDefect19049() throws Exception {
         ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
-        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, "test.fakeconnector.FakeConnector");//$NON-NLS-1$
-        props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, loader);
+        final String connectorName = FakeConnector.class.getName();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);//$NON-NLS-1$
+        URLClassLoader cl = new URLClassLoader(new URL[0]);
+        props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, cl);
         startConnectorManager(cm, props);
+        ((FakeConnector)cm.getConnector().getActualConnector()).setClassloader(cl);
         AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
         QueueResultsReceiver receiver = new QueueResultsReceiver();
         cm.executeRequest(receiver, request);

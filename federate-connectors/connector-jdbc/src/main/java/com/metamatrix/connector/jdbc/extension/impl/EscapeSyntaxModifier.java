@@ -27,7 +27,7 @@ package com.metamatrix.connector.jdbc.extension.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.IFunction;
 
 /**
  * Wrap a function in standard JDBC escape syntax.  In some cases, the 
@@ -41,7 +41,7 @@ public class EscapeSyntaxModifier extends BasicFunctionModifier {
     }
     
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      * @since 5.0
      */
     public List translate(IFunction function) {

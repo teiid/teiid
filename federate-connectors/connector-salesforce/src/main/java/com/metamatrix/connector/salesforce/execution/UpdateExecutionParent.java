@@ -25,20 +25,21 @@ package com.metamatrix.connector.salesforce.execution;
 
 import java.util.ArrayList;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.IQueryProvidingVisitor;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.UpdateExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
@@ -55,44 +56,45 @@ public class UpdateExecutionParent implements UpdateExecution {
 	private RuntimeMetadata metadata;
 	private ExecutionContext context;
 	private ConnectorEnvironment connectorEnv;
-	private String connectionIdentifier;
-	private String connectorIdentifier;
-	private String requestIdentifier;
-	private String partIdentifier;
+	private ICommand command;
+	private int result;
 
-	public UpdateExecutionParent(SalesforceConnection salesforceConnection,
+	public UpdateExecutionParent(ICommand command, SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context,
 			ConnectorEnvironment connectorEnv) {
 		this.connection = salesforceConnection;
 		this.metadata = metadata;
 		this.context = context;
 		this.connectorEnv = connectorEnv;
-
-		String connectionIdentifier = context.getConnectionIdentifier();
-		String connectorIdentifier = context.getConnectorIdentifier();
-		String requestIdentifier = context.getRequestIdentifier();
-		partIdentifier = context.getPartIdentifier();
+		this.command = command;
 	}
 
+	@Override
 	public void cancel() throws ConnectorException {
 	}
 
+	@Override
 	public void close() throws ConnectorException {
 	}
 
-	public int execute(ICommand command) throws ConnectorException {
-		int result = 0;
-		if(command instanceof com.metamatrix.data.language.IDelete) {
+	@Override
+	public void execute() throws ConnectorException {
+		if(command instanceof com.metamatrix.connector.language.IDelete) {
 			DeleteExecutionImpl ex = new DeleteExecutionImpl();
 			result = ex.execute(((IDelete)command), this);
-		} else if (command instanceof com.metamatrix.data.language.IInsert) {
+		} else if (command instanceof com.metamatrix.connector.language.IInsert) {
 			InsertExecutionImpl ex = new InsertExecutionImpl();
 			result = ex.execute(((IInsert)command), this);
-		} else if (command instanceof com.metamatrix.data.language.IUpdate) {
+		} else if (command instanceof com.metamatrix.connector.language.IUpdate) {
 			UpdateExecutionImpl ex = new UpdateExecutionImpl();
 			result = ex.execute(((IUpdate)command), this);
 		}
-		return result;
+	}
+	
+	@Override
+	public int[] getUpdateCounts() throws DataNotAvailableException,
+			ConnectorException {
+		return new int[] {result};
 	}
 
 	public RuntimeMetadata getMetadata() {
@@ -121,7 +123,7 @@ public class UpdateExecutionParent implements UpdateExecution {
 	
 		} else if (visitor.hasCriteria()) {
 			String query = visitor.getQuery();
-			QueryResult results = getConnection().query(query, 500);
+			QueryResult results = getConnection().query(query, context.getBatchSize());
 			if (null != results && results.getSize() > 0) {
 				ArrayList<String> idList = new ArrayList<String>(results
 						.getRecords().length);

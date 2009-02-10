@@ -29,8 +29,8 @@ import javax.transaction.SystemException;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
 public interface TransactionServer {
     
@@ -62,7 +62,7 @@ public interface TransactionServer {
 
     
     // recovery
-    void registerRecoverySource(String name, XAConnector resource);
+    void registerRecoverySource(String name, XAConnectionSource resource);
     
     void removeRecoverySource(String name);            
 }

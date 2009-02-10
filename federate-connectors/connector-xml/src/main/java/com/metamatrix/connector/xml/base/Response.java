@@ -35,11 +35,11 @@ import java.io.Serializable;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.http.Messages;
-import com.metamatrix.data.exception.ConnectorException;
 
 // Response class
 

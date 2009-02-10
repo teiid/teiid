@@ -29,12 +29,12 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IOrderByItem;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.language.ISetQuery;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;

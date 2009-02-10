@@ -32,8 +32,8 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestMultiFileTextSynchExecution extends TestCase {

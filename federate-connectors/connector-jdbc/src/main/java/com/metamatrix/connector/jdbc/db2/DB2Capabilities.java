@@ -119,7 +119,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -131,7 +131,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsExcept()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsExcept()
      */
     @Override
     public boolean supportsExcept() {
@@ -139,7 +139,7 @@ public class DB2Capabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.data.basic.BasicConnectorCapabilities#supportsIntersect()
+     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

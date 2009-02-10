@@ -24,19 +24,29 @@
 
 package com.metamatrix.dqp.internal.transaction;
 
+import java.sql.SQLException;
 import java.util.Properties;
 
 import javax.resource.spi.XATerminator;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
 
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.connector.xa.api.XAConnection;
 
 
 public interface TransactionProvider {
+	
+	public interface XAConnectionSource {
+		
+		XAResource getXAResource() throws SQLException;
+		
+		void close();
+		
+	}
     
     void init(Properties props) throws XATransactionException;
 
@@ -50,7 +60,7 @@ public interface TransactionProvider {
     
     void shutdown();
     
-    void registerRecoverySource(String name, XAConnector resource);
+    void registerRecoverySource(String name, XAConnectionSource resource);
     
     void removeRecoverySource(String name);    
 }

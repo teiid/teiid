@@ -36,23 +36,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * Implementation of text connector.
  */
-public class TextConnector implements Connector, GlobalCapabilitiesProvider {
+public class TextConnector implements Connector {
 
     private ConnectorLogger logger;
     private ConnectorEnvironment env;
-    private boolean start = false;
     private int srcFiles = 0;
     private int srcFileErrs = 0;
     Map metadataProps = new HashMap();
@@ -60,38 +58,29 @@ public class TextConnector implements Connector, GlobalCapabilitiesProvider {
     /**
      * Initialization with environment.
      */
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
+    @Override
+    public void start(ConnectorEnvironment environment) throws ConnectorException {
         logger = environment.getLogger();
         this.env = environment;
 
         initMetaDataProps(this.env);
         // test connection
         TextConnection test = new TextConnection(this.env, metadataProps);
-        test.release();
+        test.close();
 
         // logging
         logger = environment.getLogger();
-        logger.logInfo("Text Connector is intialized."); //$NON-NLS-1$
+        logger.logInfo("Text Connector is started."); //$NON-NLS-1$
     }
 
     public void stop() {
-        if (!start) {
-            return;
-        }
-
-        start = false;
         logger.logInfo("Text Connector is stoped."); //$NON-NLS-1$
-    }
-
-    public void start() {
-        start = true;
-        logger.logInfo("Text Connector is started."); //$NON-NLS-1$
     }
 
     /*
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
         return new TextConnection(this.env, metadataProps);
     }
 

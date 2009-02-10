@@ -33,17 +33,16 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
 
 
 /** 
@@ -60,24 +59,23 @@ public class TestFileExecution extends TestCase {
             FileConnection conn = new FileConnection(env);
             assertTrue(conn.isConnected());
             RuntimeMetadata metadata = new FakeRuntimeMetadata("BookCollection.xml"); //$NON-NLS-1$
-            FileExecution exec = (FileExecution)conn.createExecution(2, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
-            
+
             ILanguageFactory fact = env.getLanguageFactory();
-            IProcedure procedure = fact.createProcedure("GetXMLFile", null, null); //$NON-NLS-1$
+           	IProcedure procedure = fact.createProcedure("GetXMLFile", null, null); //$NON-NLS-1$
+
+            FileExecution exec = (FileExecution)conn.createExecution(procedure, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
             
-            exec.execute(procedure, 100);
+            exec.execute();
             
-            Batch b = exec.nextBatch();
-            assertNotNull(b);
-            assertTrue(b.isLast());
-            List[] lists = b.getResults();
-            assertEquals("There should be only one row", 1, b.getRowCount()); //$NON-NLS-1$
+            List result = exec.next();
+            assertNotNull(result);
+            assertNull(exec.next());
             try {
                 exec.getOutputValue(getReturnParameter());
                 fail("should have thrown error in returning a return"); //$NON-NLS-1$
             }catch(Exception e) {                
             }
-            SQLXML xmlSource = (SQLXML)lists[0].get(0);            
+            SQLXML xmlSource = (SQLXML)result.get(0);            
             assertNotNull(xmlSource);
             String xml = xmlSource.getString();
                         
@@ -102,12 +100,11 @@ public class TestFileExecution extends TestCase {
             FileConnection conn = new FileConnection(env);
             assertTrue(conn.isConnected());
             RuntimeMetadata metadata = new FakeRuntimeMetadata("nofile.xml"); //$NON-NLS-1$
-            FileExecution exec = (FileExecution)conn.createExecution(2, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
-            
             ILanguageFactory fact = env.getLanguageFactory();
-            IProcedure procedure = fact.createProcedure("GetXMLFile", null, null); //$NON-NLS-1$
+            FileExecution exec = (FileExecution)conn.createExecution(fact.createProcedure("GetXMLFile", null, null), EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             
-            exec.execute(procedure, 100);
+            
+            exec.execute();
             fail("mast have failed to find the file"); //$NON-NLS-1$            
         } catch (ConnectorException e) {
             //pass

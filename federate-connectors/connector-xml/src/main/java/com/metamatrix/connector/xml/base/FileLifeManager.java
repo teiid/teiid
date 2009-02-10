@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorLogger;
+import com.metamatrix.connector.api.ConnectorLogger;
 
 // Deletes a file when garbage collected. This allows a physical file
 // to be removed during the garbage collection process. As long as everyone

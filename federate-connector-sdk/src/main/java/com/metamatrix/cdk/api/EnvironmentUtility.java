@@ -27,10 +27,10 @@ package com.metamatrix.cdk.api;
 import java.io.Serializable;
 import java.util.Properties;
 
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
@@ -98,7 +98,7 @@ public class EnvironmentUtility {
      * @param user User name
      * @return A SecurityContext / ExecutionContext instance
      */
-    public static SecurityContext createSecurityContext(String user) {
+    public static ExecutionContext createSecurityContext(String user) {
         return new ExecutionContextImpl("vdb", "1", user, null, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0", false);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
     }
 
@@ -111,7 +111,7 @@ public class EnvironmentUtility {
      * @param trustedToken Trusted token (passed when creating JDBC Connection)
      * @return A SecurityContext / ExecutionContext instance
      */
-    public static SecurityContext createSecurityContext(String vdbName, String vdbVersion, String user, Serializable trustedToken) {
+    public static ExecutionContext createSecurityContext(String vdbName, String vdbVersion, String user, Serializable trustedToken) {
         return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0", false);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
@@ -122,7 +122,7 @@ public class EnvironmentUtility {
      * @param partID Unique identifier for the source command within the context of a requestID
      * @return A SecurityContext / ExecutionContext instance
      */
-    public static SecurityContext createExecutionContext(String requestID, String partID) {
+    public static ExecutionContext createExecutionContext(String requestID, String partID) {
         return new ExecutionContextImpl("vdb", "1", "user", null, null, "Connection", "ConnectorID<CDK>", requestID, partID, "0", false);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     }
 
@@ -140,7 +140,7 @@ public class EnvironmentUtility {
      * @return A SecurityContext / ExecutionContext instance
      * @since 4.2
      */
-    public static SecurityContext createExecutionContext(String vdbName, String vdbVersion, String user,
+    public static ExecutionContext createExecutionContext(String vdbName, String vdbVersion, String user,
                                                         Serializable trustedToken, Serializable executionPayload,                                                         
 														String connectionID, String connectorID, String requestID, String partID, boolean useResultSetCache) {
         return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, executionPayload, connectionID, connectorID, requestID, partID, "0", useResultSetCache); //$NON-NLS-1$

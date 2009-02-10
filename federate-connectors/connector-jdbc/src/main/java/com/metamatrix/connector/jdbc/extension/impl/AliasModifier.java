@@ -26,7 +26,7 @@
  */
 package com.metamatrix.connector.jdbc.extension.impl;
 
-import com.metamatrix.data.language.*;
+import com.metamatrix.connector.language.*;
 
 /**
  */
@@ -43,7 +43,7 @@ public class AliasModifier extends BasicFunctionModifier {
     }
     
     /**
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         function.setName(alias);

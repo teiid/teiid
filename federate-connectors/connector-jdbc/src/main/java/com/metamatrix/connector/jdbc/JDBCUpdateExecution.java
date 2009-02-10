@@ -31,33 +31,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
-import com.metamatrix.data.api.BatchedUpdatesExecution;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.UpdateExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IBulkInsert;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.language.IBatchedUpdates;
+import com.metamatrix.connector.language.IBulkInsert;
+import com.metamatrix.connector.language.ICommand;
 
 /**
  */
 public class JDBCUpdateExecution extends JDBCBaseExecution implements
-                                                          UpdateExecution,
-                                                          BatchedUpdatesExecution {
+                                                          UpdateExecution {
 
-    // ===========================================================================================================================
-    // Fields
-    // ===========================================================================================================================
-
-    private int updateCount = 0;
-
-    // ===========================================================================================================================
-    // Constructors
-    // ===========================================================================================================================
-
+	private ICommand command;
+	private int[] result;
+	
     /**
      * @param connection
      * @param sqlTranslator
@@ -66,49 +59,43 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
      * @param logger
      * @param props
      */
-    public JDBCUpdateExecution(Connection connection,
+    public JDBCUpdateExecution(ICommand command, Connection connection,
                                SQLTranslator sqlTranslator,
                                ResultsTranslator resultsTranslator,
                                ConnectorLogger logger,
                                Properties props,
                                ExecutionContext context) {
         super(connection, sqlTranslator, resultsTranslator, logger, props, context);
+        this.command = command;
     }
 
     // ===========================================================================================================================
     // Methods
     // ===========================================================================================================================
 
-    /*
-     * @see com.metamatrix.data.UpdateExecution#execute(com.metamatrix.data.language.ICommand)
-     */
-    public int execute(ICommand command) throws ConnectorException {
+    @Override
+    public void execute() throws ConnectorException {
         if (command instanceof IBulkInsert) {
-            return execute((IBulkInsert)command);
+            result = new int [] {execute((IBulkInsert)command)};
+        } else if (command instanceof IBatchedUpdates) {
+        	result = execute(((IBatchedUpdates)command));
+        } else {
+            // translate command
+            TranslatedCommand translatedComm = translateCommand(command);
+
+            result = new int [] {executeTranslatedCommand(translatedComm)};
         }
-
-        // translate command
-        TranslatedCommand translatedComm = translateCommand(command);
-
-        try {
-            this.updateCount = executeTranslatedCommand(translatedComm);
-        } catch (ConnectorException err) {
-            this.logger.logError(err.getMessage());
-            throw err;
-        }
-
-        return this.updateCount;
     }
 
     /**
-     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(com.metamatrix.data.language.ICommand[])
+     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(com.metamatrix.connector.language.ICommand[])
      * @since 4.2
      */
-    public int[] execute(ICommand[] commands) throws ConnectorException {
+    public int[] execute(IBatchedUpdates batchedCommand) throws ConnectorException {
         boolean succeeded = false;
 
         boolean commitType = getAutoCommit(null);
-
+        ICommand[] commands = (ICommand[])batchedCommand.getUpdateCommands().toArray(new ICommand[batchedCommand.getUpdateCommands().size()]);
         int[] results = new int[commands.length];
 
         try {
@@ -188,7 +175,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         String sql = translatedComm.getSql();
 
         boolean commitType = getAutoCommit(translatedComm);
-
+        int updateCount = -1;
         try {
             // temporarily turn the auto commit off, and set it back to what it was
             // before at the end of the command execution.
@@ -279,5 +266,11 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         } catch (SQLException err) {
             throw createAndLogError(err, command);
         }
+    }
+    
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException,
+    		ConnectorException {
+    	return result;
     }
 }

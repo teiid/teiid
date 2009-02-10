@@ -28,12 +28,12 @@ package com.metamatrix.connector.xml.soap;
 
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * This class copies the the name of the interface because it is remaining

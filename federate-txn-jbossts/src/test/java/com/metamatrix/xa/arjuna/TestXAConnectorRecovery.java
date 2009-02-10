@@ -40,8 +40,8 @@ public class TestXAConnectorRecovery extends TestCase {
     
     // make sure hasMoreResources working as expected
     public void testhasMoreResources() throws Exception {
-        XAConnectorRecovery.addConnector(CONN1, new FakeXAConnector(CONN1)); 
-        XAConnectorRecovery.addConnector(CONN2, new FakeXAConnector(CONN2)); 
+        XAConnectorRecovery.addConnector(CONN1, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN1))); 
+        XAConnectorRecovery.addConnector(CONN2, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN2))); 
         XAConnectorRecovery recovery = new XAConnectorRecovery();
 
         // start out with false
@@ -65,8 +65,8 @@ public class TestXAConnectorRecovery extends TestCase {
     
     // make sure all the resources are available in the cycles; not just few
     public void testXARecoveryResources() throws Exception {
-        XAConnectorRecovery.addConnector(CONN1, new FakeXAConnector(CONN1)); 
-        XAConnectorRecovery.addConnector(CONN2, new FakeXAConnector(CONN2)); 
+    	XAConnectorRecovery.addConnector(CONN1, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN1))); 
+        XAConnectorRecovery.addConnector(CONN2, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN2))); 
         
         XAConnectorRecovery recovery = new XAConnectorRecovery();
         
@@ -85,12 +85,11 @@ public class TestXAConnectorRecovery extends TestCase {
     
     // when the connection fails to create the XAResouce, that connection must be released.
     public void testConnectionReleaseOnFail() throws Exception {
-        FakeXAConnector connector_1 = new FakeXAConnector(CONN1);
-        FakeXAConnector connector_2 = new FakeXAConnector(CONN2);
-        
-        XAConnectorRecovery.addConnector(CONN1, connector_1); 
-        XAConnectorRecovery.addConnector(CONN2, connector_2); 
-        
+    	FakeXAConnection conn1 = new FakeXAConnection(CONN1);
+    	FakeXAConnection conn2 = new FakeXAConnection(CONN2);
+    	XAConnectorRecovery.addConnector(CONN1, new TestArjunaRecovery.FakeXAConnectionSource(conn1)); 
+        XAConnectorRecovery.addConnector(CONN2, new TestArjunaRecovery.FakeXAConnectionSource(conn2)); 
+                
         XAConnectorRecovery recovery = new XAConnectorRecovery();
         
         // start out with false
@@ -101,31 +100,24 @@ public class TestXAConnectorRecovery extends TestCase {
         FakeXAResource res1 = (FakeXAResource)recovery.getXAResource();
         assertEquals(CONN2, res1.name);
         
-        connector_1.failToCreateResource(true);
-        connector_2.failToCreateResource(true);
+        conn1.failToCreateResource(true);
+        conn2.failToCreateResource(true);
         assertTrue(recovery.hasMoreResources());
         try {
             recovery.getXAResource();
             fail("should have failed to get a resource"); //$NON-NLS-1$
         }catch(SQLException e) {
             // pass
-            assertTrue(connector_1.conn.released);
-        }
-        finally {                
-            connector_1.failToCreateResource(false);
-            connector_2.failToCreateResource(false);
+            assertTrue(conn1.released);
         }
     }     
     
     
     // make sure the same connection is used over and over again
     public void testConnectionHeld() throws Exception {
-        FakeXAConnector connector_1 = new FakeXAConnector(CONN1);
-        FakeXAConnector connector_2 = new FakeXAConnector(CONN2);
-        
-        XAConnectorRecovery.addConnector(CONN1, connector_1); 
-        XAConnectorRecovery.addConnector(CONN2, connector_2); 
-        
+    	XAConnectorRecovery.addConnector(CONN1, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN1))); 
+        XAConnectorRecovery.addConnector(CONN2, new TestArjunaRecovery.FakeXAConnectionSource(new FakeXAConnection(CONN2))); 
+                
         XAConnectorRecovery recovery = new XAConnectorRecovery();
         
         // start out with false
@@ -142,7 +134,6 @@ public class TestXAConnectorRecovery extends TestCase {
 
         // now lets set the connection on the conn2 to null, since the 
         // connection should be cached we should be still get a resource. 
-        connector_2.conn = null;
         FakeXAResource res1 = (FakeXAResource)recovery.getXAResource();
         assertEquals(CONN2, res1.name);        
     }

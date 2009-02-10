@@ -45,7 +45,7 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.data.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;

@@ -27,8 +27,7 @@ package com.metamatrix.connector.yahoo;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 /**
  * Specifies the capabilities of this connector.  The Yahoo connector
@@ -42,16 +41,6 @@ public class YahooCapabilities extends BasicConnectorCapabilities {
      * Construct the capabilities class 
      */
     public YahooCapabilities() {
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        if(executionMode == ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY) {
-            return true;
-        }
-        return false;
     }
 
     /* 

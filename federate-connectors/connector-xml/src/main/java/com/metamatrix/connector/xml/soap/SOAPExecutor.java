@@ -58,6 +58,9 @@ import org.jdom.input.DOMBuilder;
 import org.jdom.output.DOMOutputter;
 import org.w3c.dom.NodeList;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
@@ -73,9 +76,6 @@ import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.http.Messages;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class SOAPExecutor extends RequestResponseDocumentProducer {
 	

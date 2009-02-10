@@ -24,9 +24,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.INotCriteria;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.INotCriteria;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class NotCriteriaImpl extends BaseLanguageObject implements INotCriteria {
 
@@ -36,14 +36,14 @@ public class NotCriteriaImpl extends BaseLanguageObject implements INotCriteria 
         this.criteria = criteria;
     }
     /**
-     * @see com.metamatrix.data.language.INotCriteria#getCriteria()
+     * @see com.metamatrix.connector.language.INotCriteria#getCriteria()
      */
     public ICriteria getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

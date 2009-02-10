@@ -24,7 +24,7 @@
 
 package com.metamatrix.connector.text;
 
-import com.metamatrix.data.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 
 public class TextCapabilities extends BasicConnectorCapabilities {
 

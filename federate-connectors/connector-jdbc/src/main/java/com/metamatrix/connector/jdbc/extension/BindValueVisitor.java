@@ -24,21 +24,21 @@
 
 package com.metamatrix.connector.jdbc.extension;
 
-import com.metamatrix.data.language.ICaseExpression;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.IExistsCriteria;
-import com.metamatrix.data.language.IFunction;
-import com.metamatrix.data.language.IInCriteria;
-import com.metamatrix.data.language.IInlineView;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILanguageObject;
-import com.metamatrix.data.language.ILikeCriteria;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.IScalarSubquery;
-import com.metamatrix.data.language.ISearchedCaseExpression;
-import com.metamatrix.data.language.ISetClause;
-import com.metamatrix.data.language.ISubqueryCompareCriteria;
-import com.metamatrix.data.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.language.ICaseExpression;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.IExistsCriteria;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.IInlineView;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  * This visitor will mark literals in well known locations as bindValues.

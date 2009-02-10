@@ -24,10 +24,10 @@
 
 package com.metamatrix.connector.xml.base;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * @author JChoate
@@ -44,15 +44,10 @@ public abstract class LoggingConnector implements StatefulConnector {
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.xml.base.StatefulConnector#initialize(com.metamatrix.data.api.ConnectorEnvironment)
 	 */
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-        try {
-        	m_logger = environment.getLogger();
-        	m_environment = environment;
-        	m_state = createState(m_environment);
-        }
-        catch (RuntimeException e) {
-        	throw new ConnectorException(e);
-        }
+    public void start(ConnectorEnvironment environment) throws ConnectorException {
+    	m_logger = environment.getLogger();
+    	m_environment = environment;
+    	m_state = createState(m_environment);
     }
     
     /* (non-Javadoc)

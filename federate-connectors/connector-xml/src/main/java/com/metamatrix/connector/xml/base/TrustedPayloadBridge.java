@@ -28,10 +28,10 @@ package com.metamatrix.connector.xml.base;
 
 import java.io.Serializable;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.pool.CredentialMap;
 
 public abstract class TrustedPayloadBridge implements TrustedPayloadHandler {
 

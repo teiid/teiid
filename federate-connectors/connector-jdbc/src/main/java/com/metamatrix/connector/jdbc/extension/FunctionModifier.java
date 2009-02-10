@@ -28,8 +28,8 @@ package com.metamatrix.connector.jdbc.extension;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
 
 /**
  * Implementations of this interface are used to modify metamatrix functions

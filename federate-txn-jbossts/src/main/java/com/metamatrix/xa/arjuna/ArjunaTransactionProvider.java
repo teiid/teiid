@@ -58,7 +58,6 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.internal.transaction.TransactionProvider;
 import com.metamatrix.dqp.service.TransactionService;
 
@@ -191,7 +190,7 @@ public class ArjunaTransactionProvider implements TransactionProvider {
         }
     }
 
-    public void registerRecoverySource(String name, XAConnector connector) {
+    public void registerRecoverySource(String name, XAConnectionSource connector) {
         XAConnectorRecovery.addConnector(name, connector);
     }
     

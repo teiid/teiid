@@ -73,40 +73,53 @@
 
 package com.metamatrix.connector.ldap;
 
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.metadata.runtime.*;
-import com.metamatrix.data.api.ConnectorLogger;
-import java.util.*;
 import java.io.IOException;
-
-import javax.naming.*;
-import javax.naming.directory.*;
-import javax.naming.ldap.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.SizeLimitExceededException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.SortControl;
+import javax.naming.ldap.SortKey;
+
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /** 
  * LDAPSyncQueryExecution is responsible for executing an LDAP search 
  * corresponding to a read-only "select" query from MetaMatrix.
  */
-public class LDAPSyncQueryExecution implements SynchQueryExecution {
+public class LDAPSyncQueryExecution implements ResultSetExecution {
 
 	private ConnectorLogger logger;
 	private LDAPSearchDetails searchDetails;
 	private RuntimeMetadata rm;
-	private int maxBatchSize;
 	private InitialLdapContext initialLdapContext;
 	private LdapContext ldapCtx;
 	private NamingEnumeration searchEnumeration;
 	private IQueryToLdapSearchParser parser;
 	private Properties props;
+	private IQuery query;
 
 	/** 
 	 * Constructor
@@ -116,17 +129,14 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	 * @param logger the ConnectorLogger
 	 * @param ldapCtx the LDAP Context
 	 */
-	public LDAPSyncQueryExecution(int executionMode, ExecutionContext ctx,
+	public LDAPSyncQueryExecution(IQuery query, ExecutionContext ctx,
 			RuntimeMetadata rm, ConnectorLogger logger,
 			InitialLdapContext ldapCtx, Properties props) throws ConnectorException {
-		if (executionMode != ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY) {
-            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execModeError"); //$NON-NLS-1$
-			throw new ConnectorException(msg); 
-		}
 		this.rm = rm;
 		this.logger = logger;
 		this.initialLdapContext = ldapCtx;
 		this.props = props;
+		this.query = query;
 	}
 
 	/** 
@@ -134,9 +144,8 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	 * @param query the query object.
 	 * @param maxBatchSize the max batch size.
 	 */
-	public void execute(IQuery query, int maxBatchSize) throws ConnectorException {
-		this.maxBatchSize = maxBatchSize;
-
+	@Override
+	public void execute() throws ConnectorException {
 		// Parse the IQuery, and translate it into an appropriate LDAP search.
 		this.parser = new IQueryToLdapSearchParser(logger, this.rm, this.props);
 		searchDetails = parser.translateSQLQueryToLDAPSearch(query);
@@ -252,6 +261,7 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	// We are very conservative when closing the enumeration
 	// but less so when closing context, since it is safe to call close
 	// on contexts multiple times
+	@Override
 	public void cancel() throws ConnectorException {
 		close();
 	}
@@ -262,6 +272,7 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	// We are very conservative when closing the enumeration
 	// but less so when closing context, since it is safe to call close
 	// on contexts multiple times
+	@Override
 	public void close() throws ConnectorException {
 		if (searchEnumeration != null) {
 			try {
@@ -289,34 +300,28 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	// it from being used again.
 	// GHH 20080326 - also added return of explanation for generic
 	// NamingException
-	public Batch nextBatch() throws ConnectorException {
-		Batch batch = new BasicBatch();
-		int curBatchSize = 0;
+	public List next() throws ConnectorException {
 		try {
 			// The search has been executed, so process up to one batch of
 			// results.
-			while (searchEnumeration != null && searchEnumeration.hasMore()
-					&& curBatchSize < maxBatchSize)
+			List result = null;
+			while (result == null && searchEnumeration != null && searchEnumeration.hasMore())
 			{
-				SearchResult result = (SearchResult) searchEnumeration.next();
-				addRowToBatch(batch, result);
-				curBatchSize++;
+				SearchResult searchResult = (SearchResult) searchEnumeration.next();
+				result = getRow(searchResult);
 			}
 
-			if (!searchEnumeration.hasMore()) {
-				batch.setLast();
-			} 
+			return result;
 		} catch (SizeLimitExceededException e) {
 			logger.logWarning("Search results exceeded size limit. Results may be incomplete."); //$NON-NLS-1$
-			batch.setLast(); // GHH 20080326 - if size limit exceeded don't try to read more results
 			searchEnumeration = null; // GHH 20080326 - NamingEnumartion's are no longer good after an exception so toss it
+			return null; // GHH 20080326 - if size limit exceeded don't try to read more results
 		} catch (NamingException ne) {
 			final String msg = "Ldap error while processing next batch of results: " + ne.getExplanation(); //$NON-NLS-1$
 			logger.logError(msg);  // GHH 20080326 - changed to output explanation from LDAP server
 			searchEnumeration = null; // GHH 20080326 - NamingEnumertion's are no longer good after an exception so toss it
 			throw new ConnectorException(msg);
 		}
-		return batch;
 	}
 
 	/**
@@ -326,7 +331,7 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 	 */
 	// GHH 20080326 - added fetching of DN of result, for directories that
 	// do not include it as an attribute
-	private void addRowToBatch(Batch batch, SearchResult result) throws ConnectorException, NamingException {
+	private List getRow(SearchResult result) throws ConnectorException, NamingException {
 		Attributes attrs = result.getAttributes();
 		String resultDN = result.getNameInNamespace(); // added GHH 20080326 
 		ArrayList attributeList = searchDetails.getElementList();
@@ -337,8 +342,9 @@ public class LDAPSyncQueryExecution implements SynchQueryExecution {
 			while(itr.hasNext()) {
 				addResultToRow((Element)itr.next(), resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
 			}
-			batch.addRow(row);
+			return row;
 		}
+		return null;
 	}
 
 	/**

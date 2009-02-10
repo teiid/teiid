@@ -28,8 +28,8 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 public class TestConnectionWrapper extends TestCase {
 
@@ -37,7 +37,7 @@ public class TestConnectionWrapper extends TestCase {
 		ConnectionWrapper wrapper = new ConnectionWrapper(Mockito.mock(Connection.class), Mockito.mock(ConnectionPool.class), 1);
 		long time = wrapper.getTimeReturnedToPool();
 		Thread.sleep(5);
-		wrapper.release();
+		wrapper.close();
 		assertTrue(wrapper.getTimeReturnedToPool() - time > 0);
 	}
 	

@@ -25,18 +25,17 @@
 package com.metamatrix.connector.xmlsource;
 
 import java.sql.SQLXML;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.transform.Source;
 
-import com.metamatrix.data.DataPlugin;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ProcedureExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
+import com.metamatrix.connector.DataPlugin;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
 
 
 /** 
@@ -46,6 +45,7 @@ public abstract class XMLSourceExecution implements ProcedureExecution {
 
     // Connector environment
     protected ConnectorEnvironment env;
+    private boolean returnedResult;
     
     /**
      * ctor 
@@ -68,35 +68,32 @@ public abstract class XMLSourceExecution implements ProcedureExecution {
     }
     
     protected abstract Source getReturnValue();
-    
-    /** 
-     * @see com.metamatrix.connector.xmlsource.XMLSourceExecution#nextBatch()
-     */
-    public Batch nextBatch() throws ConnectorException {
-        Batch b = new BasicBatch();
-        List row = new ArrayList();
-        row.add(convertToXMLType(getReturnValue()));   
-        b.addRow(row);
-        b.setLast();
-        return b;
+
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (!returnedResult) {
+    		returnedResult = true;
+    		return Arrays.asList(convertToXMLType(getReturnValue()));
+    	}
+    	return null;
     }  
     
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
+     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
      */
     public Object getOutputValue(IParameter parameter) throws ConnectorException {
         throw new ConnectorException(XMLSourcePlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
     }
 
     /** 
-     * @see com.metamatrix.data.api.Execution#close()
+     * @see com.metamatrix.connector.api.Execution#close()
      */
     public void close() throws ConnectorException {
         // no-op
     }
 
     /** 
-     * @see com.metamatrix.data.api.Execution#cancel()
+     * @see com.metamatrix.connector.api.Execution#cancel()
      */
     public void cancel() throws ConnectorException {
         // no-op

@@ -43,10 +43,11 @@ import javax.transaction.xa.Xid;
 
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnector;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.transaction.XAServer;
 
@@ -604,7 +605,7 @@ public class TransactionServerImpl implements
         }
     }    
     
-    public synchronized void registerRecoverySource(String name, XAConnector resource) {
+    public synchronized void registerRecoverySource(String name, XAConnectionSource resource) {
         this.provider.registerRecoverySource(name, resource);
     }
 

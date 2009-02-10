@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.ICaseExpression;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICaseExpression;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class CaseExpressionImpl extends BaseLanguageObject implements ICaseExpression {
     
@@ -49,42 +49,42 @@ public class CaseExpressionImpl extends BaseLanguageObject implements ICaseExpre
         this.type = type;
     }
     /**
-     * @see com.metamatrix.data.language.ICaseExpression#getElseExpression()
+     * @see com.metamatrix.connector.language.ICaseExpression#getElseExpression()
      */
     public IExpression getElseExpression() {
         return elseExpression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ICaseExpression#getExpression()
+     * @see com.metamatrix.connector.language.ICaseExpression#getExpression()
      */
     public IExpression getExpression() {
         return expression;
     }
 
     /**
-     * @see com.metamatrix.data.language.ICaseExpression#getThenExpression(int)
+     * @see com.metamatrix.connector.language.ICaseExpression#getThenExpression(int)
      */
     public IExpression getThenExpression(int index) {
         return (IExpression)thenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.data.language.ICaseExpression#getWhenCount()
+     * @see com.metamatrix.connector.language.ICaseExpression#getWhenCount()
      */
     public int getWhenCount() {
         return whenExpressions.size();
     }
 
     /**
-     * @see com.metamatrix.data.language.ICaseExpression#getWhenExpression(int)
+     * @see com.metamatrix.connector.language.ICaseExpression#getWhenExpression(int)
      */
     public IExpression getWhenExpression(int index) {
         return (IExpression)whenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

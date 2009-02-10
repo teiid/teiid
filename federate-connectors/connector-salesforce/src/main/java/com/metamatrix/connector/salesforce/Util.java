@@ -26,7 +26,7 @@ package com.metamatrix.connector.salesforce;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 public class Util {
 

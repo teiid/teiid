@@ -24,27 +24,26 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.monitor.AliveStatus;
-import com.metamatrix.data.monitor.ConnectionStatus;
-import com.metamatrix.data.monitor.MonitoredConnector;
-import com.metamatrix.data.pool.ConnectorIdentity;
-import com.metamatrix.data.pool.ConnectorIdentityFactory;
-import com.metamatrix.data.pool.SingleIdentity;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.monitor.AliveStatus;
+import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.monitor.MonitoredConnector;
+import com.metamatrix.connector.pool.ConnectorIdentity;
+import com.metamatrix.connector.pool.ConnectorIdentityFactory;
+import com.metamatrix.connector.pool.SingleIdentity;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnector;
 
 /**
  * ConnectorWrapper adds default behavior to the wrapped connector.
  */
-public class ConnectorWrapper implements XAConnector, GlobalCapabilitiesProvider, MonitoredConnector, ConnectorIdentityFactory {
+public class ConnectorWrapper implements XAConnector, MonitoredConnector, ConnectorIdentityFactory {
 	
 	private Connector actualConnector;
 	
@@ -52,12 +51,8 @@ public class ConnectorWrapper implements XAConnector, GlobalCapabilitiesProvider
 		this.actualConnector = actualConnector;
 	}
 
-	public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-		actualConnector.initialize(environment);
-	}
-
-	public void start() throws ConnectorException {
-		actualConnector.start();
+	public void start(ConnectorEnvironment environment) throws ConnectorException {
+		actualConnector.start(environment);
 	}
 
 	public void stop() {
@@ -65,43 +60,40 @@ public class ConnectorWrapper implements XAConnector, GlobalCapabilitiesProvider
 	}
 	
 	@Override
-	public final Connection getConnection(SecurityContext context)
+	public final Connection getConnection(ExecutionContext context)
 			throws ConnectorException {
     	setIdentity(context);
 		return getConnectionDirect(context);
 	}
 
-	protected Connection getConnectionDirect(SecurityContext context)
+	protected Connection getConnectionDirect(ExecutionContext context)
 			throws ConnectorException {
 		return actualConnector.getConnection(context);
 	}
 	
 	@Override
-    public final XAConnection getXAConnection( SecurityContext securityContext, TransactionContext transactionContext) throws ConnectorException {
-    	setIdentity(securityContext);
-		return getXAConnectionDirect(securityContext, transactionContext);
+    public final XAConnection getXAConnection( ExecutionContext executionContext, TransactionContext transactionContext) throws ConnectorException {
+    	setIdentity(executionContext);
+		return getXAConnectionDirect(executionContext, transactionContext);
     }
 
-	protected XAConnection getXAConnectionDirect(SecurityContext securityContext,
+	protected XAConnection getXAConnectionDirect(ExecutionContext executionContext,
 			TransactionContext transactionContext) throws ConnectorException {
 		if (actualConnector instanceof XAConnector) {
-    		return ((XAConnector)actualConnector).getXAConnection(securityContext, transactionContext);
+    		return ((XAConnector)actualConnector).getXAConnection(executionContext, transactionContext);
     	}
     	return null;
 	}
 
-	private void setIdentity(SecurityContext securityContext)
+	private void setIdentity(ExecutionContext executionContext)
 			throws ConnectorException {
-		if (securityContext.getConnectorIdentity() == null && securityContext instanceof ExecutionContextImpl) {
-    		((ExecutionContextImpl)securityContext).setConnectorIdentity(createIdentity(securityContext));
+		if (executionContext instanceof ExecutionContextImpl && executionContext.getConnectorIdentity() == null) {
+    		((ExecutionContextImpl)executionContext).setConnectorIdentity(createIdentity(executionContext));
     	}
 	}
 	
 	public ConnectorCapabilities getCapabilities() {
-		if(actualConnector instanceof GlobalCapabilitiesProvider){
-            return ((GlobalCapabilitiesProvider)actualConnector).getCapabilities();
-		}
-		return null;
+	    return actualConnector.getCapabilities();
 	}
 	
 	@Override
@@ -121,7 +113,7 @@ public class ConnectorWrapper implements XAConnector, GlobalCapabilitiesProvider
 	}
 	
 	@Override
-	public ConnectorIdentity createIdentity(SecurityContext context)
+	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
 		if (actualConnector instanceof ConnectorIdentityFactory) {
 			return ((ConnectorIdentityFactory)actualConnector).createIdentity(context);

@@ -31,17 +31,17 @@ import java.util.Map;
 
 import javax.xml.transform.Source;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
 import com.metamatrix.connector.xmlsource.soap.ServiceOperation.ExcutionFailedException;
 import com.metamatrix.connector.xmlsource.soap.SoapConnection.OperationNotFoundException;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IParameter;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /**
@@ -55,21 +55,23 @@ public class SoapExecution extends XMLSourceExecution {
     Source returnValue = null;   
     RuntimeMetadata metadata = null;
     ExecutionContext context;
+    private IProcedure procedure;
     
     /** 
      * @param env
      */
-    public SoapExecution(ConnectorEnvironment env, RuntimeMetadata metadata, ExecutionContext context, SoapConnection conn) {
+    public SoapExecution(IProcedure procedure, ConnectorEnvironment env, RuntimeMetadata metadata, ExecutionContext context, SoapConnection conn) {
         super(env);
         this.connection = conn;
         this.metadata = metadata;
         this.context = context;
+        this.procedure = procedure;
     }
 
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#execute(com.metamatrix.data.language.IProcedure, int)
+     * @see com.metamatrix.connector.api.ProcedureExecution#execute(com.metamatrix.connector.language.IProcedure, int)
      */
-    public void execute(IProcedure procedure, int maxBatchSize) throws ConnectorException {
+    public void execute() throws ConnectorException {
         ArrayList argsList = new ArrayList();
 
         // look for the name of the Service to return in the metadata, "Name in Source" property

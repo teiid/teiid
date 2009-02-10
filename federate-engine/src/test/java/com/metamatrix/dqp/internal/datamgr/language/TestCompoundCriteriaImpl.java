@@ -26,7 +26,7 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.Iterator;
 
-import com.metamatrix.data.language.ICriteria;
+import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 

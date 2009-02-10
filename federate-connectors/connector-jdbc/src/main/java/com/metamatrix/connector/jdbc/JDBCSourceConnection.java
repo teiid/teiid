@@ -29,22 +29,27 @@ package com.metamatrix.connector.jdbc;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  * 
  */
-public class JDBCSourceConnection implements Connection, PoolAwareConnection {
+public class JDBCSourceConnection extends BasicConnection implements PoolAwareConnection {
     protected java.sql.Connection physicalConnection;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
@@ -111,36 +116,29 @@ public class JDBCSourceConnection implements Connection, PoolAwareConnection {
         return this.capabilities;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.data.Connection#createSynchExecution(com.metamatrix.data.language.ICommand)
-     */
-    public Execution createExecution(int executionMode, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {               
-        sqlTranslator.initialize(environment, metadata);
-        
-        switch(executionMode) {
-        	case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY:
-            case ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERYCOMMAND:
-            {
-                return new JDBCQueryExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
-            }
-            case ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES:
-            case ConnectorCapabilities.EXECUTION_MODE.UPDATE:
-            case ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT:                
-            {
-                return new JDBCUpdateExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);
-            }
-            case ConnectorCapabilities.EXECUTION_MODE.PROCEDURE:
-            {
-                return new JDBCProcedureExecution(this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
-            }
-            default:
-            {
-                throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnection.Execution_mode_not_supported__{0}_1", ""+executionMode)); //$NON-NLS-1$ //$NON-NLS-2$
-            }                            
-        }
+    @Override
+    public ResultSetExecution createResultSetExecution(IQueryCommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new JDBCQueryExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
+    }
+    
+    @Override
+    public ProcedureExecution createProcedureExecution(IProcedure command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new JDBCProcedureExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
     }
 
-    public void release() {
+    @Override
+    public UpdateExecution createUpdateExecution(ICommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new JDBCUpdateExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);    
+    }
+    
+    @Override
+    public void close() {
         try {
             // notify the listener that connection being destroyed
             if (connectionListener != null) { 
@@ -152,6 +150,7 @@ public class JDBCSourceConnection implements Connection, PoolAwareConnection {
         }
     }
 
+    @Override
     public boolean isAlive() {
         if (connectionStrategy == null) {
             try {
@@ -164,7 +163,7 @@ public class JDBCSourceConnection implements Connection, PoolAwareConnection {
     }
     
     @Override
-    public void connectionReleased() {
+    public void closeCalled() {
     	
     }
     

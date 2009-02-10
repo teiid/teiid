@@ -29,7 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 
-import com.metamatrix.data.api.TypeFacility;
+import com.metamatrix.connector.api.TypeFacility;
 
 /**
  * Specifies how value objects are retrieved from JDBC ResultSet for different 

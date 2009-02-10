@@ -28,12 +28,12 @@ package com.metamatrix.connector.jdbc.access;
 
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class AccessSQLTranslator extends BasicSQLTranslator {
     private Properties connectorProperties;

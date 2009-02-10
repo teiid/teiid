@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class InsertImpl extends BaseLanguageObject implements IInsert {
     
@@ -42,28 +42,28 @@ public class InsertImpl extends BaseLanguageObject implements IInsert {
         this.values = values;
     }
     /**
-     * @see com.metamatrix.data.language.IInsert#getGroup()
+     * @see com.metamatrix.connector.language.IInsert#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.data.language.IInsert#getElements()
+     * @see com.metamatrix.connector.language.IInsert#getElements()
      */
     public List getElements() {
         return elements;
     }
 
     /**
-     * @see com.metamatrix.data.language.IInsert#getValues()
+     * @see com.metamatrix.connector.language.IInsert#getValues()
      */
     public List getValues() {
         return values;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

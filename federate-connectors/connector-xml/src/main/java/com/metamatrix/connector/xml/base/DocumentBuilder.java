@@ -38,8 +38,8 @@ import org.jdom.IllegalNameException;
 import org.jdom.Namespace;
 import org.jdom.output.XMLOutputter;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class DocumentBuilder {
 

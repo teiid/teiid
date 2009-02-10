@@ -45,10 +45,8 @@ public class TestHelper {
 	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS, "yyyy-MM-dd,hh:mm:ss,hh:mm,dd/mm/yyyy"); //$NON-NLS-1$
 	    connProps.put(TextPropertyNames.DATE_RESULT_FORMATS_DELIMITER, ","); //$NON-NLS-1$
 	    ConnectorHost host = new ConnectorHost(new TextConnector(), connProps, UnitTestUtil.getTestDataPath() + File.separator + vdb, false);
-	    host.setBatchSize(maxBatchSize);
 	    List results = host.executeCommand(sql);
 	    Assert.assertEquals("Total row count doesn't match expected size. ", expectedRowCount, results.size()); //$NON-NLS-1$
-	    Assert.assertEquals((expectedRowCount/maxBatchSize) + (expectedRowCount % maxBatchSize > 0 ? 1 : 0), host.getBatchCount());
 	}
 
 	public static ConnectorHost getConnectorHostWithFakeMetadata(String descriptorFile) throws Exception {

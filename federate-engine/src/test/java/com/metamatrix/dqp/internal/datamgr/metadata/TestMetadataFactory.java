@@ -32,8 +32,8 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;

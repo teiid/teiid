@@ -27,13 +27,14 @@ package com.metamatrix.connector.jdbc;
 import java.sql.Connection;
 import java.util.Properties;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator;
+import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
 import com.metamatrix.core.util.SimpleMock;
-import com.metamatrix.data.api.ConnectorEnvironment;
 
 
 /** 
@@ -56,23 +57,14 @@ public class TestJDBCSourceConnection extends TestCase {
         
     }
     
-    public static Test suite() {
-        TestSuite suite = new TestSuite("TestJDBCSourceConnection"); //$NON-NLS-1$
-        suite.addTestSuite(TestJDBCSourceConnection.class);
-        return suite;
-    }
-    
     public void setUp() throws Exception {
         fakeConnection = new FakeConnection();
         connection = SimpleMock.createSimpleMock(fakeConnection, Connection.class);
 
         final Properties properties = new Properties();
-        properties.setProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, 
-            "com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator");  //$NON-NLS-1$
-        properties.setProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, 
-            "com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator");  //$NON-NLS-1$
-        properties.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, 
-            "com.metamatrix.data.basic.BasicConnectorCapabilities");  //$NON-NLS-1$
+        properties.setProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, BasicSQLTranslator.class.getName()); 
+        properties.setProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, BasicResultsTranslator.class.getName());  
+        properties.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, BasicConnectorCapabilities.class.getName());  
         
         environment = EnvironmentUtility.createEnvironment(properties, false); 
         

@@ -40,15 +40,15 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.base.SecureConnectorStateImpl;
 import com.metamatrix.connector.xml.base.XMLConnectionImpl;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class HTTPConnectorState extends SecureConnectorStateImpl {
 
@@ -441,7 +441,7 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
     }
 
     public Connection getConnection(CachingConnector connector,
-            SecurityContext context, ConnectorEnvironment environment)
+            ExecutionContext context, ConnectorEnvironment environment)
             throws ConnectorException {
         return new XMLConnectionImpl(connector, context, environment);
     }

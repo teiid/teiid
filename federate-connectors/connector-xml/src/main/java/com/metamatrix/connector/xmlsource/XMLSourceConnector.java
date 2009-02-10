@@ -24,21 +24,20 @@
 
 package com.metamatrix.connector.xmlsource;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.GlobalCapabilitiesProvider;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * XML Source connector, will give provide a XML document as source to
  * Metamatrix engine.
  */
 @ConnectionPooling
-public class XMLSourceConnector implements Connector, GlobalCapabilitiesProvider {
+public class XMLSourceConnector implements Connector {
 
     private ConnectorEnvironment env;
     private XMLConnectionFacory connFactory;
@@ -47,18 +46,20 @@ public class XMLSourceConnector implements Connector, GlobalCapabilitiesProvider
     /**
      * Initialization with environment.
      */
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
+
+    public void start(ConnectorEnvironment environment) throws ConnectorException {
+        start = true;
 
         this.env = environment;
         this.connFactory = new XMLConnectionFacory(this.env);
         
         // logging
-        XMLSourcePlugin.logInfo(this.env.getLogger(), "Connector_intialized"); //$NON-NLS-1$
+        XMLSourcePlugin.logInfo(this.env.getLogger(), "Connector_started"); //$NON-NLS-1$
     }
 
     /**
      * Stop the Connector 
-     * @see com.metamatrix.data.api.Connector#stop()
+     * @see com.metamatrix.connector.api.Connector#stop()
      */
     public void stop() {
         if (!start) {
@@ -68,23 +69,16 @@ public class XMLSourceConnector implements Connector, GlobalCapabilitiesProvider
         XMLSourcePlugin.logInfo(this.env.getLogger(), "Connector_stoped"); //$NON-NLS-1$
     }
 
-    /**
-     * Start the Connector 
-     * @see com.metamatrix.data.api.Connector#start()
-     */
-    public void start() {
-        start = true;
-        XMLSourcePlugin.logInfo(this.env.getLogger(), "Connector_started"); //$NON-NLS-1$
-    }
-
     /*
      * Get a Connection to the XML Source requested.
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    @Override
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
         return this.connFactory.createConnection(context);
     }
 
+    @Override
 	public ConnectorCapabilities getCapabilities() {
 		return XMLSourceCapabilities.INSTANCE;
 	}

@@ -29,21 +29,24 @@ package com.metamatrix.connector.jdbc.xa;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCConnector;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
+import com.metamatrix.connector.xa.api.TransactionContext;
+import com.metamatrix.connector.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.xa.api.TransactionContext;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
 
 @ConnectionPooling
 public class JDBCXAConnector extends JDBCConnector implements XAConnector{
 
-    public void start() throws ConnectorException {
+	@Override
+	public void start(ConnectorEnvironment environment)
+			throws ConnectorException {
         Properties appEnvProps = environment.getProperties();          
 
         // Get and parse URL for some DataSource properties - add to connectionProps
@@ -54,17 +57,17 @@ public class JDBCXAConnector extends JDBCConnector implements XAConnector{
         
         parseURL(url, appEnvProps);
 
-        super.start();
+        super.start(environment);
 
         //TODO: this assumes single identity support
         Connection conn = this.getXAConnection(null, null);
-        conn.release();
+        conn.close();
     }
     
     /*
      * @see com.metamatrix.data.api.xa.XAConnector#getXAConnection(com.metamatrix.data.api.SecurityContext)
      */
-    public XAConnection getXAConnection(SecurityContext context, final TransactionContext transactionContext) throws ConnectorException {
+    public XAConnection getXAConnection(ExecutionContext context, final TransactionContext transactionContext) throws ConnectorException {
     	return (XAConnection)this.getConnection(context);
     }
 

@@ -35,9 +35,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  */
@@ -124,9 +124,9 @@ public class TestsExec extends TestCase {
     
 
     class CancelThread extends Thread{
-        private SynchQueryExecution execution;
+        private ResultSetExecution execution;
 
-        CancelThread(SynchQueryExecution execution){
+        CancelThread(ResultSetExecution execution){
             this.execution = execution;
         }
         public void run(){

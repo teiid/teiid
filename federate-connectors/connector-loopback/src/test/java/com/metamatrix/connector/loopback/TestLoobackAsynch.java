@@ -42,13 +42,11 @@ public class TestLoobackAsynch extends TestCase {
         LoopbackConnector connector = new LoopbackConnector();
 
         Properties props = new Properties();
-        props.setProperty(LoopbackProperties.CAPABILITIES_CLASS, LoopbackAsynchCapabilities.class.getName());
         props.setProperty(LoopbackProperties.POLL_INTERVAL, "100"); //$NON-NLS-1$
         props.setProperty(LoopbackProperties.WAIT_TIME, "200"); //$NON-NLS-1$
         props.setProperty(LoopbackProperties.ROW_COUNT, "1000"); //$NON-NLS-1$
                 
         ConnectorHost host = new ConnectorHost(connector, props, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
-        host.setBatchSize(500);
         List results = host.executeCommand("SELECT intkey from bqt1.smalla"); //$NON-NLS-1$
         assertEquals(1000, results.size());
     }

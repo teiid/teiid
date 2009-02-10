@@ -30,18 +30,25 @@
  */
 package com.metamatrix.connector.jdbc.oracle.spatial;
 
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCConnector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class OracleSpatialConnector extends JDBCConnector {
     
-    public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-
-        super.initialize(environment);
+	@Override
+	public void start(ConnectorEnvironment environment)
+			throws ConnectorException {
+		super.start(environment);
         
         environment.getLogger().logInfo(Messages.getString("OracleSpatialConnector.Connector_initialized")); //$NON-NLS-1$
         environment.getLogger().logTrace("Connector init properties: " + environment.getProperties()); //$NON-NLS-1$
+    }
+    
+    @Override
+    public ConnectorCapabilities getCapabilities() {
+    	return new OracleSpatialCapabilities();
     }
 
 }

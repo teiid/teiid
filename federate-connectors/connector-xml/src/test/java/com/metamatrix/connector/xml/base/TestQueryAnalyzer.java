@@ -26,17 +26,19 @@ package com.metamatrix.connector.xml.base;
 
 
 
+import org.mockito.Mockito;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.SysLogger;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
-import com.metamatrix.connector.xml.MockConnectorEnvironment;
-import com.metamatrix.connector.xml.MockExecutionContext;
 import com.metamatrix.connector.xml.MockQueryPreprocessor;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -70,11 +72,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
         	assertNotNull("analyzer is null", analyzer);
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -85,11 +85,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -101,11 +99,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -117,11 +113,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -133,11 +127,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
         	analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -149,11 +141,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -165,11 +155,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -181,11 +169,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, strQuery);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
             analyzer.analyze();
         } catch (ConnectorException e) {
             fail(e.getMessage());
@@ -196,11 +182,9 @@ public class TestQueryAnalyzer extends TestCase {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
         RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQueryPreprocessor preprocessor = new MockQueryPreprocessor();
-        MockExecutionContext exeCtx = new MockExecutionContext();
-        MockConnectorEnvironment connEnv = new MockConnectorEnvironment();
         ConnectorLogger logger = new SysLogger(false);
         try {
-        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, exeCtx, connEnv);
+        	QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, preprocessor, logger, Mockito.mock(ExecutionContext.class), Mockito.mock(ConnectorEnvironment.class));
 	        assertNotNull("analyzer is null", analyzer);
 	        ExecutionInfo base = analyzer.getExecutionInfo();
 	        assertEquals(1, base.getColumnCount());

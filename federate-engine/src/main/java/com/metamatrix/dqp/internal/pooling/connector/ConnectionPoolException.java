@@ -26,7 +26,7 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * This class is for exceptions occurring within the connection pool.

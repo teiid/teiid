@@ -33,12 +33,12 @@ import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.transaction.xa.XAResource;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.ConnectionListener;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.xa.api.XAConnection;
+import com.metamatrix.connector.xa.api.XAConnection;
 
 public class JDBCSourceXAConnection extends JDBCSourceConnection implements XAConnection {
     private javax.sql.XAConnection xaConn;
@@ -62,14 +62,15 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
     }
     
     /**
-     * @see com.metamatrix.data.xa.api.XAConnection#getXAResource()
+     * @see com.metamatrix.connector.xa.api.XAConnection#getXAResource()
      */
     public XAResource getXAResource() throws ConnectorException {
         return resource;
     }
     
-    public synchronized void release() {
-        super.release();
+    @Override
+    public void close() {
+        super.close();
         
         try {
 			this.xaConn.close();
@@ -82,8 +83,8 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
      * XAConnection Connections should be cycled to ensure proper cleanup after the transaction.
      */
     @Override
-    public void connectionReleased() {
-    	super.release();
+    public void closeCalled() {
+    	super.closeCalled();
     	try {
 			this.physicalConnection = this.xaConn.getConnection();
 		} catch (SQLException e) {

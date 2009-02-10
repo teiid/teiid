@@ -30,14 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.SubstringFunctionModifier;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

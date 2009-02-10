@@ -24,18 +24,21 @@
 
 package com.metamatrix.xa.arjuna;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import junit.framework.TestCase;
 
 import com.arjuna.ats.arjuna.common.Configuration;
 import com.arjuna.ats.arjuna.recovery.RecoveryConfiguration;
-
 import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.dqp.internal.transaction.TransactionProvider;
 import com.metamatrix.dqp.service.TransactionService;
 
 
@@ -43,13 +46,36 @@ import com.metamatrix.dqp.service.TransactionService;
  * Test that Arjuna is calling into the xa resource in event of recovery
  */
 public class TestArjunaRecovery extends TestCase {
-    private static final String CONN2 = "conn2";//$NON-NLS-1$
+	
+    public static final class FakeXAConnectionSource implements
+			TransactionProvider.XAConnectionSource {
+		private final FakeXAConnection connection_1;
+
+		FakeXAConnectionSource(FakeXAConnection connection_1) {
+			this.connection_1 = connection_1;
+		}
+		
+		@Override
+		public XAResource getXAResource() throws SQLException {
+			try {
+				return connection_1.getXAResource();
+			} catch (ConnectorException e) {
+				throw new SQLException(e);
+			}
+		}
+		
+		@Override
+		public void close() {
+			connection_1.close();
+		}
+	}
+
+	private static final String CONN2 = "conn2";//$NON-NLS-1$
     private static final String CONN1 = "conn1";//$NON-NLS-1$
 
 
     public TestArjunaRecovery() {
     	super();
-    	System.setProperty("metamatrix.config.none", "true");
     }
     
     public void testRecovery() throws Exception{
@@ -63,12 +89,9 @@ public class TestArjunaRecovery extends TestCase {
         Configuration.setPropertiesFile("com/metamatrix/xa/arjuna/jbossjta-properties.xml"); //$NON-NLS-1$
         com.arjuna.ats.txoj.common.Configuration.setPropertiesFile("com/metamatrix/xa/arjuna/jbossjta-properties.xml"); //$NON-NLS-1$
         
-        FakeXAConnector connector_1 = new FakeXAConnector(CONN1);
-        FakeXAConnector connector_2 = new FakeXAConnector(CONN2);
-                
         // now setup some fake xid to recover
-        FakeXAConnection connection_1 = (FakeXAConnection)connector_1.getXAConnection(null,null);
-        FakeXAConnection connection_2 = (FakeXAConnection)connector_2.getXAConnection(null,null);
+        final FakeXAConnection connection_1 = new FakeXAConnection(CONN1);
+        final FakeXAConnection connection_2 = new FakeXAConnection(CONN2);
 
         final MMXid xid1 = new MMXid(1, "conn1".getBytes(), "txn1".getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
         final MMXid xid2 = new MMXid(2, "conn2".getBytes(), "txn2".getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -120,8 +143,8 @@ public class TestArjunaRecovery extends TestCase {
         resource_2.setRecoverableXid(xid2); 
         
         ArjunaTransactionProvider provider = ArjunaTransactionProvider.getInstance(props);
-        provider.registerRecoverySource(CONN1, connector_1);
-        provider.registerRecoverySource(CONN2, connector_2);
+        provider.registerRecoverySource(CONN1, new FakeXAConnectionSource(connection_1));
+        provider.registerRecoverySource(CONN2, new FakeXAConnectionSource(connection_2));
 
         synchronized (done) {
             done.wait(60000);    

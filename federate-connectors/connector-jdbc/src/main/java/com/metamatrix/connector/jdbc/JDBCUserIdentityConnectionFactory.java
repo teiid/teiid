@@ -27,12 +27,12 @@ package com.metamatrix.connector.jdbc;
 import java.sql.Driver;
 import java.util.Properties;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.pool.CredentialMap;
-import com.metamatrix.data.pool.UserIdentityFactory;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.pool.CredentialMap;
+import com.metamatrix.connector.pool.UserIdentityFactory;
 
 /**
  */
@@ -76,7 +76,7 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
         return this.transIsoLevel;
     }
 
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
         String[] userProperties = getUserProperties(context);
         
         Properties props = new Properties();
@@ -85,7 +85,7 @@ public class JDBCUserIdentityConnectionFactory extends JDBCSourceConnectionFacto
         return createJDBCConnection(this.driver, getUrl(), getTransactionIsolationLevel(), props);
     }
     
-    protected String[] getUserProperties(SecurityContext context) throws ConnectorException {
+    protected String[] getUserProperties(ExecutionContext context) throws ConnectorException {
         
         // By default, assume the session token is a CredentialMap and pull out the user/password props
         Object trustedPayload = context.getTrustedPayload(); 

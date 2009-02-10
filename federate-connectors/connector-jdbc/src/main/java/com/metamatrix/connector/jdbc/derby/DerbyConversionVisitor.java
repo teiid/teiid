@@ -35,7 +35,7 @@ class DerbyConversionVisitor extends SQLConversionVisitor {
     private final int MAX_TABLE_ALIAS_LENGTH = 128;
     
     /** 
-     * @see com.metamatrix.data.visitor.util.SQLStringVisitor#getMaxTableAliasLength()
+     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#getMaxTableAliasLength()
      */
     protected int getMaxTableAliasLength() {
         return MAX_TABLE_ALIAS_LENGTH;

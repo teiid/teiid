@@ -28,7 +28,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorCapabilities;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -55,18 +55,6 @@ public class TestXMLCapabilities extends TestCase {
         assertEquals(Integer.MAX_VALUE, m_caps.getMaxInCriteriaSize());
     }
     
-    public void testGetCapabilitiesScope() {
-        assertEquals(ConnectorCapabilities.SCOPE.GLOBAL, m_caps.getCapabilitiesScope());
-    }
-
-    public void testSupportsExecutionMode() {
-        assertTrue(m_caps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.SYNCH_QUERY));
-        assertFalse(m_caps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.BATCHED_UPDATES));
-        assertFalse(m_caps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT));
-        assertFalse(m_caps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.PROCEDURE));
-        assertFalse(m_caps.supportsExecutionMode(ConnectorCapabilities.EXECUTION_MODE.UPDATE));
-    }
-
     public void testSupportsCriteria() {
         assertTrue(m_caps.supportsCriteria());
     }
@@ -247,20 +235,8 @@ public class TestXMLCapabilities extends TestCase {
         assertFalse(m_caps.supportsScalarFunctions());
     }
 
-    /*
-     * Class under test for java.util.List getSupportedFunctions()
-     */
-
-    public void testSupportsXATransactions() {
-        assertFalse(m_caps.supportsXATransactions());
-    }
-
     public void testSupportsInlineViews() {
         assertFalse(m_caps.supportsInlineViews());
-    }
-
-    public void testSupportsUnionOrderBy() {
-        assertFalse(m_caps.supportsUnionOrderBy());
     }
 
     public void testSupportsUnions() {

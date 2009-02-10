@@ -30,14 +30,14 @@ import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
 
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.execution.visitors.UpdateVisitor;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.ISetClause;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.metadata.runtime.Element;
 
 public class UpdateExecutionImpl {
 

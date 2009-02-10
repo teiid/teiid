@@ -47,8 +47,8 @@ import org.apache.axis.wsdl.symbolTable.Parameters;
 import org.apache.axis.wsdl.symbolTable.TypeEntry;
 import org.w3c.dom.Element;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.ConnectorEnvironment;
 
 
 /**

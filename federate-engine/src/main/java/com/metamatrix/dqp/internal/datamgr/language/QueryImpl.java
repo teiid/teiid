@@ -27,14 +27,14 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IFrom;
-import com.metamatrix.data.language.IGroupBy;
-import com.metamatrix.data.language.IOrderBy;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelect;
-import com.metamatrix.data.language.ISelectSymbol;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IGroupBy;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class QueryImpl extends QueryCommandImpl implements IQuery {
 
@@ -54,35 +54,35 @@ public class QueryImpl extends QueryCommandImpl implements IQuery {
         this.setOrderBy(orderBy);
     }
     /**
-     * @see com.metamatrix.data.language.IQuery#getSelect()
+     * @see com.metamatrix.connector.language.IQuery#getSelect()
      */
     public ISelect getSelect() {
         return select;
     }
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getFrom()
+     * @see com.metamatrix.connector.language.IQuery#getFrom()
      */
     public IFrom getFrom() {
         return from;
     }
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getWhere()
+     * @see com.metamatrix.connector.language.IQuery#getWhere()
      */
     public ICriteria getWhere() {
         return where;
     }
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getGroupBy()
+     * @see com.metamatrix.connector.language.IQuery#getGroupBy()
      */
     public IGroupBy getGroupBy() {
         return groupBy;
     }
 
     /**
-     * @see com.metamatrix.data.language.IQuery#getHaving()
+     * @see com.metamatrix.connector.language.IQuery#getHaving()
      */
     public ICriteria getHaving() {
         return having;
@@ -114,7 +114,7 @@ public class QueryImpl extends QueryCommandImpl implements IQuery {
     }
     
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -34,12 +34,13 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IGroup;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.ISelectSymbol;
 
 /**
  */

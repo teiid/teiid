@@ -26,10 +26,10 @@ package com.metamatrix.connector.xmlsource;
 
 import java.lang.reflect.Constructor;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 
 
 /** 
@@ -54,7 +54,7 @@ public class XMLConnectionFacory {
      * @return
      * @throws ConnectorException
      */
-    public Connection createConnection(SecurityContext context) 
+    public Connection createConnection(ExecutionContext context) 
         throws ConnectorException {
         String connectionTypeClass = env.getProperties().getProperty("ConnectionType"); //$NON-NLS-1$
         try {

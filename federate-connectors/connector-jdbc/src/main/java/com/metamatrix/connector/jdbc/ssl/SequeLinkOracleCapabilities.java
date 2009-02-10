@@ -25,7 +25,6 @@
 package com.metamatrix.connector.jdbc.ssl;
 
 import com.metamatrix.connector.jdbc.oracle.OracleCapabilities;
-import com.metamatrix.data.api.ConnectorCapabilities;
 
 
 /** 
@@ -33,11 +32,9 @@ import com.metamatrix.data.api.ConnectorCapabilities;
  */
 public class SequeLinkOracleCapabilities extends OracleCapabilities {
     
-    public boolean supportsExecutionMode(int executionMode) {
-        if ( executionMode == ConnectorCapabilities.EXECUTION_MODE.BULK_INSERT) {
-            return false;
-        }
-        return super.supportsExecutionMode(executionMode);
-    }
-
+	@Override
+	public boolean supportsBulkInsert() {
+		return false;
+	}
+	
 }

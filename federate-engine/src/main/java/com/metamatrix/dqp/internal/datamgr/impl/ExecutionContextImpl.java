@@ -26,14 +26,13 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.pool.ConnectorIdentity;
 
 /**
  */
-public class ExecutionContextImpl implements SecurityContext {
+public class ExecutionContextImpl implements ExecutionContext {
 
     // Orginal request non-atomic request id
     private String requestID;   
@@ -63,6 +62,8 @@ public class ExecutionContextImpl implements SecurityContext {
     private boolean isTransactional;
     
     private ConnectorIdentity connectorIdentity;
+    
+    private int batchSize;
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 
@@ -179,5 +180,14 @@ public class ExecutionContextImpl implements SecurityContext {
 	
 	public void setConnectorIdentity(ConnectorIdentity connectorIdentity) {
 		this.connectorIdentity = connectorIdentity;
+	}
+	
+	@Override
+	public int getBatchSize() {
+		return batchSize;
+	}
+	
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 }

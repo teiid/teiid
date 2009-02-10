@@ -27,92 +27,78 @@ package com.metamatrix.connector.metadata.adapter;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.internal.IObjectQuery;
 import com.metamatrix.connector.metadata.internal.MetadataException;
 import com.metamatrix.connector.metadata.internal.ObjectQuery;
 import com.metamatrix.connector.metadata.internal.ObjectQueryProcessor;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Adapter to expose the object processing logic via the standard connector API.
  * Makes the batches coming from the objectSource match the batch sizes requested by the caller.
  */
-public class ObjectSynchExecution implements SynchQueryExecution {
+public class ObjectSynchExecution implements ResultSetExecution {
     private final RuntimeMetadata metadata;
     private ObjectQueryProcessor processor;
 
     private IObjectQuery query;
     private Iterator queryResults;
-    private int maxBatchSize;
-    private boolean closed;
     private ObjectConnection connection;
+    private IQuery command;
+    private volatile boolean cancel;
 
-    public ObjectSynchExecution(RuntimeMetadata metadata, ObjectConnection connection) {
+    public ObjectSynchExecution(IQuery command, RuntimeMetadata metadata, ObjectConnection connection) {
         this.metadata = metadata;
         this.connection = connection;
+        this.command = command;
     }
 
-    private void throwAwayResults() {
-        queryResults = null;
-    }
-
-    public synchronized void execute(IQuery query, int maxBatchSize) throws ConnectorException {
-        if (closed) {
-            throw new ConnectorException(MetadataConnectorPlugin.Util.getString("ObjectSynchExecution.closed")); //$NON-NLS-1$
-        }
+    @Override
+    public void execute() throws ConnectorException {
         this.processor = new ObjectQueryProcessor(connection.getMetadataObjectSource());
         
-        this.query = new ObjectQuery(metadata, query);
-        this.maxBatchSize = maxBatchSize;  
+        this.query = new ObjectQuery(metadata, command);
         try {
 			queryResults = processor.process(this.query);
 		} catch (MetadataException e) {
 			throw new ConnectorException(e);
 		}              
+    	
     }
-
-    /* 
-     * @see com.metamatrix.data.SynchExecution#nextBatch(int)
-     */
-    public synchronized Batch nextBatch() throws ConnectorException {
-        if (closed) {
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (cancel) {
             throw new ConnectorException(MetadataConnectorPlugin.Util.getString("ObjectSynchExecution.closed")); //$NON-NLS-1$
         }
-        int count = 0;
-        BasicBatch result = new BasicBatch();
-        while (queryResults.hasNext() && count++ < maxBatchSize) {
-        	result.addRow((List)queryResults.next());
+    	if(this.queryResults == null) {
+        	return null;
         }
-        if (!queryResults.hasNext()) {
-            result.setLast();
-        }
-        return result;
+    	int count = 0;
+    	if (queryResults.hasNext()) {
+    		return (List)queryResults.next();
+    	}
+    	return null;
     }
 
     /* 
      * @see com.metamatrix.data.Execution#cancel()
      */
-    public synchronized void cancel() throws ConnectorException {
-        closed = true;
-        throwAwayResults();
+    @Override
+    public void cancel() throws ConnectorException {
+       cancel = true;
     }
 
     /* 
      * @see com.metamatrix.data.Execution#close()
      */
-    public synchronized void close() throws ConnectorException {
-        /* Defect 18362 - Since cancel/close occur asynchronously, it's possible that queryresults can be set to
-         * null at any time. Synchronizing alleviates possible races that might occur when the
-         * connector is concurrently calling execute() or nextBatch().
-         */
-        closed = true;
-        throwAwayResults();
+    @Override
+    public void close() throws ConnectorException {
     }
 
 }

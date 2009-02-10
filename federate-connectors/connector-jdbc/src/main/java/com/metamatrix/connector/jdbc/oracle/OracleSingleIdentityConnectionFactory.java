@@ -31,13 +31,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.jdbc.ConnectionListener;
 import com.metamatrix.connector.jdbc.ConnectionQueryStrategy;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.DefaultConnectionListener;
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
-import com.metamatrix.data.api.ConnectorEnvironment;
 
 public class OracleSingleIdentityConnectionFactory extends JDBCSingleIdentityConnectionFactory{
     private String queryTest = "Select 'x' from DUAL"; //$NON-NLS-1$

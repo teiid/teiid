@@ -29,7 +29,7 @@ package com.metamatrix.connector.jdbc.sqlserver;
 import java.sql.Time;
 
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.*;
+import com.metamatrix.connector.language.*;
 
 /**
  */

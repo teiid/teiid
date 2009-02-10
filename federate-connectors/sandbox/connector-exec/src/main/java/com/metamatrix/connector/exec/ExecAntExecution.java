@@ -50,22 +50,21 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.OSPlatformUtil;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.TempDirectory;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.basic.BasicBatch;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 /**
  * Represents the execution of a command.
  */
-public class ExecAntExecution implements SynchQueryExecution {
+public class ExecAntExecution implements ResultSetExecution {
 
 	private static final Random random = new Random(System.currentTimeMillis());
 	private static TempDirectory TEMPDIR = null;
@@ -91,6 +90,7 @@ public class ExecAntExecution implements SynchQueryExecution {
 	private Process p = null;
 
 	private List exclusionList;
+	private IQuery query;
 
 	static {
 		String hosttempdir = ".";//$NON-NLS-1$
@@ -107,9 +107,9 @@ public class ExecAntExecution implements SynchQueryExecution {
 		TEMPDIR.create();
 	}
 
-	public ExecAntExecution(ConnectorEnvironment env, RuntimeMetadata metadata, ConnectorLogger logger, List exclusionThese) {
+	public ExecAntExecution(IQuery query, ConnectorEnvironment env, RuntimeMetadata metadata, ConnectorLogger logger, List exclusionThese) {
 		this.env = env;
-
+		this.query = query;
 		if (exclusionThese != null)
 			exclusionList = exclusionThese;
 		else
@@ -131,11 +131,11 @@ public class ExecAntExecution implements SynchQueryExecution {
 	 * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery,
 	 *      int)
 	 */
-	public void execute(IQuery query, int maxBatchSize)
+	public void execute()
 			throws ConnectorException {
 
 		env.getLogger().logTrace("Exec executing command: " + query); //$NON-NLS-1$
-		com.metamatrix.data.language.ICriteria crit = query.getWhere();
+		com.metamatrix.connector.language.ICriteria crit = query.getWhere();
 		if (crit == null)
 			throw new ConnectorException(ExecPlugin.Util
 					.getString("ExecExecution.Must_have_criteria")); //$NON-NLS-1$
@@ -226,25 +226,13 @@ public class ExecAntExecution implements SynchQueryExecution {
 		return rep;
 	}
 
-	/*
-	 * @see com.metamatrix.data.SynchExecution#nextBatch(int)
-	 */
-	public Batch nextBatch() throws ConnectorException {
-		BasicBatch batch = new BasicBatch();
+	@Override
+	public List next() throws ConnectorException, DataNotAvailableException {
+		if (returnIndex < responses.size()) {
+			return (List)responses.get(returnIndex++);
+		} 
 
-		if (returnIndex < 1) {
-			for (Iterator it = responses.iterator(); it.hasNext();) {
-				List rows = (List) it.next();
-				batch.addRow(rows);
-			}
-			batch.setLast();
-		} else {
-			returnIndex = 1;
-			batch.setLast();
-
-		}
-
-		return batch;
+		return null;
 	}
 
 	/**

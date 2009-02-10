@@ -35,8 +35,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.xa.api.XAConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.transaction.TransactionServer;
@@ -170,6 +170,13 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 	
     private TransactionServer getTransactionServer() {
         return manager.getTransactionService().getTransactionServer();
+    }
+    
+    @Override
+    protected boolean dataNotAvailable(long delay) {
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {
+				"AtomicRequest", id, "On connector", manager.getName(), " threw a DataNotAvailableException, but will be ignored since this is a Synch Connector." }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	return true;
     }
 
 }

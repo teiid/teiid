@@ -26,8 +26,8 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IGroupBy;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IGroupBy;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class GroupByImpl extends BaseLanguageObject implements IGroupBy {
 
@@ -38,14 +38,14 @@ public class GroupByImpl extends BaseLanguageObject implements IGroupBy {
     }
     
     /**
-     * @see com.metamatrix.data.language.IGroupBy#getElements()
+     * @see com.metamatrix.connector.language.IGroupBy#getElements()
      */
     public List getElements() {
         return elements;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

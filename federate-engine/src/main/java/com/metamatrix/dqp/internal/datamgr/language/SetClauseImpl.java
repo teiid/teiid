@@ -24,10 +24,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.ISetClause;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SetClauseImpl implements ISetClause {
 

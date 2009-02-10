@@ -35,24 +35,24 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.UpdateExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ICompareCriteria;
-import com.metamatrix.data.language.ICriteria;
-import com.metamatrix.data.language.IDelete;
-import com.metamatrix.data.language.IElement;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IInsert;
-import com.metamatrix.data.language.ILiteral;
-import com.metamatrix.data.language.ISetClause;
-import com.metamatrix.data.language.IUpdate;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Please see the user's guide for a full description of capabilties, etc.
@@ -76,16 +76,13 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	private LdapContext ldapCtx;
 	private ICommand command;
 
-	public LDAPUpdateExecution(int executionMode, ExecutionContext ctx,
+	public LDAPUpdateExecution(ICommand command, ExecutionContext ctx,
 			RuntimeMetadata rm, ConnectorLogger logger,
 			InitialLdapContext ldapCtx) throws ConnectorException {
-		if (executionMode != ConnectorCapabilities.EXECUTION_MODE.UPDATE) {
-            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.execModeError"); //$NON-NLS-1$
-			throw new ConnectorException(msg); 
-		}
 		this.rm = rm;
 		this.logger = logger;
 		this.initialLdapContext = ldapCtx;
+		this.command = command;
 	}
 	
 	/** execute generic update-class (either an update, delete, or insert)
@@ -102,8 +99,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	 * did exist prior to the delete), so right now we sacrifice accuracy
 	 * here for the sake of efficiency.
 	 */
-	public int execute(ICommand command) 
-			throws ConnectorException {
+	@Override
+	public void execute() throws ConnectorException {
 		// first make a copy of the initial LDAP context we got from
 		// the connection.  The actual update-class operation will use
 		// this copy.  This will enable the close and cancel methods
@@ -117,7 +114,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			throw new ConnectorException(msg);
 		}
 
-		this.command = command;
 		if (command instanceof IUpdate) {
 			executeUpdate();
 		}
@@ -131,7 +127,12 @@ public class LDAPUpdateExecution implements UpdateExecution {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.incorrectCommandError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}
-		return 1;
+	}
+	
+	@Override
+	public int[] getUpdateCounts() throws DataNotAvailableException,
+			ConnectorException {
+		return new int[] {1};
 	}
 
 

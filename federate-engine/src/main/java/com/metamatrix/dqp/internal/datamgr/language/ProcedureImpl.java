@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.MetadataID;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
 
@@ -57,7 +57,7 @@ public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -27,19 +27,20 @@ package com.metamatrix.connector.text;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorMetadata;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Implementation of Connection interface for text connection.
  */
-public class TextConnection implements Connection {
+public class TextConnection extends BasicConnection {
 
     // metadata props -- Map<groupName --> Map<propName, propValue>
     Map metadataProps = new HashMap();
@@ -56,28 +57,15 @@ public class TextConnection implements Connection {
         this.metadataProps = metadataProps;
     }
 
-    /**
-     * Create text execution.
-     * 
-     * @param command
-     *            ICommand containing the query
-     */
-    public Execution createExecution(int executionMode,
-                                     ExecutionContext executionContext,
-                                     RuntimeMetadata metadata) {
-        return new TextSynchExecution(this, metadata);
+    @Override
+    public ResultSetExecution createResultSetExecution(IQueryCommand command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata)
+    		throws ConnectorException {
+    	return new TextSynchExecution((IQuery)command, this, metadata);
     }
 
-    /**
-     * Get the metadata of the source the connector is connected to.
-     * 
-     * @return ConnectorMetadata
-     */
-    public ConnectorMetadata getMetadata() {
-        return null;
-    }
-
-    public void release() {
+    @Override
+    public void close() {
         metadataProps = null;
         env.getLogger().logInfo("Text Connection is successfully closed."); //$NON-NLS-1$
     }
@@ -86,6 +74,6 @@ public class TextConnection implements Connection {
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return TextCapabilities.INSTANCE;
+        return null;
     }
 }

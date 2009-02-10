@@ -29,12 +29,12 @@ package com.metamatrix.connector.xml;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.base.LoggingConnector;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.cache.RequestRecord;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.exception.ConnectorException;
 
 public abstract class AbstractCachingConnector extends LoggingConnector implements CachingConnector
 {
@@ -50,28 +50,20 @@ public abstract class AbstractCachingConnector extends LoggingConnector implemen
       super();
    }
 
-   public void initialize(ConnectorEnvironment env) throws ConnectorException
+   public void start(ConnectorEnvironment env) throws ConnectorException
    {
-      try
-      {
-         super.initialize(env);
-         m_documentCache = new DocumentCache(m_state.getMaxMemoryCacheSizeByte(), m_state.getMaxFileCacheSizeByte(),
-               m_state.getCacheLocation(), m_state.getCacheTimeoutMillis(), getLogger(), env.getConnectorName(), true);
+     super.start(env);
+     m_documentCache = new DocumentCache(m_state.getMaxMemoryCacheSizeByte(), m_state.getMaxFileCacheSizeByte(),
+           m_state.getCacheLocation(), m_state.getCacheTimeoutMillis(), getLogger(), env.getConnectorName(), true);
 
-         // It would be nice if there was a way to tell the cache that
-         // nothing,
-         // expires, but there is no way, so I just give it a very large
-         // integer
-         m_statementCache = new DocumentCache(Integer.MAX_VALUE / 2, 0, m_state.getCacheLocation(),
-               Integer.MAX_VALUE / 2, getLogger(), env.getConnectorName() + "_STMT", false);//$NON-NLS-1$ 
+     // It would be nice if there was a way to tell the cache that
+     // nothing,
+     // expires, but there is no way, so I just give it a very large
+     // integer
+     m_statementCache = new DocumentCache(Integer.MAX_VALUE / 2, 0, m_state.getCacheLocation(),
+           Integer.MAX_VALUE / 2, getLogger(), env.getConnectorName() + "_STMT", false);//$NON-NLS-1$ 
 
-         requestInfo = new HashMap();
-
-      }
-      catch (RuntimeException e)
-      {
-         throw new ConnectorException(e);
-      }
+     requestInfo = new HashMap();
    }
 
    /*

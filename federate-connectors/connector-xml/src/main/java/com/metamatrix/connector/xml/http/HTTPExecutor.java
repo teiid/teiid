@@ -45,6 +45,8 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.util.ParameterParser;
 import org.jdom.Document;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnection;
@@ -59,8 +61,6 @@ import com.metamatrix.connector.xml.base.Response;
 import com.metamatrix.connector.xml.base.XMLDocument;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * created by JChoate on Jun 27, 2005

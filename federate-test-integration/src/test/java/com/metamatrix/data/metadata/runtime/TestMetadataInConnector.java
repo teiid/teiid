@@ -1,7 +1,7 @@
 package com.metamatrix.data.metadata.runtime;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.exception.ConnectorException;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 public class TestMetadataInConnector extends AbstractMMQueryTestCase {
@@ -13,18 +13,14 @@ public class TestMetadataInConnector extends AbstractMMQueryTestCase {
     public void testMetadataTable() throws ConnectorException {
     	getConnection(VDB, DQP_PROP_FILE, ""); //$NON-NLS-1$
     	execute("Select * from TableA"); //$NON-NLS-1$
-    	String expected[] = {"column1[string]    column2[integer]", //$NON-NLS-1$
-    			"A    1", //$NON-NLS-1$
-    			"B    2"};//$NON-NLS-1$
+    	String expected[] = {"column1[string]    column2[integer]"}; //$NON-NLS-1$
     	assertResults(expected); 
     }
     
     public void testMetadataProcedure() throws ConnectorException {
     	getConnection(VDB, DQP_PROP_FILE, ""); //$NON-NLS-1$
     	executeStoredProcedure("exec AnyModel.ProcedureB(?)", new Object[] {"foo"}); //$NON-NLS-1$ //$NON-NLS-2$
-    	String expected[] = {"column1[string]    column2[integer]", //$NON-NLS-1$
-    			"A    1", //$NON-NLS-1$
-    			"B    2"};//$NON-NLS-1$
+    	String expected[] = {"column1[string]    column2[integer]"}; //$NON-NLS-1$
     	assertResults(expected); 
     }	
     

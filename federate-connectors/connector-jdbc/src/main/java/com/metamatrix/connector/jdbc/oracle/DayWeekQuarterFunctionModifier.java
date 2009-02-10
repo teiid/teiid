@@ -26,9 +26,7 @@ package com.metamatrix.connector.jdbc.oracle;
 
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.language.IExpression;
-import com.metamatrix.data.language.IFunction;
+import com.metamatrix.connector.language.*;
 
 /**
  * This a method for multiple use. It can be used for:

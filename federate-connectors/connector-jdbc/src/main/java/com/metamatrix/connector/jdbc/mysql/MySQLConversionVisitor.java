@@ -32,8 +32,8 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.data.language.ILimit;
-import com.metamatrix.data.language.IQueryCommand;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IQueryCommand;
 
 /**
  */

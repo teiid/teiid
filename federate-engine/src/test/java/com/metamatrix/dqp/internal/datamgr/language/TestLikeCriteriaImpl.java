@@ -24,7 +24,7 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.ILiteral;
+import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;

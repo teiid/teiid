@@ -33,13 +33,14 @@ import java.util.Properties;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.ObjectConverterUtil;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 /**
  * Implementation of text connector.
@@ -52,12 +53,11 @@ public class ExecConnector implements Connector {
     private List exclusionList= Collections.EMPTY_LIST;
     private String exclusionFile;
 
-    
-
     /**
      * Initialization with environment.
      */
-    public void initialize( ConnectorEnvironment environment ) throws ConnectorException {
+    @Override
+    public void start( ConnectorEnvironment environment ) throws ConnectorException {
         logger = environment.getLogger();
         this.env = environment;
         
@@ -69,7 +69,8 @@ public class ExecConnector implements Connector {
 
         // logging
         logger = environment.getLogger();
-        logger.logInfo("Exec Connector is intialized."); //$NON-NLS-1$
+        start = true;
+        logger.logInfo("Exec Connector is started."); //$NON-NLS-1$
     }
 
     public void stop() {
@@ -80,16 +81,16 @@ public class ExecConnector implements Connector {
         start = false;
         logger.logInfo("Exec Connector is stoped."); //$NON-NLS-1$
     }
-
-    public void start() {
-        start = true;
-        logger.logInfo("Exec Connector is started."); //$NON-NLS-1$
+    
+    @Override
+    public ConnectorCapabilities getCapabilities() {
+    	return new ExecCapabilities();
     }
 
     /*
      * @see com.metamatrix.data.Connector#getConnection(com.metamatrix.data.SecurityContext)
      */
-    public Connection getConnection(SecurityContext context) throws ConnectorException {
+    public Connection getConnection(ExecutionContext context) throws ConnectorException {
         return new ExecConnection(this.env, exclusionList);
     }
     

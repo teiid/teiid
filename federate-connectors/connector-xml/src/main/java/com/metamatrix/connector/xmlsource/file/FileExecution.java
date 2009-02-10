@@ -33,14 +33,14 @@ import java.util.Properties;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.metadata.runtime.MetadataObject;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -54,6 +54,7 @@ public class FileExecution extends XMLSourceExecution {
     Source returnValue = null;
     ExecutionContext context;
     File rootFolder;
+    private IProcedure procedure;
     
     /** 
      * @param env
@@ -61,18 +62,20 @@ public class FileExecution extends XMLSourceExecution {
      * @param context
      * @param metadata
      */
-    public FileExecution(ConnectorEnvironment env, RuntimeMetadata metadata, ExecutionContext context, File rootFolder) 
+    public FileExecution(IProcedure proc, ConnectorEnvironment env, RuntimeMetadata metadata, ExecutionContext context, File rootFolder) 
         throws ConnectorException{
         super(env);
         this.metadata = metadata;
         this.context = context;
         this.rootFolder = rootFolder;
+        this.procedure = proc;
     }
     
     /** 
-     * @see com.metamatrix.data.api.ProcedureExecution#execute(com.metamatrix.data.language.IProcedure, int)
+     * @see com.metamatrix.connector.api.ProcedureExecution#execute(com.metamatrix.connector.language.IProcedure, int)
      */
-    public void execute(IProcedure procedure, int maxBatchSize) throws ConnectorException {
+    @Override
+    public void execute() throws ConnectorException {
         
         // look for the name of the file to return in the metadata, "Name in Source" property
         MetadataObject metaObject = this.metadata.getObject(procedure.getMetadataID());

@@ -32,12 +32,12 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
 
 /**
  */
@@ -72,7 +72,7 @@ public class TestDB2SqlTranslator extends TestCase {
         // Convert from sql to objects
         ICommand obj = util.parseCommand(input);
         
-        SecurityContext context = EnvironmentUtility.createSecurityContext("user");
+        ExecutionContext context = EnvironmentUtility.createSecurityContext("user");
                 
         TranslatedCommand tc = new TranslatedCommand(context, TRANSLATOR);
         tc.translateCommand(obj);

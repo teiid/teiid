@@ -29,15 +29,15 @@ package com.metamatrix.connector.jdbc.db2;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.ILanguageFactory;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */
@@ -75,7 +75,7 @@ public class DB2SQLTranslator extends BasicSQLTranslator {
     }
     
     /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#modifyCommand(com.metamatrix.data.language.ICommand, com.metamatrix.data.SecurityContext)
+     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#modifyCommand(com.metamatrix.connector.language.ICommand, com.metamatrix.data.SecurityContext)
      */
     public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
         // DB2-specific modification

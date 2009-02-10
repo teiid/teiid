@@ -28,7 +28,7 @@ import java.util.*;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.data.exception.ConnectorException;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;

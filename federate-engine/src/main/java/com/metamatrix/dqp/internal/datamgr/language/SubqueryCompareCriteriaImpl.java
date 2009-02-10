@@ -24,8 +24,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.*;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

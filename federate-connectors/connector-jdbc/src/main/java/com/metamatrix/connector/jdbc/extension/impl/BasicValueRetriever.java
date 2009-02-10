@@ -32,8 +32,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.ValueRetriever;
-import com.metamatrix.data.api.TypeFacility;
 
 /**
  * Retrieve objects  

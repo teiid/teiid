@@ -26,17 +26,19 @@
  */
 package com.metamatrix.connector.jdbc.extension;
 
-import java.sql.*;
-
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.TimeZone;
 
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.TypeFacility;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
 
 /**
  * Specify database-specific behavior for translating results.
@@ -112,7 +114,7 @@ public interface ResultsTranslator {
      * @return The batch to use instead
      * @since 4.2
      */
-    Batch modifyBatch(Batch batch, ExecutionContext context, ICommand command);    
+    List modifyRow(List batch, ExecutionContext context, ICommand command);    
     
     /**
      * Get the max result rows allowed

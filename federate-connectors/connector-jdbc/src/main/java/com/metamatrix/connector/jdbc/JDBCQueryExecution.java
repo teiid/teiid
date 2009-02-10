@@ -30,46 +30,54 @@ package com.metamatrix.connector.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.api.ValueTranslator;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
-import com.metamatrix.data.api.Batch;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.api.SynchQueryCommandExecution;
-import com.metamatrix.data.api.SynchQueryExecution;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IQueryCommand;
 
 /**
  * 
  */
-public class JDBCQueryExecution extends JDBCBaseExecution implements
-                                                         SynchQueryExecution, SynchQueryCommandExecution {
+public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetExecution {
 
     // ===========================================================================================================================
     // Fields
     // ===========================================================================================================================
 
-    protected int maxBatchSize = -1;
     protected ResultSet results;
     protected Class[] columnDataTypes;
     protected Calendar calendar;
     protected ConnectorEnvironment env;
+    protected ICommand command;
+	private boolean[] transformKnown;
+	private ValueTranslator[] transforms;
+	private boolean[] trimColumn;
+	private int[] nativeTypes;
 
     // ===========================================================================================================================
     // Constructors
     // ===========================================================================================================================
 
-    public JDBCQueryExecution(Connection connection,
+    public JDBCQueryExecution(ICommand command, Connection connection,
                               SQLTranslator sqlTranslator,
                               ResultsTranslator resultsTranslator,
                               ConnectorLogger logger,
@@ -77,7 +85,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
                               ExecutionContext context,
                               ConnectorEnvironment env) {
         super(connection, sqlTranslator, resultsTranslator, logger, props, context);
-
+        this.command = command;
         TimeZone dbmsTimeZone = resultsTranslator.getDatabaseTimezone();
 
         if (dbmsTimeZone != null) {
@@ -88,17 +96,11 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
         
         this.env = env;
     }
-
-    // ===========================================================================================================================
-    // Methods
-    // ===========================================================================================================================
-
-    public void execute(IQueryCommand command,
-                        int maxBatchSize) throws ConnectorException {
-        this.maxBatchSize = maxBatchSize;
-
+    
+    @Override
+    public void execute() throws ConnectorException {
         // get column types
-        columnDataTypes = JDBCExecutionHelper.getColumnDataTypes(command);
+        columnDataTypes = ((IQueryCommand)command).getColumnTypes();
 
         // translate command
         TranslatedCommand translatedComm = translateCommand(command);
@@ -117,6 +119,31 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
                 throw new ConnectorException(
                                              JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
             }
+            
+            trimColumn = new boolean[columnDataTypes.length];
+            nativeTypes = new int[columnDataTypes.length];
+            try {
+                ResultSetMetaData rsmd = results.getMetaData();
+                for(int i=0; i<columnDataTypes.length; i++) {
+                	
+                	nativeTypes[i] = rsmd.getColumnType(i+1);
+                	if ((nativeTypes[i] == Types.BLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.BLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))
+    						|| (nativeTypes[i] == Types.CLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.CLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))) {
+    					context.keepExecutionAlive(true);
+    				}
+                	
+                    if(columnDataTypes[i].equals(String.class)) {
+                        if(trimString || nativeTypes[i] == Types.CHAR) {
+                            trimColumn[i] = true;
+                        } 
+                    }
+                }
+            } catch(SQLException e) {
+                throw new ConnectorException(e.getMessage());
+            }
+
+            transformKnown = new boolean[columnDataTypes.length];
+            transforms = new ValueTranslator[columnDataTypes.length];
 
         } catch (SQLException e) {
             // try to cleanup the statement and may be resultset object
@@ -125,23 +152,50 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
             throw createAndLogError(e, translatedComm);
         }
     }
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+        try {
+            if (results.next()) {
+                // New row for result set
+                List vals = new ArrayList(columnDataTypes.length);
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.data.SynchExecution#nextBatch(int)
-     */
-    public Batch nextBatch() throws ConnectorException {
-        return JDBCExecutionHelper.createBatch(results,
-                                               columnDataTypes,
-                                               maxBatchSize,
-                                               trimString,
-                                               this.resultsTranslator,
-                                               context,
-                                               calendar,
-                                               env.getTypeFacility());
+                for (int i = 0; i < columnDataTypes.length; i++) {
+                    // Convert from 0-based to 1-based
+                    Object value = resultsTranslator.getValueRetriever().retrieveValue(results, i+1, columnDataTypes[i], nativeTypes[i], calendar, env.getTypeFacility());
+                    if(value != null) {
+                        // Determine transformation if unknown
+                        if(! transformKnown[i]) {
+                            Class valueType = value.getClass();
+                            if(!columnDataTypes[i].isAssignableFrom(valueType)) {
+                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], resultsTranslator.getValueTranslators(), resultsTranslator.getTypefacility());
+                            }
+                            transformKnown[i] = true;
+                        }
+
+                        // Transform value if necessary
+                        if(transforms[i] != null) {
+                            value = transforms[i].translate(value, context);
+                        }
+                                                    
+                        // Trim string column if necessary
+                        if(trimColumn[i]) {
+                            value = JDBCExecutionHelper.trimString((String) value);
+                        }
+                    }
+                    vals.add(value); 
+                }
+
+                return vals;
+            } 
+        } catch (SQLException e) {
+            throw new ConnectorException(e,
+                    JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
+        }
+        
+        return null;
     }
-
+    
     /**
      * @see com.metamatrix.connector.jdbc.JDBCBaseExecution#close()
      */
@@ -157,14 +211,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements
             }
         }
         super.close();
-    }
-
-    /** 
-     * @see com.metamatrix.data.api.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
-     */
-    public void execute(IQuery command,
-                        int maxBatchSize) throws ConnectorException {
-        execute((IQueryCommand)command, maxBatchSize);
     }
 
 }

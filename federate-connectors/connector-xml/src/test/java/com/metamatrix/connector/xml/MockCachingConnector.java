@@ -25,13 +25,14 @@
 
 package com.metamatrix.connector.xml;
 
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 import com.metamatrix.connector.xml.cache.MockDocumentCache;
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorEnvironment;
-import com.metamatrix.data.api.ConnectorLogger;
-import com.metamatrix.data.api.SecurityContext;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class MockCachingConnector implements CachingConnector {
 
@@ -69,22 +70,25 @@ public class MockCachingConnector implements CachingConnector {
 		return null;
 	}
 
-	public void initialize(ConnectorEnvironment environment) throws ConnectorException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public Connection getConnection(SecurityContext arg0) throws ConnectorException {
+	public Connection getConnection(ExecutionContext arg0) throws ConnectorException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public void start() throws ConnectorException {
+	public void stop() {
 		// TODO Auto-generated method stub
 		
 	}
-
-	public void stop() {
+	
+	@Override
+	public ConnectorCapabilities getCapabilities() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public void start(ConnectorEnvironment environment)
+			throws ConnectorException {
 		// TODO Auto-generated method stub
 		
 	}

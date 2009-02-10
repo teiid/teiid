@@ -55,16 +55,16 @@ import com.metamatrix.common.config.model.BasicConnectorArchive;
 import com.metamatrix.common.config.model.BasicExtensionModule;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.util.ByteArrayHelper;
+import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.commandshell.ConnectorResultUtility;
 import com.metamatrix.core.factory.ComponentLoader;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtilities;
-import com.metamatrix.data.api.Connector;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.language.ICommand;
-import com.metamatrix.data.language.IProcedure;
-import com.metamatrix.data.language.IQuery;
 
 
 /**
@@ -231,7 +231,6 @@ public class ConnectorShellCommandTarget extends QueryCommandTarget {
     }
     
     public void setBatchSize(int batchSize) {
-        getConnectorHost().setBatchSize(batchSize);
     }
 
     public void setProperty(String propertyName, String propertyValue) {

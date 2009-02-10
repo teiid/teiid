@@ -26,14 +26,15 @@ package com.metamatrix.dqp.internal.pooling.connector;
 
 import javax.transaction.xa.XAResource;
 
-import com.metamatrix.data.api.Connection;
-import com.metamatrix.data.api.ConnectorCapabilities;
-import com.metamatrix.data.api.Execution;
-import com.metamatrix.data.api.ExecutionContext;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.data.pool.PoolAwareConnection;
-import com.metamatrix.data.xa.api.XAConnection;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.PoolAwareConnection;
+import com.metamatrix.connector.xa.api.XAConnection;
 
 public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 
@@ -78,10 +79,10 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 	}
 	
 	@Override
-	public Execution createExecution(int executionMode,
+	public Execution createExecution(ICommand command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
-		return connection.createExecution(executionMode, executionContext, metadata);
+		return connection.createExecution(command, executionContext, metadata);
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 	}
 
 	@Override
-	public void release() {
+	public void close() {
 		synchronized (this) {
 			if (this.leaseCount > 0) {
 				this.leaseCount--;
@@ -99,7 +100,7 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 				return;
 			}
 		}
-		this.connectionReleased();
+		this.closeCalled();
 		this.timeReturnedToPool = System.currentTimeMillis();
 		this.connectionPool.release(this, false);
 	}
@@ -112,10 +113,6 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 		return null;
 	}
 	
-	public void close() {
-		this.connection.release();
-	}
-
     public synchronized boolean isLeased() {
         return this.leaseCount > 0;
     }    
@@ -133,9 +130,9 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 	}
 
 	@Override
-	public void connectionReleased() {
+	public void closeCalled() {
 		if (this.connection instanceof PoolAwareConnection) {
-			((PoolAwareConnection)this.connection).connectionReleased();
+			((PoolAwareConnection)this.connection).closeCalled();
 		}
 	}
 	

@@ -27,7 +27,7 @@ package com.metamatrix.connector.object.extension;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.data.language.ICommand;
+import com.metamatrix.connector.language.ICommand;
 
 
 /** 

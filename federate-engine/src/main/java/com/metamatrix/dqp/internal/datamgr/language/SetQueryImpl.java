@@ -24,11 +24,11 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.data.language.IQuery;
-import com.metamatrix.data.language.IQueryCommand;
-import com.metamatrix.data.visitor.framework.LanguageObjectVisitor;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
-public class SetQueryImpl extends QueryCommandImpl implements com.metamatrix.data.language.ISetQuery {
+public class SetQueryImpl extends QueryCommandImpl implements com.metamatrix.connector.language.ISetQuery {
 
     private boolean all;
     private IQueryCommand leftQuery;
@@ -46,63 +46,63 @@ public class SetQueryImpl extends QueryCommandImpl implements com.metamatrix.dat
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#getLeftQuery()
+     * @see com.metamatrix.connector.language.ISetQuery#getLeftQuery()
      */
     public IQueryCommand getLeftQuery() {
         return leftQuery;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#getOperation()
+     * @see com.metamatrix.connector.language.ISetQuery#getOperation()
      */
     public Operation getOperation() {
         return operation;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#getRightQuery()
+     * @see com.metamatrix.connector.language.ISetQuery#getRightQuery()
      */
     public IQueryCommand getRightQuery() {
         return rightQuery;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#isAll()
+     * @see com.metamatrix.connector.language.ISetQuery#isAll()
      */
     public boolean isAll() {
         return all;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#setAll(boolean)
+     * @see com.metamatrix.connector.language.ISetQuery#setAll(boolean)
      */
     public void setAll(boolean all) {
         this.all = all;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#setLeftQuery(com.metamatrix.data.language.IQueryCommand)
+     * @see com.metamatrix.connector.language.ISetQuery#setLeftQuery(com.metamatrix.connector.language.IQueryCommand)
      */
     public void setLeftQuery(IQueryCommand leftQuery) {
         this.leftQuery = leftQuery;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#setOperation(com.metamatrix.data.language.ISetQuery.Operation)
+     * @see com.metamatrix.connector.language.ISetQuery#setOperation(com.metamatrix.connector.language.ISetQuery.Operation)
      */
     public void setOperation(Operation operation) {
         this.operation = operation;
     }
 
     /** 
-     * @see com.metamatrix.data.language.ISetQuery#setRightQuery(com.metamatrix.data.language.IQueryCommand)
+     * @see com.metamatrix.connector.language.ISetQuery#setRightQuery(com.metamatrix.connector.language.IQueryCommand)
      */
     public void setRightQuery(IQueryCommand rightQuery) {
         this.rightQuery = rightQuery;
     }
 
     /**
-     * @see com.metamatrix.data.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

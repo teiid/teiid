@@ -31,9 +31,9 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.base.TrustedPayloadBridge;
-import com.metamatrix.data.exception.ConnectorException;
 
 public class DefaultTrustDeserializer extends TrustedPayloadBridge implements HTTPTrustDeserializer {
 	

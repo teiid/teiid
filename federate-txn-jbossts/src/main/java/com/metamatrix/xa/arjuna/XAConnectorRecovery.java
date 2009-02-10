@@ -33,9 +33,7 @@ import java.util.Map;
 import javax.transaction.xa.XAResource;
 
 import com.arjuna.ats.jta.recovery.XAResourceRecovery;
-import com.metamatrix.data.exception.ConnectorException;
-import com.metamatrix.data.xa.api.XAConnection;
-import com.metamatrix.data.xa.api.XAConnector;
+import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
 
 /** 
@@ -43,10 +41,10 @@ import com.metamatrix.data.xa.api.XAConnector;
  * in the MetaMatrix system for recovery use.
  */
 public class XAConnectorRecovery implements XAResourceRecovery {
-    private static Map resourceRegistry = Collections.synchronizedMap(new HashMap());
+    private static Map<String, XAConnectionSource> resourceRegistry = Collections.synchronizedMap(new HashMap<String, XAConnectionSource>());
 
-    Iterator connectorIter = null;
-    Map connectionsHeld = new HashMap();
+    private Iterator connectorIter = null;
+    private Map<String, XAConnectionSource> connectionsHeld = new HashMap<String, XAConnectionSource>();
     
     /** 
      * @see com.arjuna.ats.jta.recovery.XAResourceRecovery#getXAResource()
@@ -55,18 +53,18 @@ public class XAConnectorRecovery implements XAResourceRecovery {
         synchronized (resourceRegistry) {
             String connectorName = (String)connectorIter.next();
             
-            XAConnection conn = null;
+            XAConnectionSource conn = null;
             try {
-                 conn = (XAConnection)this.connectionsHeld.get(connectorName);
+                 conn = this.connectionsHeld.get(connectorName);
                 if (conn == null) {
-                    conn = getNewConnection(connectorName);
+                	conn = resourceRegistry.get(connectorName);
                     this.connectionsHeld.put(connectorName, conn);
                 }
                 
                 return conn.getXAResource();
-            } catch (ConnectorException e) {
+            } catch (SQLException e) {
                 if (conn != null) {
-                    conn.release();
+                    conn.close();
                     this.connectionsHeld.remove(connectorName);
                 }
                 // todo: log exception
@@ -102,7 +100,7 @@ public class XAConnectorRecovery implements XAResourceRecovery {
         return true;
     }
     
-    public static void addConnector(String name, XAConnector connector) {
+    public static void addConnector(String name, XAConnectionSource connector) {
         resourceRegistry.put(name, connector);
     }
     
@@ -110,9 +108,4 @@ public class XAConnectorRecovery implements XAResourceRecovery {
         resourceRegistry.remove(name);
     }
         
-    private XAConnection getNewConnection(String connectorName) throws ConnectorException {
-        XAConnector connector = (XAConnector)resourceRegistry.get(connectorName);
-
-        return (XAConnection)connector.getXAConnection(null, null);
-    }
 }
