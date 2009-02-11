@@ -29,11 +29,17 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
+import com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.SimpleMock;
 
 
@@ -62,7 +68,7 @@ public class TestJDBCSourceConnection extends TestCase {
         connection = SimpleMock.createSimpleMock(fakeConnection, Connection.class);
 
         final Properties properties = new Properties();
-        properties.setProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, BasicSQLTranslator.class.getName()); 
+        properties.setProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, OracleSQLTranslator.class.getName()); 
         properties.setProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, BasicResultsTranslator.class.getName());  
         properties.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, BasicConnectorCapabilities.class.getName());  
         
@@ -112,6 +118,13 @@ public class TestJDBCSourceConnection extends TestCase {
         fakeConnection.fail = true;
         assertTrue(sourceConnection.isAlive());
         
+    }
+    
+    public void testSqlTranslatorInit() throws Exception {
+    	JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, null); 
+        JDBCQueryExecution exec = (JDBCQueryExecution)sourceConnection.createExecution(Mockito.mock(IQuery.class), Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class));
+        SQLTranslator trans = exec.getSqlTranslator();
+        assertTrue(trans.getFunctionModifiers().size() > 0);
     }
     
 }

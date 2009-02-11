@@ -53,11 +53,10 @@ public class JDBCSourceConnection extends BasicConnection implements PoolAwareCo
     protected java.sql.Connection physicalConnection;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
-    private ConnectorCapabilities capabilities;
-    private SQLTranslator sqlTranslator;
     private ResultsTranslator resultsTranslator;
     private ConnectionStrategy connectionStrategy;
     private ConnectionListener connectionListener;
+	private Class sqlTransClass;
     /**
      * @param connection
      */
@@ -80,11 +79,7 @@ public class JDBCSourceConnection extends BasicConnection implements PoolAwareCo
             if(className == null){
                 throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnection.Property_{0}_is_required,_but_not_defined_1", JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS)); //$NON-NLS-1$
             }
-            Class sqlTransClass = loader.loadClass(className);
-            sqlTranslator = (SQLTranslator) sqlTransClass.newInstance();
-            
-            // Wrap in wrapper to standardize  
-            sqlTranslator = new SQLTranslatorWrapper(sqlTranslator); 
+			sqlTransClass = Thread.currentThread().getContextClassLoader().loadClass(className);
             
             //create ResultsTranslator
             className = connectorProps.getProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS);  
@@ -94,7 +89,6 @@ public class JDBCSourceConnection extends BasicConnection implements PoolAwareCo
             Class resultsTransClass = loader.loadClass(className);
             resultsTranslator = (ResultsTranslator) resultsTransClass.newInstance();
             resultsTranslator.initialize(environment);           
-            capabilities = JDBCConnector.createCapabilities(environment, loader);
         } catch (ClassNotFoundException e1) {
             throw new ConnectorException(e1);
         } catch (InstantiationException e2) {
@@ -108,33 +102,45 @@ public class JDBCSourceConnection extends BasicConnection implements PoolAwareCo
             this.connectionListener.afterConnectionCreation(this.physicalConnection, this.environment);
         }
     }
+    
+    private SQLTranslator getSQLTranslator(RuntimeMetadata metadata) throws ConnectorException {
+		try {
+	        SQLTranslator sqlTranslator = (SQLTranslator) sqlTransClass.newInstance();
+	        sqlTranslator.initialize(environment, metadata);
+	        return sqlTranslator;
+		} catch (InstantiationException e) {
+			throw new ConnectorException(e);
+		} catch (IllegalAccessException e) {
+			throw new ConnectorException(e);
+		}
+    }
 
     /* 
      * @see com.metamatrix.data.Connection#getCapabilities()
      */
     public ConnectorCapabilities getCapabilities() {
-        return this.capabilities;
+        return null;
     }
-
+    
     @Override
     public ResultSetExecution createResultSetExecution(IQueryCommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCQueryExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
+    	return new JDBCQueryExecution(command, this.physicalConnection, getSQLTranslator(metadata), resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
     }
     
     @Override
     public ProcedureExecution createProcedureExecution(IProcedure command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCProcedureExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
+    	return new JDBCProcedureExecution(command, this.physicalConnection, getSQLTranslator(metadata), resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
     }
 
     @Override
     public UpdateExecution createUpdateExecution(ICommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCUpdateExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);    
+    	return new JDBCUpdateExecution(command, this.physicalConnection, getSQLTranslator(metadata), resultsTranslator, logger, this.environment.getProperties(), executionContext);    
     }
     
     @Override

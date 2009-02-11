@@ -263,4 +263,8 @@ public abstract class JDBCBaseExecution {
     public Connection getConnection() {
         return this.connection;
     }
+    
+    public SQLTranslator getSqlTranslator() {
+		return sqlTranslator;
+	}
 }
