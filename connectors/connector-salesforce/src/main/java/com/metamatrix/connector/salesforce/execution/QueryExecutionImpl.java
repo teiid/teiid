@@ -121,7 +121,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	public List next() throws ConnectorException, DataNotAvailableException {
 		while (results != null) {
 			if (i < results.getSize()) {
-				SObject sObject = results.getRecords(i);
+				SObject sObject = results.getRecords(i++);
 				org.apache.axis.message.MessageElement[] fields = sObject.get_any();
 				if (null == fieldMap) {
 					logAndMapFields(fields);
@@ -134,6 +134,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				break;
 			} 
 			results = connection.queryMore(results.getQueryLocator());
+			i = 0;
 		}
 		return null;
 	}

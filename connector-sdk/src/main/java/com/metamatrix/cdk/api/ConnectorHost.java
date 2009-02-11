@@ -132,6 +132,10 @@ public class ConnectorHost implements IConnectorHost {
         this.executionContext = new ExecutionContextImpl(vdbName, vdbVersion, userName, trustedPayload, executionPayload, "Connection", "Connector<CDK>", "Request", "1", "0", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$  
     }
     
+    public void setExecutionContext(ExecutionContext context) {
+    	this.executionContext = context;
+    }
+    
     public List executeCommand(String query) throws ConnectorException {
         startConnectorIfNeeded();
 

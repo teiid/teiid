@@ -26,6 +26,7 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
 
+import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.core.util.HashCodeUtil;
@@ -63,7 +64,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     private ConnectorIdentity connectorIdentity;
     
-    private int batchSize;
+    private int batchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 

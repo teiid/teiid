@@ -56,7 +56,7 @@ public class BaseBatchProducer {
                 for (int colNum = 0; colNum < allResultsList.size(); colNum++) {
                     Object resultObj = allResultsList.get(colNum);
                     ArrayList result = (ArrayList) resultObj;
-                    Object valueObj = result.get(currentReturnIndex++);
+                    Object valueObj = result.get(currentReturnIndex);
                     LargeOrSmallString value = (LargeOrSmallString) valueObj;
                     if (!(addRowToCollector = passesCriteriaCheck(info
                             .getCriteria(), value, colNum, exeCtx, connectorEnv))) {
@@ -64,6 +64,7 @@ public class BaseBatchProducer {
                     }
                     setColumnValue(colNum, value, row, info, exeCtx, connectorEnv);
                 }
+                currentReturnIndex++;
                 if (addRowToCollector) {
                     return row;
                 }
