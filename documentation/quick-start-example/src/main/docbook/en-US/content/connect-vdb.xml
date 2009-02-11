@@ -97,6 +97,6 @@
   <para>If your application is Web based, you can also deploy Teiid Embedded in an application server 
   and treat it as any other JDBC source by creating a connection pool with the 
   <emphasis>com.metamatrix.jdbc.EmbeddedDataSource</emphasis> and assigning it a JNDI name. 
-  Refer to <ulink url="https://www.jboss.org/community/docs/DOC-13183">deployment to application server</ulink> for more information</para>
+  Refer to <ulink url="https://www.jboss.org/community/docs/DOC-13183">deployment to application server</ulink> for more information.</para>
   </sect1>   
 </chapter>
