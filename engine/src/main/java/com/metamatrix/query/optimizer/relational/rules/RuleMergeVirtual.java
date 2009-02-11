@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2008-2009 Red Hat, Inc.
  * Copyright (C) 2000-2007 MetaMatrix, Inc.
  * Licensed to Red Hat, Inc. under one or more contributor 
  * license agreements.  See the copyright.txt file in the
@@ -35,6 +35,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
@@ -45,9 +46,11 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
@@ -314,6 +317,13 @@ public final class RuleMergeVirtual implements
             }
             if (parentGroup != null && !(SymbolMap.getExpression(symbol) instanceof SingleElementSymbol)) {
                 return false;
+            }
+            // TEIID-16: We do not want to merge a non-deterministic scalar function
+            Collection<Function> functions = FunctionCollectorVisitor.getFunctions(symbol, true, true);
+           	for (Function function : functions) {
+           		if ( function.getFunctionDescriptor().getDeterministic() >= FunctionMethod.NONDETERMINISTIC ) {
+           			return false;
+           		}
             }
         }
 
