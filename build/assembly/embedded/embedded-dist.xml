@@ -1,4 +1,4 @@
-<!--This script builds a JAR for a Federate Embedded Server Installation -->
+<!--This script builds a JAR for the Embedded Server Installation -->
 <assembly>
   
   <id>embedded-dist</id>
