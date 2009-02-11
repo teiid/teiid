@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2008-2009 Red Hat, Inc.
  * Copyright (C) 2000-2007 MetaMatrix, Inc.
  * Licensed to Red Hat, Inc. under one or more contributor 
  * license agreements.  See the copyright.txt file in the
@@ -225,5 +225,98 @@ public class FakeDataStore {
                 Arrays.asList(new Object[] { "a",   new Integer(0) }) //$NON-NLS-1$
                 } );    
     }
+
+    public static void sampleData2(FakeDataManager dataMgr) throws QueryMetadataException, MetaMatrixComponentException {
+		FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+
+		// Group pm1.g1
+		FakeMetadataObject groupID = (FakeMetadataObject) metadata
+				.getGroupID("pm1.g1"); //$NON-NLS-1$
+		List elementIDs = metadata.getElementIDsInGroupID(groupID);
+		List elementSymbols = createElements(elementIDs);
+
+		dataMgr.registerTuples(groupID, elementSymbols,
+
+		new List[] {
+				Arrays.asList(new Object[] {
+						"a", new Integer(0), Boolean.FALSE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(1), Boolean.TRUE, null }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"c", new Integer(2), Boolean.FALSE, new Double(0.0) }), //$NON-NLS-1$
+		});
+
+		// Group pm1.g2
+		groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
+		elementIDs = metadata.getElementIDsInGroupID(groupID);
+		elementSymbols = createElements(elementIDs);
+
+		dataMgr.registerTuples(groupID, elementSymbols,
+
+		new List[] {
+				Arrays.asList(new Object[] {
+						"a", new Integer(1), Boolean.TRUE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(0), Boolean.FALSE, new Double(0.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(5), Boolean.TRUE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(2), Boolean.FALSE, null }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"d", new Integer(2), Boolean.FALSE, new Double(1.0) }), //$NON-NLS-1$
+		});
+
+		// Group pm2.g1
+		groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
+		elementIDs = metadata.getElementIDsInGroupID(groupID);
+		elementSymbols = createElements(elementIDs);
+
+		dataMgr.registerTuples(groupID, elementSymbols,
+
+		new List[] {
+				Arrays.asList(new Object[] {
+						"b", new Integer(0), Boolean.FALSE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"d", new Integer(3), Boolean.TRUE, new Double(7.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"e", new Integer(1), Boolean.TRUE, null }), //$NON-NLS-1$
+		});
+
+		// Group pm2.g2
+		groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g2"); //$NON-NLS-1$
+		elementIDs = metadata.getElementIDsInGroupID(groupID);
+		elementSymbols = createElements(elementIDs);
+
+		dataMgr.registerTuples(groupID, elementSymbols,
+
+		new List[] {
+				Arrays.asList(new Object[] {
+						"a", new Integer(1), Boolean.TRUE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(0), Boolean.FALSE, new Double(0.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(5), Boolean.TRUE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(2), Boolean.FALSE, null }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"d", new Integer(2), Boolean.FALSE, new Double(1.0) }), //$NON-NLS-1$
+		});
+
+		// Group pm1.table1
+		groupID = (FakeMetadataObject) metadata.getGroupID("pm1.table1"); //$NON-NLS-1$
+		elementIDs = metadata.getElementIDsInGroupID(groupID);
+		elementSymbols = createElements(elementIDs);
+
+		dataMgr.registerTuples(groupID, elementSymbols,
+
+		new List[] {
+				Arrays.asList(new Object[] {
+						"a", new Integer(0), Boolean.FALSE, new Double(2.0) }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"b", new Integer(1), Boolean.TRUE, null }), //$NON-NLS-1$
+				Arrays.asList(new Object[] {
+						"c", new Integer(2), Boolean.FALSE, new Double(0.0) }), //$NON-NLS-1$
+		});
+	}                  
 
 }
