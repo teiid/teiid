@@ -1,4 +1,4 @@
-CONNECT 'jdbc:derby://localhost:1527/federate/accounts;create=true;';
+CONNECT 'jdbc:derby://localhost:1527/teiid/accounts;create=true;';
 
 DROP TABLE CUSTOMER;
 CREATE TABLE CUSTOMER

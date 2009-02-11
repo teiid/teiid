@@ -1,7 +1,7 @@
 @ECHO OFF
 @setlocal
 
-@REM Federate Connector Development Kit (CDK)
+@REM Teiid Connector Development Kit (CDK)
 @REM JBoss, Home of Professional Open Source.
 @REM Copyright (C) 2008 Red Hat, Inc.
 @REM Licensed to Red Hat, Inc. under one or more contributor 
@@ -28,7 +28,7 @@
 
 @pushd
 @REM 	get the ROOT directory of this installation
-@for /F "delims=" %%i IN ('cd') DO set FEDERATE_ROOT=%%i
+@for /F "delims=" %%i IN ('cd') DO set TEIID_ROOT=%%i
 @REM 	return to the bin directory
 @popd
 
@@ -53,16 +53,16 @@ goto endOfScript
 
 :runProgram
 @REM Set up directories
-@set FEDERATE_LIB=%FEDERATE_ROOT%\lib
+@set TEIID_LIB=%TEIID_ROOT%\lib
 
 @REM Set up classpath variables
-@set PATCH_JAR=%FEDERATE_LIB%\patch\*
-@set CDK_CLASSPATH=%FEDERATE_LIB%\*
+@set PATCH_JAR=%TEIID_LIB%\patch\*
+@set CDK_CLASSPATH=%TEIID_LIB%\*
 @set CP=%PATCH_JAR%;%CDK_CLASSPATH%;.;.\*
 
 @REM Print the env settings
 @echo ========================== ENV SETTINGS ==========================
-@echo FEDERATE_ROOT  = %FEDERATE_ROOT%
+@echo TEIID_ROOT  = %TEIID_ROOT%
 @echo JAVA_HOME      = %JAVA_HOME%
 @echo CP      	     = %CP%
 @echo ==================================================================

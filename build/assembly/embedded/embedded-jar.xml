@@ -8,33 +8,33 @@
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>federate-embedded</baseDirectory>
+  <baseDirectory>teiid-embedded</baseDirectory>
     
   <moduleSets>
     <moduleSet>
         <includeSubModules>true</includeSubModules>
                
         <includes>
-            <include>org.jboss.federate:federate-cache-jbosscache</include>
-            <include>org.jboss.federate:federate-client</include>
-            <include>org.jboss.federate:federate-client-jdbc</include>	
-            <include>org.jboss.federate:federate-common-core</include>	
-            <include>org.jboss.federate:federate-common-internal</include>
+            <include>org.jboss.teiid:teiid-cache-jbosscache</include>
+            <include>org.jboss.teiid:teiid-client</include>
+            <include>org.jboss.teiid:teiid-client-jdbc</include>	
+            <include>org.jboss.teiid:teiid-common-core</include>	
+            <include>org.jboss.teiid:teiid-common-internal</include>
     	
-        	<include>org.jboss.federate:federate-connector-api</include>
-        	<include>org.jboss.federate:federate-connector-metadata</include>
-            <include>org.jboss.federate:federate-embedded</include>
-        	<include>org.jboss.federate:federate-engine</include>
-        	<include>org.jboss.federate:federate-metadata</include>
-        	<include>org.jboss.federate:federate-txn-jbossts</include>
+        	<include>org.jboss.teiid:teiid-connector-api</include>
+        	<include>org.jboss.teiid:teiid-connector-metadata</include>
+            <include>org.jboss.teiid:teiid-embedded</include>
+        	<include>org.jboss.teiid:teiid-engine</include>
+        	<include>org.jboss.teiid:teiid-metadata</include>
+        	<include>org.jboss.teiid:teiid-txn-jbossts</include>
 
-        	<include>org.jboss.federate.connectors:connector-jdbc</include>
-            <include>org.jboss.federate.connectors:connector-xml</include>
-            <include>org.jboss.federate.connectors:connector-loopback</include>
-            <include>org.jboss.federate.connectors:connector-text</include>
-            <include>org.jboss.federate.connectors:connector-ldap</include>
-            <include>org.jboss.federate.connectors:connector-salesforce</include>
-            <include>org.jboss.federate.connectors:salesforce-api</include>                      
+        	<include>org.jboss.teiid.connectors:connector-jdbc</include>
+            <include>org.jboss.teiid.connectors:connector-xml</include>
+            <include>org.jboss.teiid.connectors:connector-loopback</include>
+            <include>org.jboss.teiid.connectors:connector-text</include>
+            <include>org.jboss.teiid.connectors:connector-ldap</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce</include>
+            <include>org.jboss.teiid.connectors:salesforce-api</include>                      
         </includes>
         
         <binaries>

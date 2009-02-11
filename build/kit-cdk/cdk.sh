@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Federate Connector Development Kit (CDK)
+# Teiid Connector Development Kit (CDK)
 # JBoss, Home of Professional Open Source.
 # Copyright (C) 2008 Red Hat, Inc.
 # Licensed to Red Hat, Inc. under one or more contributor 
@@ -34,23 +34,23 @@ fi
 
 if [ -e $(basename $0) ];
 then
-    FEDERATE_ROOT=`pwd`
+    TEIID_ROOT=`pwd`
 else
     echo -e "\nPlease execute cdk.sh from the directory in which it is installed.\n"
     exit
 fi
 
 # Set up directories
-FEDERATE_LIB=${FEDERATE_ROOT}/lib
+TEIID_LIB=${TEIID_ROOT}/lib
 
 # Set up classpath variables
-PATCH_JAR=${FEDERATE_LIB}/patches/tools_patch.jar
-CDK_CLASSPATH=$PATCH_JAR:${FEDERATE_LIB}/*:.:./*
+PATCH_JAR=${TEIID_LIB}/patches/tools_patch.jar
+CDK_CLASSPATH=$PATCH_JAR:${TEIID_LIB}/*:.:./*
 
 
 # Print the env settings
 echo ========================== ENV SETTINGS ==========================
-echo FEDERATE_ROOT  = $FEDERATE_ROOT
+echo TEIID_ROOT  = $TEIID_ROOT
 echo CLASSPATH      = $CDK_CLASSPATH
 echo ==================================================================
 

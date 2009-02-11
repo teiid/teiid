@@ -90,7 +90,7 @@
       <diagramEntity xmi:uuid="mmuuid:71ed3b41-da11-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/104b55c0-da11-1105-b511-c9cb83fb3e5e" xPosition="243" yPosition="10"/>
     </diagram>
   </diagram:DiagramContainer>
-  <jdbc:JdbcSource xmi:uuid="mmuuid:68330e00-da0b-1105-b511-c9cb83fb3e5e" name="Accounts" driverName="Apache Derby Network" driverClass="org.apache.derby.jdbc.ClientDriver" url="jdbc:derby://localhost:1527/federate/accounts">
+  <jdbc:JdbcSource xmi:uuid="mmuuid:68330e00-da0b-1105-b511-c9cb83fb3e5e" name="Accounts" driverName="Apache Derby Network" driverClass="org.apache.derby.jdbc.ClientDriver" url="jdbc:derby://localhost:1527/teiid/accounts">
     <importSettings xmi:uuid="mmuuid:6c8cf240-da0b-1105-b511-c9cb83fb3e5e" createSchemasInModel="false">
       <includedSchemaPaths>/APP</includedSchemaPaths>
       <includedTableTypes>SYNONYM</includedTableTypes>

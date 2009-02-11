@@ -8,26 +8,26 @@
   </formats>
   
   <includeBaseDirectory>true</includeBaseDirectory>
-  <baseDirectory>federate-cdk-${version}</baseDirectory>
+  <baseDirectory>teiid-cdk-${version}</baseDirectory>
 
 
   <fileSets>
   
     <fileSet>
-      <directory>target/distribution/federate-${version}-cdk-dependencies.dir</directory>
+      <directory>target/distribution/teiid-${version}-cdk-dependencies.dir</directory>
       <includes>
-        <include>federate-connector-api-${version}.jar</include>
+        <include>teiid-connector-api-${version}.jar</include>
       </includes>
       <outputDirectory>/</outputDirectory>      
     </fileSet>
   
     <fileSet>
-      <directory>target/distribution/federate-${version}-cdk-dependencies.dir</directory>
+      <directory>target/distribution/teiid-${version}-cdk-dependencies.dir</directory>
       <includes>
         <include>*.jar</include>
       </includes>
         <excludes>
-          <exclude>federate-connector-api-*</exclude>
+          <exclude>teiid-connector-api-*</exclude>
         </excludes>              
       <outputDirectory>lib</outputDirectory>      
     </fileSet>    

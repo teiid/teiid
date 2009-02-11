@@ -5,7 +5,7 @@
 #
 
 ######################################################
-# This script is used to set the environment for the Federate scripts
+# This script is used to set the environment for the teiid scripts
 #
 #    MM_DEBUG - If this is defined (with any value), the script
 #                       will emit debug messages.

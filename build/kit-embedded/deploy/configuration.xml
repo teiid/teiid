@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><ConfigurationDocument>
   <Header>
-    <ApplicationCreatedBy>Federate</ApplicationCreatedBy>
+    <ApplicationCreatedBy>Teiid</ApplicationCreatedBy>
     <ApplicationVersionCreatedBy>4.2</ApplicationVersionCreatedBy>
     <UserCreatedBy>Configuration</UserCreatedBy>
     <ConfigurationVersion>4.2</ConfigurationVersion>

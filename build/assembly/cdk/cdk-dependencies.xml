@@ -8,15 +8,15 @@
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>federate-cdk</baseDirectory>
+  <baseDirectory>teiid-cdk</baseDirectory>
     
   <moduleSets>
     <moduleSet>
         <includeSubModules>true</includeSubModules>
                
         <includes>
-        	<include>org.jboss.federate:federate-connector-api</include>
-            <include>org.jboss.federate:federate-connector-sdk</include>
+        	<include>org.jboss.teiid:teiid-connector-api</include>
+            <include>org.jboss.teiid:teiid-connector-sdk</include>
         </includes>
         
         <binaries>        
@@ -31,7 +31,7 @@
               <useDefaultExcludes>true</useDefaultExcludes>
               <!-- 
               <excludes>
-                <exclude>federate*</exclude>
+                <exclude>teiid*</exclude>
                 <exclude>jta*</exclude>
               </excludes>
                -->

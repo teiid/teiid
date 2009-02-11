@@ -8,21 +8,21 @@
   </formats>
   
   <includeBaseDirectory>true</includeBaseDirectory>
-  <baseDirectory>federate-embedded-${version}</baseDirectory>
+  <baseDirectory>teiid-embedded-${version}</baseDirectory>
 
   <fileSets>
   
     <fileSet>
       <directory>target/distribution</directory>
       <includes>
-        <include>federate-${version}-embedded.jar</include>
+        <include>teiid-${version}-embedded.jar</include>
       </includes>
       <outputDirectory>/</outputDirectory>      
     </fileSet>
     
     
     <fileSet>
-      <directory>target/distribution/federate-${version}-embedded-dependencies.dir</directory>
+      <directory>target/distribution/teiid-${version}-embedded-dependencies.dir</directory>
       <includes>
         <include>*.jar</include>
       </includes>
@@ -30,7 +30,7 @@
     </fileSet>    
     
     <fileSet>
-      <directory>target/distribution/federate-${version}-connector-dependencies.dir</directory>
+      <directory>target/distribution/teiid-${version}-connector-dependencies.dir</directory>
       <includes>
         <include>*.jar</include>
       </includes>

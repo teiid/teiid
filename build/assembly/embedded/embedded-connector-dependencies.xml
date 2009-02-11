@@ -8,20 +8,20 @@
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>federate-embedded</baseDirectory>
+  <baseDirectory>teiid-embedded</baseDirectory>
     
   <moduleSets>
     <moduleSet>
         <includeSubModules>true</includeSubModules>
                
         <includes>        	
-            <include>org.jboss.federate.connectors:connector-jdbc</include>
-            <include>org.jboss.federate.connectors:connector-xml</include>
-            <include>org.jboss.federate.connectors:connector-loopback</include>
-            <include>org.jboss.federate.connectors:connector-text</include>
-            <include>org.jboss.federate.connectors:connector-ldap</include>
-            <include>org.jboss.federate.connectors:connector-salesforce</include>
-            <include>org.jboss.federate.connectors:salesforce-api</include>
+            <include>org.jboss.teiid.connectors:connector-jdbc</include>
+            <include>org.jboss.teiid.connectors:connector-xml</include>
+            <include>org.jboss.teiid.connectors:connector-loopback</include>
+            <include>org.jboss.teiid.connectors:connector-text</include>
+            <include>org.jboss.teiid.connectors:connector-ldap</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce</include>
+            <include>org.jboss.teiid.connectors:salesforce-api</include>
         </includes>
         
         <binaries>        
@@ -35,7 +35,7 @@
               <useTransitiveDependencies>false</useTransitiveDependencies>
               <useDefaultExcludes>true</useDefaultExcludes>
               <excludes>
-                <exclude>federate*</exclude>
+                <exclude>teiid*</exclude>
               </excludes>              
             </dependencySet>
           </dependencySets>
