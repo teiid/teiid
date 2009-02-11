@@ -17,7 +17,7 @@
   <sect1>
     <title>What is Teiid Embedded?</title>
     <para> Teiid Embedded is a container for deploying your VDB. Before you can access your data in a federated
-      manner, use the Teiid Modeler to build a VDB. This picture shows the relationship between the tools
+      manner, use the Teiid Designer to build a VDB. This picture shows the relationship between the tools
       involved.</para>
     <figure id="lifecycle">
       <title>Lifecycle of Events</title>
@@ -26,7 +26,7 @@
     <para>The Teiid Designer tool lets you define physical data sources by importing the required metadata
       (schema) from these sources. Once the metadata is imported, use the Designer to build a virtual data model.
       The collection of physical and logical models form a virtual schema. Once the user has completed the models,
-      the Modeler is used to package them in a Virtual Database, or VDB. So, a VDB can be further defined as a
+      the Designer is used to package them in a Virtual Database, or VDB. So, a VDB can be further defined as a
       collection of logical (virtual) data models.</para>
   </sect1>
 </chapter>

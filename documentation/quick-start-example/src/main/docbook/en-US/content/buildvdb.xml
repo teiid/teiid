@@ -7,7 +7,7 @@
     <para>
       The Teiid Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
       download Teiid Designer
-      <ulink url="/projects/federatedesigner.html">here</ulink>
+      <ulink url="http://teiid.org/teiiddesigner.html">here</ulink>
       Once downloaded, please follow the installation instructions. Start the Teiid Designer and return here to continue
       building the VDB.
     </para>

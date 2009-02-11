@@ -27,7 +27,7 @@
     </para>
     <para />
     <para>
-      You can use any of these <ulink url="/project/federate/url-properties"></ulink>optional connection properties
+      You can use any of these <ulink url="https://www.jboss.org/community/docs/DOC-13157"> optional connection properties </ulink>
       in your URL. Here is sample code showing how to make JDBC connection.
     </para>
     <programlisting><![CDATA[
@@ -73,7 +73,7 @@
       ]]></programlisting>
       <para>EmbeddedData source also provides an option to set optional parameters using the "set" methods on the 
        data source look. For all the allowable properties at the 
-       <ulink url="/project/federate/datasource-properties">data source properties</ulink>.</para>       
+       <ulink url="https://www.jboss.org/community/docs/DOC-13158">data source properties</ulink>.</para>       
   </sect1>
   <sect1>
   <title>Testing Your Teiid Embedded Deployment</title>
@@ -97,6 +97,6 @@
   <para>If your application is Web based, you can also deploy Teiid Embedded in an application server 
   and treat it as any other JDBC source by creating a connection pool with the 
   <emphasis>com.metamatrix.jdbc.EmbeddedDataSource</emphasis> and assigning it a JNDI name. 
-  Refer to <ulink url="/project/federate/deployments">deployment to application server</ulink> for more information</para>
+  Refer to <ulink url="https://www.jboss.org/community/docs/DOC-13183">deployment to application server</ulink> for more information</para>
   </sect1>   
 </chapter>
