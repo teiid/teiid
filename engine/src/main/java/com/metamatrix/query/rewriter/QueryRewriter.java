@@ -2016,10 +2016,21 @@ public class QueryRewriter {
 			return rewriteExpression(caseExpr, procCommand, context, metadata);
 		}
 		
-		//rewrite coalesce(a, b) => case when (a is not null) then a when (b is not null) b else null
+		//TODO: add proper support for COALESCE
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
 			Expression[] args = function.getArgs();
-
+			if (args.length == 2) {
+				Function result = new Function(FunctionLibrary.IFNULL,
+						new Expression[] {function.getArg(0), function.getArg(1) });
+				//resolve the function
+				FunctionDescriptor descriptor = 
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.IFNULL, new Class[] { function.getType(), function.getType()  });
+				result.setFunctionDescriptor(descriptor);
+				result.setType(function.getType());
+				return rewriteFunction(result, procCommand, context, metadata);
+			}
+			
+			//rewrite coalesce(a, b) => case when (a is not null) then a when (b is not null) b else null
 			List<Criteria> when = new ArrayList<Criteria>(args.length);
 			List<Expression> then = new ArrayList<Expression>(args.length);
 			for (int i = 0; i < args.length; i++) {

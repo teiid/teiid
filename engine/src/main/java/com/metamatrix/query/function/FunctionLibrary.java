@@ -77,6 +77,7 @@ public class FunctionLibrary {
     public static final String CONCAT_OPERATOR = "||"; //$NON-NLS-1$
     public static final String SUBSTRING = "substring"; //$NON-NLS-1$
     public static final String NVL = "NVL"; //$NON-NLS-1$
+    public static final String IFNULL = "IFNULL"; //$NON-NLS-1$
     
     public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
     public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$

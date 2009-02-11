@@ -2098,7 +2098,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteCoalesce() throws Exception {
-    	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "CASE WHEN convert(pm1.g1.e2, double) IS NOT NULL THEN convert(pm1.g1.e2, double) WHEN pm1.g1.e4 IS NOT NULL THEN pm1.g1.e4 ELSE convert(null, double) END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }
