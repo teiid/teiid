@@ -54,7 +54,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 public class TestConnectorWorkItem extends TestCase {
 
 	private static final FakeMetadataFacade EXAMPLE_BQT = FakeMetadataFactory
-			.exampleBQT();
+			.exampleBQTCached();
 
 	private static Command helpGetCommand(String sql,
 			QueryMetadataInterface metadata) throws Exception {
@@ -303,6 +303,20 @@ public class TestConnectorWorkItem extends TestCase {
 
 		assertEquals(2, resultsReceiver.results.size());
 		assertEquals(1, state.resumeCount);
+	}
+	
+	public void testUpdateExecution() throws Throwable {
+		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+		arm.setCommand(command);
+		QueueResultsReceiver receiver = new QueueResultsReceiver();
+		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(arm, getConnectorManager(), receiver);
+		synchConnectorWorkItem.run();
+		if (receiver.exception != null) {
+			throw receiver.exception;
+		}
+		AtomicResultsMessage results = receiver.getResults().remove();
+		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 	}
 
 	private static class FakeQueuingAsynchConnectorWorkItem extends

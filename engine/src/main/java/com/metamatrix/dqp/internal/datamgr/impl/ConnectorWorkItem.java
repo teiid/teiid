@@ -301,7 +301,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "IQueryCommand Executions are expected to be ResultSetExecutions");
         	this.execution = (ResultSetExecution)exec;
         } else {
-        	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "Update Executions are expected to be UpdateExecutions");
+        	Assertion.isInstanceOf(this.execution, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions");
         	this.execution = new ResultSetExecution() {
         		private int[] results;
         		private int index;
@@ -322,7 +322,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         		public List<?> next() throws ConnectorException,
         				DataNotAvailableException {
         			if (results == null) {
-        				results = ((UpdateExecution)execution).getUpdateCounts();
+        				results = ((UpdateExecution)exec).getUpdateCounts();
         			}
         			if (index < results.length) {
         				return Arrays.asList(results[index++]);

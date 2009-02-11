@@ -39,6 +39,7 @@ import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
@@ -105,7 +106,7 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
 		}
     }   
     
-    private final class FakeBlockingExecution implements ResultSetExecution {
+    private final class FakeBlockingExecution implements ResultSetExecution, UpdateExecution {
         private boolean closed = false;
         private boolean cancelled = false;
         private int rowCount;
@@ -154,6 +155,11 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
                 throw new RuntimeException(e);
             }
         }
+		@Override
+		public int[] getUpdateCounts() throws DataNotAvailableException,
+				ConnectorException {
+			return new int[] {1};
+		}
     }
 
 	public boolean isExecuteBlocks() {
