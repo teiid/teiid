@@ -3,14 +3,14 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <parent>
-    <artifactId>federate-connectors</artifactId>
-    <groupId>org.jboss.federate.connectors</groupId>
+    <artifactId>teiid-connectors</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connector-salesforce</artifactId>
   <name>Salesforce Connector</name>
-  <description>Integrates the federate engine with Salesforce.com.</description>
+  <description>Integrates the query engine with Salesforce.com.</description>
   <dependencies>
   	<dependency>
   		<groupId>axis</groupId>
@@ -48,7 +48,7 @@
 		<scope>compile</scope>
 	</dependency>
 	<dependency>
-		<groupId>org.jboss.federate.connectors</groupId>
+		<groupId>org.jboss.teiid.connectors</groupId>
 		<artifactId>salesforce-api</artifactId>
 		<version>${project.version}</version>
 	</dependency>

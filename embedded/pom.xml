@@ -1,61 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <parent>
-    <artifactId>federate</artifactId>
-    <groupId>org.jboss.federate</groupId>
+    <artifactId>teiid</artifactId>
+    <groupId>org.jboss.teiid</groupId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.jboss.federate</groupId>
-  <artifactId>federate-embedded</artifactId>
+  <groupId>org.jboss.teiid</groupId>
+  <artifactId>teiid-embedded</artifactId>
   <name>Embedded Engine</name>
   <description>Embedded implementation of the engine</description>
   <dependencies>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-core</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-core</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-internal</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-internal</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-connector-api</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-connector-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-client</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-engine</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-engine</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-txn-jbossts</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-txn-jbossts</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-metadata</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-client-jdbc</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-client-jdbc</artifactId>
     </dependency>
     <dependency>
-    	<groupId>org.jboss.federate</groupId>
-    	<artifactId>federate-cache-jbosscache</artifactId>
+    	<groupId>org.jboss.teiid</groupId>
+    	<artifactId>teiid-cache-jbosscache</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.code.guice</groupId>

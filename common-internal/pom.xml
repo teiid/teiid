@@ -3,30 +3,30 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
-		<artifactId>federate</artifactId>
-		<groupId>org.jboss.federate</groupId>
+		<artifactId>teiid</artifactId>
+		<groupId>org.jboss.teiid</groupId>
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>federate-common-internal</artifactId>
+	<artifactId>teiid-common-internal</artifactId>
 	<name>Common Internal</name>
-	<description>Common code internal to federate (mostly legacy code).</description>
+	<description>Common (mostly legacy) code - not intended for use by clients.</description>
 	
 	<dependencies>
 		<dependency>
-			<groupId>org.jboss.federate</groupId>
-			<artifactId>federate-common-core</artifactId>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
 		</dependency>
 		
 		<dependency>
-			<groupId>org.jboss.federate</groupId>
-			<artifactId>federate-common-core</artifactId>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 		</dependency>
     
         <dependency>
-          <groupId>org.jboss.federate</groupId>
-          <artifactId>federate-client</artifactId>
+          <groupId>org.jboss.teiid</groupId>
+          <artifactId>teiid-client</artifactId>
         </dependency>    
 		
 		<dependency>

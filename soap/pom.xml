@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>federate</artifactId>
-    <groupId>org.jboss.federate</groupId>
+    <artifactId>teiid</artifactId>
+    <groupId>org.jboss.teiid</groupId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>federate-soap</artifactId>
+  <artifactId>teiid-soap</artifactId>
   <packaging>war</packaging>
   <name>SOAP</name>
   <description>SOAP interface for web services.</description>
@@ -14,14 +14,14 @@
   <dependencies>
   
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-common-core</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
     </dependency>
     
     <dependency>
-      <groupId>org.jboss.federate</groupId>
-      <artifactId>federate-client-jdbc</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-client-jdbc</artifactId>
       <version>${project.version}</version>
       <exclusions>
         <exclusion>

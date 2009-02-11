@@ -2,15 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.jboss.federate</groupId>
-	<artifactId>federate</artifactId>
+	<groupId>org.jboss.teiid</groupId>
+	<artifactId>teiid</artifactId>
 	<packaging>pom</packaging>
-	<name>Federate</name>
+	<name>Teiid</name>
 	<version>6.0.0-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
-		<site.url>http://www.federateproject.org</site.url>
+		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<licenses>
 		<license>
@@ -191,114 +191,114 @@
       
       <!-- Internal dependencies -->
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-common-core</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-common-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-common-core</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-common-core</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-common-internal</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-common-internal</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-common-internal</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-common-internal</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-connector-api</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-connector-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-connector-api</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-connector-api</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-client</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-client</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-client</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-client-jdbc</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-client-jdbc</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-client-jdbc</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-client-jdbc</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-engine</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-engine</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-engine</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-engine</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-metadata</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-metadata</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-metadata</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-metadata</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-txn-jbossts</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-txn-jbossts</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-cache-jbosscache</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-cache-jbosscache</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-connector-sdk</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-connector-sdk</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-connector-sdk</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-connector-sdk</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.federate</groupId>
-				<artifactId>federate-connector-metadata</artifactId>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-connector-metadata</artifactId>
 				<version>${project.version}</version>
 			</dependency>
       
@@ -403,24 +403,24 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
-		<module>federate-common-core</module>
-		<module>federate-common-internal</module>
-		<module>federate-connector-api</module>
-		<module>federate-client</module>
-		<module>federate-client-jdbc</module>
-		<module>federate-engine</module>
-		<module>federate-connectors</module>
-		<module>federate-metadata</module>
-		<module>federate-txn-jbossts</module>
-		<module>federate-connector-sdk</module>
-		<module>federate-console</module>
-		<module>federate-server</module>
-		<module>federate-soap</module>
-		<module>federate-embedded</module>
-		<module>federate-adminshell</module>
-		<module>federate-test-integration</module>
-		<module>federate-connector-metadata</module>
-		<module>federate-cache-jbosscache</module>
-		<module>federate-server-installer</module>
+		<module>common-core</module>
+		<module>common-internal</module>
+		<module>connector-api</module>
+		<module>client</module>
+		<module>client-jdbc</module>
+		<module>engine</module>
+		<module>connectors</module>
+		<module>metadata</module>
+		<module>txn-jbossts</module>
+		<module>connector-sdk</module>
+		<module>console</module>
+		<module>server</module>
+		<module>soap</module>
+		<module>embedded</module>
+		<module>adminshell</module>
+		<module>test-integration</module>
+		<module>connector-metadata</module>
+		<module>cache-jbosscache</module>
+		<module>server-installer</module>
 	</modules>
 </project>

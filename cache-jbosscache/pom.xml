@@ -2,18 +2,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
-		<artifactId>federate</artifactId>
-		<groupId>org.jboss.federate</groupId>
+		<artifactId>teiid</artifactId>
+		<groupId>org.jboss.teiid</groupId>
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>federate-cache-jbosscache</artifactId>
+	<artifactId>teiid-cache-jbosscache</artifactId>
 	<name>JBoss Cache</name>
 	<description>JBossCache provider.</description>
 	<dependencies>
 		<dependency>
-			<groupId>org.jboss.federate</groupId>
-			<artifactId>federate-engine</artifactId>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.cache</groupId>
