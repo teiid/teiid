@@ -798,6 +798,10 @@ public class TestValidator extends TestCase {
     public void testXMLQuery6() {
     	helpValidate("SELECT * FROM vm1.doc1 UNION SELECT * FROM vm1.doc1", new String[] {"\"xml\"", "SELECT * FROM vm1.doc1 UNION SELECT * FROM vm1.doc1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
+    
+    public void testXMLQueryWithLimit() {
+    	helpValidate("SELECT * FROM vm1.doc1 limit 1", new String[] {"SELECT * FROM vm1.doc1 LIMIT 1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     /** test rowlimit function is valid */
     public void testXMLQueryRowLimit() {

@@ -657,6 +657,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if(obj.getHaving() != null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0032), obj);
         }
+        if(obj.getLimit() != null) {
+            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj);
+        }
     }
     
     protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) throws QueryMetadataException, MetaMatrixComponentException {
@@ -1042,5 +1045,5 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_nontemptable", drop.getTable()), drop); //$NON-NLS-1$
         }
     }
-    
+        
 }
