@@ -1,416 +1,414 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="scalar_functions">
-  <title>Scalar Functions</title>
-  <para>
-    Teiid provides an extensive set of built-in scalar functions. See
-    also
-    <link linkend="sql_support">SQL Support</link>
-    and
-    <link linkend="datatypes">Datatypes</link>
-    . In addition, Teiid provides the capability for
-    <link linkend="udfs">user defined functions or UDFs</link>
-    .
-  </para>
-  <sect1 id="numeric_functions">
-    <title>Numeric Functions</title>
-    <para>Numeric functions return numeric values (integer, long,
-      float, double, biginteger, bigdecimal). They generally take
-      numeric values as inputs, though some take strings.</para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para>+ - * /</para>
-            </entry>
-            <entry>
-              <para>Standard numeric operators</para>
-            </entry>
-            <entry>
-              <para>x in {integer, long, float, double, biginteger,
-                bigdecimal}, return type is same as x</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ABS(x)</para>
-            </entry>
-            <entry>
-              <para>Absolute value of x</para>
-            </entry>
-            <entry>
-              <para>See standard numeric operators above</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ACOS(x)</para>
-            </entry>
-            <entry>
-              <para>Arc cosine of x</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ASIN(x)</para>
-            </entry>
-            <entry>
-              <para>Arc sine of x</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ATAN(x)</para>
-            </entry>
-            <entry>
-              <para>Arc tangent of x</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ATAN2(x,y)</para>
-            </entry>
-            <entry>
-              <para>Arc tangent of x and y</para>
-            </entry>
-            <entry>
-              <para>x, y in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>CEILING(x)</para>
-            </entry>
-            <entry>
-              <para>Ceiling of x</para>
-            </entry>
-            <entry>
-              <para>x in {double, float}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>COS(x)</para>
-            </entry>
-            <entry>
-              <para>Cosine of x</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>COT(x)</para>
-            </entry>
-            <entry>
-              <para>Cotangent of x</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>DEGREES(x)</para>
-            </entry>
-            <entry>
-              <para>Convert x degrees to radians</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>EXP(x)</para>
-            </entry>
-            <entry>
-              <para>e^x</para>
-            </entry>
-            <entry>
-              <para>x in {double, float}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FLOOR(x)</para>
-            </entry>
-            <entry>
-              <para>Floor of x</para>
-            </entry>
-            <entry>
-              <para>x in {double, float}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATBIGDECIMAL(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is bigdecimal, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATBIGINTEGER(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is biginteger, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATDOUBLE(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is double, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATFLOAT(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is float, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATINTEGER(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is integer, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FORMATLONG(x, y)</para>
-            </entry>
-            <entry>
-              <para>Formats x using format y</para>
-            </entry>
-            <entry>
-              <para>x is long, y is string, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>LOG(x)</para>
-            </entry>
-            <entry>
-              <para>Natural log of x (base e)</para>
-            </entry>
-            <entry>
-              <para>x in {double, float}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>LOG10(x)</para>
-            </entry>
-            <entry>
-              <para>Log of x (base 10)</para>
-            </entry>
-            <entry>
-              <para>x in {double, float}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>MOD(x, y)</para>
-            </entry>
-            <entry>
-              <para>Modulus (remainder of x / y)</para>
-            </entry>
-            <entry>
-              <para>x in {integer, long, float, double, biginteger},
-                return type is same as x</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSEBIGDECIMAL(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns bigdecimal</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSEBIGINTEGER(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns biginteger</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSEDOUBLE(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSEFLOAT(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns float</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSEINTEGER(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns integer</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PARSELONG(x, y)</para>
-            </entry>
-            <entry>
-              <para>Parses x using format y</para>
-            </entry>
-            <entry>
-              <para>x, y are strings, returns long</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>PI()</para>
-            </entry>
-            <entry>
-              <para>Value of Pi</para>
-            </entry>
-            <entry>
-              <para>return is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>POWER(x,y)</para>
-            </entry>
-            <entry>
-              <para>x to the y power</para>
-            </entry>
-            <entry>
-              <para>x in {integer, long, float, double, biginteger}, if
-                x is biginteger then return type is biginteger, else
-                double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>RADIANS(x)</para>
-            </entry>
-            <entry>
-              <para>Convert x radians to degrees</para>
-            </entry>
-            <entry>
-              <para>x in {double}, return type is double</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>RAND()</para>
-            </entry>
-            <entry>
-              <para>Returns a random number, using generator
-                established so far in the query or initializing with
-                system clock if necessary.</para>
-            </entry>
-            <entry>
-              <para>Returns double.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>RAND(x)</para>
-            </entry>
-            <entry>
-              <para>Returns a random number, using new generator
-                seeded with x.</para>
-            </entry>
-            <entry>
-              <para>x is integer, returns double.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>ROUND(x,y)</para>
-            </entry>
-            <entry>
-              <para>Round x to y places; negative values of y
-                indicate places to the right of the decimal point</para>
-            </entry>
-            <entry>
-              <para>x in {integer, float, double} y is integer, return
-                is same type as x</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>SIGN(x)</para>
-            </entry>
-            <entry>
-              <para>1 if x &gt; 0, 0 if x = 0, -1 if x &lt; 0</para>
+	<title>Scalar Functions</title>
+	<para>
+		Teiid provides an extensive set of built-in scalar functions. See also
+		<link linkend="sql_support">SQL Support</link>
+		and
+		<link linkend="datatypes">Datatypes</link>
+		. In addition, Teiid provides the capability for
+		<link linkend="udfs">user defined functions or UDFs</link>
+		.
+	</para>
+	<sect1 id="numeric_functions">
+		<title>Numeric Functions</title>
+		<para>Numeric functions return numeric values (integer, long,
+			float, double, biginteger, bigdecimal). They generally take numeric
+			values as inputs, though some take strings.</para>
+		<informaltable frame="all">
+			<tgroup cols="3">
+				<thead>
+					<row>
+						<entry>
+							<para>Function</para>
+						</entry>
+						<entry>
+							<para>Definition</para>
+						</entry>
+						<entry>
+							<para>Datatype Constraint</para>
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<para>+ - * /</para>
+						</entry>
+						<entry>
+							<para>Standard numeric operators</para>
+						</entry>
+						<entry>
+							<para>x in {integer, long, float, double, biginteger,
+								bigdecimal}, return type is same as x</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ABS(x)</para>
+						</entry>
+						<entry>
+							<para>Absolute value of x</para>
+						</entry>
+						<entry>
+							<para>See standard numeric operators above</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ACOS(x)</para>
+						</entry>
+						<entry>
+							<para>Arc cosine of x</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ASIN(x)</para>
+						</entry>
+						<entry>
+							<para>Arc sine of x</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ATAN(x)</para>
+						</entry>
+						<entry>
+							<para>Arc tangent of x</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ATAN2(x,y)</para>
+						</entry>
+						<entry>
+							<para>Arc tangent of x and y</para>
+						</entry>
+						<entry>
+							<para>x, y in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>CEILING(x)</para>
+						</entry>
+						<entry>
+							<para>Ceiling of x</para>
+						</entry>
+						<entry>
+							<para>x in {double, float}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>COS(x)</para>
+						</entry>
+						<entry>
+							<para>Cosine of x</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>COT(x)</para>
+						</entry>
+						<entry>
+							<para>Cotangent of x</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>DEGREES(x)</para>
+						</entry>
+						<entry>
+							<para>Convert x degrees to radians</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>EXP(x)</para>
+						</entry>
+						<entry>
+							<para>e^x</para>
+						</entry>
+						<entry>
+							<para>x in {double, float}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FLOOR(x)</para>
+						</entry>
+						<entry>
+							<para>Floor of x</para>
+						</entry>
+						<entry>
+							<para>x in {double, float}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATBIGDECIMAL(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is bigdecimal, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATBIGINTEGER(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is biginteger, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATDOUBLE(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is double, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATFLOAT(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is float, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATINTEGER(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is integer, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>FORMATLONG(x, y)</para>
+						</entry>
+						<entry>
+							<para>Formats x using format y</para>
+						</entry>
+						<entry>
+							<para>x is long, y is string, returns string</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>LOG(x)</para>
+						</entry>
+						<entry>
+							<para>Natural log of x (base e)</para>
+						</entry>
+						<entry>
+							<para>x in {double, float}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>LOG10(x)</para>
+						</entry>
+						<entry>
+							<para>Log of x (base 10)</para>
+						</entry>
+						<entry>
+							<para>x in {double, float}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>MOD(x, y)</para>
+						</entry>
+						<entry>
+							<para>Modulus (remainder of x / y)</para>
+						</entry>
+						<entry>
+							<para>x in {integer, long, float, double, biginteger}, return
+								type is same as x</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSEBIGDECIMAL(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns bigdecimal</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSEBIGINTEGER(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns biginteger</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSEDOUBLE(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSEFLOAT(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns float</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSEINTEGER(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns integer</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PARSELONG(x, y)</para>
+						</entry>
+						<entry>
+							<para>Parses x using format y</para>
+						</entry>
+						<entry>
+							<para>x, y are strings, returns long</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>PI()</para>
+						</entry>
+						<entry>
+							<para>Value of Pi</para>
+						</entry>
+						<entry>
+							<para>return is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>POWER(x,y)</para>
+						</entry>
+						<entry>
+							<para>x to the y power</para>
+						</entry>
+						<entry>
+							<para>x in {integer, long, float, double, biginteger}, if x is
+								biginteger then return type is biginteger, else double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>RADIANS(x)</para>
+						</entry>
+						<entry>
+							<para>Convert x radians to degrees</para>
+						</entry>
+						<entry>
+							<para>x in {double}, return type is double</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>RAND()</para>
+						</entry>
+						<entry>
+							<para>Returns a random number, using generator established
+								so far in the query or initializing with system clock if
+								necessary.</para>
+						</entry>
+						<entry>
+							<para>Returns double.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>RAND(x)</para>
+						</entry>
+						<entry>
+							<para>Returns a random number, using new generator seeded
+								with x.</para>
+						</entry>
+						<entry>
+							<para>x is integer, returns double.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>ROUND(x,y)</para>
+						</entry>
+						<entry>
+							<para>Round x to y places; negative values of y indicate
+								places to the right of the decimal point</para>
+						</entry>
+						<entry>
+							<para>x in {integer, float, double} y is integer, return is same
+								type as x</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>SIGN(x)</para>
+						</entry>
+						<entry>
+							<para>1 if x &gt; 0, 0 if x = 0, -1 if x &lt; 0</para>
             </entry>
               <entry>
                 <para>x in {integer, long, float, double, biginteger, bigdecimal},
@@ -1678,7 +1676,7 @@
   </sect1>
   <sect1>
     <title>Lookup Function</title>
-    <para>The Lookup function allows you to cache a physical group’s
+    <para>The Lookup function allows you to cache a group’s
     data in memory and access it through a scalar function. This caching
     accelerates response time to queries that use the lookup groups, known
     in business terminology as lookup tables or code groups.</para>
@@ -1690,10 +1688,9 @@
       of the state. Hence, a query to this lookup group would typically
       provide the PostalCode and expect the StateDisplayName in response.
     </para>
-    <para>When you call this function for the first time, the
-      Teiid System caches the lookup group when you first request a
-      value for any combination of codeGroup, returnElement, and
-      keyElement. The Teiid System uses this cached map for all
+    <para>When you call this function for any combination of codeGroup, returnElement, and
+      keyElement for the first time, the Teiid System caches the result. 
+      The Teiid System uses this cached map for all
       queries, in all sessions, that later access this lookup group. The
       codeGroup requires use of the fully-qualified name, and the
       returnElement and keyElement parameters should use shortened column
