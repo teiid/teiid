@@ -1,0 +1,4 @@
+Portions Copyright (C) 2008-2009 Red Hat, Inc.
+Portions Copyright (C) 2000-2007 MetaMatrix, Inc.
+Portions Copyright (c) 2000, 2003, 2008 IBM Corporation and others.
+Portions Copyright (c) 1997-2000 Sun Microsystems, Inc.
