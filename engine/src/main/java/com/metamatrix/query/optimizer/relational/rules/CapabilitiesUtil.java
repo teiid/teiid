@@ -525,5 +525,18 @@ public class CapabilitiesUtil {
 
         return caps.supportsCapability(Capability.REQUIRES_CRITERIA);
 	}
+    
+    public static boolean useAnsiJoin(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    throws QueryMetadataException, MetaMatrixComponentException {
+		
+        if (metadata.isVirtualModel(modelID)){
+            return false;
+        }
+
+        // Find capabilities
+        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
+
+        return caps.supportsCapability(Capability.QUERY_FROM_ANSI_JOIN);
+	}
 
 }

@@ -120,30 +120,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                                              JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
             }
             
-            trimColumn = new boolean[columnDataTypes.length];
-            nativeTypes = new int[columnDataTypes.length];
-            try {
-                ResultSetMetaData rsmd = results.getMetaData();
-                for(int i=0; i<columnDataTypes.length; i++) {
-                	
-                	nativeTypes[i] = rsmd.getColumnType(i+1);
-                	if ((nativeTypes[i] == Types.BLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.BLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))
-    						|| (nativeTypes[i] == Types.CLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.CLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))) {
-    					context.keepExecutionAlive(true);
-    				}
-                	
-                    if(columnDataTypes[i].equals(String.class)) {
-                        if(trimString || nativeTypes[i] == Types.CHAR) {
-                            trimColumn[i] = true;
-                        } 
-                    }
-                }
-            } catch(SQLException e) {
-                throw new ConnectorException(e.getMessage());
-            }
-
-            transformKnown = new boolean[columnDataTypes.length];
-            transforms = new ValueTranslator[columnDataTypes.length];
+            initResultSetInfo();
 
         } catch (SQLException e) {
             // try to cleanup the statement and may be resultset object
@@ -152,6 +129,29 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
             throw createAndLogError(e, translatedComm);
         }
     }
+
+	protected void initResultSetInfo() throws SQLException {
+		trimColumn = new boolean[columnDataTypes.length];
+		nativeTypes = new int[columnDataTypes.length];
+		ResultSetMetaData rsmd = results.getMetaData();
+		for(int i=0; i<columnDataTypes.length; i++) {
+			
+			nativeTypes[i] = rsmd.getColumnType(i+1);
+			if ((nativeTypes[i] == Types.BLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.BLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))
+					|| (nativeTypes[i] == Types.CLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.CLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))) {
+				context.keepExecutionAlive(true);
+			}
+			
+		    if(columnDataTypes[i].equals(String.class)) {
+		        if(trimString || nativeTypes[i] == Types.CHAR) {
+		            trimColumn[i] = true;
+		        } 
+		    }
+		}
+
+		transformKnown = new boolean[columnDataTypes.length];
+		transforms = new ValueTranslator[columnDataTypes.length];
+	}
     
     @Override
     public List next() throws ConnectorException, DataNotAvailableException {

@@ -36,6 +36,7 @@ import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.exception.ConnectorException;
@@ -90,17 +91,19 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         //create statement or CallableStatement and execute
         String sql = translatedComm.getSql();
         try{
-            if(translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT){
-                //create parameter index map
-                parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
-                CallableStatement cstmt = getCallableStatement(sql);
-                results = resultsTranslator.executeStoredProcedure(cstmt, translatedComm);
-                if (cstmt.getWarnings() != null) {
-                    logger.logDetail(StringUtil.getStackTrace(cstmt.getWarnings()));
-                }
-            } else {
-                throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
-            }                                       
+            if(translatedComm.getStatementType() != TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT){
+            	throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
+            }
+            //create parameter index map
+            parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
+            CallableStatement cstmt = getCallableStatement(sql);
+            results = resultsTranslator.executeStoredProcedure(cstmt, translatedComm);
+            if (cstmt.getWarnings() != null) {
+                logger.logDetail(StringUtil.getStackTrace(cstmt.getWarnings()));
+            }
+            if (results != null) {
+            	initResultSetInfo();
+            }
         }catch(SQLException e){
             // try to cleanup the statement and may be resultset object
             close();
@@ -109,6 +112,15 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             // Defect 15316 - always unroll SQLExceptions
             throw new ConnectorException(e);
         }           
+        
+    }
+    
+    @Override
+    public List next() throws ConnectorException, DataNotAvailableException {
+    	if (results == null) {
+    		return null;
+    	}
+    	return super.next();
     }
     
     /**

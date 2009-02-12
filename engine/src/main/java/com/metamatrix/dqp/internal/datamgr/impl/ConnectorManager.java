@@ -370,6 +370,7 @@ public class ConnectorManager implements ApplicationService {
             } else {
             	this.connector = new ConnectorWrapper(c);
             }
+            this.connector.start(env);
             if (this.isXa) {
                 if (this.connector.supportsSingleIdentity()) {
                 	// add this connector as the recovery source
@@ -396,7 +397,6 @@ public class ConnectorManager implements ApplicationService {
                 	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.getName())); //$NON-NLS-1$	                
                 }
             }
-            this.connector.start(env);
         } catch (InstantiationException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_instantiate_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
         } catch (IllegalAccessException e) {
