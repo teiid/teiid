@@ -63,6 +63,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public abstract class ConnectorWorkItem extends AbstractWorkItem {
@@ -296,7 +297,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         if (this.translatedCommand instanceof IProcedure) {
         	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "IProcedure Executions are expected to be ProcedureExecutions");
         	this.execution = (ProcedureExecution)exec;
-        	this.procedureBatchHandler = new ProcedureBatchHandler((IProcedure)this.translatedCommand, (ProcedureExecution)this.execution);
+        	StoredProcedure proc = (StoredProcedure)command;
+        	if (proc.returnParameters()) {
+        		this.procedureBatchHandler = new ProcedureBatchHandler((IProcedure)this.translatedCommand, (ProcedureExecution)this.execution);
+        	}
         } else if (this.translatedCommand instanceof IQueryCommand){
         	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "IQueryCommand Executions are expected to be ResultSetExecutions");
         	this.execution = (ResultSetExecution)exec;
@@ -378,7 +382,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
                 
         if (lastBatch) {
         	if (this.procedureBatchHandler != null) {
-        		rows.addAll(this.procedureBatchHandler.getOutputRows());
+        		List row = this.procedureBatchHandler.getOutputRow();
+        		if (row != null) {
+        			rows.add(row);
+        		}
         	}
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$
         }   

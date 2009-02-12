@@ -505,15 +505,26 @@
           </para>
         </listitem>
       </itemizedlist>
-      <note>
-        <title>Named Parameters</title>
-        <para> The default order of parameter specification is the same
-          as how they are defined in the procedure definition. You can also
-          specify the parameters in any order by name. Parameters that are have
+      <itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The default order of parameter specification is the same
+          as how they are defined in the procedure definition.
+          </para>
+        </listitem>
+        <listitem>
+          <para>You can specify the parameters in any order by name. Parameters that are have
           default values and/or are nullable in the metadata, can be omitted
           from the named parameter call and will have the appropriate value
-          passed at runtime.</para>
-      </note>
+          passed at runtime.
+          </para>
+        </listitem>
+        <listitem>
+          <para>If the procedure does not return a result set, the values from the RETURN, OUT, and IN_OUT parameters will be returned as a single row.
+          </para>
+        </listitem>
+      </itemizedlist>
     </sect2>
     <sect2 id="procedural_relational">
 	  <title>Procedural Relational Command</title>
@@ -543,9 +554,8 @@
 	    <itemizedlist>
           <para>Syntax Rules:</para>
           <listitem>
-	        <para>The procedure as a table projects all of the
-		      IN,OUT,RETURN,IN_OUT parameters, as well as the result set columns.
-		      IN_OUT columns will be projected as two columns, one that represents
+	        <para>The procedure as a table projects the same columns as an exec with the addition of the input parameters.
+		      For procedures that do not return a result set, IN_OUT columns will be projected as two columns, one that represents
 		      the output value and one named {column name}_IN that represents the
 		      input of the parameter.</para>
           </listitem>
@@ -559,7 +569,7 @@
             </para>
           </listitem>
           <listitem>
-            <para>Procedures containing duplicate names between the parameters (IN, IN_OUT, OUT, RETURN) and columns in its result set
+            <para>Procedures containing duplicate names between the parameters (IN, IN_OUT, OUT, RETURN) and result set columns 
             cannot be used in a procedural relational command.
             </para>
           </listitem>

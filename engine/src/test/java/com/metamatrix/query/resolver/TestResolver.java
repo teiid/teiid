@@ -4672,5 +4672,29 @@ public class TestResolver extends TestCase {
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as e2 FROM pm1.g1 ORDER BY x, e2 "); //$NON-NLS-1$
         helpTestOrderBy(resolvedQuery.getOrderBy(), new int[] {1, 2});
     }
-   
+    
+    public void testSPOutParamWithExec() {
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm2.spTest8(1)", FakeMetadataFactory.exampleBQTCached(), null);
+    	assertEquals(2, proc.getProjectedSymbols().size());
+    }
+
+    /**
+     * Note that the call syntax is not quite correct, the output parameter is not in the arg list.
+     * That hack is handled by the PreparedStatementRequest
+     */
+    public void testSPOutParamWithCallableStatement() {
+    	StoredProcedure proc = (StoredProcedure)helpResolve("{call pm2.spTest8(1)}", FakeMetadataFactory.exampleBQTCached(), null);
+    	assertEquals(3, proc.getProjectedSymbols().size());
+    }
+    
+    public void testProcRelationalWithOutParam() {
+    	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", FakeMetadataFactory.exampleBQTCached(), null);
+    	assertEquals(3, proc.getProjectedSymbols().size());
+    }
+    
+    public void testSPReturnParamWithNoResultSet() {
+    	StoredProcedure proc = (StoredProcedure)helpResolve("exec pm4.spTest9(1)", FakeMetadataFactory.exampleBQTCached(), null);
+    	assertEquals(1, proc.getProjectedSymbols().size());
+    }
+    
 }

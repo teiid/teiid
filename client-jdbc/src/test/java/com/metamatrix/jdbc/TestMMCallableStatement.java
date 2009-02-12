@@ -25,7 +25,9 @@ package com.metamatrix.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -33,6 +35,10 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.dqp.message.ParameterInfo;
+import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.platform.security.api.LogonResult;
 
 public class TestMMCallableStatement extends TestCase {
@@ -52,6 +58,25 @@ public class TestMMCallableStatement extends TestCase {
 		assertTrue(mmcs.wasNull());
 		assertTrue(mmcs.getBoolean(2));
 		assertFalse(mmcs.wasNull());
+	}
+	
+	public void testGetOutputParameter() throws Exception {
+		MMCallableStatement mmcs = getCallableStatement();
+		
+		RequestMessage request = new RequestMessage();
+		request.setExecutionId(1);
+		ResultsMessage resultsMsg = new ResultsMessage(request);
+		List[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
+		resultsMsg.setResults(results);
+		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.INTEGER }); 
+		resultsMsg.setFinalRow(results.length);
+		resultsMsg.setLastRow(results.length);
+		resultsMsg.setFirstRow(1);
+		resultsMsg.setParameters(Arrays.asList(new ParameterInfo(ParameterInfo.RESULT_SET, 1), new ParameterInfo(ParameterInfo.OUT, 1), new ParameterInfo(ParameterInfo.OUT, 1)));
+		mmcs.processQueryMessage(resultsMsg);
+		assertEquals(1, mmcs.getInt(1));
+		assertEquals(2, mmcs.getInt(2));
 	}
 	
 	public void testUnknownIndex() throws Exception {

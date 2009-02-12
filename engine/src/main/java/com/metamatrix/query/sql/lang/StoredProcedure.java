@@ -53,7 +53,7 @@ public class StoredProcedure extends ProcedureContainer {
     // =========================================================================
 
     /** Used as parameters */
-    private Map mapOfParameters;
+	private Map<Integer, SPParameter> mapOfParameters = new TreeMap<Integer, SPParameter>();
 
     /** Used to reference result set parameter if there is any */
     private Integer resultSetParameterKey;
@@ -80,8 +80,6 @@ public class StoredProcedure extends ProcedureContainer {
      * Constructs a default instance of this class.
      */
     public StoredProcedure() {
-        // re-initialize the list of parameters
-        mapOfParameters = new TreeMap();
     }
 
 	/**
@@ -94,7 +92,7 @@ public class StoredProcedure extends ProcedureContainer {
 
     private SPParameter getResultSetParameter(){
         if (this.resultSetParameterKey != null){
-            return (SPParameter)mapOfParameters.get(resultSetParameterKey);
+            return mapOfParameters.get(resultSetParameterKey);
         }
         return null;
     }
@@ -246,6 +244,10 @@ public class StoredProcedure extends ProcedureContainer {
     public boolean returnsScalarValue(){
         return returnsScalarValue;
     }
+    
+    public boolean returnParameters() {
+    	return isCallableStatement || !returnsResultSet();
+    }
 
     /**
 	 * Get the ordered list of all elements returned by this query.  These elements
@@ -258,6 +260,9 @@ public class StoredProcedure extends ProcedureContainer {
 		//add result set columns
 		List rsColumns = getResultSetColumns();
 		result.addAll(rsColumns);
+		if (!returnParameters()) {
+			return result;
+		}
 		//add out/inout parameter symbols
 		Iterator iter = mapOfParameters.values().iterator();
 		while(iter.hasNext()){
@@ -269,7 +274,7 @@ public class StoredProcedure extends ProcedureContainer {
 	        }
 		}
 		//add return parameter
-		 iter = mapOfParameters.values().iterator();
+		iter = mapOfParameters.values().iterator();
 		while(iter.hasNext()){
 			SPParameter parameter = (SPParameter)iter.next();
 			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){

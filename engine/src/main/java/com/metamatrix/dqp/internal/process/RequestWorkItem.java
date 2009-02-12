@@ -475,7 +475,10 @@ public class RequestWorkItem extends AbstractWorkItem {
             // If it is stored procedure, set parameters
             Command command = (Command)requestMsg.getCommand();
             if (command instanceof StoredProcedure) {
-                response.setParameters(getParameterInfo((StoredProcedure)command));
+            	StoredProcedure proc = (StoredProcedure)command;
+            	if (proc.returnParameters()) {
+            		response.setParameters(getParameterInfo(proc));
+            	}
             }
 
             /*

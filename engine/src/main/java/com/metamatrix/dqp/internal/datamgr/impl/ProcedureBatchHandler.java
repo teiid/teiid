@@ -80,19 +80,19 @@ class ProcedureBatchHandler {
         return result;
 	}
 	
-	List<List> getOutputRows() throws ConnectorException {
+	List getOutputRow() throws ConnectorException {
 		if (this.paramCols == 0) {
-			return Collections.emptyList();
+			return null;
 		}
 		List params = proc.getParameters();
-		List outParamValues = new ArrayList(this.paramCols);
-		List<List> results = new ArrayList<List>(this.paramCols);
+		List outParamValues = Arrays.asList(new Object[this.resultSetCols + this.paramCols]);
 		Iterator iter = params.iterator();
+		int index = this.resultSetCols;
         //return
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
             if(param.getDirection() == IParameter.RETURN){
-                outParamValues.add(procExec.getOutputValue(param));
+                outParamValues.set(index++, procExec.getOutputValue(param));
             }
         }
         //out, inout
@@ -100,18 +100,11 @@ class ProcedureBatchHandler {
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
             if(param.getDirection() == IParameter.OUT || param.getDirection() == IParameter.INOUT){
-                outParamValues.add(procExec.getOutputValue(param));
+                outParamValues.set(index++, procExec.getOutputValue(param));
             }
         }
 
-        //add out/return values
-        Iterator i = outParamValues.iterator();
-        for(int index = resultSetCols; i.hasNext(); index++){
-            Object[] newRow = new Object[paramCols + resultSetCols];
-            newRow[index] = i.next();
-            results.add(Arrays.asList(newRow));
-        }
-        return results;
+        return outParamValues;
 	}
 	
 }

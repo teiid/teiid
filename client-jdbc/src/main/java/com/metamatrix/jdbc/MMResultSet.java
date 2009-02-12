@@ -199,7 +199,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
          // Mark the row we're on
          final int originalRow = getAbsoluteRowNumber();
          
-         this.batchResults.absolute(index - (parameters + resultColumns) - 1);
+         this.batchResults.absolute(-1);
          try {
          	return getObjectDirect(index);
          } finally {

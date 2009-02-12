@@ -91,7 +91,7 @@ public class TestConnectorWorkItem extends TestCase {
 
 		// this has two result set columns and 1 out parameter
 		int total_columns = 3;
-		Command command = helpGetCommand("exec pm2.spTest8(?)", EXAMPLE_BQT); //$NON-NLS-1$                
+		Command command = helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
 		IProcedure proc = (IProcedure) new LanguageBridgeFactory(EXAMPLE_BQT)
 				.translate(command);
 
@@ -99,10 +99,10 @@ public class TestConnectorWorkItem extends TestCase {
 
 		assertEquals(total_columns, pbh.padRow(Arrays.asList(null, null)).size());
 
-		List<List> params = pbh.getOutputRows();
+		List params = pbh.getOutputRow();
 		
 		// check the parameter value
-		assertEquals(new Integer(3), params.get(0).get(2));
+		assertEquals(new Integer(3), params.get(2));
 
 		try {
 			pbh.padRow(Arrays.asList(1));
