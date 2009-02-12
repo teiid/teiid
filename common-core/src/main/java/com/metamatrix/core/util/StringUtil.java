@@ -1,10 +1,9 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (C) 2008 Red Hat, Inc.
- * Copyright (C) 2000-2007 MetaMatrix, Inc.
- * Licensed to Red Hat, Inc. under one or more contributor
- * license agreements.  See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ *
  * Copyright (c) 2000, 2008 IBM Corporation and others.
  * All rights reserved.
  * This code is made available under the terms of the Eclipse Public
