@@ -4,6 +4,15 @@
   <title>Using Teiid Designer to build a VDB</title>
   <sect1>
     <title>Download Teiid Designer</title>
+    
+    <note>
+      <para>
+        If you would like to skip building your own VDB, you can safely go to next page and continue with the 
+        exercise as there is a pre-built VDB available for your convenience in the 
+        examples/portfolio/PortfolioModel directory of the download.
+      </para>
+    </note>
+        
     <para>
       The Teiid Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
       download Teiid Designer
