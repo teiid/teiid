@@ -42,7 +42,6 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
@@ -60,7 +59,6 @@ public class BasicResultsTranslator implements ResultsTranslator {
     private ValueRetriever valueRetriever = new BasicValueRetriever();
     private TimeZone dbmsTimeZone = null;
     private int maxResultRows = 0;
-    private int fetchSize = 0;
     private TypeFacility typeFacility;
     
     /**
@@ -86,17 +84,6 @@ public class BasicResultsTranslator implements ResultsTranslator {
             }
         }
         
-        String fetchSizeString = env.getProperties().getProperty(JDBCPropertyNames.FETCH_SIZE);
-        if ( fetchSizeString != null && fetchSizeString.trim().length() > 0 ) {
-            try {
-                fetchSize = Integer.parseInt(fetchSizeString);
-            } catch (NumberFormatException e) {
-                Object[] params = new Object[]{JDBCPropertyNames.FETCH_SIZE};
-                String msg = JDBCPlugin.Util.getString("BasicResultsTranslator.Couldn__t_parse_property", params); //$NON-NLS-1$
-                env.getLogger().logWarning(msg);
-            }
-        }
-                
         String timeZone = env.getProperties().getProperty(JDBCPropertyNames.DATABASE_TIME_ZONE);
         if(timeZone != null && timeZone.trim().length() > 0) {
         	TimeZone tz = TimeZone.getTimeZone(timeZone);
@@ -144,18 +131,6 @@ public class BasicResultsTranslator implements ResultsTranslator {
                     
             if(param.getDirection() == IParameter.IN || param.getDirection() == IParameter.INOUT){
                 bindValue(statement, param.getValue(), param.getType(), index++, cal);
-            }
-        }
-        
-        if (maxResultRows > 0) {
-            statement.setMaxRows(maxResultRows + 1);
-        }
-        
-        if (fetchSize > 0) {
-            if (maxResultRows > 0) {
-                statement.setFetchSize(Math.min(fetchSize, maxResultRows + 1));
-            } else {
-                statement.setFetchSize(fetchSize);
             }
         }
         

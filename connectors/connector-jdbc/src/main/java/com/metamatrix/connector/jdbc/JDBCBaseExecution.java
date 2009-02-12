@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.exception.ConnectorException;
@@ -60,6 +61,7 @@ public abstract class JDBCBaseExecution {
 
     // Derived from properties
     protected boolean trimString;
+    protected int fetchSize;
 
     // Set during execution
     protected Statement statement;
@@ -83,6 +85,12 @@ public abstract class JDBCBaseExecution {
         String propStr = props.getProperty(JDBCPropertyNames.TRIM_STRINGS);
         if (propStr != null) {
             trimString = Boolean.valueOf(propStr).booleanValue();
+        }
+        
+        fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, context.getBatchSize());
+        int max = resultsTranslator.getMaxResultRows();
+        if (max > 0) {
+        	fetchSize = Math.min(fetchSize, max);
         }
     }
 
@@ -215,10 +223,11 @@ public abstract class JDBCBaseExecution {
         }
     }
 
-    protected void setMaxRows(Statement statement) throws SQLException {
+    protected void setSizeContraints(Statement statement) throws SQLException {
         if (resultsTranslator.getMaxResultRows() > 0) {
             statement.setMaxRows(resultsTranslator.getMaxResultRows());
         }
+    	statement.setFetchSize(fetchSize);
     }
 
     protected synchronized Statement getStatement() throws SQLException {
@@ -227,8 +236,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.createStatement();
-        statement.setFetchSize(context.getBatchSize());
-        setMaxRows(statement);
+        setSizeContraints(statement);
         return statement;
     }
 
@@ -238,8 +246,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.prepareCall(sql);
-        statement.setFetchSize(context.getBatchSize());
-        setMaxRows(statement);
+        setSizeContraints(statement);
         return (CallableStatement)statement;
     }
 
@@ -249,8 +256,7 @@ public abstract class JDBCBaseExecution {
             statement = null;
         }
         statement = connection.prepareStatement(sql);
-        statement.setFetchSize(context.getBatchSize());
-        setMaxRows(statement);
+        setSizeContraints(statement);
         return (PreparedStatement)statement;
     }
 
