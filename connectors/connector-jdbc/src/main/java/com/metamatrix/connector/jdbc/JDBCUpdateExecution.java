@@ -182,6 +182,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             }
             PreparedStatement stmt = getPreparedStatement(sql);
             updateCount = resultsTranslator.executeStatementForBulkInsert(this.connection, stmt, translatedComm);
+            addStatementWarnings();
             succeeded = true;
         } catch (SQLException e) {
             throw createAndLogError(e, translatedComm);
@@ -198,6 +199,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                               List commands) throws ConnectorException {
         try {
             int[] batchResults = statement.executeBatch();
+            addStatementWarnings();
             for (int j = 0; j < batchResults.length; j++) {
                 results[commandCount - 1 - j] = batchResults[batchResults.length - 1 - j];
             }
@@ -217,18 +219,21 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         String sql = translatedComm.getSql();
 
         try {
+        	int updateCount;
             if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_STATEMENT) {
-                return getStatement().executeUpdate(sql);
+                updateCount = getStatement().executeUpdate(sql);
             } else if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT) {
                 PreparedStatement pstatement = getPreparedStatement(sql);
                 resultsTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
-                return pstatement.executeUpdate();
+                updateCount = pstatement.executeUpdate();
             } else {
                 throw new ConnectorException(
                                              JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", //$NON-NLS-1$
                                                                        new Integer(translatedComm.getStatementType()),
                                                                        sql));
             }
+            addStatementWarnings();
+            return updateCount;
         } catch (SQLException err) {
             throw createError(err, translatedComm);
         }

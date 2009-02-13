@@ -128,10 +128,6 @@ public class MockConnector implements Connector {
 		        return exec;
 			}
 			
-			@Override
-			public ConnectorCapabilities getCapabilities() {
-				return null;
-			}
 		};
 	}
 

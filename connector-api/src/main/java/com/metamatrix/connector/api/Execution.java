@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.api;
 
+import java.util.List;
+
 import com.metamatrix.connector.exception.ConnectorException;
 
 /**
@@ -46,7 +48,16 @@ public interface Execution {
      */
     void cancel() throws ConnectorException;
     
+    /**
+     * Execute the associated command.  Results will be retrieved through a specific sub-interface call.
+     * @throws ConnectorException
+     */
     void execute() throws ConnectorException;
-    
-    //List<ConnectorException> getWarnings();
+
+    /**
+     * Get and clear the warnings for this execution.  Will be called
+     * each time results are retrieved.
+     * @return a List of ConnectorExceptions or null if there are no warnings
+     */
+    List<Exception> getWarnings();
 }

@@ -26,6 +26,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.Properties;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
@@ -43,7 +45,7 @@ import com.metamatrix.connector.pool.ConnectorIdentity;
 
 /**
  */
-public abstract class JDBCBaseExecution {
+public abstract class JDBCBaseExecution extends BasicExecution  {
 
     // ===========================================================================================================================
     // Fields
@@ -185,7 +187,7 @@ public abstract class JDBCBaseExecution {
         TranslatedCommand translatedCommand = new TranslatedCommand(context, sqlTranslator);
         translatedCommand.translateCommand(command);
 
-        if (translatedCommand.getSql() != null) {
+        if (translatedCommand.getSql() != null && this.logger.isDetailEnabled()) {
             this.logger.logDetail("Source-specific command: " + translatedCommand.getSql()); //$NON-NLS-1$
         }
 
@@ -271,4 +273,18 @@ public abstract class JDBCBaseExecution {
     public SQLTranslator getSqlTranslator() {
 		return sqlTranslator;
 	}
+    
+    public void addStatementWarnings() throws SQLException {
+    	SQLWarning warning = this.statement.getWarnings();
+    	while (warning != null) {
+    		SQLWarning toAdd = warning;
+    		warning = toAdd.getNextWarning();
+    		toAdd.setNextException(null);
+    		if (logger.isDetailEnabled()) {
+    			logger.logDetail(context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
+    		}
+    		addWarning(toAdd);
+    	}
+    	this.statement.clearWarnings();
+    }
 }

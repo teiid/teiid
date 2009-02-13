@@ -42,6 +42,7 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
@@ -60,7 +61,7 @@ import com.metamatrix.core.util.StringUtil;
  * The essential part that executes the query. It keeps all the execution
  * states.
  */
-public class TextSynchExecution implements ResultSetExecution {
+public class TextSynchExecution extends BasicExecution implements ResultSetExecution {
     // Command to be executed
     private IQuery cmd;
 

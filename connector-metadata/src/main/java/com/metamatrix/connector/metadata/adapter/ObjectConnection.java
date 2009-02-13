@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.metadata.adapter;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
@@ -65,13 +64,6 @@ public class ObjectConnection extends BasicConnection {
     
     protected IObjectSource getMetadataObjectSource() throws ConnectorException {
         return connector.getMetadataObjectSource(executionContext);
-    }
-    
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
     }
     
     @Override

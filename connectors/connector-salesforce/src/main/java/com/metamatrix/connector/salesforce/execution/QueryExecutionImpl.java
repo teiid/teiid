@@ -36,6 +36,7 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.Element;
@@ -47,7 +48,7 @@ import com.metamatrix.connector.salesforce.execution.visitors.SelectVisitor;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
-public class QueryExecutionImpl implements ResultSetExecution {
+public class QueryExecutionImpl extends BasicExecution implements ResultSetExecution {
 
 	private SalesforceConnection connection;
 

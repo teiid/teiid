@@ -64,7 +64,7 @@ public interface ProcessorPlan extends Cloneable, Describable {
      * the current warnings list.  The warnings are in order they were detected.
      * @return Current list of warnings, never null
      */
-    List getAndClearWarnings();
+    List<Exception> getAndClearWarnings();
     
     /**
      * Reset a plan so that it can be processed again.

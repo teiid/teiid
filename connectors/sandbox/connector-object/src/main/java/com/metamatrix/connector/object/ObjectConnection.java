@@ -24,7 +24,6 @@ package com.metamatrix.connector.object;
 
 
 import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
@@ -89,14 +88,6 @@ public class ObjectConnection extends BasicConnection implements PoolAwareConnec
     		throws ConnectorException {
     	return new ObjectProcedureExecution(command, getObjectSource(), translator, metadata, env);
     }
-    
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
-    }  
-    
     
     /** 
      * @see com.metamatrix.connector.object.ObjectConnection#getAPI()

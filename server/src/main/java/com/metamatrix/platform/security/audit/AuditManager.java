@@ -135,13 +135,6 @@ public final class AuditManager {
     public static final String SYSTEM_AUDIT_CONSOLE_PROPERTY_NAME = "metamatrix.audit.console"; //$NON-NLS-1$
 
     /**
-     * The name of the configuration property that contains the maximum number of threads
-     * for the AuditManager.  This is an optional property that defaults to '1'.
-     * Note that the maximum value must be greater than or equal to the minimum value.
-     */
-    public static final String SYSTEM_AUDIT_MAX_THREADS           = "metamatrix.audit.maxThreads"; //$NON-NLS-1$
-
-    /**
      * The name of the configuration property that contains the time to live (in milliseconds) for threads
      * in the AuditManager.  The time to live is simply the period of thread inactivity
      * that determines when a thread may be expired.  This is an optional property
@@ -310,11 +303,10 @@ public final class AuditManager {
     private void initializeQueueWorkers() {
         try {
             // Create the worker pool
-            String maxThreadsString = System.getProperty(SYSTEM_AUDIT_MAX_THREADS, DEFAULT_AUDIT_MAX_THREADS);
             String threadTTLString = System.getProperty(SYSTEM_AUDIT_THREAD_TTL, DEFAULT_AUDIT_THREAD_TTL);
             this.workerPool = WorkerPoolFactory.newWorkerPool(
                 "AuditQueue", //$NON-NLS-1$
-                Integer.parseInt(maxThreadsString),
+                1,
                 Integer.parseInt(threadTTLString));
         } catch ( Exception e ) {
             I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0007, e,

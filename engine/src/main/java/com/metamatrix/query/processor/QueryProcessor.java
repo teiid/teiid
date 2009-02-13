@@ -222,7 +222,7 @@ public class QueryProcessor {
         }
     }
 
-    public List getAndClearWarnings() {
+    public List<Exception> getAndClearWarnings() {
         return this.processPlan.getAndClearWarnings();
     }
     

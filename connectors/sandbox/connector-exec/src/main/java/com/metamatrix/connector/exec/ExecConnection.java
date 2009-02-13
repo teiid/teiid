@@ -64,10 +64,4 @@ public class ExecConnection extends BasicConnection {
         logger.logDetail("Exec Connection is successfully closed."); //$NON-NLS-1$
     }
 
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-    	return null;
-    }     
 }

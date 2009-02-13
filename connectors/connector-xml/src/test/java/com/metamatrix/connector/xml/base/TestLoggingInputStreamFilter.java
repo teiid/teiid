@@ -179,6 +179,60 @@ public class TestLoggingInputStreamFilter extends TestCase {
 			// TODO Auto-generated method stub
 			
 		}
+
+		@Override
+		public boolean isDetailEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean isErrorEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean isInfoEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean isTraceEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean isWarningEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void logDetail(String message, Throwable error) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void logInfo(String message, Throwable error) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void logTrace(String message, Throwable error) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void logWarning(String message, Throwable error) {
+			// TODO Auto-generated method stub
+			
+		}
 		
 	}
 }

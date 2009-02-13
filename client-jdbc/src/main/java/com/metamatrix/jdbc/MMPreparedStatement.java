@@ -259,7 +259,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         } else {
             // save warnings if have any
             if (resultsWarning != null) {
-                setWarnings(resultsWarning);
+                accumulateWarnings(resultsWarning);
             }
             // wrap results into ResultSet, only one update count
             resultSet = new MMResultSet(resultsMsg, this);

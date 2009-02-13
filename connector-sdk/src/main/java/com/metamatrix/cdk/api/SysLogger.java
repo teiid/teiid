@@ -101,4 +101,49 @@ public class SysLogger implements ConnectorLogger {
         log(TRACE, message, null);
     }
 
+	@Override
+	public boolean isDetailEnabled() {
+		return DETAIL <= this.logLevel;
+	}
+
+	@Override
+	public boolean isErrorEnabled() {
+		return ERROR <= this.logLevel;
+	}
+
+	@Override
+	public boolean isInfoEnabled() {
+		return INFO <= this.logLevel;
+	}
+
+	@Override
+	public boolean isTraceEnabled() {
+		return TRACE <= this.logLevel;	
+	}
+
+	@Override
+	public boolean isWarningEnabled() {
+		return WARNING <= this.logLevel;
+	}
+
+	@Override
+	public void logDetail(String message, Throwable error) {
+		log(DETAIL, message, error);
+	}
+
+	@Override
+	public void logInfo(String message, Throwable error) {
+		log(INFO, message, error);		
+	}
+
+	@Override
+	public void logTrace(String message, Throwable error) {
+		log(TRACE, message, error);		
+	}
+
+	@Override
+	public void logWarning(String message, Throwable error) {
+		log(WARNING, message, error);		
+	}
+
 }

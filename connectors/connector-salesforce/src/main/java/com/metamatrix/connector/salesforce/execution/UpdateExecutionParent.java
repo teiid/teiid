@@ -27,6 +27,7 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICompareCriteria;
@@ -48,7 +49,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * get IDs of Salesforce objects.
  *
  */
-public class UpdateExecutionParent implements UpdateExecution {
+public class UpdateExecutionParent extends BasicExecution implements UpdateExecution {
 
 	private SalesforceConnection connection;
 	private RuntimeMetadata metadata;

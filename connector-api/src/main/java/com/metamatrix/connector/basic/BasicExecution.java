@@ -20,38 +20,33 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.xmlsource;
+package com.metamatrix.connector.basic;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.exception.ConnectorException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
-/**
- * A Base XML Connection to an XML Source
- */
-public abstract class XMLSourceConnection extends BasicConnection {
+import com.metamatrix.connector.api.Execution;
 
-    protected ConnectorEnvironment env;
-    protected boolean connected = false;
-    
-    /**
-     * Constructor. 
-     * @param env
-     */
-    public XMLSourceConnection(ConnectorEnvironment env) throws ConnectorException {
-        this.env = env;
-    }
-
-    /** 
-     * @see com.metamatrix.connector.api.Connection#release()
-     */
-    public void close() {            
-        XMLSourcePlugin.logInfo(this.env.getLogger(), "Connection_closed"); //$NON-NLS-1$
-    }
-    
-    /**
-     * Check if the connection is active. 
-     * @return true if active; false otherwise
-     */
-    public abstract boolean isConnected();       
+public abstract class BasicExecution implements Execution {
+	
+	private List<Exception> warnings = new LinkedList<Exception>();
+	
+	/**
+	 * Add an exception as a warning to this Execution.
+	 */
+	public void addWarning(Exception ex) {
+		if (ex == null) {
+			return;
+		}
+		this.warnings.add(ex);
+	}
+	
+	@Override
+	public List<Exception> getWarnings() {
+		List<Exception> result = new ArrayList<Exception>(warnings);
+		warnings.clear();
+		return result;
+	}
+	
 }

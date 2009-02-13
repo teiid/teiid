@@ -112,7 +112,7 @@ public class RelationalNodeUtil {
 
                 if(criteria == null) {
                     return true;
-                } else if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, true)) {
+                } else if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
                     // If there are elements present in the criteria,
                     // then we don't know the result, so assume we need to execute
                     return true;
@@ -133,7 +133,10 @@ public class RelationalNodeUtil {
                 criteria = update.getCriteria();
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
-                if(ElementCollectorVisitor.getElements(criteria, true).size() > 0) {
+                if (criteria == null) {
+                	return true;
+                }
+                if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
                 } else if(evaluateCriteria(criteria)) {
                     if (simplifyCriteria) {
@@ -147,7 +150,10 @@ public class RelationalNodeUtil {
                 criteria = delete.getCriteria();
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
-                if(ElementCollectorVisitor.getElements(criteria, true).size() > 0) {
+                if (criteria == null) {
+                	return true;
+                }
+                if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
                 } else if(evaluateCriteria(criteria)) {
                     if (simplifyCriteria) {

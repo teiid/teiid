@@ -92,10 +92,7 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
         List[] results = createResults(projectedSymbols);
                 
         AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(request, results, projectedSymbols);
-        msg.setFirstRow(1);
-        msg.setLastRow(rows);
         msg.setFinalRow(rows);
-        msg.setPartialResults(false);
         resultListener.receiveResults(msg);
         AtomicResultsMessage closeMsg = ConnectorWorkItem.createResultsMessage(request, results, projectedSymbols);
         closeMsg.setRequestClosed(true);

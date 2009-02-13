@@ -22,7 +22,9 @@
 
 package com.metamatrix.connector.yahoo;
 
-import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
@@ -44,13 +46,6 @@ public class YahooConnection extends BasicConnection {
         this.env = env;
     }
 
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
-    }
-    
     @Override
     public ResultSetExecution createResultSetExecution(IQueryCommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)

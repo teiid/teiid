@@ -27,6 +27,7 @@ import java.util.List;
 
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
@@ -40,7 +41,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
  * Adapter to expose the object processing logic via the standard connector API.
  * Makes the batches coming from the objectSource match the batch sizes requested by the caller.
  */
-public class ObjectSynchExecution implements ResultSetExecution {
+public class ObjectSynchExecution extends BasicExecution implements ResultSetExecution {
     private final RuntimeMetadata metadata;
     private ObjectQueryProcessor processor;
 

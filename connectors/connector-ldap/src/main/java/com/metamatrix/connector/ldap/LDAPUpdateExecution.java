@@ -37,6 +37,7 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICompareCriteria;
@@ -67,7 +68,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
  * item in the WHERE clause for UPDATE and DELETE operations, and in the list
  * of attributes to assign values in an INSERT operation * Responsible for update/insert/delete operations against LDAP
  */
-public class LDAPUpdateExecution implements UpdateExecution {
+public class LDAPUpdateExecution extends BasicExecution implements UpdateExecution {
 	private ConnectorLogger logger;
 	private RuntimeMetadata rm;
 	private InitialLdapContext initialLdapContext;

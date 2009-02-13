@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.dqp.exception.SourceFailureDetails;
+import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
@@ -105,14 +105,10 @@ public class TestDQPCoreRequestHandling extends TestCase {
         compareReqInfos(reqs, actualReqs);
     }
     
-    private SourceFailureDetails getSourceFailures(String model, String binding, String message) {
-    	return new SourceFailureDetails(model, binding, getWarning(message));
+    private SourceWarning getSourceFailures(String model, String binding, String message) {
+    	return new SourceWarning(model, binding, new MetaMatrixException(message), true);
     }
-    
-    private MetaMatrixException getWarning(String message) {
-    	return new MetaMatrixException(message);    	
-    }
-    
+        
     public void testAddRequest() {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
@@ -132,7 +128,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         workItem.addSourceFailureDetails(getSourceFailures("Model2", "Binding2", "Warning2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         workItem.addSourceFailureDetails(getSourceFailures("Model3", "Binding3", "Warning3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
-        assertNotNull(workItem.getPartialWarn());
+        assertEquals(3, workItem.getWarnings().size());
     }
     
     static RequestWorkItem addRequest(DQPCore rm, 

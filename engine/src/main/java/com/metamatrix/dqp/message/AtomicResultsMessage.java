@@ -26,35 +26,16 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Date;
 import java.util.List;
 
 import com.metamatrix.common.batch.BatchSerializer;
+import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.ExternalizeUtil;
 
 public class AtomicResultsMessage implements Externalizable {
 
-    // atomic request messages's id if this is result for a atomic request.
-    private AtomicRequestID atomicRequestId;
-	
-    // This object represents the time when command is submitted to the server.
-    private Date processingTimestamp;
-
-    // This object represents the time when results are produced on the server.
-    private Date completedTimestamp;
-	
-	private List[] results = null;
-	private String[] columnNames = null;
-	private String[] dataTypes = null;
-
-    // First row index 
-    private int firstRow = 0;
-
-    // Last row index
-    private int lastRow;	
-    
-    // Flag indicating whether this result set is part or all of the entire result set 
-    private boolean partialResultsFlag;
+	private List[] results;
+	private String[] dataTypes;
 
     // Final row index in complete result set, if known
     private int finalRow = -1;
@@ -63,30 +44,23 @@ public class AtomicResultsMessage implements Externalizable {
     private boolean supportsImplicitClose = true;
 
     // this flag is used to notify the connector state
-    private boolean requestClosed = false;
+    private boolean requestClosed;
     
     private boolean isTransactional;
+    
+    private List<Exception> warnings;
 
     // to honor the externalizable contract
 	public AtomicResultsMessage() {
 	}
 	
 	public AtomicResultsMessage(AtomicRequestMessage msg, List[] results, String[] columnNames, String[] dataTypes) {
-
 		this(msg);
-		
+		this.dataTypes = dataTypes;
         this.results = results;
-        this.columnNames = columnNames;
-        this.dataTypes = dataTypes;
-        this.firstRow = 1;
-        this.lastRow = results.length;
-        this.partialResultsFlag = false;
 	}
 	
 	public AtomicResultsMessage(AtomicRequestMessage msg) {
-        this.processingTimestamp = msg.getProcessingTimestamp();
-        this.completedTimestamp = new Date();
-        this.atomicRequestId = msg.getAtomicRequestID();
 	}
 	
     public boolean supportsImplicitClose() {
@@ -96,30 +70,6 @@ public class AtomicResultsMessage implements Externalizable {
     public void setSupportsImplicitClose(boolean supportsImplicitClose) {
         this.supportsImplicitClose = supportsImplicitClose;
     }    
-    
-    public int getFirstRow() {
-        return firstRow;
-    }
-    
-    public void setFirstRow(int i) {
-        firstRow = i;
-    }
-
-    public int getLastRow() {
-        return lastRow;
-    }    
-    
-    public void setLastRow(int i) {
-        lastRow = i;
-    }
-    
-    public boolean isPartialResults() {
-        return partialResultsFlag;
-    }
-    
-    public void setPartialResults(boolean b) {
-        partialResultsFlag = b;
-    }
     
     public int getFinalRow() {
         return finalRow;
@@ -137,58 +87,26 @@ public class AtomicResultsMessage implements Externalizable {
         this.requestClosed = requestClosed;
     }     
     
-	public AtomicRequestID getAtomicRequestId() {
-		return atomicRequestId;
-	}
-	
 	public  List[] getResults() {
 		return results;
 	}
 
-	public  String[] getColumnNames() {
-        return this.columnNames;
-	}
-
-	public String[] getDataTypes() {
-        return this.dataTypes;
-	}
-		
-    public Date getProcessingTimestamp() {
-        return this.processingTimestamp;
-    }
-
-    public Date getCompletedTimestamp() {
-        return this.completedTimestamp;
-    }
-    
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        atomicRequestId = (AtomicRequestID)in.readObject();
-        processingTimestamp = (Date)in.readObject();
-        completedTimestamp = (Date)in.readObject();
-        columnNames = ExternalizeUtil.readStringArray(in);
         dataTypes = ExternalizeUtil.readStringArray(in);
         results = BatchSerializer.readBatch(in, dataTypes);
-        firstRow = in.readInt();
-        lastRow = in.readInt();
-        partialResultsFlag = in.readBoolean();
         finalRow = in.readInt();
         supportsImplicitClose = in.readBoolean();
-        requestClosed = in.readBoolean();        
+        requestClosed = in.readBoolean();
+        warnings = (List<Exception>)in.readObject();
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(atomicRequestId);
-        out.writeObject(processingTimestamp);
-        out.writeObject(completedTimestamp);
-        ExternalizeUtil.writeArray(out, columnNames);
         ExternalizeUtil.writeArray(out, dataTypes);
         BatchSerializer.writeBatch(out, dataTypes, results);
-        out.writeInt(firstRow);
-        out.writeInt(lastRow);
-        out.writeBoolean(partialResultsFlag);
         out.writeInt(finalRow);
         out.writeBoolean(supportsImplicitClose);
         out.writeBoolean(requestClosed);
+        out.writeObject(warnings);
 	}
 
 	public boolean isTransactional() {
@@ -197,5 +115,13 @@ public class AtomicResultsMessage implements Externalizable {
 
 	public void setTransactional(boolean isTransactional) {
 		this.isTransactional = isTransactional;
-	}    
+	}   
+	
+	public void setWarnings(List<Exception> warnings) {
+		this.warnings = warnings;
+	}
+	
+	public List<Exception> getWarnings() {
+		return warnings;
+	}
 }

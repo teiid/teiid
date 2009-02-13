@@ -39,6 +39,7 @@ import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IParameter;
@@ -48,7 +49,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 /**
  * Represents the execution of a command.
  */
-public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
+public class LoopbackExecution extends BasicExecution implements UpdateExecution, ProcedureExecution {
 
     private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
 

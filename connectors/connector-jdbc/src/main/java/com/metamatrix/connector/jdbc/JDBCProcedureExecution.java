@@ -96,19 +96,12 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
             CallableStatement cstmt = getCallableStatement(sql);
             results = resultsTranslator.executeStoredProcedure(cstmt, translatedComm);
-            if (cstmt.getWarnings() != null) {
-                logger.logDetail(StringUtil.getStackTrace(cstmt.getWarnings()));
-            }
             if (results != null) {
             	initResultSetInfo();
             }
+            addStatementWarnings();
         }catch(SQLException e){
-            // try to cleanup the statement and may be resultset object
-            close();
-
-            logger.logError(JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
-            // Defect 15316 - always unroll SQLExceptions
-            throw new ConnectorException(e);
+            throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql));
         }           
         
     }

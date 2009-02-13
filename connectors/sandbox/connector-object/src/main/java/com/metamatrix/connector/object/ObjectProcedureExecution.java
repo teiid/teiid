@@ -28,6 +28,7 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
@@ -41,7 +42,7 @@ import com.metamatrix.connector.object.util.ObjectExecutionHelper;
 /** 
  * @since 4.3
  */
-public class ObjectProcedureExecution implements ProcedureExecution {
+public class ObjectProcedureExecution extends BasicExecution implements ProcedureExecution {
 
     private RuntimeMetadata metadata = null;
     private IObjectSource api;

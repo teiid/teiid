@@ -54,7 +54,7 @@ public class ResultsMessage implements Externalizable {
     private MetaMatrixException exception;
 
     /** Warning could be schema validation errors or partial results warnings */
-    private List warnings;
+    private List<Exception> warnings;
 
     /** Schemas associated with xml results. */
     private Collection schemas;
@@ -260,7 +260,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @param list
      */
-    public void setWarnings(List list) {
+    public void setWarnings(List<Exception> list) {
         warnings = list;
     }
 

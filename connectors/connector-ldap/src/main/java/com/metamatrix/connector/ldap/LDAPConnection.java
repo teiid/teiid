@@ -29,7 +29,6 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.ldap.InitialLdapContext;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
@@ -173,11 +172,6 @@ public class LDAPConnection extends BasicConnection implements PoolAwareConnecti
 		return new LDAPUpdateExecution(command, executionContext, metadata, this.logger, this.initCtx);
 	}
 	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
-	}
-
 	/** 
 	 * Closes LDAP context, effectively closing the connection to LDAP.
 	 * (non-Javadoc)

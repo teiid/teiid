@@ -304,6 +304,13 @@ public class TestConnectorWorkItem extends TestCase {
 	}
 	
 	public void testUpdateExecution() throws Throwable {
+		QueueResultsReceiver receiver = helpExecuteUpdate();
+		AtomicResultsMessage results = receiver.getResults().remove();
+		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
+	}
+
+	private QueueResultsReceiver helpExecuteUpdate() throws Exception,
+			Throwable {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
@@ -313,8 +320,13 @@ public class TestConnectorWorkItem extends TestCase {
 		if (receiver.exception != null) {
 			throw receiver.exception;
 		}
+		return receiver;
+	}
+	
+	public void testExecutionWarning() throws Throwable {
+		QueueResultsReceiver receiver = helpExecuteUpdate();
 		AtomicResultsMessage results = receiver.getResults().remove();
-		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
+		assertEquals(1, results.getWarnings().size());
 	}
 
 	private static class FakeQueuingAsynchConnectorWorkItem extends

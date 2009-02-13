@@ -75,7 +75,9 @@ public class PooledConnector extends ConnectorWrapper {
 					conn.close();
 				}
 			}
-			environment.getLogger().logTrace("released connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
+			if (environment.getLogger().isTraceEnabled()) {
+				environment.getLogger().logTrace("released connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
+			}
 		}
 
 		public void beforeCompletion() {
@@ -131,7 +133,9 @@ public class PooledConnector extends ConnectorWrapper {
         	synchronized (idToConnections) {
                 conn  = idToConnections.get(transactionContext.getTxnID());
                 if (conn != null){
-                    environment.getLogger().logTrace("Transaction " + transactionContext.getTxnID() + " already has connection, using the same connection"); //$NON-NLS-1$ //$NON-NLS-2$
+                	if (environment.getLogger().isTraceEnabled()) {
+                		environment.getLogger().logTrace("Transaction " + transactionContext.getTxnID() + " already has connection, using the same connection"); //$NON-NLS-1$ //$NON-NLS-2$
+                	}
                     conn.lease();
                     return conn;
                 }
@@ -141,7 +145,9 @@ public class PooledConnector extends ConnectorWrapper {
         conn = xaPool.obtain(executionContext, transactionContext, true);
         conn.lease();
         if (transactionContext != null) {
-        	environment.getLogger().logTrace("Obtained new connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
+        	if (environment.getLogger().isTraceEnabled()) {
+        		environment.getLogger().logTrace("Obtained new connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
+        	}
             
             try { //add a synchronization to remove the map entry
                 transactionContext.getTransaction().registerSynchronization(new RemovalCallback(transactionContext, conn));

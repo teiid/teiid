@@ -25,7 +25,6 @@ package com.metamatrix.connector.text;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
@@ -66,12 +65,5 @@ public class TextConnection extends BasicConnection {
     public void close() {
         metadataProps = null;
         env.getLogger().logInfo("Text Connection is successfully closed."); //$NON-NLS-1$
-    }
-
-    /*
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
     }
 }

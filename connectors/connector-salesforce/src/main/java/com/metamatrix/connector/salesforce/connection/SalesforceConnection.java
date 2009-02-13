@@ -24,7 +24,6 @@ package com.metamatrix.connector.salesforce.connection;
 import java.net.URL;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
@@ -87,11 +86,6 @@ public class SalesforceConnection extends BasicConnection implements PoolAwareCo
 
 	}
 	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
-	}
-
 	@Override
 	public void close() {
 	}

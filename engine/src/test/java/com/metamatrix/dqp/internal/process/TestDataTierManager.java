@@ -158,11 +158,6 @@ public class TestDataTierManager extends TestCase {
 
         AtomicResultsMessage results = new AtomicResultsMessage(request, new List[0], new String[0], new String[0]);
         
-        if (isFirst) {
-            results.setFirstRow(1);
-        } else {
-            results.setFirstRow(5);
-        }
         if (isLast) {
             results.setFinalRow(10);
         }
@@ -178,44 +173,44 @@ public class TestDataTierManager extends TestCase {
         AtomicResultsMessage results = helpSetup(true, true);
         info.receiveResults(results);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
-        DataTierTupleSource connRequest = workItem.getConnectorRequest(results.getAtomicRequestId());
+        DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         
         connRequest.closeSource();
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         AtomicResultsMessage closeResult = new AtomicResultsMessage(request);
         closeResult.setRequestClosed(true);
         info.receiveResults(closeResult);
         
-        assertNull(workItem.getConnectorRequest(closeResult.getAtomicRequestId()));        
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));        
     }
 
     public void testDeliverMessageNEWResponseNonFinal() throws Exception {
     	AtomicResultsMessage results = helpSetup(true, false);
         info.receiveResults(results);
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }
 
     public void testDeliverMessageMOREResponseFinal_Defect15646() throws Exception {
     	AtomicResultsMessage results = helpSetup(false, true);
         info.receiveResults(results);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
-        DataTierTupleSource connRequest = workItem.getConnectorRequest(results.getAtomicRequestId());
+        DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         
         connRequest.closeSource();
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         AtomicResultsMessage closeResult = new AtomicResultsMessage(request);
         closeResult.setRequestClosed(true);
         info.receiveResults(closeResult);
         
-        assertNull(workItem.getConnectorRequest(closeResult.getAtomicRequestId()));                
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));                
     }
     
     public void testExplicitClose() throws Exception {
@@ -225,24 +220,24 @@ public class TestDataTierManager extends TestCase {
         results.setSupportsImplicitClose(false);
         
         info.receiveResults(results);
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
-        DataTierTupleSource connRequest = workItem.getConnectorRequest(results.getAtomicRequestId());
+        DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         connRequest.closeSource();
         assertFalse(this.dataService.closed);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         // now explicit close and see it gone        
         connRequest.fullyCloseSource();
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         AtomicResultsMessage closeResult = new AtomicResultsMessage(request);
         closeResult.setRequestClosed(true);
         info.receiveResults(closeResult);
         
-        assertNull(workItem.getConnectorRequest(results.getAtomicRequestId()));        
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));        
     }    
     
     
@@ -254,19 +249,19 @@ public class TestDataTierManager extends TestCase {
         
         info.receiveResults(results);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
 
-        DataTierTupleSource connRequest = workItem.getConnectorRequest(results.getAtomicRequestId());
+        DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         connRequest.closeSource();
         assertTrue(this.dataService.closed);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
         AtomicResultsMessage closeResult = new AtomicResultsMessage(request);
         closeResult.setRequestClosed(true);
         info.receiveResults(closeResult);
 
-        assertNull(workItem.getConnectorRequest(closeResult.getAtomicRequestId()));
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     } 
     
     public void testImplictCloseWithNotAllowedState() throws Exception {
@@ -277,14 +272,14 @@ public class TestDataTierManager extends TestCase {
         
         info.receiveResults(results);
         assertFalse(this.dataService.closed);
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
         
-        DataTierTupleSource connRequest = workItem.getConnectorRequest(results.getAtomicRequestId());
+        DataTierTupleSource connRequest = workItem.getConnectorRequest(request.getAtomicRequestID());
         
         // now implicitly close the request then check to make sure it is not gone 
         connRequest.closeSource();
         assertFalse(this.dataService.closed);        
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }     
     
     
@@ -292,7 +287,7 @@ public class TestDataTierManager extends TestCase {
     	AtomicResultsMessage results = helpSetup(false, false);
         info.receiveResults(results);
         
-        assertNotNull(workItem.getConnectorRequest(results.getAtomicRequestId()));
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }
     
     public void testCodeTableResponseException() throws Exception {

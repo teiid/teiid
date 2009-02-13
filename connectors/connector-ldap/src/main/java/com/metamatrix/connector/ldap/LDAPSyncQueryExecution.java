@@ -98,6 +98,7 @@ import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.runtime.Element;
@@ -107,7 +108,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
  * LDAPSyncQueryExecution is responsible for executing an LDAP search 
  * corresponding to a read-only "select" query from MetaMatrix.
  */
-public class LDAPSyncQueryExecution implements ResultSetExecution {
+public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetExecution {
 
 	private ConnectorLogger logger;
 	private LDAPSearchDetails searchDetails;

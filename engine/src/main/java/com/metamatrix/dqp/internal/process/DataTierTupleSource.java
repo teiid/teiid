@@ -30,7 +30,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.dqp.exception.SourceFailureDetails;
+import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
@@ -172,7 +172,7 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 				nextBatch = new List[0];
 				nextBatchIsLast = true;
 		        String connectorBindingName = dataMgr.getConnectorName(aqr.getConnectorBindingID());
-		        SourceFailureDetails sourceFailure = new SourceFailureDetails(this.aqr.getModelName(), connectorBindingName, new MetaMatrixComponentException(e));
+		        SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), connectorBindingName, e, true);
 		        workItem.addSourceFailureDetails(sourceFailure);
 			} else {
 				this.exception = e;
@@ -192,7 +192,6 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	        } else {
 		        supportsImplicitClose = response.supportsImplicitClose();
 		        isTransactional = response.isTransactional();
-		        aqr.setProcessingTimestamp(response.getProcessingTimestamp());
 		        
 		        nextBatch = response.getResults();    
 				nextBatchIsLast = response.getFinalRow() >= 0;
@@ -200,6 +199,13 @@ public class DataTierTupleSource implements TupleSource, ResultsReceiver<AtomicR
 	        }
 	        // reset waitingForData flag
 	        waitingForData = false;
+		}
+		if (response.getWarnings() != null) {
+	        String connectorBindingName = dataMgr.getConnectorName(aqr.getConnectorBindingID());
+			for (Exception warning : response.getWarnings()) {
+				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), connectorBindingName, warning, true);
+		        workItem.addSourceFailureDetails(sourceFailure);
+			}
 		}
 		if (removeRequest) {
         	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());

@@ -36,6 +36,7 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
@@ -56,8 +57,7 @@ import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.exception.PartialResultsException;
-import com.metamatrix.dqp.exception.SourceFailureDetails;
+import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.internal.cache.CacheID;
 import com.metamatrix.dqp.internal.cache.CacheResults;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
@@ -151,7 +151,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     private Throwable processingException;
     private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = new ConcurrentHashMap<AtomicRequestID, DataTierTupleSource>(4);
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
-    private PartialResultsException partialWarn;
+    private List<MetaMatrixException> warnings = new LinkedList<MetaMatrixException>();
 
     private boolean doneProducingBatches;
     protected boolean isClosed;
@@ -162,8 +162,6 @@ public class RequestWorkItem extends AbstractWorkItem {
     protected ResultsCursor resultsCursor = new ResultsCursor();
     
     private Map<Integer, LobWorkItem> lobStreams = Collections.synchronizedMap(new HashMap<Integer, LobWorkItem>(4));
-    
-    private Object partialWarnLock = new Object();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -457,16 +455,14 @@ public class RequestWorkItem extends AbstractWorkItem {
             response.setSchemas(this.schemas);
             
             // send any warnings with the response object
-            List responseWarnings = new ArrayList();
-    		List currentWarnings = processor.getAndClearWarnings();
+            List<Exception> responseWarnings = new ArrayList<Exception>();
+    		List<Exception> currentWarnings = processor.getAndClearWarnings();
     	    if (currentWarnings != null) {
     	    	responseWarnings.addAll(currentWarnings);
     	    }
-    	    synchronized (partialWarnLock) {
-	    	    if (this.partialWarn != null) {
-	            	responseWarnings.add(partialWarn);
-	            	this.partialWarn = null;
-	            }
+    	    synchronized (warnings) {
+            	responseWarnings.addAll(this.warnings);
+            	this.warnings.clear();
     	    }
             response.setWarnings(responseWarnings);
             
@@ -659,7 +655,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         connectorInfo.remove(atomicRequestId);
         LogManager.logTrace(LogConstants.CTX_DQP, new Object[] {"closed atomic-request:", atomicRequestId});  //$NON-NLS-1$
     }
-	
+    
 	public void addConnectorRequest(AtomicRequestID atomicRequestId, DataTierTupleSource connInfo) {
 		connectorInfo.put(atomicRequestId, connInfo);
 	}
@@ -667,17 +663,13 @@ public class RequestWorkItem extends AbstractWorkItem {
     /**
 	 * <p>This method add information to the warning on the work item for the given
 	 * <code>RequestID</code>. This method is called from <code>DataTierManager</code></p>
-     * @param details A <code>SourceFailureDetails</code> object, with atomic query failure details.
 	 */
-    public void addSourceFailureDetails(SourceFailureDetails details) {
-    	synchronized (partialWarnLock) {
-			if(this.partialWarn == null) {
-				this.partialWarn = new PartialResultsException();
-			}
-			this.partialWarn.addSourceFailure(details);
+    public void addSourceFailureDetails(SourceWarning details) {
+    	synchronized (warnings) {
+			this.warnings.add(details);
     	}
 	}
-    
+        
     /**
      * Log the command to the MM cmd log. 
      */
@@ -732,8 +724,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 		return this.connectorInfo.get(id);
 	}
 	
-	PartialResultsException getPartialWarn() {
-		return partialWarn;
+	public List<MetaMatrixException> getWarnings() {
+		return warnings;
 	}
 
 	@Override

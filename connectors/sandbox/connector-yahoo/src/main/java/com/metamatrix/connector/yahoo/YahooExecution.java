@@ -43,6 +43,7 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IElement;
@@ -57,7 +58,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 /**
  * Represents the execution of a command.
  */
-public class YahooExecution implements ResultSetExecution {
+public class YahooExecution extends BasicExecution implements ResultSetExecution {
     public static final String HTTP_PROXY_HOST = "HttpProxyHost"; //$NON-NLS-1$
     public static final String HTTP_PROXY_PORT = "HttpProxyPort"; //$NON-NLS-1$
 

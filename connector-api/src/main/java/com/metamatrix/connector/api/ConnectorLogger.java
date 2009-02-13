@@ -48,11 +48,23 @@ public interface ConnectorLogger {
     void logWarning( String message );
 
     /**
+     * Log a warning message.
+     * @param message The message
+     */
+    void logWarning( String message, Throwable error );
+
+    /**
      * Log an informational message.
      * @param message The message
      */
     void logInfo( String message );
 
+    /**
+     * Log an informational message.
+     * @param message The message
+     */
+    void logInfo( String message, Throwable error);
+    
     /**
      * Log a detail debugging message.
      * @param message The message
@@ -60,9 +72,46 @@ public interface ConnectorLogger {
     void logDetail( String message );
 
     /**
+     * Log a detail debugging message.
+     * @param message The message
+     */
+    void logDetail( String message, Throwable error );
+
+    /**
      * Log a trace debugging message.
      * @param message The message
      */
     void logTrace( String message );
+    
+    /**
+     * Log a trace debugging message.
+     * @param message The message
+     */
+    void logTrace( String message, Throwable error );
 
+    /**
+     * @return true if error logging is enabled
+     */
+    boolean isErrorEnabled();
+
+    /**
+     * @return true if warning logging is enabled
+     */
+    boolean isWarningEnabled();
+
+    /**
+     * @return true if info logging is enabled
+     */
+    boolean isInfoEnabled();
+
+    /**
+     * @return true if detail logging is enabled
+     */
+    boolean isDetailEnabled();
+
+    /**
+     * @return true if trace logging is enabled
+     */
+    boolean isTraceEnabled();
+    
 }

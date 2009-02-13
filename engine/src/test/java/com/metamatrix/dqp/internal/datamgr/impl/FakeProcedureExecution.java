@@ -27,10 +27,11 @@ import java.util.List;
 
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 
-final class FakeProcedureExecution implements ProcedureExecution {
+final class FakeProcedureExecution extends BasicExecution implements ProcedureExecution {
 
     int resultSetSize;
     int rowNum;

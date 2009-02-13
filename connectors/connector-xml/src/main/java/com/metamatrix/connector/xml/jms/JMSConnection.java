@@ -35,7 +35,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
@@ -142,11 +141,6 @@ public class JMSConnection extends BasicConnection implements XMLConnection {
 			ExecutionContext executionContext, RuntimeMetadata metadata)
 			throws ConnectorException {
 		return new JMSExecution((IQuery)command, this, metadata, executionContext, this.connectorEnv, connector.getLogger());
-	}
-
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
 	}
 
 	@Override

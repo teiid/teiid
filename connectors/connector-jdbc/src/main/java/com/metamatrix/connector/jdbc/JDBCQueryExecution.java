@@ -117,13 +117,10 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 throw new ConnectorException(
                                              JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
             }
-            
+            addStatementWarnings();
             initResultSetInfo();
 
         } catch (SQLException e) {
-            // try to cleanup the statement and may be resultset object
-            close();
-
             throw createAndLogError(e, translatedComm);
         }
     }
@@ -197,7 +194,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     /**
      * @see com.metamatrix.connector.jdbc.JDBCBaseExecution#close()
      */
-    public synchronized void close() throws ConnectorException {
+    public void close() throws ConnectorException {
         // first we would need to close the result set here then we can close
         // the statement, using the base class.
         if (results != null) {

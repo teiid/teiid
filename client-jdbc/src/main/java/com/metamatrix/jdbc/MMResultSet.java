@@ -81,8 +81,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	private com.metamatrix.jdbc.api.ResultSetMetaData rmetadata;
 	// Statement that causes this results
 	private MMStatement statement;
-	// Warning could be schema validation errors or partial results warnings,
-	private List warnings;
 
 	// This object represents the time when command is submitted to the server.
 	private java.util.Date processingTimestamp;
@@ -389,13 +387,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		checkClosed(); // check to see if the ResultSet is closed
 	}
 
-	/**
-	 * There is no concept of warnings in metamatrix. This method is implemented
-	 * to do nothing
-	 * 
-	 * @throws SQLException
-	 * 		, should never occur
-	 */
+	@Override
 	public void clearWarnings() throws SQLException {
 		// do nothing
 		checkClosed(); // check to see if the ResultSet is closed
@@ -1093,13 +1085,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 
 	protected void setResultsData(ResultsMessage resultsMsg) {
 		this.completedTimestamp = resultsMsg.getCompletedTimestamp();
-		if (resultsMsg.getWarnings() != null) {
-			if (this.warnings == null) {
-				this.warnings = resultsMsg.getWarnings();
-			} else {
-				this.warnings.addAll(resultsMsg.getWarnings());
-			}
-		}
+		this.statement.accumulateWarnings(resultsMsg.getWarnings());
 	}
 
 	/**
@@ -1164,10 +1150,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	public SQLWarning getWarnings() throws SQLException {
 		checkClosed();
 
-		// if the query is run in partial results mode
-		if (warnings != null) {
-			return WarningUtil.convertWarnings(warnings);
-		}
 		return null;
 	}
 

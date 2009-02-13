@@ -25,7 +25,6 @@ package com.metamatrix.connector.xml.base;
 
 import java.io.Serializable;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
@@ -71,10 +70,6 @@ public class XMLConnectionImpl extends BasicConnection implements XMLConnection 
 	}
 	///////////////////////////////////////////////////////////////
 	//Connection API Implementation
-	public ConnectorCapabilities getCapabilities() {
-		return null;
-	}
-	
 	@Override
 	public ResultSetExecution createResultSetExecution(IQueryCommand command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)

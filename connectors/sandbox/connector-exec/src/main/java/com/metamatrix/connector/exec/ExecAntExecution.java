@@ -52,6 +52,7 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -62,7 +63,7 @@ import com.metamatrix.core.util.TempDirectory;
 /**
  * Represents the execution of a command.
  */
-public class ExecAntExecution implements ResultSetExecution {
+public class ExecAntExecution extends BasicExecution implements ResultSetExecution {
 
 	private static final Random random = new Random(System.currentTimeMillis());
 	private static TempDirectory TEMPDIR = null;

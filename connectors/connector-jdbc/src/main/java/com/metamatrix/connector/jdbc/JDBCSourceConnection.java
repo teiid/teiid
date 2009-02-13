@@ -27,7 +27,6 @@ package com.metamatrix.connector.jdbc;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
@@ -113,13 +112,6 @@ public class JDBCSourceConnection extends BasicConnection implements PoolAwareCo
 		}
     }
 
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
-    }
-    
     @Override
     public ResultSetExecution createResultSetExecution(IQueryCommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)

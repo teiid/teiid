@@ -342,7 +342,7 @@ mmStatement.setExecutionProperty(
         </warning>
         <para> For each source that is excluded from a query, a warning
           will be generated describing the source and the failure. These
-          warnings can be obtained from the ResultSet.getWarnings()
+          warnings can be obtained from the Statement.getWarnings()
           method. This method returns a SQLWarning object but in the
           case of "partial results" warnings, this will be an object of
           type com.metamatrix.jdbc.api.PartialResultsWarning. This class
@@ -354,7 +354,7 @@ mmStatement.setExecutionProperty(
           </title>
           <programlisting>statement.setExecutionProperty( PROP_PARTIAL_RESULTS_MODE, "true"); 
 ResultSet results = statement.executeQuery("SELECT Name FROM Accounts"); 
-SQLWarning warning = results.getWarnings(); 
+SQLWarning warning = statement.getWarnings(); 
 if(warning instanceof PartialResultsWarning) { 
   PartialResultsWarning partialWarning = (PartialResultsWarning)warning; 
   Collection failedConnectors = partialWarning.getFailedConnectors(); 

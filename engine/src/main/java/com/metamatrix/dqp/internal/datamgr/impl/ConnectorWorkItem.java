@@ -331,6 +331,10 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         			}
         			return null;
         		}
+				@Override
+				public List<Exception> getWarnings() {
+					return exec.getWarnings();
+				}
         	};
         }
         
@@ -389,7 +393,25 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         }   
         
         if (sendResults) {
-        	sendResults(rows.toArray(new List[rows.size()]), (requestMsg.getCommand()).getProjectedSymbols());
+        	int currentRowCount = rows.size();
+            if ( !lastBatch && currentRowCount == 0 ) {
+                // Defect 13366 - Should send all batches, even if they're zero size.
+                // Log warning if received a zero-size non-last batch from the connector.
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorID())); //$NON-NLS-1$
+            }
+
+            AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
+            
+            // if we need to keep the execution alive, then we can not support
+            // implicit close.
+            response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
+            response.setTransactional(this.securityContext.isTransactional());
+            response.setWarnings(this.execution.getWarnings());
+
+            if ( lastBatch ) {
+                response.setFinalRow(rowCount);
+            } 
+            this.resultsReceiver.receiveResults(response);
         }
     }
     
@@ -403,36 +425,6 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         handleBatch();
     }
             
-    protected void sendResults(List[] rows, List elements) 
-        throws CommunicationException {
-        
-        int currentRowCount = rows.length;
-        if ( !lastBatch && currentRowCount == 0 ) {
-            // Defect 13366 - Should send all batches, even if they're zero size.
-            // Log warning if received a zero-size non-last batch from the connector.
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorID())); //$NON-NLS-1$
-        }
-
-        AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows, elements);
-        response.setFirstRow(rowCount + 1 - currentRowCount);
-        response.setLastRow(rowCount);
-        
-        // if we need to keep the execution alive, then we can not support
-        // implicit close.
-        response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
-        response.setTransactional(this.securityContext.isTransactional());
-
-        if ( lastBatch ) {
-            response.setFinalRow(rowCount);
-            response.setPartialResults(false);
-        } else {
-            response.setFinalRow(-1);
-            response.setPartialResults(true);
-        }
-
-        this.resultsReceiver.receiveResults(response);
-    }
-    
     public static AtomicResultsMessage createResultsMessage(AtomicRequestMessage message, List[] batch, List columnSymbols) {
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];

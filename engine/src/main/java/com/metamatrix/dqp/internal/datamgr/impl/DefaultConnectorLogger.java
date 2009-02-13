@@ -28,6 +28,7 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.util.LogConstants;
 
@@ -61,4 +62,49 @@ public class DefaultConnectorLogger implements ConnectorLogger {
     public void logTrace(String message) {
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, message);
     }
+
+	@Override
+	public boolean isDetailEnabled() {
+		return LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL);
+	}
+
+	@Override
+	public boolean isErrorEnabled() {
+		return LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.ERROR);
+	}
+
+	@Override
+	public boolean isInfoEnabled() {
+		return LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.INFO);
+	}
+
+	@Override
+	public boolean isTraceEnabled() {
+		return LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE);
+	}
+
+	@Override
+	public boolean isWarningEnabled() {
+		return LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.WARNING);
+	}
+
+	@Override
+	public void logDetail(String message, Throwable error) {
+		LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_CONNECTOR, error, message);
+	}
+
+	@Override
+	public void logInfo(String message, Throwable error) {
+		LogManager.log(MessageLevel.INFO, LogConstants.CTX_CONNECTOR, error, message);
+	}
+
+	@Override
+	public void logTrace(String message, Throwable error) {
+		LogManager.log(MessageLevel.TRACE, LogConstants.CTX_CONNECTOR, error, message);		
+	}
+
+	@Override
+	public void logWarning(String message, Throwable error) {
+		LogManager.log(MessageLevel.WARNING, LogConstants.CTX_CONNECTOR, error, message);	
+	}
 }

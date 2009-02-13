@@ -32,6 +32,7 @@ import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 
@@ -39,7 +40,7 @@ import com.metamatrix.connector.language.IParameter;
 /** 
  * This is main class which will execute request in the XML Source
  */
-public abstract class XMLSourceExecution implements ProcedureExecution {
+public abstract class XMLSourceExecution extends BasicExecution implements ProcedureExecution {
 
     // Connector environment
     protected ConnectorEnvironment env;

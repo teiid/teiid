@@ -23,13 +23,9 @@
 package com.metamatrix.jdbc;
 
 import java.sql.SQLWarning;
-import java.util.*;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.dqp.exception.PartialResultsException;
-import com.metamatrix.dqp.exception.SourceFailureDetails;
+import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.jdbc.api.PartialResultsWarning;
 
 /**
@@ -47,47 +43,15 @@ class WarningUtil {
      * @param ex Throwable object which needs to be wrapped.
      */
     static SQLWarning createWarning(Throwable ex) {
-        if(ex instanceof PartialResultsException) {
-            return convertToWarning((PartialResultsException)ex);
+        if(ex instanceof SourceWarning) {
+        	SourceWarning exception = (SourceWarning)ex;
+        	if (exception.isPartialResultsError()) {
+        		PartialResultsWarning warning = new PartialResultsWarning(JDBCPlugin.Util.getString("WarningUtil.Failures_occurred")); //$NON-NLS-1$
+        		warning.addConnectorFailure(exception.getConnectorBindingName(), MMSQLException.create(exception));
+        		return warning;
+        	}
         }
-        return new SQLWarning(ex.getMessage());
-    }
-
-    /**
-     * Get child exception based on type of parent
-     * @param parent Exception parent
-     * @return Child if there is one or null otherwise
-     */
-    static Throwable getChildException(Throwable parent) {
-        Throwable exception;
-        if (parent instanceof MetaMatrixException) {
-            exception = ((MetaMatrixException) parent).getChild();
-        } else if (parent instanceof SQLWarning) {
-            exception = ((SQLWarning) parent).getNextException();
-        } else {
-            exception = null;   
-        }
-        return exception;
-    }
-
-    /**
-     * Used to convert a PartialResultsException into a PartialResultsWarning
-     * @param exception The source exception sent from the server
-     * @return The warning that is being sent to the user
-     */    
-    static PartialResultsWarning convertToWarning(PartialResultsException exception) {
-        PartialResultsWarning warning = new PartialResultsWarning(JDBCPlugin.Util.getString("WarningUtil.Failures_occurred")); //$NON-NLS-1$
-        
-        Collection failures = exception.getSourceFailureDetails();
-        for(Iterator iter = failures.iterator(); iter.hasNext(); ) {
-            SourceFailureDetails details = (SourceFailureDetails) iter.next();
-            String connectorName = details.getConnectorBindingName();
-            MetaMatrixException sourceEx = details.getException();
-
-            warning.addConnectorFailure(connectorName, MMSQLException.create(sourceEx));                                  
-        }
-        
-        return warning;
+        return new SQLWarning(ex);
     }
 
     /**
@@ -95,36 +59,22 @@ class WarningUtil {
      * @param exceptions List of exceptions from server
      * @return Chain of SQLWarning corresponding to list of exceptions
      */
-    static SQLWarning convertWarnings(List exceptions) {
+    static SQLWarning convertWarnings(List<Exception> exceptions) {
         if(exceptions == null || exceptions.size() == 0) {
             return null;    
-        } else if(exceptions.size() == 1) {
-            return createWarning((Exception) exceptions.get(0));   
-        } else {
-            Iterator exIter = exceptions.iterator();
-            SQLWarning warning = null;
-
-            Throwable childException = (Throwable) exIter.next();  // child exception or warning       
-            while(childException != null) {
-                SQLWarning newWarning = createWarning(childException); 
-                if(warning == null) {
-                    warning = newWarning;
-                } else {
-                    // This call can be made multiple times - it adds the next exception to 
-                    // the END of the chain (which is quite tricky)
-                    warning.setNextWarning(newWarning);
-                }
-    
-                // Walk chain or switch to next exception in iterator                
-                childException = getChildException(childException);
-                if(childException == null && exIter.hasNext()) {
-                    childException = (Throwable) exIter.next();
-                }
-            }
-         
-            return warning;   
         }
-    }
+        SQLWarning warning = null;
 
+        for (Exception ex : exceptions) {
+            SQLWarning newWarning = createWarning(ex); 
+            if(warning == null) {
+                warning = newWarning;
+            } else {
+                warning.setNextWarning(newWarning);
+            }
+        }
+     
+        return warning;   
+    }
 
 }

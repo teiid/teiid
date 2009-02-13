@@ -135,8 +135,7 @@ public class MMStatement extends WrapperImpl implements Statement {
     // exception by metamatrix server, may also thrown by partial mode
     private MMSQLException serverException;
 
-    // warnings by validation XML schema or partial mode
-    private List serverWarnings;
+    private List<Exception> serverWarnings;
 
     // the per-execution security payload
     private Serializable payload;
@@ -442,7 +441,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 
         // save warnings if have any
         if (resultsWarning != null) {
-            setWarnings(resultsWarning);
+            accumulateWarnings(resultsWarning);
         }
 
       //create out/return parameter index map if there is any
@@ -706,9 +705,14 @@ public class MMStatement extends WrapperImpl implements Statement {
         return rowsAffected;
     }
 
-
-    protected void setWarnings(List serverWarnings) {
-        this.serverWarnings = serverWarnings;
+    protected void accumulateWarnings(List<Exception> serverWarnings) {
+    	if (serverWarnings == null || serverWarnings.isEmpty()) {
+    		return;
+    	}
+    	if (this.serverWarnings == null) {
+    		this.serverWarnings = new ArrayList<Exception>();
+    	}
+    	this.serverWarnings.addAll(serverWarnings);
     }
 
     /**

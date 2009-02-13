@@ -27,6 +27,7 @@ import java.util.List;
 
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
+import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
@@ -39,7 +40,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 /** 
  * @since 4.2
  */
-public class MetadataProcedureExecution implements ProcedureExecution {
+public class MetadataProcedureExecution extends BasicExecution implements ProcedureExecution {
 
     private final RuntimeMetadata metadata;
     private final ObjectProcedureProcessor processor;
