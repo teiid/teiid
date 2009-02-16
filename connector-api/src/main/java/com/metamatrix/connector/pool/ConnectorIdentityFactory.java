@@ -22,16 +22,13 @@
 
 package com.metamatrix.connector.pool;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 
 public interface ConnectorIdentityFactory {
 
     /**
-     * Create an identity object based on a security context.  This method determines
-     * how different security contexts are treated within the connection pool.  For 
-     * example, using a {@link SingleIdentity} specifies that ALL contexts are treated
-     * equally and thus use the same pool.
+     * Create an identity object based on a security context.
      * 
      * If single identity is not supported then an exception should be thrown when a
      * null context is supplied.

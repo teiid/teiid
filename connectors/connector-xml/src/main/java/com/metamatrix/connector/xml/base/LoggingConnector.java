@@ -23,8 +23,8 @@
 package com.metamatrix.connector.xml.base;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 /**

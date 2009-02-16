@@ -40,9 +40,8 @@ import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
 import com.metamatrix.connector.xmlsource.soap.service.WebServiceServer;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -548,7 +547,7 @@ public class TestSoapExecution extends TestCase {
         List parameters = new ArrayList();
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
-                IParameter param = fact.createParameter(i+1, IParameter.IN, args[i], args[i].getClass(), null);           
+                IParameter param = fact.createParameter(i+1, Direction.IN, args[i], args[i].getClass(), null);           
                 parameters.add(param);
             }
         }
@@ -560,9 +559,9 @@ public class TestSoapExecution extends TestCase {
         List result = exec.next();
         assertNotNull(result);
         assertNull(exec.next());
-        
+        IParameter returnParam = fact.createParameter(0, Direction.RETURN, null, null, null);
         try {
-            exec.getOutputValue(getReturnParameter());
+            exec.getOutputValue(returnParam);
             fail("should have thrown error in returning a return"); //$NON-NLS-1$            
         }catch(Exception e) {            
         }
@@ -577,34 +576,4 @@ public class TestSoapExecution extends TestCase {
         // System.out.println(xmlString);
     }
     
-    IParameter getReturnParameter() {
-        return new IParameter() {
-            public int getIndex() {
-                return 0;
-            }
-            public int getDirection() {
-                return IParameter.RETURN;
-            }
-            public Class getType() {
-                return null;
-            }
-            public Object getValue() {
-                return null;
-            }
-            public boolean getValueSpecified() {
-                return false;
-            }
-            public void setIndex(int index) {}
-            public void setDirection(int direction) {}
-            public void setType(Class type) {}
-            public void setValue(Object value) {}
-            public void setValueSpecified(boolean specified) {}
-            public void acceptVisitor(LanguageObjectVisitor visitor) {}
-            public MetadataID getMetadataID() {
-                return null;
-            }
-            public void setMetadataID(MetadataID metadataID) {}            
-        };     
-    }    
-        
 }

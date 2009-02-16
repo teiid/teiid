@@ -24,17 +24,16 @@
  */
 package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * A ValueTranslator knows how to convert an object value of a given source type
  * into a target type.
  */
-public interface ValueTranslator {
+public interface ValueTranslator<S, T> {
     
-    Class getSourceType();
+    Class<S> getSourceType();
     
-    Class getTargetType();
+    Class<T> getTargetType();
     
-    Object translate(Object value, ExecutionContext context) throws ConnectorException;
+    T translate(S value, ExecutionContext context) throws ConnectorException;
 }

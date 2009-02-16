@@ -29,7 +29,7 @@ import java.io.ObjectOutput;
 import java.util.List;
 
 import com.metamatrix.common.batch.BatchSerializer;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.core.util.ExternalizeUtil;
 
 public class AtomicResultsMessage implements Externalizable {

@@ -28,7 +28,6 @@ package com.metamatrix.server.dqp.service;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,12 +38,8 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.api.ConnectorBindingType;
-import com.metamatrix.connector.exception.ConnectorException;
-import com.metamatrix.connector.monitor.AliveStatus;
-import com.metamatrix.connector.monitor.ConnectionStatus;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -54,6 +49,7 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.connector.service.ConnectorServiceInterface;
 
@@ -165,27 +161,6 @@ public class PlatformDataService implements DataService {
         // that the client is shutting down
     }
 
-    /* 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorStatus()
-     */
-    public Map getConnectorStatus() {
-        throw new UnsupportedOperationException();
-    }
-    
-    /* 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorStatus()
-     */
-    public ConnectionStatus getConnectorStatus(String connectorName) {
-        throw new UnsupportedOperationException();
-    }
-    
-    /*
-     * @see com.metamatrix.dqp.service.DataService#getConnectorNames()
-     */
-    public String[] getConnectorNames() {
-        throw new UnsupportedOperationException();
-    }
-    
     /** 
      * @see com.metamatrix.dqp.service.DataService#startConnectorBinding(java.lang.String)
      * @since 4.3
@@ -213,34 +188,10 @@ public class PlatformDataService implements DataService {
     }
 
     /** 
-     * @see com.metamatrix.dqp.service.DataService#addConnectorType(java.lang.String, com.metamatrix.common.config.api.ConnectorBindingType)
-     * @since 4.3
-     */
-    public void addConnectorType(String name, ConnectorBindingType type) {
-        throw new UnsupportedOperationException();
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#deleteConnectorType(java.lang.String)
-     * @since 4.3
-     */
-    public void deleteConnectorType(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorTypes()
-     * @since 4.3
-     */
-    public List getConnectorTypes() {
-        throw new UnsupportedOperationException();
-    }
-
-    /** 
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public AliveStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
+    public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
         throw new UnsupportedOperationException();
     }
 

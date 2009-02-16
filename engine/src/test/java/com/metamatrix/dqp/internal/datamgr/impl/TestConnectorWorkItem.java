@@ -30,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;

@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;

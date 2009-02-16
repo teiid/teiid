@@ -24,14 +24,12 @@ package com.metamatrix.common.comm;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ClientServiceRegistry<S> {
+public class ClientServiceRegistry {
 	
     private ConcurrentHashMap<String, Object> localServices = new ConcurrentHashMap<String, Object>();
     private ConcurrentHashMap<String, String> loggingContext = new ConcurrentHashMap<String, String>();
-    private S sessionServiceProxy;
     
-    public ClientServiceRegistry(S sessionService) {
-    	this.sessionServiceProxy = sessionService;
+    public ClientServiceRegistry() {
     }
     
 	public <T> T getClientService(Class<T> iface) {
@@ -42,10 +40,6 @@ public class ClientServiceRegistry<S> {
 		return localServices.get(iface);
 	}
 
-	public S getSessionService() {
-		return this.sessionServiceProxy;
-	}
-	
 	public void registerClientService(Class<?> iface, Object instance, String loggingContext) {
 		this.localServices.put(iface.getName(), instance);
 		this.loggingContext.put(iface.getName(), loggingContext);

@@ -23,7 +23,7 @@
 
 package com.metamatrix.connector.xml.cache;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 public interface IDocumentCache {
 

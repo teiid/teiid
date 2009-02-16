@@ -48,9 +48,8 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
@@ -291,13 +290,13 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public AliveStatus getConnectorBindingState(String deployedConnectorBindingName) 
+    public Boolean getConnectorBindingState(String deployedConnectorBindingName) 
         throws MetaMatrixComponentException {
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
         if (binding != null) {
             ConnectorManager mgr = getConnectorManager(binding);
             if (mgr != null) {
-                return mgr.getStatus().getStatus();
+                return mgr.getStatus();
             }
         }
         throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$

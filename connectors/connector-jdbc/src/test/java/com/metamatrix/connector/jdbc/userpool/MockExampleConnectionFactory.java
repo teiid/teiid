@@ -26,7 +26,7 @@ import java.sql.Driver;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCUserIdentityConnectionFactory;
 
 /**

@@ -20,22 +20,22 @@
  * 02110-1301 USA.
  */
 
-/*
- */
-package com.metamatrix.dqp.internal.pooling.connector;
+package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.core.MetaMatrixCoreException;
 
 /**
- * This class is for exceptions occurring within the connection pool.
+ * An exception the connector writer can return in case of an 
+ * error while using the connector.
  */
-public class ConnectionPoolException extends ConnectorException{
+public class ConnectorException extends MetaMatrixCoreException{
 
+	private static final long serialVersionUID = -5980862789340592219L;
 
-    /**
+	/**
      * No-arg constructor required by Externalizable semantics.
      */
-    public ConnectionPoolException() {
+    public ConnectorException() {
         super();
     }
     
@@ -44,27 +44,27 @@ public class ConnectionPoolException extends ConnectorException{
      *
      * @param message A message describing the exception
      */
-    public ConnectionPoolException( String message ) {
+    public ConnectorException( String message ) {
         super( message );
-    }
-
-    /**
-     * Construct an instance with a linked exception specified.
-     *
-     * @param e An exception to chain to this exception
-     */
-    public ConnectionPoolException( Throwable e ) {
-        super( e );
     }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param message A message describing the exception
+     * @param code A code denoting the exception
      * @param e An exception to nest within this one
      */
-    public ConnectionPoolException( Throwable e, String message ) {
+    public ConnectorException( Throwable e, String message ) {
         super( e, message );
-    }
+    }  
+    
+    /**
+     * Construct an instance with a linked exception specified.
+     *
+     * @param e An exception to chain to this exception
+     */
+    public ConnectorException( Throwable e ) {
+        super( e );
+    }  
 
 }

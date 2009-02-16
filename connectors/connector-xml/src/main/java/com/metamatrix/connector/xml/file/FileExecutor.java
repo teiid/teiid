@@ -34,9 +34,9 @@ import java.util.ArrayList;
 
 import org.jdom.Document;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.NamedDocumentExecutor;
 import com.metamatrix.connector.xml.SAXFilterProvider;

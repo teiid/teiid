@@ -21,7 +21,7 @@
  */
 package com.metamatrix.connector.salesforce.execution.visitors;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 public interface ICriteriaVisitor {
 

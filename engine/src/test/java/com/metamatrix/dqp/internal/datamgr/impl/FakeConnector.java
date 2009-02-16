@@ -33,25 +33,23 @@ import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.monitor.AliveStatus;
-import com.metamatrix.connector.monitor.ConnectionStatus;
-import com.metamatrix.connector.monitor.MonitoredConnector;
 import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.connector.xa.api.XAConnector;
 
-public class FakeConnector implements Connector, XAConnector, MonitoredConnector {
+public class FakeConnector implements Connector, XAConnector {
 	private static final int RESULT_SIZE = 5;
 	
 	private boolean executeBlocks;
@@ -78,7 +76,7 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
 		return new FakeXAConnection();
 	}
 	
-    private class FakeConnection implements Connection {
+    private class FakeConnection extends BasicConnection {
         public boolean released = false;
         public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
             return new FakeBlockingExecution(executionContext);
@@ -131,7 +129,7 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
         }
         @Override
         public void execute() throws ConnectorException {
-            this.addWarning(new Exception("Some warning")); //$NON-NLS-1$
+            ec.addWarning(new Exception("Some warning")); //$NON-NLS-1$
         }
         @Override
         public List next() throws ConnectorException, DataNotAvailableException {
@@ -193,11 +191,6 @@ public class FakeConnector implements Connector, XAConnector, MonitoredConnector
 		this.simulatedBatchRetrievalTime = simulatedBatchRetrievalTime;
 	}
 	
-	@Override
-	public ConnectionStatus getStatus() {
-		return new ConnectionStatus(AliveStatus.DEAD);
-	}
-
 	public void setClassloader(ClassLoader classloader) {
 		this.classloader = classloader;
 	}

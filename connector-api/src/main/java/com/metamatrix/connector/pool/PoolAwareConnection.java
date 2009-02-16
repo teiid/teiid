@@ -25,18 +25,13 @@
 package com.metamatrix.connector.pool;
 
 import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorException;
 
 /**
  * Pooled Connections can optionally implement this interface to provide implementations
  * for Connection testing and pool life-cycle events.
  */
 public interface PoolAwareConnection extends Connection {
-
-    /**
-     * Called by the pool to determine whether the connection is open
-     * @return True if open, false if closed or failed.
-     */    
-    boolean isAlive();
     
     /**
      * Called by the pool to indicate that the connection was returned to the pool.
@@ -44,4 +39,12 @@ public interface PoolAwareConnection extends Connection {
      */
     void closeCalled();
 
+    /**
+     * Called by the pool when an existing connection is leased so that the underlying
+     * Connection may have it's identity switched to a different user.
+     * @param identity
+     * @throws ConnectorException
+     */
+	void setConnectorIdentity(ConnectorIdentity identity) throws ConnectorException;
+    
 }

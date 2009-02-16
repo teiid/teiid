@@ -36,5 +36,5 @@ public interface IBatchedUpdates extends ICommand {
      * @return a list of IInsert, IUpdate and IDelete commands in this batched update.
      * @since 4.2
      */
-    List getUpdateCommands();
+    List<ICommand> getUpdateCommands();
 }

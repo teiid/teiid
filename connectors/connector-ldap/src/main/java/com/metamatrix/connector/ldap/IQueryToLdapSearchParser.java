@@ -50,8 +50,8 @@ import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 import javax.naming.NamingException;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICompareCriteria;
@@ -73,6 +73,7 @@ import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IScalarSubquery;
 import com.metamatrix.connector.language.ISearchedCaseExpression;
 import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
@@ -359,11 +360,11 @@ public class IQueryToLdapSearchParser {
 	 * @param op operator to evaluate
 	 * @return LDAP-specific string equivalent of the operator
 	 */
-	private String parseCompoundCriteriaOp(int op) throws ConnectorException {
+	private String parseCompoundCriteriaOp(ICompoundCriteria.Operator op) throws ConnectorException {
 		switch(op) {
-			case ICompoundCriteria.AND:
+			case AND:
 				return "&";	 //$NON-NLS-1$
-			case ICompoundCriteria.OR:
+			case OR:
 				return "|"; //$NON-NLS-1$
 			default:
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.criteriaNotParsableError"); //$NON-NLS-1$
@@ -469,7 +470,7 @@ public class IQueryToLdapSearchParser {
 		// Recursive case: compound criteria
 		if(criteria instanceof ICompoundCriteria) {
 			logger.logTrace("Parsing compound criteria."); //$NON-NLS-1$
-			int op = ((ICompoundCriteria) criteria).getOperator();
+			ICompoundCriteria.Operator op = ((ICompoundCriteria) criteria).getOperator();
 			List criteriaList = ((ICompoundCriteria) criteria).getCriteria();
 			String stringOp = parseCompoundCriteriaOp(op);
 			
@@ -486,7 +487,8 @@ public class IQueryToLdapSearchParser {
 		// Base case
 		} else if(criteria instanceof ICompareCriteria) {
 			logger.logTrace("Parsing compare criteria."); //$NON-NLS-1$
-			int op = ((ICompareCriteria) criteria).getOperator();
+			ICompareCriteria.Operator op = ((ICompareCriteria) criteria).getOperator();
+			
 			IExpression lhs = ((ICompareCriteria) criteria).getLeftExpression();
 			IExpression rhs = ((ICompareCriteria) criteria).getRightExpression();
 		
@@ -496,8 +498,8 @@ public class IQueryToLdapSearchParser {
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.missingNISError"); //$NON-NLS-1$
 				throw new ConnectorException(msg); 
 			}
+			
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
-
 		// Base case
 		} else if(criteria instanceof IExistsCriteria) {
 			logger.logTrace("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
@@ -506,7 +508,7 @@ public class IQueryToLdapSearchParser {
 		} else if(criteria instanceof ILikeCriteria) {
 			logger.logTrace("Parsing LIKE criteria."); //$NON-NLS-1$
 			// Convert LIKE to Equals, where any "%" symbol is replaced with "*".
-			int op = ICompareCriteria.EQ;
+			ICompareCriteria.Operator op = Operator.EQ;
 			IExpression lhs = ((ILikeCriteria) criteria).getLeftExpression();
 			IExpression rhs = ((ILikeCriteria) criteria).getRightExpression();
 		
@@ -536,10 +538,10 @@ public class IQueryToLdapSearchParser {
 			return;
 		}
 		filterList.add("("); //$NON-NLS-1$
-		filterList.add(parseCompoundCriteriaOp(ICompoundCriteria.OR));
+		filterList.add(parseCompoundCriteriaOp(com.metamatrix.connector.language.ICompoundCriteria.Operator.OR));
 		Iterator rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
-			addCompareCriteriaToList(filterList, ICompareCriteria.EQ, getExpressionString(lhs), 
+			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionString(lhs), 
 					getExpressionString((IExpression)rhsItr.next()));
 		}
 		filterList.add(")"); //$NON-NLS-1$
@@ -552,11 +554,11 @@ public class IQueryToLdapSearchParser {
 	 * @param lhs left hand side expression
 	 * @param rhs right hand side expression
 	 */
-	private void addCompareCriteriaToList(List filterList, int op, String lhs, String rhs) throws ConnectorException {
+	private void addCompareCriteriaToList(List filterList, ICompareCriteria.Operator op, String lhs, String rhs) throws ConnectorException {
 		// Push the comparison statement into the list, e.g.:
 		// (sn=Mike)
 		// !(empNum>=100)
-		if(op == ICompareCriteria.NE) {
+		if(op == Operator.NE || op == Operator.GT || op == Operator.LT) {
 			filterList.add("("); //$NON-NLS-1$
 			filterList.add("!"); //$NON-NLS-1$
 		}
@@ -564,25 +566,17 @@ public class IQueryToLdapSearchParser {
 		filterList.add(lhs);
 
 		switch(op) {
-			case ICompareCriteria.EQ:
+		    case NE:
+			case EQ:
 				filterList.add("="); //$NON-NLS-1$
 				break;
-			case ICompareCriteria.GE:
+			case LT:
+			case GE:
 				filterList.add(">="); //$NON-NLS-1$
 				break;
-			// Arguably, this is not correct, but LDAP doesn't support GT, and 
-			// we want to support pushdown in this case, to make things uniform.
-			case ICompareCriteria.GT:
-				filterList.add(">="); //$NON-NLS-1$
-				break;
-			case ICompareCriteria.LE:
+			case GT:
+			case LE:
 				filterList.add("<="); //$NON-NLS-1$
-				break;
-			case ICompareCriteria.LT:
-				filterList.add("<="); //$NON-NLS-1$
-				break;
-			case ICompareCriteria.NE:
-				filterList.add("="); //$NON-NLS-1$
 				break;
 			default:
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.criteriaNotSupportedError"); //$NON-NLS-1$
@@ -591,7 +585,7 @@ public class IQueryToLdapSearchParser {
 		}
 		filterList.add(rhs);
 		filterList.add(")"); //$NON-NLS-1$
-		if(op == ICompareCriteria.NE) {
+		if(op == Operator.NE || op == Operator.GT || op == Operator.LT) {
 			filterList.add(")"); //$NON-NLS-1$
 		}
 	}

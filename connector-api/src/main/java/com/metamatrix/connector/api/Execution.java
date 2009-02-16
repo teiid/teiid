@@ -22,10 +22,6 @@
 
 package com.metamatrix.connector.api;
 
-import java.util.List;
-
-import com.metamatrix.connector.exception.ConnectorException;
-
 /**
  * An execution represents the state and lifecycle for a particular 
  * command execution.  The methods provided on this interface define
@@ -54,10 +50,4 @@ public interface Execution {
      */
     void execute() throws ConnectorException;
 
-    /**
-     * Get and clear the warnings for this execution.  Will be called
-     * each time results are retrieved.
-     * @return a List of ConnectorExceptions or null if there are no warnings
-     */
-    List<Exception> getWarnings();
 }

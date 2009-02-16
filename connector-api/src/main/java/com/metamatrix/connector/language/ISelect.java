@@ -33,7 +33,7 @@ public interface ISelect extends ILanguageObject {
      * Get List of ISelectSymbol.
      * @return List of ISelectSymbol
      */
-    List getSelectSymbols();
+    List<ISelectSymbol> getSelectSymbols();
     
     /**
      * Determine whether the DISTINCT flag is used in this SELECT.
@@ -45,7 +45,7 @@ public interface ISelect extends ILanguageObject {
      * Set List of ISelectSymbol.
      * @param symbols List of ISelectSymbol
      */
-    void setSelectSymbols(List symbols);
+    void setSelectSymbols(List<ISelectSymbol> symbols);
     
     /**
      * Set whether the DISTINCT flag is used in this SELECT.

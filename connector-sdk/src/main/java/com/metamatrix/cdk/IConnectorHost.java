@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 
 /**

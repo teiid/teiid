@@ -24,7 +24,7 @@
 
 package com.metamatrix.connector.xml;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.base.StatefulConnector;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 

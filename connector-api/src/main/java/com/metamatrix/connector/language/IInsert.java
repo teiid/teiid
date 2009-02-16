@@ -39,13 +39,13 @@ public interface IInsert extends ICommand {
      * Get list of elements being inserted into
      * @return List of IElement
      */
-    List getElements();
+    List<IElement> getElements();
     
     /**
      * Get list of values being inserted
      * @return List of ILiteral
      */
-    List getValues();
+    List<IExpression> getValues();
     
     /**
      * Set group that is being inserted into.
@@ -57,12 +57,12 @@ public interface IInsert extends ICommand {
      * Set list of elements being inserted into
      * @param elements List of IElement
      */
-    void setElements(List elements);
+    void setElements(List<IElement> elements);
     
     /**
      * Set list of values being inserted
-     * @param values List of ILiteral
+     * @param values List of IExpression
      */
-    void setValues(List values);
+    void setValues(List<IExpression> values);
     
 }

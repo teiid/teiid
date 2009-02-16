@@ -23,9 +23,45 @@
 package com.metamatrix.connector.visitor.framework;
 
 import java.util.Collection;
-import java.util.Iterator;
 
-import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.IBatchedUpdates;
+import com.metamatrix.connector.language.IBulkInsert;
+import com.metamatrix.connector.language.ICaseExpression;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompoundCriteria;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExistsCriteria;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IGroupBy;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.IInlineView;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.IIsNullCriteria;
+import com.metamatrix.connector.language.IJoin;
+import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.INotCriteria;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.language.ISetClauseList;
+import com.metamatrix.connector.language.ISetQuery;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria;
+import com.metamatrix.connector.language.ISubqueryInCriteria;
+import com.metamatrix.connector.language.IUpdate;
 
 /**
  * Visitor that visits an instance of ILanguageObject and performs an operation
@@ -57,10 +93,10 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
      * can be used by subclasses to visit each ILanguageObject in the Collection
      * @param nodes a Collection of ILanguageObjects
      */
-    public void visitNodes(Collection nodes) {
+    public void visitNodes(Collection<? extends ILanguageObject> nodes) {
         if (nodes != null && nodes.size() > 0) {
-            for (Iterator i = nodes.iterator(); i.hasNext();) {
-                visitNode((ILanguageObject)i.next());
+            for (ILanguageObject node : nodes) {
+                visitNode(node);
             }
         }
     }

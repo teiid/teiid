@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IElement;

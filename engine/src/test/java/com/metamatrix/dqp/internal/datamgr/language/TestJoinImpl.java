@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IJoin;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.JoinPredicate;
 import com.metamatrix.query.sql.lang.JoinType;
@@ -69,11 +68,11 @@ public class TestJoinImpl extends TestCase {
     }
 
     public void testGetJoinType() throws Exception {
-        assertEquals(IJoin.CROSS_JOIN, example(JoinType.JOIN_CROSS).getJoinType());
-        assertEquals(IJoin.FULL_OUTER_JOIN, example(JoinType.JOIN_FULL_OUTER).getJoinType());
-        assertEquals(IJoin.INNER_JOIN, example(JoinType.JOIN_INNER).getJoinType());
-        assertEquals(IJoin.LEFT_OUTER_JOIN, example(JoinType.JOIN_LEFT_OUTER).getJoinType());
-        assertEquals(IJoin.RIGHT_OUTER_JOIN, example(JoinType.JOIN_RIGHT_OUTER).getJoinType());
+        assertEquals(com.metamatrix.connector.language.IJoin.JoinType.CROSS_JOIN, example(JoinType.JOIN_CROSS).getJoinType());
+        assertEquals(com.metamatrix.connector.language.IJoin.JoinType.FULL_OUTER_JOIN, example(JoinType.JOIN_FULL_OUTER).getJoinType());
+        assertEquals(com.metamatrix.connector.language.IJoin.JoinType.INNER_JOIN, example(JoinType.JOIN_INNER).getJoinType());
+        assertEquals(com.metamatrix.connector.language.IJoin.JoinType.LEFT_OUTER_JOIN, example(JoinType.JOIN_LEFT_OUTER).getJoinType());
+        assertEquals(com.metamatrix.connector.language.IJoin.JoinType.RIGHT_OUTER_JOIN, example(JoinType.JOIN_RIGHT_OUTER).getJoinType());
     }
 
     public void testGetCriteria() throws Exception {

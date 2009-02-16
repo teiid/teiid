@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.IndexConnector;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;

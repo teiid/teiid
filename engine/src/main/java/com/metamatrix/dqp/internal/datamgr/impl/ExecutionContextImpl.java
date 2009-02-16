@@ -23,6 +23,9 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.connector.api.ExecutionContext;
@@ -63,6 +66,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     private ConnectorIdentity connectorIdentity;
     
     private int batchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
+	private List<Exception> warnings = new LinkedList<Exception>();
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 
@@ -188,5 +192,22 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	public void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
+	}
+		
+	/**
+	 * Add an exception as a warning to this Execution.
+	 */
+	@Override
+	public void addWarning(Exception ex) {
+		if (ex == null) {
+			return;
+		}
+		this.warnings.add(ex);
+	}
+	
+	public List<Exception> getWarnings() {
+		List<Exception> result = new ArrayList<Exception>(warnings);
+		warnings.clear();
+		return result;
 	}
 }

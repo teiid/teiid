@@ -31,7 +31,6 @@ import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -122,7 +121,7 @@ public interface DataService extends ApplicationService {
      * @throws MetaMatrixComponentException
      * @since 4.3
      */
-    AliveStatus getConnectorBindingState(String connectorBindingName) 
+    Boolean getConnectorBindingState(String connectorBindingName) 
         throws MetaMatrixComponentException;
     
     /**

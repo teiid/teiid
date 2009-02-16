@@ -32,8 +32,8 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;

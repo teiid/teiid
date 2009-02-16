@@ -21,7 +21,7 @@
  */
 package com.metamatrix.connector.salesforce.execution;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IDelete;
 import com.metamatrix.connector.salesforce.execution.visitors.DeleteVisitor;
 

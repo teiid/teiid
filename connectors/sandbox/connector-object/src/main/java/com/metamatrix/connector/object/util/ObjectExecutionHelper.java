@@ -36,11 +36,11 @@ import java.util.List;
 import java.util.TimeZone;
 
 import com.metamatrix.common.util.TimestampWithTimezone;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.ValueTranslator;
 import com.metamatrix.connector.basic.BasicValueTranslator;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;

@@ -25,14 +25,15 @@ package com.metamatrix.xa.arjuna;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xa.api.XAConnection;
 
-class FakeXAConnection implements XAConnection {
+class FakeXAConnection extends BasicConnection implements XAConnection {
     String name;
     boolean released = false;
     boolean failToCreateXAResource = false;

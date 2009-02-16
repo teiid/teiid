@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExpression;

@@ -57,15 +57,17 @@ public class ServerWorkItem implements Runnable {
 	private final ClientInstance socketClientInstance;
 	private final Serializable messageKey;
     private final Message message;
-    private final ClientServiceRegistry<SessionServiceInterface> server;
+    private final ClientServiceRegistry server;
+    private final SessionServiceInterface sessionService;
     
     public ServerWorkItem(ClientInstance socketClientInstance,
 			Serializable messageKey, Message message,
-			ClientServiceRegistry server) {
+			ClientServiceRegistry server, SessionServiceInterface sessionService) {
 		this.socketClientInstance = socketClientInstance;
 		this.messageKey = messageKey;
 		this.message = message;
 		this.server = server;
+		this.sessionService = sessionService;
 	}
 
 	/**
@@ -103,7 +105,7 @@ public class ServerWorkItem implements Runnable {
 				}
 				if (!(instance instanceof ILogon)) {
 					DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
-					server.getSessionService().validateSession(workContext.getSessionId());
+					sessionService.validateSession(workContext.getSessionId());
 				}
 				service = serviceStruct.targetClass;
 				ReflectionHelper helper = new ReflectionHelper(instance.getClass());

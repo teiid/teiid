@@ -32,13 +32,12 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -68,8 +67,9 @@ public class TestFileExecution extends TestCase {
             List result = exec.next();
             assertNotNull(result);
             assertNull(exec.next());
+            IParameter returnParam = fact.createParameter(0, Direction.RETURN, null, null, null);
             try {
-                exec.getOutputValue(getReturnParameter());
+                exec.getOutputValue(returnParam);
                 fail("should have thrown error in returning a return"); //$NON-NLS-1$
             }catch(Exception e) {                
             }
@@ -109,37 +109,6 @@ public class TestFileExecution extends TestCase {
         }         
     }    
  
-    
-    IParameter getReturnParameter() {
-        return new IParameter() {
-            public int getIndex() {
-                return 0;
-            }
-            public int getDirection() {
-                return IParameter.RETURN;
-            }
-            public Class getType() {
-                return null;
-            }
-            public Object getValue() {
-                return null;
-            }
-            public boolean getValueSpecified() {
-                return false;
-            }
-            public void setIndex(int index) {}
-            public void setDirection(int direction) {}
-            public void setType(Class type) {}
-            public void setValue(Object value) {}
-            public void setValueSpecified(boolean specified) {}
-            public void acceptVisitor(LanguageObjectVisitor visitor) {}
-            public MetadataID getMetadataID() {
-                return null;
-            }
-            public void setMetadataID(MetadataID metadataID) {}            
-        };     
-    }      
-    
     String readFile(String filename) throws Exception {
         Reader reader = new FileReader(filename); 
         StringBuffer fileContents = new StringBuffer();

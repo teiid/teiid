@@ -26,6 +26,7 @@ import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IFromItem;
 import com.metamatrix.connector.language.IJoin;
 import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IJoin.JoinType;
 
 /** 
  * @since 4.3
@@ -73,8 +74,7 @@ public class DB2SQLConversionVisitor extends SQLConversionVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IJoin)
      */
     public void visit(IJoin obj) {
-        final int type = obj.getJoinType();
-        if(type != IJoin.CROSS_JOIN) {
+        if(obj.getJoinType() != JoinType.CROSS_JOIN) {
             super.visit(obj);
             return;
         }

@@ -24,7 +24,7 @@ package com.metamatrix.connector.xmlsource;
 
 import java.util.Properties;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;

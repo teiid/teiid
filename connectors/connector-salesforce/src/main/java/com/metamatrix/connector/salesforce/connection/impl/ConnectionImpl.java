@@ -37,8 +37,8 @@ import org.apache.axis.handlers.SimpleSessionHandler;
 import org.apache.axis.transport.http.CommonsHTTPSender;
 import org.apache.axis.transport.http.HTTPTransport;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
 import com.sforce.soap.partner.CallOptions;
 import com.sforce.soap.partner.DeleteResult;

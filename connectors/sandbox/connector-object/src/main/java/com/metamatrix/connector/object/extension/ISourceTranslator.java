@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.TimeZone;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 

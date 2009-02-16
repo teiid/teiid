@@ -52,6 +52,7 @@ import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
@@ -393,7 +394,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         Iterator iter = params.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.RETURN){
+            if(param.getDirection() == Direction.RETURN){
                 needQuestionMark = true;
                 break;
             }
@@ -413,7 +414,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         iter = params.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.IN || param.getDirection() == IParameter.OUT || param.getDirection() == IParameter.INOUT){
+            if(param.getDirection() == Direction.IN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                 if(numberOfParameters > 0){
                     prepareCallBuffer.append(","); //$NON-NLS-1$
                 }

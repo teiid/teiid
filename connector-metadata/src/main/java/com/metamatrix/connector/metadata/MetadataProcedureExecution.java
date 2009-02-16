@@ -25,12 +25,13 @@ package com.metamatrix.connector.metadata;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.ObjectProcedure;
 import com.metamatrix.connector.metadata.internal.ObjectProcedureProcessor;
@@ -89,7 +90,7 @@ public class MetadataProcedureExecution extends BasicExecution implements Proced
      * @since 4.2
      */
     public Object getOutputValue(final IParameter parameter) throws ConnectorException {
-        if(parameter.getDirection() != IParameter.OUT && parameter.getDirection() != IParameter.INOUT &&  parameter.getDirection() != IParameter.RETURN){
+        if(parameter.getDirection() != Direction.OUT && parameter.getDirection() != Direction.INOUT &&  parameter.getDirection() != Direction.RETURN){
             throw new ConnectorException(MetadataConnectorPlugin.Util.getString("ObjectProcedureExecution.0")); //$NON-NLS-1$
         }
         //TODO: Output parameters are not currently handled

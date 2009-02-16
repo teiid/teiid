@@ -20,25 +20,10 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.api;
+package com.metamatrix.connector.basic;
 
-import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.api.Connector;
 
-/**
- * The procedure execution represents the case where a connector can 
- * execute a procedural call (such as a stored procedure).  This command
- * takes a procedure with input values and executes the procedure.  The 
- * output may include 0 or more output parameters and optionally a result 
- * set.   
- */
-public interface ProcedureExecution extends ResultSetExecution {
+public abstract class BasicConnector implements Connector {
 
-    /**
-     * Get the output parameter value for the given parameter.
-     * @param parameter The parameter (either OUT or INOUT direction)
-     * @return The value or null if null
-     * @throws ConnectorException If an error occurs while retrieving the output value
-     */
-    Object getOutputValue(IParameter parameter) throws ConnectorException;
-    
 }

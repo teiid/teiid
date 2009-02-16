@@ -22,7 +22,7 @@
 
 package com.metamatrix.connector.xml.base;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 
 public class LargeOrSmallString

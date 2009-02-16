@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.pool;
+package com.metamatrix.connector.api;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -30,9 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.connector.DataPlugin;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.StringUtil;
 
 /**

@@ -70,10 +70,8 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.monitor.AliveStatus;
-import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -349,24 +347,20 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     public void checkState() throws ServiceStateException {
 
         if (monitoringEnabled) {
-            ConnectionStatus status = connectorMgr.getStatus();
+            Boolean status = connectorMgr.getStatus();
             int state = getCurrentState();
-            if (state == ServiceState.STATE_OPEN) {
-                if (status.getStatus().equals(AliveStatus.DEAD)) {
-                    updateState(ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);
-                    
-                    logOK("ConnectorService.Change_state_to_data_source_unavailable", connectorMgrName); //$NON-NLS-1$
-                    
-                    //TODO: store the exception in the registry
-                }
+            if (state == ServiceState.STATE_OPEN && status == Boolean.FALSE) {
+                updateState(ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);
+                
+                logOK("ConnectorService.Change_state_to_data_source_unavailable", connectorMgrName); //$NON-NLS-1$
+                
+                //TODO: store the exception in the registry
             }
             
-            if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {                  
-                if (status.getStatus().equals(AliveStatus.ALIVE)) {
-                    this.updateState(ServiceState.STATE_OPEN);
-                    
-                    logOK("ConnectorService.Change_state_to_open", connectorMgrName); //$NON-NLS-1$                
-                }            
+            if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE && status == Boolean.TRUE) {
+                this.updateState(ServiceState.STATE_OPEN);
+                
+                logOK("ConnectorService.Change_state_to_open", connectorMgrName); //$NON-NLS-1$                
             }
         }
         

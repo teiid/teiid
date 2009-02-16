@@ -29,9 +29,9 @@ import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCConnector;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.xa.api.TransactionContext;

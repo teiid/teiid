@@ -26,9 +26,9 @@ import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * XML Source connector, will give provide a XML document as source to

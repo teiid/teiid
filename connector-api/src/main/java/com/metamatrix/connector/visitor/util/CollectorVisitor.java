@@ -33,27 +33,22 @@ import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
  * tree.  Each visit method does an instanceof method to check whether the object
  * is of the expected type.
  */
-public class CollectorVisitor implements LanguageObjectVisitor {
+public class CollectorVisitor<T> implements LanguageObjectVisitor {
 
-    private Class type;
-    private Collection objects;
+    private Class<T> type;
+    private Collection<T> objects = new ArrayList<T>();
 
-    public CollectorVisitor(Class type) {
+    public CollectorVisitor(Class<T> type) {
         this.type = type;
-        reset();
-    }
-
-    public void reset() {
-        objects= new ArrayList();
     }
 
     private void checkInstance(ILanguageObject obj) {
         if(type.isInstance(obj)) {
-            this.objects.add(obj);
+            this.objects.add((T)obj);
         }
     }
     
-    public Collection getCollectedObjects() {
+    public Collection<T> getCollectedObjects() {
         return this.objects;
     }
 
@@ -314,8 +309,8 @@ public class CollectorVisitor implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of ILanguageObject of the specified type
      */
-    public static Collection collectObjects(Class type, ILanguageObject object) {
-        CollectorVisitor visitor = new CollectorVisitor(type);
+    public static <T> Collection<T> collectObjects(Class<T> type, ILanguageObject object) {
+        CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(visitor, null);
         object.acceptVisitor(hierarchyVisitor);
         return visitor.getCollectedObjects();
@@ -328,7 +323,7 @@ public class CollectorVisitor implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of IElement of the specified type
      */
-    public static Collection collectElements(ILanguageObject object) {
+    public static Collection<IElement> collectElements(ILanguageObject object) {
         return CollectorVisitor.collectObjects(IElement.class, object);
     }
 
@@ -339,7 +334,7 @@ public class CollectorVisitor implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Collection of IGroup of the specified type
      */
-    public static Collection collectGroups(ILanguageObject object) {
+    public static Collection<IGroup> collectGroups(ILanguageObject object) {
         return CollectorVisitor.collectObjects(IGroup.class, object);
     }
         
@@ -350,17 +345,13 @@ public class CollectorVisitor implements LanguageObjectVisitor {
      * @param object Root of the language object tree
      * @return Set of IGroup
      */
-    public static Set collectGroupsUsedByElements(ILanguageObject object) {
-        Collection elements = CollectorVisitor.collectElements(object);        
-        Set groups = new HashSet();
-        Iterator iter = elements.iterator();
-        while(iter.hasNext()) {
-            IElement element = (IElement) iter.next();
+    public static Set<IGroup> collectGroupsUsedByElements(ILanguageObject object) {
+        Set<IGroup> groups = new HashSet<IGroup>();
+        for (IElement element : CollectorVisitor.collectElements(object)) {
             if(element.getGroup() != null) {
                 groups.add(element.getGroup());
             }
         }
-        
         return groups;
     }
     

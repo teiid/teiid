@@ -62,12 +62,12 @@ public class TestCommSockets extends TestCase {
 
 	public void testFailedConnect() throws Exception {
 		InetSocketAddress addr = new InetSocketAddress(0);
-		ClientServiceRegistry<SessionServiceInterface> csr = new ClientServiceRegistry(
-				mock(SessionServiceInterface.class));
-		csr.registerClientService(ILogon.class, new LogonImpl(csr.getSessionService(), "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
+		ClientServiceRegistry csr = new ClientServiceRegistry();
+		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
+		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), null, true); //$NON-NLS-1$
+						"testIO", 1, 120000), null, true, sessionService); //$NON-NLS-1$
 
 		try {
 			Properties p = new Properties();
@@ -114,10 +114,9 @@ public class TestCommSockets extends TestCase {
 			SSLEngine serverSSL, boolean isClientEncryptionEnabled, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
 		InetSocketAddress addr = new InetSocketAddress(0);
-		ClientServiceRegistry<SessionServiceInterface> csr = new ClientServiceRegistry(
-				mock(SessionServiceInterface.class));
-		csr.registerClientService(ILogon.class, new LogonImpl(csr
-				.getSessionService(), "fakeCluster") { //$NON-NLS-1$
+		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
+		ClientServiceRegistry csr = new ClientServiceRegistry();
+		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)
 					throws LogonException, ComponentNotFoundException {
@@ -126,7 +125,7 @@ public class TestCommSockets extends TestCase {
 		}, "foo"); //$NON-NLS-1$
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
 				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled); //$NON-NLS-1$
+						"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled, sessionService); //$NON-NLS-1$
 
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(0, stats.maxSockets);

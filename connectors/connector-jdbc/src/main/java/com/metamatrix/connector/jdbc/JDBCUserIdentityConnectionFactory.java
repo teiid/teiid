@@ -27,9 +27,9 @@ import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
-import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.connector.pool.UserIdentityFactory;
 
 /**

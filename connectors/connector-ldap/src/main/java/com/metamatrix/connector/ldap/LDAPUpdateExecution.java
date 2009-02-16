@@ -33,12 +33,12 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICriteria;
@@ -49,6 +49,7 @@ import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.ISetClause;
 import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -368,7 +369,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			throw new ConnectorException(msg);
 		}
 		ICompareCriteria compareCriteria = (ICompareCriteria)criteria;	
-		if (compareCriteria.getOperator() != ICompareCriteria.EQ) {
+		if (compareCriteria.getOperator() != Operator.EQ) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotEqualsError"); //$NON-NLS-1$
 			throw new ConnectorException(msg);
 		}

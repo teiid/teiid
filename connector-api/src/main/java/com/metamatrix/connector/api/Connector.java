@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * <p>The primary entry point for a Connector.  This interface should be implemented
@@ -33,8 +32,6 @@ import com.metamatrix.connector.exception.ConnectorException;
  * instantiated, the {@link #initialize(ConnectorEnvironment)} method will be called
  * with all necessary connector properties.  The {@link #start()} and {@link #stop()} 
  * methods are lifecycle methods called when starting or stopping the connector.</p>  
- *  
- * <p>
  */
 public interface Connector {
 
@@ -58,7 +55,8 @@ public interface Connector {
      * with a particular security context.  The connection is assumed to be pooled in 
      * the underlying source if pooling is necessary - the connection will be closed 
      * when execution has completed against it.  
-     * @param context The context of the current MetaMatrix user that will be using this connection 
+     * @param context The context of the current user that will be using this connection, 
+     * may be null if this connection is for an administrative operation. 
      * @return A Connection, created by the Connector
      * @throws ConnectorException If an error occurred obtaining a connection
      */
@@ -67,7 +65,7 @@ public interface Connector {
     /**
      * Get the capabilities of this connector.  The capabilities affect what kinds of 
      * queries (and other commands) will be sent to the connector.
-     * @return Connector capabilities, may return null if the Connector provides User scoped capabilities {@link Connection#getCapabilities()}
+     * @return ConnectorCapabilities, may return null if the Connector provides User scoped capabilities {@link Connection#getCapabilities()}
      */
     ConnectorCapabilities getCapabilities();
 

@@ -40,8 +40,8 @@ import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLExecution;

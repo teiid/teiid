@@ -23,8 +23,8 @@
 package com.metamatrix.connector.xmlsource;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * A Base XML Connection to an XML Source

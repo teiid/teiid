@@ -35,6 +35,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQuery;
@@ -90,8 +91,8 @@ public class TestIQueryToLdapSearchParser extends TestCase {
     	SortKey[] sortKeys = searchDetails.getSortKeys();
     	
     	// Compare actual with Expected
-    	assertEquals(contextName, expectedContextName);
-    	assertEquals(contextFilter, expectedContextFilter);
+    	assertEquals(expectedContextName, contextName);
+    	assertEquals(expectedContextFilter, contextFilter);
     	
     	assertEquals(attrList.size(),expectedAttrNameList.size());
     	Iterator iter = attrList.iterator();
@@ -102,25 +103,16 @@ public class TestIQueryToLdapSearchParser extends TestCase {
 			assertEquals(actualName, expectedName);
     	}
 
-    	assertEquals(countLimit, expectedCountLimit);
-    	assertEquals(searchScope, expectedSearchScope);
-    	assertEquals(sortKeys, expectedSortKeys);
+    	assertEquals(expectedCountLimit, countLimit);
+    	assertEquals(expectedSearchScope, searchScope);
+    	assertEquals(expectedSortKeys, sortKeys);
     }
 
 	/**
      * Test a Query without criteria
      */
     public void testSelectFrom1() throws Exception {
-    	ConnectorLogger logger = new SysLogger(false);
-    	QueryMetadataInterface metadata = exampleLdap();
-    	RuntimeMetadata rm = new MetadataFactory(metadata).createRuntimeMetadata();
-    	Properties props = new Properties();
-    	
-    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);
-    	
-        IQuery query = (IQuery)getCommand("SELECT UserID, Name FROM LdapModel.People", metadata); //$NON-NLS-1$
-
-        LDAPSearchDetails searchDetails = searchParser.translateSQLQueryToLDAPSearch(query);
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People"); //$NON-NLS-1$
         
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -145,16 +137,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
      * Test a Query with a criteria
      */
     public void testSelectFromWhere1() throws Exception {
-    	ConnectorLogger logger = new SysLogger(false);
-    	QueryMetadataInterface metadata = exampleLdap();
-    	RuntimeMetadata rm = new MetadataFactory(metadata).createRuntimeMetadata();
-    	Properties props = new Properties();
-    	
-    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);
-    	
-        IQuery query = (IQuery)getCommand("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R%'", metadata); //$NON-NLS-1$
-
-        LDAPSearchDetails searchDetails = searchParser.translateSQLQueryToLDAPSearch(query);
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R%'"); //$NON-NLS-1$
         
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -174,6 +157,62 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
         
     }
+    
+    public void testGT() throws Exception {
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name > 'R'"); //$NON-NLS-1$
+        
+        //-----------------------------------
+        // Set Expected SearchDetails Values
+        //-----------------------------------
+        String expectedContextName = "ou=people,dc=metamatrix,dc=com"; //$NON-NLS-1$
+        String expectedContextFilter = "(!(cn<=R))"; //$NON-NLS-1$
+        
+        List expectedAttrNameList = new ArrayList();
+        expectedAttrNameList.add("uid"); //$NON-NLS-1$
+        expectedAttrNameList.add("cn"); //$NON-NLS-1$
+        
+        long expectedCountLimit = -1;
+        int expectedSearchScope = SearchControls.ONELEVEL_SCOPE;
+        SortKey[] expectedSortKeys = null;
+        
+        helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
+        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+    }
+    
+    public void testLT() throws Exception {
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name < 'R'"); //$NON-NLS-1$
+        
+        //-----------------------------------
+        // Set Expected SearchDetails Values
+        //-----------------------------------
+        String expectedContextName = "ou=people,dc=metamatrix,dc=com"; //$NON-NLS-1$
+        String expectedContextFilter = "(!(cn>=R))"; //$NON-NLS-1$
+        
+        List expectedAttrNameList = new ArrayList();
+        expectedAttrNameList.add("uid"); //$NON-NLS-1$
+        expectedAttrNameList.add("cn"); //$NON-NLS-1$
+        
+        long expectedCountLimit = -1;
+        int expectedSearchScope = SearchControls.ONELEVEL_SCOPE;
+        SortKey[] expectedSortKeys = null;
+        
+        helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
+        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+    }
+
+	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws ConnectorException {
+		ConnectorLogger logger = new SysLogger(false);
+    	QueryMetadataInterface metadata = exampleLdap();
+    	RuntimeMetadata rm = new MetadataFactory(metadata).createRuntimeMetadata();
+    	Properties props = new Properties();
+    	
+    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);
+    	
+        IQuery query = (IQuery)getCommand(queryString, metadata);
+
+        LDAPSearchDetails searchDetails = searchParser.translateSQLQueryToLDAPSearch(query);
+		return searchDetails;
+	}
     
     
     public static FakeMetadataFacade exampleLdap() { 

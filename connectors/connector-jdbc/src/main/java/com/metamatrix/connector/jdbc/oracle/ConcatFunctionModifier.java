@@ -28,12 +28,12 @@ import java.util.List;
 
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ICompoundCriteria.Operator;
 
 
 /**
@@ -81,7 +81,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
         } else if (crits.size() == 1) {
         	crit = (ICriteria)crits.get(0);
         } else {
-        	crit = langFactory.createCompoundCriteria(ICompoundCriteria.OR, crits);
+        	crit = langFactory.createCompoundCriteria(Operator.OR, crits);
         }
         when.add(crit);
         List then = Arrays.asList(new IExpression[] {nullValue}); 

@@ -61,7 +61,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
      * @see com.metamatrix.data.language.ILanguageFactory#createCompareCriteria(int, com.metamatrix.data.language.IExpression, com.metamatrix.data.language.IExpression)
      */
     public ICompareCriteria createCompareCriteria(
-        int operator,
+        ICompareCriteria.Operator operator,
         IExpression leftExpression,
         IExpression rightExpression) {
         return new CompareCriteriaImpl(leftExpression, rightExpression, operator);
@@ -70,7 +70,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createCompoundCriteria(int, java.util.List)
      */
-    public ICompoundCriteria createCompoundCriteria(int operator, List innerCriteria) {
+    public ICompoundCriteria createCompoundCriteria(ICompoundCriteria.Operator operator, List innerCriteria) {
         return new CompoundCriteriaImpl(innerCriteria, operator);
     }
 
@@ -154,7 +154,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createJoin(int, com.metamatrix.data.language.IFromItem, com.metamatrix.data.language.IFromItem, java.util.List)
      */
-    public IJoin createJoin(int joinType, IFromItem leftItem, IFromItem rightItem, List criteria) {
+    public IJoin createJoin(IJoin.JoinType joinType, IFromItem leftItem, IFromItem rightItem, List criteria) {
         return new JoinImpl(leftItem, rightItem, joinType, criteria);
     }
 
@@ -200,7 +200,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createParameter(int, int, java.lang.Object, java.lang.Class)
      */
-    public IParameter createParameter(int index, int direction, Object value, Class type, MetadataID metadataReference) {
+    public IParameter createParameter(int index, IParameter.Direction direction, Object value, Class type, MetadataID metadataReference) {
         return new ParameterImpl(index, direction, value, type, metadataReference);
     }
 
@@ -261,8 +261,8 @@ public class LanguageFactoryImpl implements ILanguageFactory {
      */
     public ISubqueryCompareCriteria createSubqueryCompareCriteria(
         IExpression leftExpression,
-        int operator,
-        int quantifier,
+        ICompareCriteria.Operator operator,
+        ISubqueryCompareCriteria.Quantifier quantifier,
         IQuery subquery) {
         return new SubqueryCompareCriteriaImpl(leftExpression, operator, quantifier, subquery);
     }

@@ -27,7 +27,7 @@ package com.metamatrix.connector.xa.api;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 public interface XAConnection extends Connection{
     /**

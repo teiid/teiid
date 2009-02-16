@@ -27,8 +27,8 @@ package com.metamatrix.connector.xml.jms;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.soap.SOAPConnectorStateImpl;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;

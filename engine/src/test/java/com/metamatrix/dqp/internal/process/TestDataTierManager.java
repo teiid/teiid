@@ -43,7 +43,6 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -371,7 +370,7 @@ public class TestDataTierManager extends TestCase {
         public void startConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public List getConnectorBindings() throws ComponentNotFoundException {return null;}
-        public AliveStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
+        public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {}

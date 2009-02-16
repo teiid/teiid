@@ -28,12 +28,12 @@ import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  */
@@ -42,7 +42,7 @@ public class FakeSourceConnectionFactory implements Connector {
     
     static boolean alive = true;
     
-    class FakeSourceConnection implements Connection, PoolAwareConnection {
+    class FakeSourceConnection extends BasicConnection {
         int id;
         
         FakeSourceConnection(int id){
@@ -78,10 +78,6 @@ public class FakeSourceConnectionFactory implements Connector {
 			
 		}
 		
-		@Override
-		public void closeCalled() {
-			
-		}
     }
 
 	@Override

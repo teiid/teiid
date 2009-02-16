@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 public class TestLoopbackExecution extends TestCase {
 

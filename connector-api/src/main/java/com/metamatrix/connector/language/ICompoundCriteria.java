@@ -29,35 +29,37 @@ import java.util.List;
  */
 public interface ICompoundCriteria extends ILogicalCriteria {
 
-    public static final int AND = 0;
-    public static final int OR = 1;
-
+	public enum Operator {
+		AND,
+		OR
+	}
+	
     /**
      * Get operator used to connect these criteria.
      * @return Operator constant
-     * @see #AND
-     * @see #OR
+     * @see Operator#AND
+     * @see Operator#OR
      */
-    int getOperator();
+    Operator getOperator();
 
     /**
      * Set operator used to connect these criteria.
      * @param operator Operator constant
-     * @see #AND
-     * @see #OR
+     * @see Operator#AND
+     * @see Operator#OR
      */
-    void setOperator(int operator);
+    void setOperator(Operator operator);
 
     /**
      * Get list of ICriteria combined by this compound criteria.
      * @return List of ICriteria
      */
-    List getCriteria();
+    List<ICriteria> getCriteria();
     
     /**
      * Set list of ICriteria combined by this compound criteria.
      * @param criteria List of ICriteria
      */
-    void setCriteria(List criteria);
+    void setCriteria(List<ICriteria> criteria);
     
 }

@@ -39,13 +39,6 @@ public class UserIdentity implements ConnectorIdentity {
         this.context = context;
     }    
     
-    /*
-     * @see com.metamatrix.data.pool.ConnectorIdentity#getSecurityContext()
-     */
-    public ExecutionContext getSecurityContext() {
-        return this.context;
-    }
-
     /**
      * Implement equals based on the case-insensitive user name.
      * @param obj Other identity object
@@ -58,7 +51,7 @@ public class UserIdentity implements ConnectorIdentity {
 
         if (obj instanceof UserIdentity) {
             UserIdentity that = (UserIdentity)obj;
-            return this.context.getUser().toUpperCase().equals(that.context.getUser().toUpperCase());
+            return this.context.getUser().equals(that.context.getUser());
         }
         
         return false;        
@@ -68,7 +61,7 @@ public class UserIdentity implements ConnectorIdentity {
      * Get hash code, based on user name
      */
     public int hashCode(){
-        return context.getUser().toUpperCase().hashCode();
+        return context.getUser().hashCode();
     }    
     
     public String toString(){

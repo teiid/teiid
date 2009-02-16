@@ -40,7 +40,7 @@ public interface IProcedure extends ICommand, IMetadataReference {
      * The parameters describe inputs and outputs.
      * @return List of IParameter
      */
-    List getParameters();
+    List<IParameter> getParameters();
     
     /**
      * Sets the name of the procedure.
@@ -53,6 +53,6 @@ public interface IProcedure extends ICommand, IMetadataReference {
      * The parameters describe inputs and outputs.
      * @param parameters List of IParameter
      */
-    void setParameters(List parameters);
+    void setParameters(List<IParameter> parameters);
     
 }

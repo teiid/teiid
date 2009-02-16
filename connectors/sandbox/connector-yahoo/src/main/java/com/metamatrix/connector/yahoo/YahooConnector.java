@@ -23,7 +23,6 @@
 package com.metamatrix.connector.yahoo;
 
 import com.metamatrix.connector.api.*;
-import com.metamatrix.connector.exception.ConnectorException;
 
 public class YahooConnector implements Connector {
 

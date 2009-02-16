@@ -24,7 +24,7 @@ package com.metamatrix.connector.metadata.runtime;
 
 import java.util.List;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 /**
  * Represents a runtime metadata identifier.
@@ -52,7 +52,7 @@ public interface MetadataID {
      * A procedure ID will return the IDs of it's parameters.
      * @return List of MetadataID, which may be empty but never null
      */
-    List getChildIDs() throws ConnectorException;
+    List<MetadataID> getChildIDs() throws ConnectorException;
 
     /**
      * Get the parent ID if one exists

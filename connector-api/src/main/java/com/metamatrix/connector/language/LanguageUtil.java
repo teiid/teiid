@@ -23,8 +23,8 @@
 package com.metamatrix.connector.language;
 
 import java.util.*;
-import java.util.Collections;
-import java.util.List;
+
+import com.metamatrix.connector.language.ICompoundCriteria.Operator;
 
 /**
  * Helpful utility methods to work with language interfaces.  
@@ -66,7 +66,7 @@ public final class LanguageUtil {
     private static void separateCriteria(ICriteria crit, List parts) {
         if(crit instanceof ICompoundCriteria) {
             ICompoundCriteria compCrit = (ICompoundCriteria) crit;
-            if(compCrit.getOperator() == ICompoundCriteria.AND) {
+            if(compCrit.getOperator() == Operator.AND) {
                 List subCrits = compCrit.getCriteria();
                 Iterator iter = subCrits.iterator();
                 while(iter.hasNext()) { 
@@ -97,7 +97,7 @@ public final class LanguageUtil {
             return additionalCrit;
         } else if(additionalCrit == null) { 
             return primaryCrit;
-        } else if((primaryCrit instanceof ICompoundCriteria) && ((ICompoundCriteria)primaryCrit).getOperator() == ICompoundCriteria.AND) {
+        } else if((primaryCrit instanceof ICompoundCriteria) && ((ICompoundCriteria)primaryCrit).getOperator() == Operator.AND) {
             ICompoundCriteria primaryCompound = (ICompoundCriteria) primaryCrit;
             primaryCompound.getCriteria().add(additionalCrit);
             return primaryCrit;
@@ -105,7 +105,7 @@ public final class LanguageUtil {
             List crits = new ArrayList(2);
             crits.add(primaryCrit);
             crits.add(additionalCrit);
-            ICompoundCriteria compCrit = languageFactory.createCompoundCriteria(ICompoundCriteria.AND, crits);
+            ICompoundCriteria compCrit = languageFactory.createCompoundCriteria(Operator.AND, crits);
             return compCrit;
         }               
     }   

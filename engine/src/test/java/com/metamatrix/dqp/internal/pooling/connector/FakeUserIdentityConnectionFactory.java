@@ -24,8 +24,8 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 import com.metamatrix.connector.pool.UserIdentity;

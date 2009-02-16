@@ -25,7 +25,7 @@ package com.metamatrix.connector.language;
 import java.util.List;
 
 /**
- * This is a simple variation of insert, where mulitple rows with single insert 
+ * This is a simple variation of insert, where multiple rows with single insert 
  * will be loaded.
  */
 public interface IBulkInsert extends IInsert {
@@ -34,11 +34,11 @@ public interface IBulkInsert extends IInsert {
      * Get the list of row values for this bulk insert  
      * @return list; never null
      */
-    List getRows();
+    List<List<?>> getRows();
     
     /**
      * Set the list of row values for this bulk insert  
      * @return list; never null
      */
-    void setRows(List rows);    
+    void setRows(List<List<?>> rows);    
 }

@@ -169,7 +169,7 @@ public abstract class VMController implements VMControllerInterface {
     // Server events that are being generated
     ServerEvents events;
     
-    protected ClientServiceRegistry<SessionServiceInterface> clientServices;
+    protected ClientServiceRegistry clientServices;
     private Map<ComponentTypeID, Properties> defaultPropertiesCache = new HashMap<ComponentTypeID, Properties>();
     private Properties hostProperties;
 
@@ -206,7 +206,7 @@ public abstract class VMController implements VMControllerInterface {
         //Register with registry
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0006, id));
 
-        this.clientServices = new ClientServiceRegistry(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
+        this.clientServices = new ClientServiceRegistry();
 
         RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getInstance().getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
         

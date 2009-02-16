@@ -33,11 +33,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
@@ -46,6 +46,7 @@ import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -124,7 +125,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             Iterator iter = params.iterator();
             while(iter.hasNext()){
                 IParameter param = (IParameter)iter.next();
-                if(param.getDirection() == IParameter.RESULT_SET){
+                if(param.getDirection() == Direction.RESULT_SET){
                     resultSet = param;
                     break;
                 }
@@ -164,7 +165,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         Iterator iter = parameters.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.RETURN){
+            if(param.getDirection() == Direction.RETURN){
                 paramsIndexes.put(param, new Integer(index++));
                 break;
             }
@@ -173,7 +174,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         iter = parameters.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() != IParameter.RESULT_SET && param.getDirection() != IParameter.RETURN){
+            if(param.getDirection() != Direction.RESULT_SET && param.getDirection() != Direction.RETURN){
                 paramsIndexes.put(param, new Integer(index++));
             }
         }
@@ -184,7 +185,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
      * @see com.metamatrix.data.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
      */
     public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        if(parameter.getDirection() != IParameter.OUT && parameter.getDirection() != IParameter.INOUT &&  parameter.getDirection() != IParameter.RETURN){
+        if(parameter.getDirection() != Direction.OUT && parameter.getDirection() != Direction.INOUT &&  parameter.getDirection() != Direction.RETURN){
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCProcedureExecution.The_parameter_direction_must_be_out_or_inout_1")); //$NON-NLS-1$
         }
         

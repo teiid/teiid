@@ -33,12 +33,12 @@ public interface IFrom extends ILanguageObject {
      * Get a List of IFromItem in this FROM clause.
      * @return List of IFromItem
      */
-    List getItems();
+    List<IFromItem> getItems();
     
     /**
      * Set a List of IFromItem in this FROM clause.
      * @param items List of IFromItem
      */
-    void setItems(List items);
+    void setItems(List<IFromItem> items);
     
 }

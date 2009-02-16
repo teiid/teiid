@@ -27,8 +27,8 @@ package com.metamatrix.connector.jdbc.oracle;
 import java.sql.Time;
 import java.util.Iterator;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IElement;
@@ -143,14 +143,13 @@ public class OracleSQLConversionVisitor extends SQLConversionVisitor {
         append(leftExpression);
         buffer.append(SPACE);
         
-        final int op = obj.getOperator();
-        switch(op) {
-            case ICompareCriteria.EQ: buffer.append(EQ); break;
-            case ICompareCriteria.GE: buffer.append(GE); break;
-            case ICompareCriteria.GT: buffer.append(GT); break;
-            case ICompareCriteria.LE: buffer.append(LE); break;
-            case ICompareCriteria.LT: buffer.append(LT); break;
-            case ICompareCriteria.NE: buffer.append(NE); break;
+        switch(obj.getOperator()) {
+            case EQ: buffer.append(EQ); break;
+            case GE: buffer.append(GE); break;
+            case GT: buffer.append(GT); break;
+            case LE: buffer.append(LE); break;
+            case LT: buffer.append(LT); break;
+            case NE: buffer.append(NE); break;
         }
         buffer.append(SPACE);
         

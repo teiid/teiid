@@ -29,11 +29,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IMetadataReference;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
@@ -101,11 +102,11 @@ public class ObjectProcedure {
             for(final Iterator iter = parameters.iterator(); iter.hasNext();) {
                 IParameter parameter = (IParameter) iter.next();
                 // if there is one result set parameter
-                if(parameter.getDirection() == IParameter.RESULT_SET) {
+                if(parameter.getDirection() == Direction.RESULT_SET) {
                     this.resultSetParameter = parameter;
                     initResultSet();
                 }
-                if(parameter.getDirection() == IParameter.IN || parameter.getDirection() == IParameter.INOUT) {
+                if(parameter.getDirection() == Direction.IN || parameter.getDirection() == Direction.INOUT) {
                     inParams.add(parameter);
                 }                
             }

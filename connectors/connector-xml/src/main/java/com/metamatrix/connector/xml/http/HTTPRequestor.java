@@ -38,8 +38,8 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 
 
 /**

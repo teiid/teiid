@@ -40,11 +40,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExpression;

@@ -25,10 +25,10 @@ package com.metamatrix.connector.metadata.adapter;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.internal.IObjectQuery;

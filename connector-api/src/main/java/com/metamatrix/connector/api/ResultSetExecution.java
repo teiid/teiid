@@ -24,13 +24,12 @@ package com.metamatrix.connector.api;
 
 import java.util.List;
 
-import com.metamatrix.connector.exception.ConnectorException;
 
 
 /**
  */
 public interface ResultSetExecution extends Execution {
 
-	List next() throws ConnectorException, DataNotAvailableException;
+	List<?> next() throws ConnectorException, DataNotAvailableException;
 
 }

@@ -29,11 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;

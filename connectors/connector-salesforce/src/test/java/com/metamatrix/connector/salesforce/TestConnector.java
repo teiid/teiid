@@ -24,8 +24,8 @@ package com.metamatrix.connector.salesforce;
 import junit.framework.TestCase;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.test.util.ObjectFactory;
 
@@ -52,14 +52,10 @@ public class TestConnector extends TestCase {
 		noCredConnector.start(env2);
 	}
 
-	public void testGetConnection() {
+	public void testGetConnection() throws Exception {
 		ExecutionContext secContext = ObjectFactory.getDefaultSecurityContext();
-		try {
-			SalesforceConnection connection = (SalesforceConnection) connector.getConnection(secContext);
-			assertNotNull("the connection is null", connection);
-		} catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
+		SalesforceConnection connection = (SalesforceConnection) connector.getConnection(secContext);
+		assertNotNull("the connection is null", connection);
 	}
 
 	/*
@@ -80,11 +76,10 @@ public class TestConnector extends TestCase {
 		try {
 			localConnector.start(env);
 			localConnector.getConnection(secContext);
+			fail("should have produced an exception");
 		} catch (ConnectorException e) {
 			assertFalse("There is no error message", e.getMessage().length() == 0);
-			return;
 		}
-		fail("should have produced an exception");
 	}
 	
 	public void testGetConnectionEmptyUser() {
@@ -94,11 +89,10 @@ public class TestConnector extends TestCase {
 		try {
 			localConnector.start(env);
 			localConnector.getConnection(secContext);
+			fail("should have produced an exception");
 		} catch (ConnectorException e) {
 			assertTrue("Wrong error message", e.getMessage().contains("Invalid"));
-			return;
 		}
-		fail("should have produced an exception");
 	}
 
 	public void testGetConnectionBadPass() {
@@ -108,11 +102,10 @@ public class TestConnector extends TestCase {
 		try {
 			localConnector.start(env);
 			localConnector.getConnection(secContext);
+			fail("should have produced an exception");
 		} catch (ConnectorException e) {
 			assertFalse("There is no error message", e.getMessage().length() == 0);
-			return;
 		}
-		fail("should have produced an exception");
 	}
 	
 	public void testGetConnectionEmptyPass() {
@@ -122,31 +115,22 @@ public class TestConnector extends TestCase {
 		try {
 			localConnector.start(env);
 			localConnector.getConnection(secContext);
+			fail("should have produced an exception");
 		} catch (ConnectorException e) {
 			assertTrue("Wrong error message", e.getMessage().contains("Invalid credential configuration"));
-			return;
 		}
-		fail("should have produced an exception");
 	}
 	
-	public void testInitialize() {
+	public void testInitialize() throws Exception {
 		Connector localConnector = new Connector();
-		try {
-			localConnector.start(ObjectFactory.getDefaultTestConnectorEnvironment());
-			assertEquals(ObjectFactory.VALID_PASSWORD, connector.getState().getPassword());
-			assertEquals(ObjectFactory.VALID_USERNAME, connector.getState().getUsername());
-		} catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
+		localConnector.start(ObjectFactory.getDefaultTestConnectorEnvironment());
+		assertEquals(ObjectFactory.VALID_PASSWORD, connector.getState().getPassword());
+		assertEquals(ObjectFactory.VALID_USERNAME, connector.getState().getUsername());
 	}
 
 
-	public void testGetLogger() {
-		try {
-			assertNotNull(connector.getLogger());
-		} catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
+	public void testGetLogger() throws Exception {
+		assertNotNull(connector.getLogger());
 	}
 
 	public void testGetState() {

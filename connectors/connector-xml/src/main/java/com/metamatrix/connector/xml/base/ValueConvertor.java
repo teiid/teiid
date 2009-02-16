@@ -28,9 +28,9 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.Element;
 
 public class ValueConvertor {

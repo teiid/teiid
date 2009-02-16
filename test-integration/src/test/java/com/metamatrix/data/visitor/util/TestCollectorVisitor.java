@@ -25,6 +25,7 @@ package com.metamatrix.data.visitor.util;
 import java.util.*;
 
 import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.visitor.util.CollectorVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.*;
 
@@ -115,7 +116,7 @@ public class TestCollectorVisitor extends TestCase {
         GroupImpl g1 = new GroupImpl("g1", null, null); //$NON-NLS-1$
         ElementImpl e1 = new ElementImpl(g1, "e1", null, String.class); //$NON-NLS-1$
         ElementImpl e2 = new ElementImpl(g1, "e2", null, String.class); //$NON-NLS-1$
-        CompareCriteriaImpl cc = new CompareCriteriaImpl(e1, e2, ICompareCriteria.EQ);
+        CompareCriteriaImpl cc = new CompareCriteriaImpl(e1, e2, Operator.EQ);
         
         helpTestElementsUsedByGroups(cc, new String[] {"g1.e1", "g1.e2"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }

@@ -24,7 +24,6 @@ package com.metamatrix.connector.api;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  */

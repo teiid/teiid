@@ -26,8 +26,8 @@ package com.metamatrix.connector.object.extension.source;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.object.ObjectConnection;
 import com.metamatrix.connector.object.SourceConnectionFactory;
 import com.metamatrix.connector.object.extension.IObjectSource;

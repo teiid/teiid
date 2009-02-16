@@ -32,7 +32,7 @@ import javax.sql.ConnectionEventListener;
 import javax.transaction.xa.XAResource;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.ConnectionListener;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;

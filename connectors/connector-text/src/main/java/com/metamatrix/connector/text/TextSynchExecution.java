@@ -38,12 +38,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IFrom;

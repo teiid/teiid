@@ -23,7 +23,7 @@
 package com.metamatrix.connector.loopback;
 
 import com.metamatrix.connector.api.*;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
@@ -31,7 +31,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
  * Serves as a connection for the Loopback connector.  Since there is no actual
  * data source, this "connection" doesn't really have any state.  
  */
-public class LoopbackConnection implements Connection {
+public class LoopbackConnection extends BasicConnection {
 
     private ConnectorEnvironment env;
 
@@ -41,14 +41,6 @@ public class LoopbackConnection implements Connection {
     public LoopbackConnection(ConnectorEnvironment env) {
         this.env = env;
     }
-    
-    /* 
-     * @see com.metamatrix.data.Connection#getCapabilities()
-     */
-    public ConnectorCapabilities getCapabilities() {
-        return null;
-    }
-
     
     @Override
     public Execution createExecution(ICommand command,

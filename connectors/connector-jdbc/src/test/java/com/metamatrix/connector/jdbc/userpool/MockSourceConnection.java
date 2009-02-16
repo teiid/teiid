@@ -22,18 +22,16 @@
 
 package com.metamatrix.connector.jdbc.userpool;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  */
-public class MockSourceConnection implements PoolAwareConnection, Connection {
+public class MockSourceConnection extends BasicConnection {
 
     private String url;
     private int transLevel;
@@ -76,18 +74,8 @@ public class MockSourceConnection implements PoolAwareConnection, Connection {
 	}
 
 	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
-	}
-
-	@Override
 	public void close() {
 		
 	}
 
-	@Override
-	public void closeCalled() {
-		
-	}
-    
 }

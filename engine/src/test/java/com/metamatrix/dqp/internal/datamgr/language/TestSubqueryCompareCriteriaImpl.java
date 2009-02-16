@@ -22,11 +22,14 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ISubqueryCompareCriteria;
-import com.metamatrix.query.sql.lang.*;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-
 import junit.framework.TestCase;
+
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria.Quantifier;
+import com.metamatrix.query.sql.lang.CompareCriteria;
+import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 /**
  */
@@ -60,11 +63,11 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
     }
     
     public void testOperator() throws Exception {
-        assertEquals("Wrong operator", ISubqueryCompareCriteria.GT, example().getOperator()); //$NON-NLS-1$
+        assertEquals("Wrong operator", ICompareCriteria.Operator.GT, example().getOperator()); //$NON-NLS-1$
     }
 
     public void testQuantifier() throws Exception {
-        assertEquals("Wrong quantifier", ISubqueryCompareCriteria.SOME, example().getQuantifier()); //$NON-NLS-1$
+        assertEquals("Wrong quantifier", Quantifier.SOME, example().getQuantifier()); //$NON-NLS-1$
     }
 
 }

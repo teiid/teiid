@@ -32,10 +32,10 @@ public class JoinImpl extends BaseLanguageObject implements IJoin {
 
     private IFromItem leftItem = null;
     private IFromItem rightItem = null;
-    private int joinType;
+    private JoinType joinType;
     private List criteria = null;
     
-    public JoinImpl(IFromItem left, IFromItem right, int joinType, List criteria) {
+    public JoinImpl(IFromItem left, IFromItem right, JoinType joinType, List criteria) {
         this.leftItem = left;
         this.rightItem = right;
         this.joinType = joinType;
@@ -58,7 +58,7 @@ public class JoinImpl extends BaseLanguageObject implements IJoin {
     /**
      * @see com.metamatrix.connector.language.IJoin#getJoinType()
      */
-    public int getJoinType() {
+    public JoinType getJoinType() {
         return this.joinType;
     }
 
@@ -90,7 +90,7 @@ public class JoinImpl extends BaseLanguageObject implements IJoin {
     /* 
      * @see com.metamatrix.data.language.IJoin#setJoinType(int)
      */
-    public void setJoinType(int type) {
+    public void setJoinType(JoinType type) {
         this.joinType = type;
     }
     /* 

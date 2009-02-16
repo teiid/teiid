@@ -29,9 +29,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -167,13 +168,13 @@ public class ProcedureCommand extends ObjectCommand {
             for(final Iterator iter = parameters.iterator(); iter.hasNext();) {
                 IParameter parameter = (IParameter) iter.next();
                 // if there is one result set parameter
-                if(parameter.getDirection() == IParameter.RESULT_SET) {
+                if(parameter.getDirection() == Direction.RESULT_SET) {
                     this.resultSetParameter = parameter;
                     initResultSet();
-                } else if(parameter.getDirection() == IParameter.IN || parameter.getDirection() == IParameter.INOUT) {
+                } else if(parameter.getDirection() == Direction.IN || parameter.getDirection() == Direction.INOUT) {
                     initCriteria(parameter);
 //                    inParams.add(parameter);
-                } else if (parameter.getDirection() == IParameter.RETURN && this.resultSetParameter==null) { 
+                } else if (parameter.getDirection() == Direction.RETURN && this.resultSetParameter==null) { 
                     this.resultSetParameter = parameter;
                     initResultReturn();
                 }

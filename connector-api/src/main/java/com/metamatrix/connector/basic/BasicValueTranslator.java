@@ -25,37 +25,41 @@
 package com.metamatrix.connector.basic;
 
 import com.metamatrix.connector.DataPlugin;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.ValueTranslator;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * BasicValueTranslator can translate between types using the standard {@link TypeFacility}
  * transformations.
  */
-public class BasicValueTranslator implements ValueTranslator {
-    private Class sourceType;
-    private Class targetType;
+public class BasicValueTranslator<S, T> implements ValueTranslator<S, T> {
+    private Class<S> sourceType;
+    private Class<T> targetType;
     private TypeFacility typeFacility;
     
-	public BasicValueTranslator(Class sourceType, Class targetType, TypeFacility typeFacility) {
+    public static <S, T> BasicValueTranslator<S, T> createTranslator(Class<S> sourceType, Class<T> targetType, TypeFacility typeFacility) {
+    	return new BasicValueTranslator<S, T>(sourceType, targetType, typeFacility);
+    }
+    
+	public BasicValueTranslator(Class<S> sourceType, Class<T> targetType, TypeFacility typeFacility) {
 		this.sourceType = sourceType;
 		this.targetType = targetType;
 		this.typeFacility = typeFacility;
 	}
 	
-    public Class getSourceType() {
+    public Class<S> getSourceType() {
         return this.sourceType;
     }
 
-    public Class getTargetType() {
+    public Class<T> getTargetType() {
         return this.targetType;
     }
 
-    public Object translate(Object value, ExecutionContext context) throws ConnectorException {
+    public T translate(S value, ExecutionContext context) throws ConnectorException {
     	if (typeFacility.hasTransformation(sourceType, targetType)) {
-    		return typeFacility.transformValue(value, sourceType, targetType);
+    		return (T)typeFacility.transformValue(value, sourceType, targetType);
     	}
     	throw new ConnectorException(DataPlugin.Util.getString("ValueTranslator.no_tranfrom_found", new Object[] {this.sourceType, this.targetType}));
     }

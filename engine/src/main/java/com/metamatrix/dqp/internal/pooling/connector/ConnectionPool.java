@@ -25,7 +25,6 @@ package com.metamatrix.dqp.internal.pooling.connector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -42,10 +41,8 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
-import com.metamatrix.connector.monitor.AliveStatus;
-import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.connector.pool.SingleIdentity;
@@ -135,14 +132,6 @@ public class ConnectionPool {
 
     private volatile boolean shuttingDownPool;
 
-    protected volatile boolean lastConnectionAttemptFailed = false;
-
-    /**Exception received during last failed connection attempt*/
-    private volatile Exception lastConnectionAttemptException = null;
-
-    /**Time of last failed connection attempt*/
-    private volatile Date lastConnectionAttemptDate = null;
-    
     /**
      * Construct the connection pool with a connection factory
      *
@@ -261,10 +250,15 @@ public class ConnectionPool {
                         
                     ConnectionWrapper conn = connLists.unused.removeFirst();
                     if ( conn.isAlive() ) { 
-                        LogManager.logTrace(CTX_CONNECTOR,  new Object[] {"Existing connection leased for", id}); //$NON-NLS-1$
-                        connLists.used.addLast(conn);
-                        success = true;
-                        return conn;
+                        try {
+							conn.setConnectorIdentity(id);
+	                        LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection leased for", id}); //$NON-NLS-1$
+	                        connLists.used.addLast(conn);
+	                        success = true;
+	                        return conn;
+						} catch (ConnectorException e) {
+							LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection failed to have identity updated", id}); //$NON-NLS-1$
+						}
                     }
                     closeSourceConnection(conn, id);
                 }
@@ -351,12 +345,8 @@ public class ConnectionPool {
         	sourceConnection = new ConnectionWrapper(connection, this, testConnectInterval);
         	LogManager.logTrace(CTX_CONNECTOR, new Object[] {"Connection pool created a connection for", id}); //$NON-NLS-1$
         } catch (ConnectorException e) {
-        	lastConnectionAttemptFailed = true;
-            lastConnectionAttemptException = e;
-            lastConnectionAttemptDate = new Date();
             throw new ConnectionPoolException(e);
         }
-        lastConnectionAttemptFailed = false;
         return sourceConnection;
     }
 
@@ -395,103 +385,6 @@ public class ConnectionPool {
                 poolSemaphore.release();
             }
         }
-    }
-    
-    /**
-     * Check the status of connections in this pool.
-     * The pool is operational if it has at least one live
-     * connection available to it.
-     *
-     * @return AliveStatus.ALIVE if there are any connections in use, or any live unused connections.
-     * <p>AliveStatus.DEAD if there are no live connections, and the connection pool cannot create a new connection.
-     * <p>AliveStatus.UNKNOWN if there are no live connections, and we don't have the ability to test getting a new connection. 
-     */
-    public ConnectionStatus getStatus() {
-    	AliveStatus poolStatus;
-
-        Collection values = null;
-        synchronized (this.lock) {
-            values = new LinkedList(this.idConnections.values());
-        }
-        
-        poolStatus = checkStatusOfUsedConnections(values);
-
-        if (poolStatus.equals(AliveStatus.UNKNOWN)) {
-            poolStatus = checkStatusOfUnusedConnections(values);
-        }
-
-        if (poolStatus.equals(AliveStatus.UNKNOWN)) {
-            poolStatus = testGetConnection();
-        }
-
-        if (poolStatus.equals(AliveStatus.UNKNOWN) && lastConnectionAttemptFailed) {
-            poolStatus = AliveStatus.DEAD;
-        }
-        
-        //never set the status of "UserIdentity" connectors to DEAD.
-        if (poolStatus.equals(AliveStatus.DEAD) && (!connectionFactory.supportsSingleIdentity())) {
-            poolStatus = AliveStatus.UNKNOWN;
-        }
-        
-        return new ConnectionStatus(poolStatus, getTotalConnectionCount(), lastConnectionAttemptException, 
-            lastConnectionAttemptDate);
-    }
-
-    private AliveStatus checkStatusOfUsedConnections(Collection connectionInfos) {
-        // Check size of all used pools.  If any > 0, pool is alive.
-        // Note that this only proves pool is alive for one ConnectorIdentity.
-        
-        for (Iterator i = connectionInfos.iterator(); i.hasNext(); ) {
-            ConnectionsForId connLists = (ConnectionsForId) i.next();
-            
-            synchronized (connLists) {
-                // check size of this used conn list for one identity
-                if ( connLists.used.size() > 0 ) {
-                    return AliveStatus.ALIVE;                
-                }
-            }
-        }
-        return AliveStatus.UNKNOWN;
-    }
-
-    private AliveStatus checkStatusOfUnusedConnections(Collection connectionInfos) {
-        // If we're here, we haven't found a live connection yet.
-        // Must query unused connections.
-        for (Iterator i = connectionInfos.iterator(); i.hasNext(); ) {
-            ConnectionsForId connLists = (ConnectionsForId)i.next();
-
-            synchronized (connLists) {
-            // check size of this used conn list for one identity
-                Iterator unusedConnItr = connLists.unused.iterator();
-                while (unusedConnItr.hasNext()) {
-                    if (((ConnectionWrapper)unusedConnItr.next()).isAlive()) {
-                        return AliveStatus.ALIVE;
-                    } 
-                    //TODO: remove connection
-                }
-            }
-        }
-        return AliveStatus.UNKNOWN;
-    }
-    
-    /**
-     * Test datasource availability by getting a connection.
-     * @return
-     * @since 4.3
-     */
-    private AliveStatus testGetConnection() {
-        if (connectionFactory.supportsSingleIdentity()) { 
-            try {
-                ConnectionWrapper connection = obtain(null);
-                boolean alive = connection.isAlive();
-                release(connection, !alive);
-                return (alive ? AliveStatus.ALIVE : AliveStatus.DEAD);
-            } catch (ConnectionPoolException e) {
-                return AliveStatus.DEAD;
-            }   
-        }
-        
-        return AliveStatus.UNKNOWN;
     }
     
     /**
@@ -553,11 +446,11 @@ public class ConnectionPool {
         
             //log that we removed a connection
             if (LogManager.isMessageToBeRecorded(CTX_CONNECTOR, MessageLevel.TRACE)) {
-                LogManager.logTrace(CTX_CONNECTOR, DataPlugin.Util.getString("ConnectionPool.Removed_conn", id)); //$NON-NLS-1$
+                LogManager.logDetail(CTX_CONNECTOR, DataPlugin.Util.getString("ConnectionPool.Removed_conn", id)); //$NON-NLS-1$
             }
             
         } catch (Exception e) {
-            LogManager.logError(CTX_CONNECTOR, DataPlugin.Util.getString("ConnectionPool.Failed_close_a_connection__2", id)); //$NON-NLS-1$
+            LogManager.logWarning(CTX_CONNECTOR, DataPlugin.Util.getString("ConnectionPool.Failed_close_a_connection__2", id)); //$NON-NLS-1$
         }
     }
         

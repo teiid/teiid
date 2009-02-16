@@ -26,7 +26,7 @@ package com.metamatrix.connector.xml;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 public interface XMLConnection extends Connection {
 

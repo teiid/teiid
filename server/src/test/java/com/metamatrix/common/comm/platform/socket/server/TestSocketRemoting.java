@@ -106,7 +106,7 @@ public class TestSocketRemoting extends TestCase {
 
 		public void send(Message message, MessageListener listener,
 				Serializable messageKey) throws CommunicationException {
-			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, clientServiceRegistry);
+			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, clientServiceRegistry, SimpleMock.createSimpleMock(SessionServiceInterface.class));
 			this.listener = listener;
 			workItem.run();
 		}
@@ -143,7 +143,7 @@ public class TestSocketRemoting extends TestCase {
 	}
 	
 	public void testMethodInvocation() throws Exception {
-		ClientServiceRegistry csr = new ClientServiceRegistry(SimpleMock.createSimpleMock(SessionServiceInterface.class));
+		ClientServiceRegistry csr = new ClientServiceRegistry();
 		csr.registerClientService(ILogon.class, new ILogon() {
 
 				public ResultsFuture<?> logoff()

@@ -25,7 +25,6 @@
 package com.metamatrix.connector.xa.api;
 
 import com.metamatrix.connector.api.*;
-import com.metamatrix.connector.exception.ConnectorException;
 
 
 public interface XAConnector extends Connector{
@@ -36,7 +35,8 @@ public interface XAConnector extends Connector{
      * with a particular security context. The connection is assumed to be pooled in 
      * the underlying source if pooling is necessary - the connection will be closed 
      * when execution has completed against it.  
-     * @param executionContext The context of the current MetaMatrix user that will be using this connection
+     * @param context The context of the current user that will be using this connection, 
+     * may be null if this connection is for an administrative operation. 
      * @param transactionContext The context of the transaction under which the connection will be used. May be null.
      * @return A Connection, created by the Connector
      * @throws ConnectorException If an error occurred obtaining a connection

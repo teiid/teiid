@@ -54,12 +54,11 @@ import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.connector.api.ConnectorAnnotations.SynchronousWorkers;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.Assertion;
@@ -270,7 +269,7 @@ public class ConnectorManager implements ApplicationService {
     /**
      * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
      */
-    public ConnectionStatus getStatus() {
+    public Boolean getStatus() {
         ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
         try {
         	Thread.currentThread().setContextClassLoader(classloader);

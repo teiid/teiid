@@ -31,8 +31,8 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;

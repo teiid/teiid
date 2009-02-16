@@ -24,7 +24,7 @@ package com.metamatrix.dqp.internal.datamgr.metadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.TypeModel;
 import com.metamatrix.query.metadata.SupportConstants;

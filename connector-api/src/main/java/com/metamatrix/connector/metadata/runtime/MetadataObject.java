@@ -24,7 +24,7 @@ package com.metamatrix.connector.metadata.runtime;
 
 import java.util.Properties;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 /**
  * Represents a runtime metadata object.

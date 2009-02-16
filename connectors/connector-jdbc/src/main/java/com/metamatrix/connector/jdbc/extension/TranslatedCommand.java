@@ -24,14 +24,12 @@
  */
 package com.metamatrix.connector.jdbc.extension;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILiteral;
@@ -131,10 +129,7 @@ public class TranslatedCommand {
      * @return
      */
     private boolean hasBindValue(ICommand command) {
-        Collection literals = CollectorVisitor.collectObjects(ILiteral.class, command);
-        
-        for (Iterator i = literals.iterator(); i.hasNext();) {
-            ILiteral l = (ILiteral)i.next();
+        for (ILiteral l : CollectorVisitor.collectObjects(ILiteral.class, command)) {
             if (l.isBindValue() || isBindEligible(l)) {
                 return true;
             }

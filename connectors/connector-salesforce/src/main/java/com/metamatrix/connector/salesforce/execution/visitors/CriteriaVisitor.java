@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExpression;
@@ -37,6 +37,7 @@ import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IInCriteria;
 import com.metamatrix.connector.language.ILikeCriteria;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
@@ -67,7 +68,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 	protected static final String CLOSE = ")";
 	
 	protected RuntimeMetadata metadata;
-	private HashMap<Integer, String> comparisonOperators;
+	private HashMap<ICompareCriteria.Operator, String> comparisonOperators;
 	protected List<String> criteriaList = new ArrayList<String>();
 	protected boolean hasCriteria;
 	protected Map<String, Element> columnElementsByName = new HashMap<String, Element>();
@@ -77,13 +78,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
 	public CriteriaVisitor(RuntimeMetadata metadata) {
 		this.metadata = metadata;
-		comparisonOperators = new HashMap<Integer, String>();
-		comparisonOperators.put(ICompareCriteria.EQ, "=");
-		comparisonOperators.put(ICompareCriteria.GE, ">=");
-		comparisonOperators.put(ICompareCriteria.GT, ">");
-		comparisonOperators.put(ICompareCriteria.LE, "<=");
-		comparisonOperators.put(ICompareCriteria.LT, "<");
-		comparisonOperators.put(ICompareCriteria.NE, "!=");		
+		comparisonOperators = new HashMap<ICompareCriteria.Operator, String>();
+		comparisonOperators.put(Operator.EQ, "=");
+		comparisonOperators.put(Operator.GE, ">=");
+		comparisonOperators.put(Operator.GT, ">");
+		comparisonOperators.put(Operator.LE, "<=");
+		comparisonOperators.put(Operator.LT, "<");
+		comparisonOperators.put(Operator.NE, "!=");		
 	}
 	
 	@Override
@@ -91,7 +92,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 		super.visit(criteria);
 		try {
 			addCompareCriteria(criteriaList, criteria);
-			boolean isAcceptableID = (ICompareCriteria.EQ == criteria.getOperator() &&
+			boolean isAcceptableID = (Operator.EQ == criteria.getOperator() &&
 					isIdColumn(criteria.getLeftExpression()));
 			setHasCriteria(true, isAcceptableID);
 		} catch (ConnectorException e) {

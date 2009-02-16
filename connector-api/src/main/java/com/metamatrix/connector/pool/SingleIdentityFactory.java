@@ -22,8 +22,8 @@
 
 package com.metamatrix.connector.pool;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 
 public class SingleIdentityFactory implements ConnectorIdentityFactory {
 	

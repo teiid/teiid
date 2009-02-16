@@ -41,9 +41,9 @@ import javax.jms.TextMessage;
 
 import org.jdom.Document;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.AsynchronousDocumentProducer;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.CriteriaDesc;

@@ -26,8 +26,8 @@ package com.metamatrix.connector.xml.base;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 
 
 public class TestXMLConnection extends TestCase {

@@ -22,7 +22,7 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
 
@@ -62,12 +62,12 @@ public class TestCompareCriteriaImpl extends TestCase {
     }
 
     public void testGetOperator() throws Exception {
-        assertEquals(ICompareCriteria.EQ, example(CompareCriteria.EQ, 200, 100).getOperator());
-        assertEquals(ICompareCriteria.GE, example(CompareCriteria.GE, 200, 100).getOperator());
-        assertEquals(ICompareCriteria.GT, example(CompareCriteria.GT, 200, 100).getOperator());
-        assertEquals(ICompareCriteria.LE, example(CompareCriteria.LE, 200, 100).getOperator());
-        assertEquals(ICompareCriteria.LT, example(CompareCriteria.LT, 200, 100).getOperator());
-        assertEquals(ICompareCriteria.NE, example(CompareCriteria.NE, 200, 100).getOperator());
+        assertEquals(Operator.EQ, example(CompareCriteria.EQ, 200, 100).getOperator());
+        assertEquals(Operator.GE, example(CompareCriteria.GE, 200, 100).getOperator());
+        assertEquals(Operator.GT, example(CompareCriteria.GT, 200, 100).getOperator());
+        assertEquals(Operator.LE, example(CompareCriteria.LE, 200, 100).getOperator());
+        assertEquals(Operator.LT, example(CompareCriteria.LT, 200, 100).getOperator());
+        assertEquals(Operator.NE, example(CompareCriteria.NE, 200, 100).getOperator());
     }
 
 }

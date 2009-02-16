@@ -23,18 +23,27 @@
 package com.metamatrix.connector.basic;
 
 import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.PoolAwareConnection;
 
+/**
+ * Provides a default implementation of a {@link PoolAwareConnection} for a Connector
+ * that supports global capabilities.  Extensions of this class should implement
+ * {@link #createProcedureExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
+ * {@link #createResultSetExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
+ * {@link #createUpdateExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
+ * as necessary.
+ */
 public abstract class BasicConnection implements PoolAwareConnection {
 
 	@Override
@@ -69,6 +78,12 @@ public abstract class BasicConnection implements PoolAwareConnection {
 	
 	@Override
 	public void closeCalled() {
+		
+	}
+	
+	@Override
+	public void setConnectorIdentity(ConnectorIdentity context)
+			throws ConnectorException {
 		
 	}
 	

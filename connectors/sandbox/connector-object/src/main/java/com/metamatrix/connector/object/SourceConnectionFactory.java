@@ -2,8 +2,8 @@ package com.metamatrix.connector.object;
 
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.SingleIdentity;
 import com.metamatrix.connector.pool.UserIdentity;

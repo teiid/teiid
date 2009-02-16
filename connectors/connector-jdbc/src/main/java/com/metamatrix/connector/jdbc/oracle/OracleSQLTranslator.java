@@ -35,18 +35,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
 import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IFromItem;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IInlineView;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -59,6 +58,7 @@ import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.language.ISetQuery;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.visitor.util.CollectorVisitor;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
@@ -129,20 +129,20 @@ public class OracleSQLTranslator extends BasicSQLTranslator {
             IGroup group = languageFactory.createGroup(INLINE_VIEW_ALIAS, null, null);
             IElement eleRowNum = languageFactory.createElement(ROWNUM_ALIAS, group, null, TypeFacility.RUNTIME_TYPES.INTEGER);
             ILiteral litOffset = languageFactory.createLiteral(new Integer( limit.getRowOffset() ), TypeFacility.RUNTIME_TYPES.INTEGER);
-            ICriteria criteria = languageFactory.createCompareCriteria(ICompareCriteria.GT, eleRowNum, litOffset);
+            ICriteria criteria = languageFactory.createCompareCriteria(Operator.GT, eleRowNum, litOffset);
             lstCriteria.add( criteria );
         }
 
         IGroup group = languageFactory.createGroup(INLINE_VIEW_ALIAS, null, null);
         IElement eleRowNum = languageFactory.createElement(ROWNUM_ALIAS, group, null, TypeFacility.RUNTIME_TYPES.INTEGER);
         ILiteral litLimit = languageFactory.createLiteral(new Integer( limit.getRowOffset() + limit.getRowLimit() ),TypeFacility.RUNTIME_TYPES.INTEGER);
-        ICriteria criteria = languageFactory.createCompareCriteria(ICompareCriteria.LE, eleRowNum, litLimit);
+        ICriteria criteria = languageFactory.createCompareCriteria(Operator.LE, eleRowNum, litLimit);
         lstCriteria.add( criteria );
                 
         if ( lstCriteria.size() == 1 ) {
             criteria = lstCriteria.get( 0 );
         } else {
-            criteria = languageFactory.createCompoundCriteria(ICompoundCriteria.AND, lstCriteria );
+            criteria = languageFactory.createCompoundCriteria(com.metamatrix.connector.language.ICompoundCriteria.Operator.AND, lstCriteria );
         }
         
         IQuery intermediate = createLimitQuery(command, null, true);
@@ -167,7 +167,7 @@ public class OracleSQLTranslator extends BasicSQLTranslator {
                                     ICriteria criteria, boolean alias) {
         IInlineView view = languageFactory.createInlineView(query, INLINE_VIEW_ALIAS);
         
-        IFrom from = languageFactory.createFrom(Arrays.asList(new Object[] {view}));
+        IFrom from = languageFactory.createFrom(Arrays.asList(new IFromItem[] {view}));
         
         LinkedHashMap<String, Class<?>> names = new LinkedHashMap<String, Class<?>>();
         

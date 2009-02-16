@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;

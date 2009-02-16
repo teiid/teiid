@@ -30,9 +30,9 @@ import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 public class CompoundCriteriaImpl extends BaseLanguageObject implements ICompoundCriteria {
     
     private List criteria = null;
-    private int operator = AND;
+    private Operator operator = Operator.AND;
     
-    public CompoundCriteriaImpl(List nestedCriteria, int operator) {
+    public CompoundCriteriaImpl(List nestedCriteria, Operator operator) {
         criteria = nestedCriteria;
         this.operator = operator; 
     }
@@ -40,7 +40,7 @@ public class CompoundCriteriaImpl extends BaseLanguageObject implements ICompoun
     /**
      * @see com.metamatrix.connector.language.ICompoundCriteria#getOperator()
      */
-    public int getOperator() {
+    public Operator getOperator() {
         return this.operator;
     }
 
@@ -61,7 +61,7 @@ public class CompoundCriteriaImpl extends BaseLanguageObject implements ICompoun
     /* 
      * @see com.metamatrix.data.language.ICompoundCriteria#setOperator(int)
      */
-    public void setOperator(int operator) {
+    public void setOperator(Operator operator) {
         this.operator = operator;
     }
 

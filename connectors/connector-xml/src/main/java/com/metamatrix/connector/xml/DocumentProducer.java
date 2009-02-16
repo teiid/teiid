@@ -25,7 +25,7 @@ package com.metamatrix.connector.xml;
 
 import java.io.Serializable;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.base.Response;
 
 /**

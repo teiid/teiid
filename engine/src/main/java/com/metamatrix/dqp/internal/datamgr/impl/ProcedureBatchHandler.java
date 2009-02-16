@@ -31,10 +31,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.dqp.DQPPlugin;
 
 class ProcedureBatchHandler {
@@ -53,9 +54,9 @@ class ProcedureBatchHandler {
             Iterator iter = params.iterator();
             while(iter.hasNext()){
                 IParameter param = (IParameter)iter.next();
-                if (param.getDirection() == IParameter.RESULT_SET) {
+                if (param.getDirection() == Direction.RESULT_SET) {
                     resultSetCols = param.getMetadataID().getChildIDs().size();
-                } else if(param.getDirection() == IParameter.RETURN || param.getDirection() == IParameter.OUT || param.getDirection() == IParameter.INOUT){
+                } else if(param.getDirection() == Direction.RETURN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                     paramCols += 1;
                 }
             }
@@ -89,7 +90,7 @@ class ProcedureBatchHandler {
         //return
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.RETURN){
+            if(param.getDirection() == Direction.RETURN){
                 outParamValues.set(index++, procExec.getOutputValue(param));
             }
         }
@@ -97,7 +98,7 @@ class ProcedureBatchHandler {
         iter = params.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.OUT || param.getDirection() == IParameter.INOUT){
+            if(param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                 outParamValues.set(index++, procExec.getOutputValue(param));
             }
         }

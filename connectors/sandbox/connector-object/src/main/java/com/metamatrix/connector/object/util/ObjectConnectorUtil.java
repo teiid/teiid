@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IMetadataReference;
 import com.metamatrix.connector.metadata.runtime.MetadataID;

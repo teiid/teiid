@@ -29,7 +29,4 @@ package com.metamatrix.connector.language;
  */
 public interface ICommand extends ILanguageObject {
     
-    //List<List> getPreparedValues();
-	
-	//void setPreparedValues(List<List>);
 }

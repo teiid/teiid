@@ -24,7 +24,6 @@
  */
 package com.metamatrix.connector.pool;
 
-import com.metamatrix.connector.api.ExecutionContext;
 
 /**
  * Represents the identity of a connection in the pool.  Identities are 
@@ -33,11 +32,5 @@ import com.metamatrix.connector.api.ExecutionContext;
  * {@link java.lang.Object#hashCode()} methods.  
  */
 public interface ConnectorIdentity {
-    
-    /**
-     * Get the security context that was used to create this identity.
-     * @return The original context
-     * @deprecated see {@link ExecutionContext#getConnectorIdentity()}
-     */
-    ExecutionContext getSecurityContext();
+	
 }

@@ -33,10 +33,10 @@ import java.util.List;
 import java.util.Properties;
 
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
@@ -283,7 +283,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     		if (logger.isDetailEnabled()) {
     			logger.logDetail(context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
     		}
-    		addWarning(toAdd);
+    		context.addWarning(toAdd);
     	}
     	this.statement.clearWarnings();
     }

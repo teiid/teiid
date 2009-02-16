@@ -250,8 +250,4 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     	visitNode(obj.getValue());
     }
 
-    public void reset() {
-
-    }
-
 }

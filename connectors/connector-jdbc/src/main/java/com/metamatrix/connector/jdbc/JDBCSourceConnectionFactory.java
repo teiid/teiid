@@ -32,8 +32,8 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.ConnectorIdentityFactory;

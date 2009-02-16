@@ -30,24 +30,14 @@ import com.metamatrix.connector.api.ExecutionContext;
  * This class represents a single ConnectorIdentity. All the connections are treated the same.
  */
 public class SingleIdentity implements ConnectorIdentity {
-    private ExecutionContext context;
 
     /**
      * Construct with a context
      * @param context The context
      */
     public SingleIdentity(ExecutionContext context){
-        this.context = context;
     }
     
-    /**
-     * Get the original context
-     * @return The original context
-     */
-    public ExecutionContext getSecurityContext() {
-        return this.context;
-    }
-
     /**
      * Return true for everything - all identities are identical.
      */
@@ -56,9 +46,6 @@ public class SingleIdentity implements ConnectorIdentity {
     }
     
     public String toString(){
-        if (context != null) {
-            return "SingleIdentity: atomic-request="+this.context.getRequestIdentifier()+"."+this.context.getPartIdentifier()+"."+this.context.getExecutionCountIdentifier(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        }
         return "SingleIdentity"; //$NON-NLS-1$
     }    
     

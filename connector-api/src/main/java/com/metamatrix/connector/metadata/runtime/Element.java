@@ -26,7 +26,7 @@
  */
 package com.metamatrix.connector.metadata.runtime;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 /**
  * Represents an element, such as a column, in runtime metadata.  

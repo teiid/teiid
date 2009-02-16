@@ -28,13 +28,13 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.language.ICommand;

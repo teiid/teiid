@@ -27,7 +27,7 @@ package com.metamatrix.connector.jdbc.informix;
 import java.util.*;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.extension.impl.*;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 

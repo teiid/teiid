@@ -22,31 +22,8 @@
 
 package com.metamatrix.connector.basic;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.metamatrix.connector.api.Execution;
 
 public abstract class BasicExecution implements Execution {
-	
-	private List<Exception> warnings = new LinkedList<Exception>();
-	
-	/**
-	 * Add an exception as a warning to this Execution.
-	 */
-	public void addWarning(Exception ex) {
-		if (ex == null) {
-			return;
-		}
-		this.warnings.add(ex);
-	}
-	
-	@Override
-	public List<Exception> getWarnings() {
-		List<Exception> result = new ArrayList<Exception>(warnings);
-		warnings.clear();
-		return result;
-	}
 	
 }

@@ -152,5 +152,11 @@ public interface ExecutionContext {
      * @return the Connector batch size.
      */
     int getBatchSize();
+    
+    /**
+     * Add an exception as a warning to this Execution.
+     * @param ex
+     */
+    void addWarning(Exception ex);
 
 }

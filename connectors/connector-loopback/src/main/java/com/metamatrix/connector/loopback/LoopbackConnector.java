@@ -23,7 +23,6 @@
 package com.metamatrix.connector.loopback;
 
 import com.metamatrix.connector.api.*;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * Starting point for the Loopback connector.

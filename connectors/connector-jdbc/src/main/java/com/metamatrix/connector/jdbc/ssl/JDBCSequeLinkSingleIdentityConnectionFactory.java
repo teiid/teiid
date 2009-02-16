@@ -32,7 +32,7 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.ConnectionQueryStrategy;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;

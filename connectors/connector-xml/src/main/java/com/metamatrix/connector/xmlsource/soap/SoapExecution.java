@@ -30,10 +30,11 @@ import java.util.Map;
 import javax.xml.transform.Source;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
@@ -88,10 +89,10 @@ public class SoapExecution extends XMLSourceExecution {
         // extract all the input parameters to send to the service
         for (Iterator i = procedure.getParameters().iterator(); i.hasNext();) {
             IParameter param = (IParameter)i.next();
-            if (param.getDirection() == IParameter.IN ) {
+            if (param.getDirection() == Direction.IN ) {
                 argsList.add(param.getValue());
             }
-            else if (param.getDirection() == IParameter.INOUT) {
+            else if (param.getDirection() == Direction.INOUT) {
                 argsList.add(param.getValue());
             }         
         }

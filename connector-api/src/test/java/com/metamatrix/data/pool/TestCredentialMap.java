@@ -25,7 +25,7 @@ package com.metamatrix.data.pool;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.connector.pool.CredentialMap;
+import com.metamatrix.connector.api.CredentialMap;
 
 import junit.framework.TestCase;
 

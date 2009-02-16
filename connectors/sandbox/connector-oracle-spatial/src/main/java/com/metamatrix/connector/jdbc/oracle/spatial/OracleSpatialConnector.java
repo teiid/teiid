@@ -30,7 +30,7 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.JDBCConnector;
 
 public class OracleSpatialConnector extends JDBCConnector {

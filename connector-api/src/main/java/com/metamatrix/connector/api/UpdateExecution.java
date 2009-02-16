@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  * The update execution represents the case where a connector can 

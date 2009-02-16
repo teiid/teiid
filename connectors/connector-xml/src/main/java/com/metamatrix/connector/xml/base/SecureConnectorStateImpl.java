@@ -27,7 +27,7 @@ package com.metamatrix.connector.xml.base;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.SecureConnectorState;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 

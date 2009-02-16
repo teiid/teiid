@@ -23,8 +23,8 @@
 package com.metamatrix.dqp.internal.datamgr.impl;
 
 import com.metamatrix.common.types.*;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  */

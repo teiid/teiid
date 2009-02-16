@@ -30,12 +30,14 @@ import java.util.List;
  */
 public interface IJoin extends IFromItem {
 
-    public static final int INNER_JOIN = 0;
-    public static final int CROSS_JOIN = 1;
-    public static final int LEFT_OUTER_JOIN = 2;
-    public static final int RIGHT_OUTER_JOIN = 3;
-    public static final int FULL_OUTER_JOIN = 4;
-
+	public enum JoinType {
+		INNER_JOIN,
+		CROSS_JOIN,
+		LEFT_OUTER_JOIN,
+		RIGHT_OUTER_JOIN,
+		FULL_OUTER_JOIN
+	}
+	
     /**
      * Get the left IFromItem
      * @return From item
@@ -51,19 +53,19 @@ public interface IJoin extends IFromItem {
     /**
      * Get join type 
      * @return Join type
-     * @see #INNER_JOIN
-     * @see #CROSS_JOIN
-     * @see #LEFT_OUTER_JOIN
-     * @see #RIGHT_OUTER_JOIN
-     * @see #FULL_OUTER_JOIN
+     * @see JoinType#INNER_JOIN
+     * @see JoinType#CROSS_JOIN
+     * @see JoinType#LEFT_OUTER_JOIN
+     * @see JoinType#RIGHT_OUTER_JOIN
+     * @see JoinType#FULL_OUTER_JOIN
      */
-    int getJoinType();
+    JoinType getJoinType();
     
     /**
      * Return List of CompareCriteria specifying join criteria.
      * @return List of CompareCriteria
      */
-    List getCriteria();
+    List<ICriteria> getCriteria();
     
     /**
      * Set the left IFromItem
@@ -80,17 +82,17 @@ public interface IJoin extends IFromItem {
     /**
      * Set join type 
      * @param type Join type
-     * @see #INNER_JOIN
-     * @see #CROSS_JOIN
-     * @see #LEFT_OUTER_JOIN
-     * @see #RIGHT_OUTER_JOIN
-     * @see #FULL_OUTER_JOIN
+     * @see JoinType#INNER_JOIN
+     * @see JoinType#CROSS_JOIN
+     * @see JoinType#LEFT_OUTER_JOIN
+     * @see JoinType#RIGHT_OUTER_JOIN
+     * @see JoinType#FULL_OUTER_JOIN
      */
-    void setJoinType(int type);
+    void setJoinType(JoinType type);
     
     /**
      * Set List of CompareCriteria specifying join criteria.
-     * @param criteria List of CompareCriteria
+     * @param criteria List of Criteria
      */
-    void setCriteria(List criteria);    
+    void setCriteria(List<ICriteria> criteria);    
 }

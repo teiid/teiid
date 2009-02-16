@@ -27,8 +27,8 @@ import java.util.Properties;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.connector.salesforce.ConnectorState;
 
 public class ObjectFactory {

@@ -34,12 +34,12 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.Connector;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQueryCommand;
@@ -331,10 +331,6 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         			}
         			return null;
         		}
-				@Override
-				public List<Exception> getWarnings() {
-					return exec.getWarnings();
-				}
         	};
         }
         
@@ -406,7 +402,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
             // implicit close.
             response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
             response.setTransactional(this.securityContext.isTransactional());
-            response.setWarnings(this.execution.getWarnings());
+            response.setWarnings(this.securityContext.getWarnings());
 
             if ( lastBatch ) {
                 response.setFinalRow(rowCount);

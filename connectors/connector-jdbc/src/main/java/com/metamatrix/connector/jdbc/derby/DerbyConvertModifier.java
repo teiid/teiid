@@ -30,6 +30,7 @@ import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
 import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 
 /**
  */
@@ -146,7 +147,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // AFTER:  CASE WHEN booleanExpression = 0 THEN 'false' ELSE 'true' END
 
             ILiteral literalZero = this.langFactory.createLiteral(new Integer(0), TypeFacility.RUNTIME_TYPES.INTEGER);
-            ICompareCriteria when = this.langFactory.createCompareCriteria(ICompareCriteria.EQ, expression, literalZero);
+            ICompareCriteria when = this.langFactory.createCompareCriteria(Operator.EQ, expression, literalZero);
             List whens = new ArrayList(1);
             whens.add(when);
             
@@ -186,7 +187,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(stringExpression, boolean)
             // AFTER:  CASE WHEN stringExpression = 'true' THEN 1 ELSE 0 END
             ILiteral literalTrue = this.langFactory.createLiteral("true", TypeFacility.RUNTIME_TYPES.STRING); //$NON-NLS-1$
-            ICompareCriteria when = this.langFactory.createCompareCriteria(ICompareCriteria.EQ, expression, literalTrue);
+            ICompareCriteria when = this.langFactory.createCompareCriteria(Operator.EQ, expression, literalTrue);
             List whens = new ArrayList(1);
             whens.add(when);
             

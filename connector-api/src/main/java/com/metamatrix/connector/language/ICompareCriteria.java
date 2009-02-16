@@ -28,13 +28,15 @@ package com.metamatrix.connector.language;
  */
 public interface ICompareCriteria extends IPredicateCriteria {
 
-    public static final int EQ = 0;
-    public static final int NE = 1;
-    public static final int LT = 2;
-    public static final int LE = 3;
-    public static final int GT = 4;
-    public static final int GE = 5;
-
+	public enum Operator {
+		EQ,
+		NE,
+		LT,
+		LE,
+		GT,
+		GE
+	}
+	
     /**
      * Get left expression.
      * @return Left expression
@@ -62,24 +64,24 @@ public interface ICompareCriteria extends IPredicateCriteria {
     /**
      * Get operator from set defined in this interface.
      * @return Operator constant
-     * @see #EQ
-     * @see #NE
-     * @see #LT
-     * @see #LE
-     * @see #GT
-     * @see #GE
+     * @see Operator#EQ
+     * @see Operator#NE
+     * @see Operator#LT
+     * @see Operator#LE
+     * @see Operator#GT
+     * @see Operator#GE
      */
-    int getOperator();
+    Operator getOperator();
     
     /**
      * Set operator from set defined in this interface.
      * @param operator Operator constant
-     * @see #EQ
-     * @see #NE
-     * @see #LT
-     * @see #LE
-     * @see #GT
-     * @see #GE
+     * @see Operator#EQ
+     * @see Operator#NE
+     * @see Operator#LT
+     * @see Operator#LE
+     * @see Operator#GT
+     * @see Operator#GE
      */
-    void setOperator(int operator);
+    void setOperator(Operator operator);
 }

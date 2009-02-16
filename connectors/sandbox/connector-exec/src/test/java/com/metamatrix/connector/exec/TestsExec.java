@@ -33,8 +33,8 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

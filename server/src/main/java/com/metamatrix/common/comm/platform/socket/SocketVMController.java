@@ -42,6 +42,7 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.VMController;
@@ -140,7 +141,7 @@ public class SocketVMController extends VMController {
         ServerSocketConfiguration helper = new ServerSocketConfiguration();
         try {
 	        helper.init();
-	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled());
+	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
         } catch (Exception e) {
         	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 

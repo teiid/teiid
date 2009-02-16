@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.metadata.runtime.TypeModel;
@@ -77,7 +78,7 @@ public class TestParams extends TestCase {
                                 String name,
                                 String fullName,
                                 int index,
-                                int direction,
+                                Direction direction,
                                 String nameInSource,
                                 String defaultValue,
                                 int nullability,
@@ -121,7 +122,7 @@ public class TestParams extends TestCase {
                        "in1",
                        "sptest.proc1.in1",
                        1,
-                       IParameter.IN,
+                       Direction.IN,
                        null,
                        "sample default",
                        TypeModel.NOT_NULLABLE,
@@ -138,7 +139,7 @@ public class TestParams extends TestCase {
                        "in2",
                        "sptest.proc1.in2",
                        2,
-                       IParameter.IN,
+                       Direction.IN,
                        null,
                        "15",
                        TypeModel.NULLABLE,
@@ -155,7 +156,7 @@ public class TestParams extends TestCase {
                        "in3",
                        "sptest.proc1.in3",
                        3,
-                       IParameter.IN,
+                       Direction.IN,
                        null,
                        "2003-04-23 09:30:00",
                        TypeModel.NULLABLE_UNKNOWN,
@@ -172,7 +173,7 @@ public class TestParams extends TestCase {
                        "inOptional",
                        "sptest.proc1.inOptional",
                        4,
-                       IParameter.IN,
+                       Direction.IN,
                        "optionalName",
                        null,
                        TypeModel.NULLABLE,

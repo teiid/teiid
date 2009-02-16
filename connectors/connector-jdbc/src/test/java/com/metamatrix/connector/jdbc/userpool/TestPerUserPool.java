@@ -30,12 +30,12 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory;
-import com.metamatrix.connector.pool.CredentialMap;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**

@@ -29,8 +29,8 @@ import java.io.Serializable;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xml.XMLConnectorState;
 

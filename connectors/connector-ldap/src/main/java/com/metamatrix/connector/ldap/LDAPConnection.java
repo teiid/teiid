@@ -29,12 +29,12 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.ldap.InitialLdapContext;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IQueryCommand;

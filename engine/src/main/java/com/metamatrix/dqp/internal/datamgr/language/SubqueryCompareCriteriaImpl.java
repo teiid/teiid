@@ -23,6 +23,7 @@
 package com.metamatrix.dqp.internal.datamgr.language;
 
 import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
@@ -30,14 +31,14 @@ import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 public class SubqueryCompareCriteriaImpl extends BaseLanguageObject implements ISubqueryCompareCriteria {
 
     private IExpression leftExpr;
-    private int operator;
-    private int quantifier;
+    private Operator operator;
+    private Quantifier quantifier;
     private IQueryCommand query;
     
     /**
      * 
      */
-    public SubqueryCompareCriteriaImpl(IExpression leftExpr, int operator, int quantifier, IQueryCommand query) {
+    public SubqueryCompareCriteriaImpl(IExpression leftExpr, Operator operator, Quantifier quantifier, IQueryCommand query) {
         this.leftExpr = leftExpr;
         this.operator = operator;
         this.quantifier = quantifier;
@@ -54,14 +55,14 @@ public class SubqueryCompareCriteriaImpl extends BaseLanguageObject implements I
     /* 
      * @see com.metamatrix.data.language.ISubqueryCompareCriteria#getOperator()
      */
-    public int getOperator() {
+    public Operator getOperator() {
         return this.operator;
     }
 
     /* 
      * @see com.metamatrix.data.language.ISubqueryCompareCriteria#getQuantifier()
      */
-    public int getQuantifier() {
+    public Quantifier getQuantifier() {
         return this.quantifier;
     }
 
@@ -89,14 +90,14 @@ public class SubqueryCompareCriteriaImpl extends BaseLanguageObject implements I
     /* 
      * @see com.metamatrix.data.language.ISubqueryCompareCriteria#setOperator(int)
      */
-    public void setOperator(int operator) {
+    public void setOperator(Operator operator) {
         this.operator = operator;
     }
 
     /* 
      * @see com.metamatrix.data.language.ISubqueryCompareCriteria#setQuantifier(int)
      */
-    public void setQuantifier(int quantifier) {
+    public void setQuantifier(Quantifier quantifier) {
         this.quantifier = quantifier;
     }
 

@@ -29,16 +29,10 @@ package com.metamatrix.connector.language;
  */
 public interface ISubqueryCompareCriteria extends IPredicateCriteria, ISubqueryContainer {
 
-    public static final int EQ = 1;
-    public static final int NE = 2;
-    public static final int LT = 3;
-    public static final int LE = 4;
-    public static final int GT = 5;
-    public static final int GE = 6;
-
-    public static final int SOME = 0;
-    public static final int ALL = 1;
-
+	public enum Quantifier {
+		SOME,
+		ALL
+	}
     /**
      * Get left expression.
      * @return Left expression
@@ -55,15 +49,15 @@ public interface ISubqueryCompareCriteria extends IPredicateCriteria, ISubqueryC
      * @see #GT
      * @see #GE
      */
-    int getOperator();
+    ICompareCriteria.Operator getOperator();
 
     /**
      * Get quantifier.
      * @return Quantifier constant
-     * @see #SOME
-     * @see #ALL
+     * @see Quantifier#SOME
+     * @see Quantifier#ALL
      */
-    int getQuantifier();
+    Quantifier getQuantifier();
     
     /**
      * Set left expression.
@@ -81,15 +75,15 @@ public interface ISubqueryCompareCriteria extends IPredicateCriteria, ISubqueryC
      * @see #GT
      * @see #GE
      */
-    void setOperator(int operator);
+    void setOperator(ICompareCriteria.Operator operator);
 
     /**
      * Set quantifier.
      * @param quantifier Quantifier constant
-     * @see #SOME
-     * @see #ALL
+     * @see Quantifier#SOME
+     * @see Quantifier#ALL
      */
-    void setQuantifier(int quantifier);
+    void setQuantifier(Quantifier quantifier);
     
 
 }

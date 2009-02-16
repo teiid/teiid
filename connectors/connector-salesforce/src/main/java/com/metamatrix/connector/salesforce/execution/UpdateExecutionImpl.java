@@ -28,7 +28,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.ISetClause;

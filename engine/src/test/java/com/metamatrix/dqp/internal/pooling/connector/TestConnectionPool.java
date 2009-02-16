@@ -29,7 +29,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.connector.pool.UserIdentity;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
@@ -169,7 +168,7 @@ public class TestConnectionPool extends TestCase{
             singleIDPool.obtain(context);
             fail("No exception received when maxing out the pool"); //$NON-NLS-1$
         } catch(ConnectionPoolException e) {
-            assertEquals("The connection pool for identity \"SingleIdentity: atomic-request=null.null.null\" is at the maximum connection count \"5\" and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("The connection pool for identity \"SingleIdentity\" is at the maximum connection count \"5\" and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -197,7 +196,7 @@ public class TestConnectionPool extends TestCase{
             
             fail("No exception received on pool timeout"); //$NON-NLS-1$           
         } catch (ConnectionPoolException e) {
-            assertEquals("The connection pool for identity \"SingleIdentity: atomic-request=null.null.null\" exceeded wait time for connection, \"1\" ms, and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("The connection pool for identity \"SingleIdentity\" exceeded wait time for connection, \"1\" ms, and no connection became available in the timeout period.  Consider increasing the number of connections allowed per identity or the wait time.", e.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -277,49 +276,6 @@ public class TestConnectionPool extends TestCase{
         //List unusedConns2 = pool.getUnusedConneections(id2);
         List usedConns2 = userIDPool.getUsedConnections(userIDPool.obtain(context2));
         assertEquals(1, usedConns2.size()); 
-    }
-    
-    /**
-     * Tests ConnectionPool.getStatus() with a SingleIdentity 
-     * @since 4.3
-     */
-    public void testGetStatusSingleIdentity() throws Exception {
-        //connection is open: status should be ALIVE
-        singleIDPool.lastConnectionAttemptFailed = false;
-        FakeSourceConnectionFactory.alive = true;
-        assertEquals(AliveStatus.ALIVE, singleIDPool.getStatus().aliveStatus); 
-        
-        //connection can't be reached: status should be DEAD
-        singleIDPool.lastConnectionAttemptFailed = false;
-        FakeSourceConnectionFactory.alive = false;
-        assertEquals(AliveStatus.DEAD, singleIDPool.getStatus().aliveStatus); 
-        
-        //connection can't be reached: status should be DEAD        
-        singleIDPool.lastConnectionAttemptFailed = true;
-        assertEquals(AliveStatus.DEAD, singleIDPool.getStatus().aliveStatus);
-    }
-    
-    /**
-     * Tests ConnectionPool.getStatus() with a UserIdentity 
-     * @since 4.3
-     */
-    public void testGetStatusUserIdentity() throws Exception {
-        userIDPool.lastConnectionAttemptFailed = false;
-
-        //status should always be UNKNOWN
-        userIDPool.lastConnectionAttemptFailed = false;
-        FakeSourceConnectionFactory.alive = true;
-        assertEquals(AliveStatus.UNKNOWN, userIDPool.getStatus().aliveStatus); 
-        
-        //status should always be UNKNOWN
-        userIDPool.lastConnectionAttemptFailed = false;
-        FakeSourceConnectionFactory.alive = false;
-        assertEquals(AliveStatus.UNKNOWN, userIDPool.getStatus().aliveStatus);
-        
-        //status should always be UNKNOWN
-        userIDPool.lastConnectionAttemptFailed = true;
-        assertEquals(AliveStatus.UNKNOWN, userIDPool.getStatus().aliveStatus);
-
     }
     
     static class LoadRunner extends Thread {        

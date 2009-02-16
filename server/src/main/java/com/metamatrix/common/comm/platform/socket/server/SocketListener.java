@@ -45,6 +45,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 /**
@@ -56,6 +57,7 @@ public class SocketListener implements ChannelListenerFactory {
     private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
     private boolean isClientEncryptionEnabled;
+    private SessionServiceInterface sessionService;
     
     /**
      * 
@@ -69,9 +71,9 @@ public class SocketListener implements ChannelListenerFactory {
      */
     public SocketListener(int port, String bindAddress,
 			ClientServiceRegistry server, int inputBufferSize,
-			int outputBufferSize, WorkerPool workerPool, SSLEngine engine, boolean isClientEncryptionEnabled) {
+			int outputBufferSize, WorkerPool workerPool, SSLEngine engine, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
     	this.isClientEncryptionEnabled = isClientEncryptionEnabled;
-
+    	this.sessionService = sessionService;
     	if (port < 0 || port > 0xFFFF) {
             throw new IllegalArgumentException("port out of range:" + port); //$NON-NLS-1$
         }
@@ -122,7 +124,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
 
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new SocketClientInstance(channel, this.workerPool, this.server, this.isClientEncryptionEnabled);
+		return new SocketClientInstance(channel, this.workerPool, this.server, this.isClientEncryptionEnabled, this.sessionService);
 	}
 
 }

@@ -24,6 +24,8 @@ package com.metamatrix.connector.language;
 
 import java.util.List;
 
+import com.metamatrix.connector.language.ICompoundCriteria.Operator;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 
 /**
@@ -52,7 +54,7 @@ public interface ILanguageFactory {
      * @param type Data type
      * @return New ICaseExpression
      */    
-    ICaseExpression createCaseExpression(IExpression mainExpression, List whenExpressions, List thenExpressions, IExpression elseExpression, Class type);
+    ICaseExpression createCaseExpression(IExpression mainExpression, List<IExpression> whenExpressions, List<IExpression> thenExpressions, IExpression elseExpression, Class type);
     
     /**
      * Create compare criteria.
@@ -61,16 +63,16 @@ public interface ILanguageFactory {
      * @param rightExpression Right expression
      * @return New ICompareCriteria
      */
-    ICompareCriteria createCompareCriteria(int operator, IExpression leftExpression, IExpression rightExpression);
+    ICompareCriteria createCompareCriteria(ICompareCriteria.Operator operator, IExpression leftExpression, IExpression rightExpression);
     
     /**
      * Create a new ICompoundCriteria
-     * @param operator Operator, as defined by {@link ICompoundCriteria#AND} or 
-     * {@link ICompoundCriteria#OR}
+     * @param operator Operator, as defined by {@link Operator#AND} or 
+     * {@link Operator#OR}
      * @param innerCriteria List of ICriteria, typically containing two criteria
      * @return New ICompoundCriteria
      */
-    ICompoundCriteria createCompoundCriteria(int operator, List innerCriteria);
+    ICompoundCriteria createCompoundCriteria(ICompoundCriteria.Operator operator, List<ICriteria> innerCriteria);
 
     /**
      * Create a new IDelete.
@@ -102,7 +104,7 @@ public interface ILanguageFactory {
      * @param items List of IFromItem
      * @return New IFrom
      */
-    IFrom createFrom(List items);
+    IFrom createFrom(List<IFromItem> items);
     
     /**
      * Create new function
@@ -127,7 +129,7 @@ public interface ILanguageFactory {
      * @param items List of IGroupByItem
      * @return New IGroupBy
      */
-    IGroupBy createGroupBy(List items);
+    IGroupBy createGroupBy(List<IExpression> items);
     
     /**
      * Create new IN criteria
@@ -136,7 +138,7 @@ public interface ILanguageFactory {
      * @param isNegated True if NOT IN, false for IN
      * @return New IInCriteria
      */
-    IInCriteria createInCriteria(IExpression leftExpression, List rightExpressions, boolean isNegated);
+    IInCriteria createInCriteria(IExpression leftExpression, List<IExpression> rightExpressions, boolean isNegated);
 
     /**
      * Create new inline view
@@ -153,17 +155,16 @@ public interface ILanguageFactory {
      * @param values List of IExpression (usually ILiteral)
      * @return New IInsert
      */
-    IInsert createInsert(IGroup group, List columns, List values);
+    IInsert createInsert(IGroup group, List<IElement> columns, List<IExpression> values);
  
     /**
      * Create new bulk insert command
      * @param group Insert group
      * @param columns List of IElement being inserted into
-     * @param List of Rows which contain --> List(s) of values, which are usally
-     * List of IExpression (usually ILiteral)
+     * @param List of Lists containing the actual values
      * @return New IBulkInsert
      */
-    IBulkInsert createBulkInsert(IGroup group, List columns, List rows);
+    IBulkInsert createBulkInsert(IGroup group, List<IElement> columns, List<List<Object>> rows);
     
     /**
      * Create new IS NULL criteria
@@ -181,7 +182,7 @@ public interface ILanguageFactory {
      * @param criteria List of ICriteria (considered to be AND'ed together)
      * @return New IJoin
      */
-    IJoin createJoin(int joinType, IFromItem leftItem, IFromItem rightItem, List criteria);
+    IJoin createJoin(IJoin.JoinType joinType, IFromItem leftItem, IFromItem rightItem, List<ICriteria> criteria);
     
     /**
      * Create new LIKE criteria
@@ -213,7 +214,7 @@ public interface ILanguageFactory {
      * @param items List of IOrderByItem
      * @return New IOrderBy
      */
-    IOrderBy createOrderBy(List items);
+    IOrderBy createOrderBy(List<IOrderByItem> items);
     
     /**
      * Create new ORDER BY item
@@ -233,7 +234,7 @@ public interface ILanguageFactory {
      * @param metadataReference Metadata identifier reference
      * @return New IParameter
      */
-    IParameter createParameter(int index, int direction, Object value, Class type, MetadataID metadataReference);
+    IParameter createParameter(int index, Direction direction, Object value, Class type, MetadataID metadataReference);
     
     /**
      * Create new procedure
@@ -242,7 +243,7 @@ public interface ILanguageFactory {
      * @param metadataReference Metadata identifier reference
      * @return New IProcedure
      */
-    IProcedure createProcedure(String name, List parameters, MetadataID metadataReference);
+    IProcedure createProcedure(String name, List<IParameter> parameters, MetadataID metadataReference);
     
     /**
      * Create new query
@@ -273,7 +274,7 @@ public interface ILanguageFactory {
      * @param type Data type
      * @return New ICaseExpression
      */    
-    ISearchedCaseExpression createSearchedCaseExpression(List whenExpressions, List thenExpressions, IExpression elseExpression, Class type);
+    ISearchedCaseExpression createSearchedCaseExpression(List<IExpression> whenExpressions, List<IExpression> thenExpressions, IExpression elseExpression, Class type);
 
     /**
      * Create new SELECT clause
@@ -281,7 +282,7 @@ public interface ILanguageFactory {
      * @param selectSymbols List of ISelectSymbol
      * @return New ISelect
      */
-    ISelect createSelect(boolean isDistinct, List selectSymbols);
+    ISelect createSelect(boolean isDistinct, List<ISelectSymbol> selectSymbols);
     
     /**
      * Create new select symbol
@@ -299,7 +300,7 @@ public interface ILanguageFactory {
      * @param subquery Right subquery
      * @return New ISubqueryCompareCriteria
      */
-    ISubqueryCompareCriteria createSubqueryCompareCriteria(IExpression leftExpression, int operator, int quantifier, IQuery subquery);
+    ISubqueryCompareCriteria createSubqueryCompareCriteria(IExpression leftExpression, ICompareCriteria.Operator operator, ISubqueryCompareCriteria.Quantifier quantifier, IQuery subquery);
     
     /**
      * Create new subquery IN criteria

@@ -67,6 +67,9 @@ import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.connector.language.ISubqueryCompareCriteria;
 import com.metamatrix.connector.language.ISubqueryInCriteria;
 import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
+import com.metamatrix.connector.language.IParameter.Direction;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria.Quantifier;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
@@ -250,17 +253,17 @@ public class LanguageBridgeFactory {
             criteria.add(translate((Criteria)i.next()));
         }
         
-        int joinType = IJoin.INNER_JOIN;
+        IJoin.JoinType joinType = IJoin.JoinType.INNER_JOIN;
         if(join.getJoinType().equals(JoinType.JOIN_INNER)) {
-            joinType = IJoin.INNER_JOIN;
+            joinType = IJoin.JoinType.INNER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_LEFT_OUTER)) {
-            joinType = IJoin.LEFT_OUTER_JOIN;
+            joinType = IJoin.JoinType.LEFT_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_RIGHT_OUTER)) {
-            joinType = IJoin.RIGHT_OUTER_JOIN;
+            joinType = IJoin.JoinType.RIGHT_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_FULL_OUTER)) {
-            joinType = IJoin.FULL_OUTER_JOIN;
+            joinType = IJoin.JoinType.FULL_OUTER_JOIN;
         } else if(join.getJoinType().equals(JoinType.JOIN_CROSS)) {
-            joinType = IJoin.CROSS_JOIN;
+            joinType = IJoin.JoinType.CROSS_JOIN;
         }
         
         return new JoinImpl(translate(join.getLeftClause()),
@@ -302,25 +305,25 @@ public class LanguageBridgeFactory {
     }
 
     ICompareCriteria translate(CompareCriteria criteria) throws MetaMatrixComponentException {
-        int operator = ICompareCriteria.EQ;
+        ICompareCriteria.Operator operator = Operator.EQ;
         switch(criteria.getOperator()) {
             case CompareCriteria.EQ:    
-                operator = ICompareCriteria.EQ;
+                operator = Operator.EQ;
                 break;
             case CompareCriteria.NE:    
-                operator = ICompareCriteria.NE;
+                operator = Operator.NE;
                 break;
             case CompareCriteria.LT:    
-                operator = ICompareCriteria.LT;
+                operator = Operator.LT;
                 break;
             case CompareCriteria.LE:    
-                operator = ICompareCriteria.LE;
+                operator = Operator.LE;
                 break;
             case CompareCriteria.GT:    
-                operator = ICompareCriteria.GT;
+                operator = Operator.GT;
                 break;
             case CompareCriteria.GE:    
-                operator = ICompareCriteria.GE;
+                operator = Operator.GE;
                 break;
             
         }
@@ -336,14 +339,7 @@ public class LanguageBridgeFactory {
             translatedCriteria.add(translate((Criteria)i.next()));
         }
         
-        int operator = 0;
-        if(criteria.getOperator() == CompoundCriteria.AND) {
-            operator = ICompoundCriteria.AND;
-        } else {
-            operator = ICompoundCriteria.OR;
-        }
-        
-        return new CompoundCriteriaImpl(translatedCriteria, operator);
+        return new CompoundCriteriaImpl(translatedCriteria, criteria.getOperator() == CompoundCriteria.AND?ICompoundCriteria.Operator.AND:ICompoundCriteria.Operator.OR);
     }
 
     IExistsCriteria translate(ExistsCriteria criteria) throws MetaMatrixComponentException {
@@ -377,38 +373,38 @@ public class LanguageBridgeFactory {
     }
 
     ISubqueryCompareCriteria translate(SubqueryCompareCriteria criteria) throws MetaMatrixComponentException {
-        int quantifier = 0;
+        Quantifier quantifier = Quantifier.ALL;
         switch(criteria.getPredicateQuantifier()) {
             case SubqueryCompareCriteria.ALL:   
-                quantifier = ISubqueryCompareCriteria.ALL;
+                quantifier = Quantifier.ALL;
                 break;
             case SubqueryCompareCriteria.ANY:
-                quantifier = ISubqueryCompareCriteria.SOME;
+                quantifier = Quantifier.SOME;
                 break;
             case SubqueryCompareCriteria.SOME:
-                quantifier = ISubqueryCompareCriteria.SOME;
+                quantifier = Quantifier.SOME;
                 break;
         }
         
-        int operator = 0;
+        ICompareCriteria.Operator operator = ICompareCriteria.Operator.EQ;
         switch(criteria.getOperator()) {
             case SubqueryCompareCriteria.EQ:
-                operator = ISubqueryCompareCriteria.EQ;
+                operator = ICompareCriteria.Operator.EQ;
                 break;
             case SubqueryCompareCriteria.NE:
-                operator = ISubqueryCompareCriteria.NE;
+                operator = ICompareCriteria.Operator.NE;
                 break;
             case SubqueryCompareCriteria.LT:
-                operator = ISubqueryCompareCriteria.LT;
+                operator = ICompareCriteria.Operator.LT;
                 break;
             case SubqueryCompareCriteria.LE:
-                operator = ISubqueryCompareCriteria.LE;
+                operator = ICompareCriteria.Operator.LE;
                 break;
             case SubqueryCompareCriteria.GT:
-                operator = ISubqueryCompareCriteria.GT;
+                operator = ICompareCriteria.Operator.GT;
                 break;
             case SubqueryCompareCriteria.GE:
-                operator = ISubqueryCompareCriteria.GE;
+                operator = ICompareCriteria.Operator.GE;
                 break;                    
         }
                 
@@ -664,28 +660,28 @@ public class LanguageBridgeFactory {
     }
 
     IParameter translate(SPParameter param, ProcedureIDImpl procID) throws MetaMatrixComponentException {
-        int direction = IParameter.IN;
+        Direction direction = Direction.IN;
         switch(param.getParameterType()) {
             case ParameterInfo.IN:    
-                direction = IParameter.IN;
+                direction = Direction.IN;
                 break;
             case ParameterInfo.INOUT: 
-                direction = IParameter.INOUT;
+                direction = Direction.INOUT;
                 break;
             case ParameterInfo.OUT: 
-                direction = IParameter.OUT;
+                direction = Direction.OUT;
                 break;
             case ParameterInfo.RESULT_SET: 
-                direction = IParameter.RESULT_SET;
+                direction = Direction.RESULT_SET;
                 break;
             case ParameterInfo.RETURN_VALUE: 
-                direction = IParameter.RETURN;
+                direction = Direction.RETURN;
                 break;
         }
         
         try {
             MetadataID metadataID = null;            
-            if(direction == IParameter.RESULT_SET) {
+            if(direction == Direction.RESULT_SET) {
                 metadataID = metadataFactory.createResultSetID(procID, param.getMetadataID(), param.getResultSetIDs());
                 return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataID);                
                 

@@ -32,8 +32,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;

@@ -24,7 +24,7 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.sql.ResultSet;
 
-import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IParameter.Direction;
 
 import junit.framework.TestCase;
 
@@ -48,9 +48,9 @@ public class TestParameterImpl extends TestCase {
     }
 
     public void testGetDirection() throws Exception {
-        assertEquals(ParameterImpl.RESULT_SET, example(0).getDirection());
-        assertEquals(ParameterImpl.IN, example(1).getDirection());
-        assertEquals(ParameterImpl.IN, example(2).getDirection());
+        assertEquals(Direction.RESULT_SET, example(0).getDirection());
+        assertEquals(Direction.IN, example(1).getDirection());
+        assertEquals(Direction.IN, example(2).getDirection());
     }
 
     public void testGetType() throws Exception {
@@ -67,7 +67,7 @@ public class TestParameterImpl extends TestCase {
     public void testGetValueSpecified() throws Exception {
         assertEquals(false, example(0).getValueSpecified());
         
-        ParameterImpl param = new ParameterImpl(1, IParameter.IN, null, String.class, null);
+        ParameterImpl param = new ParameterImpl(1, Direction.IN, null, String.class, null);
         // Test construction state (null value)
         assertEquals(false, param.getValueSpecified());
         // Test value specified not set on null

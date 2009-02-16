@@ -28,7 +28,7 @@ import java.util.*;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 

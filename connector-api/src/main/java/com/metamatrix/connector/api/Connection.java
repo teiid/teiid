@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.pool.PoolAwareConnection;
@@ -58,5 +57,12 @@ public interface Connection {
      * using the connection for an execution.
      */
     void close();
+    
+    /**
+     * Called to determine whether the connection is open
+     * @return true if open, false if there is a source error.
+     */    
+    boolean isAlive();
+
 }
 

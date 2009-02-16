@@ -33,12 +33,12 @@ public interface IInCriteria extends IBaseInCriteria {
      * Get List of IExpression in the set on the right side of the criteria.
      * @return List of IExpression
      */
-    List getRightExpressions();
+    List<IExpression> getRightExpressions();
 
     /**
      * Set List of IExpression in the set on the right side of the criteria.
      * @param expressions List of IExpression
      */
-    void setRightExpressions(List expressions);
+    void setRightExpressions(List<IExpression> expressions);
 
 }

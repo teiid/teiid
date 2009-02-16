@@ -23,9 +23,9 @@
 package com.metamatrix.connector.metadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;

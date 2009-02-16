@@ -41,6 +41,7 @@ import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 /**
  * Sockets implementation of the communication framework class representing the server's view of a client connection.
@@ -59,12 +60,14 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     private boolean usingEncryption; 
     private DhKeyGenerator keyGen;
     private DQPWorkContext workContext = new DQPWorkContext();
+    private SessionServiceInterface sessionService;
         
-    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server, boolean isClientEncryptionEnabled) {
+    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
         this.objectSocket = objectSocket;
         this.workerPool = workerPool;
         this.server = server;
         this.usingEncryption = isClientEncryptionEnabled;
+        this.sessionService = sessionService;
     }
     
     public void send(Message message, Serializable messageKey) {
@@ -135,7 +138,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
 			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "processing message:" + packet); //$NON-NLS-1$
         }
-		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server));
+		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server, this.sessionService));
 	}
 
 	public void shutdown() throws CommunicationException {

@@ -36,9 +36,9 @@ import java.util.List;
 import java.util.TimeZone;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
@@ -46,6 +46,7 @@ import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.extension.ValueRetriever;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IParameter.Direction;
 
 /**
  */
@@ -110,7 +111,7 @@ public class BasicResultsTranslator implements ResultsTranslator {
         Iterator iter = params.iterator();
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == IParameter.RETURN){
+            if(param.getDirection() == Direction.RETURN){
                 registerSpecificTypeOfOutParameter(statement,param, index++);
             }
         }
@@ -121,13 +122,13 @@ public class BasicResultsTranslator implements ResultsTranslator {
         while(iter.hasNext()){
             IParameter param = (IParameter)iter.next();
                     
-            if(param.getDirection() == IParameter.INOUT){
+            if(param.getDirection() == Direction.INOUT){
                 registerSpecificTypeOfOutParameter(statement,param, index);
-            }else if(param.getDirection() == IParameter.OUT){
+            }else if(param.getDirection() == Direction.OUT){
                 registerSpecificTypeOfOutParameter(statement,param, index++);
             }
                     
-            if(param.getDirection() == IParameter.IN || param.getDirection() == IParameter.INOUT){
+            if(param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT){
                 bindValue(statement, param.getValue(), param.getType(), index++, cal);
             }
         }

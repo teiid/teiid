@@ -26,10 +26,10 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.basic.BasicValueTranslator;
-import com.metamatrix.connector.exception.ConnectorException;
 
 
 /** 
@@ -39,7 +39,7 @@ public class TestBasicValueTranslator extends TestCase {
 
 
     public void testExceptionFromTransform() throws Exception {
-    	BasicValueTranslator adaptor = new BasicValueTranslator(String.class, Short.class, new FakeTypeFacility());
+    	BasicValueTranslator<String, Short> adaptor = BasicValueTranslator.createTranslator(String.class, Short.class, new FakeTypeFacility());
         try {
             adaptor.translate("mmuuid:blah", Mockito.mock(ExecutionContext.class)); //$NON-NLS-1$
             fail("exceptoin expected"); //$NON-NLS-1$

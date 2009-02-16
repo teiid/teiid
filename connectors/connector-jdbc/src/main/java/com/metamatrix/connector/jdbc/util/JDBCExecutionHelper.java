@@ -27,11 +27,11 @@ package com.metamatrix.connector.jdbc.util;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.ValueTranslator;
 import com.metamatrix.connector.basic.BasicValueTranslator;
-import com.metamatrix.connector.exception.ConnectorException;
 
 /**
  */

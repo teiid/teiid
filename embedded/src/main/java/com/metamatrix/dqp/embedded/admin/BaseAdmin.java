@@ -62,7 +62,6 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.monitor.AliveStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
@@ -320,12 +319,12 @@ abstract class BaseAdmin {
         // Binding state needs to be converted into pool state; until then we use
         // binding state  as pool state.
         try {
-            AliveStatus status = getDataService().getConnectorBindingState(src.getDeployedName());            
-            if (status == AliveStatus.ALIVE) {
+            Boolean status = getDataService().getConnectorBindingState(src.getDeployedName());            
+            if (status == Boolean.TRUE) {
                 binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_OPEN);
             }
-            else if (status == AliveStatus.DEAD) {
-                binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_CLOSED);
+            else if (status == Boolean.FALSE) {
+                binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
             }
             else {
                 binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);

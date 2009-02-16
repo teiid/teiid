@@ -26,12 +26,14 @@ package com.metamatrix.connector.language;
  * Represents an execution parameter.
  */
 public interface IParameter extends ILanguageObject, IMetadataReference {
-
-    public static final int IN = 0;
-    public static final int OUT = 1;
-    public static final int INOUT = 2;
-    public static final int RETURN = 3;
-    public static final int RESULT_SET = 4;
+	
+	public enum Direction {
+		IN,
+		OUT,
+		INOUT,
+		RETURN,
+		RESULT_SET
+	}
 
     /**
      * Get index of this parameter in the IExecution.
@@ -42,12 +44,12 @@ public interface IParameter extends ILanguageObject, IMetadataReference {
     /**
      * Get direction of parameter
      * @return Direction
-     * @see #IN
-     * @see #OUT
-     * @see #INOUT
-     * @see #RETURN
+     * @see Direction#IN
+     * @see Direction#OUT
+     * @see Direction#INOUT
+     * @see Direction#RETURN
      */
-    int getDirection();
+    Direction getDirection();
     
     /**
      * Get type of parameter, defined as a Java class.  Output result sets will
@@ -84,12 +86,12 @@ public interface IParameter extends ILanguageObject, IMetadataReference {
     /**
      * Set direction of parameter
      * @param direction Direction
-     * @see #IN
-     * @see #OUT
-     * @see #INOUT
-     * @see #RETURN
+     * @see Direction#IN
+     * @see Direction#OUT
+     * @see Direction#INOUT
+     * @see Direction#RETURN
      */
-    void setDirection(int direction);
+    void setDirection(Direction direction);
     
     /**
      * Set type of parameter, defined as a Java class.  Output result sets will

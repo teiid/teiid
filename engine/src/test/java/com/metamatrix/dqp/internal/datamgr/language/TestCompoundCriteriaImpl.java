@@ -25,6 +25,7 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Iterator;
 
 import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.ICompoundCriteria.Operator;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 
@@ -51,8 +52,8 @@ public class TestCompoundCriteriaImpl extends TestCase {
     }
 
     public void testGetOperator() throws Exception {
-        assertEquals(CompoundCriteriaImpl.AND, example(CompoundCriteria.AND).getOperator());
-        assertEquals(CompoundCriteriaImpl.OR, example(CompoundCriteria.OR).getOperator());
+        assertEquals(Operator.AND, example(CompoundCriteria.AND).getOperator());
+        assertEquals(Operator.OR, example(CompoundCriteria.OR).getOperator());
     }
 
     public void testGetCriteria() throws Exception {

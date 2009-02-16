@@ -22,7 +22,7 @@
 
 package com.metamatrix.connector.metadata.runtime;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 
 /**
  * Represents a procedure parameter in the runtime metadata.

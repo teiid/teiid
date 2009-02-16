@@ -29,13 +29,13 @@ import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 public class ParameterImpl extends BaseLanguageObject implements IParameter {
 
     private int index;
-    private int direction;
+    private Direction direction;
     private Object value;
     private boolean valueSpecified;
     private Class type;
     private MetadataID metadataID;
     
-    public ParameterImpl(int index, int direction, Object value, Class type, MetadataID metadataID) {
+    public ParameterImpl(int index, Direction direction, Object value, Class type, MetadataID metadataID) {
         setIndex(index);
         setDirection(direction);
         setValue(value);
@@ -53,7 +53,7 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     /**
      * @see com.metamatrix.connector.language.IParameter#getDirection()
      */
-    public int getDirection() {
+    public Direction getDirection() {
         return this.direction;
     }
 
@@ -88,7 +88,7 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     /* 
      * @see com.metamatrix.data.language.IParameter#setDirection(int)
      */
-    public void setDirection(int direction) {
+    public void setDirection(Direction direction) {
         this.direction = direction;
     }
 

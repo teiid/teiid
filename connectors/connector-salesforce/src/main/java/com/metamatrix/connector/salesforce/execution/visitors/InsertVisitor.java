@@ -28,8 +28,9 @@ import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
 
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.metadata.runtime.Element;
@@ -51,7 +52,7 @@ public class InsertVisitor extends CriteriaVisitor {
 			loadColumnMetadata(insert.getGroup());
 			
 			List<IElement> columns = insert.getElements();
-			List<Object> values = insert.getValues();
+			List<IExpression> values = insert.getValues();
 			if(columns.size() != values.size()) {
 				throw new ConnectorException("Error:  columns.size and values.size are not the same.");
 			}

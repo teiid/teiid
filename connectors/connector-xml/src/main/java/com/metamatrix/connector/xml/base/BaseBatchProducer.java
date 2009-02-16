@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.exception.ConnectorException;
 
 public class BaseBatchProducer {
 

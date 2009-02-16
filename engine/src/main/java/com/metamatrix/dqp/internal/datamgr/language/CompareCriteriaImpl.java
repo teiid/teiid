@@ -30,9 +30,9 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
 
     private IExpression leftExpression = null;
     private IExpression rightExpression = null;
-    private int operator;
+    private Operator operator;
     
-    public CompareCriteriaImpl(IExpression left, IExpression right, int operator) {
+    public CompareCriteriaImpl(IExpression left, IExpression right, Operator operator) {
         leftExpression = left;
         rightExpression = right;
         this.operator = operator;
@@ -54,7 +54,7 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
     /**
      * @see com.metamatrix.connector.language.ICompareCriteria#getOperator()
      */
-    public int getOperator() {
+    public Operator getOperator() {
         return this.operator;
     }
 
@@ -75,7 +75,7 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
     /* 
      * @see com.metamatrix.data.language.ICompareCriteria#setOperator(int)
      */
-    public void setOperator(int operator) {
+    public void setOperator(Operator operator) {
         this.operator = operator;
     }
     

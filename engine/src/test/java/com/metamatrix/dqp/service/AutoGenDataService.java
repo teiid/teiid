@@ -28,15 +28,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.monitor.AliveStatus;
-import com.metamatrix.connector.monitor.ConnectionStatus;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWorkItem;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
@@ -170,34 +167,6 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
         return caps;
     }
         
-    /*
-     * @see com.metamatrix.dqp.service.DataService#getConnectorStatus()
-     */
-    public Map getConnectorStatus() {
-        throw new UnsupportedOperationException();
-    }
-
-    /* 
-     * @see com.metamatrix.dqp.service.DataService#getConnectorStatus()
-     */
-    public ConnectionStatus getConnectorStatus(String connectorName) {
-        throw new UnsupportedOperationException();
-    }
-    
-    /*
-     * @see com.metamatrix.dqp.service.DataService#getConnectorNames()
-     */
-    public String[] getConnectorNames() {
-        throw new UnsupportedOperationException();
-    }
-    
-    /*
-     * @see com.metamatrix.dqp.service.DataService#restartConnector(java.lang.String)
-     */
-    public void restartConnector(String connectorName) throws ApplicationLifecycleException {
-        throw new UnsupportedOperationException();
-    }
-
     /** 
      * @see com.metamatrix.dqp.service.DataService#startConnectorBinding(java.lang.String)
      * @since 4.3
@@ -226,7 +195,7 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public AliveStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
+    public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
         return null;
     }
 

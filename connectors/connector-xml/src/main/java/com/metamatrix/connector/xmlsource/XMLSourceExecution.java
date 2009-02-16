@@ -30,10 +30,10 @@ import javax.xml.transform.Source;
 
 import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IParameter;
 
 

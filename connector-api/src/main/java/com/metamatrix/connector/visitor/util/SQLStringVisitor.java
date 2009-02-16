@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBulkInsert;
 import com.metamatrix.connector.language.ICaseExpression;
@@ -69,6 +69,7 @@ import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.connector.language.ISubqueryCompareCriteria;
 import com.metamatrix.connector.language.ISubqueryInCriteria;
 import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -131,7 +132,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * by creating a comma-separated list.
      * @param items a list of ILanguageObjects
      */
-    protected void append(List items) {
+    protected void append(List<? extends ILanguageObject> items) {
         if (items != null && items.size() != 0) {
             append((ILanguageObject)items.get(0));
             for (int i = 1; i < items.size(); i++) {
@@ -276,14 +277,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         append(obj.getLeftExpression());
         buffer.append(SPACE);
         
-        final int op = obj.getOperator();
-        switch(op) {
-            case ICompareCriteria.EQ: buffer.append(EQ); break;
-            case ICompareCriteria.GE: buffer.append(GE); break;
-            case ICompareCriteria.GT: buffer.append(GT); break;
-            case ICompareCriteria.LE: buffer.append(LE); break;
-            case ICompareCriteria.LT: buffer.append(LT); break;
-            case ICompareCriteria.NE: buffer.append(NE); break;
+        switch(obj.getOperator()) {
+            case EQ: buffer.append(EQ); break;
+            case GE: buffer.append(GE); break;
+            case GT: buffer.append(GT); break;
+            case LE: buffer.append(LE); break;
+            case LT: buffer.append(LT); break;
+            case NE: buffer.append(NE); break;
             default: buffer.append(UNDEFINED);
         }
         buffer.append(SPACE);
@@ -295,10 +295,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(ICompoundCriteria obj) {
         String opString = null;
-        final int op = obj.getOperator();
-        switch(op) {
-            case ICompoundCriteria.AND: opString = AND; break;
-            case ICompoundCriteria.OR:  opString = OR;  break;
+        switch(obj.getOperator()) {
+            case AND: opString = AND; break;
+            case OR:  opString = OR;  break;
             default: opString = UNDEFINED;
         }
         
@@ -446,7 +445,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             IParameter param = null;
             for (int i = 0; i < params.size(); i++) {
                 param = (IParameter)params.get(i);
-                if (param.getDirection() == IParameter.IN || param.getDirection() == IParameter.INOUT) {
+                if (param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT) {
                     if (i != 0) {
                         buffer.append(COMMA)
                               .append(SPACE);
@@ -745,25 +744,24 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         }
         buffer.append(SPACE);
         
-        final int type = obj.getJoinType();
-        switch(type) {
-            case IJoin.CROSS_JOIN:
+        switch(obj.getJoinType()) {
+            case CROSS_JOIN:
                 buffer.append(CROSS);
                 break;
-            case IJoin.FULL_OUTER_JOIN:
+            case FULL_OUTER_JOIN:
                 buffer.append(FULL)
                       .append(SPACE)
                       .append(OUTER);
                 break;
-            case IJoin.INNER_JOIN:
+            case INNER_JOIN:
                 buffer.append(INNER);
                 break;
-            case IJoin.LEFT_OUTER_JOIN:
+            case LEFT_OUTER_JOIN:
                 buffer.append(LEFT)
                       .append(SPACE)
                       .append(OUTER);
                 break;
-            case IJoin.RIGHT_OUTER_JOIN:
+            case RIGHT_OUTER_JOIN:
                 buffer.append(RIGHT)
                       .append(SPACE)
                       .append(OUTER);
@@ -1053,28 +1051,25 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         append(obj.getLeftExpression());
         buffer.append(SPACE);
         
-        final int op = obj.getOperator();
-        switch(op) {
-            case ISubqueryCompareCriteria.EQ: buffer.append(EQ); break;
-            case ISubqueryCompareCriteria.GE: buffer.append(GE); break;
-            case ISubqueryCompareCriteria.GT: buffer.append(GT); break;
-            case ISubqueryCompareCriteria.LE: buffer.append(LE); break;
-            case ISubqueryCompareCriteria.LT: buffer.append(LT); break;
-            case ISubqueryCompareCriteria.NE: buffer.append(NE); break;
+        switch(obj.getOperator()) {
+            case EQ: buffer.append(EQ); break;
+            case GE: buffer.append(GE); break;
+            case GT: buffer.append(GT); break;
+            case LE: buffer.append(LE); break;
+            case LT: buffer.append(LT); break;
+            case NE: buffer.append(NE); break;
             default: buffer.append(UNDEFINED);
         }
         buffer.append(SPACE);
         switch(obj.getQuantifier()) {
-            case ISubqueryCompareCriteria.ALL: buffer.append(ALL); break;
-            case ISubqueryCompareCriteria.SOME: buffer.append(SOME); break;
+            case ALL: buffer.append(ALL); break;
+            case SOME: buffer.append(SOME); break;
             default: buffer.append(UNDEFINED);
         }
         buffer.append(SPACE);
         buffer.append(LPAREN);        
         append(obj.getQuery());
         buffer.append(RPAREN);        
-
-
     }
 
     /* 

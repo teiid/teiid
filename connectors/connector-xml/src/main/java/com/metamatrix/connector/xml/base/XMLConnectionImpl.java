@@ -26,11 +26,11 @@ package com.metamatrix.connector.xml.base;
 import java.io.Serializable;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.exception.ConnectorException;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;

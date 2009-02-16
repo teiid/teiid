@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.connector.exception.ConnectorException;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.ICriteria;
@@ -39,6 +39,7 @@ import com.metamatrix.connector.language.IIsNullCriteria;
 import com.metamatrix.connector.language.ILikeCriteria;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataInCriteria;
@@ -195,7 +196,7 @@ public class MetadataSearchCriteriaBuilder {
      * @since 4.3
      */
     private void buildMetadataCompareCriteria(ICompareCriteria criteria) throws ConnectorException {
-        Assertion.assertTrue(criteria.getOperator() == ICompareCriteria.EQ, "Only supports equals."); //$NON-NLS-1$
+        Assertion.assertTrue(criteria.getOperator() == Operator.EQ, "Only supports equals."); //$NON-NLS-1$
 
 
         IExpression ltExpression = criteria.getLeftExpression();
@@ -283,7 +284,7 @@ public class MetadataSearchCriteriaBuilder {
      * @since 4.3
      */
     private void buildMetadataCompoundCriteria(ICompoundCriteria compoundCriteria) throws ConnectorException {
-        if (compoundCriteria.getOperator() == ICompoundCriteria.AND) {
+        if (compoundCriteria.getOperator() == com.metamatrix.connector.language.ICompoundCriteria.Operator.AND) {
             for(final Iterator critIter = compoundCriteria.getCriteria().iterator(); critIter.hasNext();) {
                 buildMetadataSearchCriteria((ICriteria)critIter.next());
             }

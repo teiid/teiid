@@ -36,8 +36,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.exception.ConnectorException;
 
 class LargeTextExtractingXmlFilter extends XMLFilterImpl {
     LargeTextExtractingXmlFilter(int maxInMemoryStringSize,
