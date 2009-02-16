@@ -1,56 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <parent>
-    <artifactId>teiid-connectors</artifactId>
-    <groupId>org.jboss.teiid.connectors</groupId>
-    <version>6.0.0-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>connector-salesforce</artifactId>
-  <name>Salesforce Connector</name>
-  <description>Integrates the query engine with Salesforce.com.</description>
-  <dependencies>
-  	<dependency>
-  		<groupId>axis</groupId>
-  		<artifactId>axis-saaj</artifactId>
-  		<version>1.2</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>axis</groupId>
-  		<artifactId>axis-jaxrpc</artifactId>
-  		<version>1.2</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>apache-discovery</groupId>
-  		<artifactId>commons-discovery</artifactId>
-  		<version>0.2</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>log4j</groupId>
-  		<artifactId>log4j</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>wsdl4j</groupId>
-  		<artifactId>wsdl4j</artifactId>
-  		<version>1.5.1</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>axis</groupId>
-  		<artifactId>axis</artifactId>
-  		<version>1.3</version>
-	</dependency>
-	<dependency>
-		<groupId>apache-httpclient</groupId>
-		<artifactId>commons-httpclient</artifactId>
-		<version>3.0.1</version>
-		<scope>compile</scope>
-	</dependency>
-	<dependency>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<parent>
+		<artifactId>teiid-connectors</artifactId>
 		<groupId>org.jboss.teiid.connectors</groupId>
-		<artifactId>salesforce-api</artifactId>
-		<version>${project.version}</version>
-	</dependency>
-  </dependencies>
+		<version>6.0.0-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>connector-salesforce</artifactId>
+	<name>Salesforce Connector</name>
+	<description>Integrates the query engine with Salesforce.com.</description>
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-xml-common</artifactId>
+			<version>${project.version}</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>salesforce-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
 </project>

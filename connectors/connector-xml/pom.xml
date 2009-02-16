@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <parent>
-    <artifactId>connector-xml-common</artifactId>
-    <groupId>org.jboss.teiid.connectors</groupId>
-    <version>6.0.0-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>connector-xml</artifactId>
-  <name>XML Connector</name>
-  <description>This connector produces the XML documents from Web
-    service and transforms the document into a relational structure.</description>
-  <dependencies>
-  	<dependency>
-  		<groupId>org.jboss.teiid.connectors</groupId>
-  		<artifactId>connector-xml-common</artifactId>
-  		<version>6.0.0-SNAPSHOT</version>
-  		<type>pom</type>
-  	</dependency>
-  </dependencies>
-  <dependencyManagement>
-  	<dependencies>
-  	</dependencies>
-  </dependencyManagement>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<parent>
+		<artifactId>teiid-connectors</artifactId>
+		<groupId>org.jboss.teiid.connectors</groupId>
+		<version>6.0.0-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>connector-xml</artifactId>
+	<name>XML Connector</name>
+	<description>This connector produces the XML documents from Web
+		service and transforms the document into a relational structure.</description>
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-xml-common</artifactId>
+			<version>${project.version}</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 </project>
