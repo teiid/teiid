@@ -121,5 +121,6 @@
     <module>connector-salesforce</module>
     <module>salesforce-api</module>
     <module>connector-ldap</module>
+    <module>connector-xml-common</module>
   </modules>
 </project>
