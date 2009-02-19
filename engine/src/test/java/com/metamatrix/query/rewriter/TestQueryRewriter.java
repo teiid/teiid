@@ -1691,9 +1691,8 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCriteria("case 0 when 1 then 1 else 2 end = 1", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    // First WHEN can't be rewritten, so no changes
     public void testRewriteSearchedCaseExpr3() {
-        helpTestRewriteCriteria("case 0 when pm1.g1.e2 then 1 else 2 end = 1", "CASE 0 WHEN pm1.g1.e2 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("case 0 when pm1.g1.e2 then 1 else 2 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testRewriteSearchedCaseExpr4() {
@@ -1704,35 +1703,35 @@ public class TestQueryRewriter extends TestCase {
 
     // First WHEN always false, so remove it
     public void testRewriteSearchedCaseExpr5() {
-        helpTestRewriteCriteria("case 0 when 1 then 1 when pm1.g1.e2 then 2 else 3 end = 1", "CASE 0 WHEN pm1.g1.e2 THEN 2 ELSE 3 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("case 0 when 1 then 1 when pm1.g1.e2 then 2 else 3 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 2 ELSE 3 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDefect16879_1(){
-    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1='a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testDefect16879_2(){
-    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1='a' THEN 'b' WHEN e1='c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testDefect16879_3(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1='a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testDefect16879_4(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1='a' THEN 'b' WHEN e1='c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testDefect16879_5(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'null, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'b' WHEN e1='c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'null, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDefect16879_6(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'd' WHEN e1='a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testDefect16879_7(){
-        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'd' WHEN e1='a' THEN 'b' ELSE 'e' END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE 'e' END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     //note that the env is now treated as deterministic, however it is really only deterministic within a session
@@ -1770,7 +1769,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteWithReference() {
-        helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where parsetimestamp(e1, 'yyyy-MM-dd') != ?", "SELECT e1 FROM pm1.g1 WHERE e1 <> formatTimestamp(?, 'yyyy-MM-dd')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where parsetimestamp(e1, 'yyyy-MM-dd') != ?", "SELECT e1 FROM pm1.g1 WHERE e1 <> formattimestamp(?, 'yyyy-MM-dd')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testRewiteJoinCriteria() {
@@ -2067,15 +2066,15 @@ public class TestQueryRewriter extends TestCase {
     }
 
     public void testRewriteConcat2_2() throws Exception {
-        helpTestRewriteCriteria("concat2(pm1.g1.e1, null) = 'xyz'", "CASE WHEN pm1.g1.e1 IS NULL THEN null ELSE CONCAT(NVL(pm1.g1.e1, ''), '') END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat2(pm1.g1.e1, null) = 'xyz'", "CASE WHEN pm1.g1.e1 IS NULL THEN null ELSE concat(ifnull(pm1.g1.e1, ''), '') END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testRewriteConcat2_3() throws Exception {
-        helpTestRewriteCriteria("concat2(pm1.g1.e1, convert(pm1.g1.e2, string)) = 'xyz'", "CASE WHEN (pm1.g1.e1 IS NULL) AND (convert(pm1.g1.e2, string) IS NULL) THEN null ELSE CONCAT(NVL(pm1.g1.e1, ''), NVL(convert(pm1.g1.e2, string), '')) END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat2(pm1.g1.e1, convert(pm1.g1.e2, string)) = 'xyz'", "CASE WHEN (pm1.g1.e1 IS NULL) AND (convert(pm1.g1.e2, string) IS NULL) THEN null ELSE concat(ifnull(pm1.g1.e1, ''), ifnull(convert(pm1.g1.e2, string), '')) END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testRewriteConcat2_4() throws Exception {
-        helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "CONCAT('a', NVL(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat('a', ifnull(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testRewiteEvaluatableAggregate() {

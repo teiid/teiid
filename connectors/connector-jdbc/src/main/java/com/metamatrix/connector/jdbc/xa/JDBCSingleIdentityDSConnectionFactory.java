@@ -111,7 +111,7 @@ public class JDBCSingleIdentityDSConnectionFactory extends JDBCSingleIdentityCon
             if(getTransactionIsolation() != NO_ISOLATION_LEVEL_SET && getTransactionIsolation() != Connection.TRANSACTION_NONE){
                 sqlConn.setTransactionIsolation(getTransactionIsolation());
             }
-            return new JDBCSourceXAConnection(sqlConn, conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
+            return new JDBCSourceXAConnection(sqlConn, conn, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener(), getResultsTranslator(), getSqlTranslator());
         }catch(SQLException se){
             throw new ConnectorException(se);
         }

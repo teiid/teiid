@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -58,15 +59,11 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
         IExpression expr = mod.modify(func);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        OracleSQLConversionVisitor sqlVisitor = new OracleSQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
-        //System.out.println(" expected: " + expectedStr + " \t actual: " + sqlVisitor.toString());
         assertEquals(expectedStr, sqlVisitor.toString());
-        
         return expr;
     }
 

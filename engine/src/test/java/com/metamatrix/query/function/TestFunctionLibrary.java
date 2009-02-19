@@ -123,7 +123,7 @@ public class TestFunctionLibrary extends TestCase {
 	private void helpFindFunction(String fname, Class[] types, FunctionDescriptor expected) {
 		FunctionDescriptor actual =  library.findFunction(fname, types);
 	
-        assertEquals("Function names do not match: ", expected.getName(), actual.getName());             //$NON-NLS-1$
+        assertEquals("Function names do not match: ", expected.getName().toLowerCase(), actual.getName().toLowerCase());             //$NON-NLS-1$
         assertEquals("Arg lengths do not match: ", expected.getTypes().length, actual.getTypes().length); //$NON-NLS-1$
 	}
 
@@ -731,24 +731,17 @@ public class TestFunctionLibrary extends TestCase {
     }
 
     public void testInvokeLpad2() {
-        helpInvokeMethod("lpad", new Object[] { "x", new Integer(3), new Character('y') }, "yyx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpInvokeMethod("lpad", new Object[] { "x", new Integer(3), "y" }, "yyx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-
-    public void testInvokeLpad3() {
-        helpInvokeMethod("lpad", new Object[] { "x", new Integer(3), "y" }, "yyx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }
-
+    
     public void testInvokeRpad1() {
         helpInvokeMethod("rpad", new Object[] { "x", new Integer(3) }, "x  " ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testInvokeRpad2() {
-        helpInvokeMethod("rpad", new Object[] { "x", new Integer(3), new Character('y') }, "xyy" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpInvokeMethod("rpad", new Object[] { "x", new Integer(3), "y" }, "xyy" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testInvokeRpad3() {
-        helpInvokeMethod("rpad", new Object[] { "x", new Integer(3), "y" }, "xyy" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }
     public void testInvokeTranslate() {
         helpInvokeMethod("translate", new Object[] { "ababcd", "ad", "da" }, "dbdbca" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
@@ -1021,10 +1014,6 @@ public class TestFunctionLibrary extends TestCase {
 		helpInvokeMethod("repeat", new Object[] {new String("cat"), new Integer(3)}, new String("catcatcat"));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	public void testInvokeSpace() {
-		helpInvokeMethod("space", new Object[] {new Integer(3)}, new String("   "));	 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
 	public void testInvokeChar() {
 		helpInvokeMethod("char", new Object[] {new Integer(32) }, new Character(' ')); //$NON-NLS-1$
 	}
@@ -1207,50 +1196,6 @@ public class TestFunctionLibrary extends TestCase {
                                                           tsUtil.createTime(23, 59, 59)},
                                                           tsUtil.createTimestamp(103, 4, 15, 23, 59, 59, 0));    
     }   
-
-    /** decodeInteger */                	   
-    public void testInvokeDecode1() {
-        helpInvokeMethod("decodeInteger", new Object[] {"integer", "integer, 4", ","}, new Integer(4)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }
-         
-    public void testInvokeDecode2() {
-        helpInvokeMethod("decodeString", new Object[] {"string", "string, 12, integer, 4", ","}, "12");                  										 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    }
-    
-    public void testInvokeDecode3() {
-        helpInvokeMethod("decodeString", new Object[] {"Not Nullable", "Not Nullable, 1, Nullable, 2, Unknown, 3", ","}, "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        helpInvokeMethod("convert", new Object[] {"1", "integer"}, new Integer(1));                                                          //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-
-    public void testInvokeDecode4() {
-        helpInvokeMethod("decodeString", new Object[] {"Unknown", "Not Nullable, YES, Nullable, NO, Unknown, ' '", ","}, " "); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    }
-
-    public void testInvokeDecode5() {
-        helpInvokeMethod("decodeString", new Object[] {"true", "true, 2, false, 1"}, new String("2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        helpInvokeMethod("convert", new Object[] {"2", "short"}, new Short((short)2)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
-    public void testInvokeDecode6() {
-        helpInvokeMethod("decodeString", new Object[] {"string", "char, \', string, \""}, "\""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }            
-
-    public void testInvokeDecode7() {
-        helpInvokeMethod("decodeString", new Object[] {"Searchable", "Searchable, 3, All Except Like, 2, Like Only, 1, Unsearchable, 0"}, new String("3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        helpInvokeMethod("convert", new Object[] {"3", "short"}, new Short((short)3)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }           
-
-    public void testInvokeDecode8() {
-        helpInvokeMethod("decodeString", new Object[] {"true", "true, 2, false, 1"}, new String("2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        helpInvokeMethod("decodeString", new Object[] {"2", "2, false, 1, true"}, new String("false")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        helpInvokeMethod("convert", new Object[] {"false", "boolean"}, new Boolean(false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        helpInvokeMethod("convert", new Object[] {"true", "boolean"}, new Boolean(true)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }  
-
-    public void testInvokeDecode9() {
-        helpInvokeMethod("decodeString", new Object[] {"JAVA_OBJECT", "JAVA_OBJECT,2000 , DISTINCT, 2001, STRUCT, 2002"}, new String("2000")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        helpInvokeMethod("convert", new Object[] {"2000", "integer"}, new Integer(2000)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
     
     public void testInvokeBitand() {
         helpInvokeMethod("bitand", new Object[] {new Integer(0xFFF), new Integer(0x0F0)}, new Integer(0x0F0)); //$NON-NLS-1$

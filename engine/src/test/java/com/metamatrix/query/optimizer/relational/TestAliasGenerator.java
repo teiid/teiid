@@ -62,7 +62,7 @@ public class TestAliasGenerator extends TestCase {
     
     public void testLongOrderByAlias() throws Exception {
         String sql = "select pm1.g1.e1 || pm1.g1.e2 as asfasdfadfasdfasdfadfasdfadsfasdfasdfasdfasdfasdfadfa, pm1.g1.e2 from pm1.g1 order by asfasdfadfasdfasdfadfasdfadsfasdfasdfasdfasdfasdfadfa"; //$NON-NLS-1$
-        String expected = "SELECT (g_0.e1 || g_0.e2) AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"; //$NON-NLS-1$
+        String expected = "SELECT concat(g_0.e1, g_0.e2) AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"; //$NON-NLS-1$
         helpTest(sql, expected, true, FakeMetadataFactory.example1Cached());
     }
     
@@ -112,13 +112,13 @@ public class TestAliasGenerator extends TestCase {
     
     public void testCorrelatedRefernce() throws Exception {
     	String sql = "select intnum, stringnum from (select intnum, stringnum from bqt1.smallb) b where intnum in (select b.stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
-        String expected = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intnum AS c_0, g_0.stringnum AS c_1 FROM bqt1.smallb AS g_0) AS v_0 WHERE v_0.c_0 IN (SELECT (v_0.c_1 || v_1.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_1)"; //$NON-NLS-1$
+        String expected = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.intnum AS c_0, g_0.stringnum AS c_1 FROM bqt1.smallb AS g_0) AS v_0 WHERE v_0.c_0 IN (SELECT concat(v_0.c_1, v_1.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_1)"; //$NON-NLS-1$
         helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
     }
 
     public void testCorrelatedRefernce1() throws Exception {
     	String sql = "select intnum, stringnum from bqt1.smallb where intnum in (select stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
-        String expected = "SELECT g_0.intnum, g_0.stringnum FROM bqt1.smallb AS g_0 WHERE g_0.intnum IN (SELECT (g_0.stringnum || v_0.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_0)"; //$NON-NLS-1$
+        String expected = "SELECT g_0.intnum, g_0.stringnum FROM bqt1.smallb AS g_0 WHERE g_0.intnum IN (SELECT concat(g_0.stringnum, v_0.c_0) FROM (SELECT g_1.intnum AS c_0 FROM bqt1.smalla AS g_1) AS v_0)"; //$NON-NLS-1$
         helpTest(sql, expected, true, FakeMetadataFactory.exampleBQTCached());
     }
     

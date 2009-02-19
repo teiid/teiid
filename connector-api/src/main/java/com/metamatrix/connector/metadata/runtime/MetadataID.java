@@ -31,11 +31,12 @@ import com.metamatrix.connector.api.ConnectorException;
  */
 public interface MetadataID {
 
-    public static final int TYPE_ELEMENT = 0;
-    public static final int TYPE_GROUP = 1;
-    public static final int TYPE_PROCEDURE = 2;
-    public static final int TYPE_PARAMETER = 3;
-
+	public enum Type {
+		TYPE_ELEMENT,
+		TYPE_GROUP,
+		TYPE_PARAMETER,
+		TYPE_PROCEDURE
+	}
     /**
      * Get the type of metadataID
      * @return ID type
@@ -44,7 +45,7 @@ public interface MetadataID {
      * @see #TYPE_PROCEDURE
      * @see #TYPE_PARAMETER
      */
-    int getType();
+    Type getType();
 
     /**
      * Get a list of child IDs from this ID.  A group metadata ID will
@@ -71,4 +72,10 @@ public interface MetadataID {
      * @return String fullName
      */
     String getFullName();
+    
+    /**
+     * Get the {@link MetadataObject} for this id
+     * @return
+     */
+    MetadataObject getMetadataObject() throws ConnectorException;
 }

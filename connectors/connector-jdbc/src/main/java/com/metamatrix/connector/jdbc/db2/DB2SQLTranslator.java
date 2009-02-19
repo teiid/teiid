@@ -24,75 +24,64 @@
  */
 package com.metamatrix.connector.jdbc.db2;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
+import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
 import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.IJoin;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
+import com.metamatrix.connector.language.IJoin.JoinType;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */
-public class DB2SQLTranslator extends BasicSQLTranslator {
+public class DB2SQLTranslator extends SQLTranslator {
 
-    private Map functionModifiers;
-    private ILanguageFactory languageFactory;
-
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#initialize(com.metamatrix.data.api.ConnectorEnvironment, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    public void initialize(ConnectorEnvironment env, RuntimeMetadata metadata) throws ConnectorException {
-        super.initialize(env, metadata);
-        languageFactory = getConnectorEnvironment().getLanguageFactory();
-        initializeFunctionModifiers();
-    }    
-
-    private void initializeFunctionModifiers() {
-        functionModifiers = new HashMap();
-        functionModifiers.putAll(super.getFunctionModifiers());
-        functionModifiers.put("cast", new DB2ConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("char", new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("convert", new DB2ConvertModifier(languageFactory)); //$NON-NLS-1$        
-        functionModifiers.put("dayofmonth", new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$        
-        functionModifiers.put("ifnull", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("nvl", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("substring", new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
+	@Override
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DB2ConvertModifier(getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$        
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getFunctionModifiers()
-     */
-    public Map getFunctionModifiers() {
-        return functionModifiers;
-    }
-    
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#modifyCommand(com.metamatrix.connector.language.ICommand, com.metamatrix.data.SecurityContext)
-     */
-    public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
-        // DB2-specific modification
-        DB2SQLModificationVisitor visitor = new DB2SQLModificationVisitor(getConnectorEnvironment().getLanguageFactory());
-        command.acceptVisitor(visitor);
-        return command;
-    }
-    
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getTranslationVisitor()
-     */
-    public SQLConversionVisitor getTranslationVisitor() {
-        SQLConversionVisitor visitor = new DB2SQLConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(functionModifiers);
-        visitor.setProperties(super.getConnectorEnvironment().getProperties());
-        visitor.setLanguageFactory(languageFactory);
-        visitor.setDatabaseTimeZone(getDatabaseTimeZone());
-        return visitor;
-    } 
+	
+	@Override
+	public String addLimitString(String queryCommand, ILimit limit) {
+		return queryCommand + " FETCH FIRST " + limit.getRowLimit() + " ROWS ONLY"; //$NON-NLS-1$
+	}
+	
+	@Override
+	public ICommand modifyCommand(ICommand command, ExecutionContext context)
+			throws ConnectorException {
+		HierarchyVisitor hierarchyVisitor = new HierarchyVisitor() {
+			@Override
+			public void visit(IJoin obj) {
+				if (obj.getJoinType() != JoinType.CROSS_JOIN) {
+					return;
+				}
+				ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
+				obj.setCriteria(Arrays.asList(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one)));
+				obj.setJoinType(JoinType.INNER_JOIN);
+			}
+		};
+		
+		command.acceptVisitor(hierarchyVisitor);
+		return command;
+	}
+	
+	@Override
+	public String getConnectionTestQuery() {
+		return "Select 'x' from sysibm.systables where 1 = 2"; //$NON-NLS-1$
+	}
     
 }

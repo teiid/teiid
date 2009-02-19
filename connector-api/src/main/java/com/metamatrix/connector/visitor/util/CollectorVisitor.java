@@ -68,13 +68,6 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     }
 
     /* 
-     * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICaseExpression)
-     */
-    public void visit(ICaseExpression obj) {
-        checkInstance(obj);
-    }
-
-    /* 
      * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompareCriteria)
      */
     public void visit(ICompareCriteria obj) {

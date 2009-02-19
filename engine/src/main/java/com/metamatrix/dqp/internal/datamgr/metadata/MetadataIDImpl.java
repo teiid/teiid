@@ -24,50 +24,55 @@
  */
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
 
 /**
  */
 public class MetadataIDImpl implements MetadataID {
-    private int type;
+    private Type type;
     private Object actualMetadataID;
     private String fullName;
-    private QueryMetadataInterface metadata;
+    private RuntimeMetadataImpl metadata;
     
-    MetadataIDImpl(Object actualMetadataID, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
+    MetadataIDImpl(Object actualMetadataID, RuntimeMetadataImpl metadata) throws MetaMatrixComponentException {
         this.actualMetadataID = actualMetadataID;
         this.metadata = metadata;
         
-        try {
-            fullName = metadata.getFullName(getActualMetadataID());
-        } catch (QueryMetadataException ex) {
-            throw new MetaMatrixComponentException(ex, ex.getMessage());
+        if (actualMetadataID != null) {
+	        try {
+	            fullName = metadata.getMetadata().getFullName(actualMetadataID);
+	        } catch (QueryMetadataException ex) {
+	            throw new MetaMatrixComponentException(ex, ex.getMessage());
+	        }
         }
     }
     
-    QueryMetadataInterface getMetadata() {
+    RuntimeMetadataImpl getMetadata() {
         return this.metadata;
     }
     
-    public int getType() {
+    public Type getType() {
         return type;
     }
 
     public List getChildIDs() throws ConnectorException {
-        if(type == MetadataID.TYPE_GROUP){
+        if(type == Type.TYPE_GROUP && actualMetadataID != null){
             try {
-                List children = metadata.getElementIDsInGroupID(actualMetadataID);
+                List children = metadata.getMetadata().getElementIDsInGroupID(actualMetadataID);
                 List childIDs = new ArrayList(children.size());
                 Iterator iter = children.iterator();
                 while(iter.hasNext()){
                     MetadataIDImpl id = new MetadataIDImpl(iter.next(), metadata);
-                    id.setType(MetadataID.TYPE_ELEMENT);
+                    id.setType(Type.TYPE_ELEMENT);
                     childIDs.add(id);
                 }
                 return childIDs;
@@ -81,10 +86,10 @@ public class MetadataIDImpl implements MetadataID {
     }
                                                   
     public MetadataID getParentID() throws ConnectorException {
-        if(type == MetadataID.TYPE_ELEMENT) {
+        if(type == Type.TYPE_ELEMENT && actualMetadataID != null) {
             try {
-                MetadataIDImpl id = new MetadataIDImpl(metadata.getGroupIDForElementID(actualMetadataID), metadata);
-                id.setType(MetadataID.TYPE_GROUP);
+                MetadataIDImpl id = new MetadataIDImpl(metadata.getMetadata().getGroupIDForElementID(actualMetadataID), metadata);
+                id.setType(Type.TYPE_GROUP);
                 return id;
             } catch(QueryMetadataException e) {
                 throw new ConnectorException(e);
@@ -113,7 +118,7 @@ public class MetadataIDImpl implements MetadataID {
         return actualMetadataID.hashCode();
     }   
 
-    void setType(int type){
+    void setType(Type type){
         this.type = type;
     }
     
@@ -141,5 +146,10 @@ public class MetadataIDImpl implements MetadataID {
             }
         }
         return shortName;
+    }
+    
+    @Override
+    public MetadataObject getMetadataObject() throws ConnectorException {
+    	return this.metadata.getObject(this);
     }
 }

@@ -255,7 +255,7 @@ public class TestValidator extends TestCase {
         return new FakeMetadataFacade(store);
     }
 
-    public FakeMetadataFacade exampleMetadata3() {
+    public static FakeMetadataFacade exampleMetadata3() {
         // Create metadata objects        
         FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
         FakeMetadataObject groupObj = FakeMetadataFactory.createPhysicalGroup("test.group", modelObj);         //$NON-NLS-1$
@@ -266,6 +266,7 @@ public class TestValidator extends TestCase {
         elemObj1.putProperty(FakeMetadataObject.Props.NULL, Boolean.FALSE);
         elemObj1.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, Boolean.FALSE);
         elemObj1.putProperty(FakeMetadataObject.Props.AUTO_INCREMENT, Boolean.TRUE);
+        elemObj1.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "e1:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         
         // set up validator metadata
         FakeMetadataStore store = new FakeMetadataStore();
@@ -905,7 +906,7 @@ public class TestValidator extends TestCase {
     }    
 
     public void testXMLQueryRowLimitInvalidCriteria6a() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimit(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE WHEN rowlimit(a2)=2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimit(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE rowlimit(a2) WHEN 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     public void testXMLQueryRowLimitInvalidCriteria7() {
@@ -1025,7 +1026,7 @@ public class TestValidator extends TestCase {
     }    
 
     public void testXMLQueryRowLimitExceptionInvalidCriteria6a() {
-        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimitexception(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE WHEN rowlimitexception(a2)=2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * FROM vm1.doc1 where 2 = CASE rowlimitexception(a2) WHEN 2 THEN 2 END", new String[] {"2 = CASE rowlimitexception(a2) WHEN 2 THEN 2 END"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     public void testXMLQueryRowLimitExceptionInvalidCriteria7() {

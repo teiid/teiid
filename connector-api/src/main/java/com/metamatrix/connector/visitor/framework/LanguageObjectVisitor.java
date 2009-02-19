@@ -30,7 +30,6 @@ public interface LanguageObjectVisitor {
     public void visit(IAggregate obj);
     public void visit(IBatchedUpdates obj);
     public void visit(IBulkInsert obj);
-    public void visit(ICaseExpression obj);
     public void visit(ICompareCriteria obj);
     public void visit(ICompoundCriteria obj);
     public void visit(IDelete obj);

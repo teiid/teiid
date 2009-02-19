@@ -33,13 +33,11 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.TimeZone;
 
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.query.QueryPlugin;
@@ -48,8 +46,6 @@ import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public final class FunctionMethods {
-
-    private static final String DEFAULT_DECODE_STRING_DELIMITER = ","; //$NON-NLS-1$
 
 	// ================== Function = plus =====================
 
@@ -1206,35 +1202,17 @@ public final class FunctionMethods {
 			int repeatCount = ((Integer) count).intValue();
 			StringBuffer result = new StringBuffer();
 
-			for (int i = 0; i < repeatCount; i++) {
+			for (int i = 0; i < repeatCount && result.length() <= DataTypeManager.MAX_STRING_LENGTH; i++) {
 				result.append((String)str);
 			}
-
+			if (result.length() > DataTypeManager.MAX_STRING_LENGTH) {
+				return result.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+			}
 			return result.toString();
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0065, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0065,
 			new Object[] {"repeat", str.getClass().getName(), count.getClass().getName()})); //$NON-NLS-1$
-	}
-
-	// ================== Function = space =====================
-	public static Object space(Object count)
-		throws FunctionExecutionException {
-		if (count == null) {
-			return null;
-		} else if (count instanceof Integer) {
-			int repeatCount = ((Integer) count).intValue();
-			StringBuffer result = new StringBuffer();
-
-			for (int i = 0; i < repeatCount; i++) {
-				result.append(" "); //$NON-NLS-1$
-			}
-
-			return result.toString();
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0066, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0066,
-			new Object[] {"space", count.getClass().getName()})); //$NON-NLS-1$
 	}
 
     // ================== Function = ascii =====================
@@ -1309,45 +1287,52 @@ public final class FunctionMethods {
 
     // ================== Function = lpad =====================
 
-    public static Object lpad(Object inputString, Object padLength, Object padChar)
+    public static Object lpad(Object inputString, Object padLength, Object padStr)
         throws FunctionExecutionException {
 
-        if(inputString == null || padLength == null || padChar == null) {
-            return null;
-        }
-
-        String str = (String) inputString;
-        int length = ((Integer)padLength).intValue();
-        if(length < 1) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0025, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0025));
-        }
-
-        int numPadChar = length - str.length();
-        if(numPadChar <= 0) {
-            return str;
-        }
-        // Get pad character
-        char ch = 0;
-        if(padChar instanceof String) {
-            String charStr = (String) padChar;
-            if(charStr.length() != 1) {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0027, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0027));
-            }
-            ch = charStr.charAt(0);
-        } else {
-            ch = ((Character)padChar).charValue();
-        }
-
-        // Pad string
-        StringBuffer outStr = new StringBuffer();
-        for(int i=0; i<numPadChar; i++) {
-            outStr.append(ch);
-        }
-        outStr.append(str);
-        return outStr.toString();
+    	return pad(inputString, padLength, padStr, true);
     }
 
-    public static final Character SPACE_CHAR = new Character(' ');
+    public static Object pad(Object inputString, Object padLength, Object padStr, boolean left)
+    throws FunctionExecutionException {
+
+	    if(inputString == null || padLength == null || padStr == null) {
+	        return null;
+	    }
+	
+	    String str = (String) inputString;
+	    int length = ((Integer)padLength).intValue();
+	    if(length < 1) {
+	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0025, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0025));
+	    }
+	    if(length < str.length()) {
+	        return str.substring(0, length);
+	    }
+	    if(length > DataTypeManager.MAX_STRING_LENGTH) {
+	    	length = DataTypeManager.MAX_STRING_LENGTH;
+	    }
+	    // Get pad character
+	    String pad = (String) padStr;
+	    if(pad.length() == 0) {
+	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0027, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0027));
+	    }
+	    // Pad string
+	    StringBuffer outStr = new StringBuffer(str);
+	    while(outStr.length() < length) {
+	    	if (left) {
+	    		outStr.insert(0, pad);
+	    	} else {
+	    		outStr.append(pad);
+	    	}
+	    }
+	    if (left) {
+	    	return outStr.substring(outStr.length() - length);
+	    }
+	    return outStr.substring(0, length);
+	}
+
+    
+    public static final String SPACE_CHAR = " "; //$NON-NLS-1$
 
     public static Object lpad(Object inputString, Object padLength)
         throws FunctionExecutionException {
@@ -1357,42 +1342,10 @@ public final class FunctionMethods {
 
     // ================== Function = rpad =====================
 
-    public static Object rpad(Object inputString, Object padLength, Object padChar)
+    public static Object rpad(Object inputString, Object padLength, Object padStr)
         throws FunctionExecutionException {
 
-        if(inputString == null || padLength == null || padChar == null) {
-            return null;
-        }
-
-        String str = (String) inputString;
-        int length = ((Integer)padLength).intValue();
-        if(length < 1) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0025, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0025));
-        }
-
-        int numPadChar = length - str.length();
-        if(numPadChar <= 0) {
-            return str;
-        }
-        // Get pad character
-        char ch = 0;
-        if(padChar instanceof String) {
-            String charStr = (String) padChar;
-            if(charStr.length() != 1) {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0029, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0029));
-            }
-            ch = charStr.charAt(0);
-        } else {
-            ch = ((Character)padChar).charValue();
-        }
-
-        // Pad string
-        StringBuffer outStr = new StringBuffer();
-        outStr.append(str);
-        for(int i=0; i<numPadChar; i++) {
-            outStr.append(ch);
-        }
-        return outStr.toString();
+    	return pad(inputString, padLength, padStr, false);
     }
 
     public static Object rpad(Object inputString, Object padLength)
@@ -1520,246 +1473,9 @@ public final class FunctionMethods {
         throw new UnsupportedOperationException("This method should never be called."); //$NON-NLS-1$
     }
 
-    // ================== Function = decodeInteger =====================
-
-    public static Object decodeInteger(
-        Object columnValue,
-        Object decodeObject)
-        throws FunctionExecutionException {
-        return decode(
-            columnValue,
-            decodeObject,
-            DEFAULT_DECODE_STRING_DELIMITER,
-            Integer.class);
-    }
-
-    public static Object decodeString(
-        Object columnValue,
-        Object decodeObject)
-        throws FunctionExecutionException {
-        return decode(
-            columnValue,
-            decodeObject,
-            DEFAULT_DECODE_STRING_DELIMITER,
-            String.class);
-    }
-
-    public static Object decodeInteger(
-        Object columnValue,
-        Object decodeObject,
-        Object decodeDelimiter)
-        throws FunctionExecutionException {
-        return decode(
-            columnValue,
-            decodeObject,
-            decodeDelimiter,
-            Integer.class);
-    }
-
-    public static Object decodeString(
-        Object columnValue,
-        Object decodeObject,
-        Object decodeDelimiter)
-        throws FunctionExecutionException {
-
-        return decode(columnValue, decodeObject, decodeDelimiter, String.class);
-
-    }
-
-    private static Object decode(
-        Object columnValue,
-        Object decodeObject,
-        Object decodeDelimiter,
-        Class returnType)
-        throws FunctionExecutionException {
-
-        Object returnObject = null;
-
-        if (decodeObject == null) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0036, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0036));
-        }
-
-        if(decodeDelimiter==null){
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0037, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0037));
-        }
-
-        if (decodeObject instanceof String
-            && decodeDelimiter instanceof String) {
-
-            String decodeDelimiterString = (String) decodeDelimiter;
-            String decodeString = (String) decodeObject;
-            StringTokenizer tokenizer =
-                new StringTokenizer(decodeString, decodeDelimiterString);
-
-            while (tokenizer.hasMoreTokens()) {
-                String resultString;
-                String compareString =
-                    convertString(tokenizer.nextToken().trim());
-                if (tokenizer.hasMoreTokens()) {
-                    resultString = convertString(tokenizer.nextToken().trim());
-                } else {
-                    /*
-                     *  if there are no more tokens in the decode string, the last token in
-                     *  the String is considered to be the 'default' value for the
-                     * return from this function.  If we reach this point in this loop, then
-                     * we just return this string as the return value from this function as
-                     * there are no more decode compare strings to be processed.
-                     */
-                    try {
-                        returnObject =
-                            convertType(returnType, compareString);
-                    } catch (TransformationException e) {
-                        throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0038, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0038, compareString, returnType!=null?returnType.getName():"null")); //$NON-NLS-1$
-                    }
-
-                    // we break out of the while if we find an endpoint.
-                    break;
-
-                }
-
-                boolean match;
-
-                match = areSemanticallyEqual(columnValue, compareString);
-
-                if (match) {
-                    try {
-                        returnObject = convertType(returnType, resultString);
-                    } catch (TransformationException e) {
-                        throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0038, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0038, resultString, returnType!=null?returnType.getName():"null")); //$NON-NLS-1$
-                    }
-                    break;
-                }else if (!tokenizer.hasMoreTokens()) {
-                    /*
-                     * if we get to this point and there are no more tokens in the
-                     * decode string, this means that we have run out of strings to
-                     * compare against the column value.  In this case we simply return
-                     * the column value itself.  We are safe doing that here because
-                     * this loop will be exited and the specified default value will have
-                     * already been returned if there is one.
-                     */
-                    try {
-                        returnObject = convertType(returnType, columnValue);
-                    } catch (TransformationException e) {
-                        throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0039, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0039,  columnValue ));
-                    }
-                }
-
-            }
-
-            return returnObject;
-
-        }
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0040, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0040));
-    }
-
-    private static boolean areSemanticallyEqual(Object object1, String string){
-        if(object1==null) {
-            if(string==null) {
-                return true;
-            }
-            return false;
-        }
-        if(string == null) {
-            return false;
-        } else if(object1.equals(string)) {
-            return true;
-        }
-
-        Class targetClass = object1.getClass();
-
-        if(DataTypeManager.isTransformable(String.class, targetClass)){
-            Transform transform =
-                DataTypeManager.getPreferredTransform(String.class, targetClass);
-            Object result = null;
-            try {
-                if (transform.getSourceType().equals(String.class)) {
-                    result = transform.transform(string);
-                } else {
-                    result = transform.transform(object1);
-                }
-            } catch (TransformationException e) {
-                /* if the attempt to convert the types to be compatible so that
-                 * they can be propertly compared fails, then we consider these
-                 * two objects to be not semantically equal.
-                 */
-                return false;
-            }
-            return result.equals(object1);
-        }
-        return false;
-    }
-
-    private static Object convertType(Class targetType, Object objectToConvert)
-        throws TransformationException, FunctionExecutionException {
-
-        if(objectToConvert==null){
-            return null;
-        }
-
-        if(targetType==objectToConvert.getClass()){
-            return objectToConvert;
-        }
-
-        Transform transform = null;
-        if(DataTypeManager.isTransformable(targetType, objectToConvert.getClass())){
-            transform =
-                DataTypeManager.getTransform(
-                    objectToConvert.getClass(),
-                    targetType);
-        }else{
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0041, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0041, new Object[]{objectToConvert, objectToConvert.getClass().getName(), targetType.getName()}));
-        }
-        return transform.transform(objectToConvert);
-    }
-
-    public static String convertString(String string) {
-        /*
-         * if there are no characters in the compare string we designate that as
-         * an indication of null.  ie if the decode string looks like this:
-         *
-         * "'this', 1,,'null'"
-         *
-         * Then if the value in the first argument is null then the String 'null' is
-         * returned from the function.
-         */
-        if (string.equals("")) { //$NON-NLS-1$
-            return null;
-        }
-
-        /*
-         * we also allow the use of the keyword null in the decode string.  if it
-         * wished to match on the string 'null' then the string must be qualified by
-         * ' designators.
-         */
-         if(string.equalsIgnoreCase("null")){ //$NON-NLS-1$
-            return null;
-         }
-
-        /*
-         * Here we check to see if the String in the decode String submitted
-         * was surrounded by String literal characters. In this case we strip
-         * these literal characters from the String.
-         */
-        if ((string.startsWith("\"") && string.endsWith("\"")) //$NON-NLS-1$ //$NON-NLS-2$
-            || (string.startsWith("'") && string.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
-            if (string.length() == 2) {
-                /*
-                 * This is an indication that the desired string to be compared is
-                 * the "" empty string, so we return it as such.
-                 */
-                string = ""; //$NON-NLS-1$
-            } else if (!string.equalsIgnoreCase("'") && !string.equalsIgnoreCase("\"")){ //$NON-NLS-1$ //$NON-NLS-2$
-                string = string.substring(1);
-                string = string.substring(0, string.length()-1);
-            }
-        }
-
-        return string;
-    }
-
     // ================== Function = nvl =====================
 
-    public static Object nvl(Object value, Object valueIfNull) {
+    public static Object ifnull(Object value, Object valueIfNull) {
 
         if(value == null) {
             return valueIfNull;

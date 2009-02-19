@@ -22,96 +22,125 @@
 
 package com.metamatrix.connector.jdbc.postgresql;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
+import com.metamatrix.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import com.metamatrix.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
 
 /** 
  * @since 4.3
  */
-public class PostgreSQLTranslator extends BasicSQLTranslator {
+public class PostgreSQLTranslator extends SQLTranslator {
 
-    private Map functionModifiers;
-    private Properties connectorProperties;
-    private ILanguageFactory languageFactory;
-
-    public void initialize(ConnectorEnvironment env,
-                           RuntimeMetadata metadata) throws ConnectorException {
+    public void initialize(ConnectorEnvironment env) throws ConnectorException {
         
-        super.initialize(env, metadata);
-        ConnectorEnvironment connEnv = getConnectorEnvironment();
-        this.connectorProperties = connEnv.getProperties();
-        this.languageFactory = connEnv.getLanguageFactory();
-        initializeFunctionModifiers();  
-
-    }
-
-    /** 
-     * @param modifier
-     * @since 4.2
-     */
-    private void initializeFunctionModifiers() {
-        functionModifiers = new HashMap();
-        functionModifiers.putAll(super.getFunctionModifiers());
-        functionModifiers.put("log", new AliasModifier("ln")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("log10", new AliasModifier("log")); //$NON-NLS-1$ //$NON-NLS-2$
+        super.initialize(env);
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$ //$NON-NLS-2$
         
-        functionModifiers.put("char", new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("concat", new AliasModifier("||")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("lcase", new AliasModifier("lower")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("left", new SubstringFunctionModifier(languageFactory, true));//$NON-NLS-1$ 
-        functionModifiers.put("right", new SubstringFunctionModifier(languageFactory, false));//$NON-NLS-1$ 
-        functionModifiers.put("substring", new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("ucase", new AliasModifier("upper")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ //$NON-NLS-2$
         
-        functionModifiers.put("dayname", new MonthOrDayNameFunctionModifier(languageFactory, "Day"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("dayofweek", new ModifiedDatePartFunctionModifier(languageFactory, "dow", "+", new Integer(1)));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        functionModifiers.put("dayofmonth", new DatePartFunctionModifier(languageFactory, "day"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("dayofyear", new DatePartFunctionModifier(languageFactory, "doy"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("hour", new DatePartFunctionModifier(languageFactory, "hour"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("minute", new DatePartFunctionModifier(languageFactory, "minute"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("month", new DatePartFunctionModifier(languageFactory, "month"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("monthname", new MonthOrDayNameFunctionModifier(languageFactory, "Month"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("quarter", new DatePartFunctionModifier(languageFactory, "quarter"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("second", new DatePartFunctionModifier(languageFactory, "second"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("week", new DatePartFunctionModifier(languageFactory, "week"));//$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("year", new DatePartFunctionModifier(languageFactory, "year"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ModifiedDatePartFunctionModifier(getLanguageFactory(), "dow", "+", new Integer(1)));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new DatePartFunctionModifier(getLanguageFactory(), "day"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DatePartFunctionModifier(getLanguageFactory(), "doy"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new DatePartFunctionModifier(getLanguageFactory(), "hour"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DatePartFunctionModifier(getLanguageFactory(), "minute"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new DatePartFunctionModifier(getLanguageFactory(), "month"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DatePartFunctionModifier(getLanguageFactory(), "quarter"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new DatePartFunctionModifier(getLanguageFactory(), "second"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DatePartFunctionModifier(getLanguageFactory(), "week"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new DatePartFunctionModifier(getLanguageFactory(), "year"));//$NON-NLS-1$ //$NON-NLS-2$
         
-        functionModifiers.put("ifnull", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("nvl", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("convert", new PostgreSQLConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("cast", new PostgreSQLConvertModifier(languageFactory)); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); //$NON-NLS-1$
     }    
     
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+        if(booleanValue.booleanValue()) {
+            return "TRUE"; //$NON-NLS-1$
+        }
+        return "FALSE"; //$NON-NLS-1$
+    }
+
+    @Override
+    public String translateLiteralDate(Date dateValue, Calendar cal) {
+        return "DATE '" + formatDateValue(dateValue, cal) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTime(Time timeValue, Calendar cal) {
+        return "TIME '" + formatDateValue(timeValue, cal) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue, Calendar cal) {
+        return "to_timestamp('" + formatDateValue(timestampValue, cal) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Override
+    public int getTimestampNanoSecondPrecision() {
+    	return 6;
+    }
+    
+    @Override
+    public String addLimitString(String queryCommand, ILimit limit) {
+        StringBuffer sb = new StringBuffer(queryCommand);
+        sb.append(" LIMIT ").append(limit.getRowLimit());
+        if (limit.getRowOffset() > 0) {
+            sb.append(" OFFSET ").append(limit.getRowOffset());
+        }
+        return sb.toString();
+    }
 
     /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getTranslationVisitor()
+     * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as 
+     * bool_and(BooleanValue)
+     * @see com.metamatrix.connector.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IAggregate)
+     * @since 4.3
      */
-    public SQLConversionVisitor getTranslationVisitor() {
-        SQLConversionVisitor visitor = new PostgreSQLConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(functionModifiers);
-        visitor.setProperties(connectorProperties);
-        visitor.setLanguageFactory(languageFactory);
-        visitor.setDatabaseTimeZone(getDatabaseTimeZone());
-        return visitor;
-    }    
- 
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getFunctionModifiers()
-     */
-    public Map getFunctionModifiers() {
-        return functionModifiers;
+    @Override
+    public ICommand modifyCommand(ICommand command, ExecutionContext context)
+    		throws ConnectorException {
+    	HierarchyVisitor visitor = new HierarchyVisitor() {
+    		@Override
+    		public void visit(IAggregate obj) {
+                if (TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(obj.getExpression().getType())) {
+                	if (obj.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
+                		obj.setName("bool_and"); //$NON-NLS-1$
+                	} else if (obj.getName().equalsIgnoreCase(SQLReservedWords.MAX)) {
+                		obj.setName("bool_or"); //$NON-NLS-1$
+                	}
+                }
+    		}
+   		};
+    	
+    	command.acceptVisitor(visitor);
+    	return command;
     }
 
 }

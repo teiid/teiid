@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionMetadataSource;
@@ -56,10 +57,10 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      */
     public SystemSource() {
 		// +, -, *, /
-        addArithmeticFunction("+", QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addArithmeticFunction("-", QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addArithmeticFunction("*", QueryPlugin.Util.getString("SystemSource.Multiply_desc"), "multiply", QueryPlugin.Util.getString("SystemSource.Multiply_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addArithmeticFunction("/", QueryPlugin.Util.getString("SystemSource.Divide_desc"), "divide", QueryPlugin.Util.getString("SystemSource.Divide_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addArithmeticFunction(SourceSystemFunctions.ADD_OP, QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addArithmeticFunction(SourceSystemFunctions.SUBTRACT_OP, QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addArithmeticFunction(SourceSystemFunctions.MULTIPLY_OP, QueryPlugin.Util.getString("SystemSource.Multiply_desc"), "multiply", QueryPlugin.Util.getString("SystemSource.Multiply_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addArithmeticFunction(SourceSystemFunctions.DIVIDE_OP, QueryPlugin.Util.getString("SystemSource.Divide_desc"), "divide", QueryPlugin.Util.getString("SystemSource.Divide_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         // numeric
         addAbsFunction();
@@ -69,45 +70,45 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addRoundFunction();
         addSignFunction();
         addSqrtFunction();        
-		addDoubleFunction("acos", QueryPlugin.Util.getString("SystemSource.Acos_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("asin", QueryPlugin.Util.getString("SystemSource.Asin_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("atan", QueryPlugin.Util.getString("SystemSource.Atan_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addAtan2Function("atan2", QueryPlugin.Util.getString("SystemSource.Atan2_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("cos", QueryPlugin.Util.getString("SystemSource.Cos_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("cot", QueryPlugin.Util.getString("SystemSource.Cot_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("degrees", QueryPlugin.Util.getString("SystemSource.Degrees_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addPiFunction("pi", QueryPlugin.Util.getString("SystemSource.Pi_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("radians", QueryPlugin.Util.getString("SystemSource.Radians_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("sin", QueryPlugin.Util.getString("SystemSource.Sin_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-		addDoubleFunction("tan", QueryPlugin.Util.getString("SystemSource.Tan_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-        addDoubleFunction("log", QueryPlugin.Util.getString("SystemSource.Log_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-        addDoubleFunction("log10", QueryPlugin.Util.getString("SystemSource.Log10_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-        addDoubleFunction("ceiling", QueryPlugin.Util.getString("SystemSource.Ceiling_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-        addDoubleFunction("exp", QueryPlugin.Util.getString("SystemSource.Exp_desc")); //$NON-NLS-1$ //$NON-NLS-2$
-        addDoubleFunction("floor", QueryPlugin.Util.getString("SystemSource.Floor_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.ACOS, QueryPlugin.Util.getString("SystemSource.Acos_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.ASIN, QueryPlugin.Util.getString("SystemSource.Asin_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.ATAN, QueryPlugin.Util.getString("SystemSource.Atan_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addAtan2Function(SourceSystemFunctions.ATAN2, QueryPlugin.Util.getString("SystemSource.Atan2_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.COS, QueryPlugin.Util.getString("SystemSource.Cos_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.COT, QueryPlugin.Util.getString("SystemSource.Cot_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.DEGREES, QueryPlugin.Util.getString("SystemSource.Degrees_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addPiFunction(SourceSystemFunctions.PI, QueryPlugin.Util.getString("SystemSource.Pi_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.RADIANS, QueryPlugin.Util.getString("SystemSource.Radians_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.SIN, QueryPlugin.Util.getString("SystemSource.Sin_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+		addDoubleFunction(SourceSystemFunctions.TAN, QueryPlugin.Util.getString("SystemSource.Tan_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+        addDoubleFunction(SourceSystemFunctions.LOG, QueryPlugin.Util.getString("SystemSource.Log_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+        addDoubleFunction(SourceSystemFunctions.LOG10, QueryPlugin.Util.getString("SystemSource.Log10_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+        addDoubleFunction(SourceSystemFunctions.CEILING, QueryPlugin.Util.getString("SystemSource.Ceiling_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+        addDoubleFunction(SourceSystemFunctions.EXP, QueryPlugin.Util.getString("SystemSource.Exp_desc")); //$NON-NLS-1$ //$NON-NLS-2$
+        addDoubleFunction(SourceSystemFunctions.FLOOR, QueryPlugin.Util.getString("SystemSource.Floor_desc")); //$NON-NLS-1$ //$NON-NLS-2$
         
         // bit
-        addBitFunction("bitand", QueryPlugin.Util.getString("SystemSource.Bitand_desc"), "bitand", 2, QueryPlugin.Util.getString("SystemSource.Bitand_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addBitFunction("bitor", QueryPlugin.Util.getString("SystemSource.Bitor_desc"), "bitor", 2, QueryPlugin.Util.getString("SystemSource.Bitor_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addBitFunction("bitxor", QueryPlugin.Util.getString("SystemSource.Bitxor_desc"), "bitxor", 2, QueryPlugin.Util.getString("SystemSource.Bitxor_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addBitFunction("bitnot", QueryPlugin.Util.getString("SystemSource.Bitnot_desc"), "bitnot", 1, QueryPlugin.Util.getString("SystemSource.Bitnot_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addBitFunction(SourceSystemFunctions.BITAND, QueryPlugin.Util.getString("SystemSource.Bitand_desc"), "bitand", 2, QueryPlugin.Util.getString("SystemSource.Bitand_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addBitFunction(SourceSystemFunctions.BITOR, QueryPlugin.Util.getString("SystemSource.Bitor_desc"), "bitor", 2, QueryPlugin.Util.getString("SystemSource.Bitor_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addBitFunction(SourceSystemFunctions.BITXOR, QueryPlugin.Util.getString("SystemSource.Bitxor_desc"), "bitxor", 2, QueryPlugin.Util.getString("SystemSource.Bitxor_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addBitFunction(SourceSystemFunctions.BITNOT, QueryPlugin.Util.getString("SystemSource.Bitnot_desc"), "bitnot", 1, QueryPlugin.Util.getString("SystemSource.Bitnot_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         // date
-        addConstantDateFunction("curdate", QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addConstantDateFunction("curtime", QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addConstantDateFunction("now", QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addDateFunction("dayname", "dayName", QueryPlugin.Util.getString("SystemSource.Dayname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("dayofmonth", "dayOfMonth", QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("dayofweek", "dayOfWeek", QueryPlugin.Util.getString("SystemSource.Dayofweek_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofweek_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("dayofyear", "dayOfYear", QueryPlugin.Util.getString("SystemSource.Dayofyear_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofyear_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("month", "month", QueryPlugin.Util.getString("SystemSource.Month_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Month_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("monthname", "monthName", QueryPlugin.Util.getString("SystemSource.Monthname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Monthname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("week", "week", QueryPlugin.Util.getString("SystemSource.Week_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Week_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addDateFunction("year", "year", QueryPlugin.Util.getString("SystemSource.Year_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Year_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addTimeFunction("hour", "hour", QueryPlugin.Util.getString("SystemSource.Hour_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Hour_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addTimeFunction("minute", "minute", QueryPlugin.Util.getString("SystemSource.Minute_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Minute_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addTimeFunction("second", "second", QueryPlugin.Util.getString("SystemSource.Second_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Second_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		addQuarterFunction("quarter", "quarter", QueryPlugin.Util.getString("SystemSource.Quarter_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Quarter_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addConstantDateFunction(SourceSystemFunctions.CURDATE, QueryPlugin.Util.getString("SystemSource.Curdate_desc"), "currentDate", DataTypeManager.DefaultDataTypes.DATE); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addConstantDateFunction(SourceSystemFunctions.CURTIME, QueryPlugin.Util.getString("SystemSource.Curtime_desc"), "currentTime", DataTypeManager.DefaultDataTypes.TIME); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addConstantDateFunction(SourceSystemFunctions.NOW, QueryPlugin.Util.getString("SystemSource.Now_desc"), "currentTimestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addDateFunction(SourceSystemFunctions.DAYNAME, "dayName", QueryPlugin.Util.getString("SystemSource.Dayname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.DAYOFMONTH, "dayOfMonth", QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofmonth_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.DAYOFWEEK, "dayOfWeek", QueryPlugin.Util.getString("SystemSource.Dayofweek_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofweek_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.DAYOFYEAR, "dayOfYear", QueryPlugin.Util.getString("SystemSource.Dayofyear_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Dayofyear_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.MONTH, "month", QueryPlugin.Util.getString("SystemSource.Month_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Month_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.MONTHNAME, "monthName", QueryPlugin.Util.getString("SystemSource.Monthname_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Monthname_result_ts_desc"), DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.WEEK, "week", QueryPlugin.Util.getString("SystemSource.Week_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Week_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addDateFunction(SourceSystemFunctions.YEAR, "year", QueryPlugin.Util.getString("SystemSource.Year_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Year_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addTimeFunction(SourceSystemFunctions.HOUR, "hour", QueryPlugin.Util.getString("SystemSource.Hour_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Hour_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addTimeFunction(SourceSystemFunctions.MINUTE, "minute", QueryPlugin.Util.getString("SystemSource.Minute_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Minute_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addTimeFunction(SourceSystemFunctions.SECOND, "second", QueryPlugin.Util.getString("SystemSource.Second_result_t_desc"), QueryPlugin.Util.getString("SystemSource.Second_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addQuarterFunction(SourceSystemFunctions.QUARTER, "quarter", QueryPlugin.Util.getString("SystemSource.Quarter_result_d_desc"), QueryPlugin.Util.getString("SystemSource.Quarter_result_ts_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		addTimestampAddFunction();
         addTimestampDiffFunction();
         addTimeZoneFunctions();
@@ -115,20 +116,19 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addUnixTimeFunctions();
 		                  
         // string
-        addStringFunction("length", QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addStringFunction("ucase", QueryPlugin.Util.getString("SystemSource.Ucase_result"), "upperCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addStringFunction("lcase", QueryPlugin.Util.getString("SystemSource.Lcase_result"), "lowerCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction(SourceSystemFunctions.LENGTH, QueryPlugin.Util.getString("SystemSource.Length_result"), "length", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction(SourceSystemFunctions.UCASE, QueryPlugin.Util.getString("SystemSource.Ucase_result"), "upperCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction(SourceSystemFunctions.LCASE, QueryPlugin.Util.getString("SystemSource.Lcase_result"), "lowerCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		addStringFunction("lower", QueryPlugin.Util.getString("SystemSource.Lower_result"), "lowerCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		addStringFunction("upper", QueryPlugin.Util.getString("SystemSource.Upper_result"), "upperCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addStringFunction("ltrim", QueryPlugin.Util.getString("SystemSource.Left_result"), "leftTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addStringFunction("rtrim", QueryPlugin.Util.getString("SystemSource.Right_result"), "rightTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction(SourceSystemFunctions.LTRIM, QueryPlugin.Util.getString("SystemSource.Left_result"), "leftTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addStringFunction(SourceSystemFunctions.RTRIM, QueryPlugin.Util.getString("SystemSource.Right_result"), "rightTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addConcatFunction();    
         addSubstringFunction(); 
         addLeftRightFunctions();
         addLocateFunction();
         addReplaceFunction();
         addAsciiFunction();
-        addChrFunction();
         addCharFunction();
         addInitCapFunction();
         addLpadFunction();
@@ -139,8 +139,8 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		addInsertFunction();
 		
         // clob
-        addClobFunction("ucase", QueryPlugin.Util.getString("SystemSource.UcaseClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        addClobFunction("lcase", QueryPlugin.Util.getString("SystemSource.LcaseClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addClobFunction(SourceSystemFunctions.UCASE, QueryPlugin.Util.getString("SystemSource.UcaseClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        addClobFunction(SourceSystemFunctions.LCASE, QueryPlugin.Util.getString("SystemSource.LcaseClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addClobFunction("lower", QueryPlugin.Util.getString("SystemSource.LowerClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addClobFunction("upper", QueryPlugin.Util.getString("SystemSource.UpperClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
@@ -156,20 +156,19 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addUserFunction();
         addEnvFunction();
         addCommandPayloadFunctions();
-        addNvlFunctions();
 		addIfNullFunctions();
         
 		// format 
-		addFormatTimeFunction("formatTime", QueryPlugin.Util.getString("SystemSource.Formattime_desc"), "formatTime", QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		addFormatDateFunction("formatDate", QueryPlugin.Util.getString("SystemSource.Formatdate_desc"), "formatDate", QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		addFormatTimestampFunction("formatTimestamp", QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"), "formatTimestamp", QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addFormatTimeFunction(SourceSystemFunctions.FORMATTIME, QueryPlugin.Util.getString("SystemSource.Formattime_desc"), "formatTime", QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addFormatDateFunction(SourceSystemFunctions.FORMATDATE, QueryPlugin.Util.getString("SystemSource.Formatdate_desc"), "formatDate", QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addFormatTimestampFunction(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"), "formatTimestamp", QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
 		addFormatNumberFunctions();
 		
 		// parse
-		addParseTimeFunction("parseTime", QueryPlugin.Util.getString("SystemSource.Parsetime_desc"), "parseTime", QueryPlugin.Util.getString("SystemSource.Parsetime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		addParseDateFunction("parseDate", QueryPlugin.Util.getString("SystemSource.Parsedate_desc"), "parseDate", QueryPlugin.Util.getString("SystemSource.Parsedate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		addParseTimestampFunction("parseTimestamp", QueryPlugin.Util.getString("SystemSource.Parsetimestamp_desc"), "parseTimestamp", QueryPlugin.Util.getString("SystemSource.Parsetimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addParseTimeFunction(SourceSystemFunctions.PARSETIME, QueryPlugin.Util.getString("SystemSource.Parsetime_desc"), "parseTime", QueryPlugin.Util.getString("SystemSource.Parsetime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addParseDateFunction(SourceSystemFunctions.PARSEDATE, QueryPlugin.Util.getString("SystemSource.Parsedate_desc"), "parseDate", QueryPlugin.Util.getString("SystemSource.Parsedate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		addParseTimestampFunction(SourceSystemFunctions.PARSETIMESTAMP, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_desc"), "parseTimestamp", QueryPlugin.Util.getString("SystemSource.Parsetimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 		addParseNumberFunctions();
         
@@ -195,21 +194,21 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
 
     private void addFormatNumberFunctions() {
-		addFormatNumberFunction("formatInteger", QueryPlugin.Util.getString("SystemSource.Formatinteger_desc"), "formatInteger", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addFormatNumberFunction("formatLong", QueryPlugin.Util.getString("SystemSource.Formatlong_desc"), "formatLong", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Formatlong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addFormatNumberFunction("formatDouble", QueryPlugin.Util.getString("SystemSource.Formatdouble_desc"), "formatDouble", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addFormatNumberFunction("formatFloat", QueryPlugin.Util.getString("SystemSource.Formatfloat_desc"), "formatFloat", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addFormatNumberFunction("formatBigInteger", QueryPlugin.Util.getString("SystemSource.Formatbiginteger_desc"), "formatBigInteger", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addFormatNumberFunction("formatBigDecimal", QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_desc"), "formatBigDecimal", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATINTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_desc"), "formatInteger", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATLONG, QueryPlugin.Util.getString("SystemSource.Formatlong_desc"), "formatLong", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Formatlong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATDOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_desc"), "formatDouble", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATFLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_desc"), "formatFloat", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGINTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_desc"), "formatBigInteger", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGDECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_desc"), "formatBigDecimal", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
 	
 	private void addParseNumberFunctions() {
-		addParseNumberFunction("parseInteger", QueryPlugin.Util.getString("SystemSource.Parseinteger_desc"), "parseInteger", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Parseinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addParseNumberFunction("parseLong", QueryPlugin.Util.getString("SystemSource.Parselong_desc"), "parseLong", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Parselong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addParseNumberFunction("parseDouble", QueryPlugin.Util.getString("SystemSource.Parsedouble_desc"), "parseDouble", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Parsedouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addParseNumberFunction("parseFloat", QueryPlugin.Util.getString("SystemSource.Parsefloat_desc"), "parseFloat", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Parsefloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addParseNumberFunction("parseBigInteger", QueryPlugin.Util.getString("SystemSource.Parsebiginteger_desc"), "parseBigInteger", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Parsebiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		addParseNumberFunction("parseBigDecimal", QueryPlugin.Util.getString("SystemSource.Parsebigdecimal_desc"), "parseBigDecimal", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Parsebigdecimal_result_desc"));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSEINTEGER, QueryPlugin.Util.getString("SystemSource.Parseinteger_desc"), "parseInteger", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Parseinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSELONG, QueryPlugin.Util.getString("SystemSource.Parselong_desc"), "parseLong", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Parselong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSEDOUBLE, QueryPlugin.Util.getString("SystemSource.Parsedouble_desc"), "parseDouble", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Parsedouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSEFLOAT, QueryPlugin.Util.getString("SystemSource.Parsefloat_desc"), "parseFloat", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Parsefloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSEBIGINTEGER, QueryPlugin.Util.getString("SystemSource.Parsebiginteger_desc"), "parseBigInteger", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Parsebiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		addParseNumberFunction(SourceSystemFunctions.PARSEBIGDECIMAL, QueryPlugin.Util.getString("SystemSource.Parsebigdecimal_desc"), "parseBigDecimal", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Parsebigdecimal_result_desc"));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
 	
     private void addArithmeticFunction(String functionName, String description, String methodName, String resultsDescription) {
@@ -241,7 +240,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addTypedAbsFunction(String type) {
         functions.add(
-            new FunctionMethod("abs", QueryPlugin.Util.getString("SystemSource.Abs_desc"), NUMERIC, FUNCTION_CLASS, "abs", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.ABS, QueryPlugin.Util.getString("SystemSource.Abs_desc"), NUMERIC, FUNCTION_CLASS, "abs", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("number", type, QueryPlugin.Util.getString("SystemSource.Abs_arg")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.Abs_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
@@ -249,13 +248,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     
     private void addRandFunction() {
         // With Seed
-        FunctionMethod rand = new FunctionMethod("rand", QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        FunctionMethod rand = new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                           new FunctionParameter[] {new FunctionParameter("seed", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rand_arg")) }, //$NON-NLS-1$ //$NON-NLS-2$
                                           new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), FunctionMethod.NONDETERMINISTIC );                 //$NON-NLS-1$ //$NON-NLS-2$
         rand.setNullDependent(true);
         functions.add(rand);
         // Without Seed
-        functions.add( new FunctionMethod("rand", QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        functions.add( new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                           new FunctionParameter[] {}, 
                                           new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), FunctionMethod.NONDETERMINISTIC ) ); //$NON-NLS-1$ //$NON-NLS-2$                
     }
@@ -285,11 +284,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 	}
 			
     private void addModFunction() {
-        addTypedArithmeticFunction("mod", QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        addTypedArithmeticFunction("mod", QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.LONG); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
-        addTypedArithmeticFunction("mod", QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.FLOAT); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
-        addTypedArithmeticFunction("mod", QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.DOUBLE); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
-        addTypedArithmeticFunction("mod", QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.BIG_INTEGER); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
+        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.LONG); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
+        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.FLOAT); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
+        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.DOUBLE); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
+        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.BIG_INTEGER); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-4$
     }
     
     private void addPowerFunction() {
@@ -299,7 +298,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addTypedPowerFunction(String baseType, String powerType) { 
         functions.add(
-            new FunctionMethod("power", QueryPlugin.Util.getString("SystemSource.Power_desc"), NUMERIC, FUNCTION_CLASS, "power", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.POWER, QueryPlugin.Util.getString("SystemSource.Power_desc"), NUMERIC, FUNCTION_CLASS, "power", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("base", baseType, QueryPlugin.Util.getString("SystemSource.Power_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("power", powerType, QueryPlugin.Util.getString("SystemSource.Power_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -315,7 +314,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addTypedRoundFunction(String roundType) { 
         functions.add(
-            new FunctionMethod("round", QueryPlugin.Util.getString("SystemSource.Round_desc"), NUMERIC, FUNCTION_CLASS, "round", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.ROUND, QueryPlugin.Util.getString("SystemSource.Round_desc"), NUMERIC, FUNCTION_CLASS, "round", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("number", roundType, QueryPlugin.Util.getString("SystemSource.Round_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("places", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Round_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -333,7 +332,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     
     private void addTypedSignFunction(String type) {        
         functions.add(
-            new FunctionMethod("sign", QueryPlugin.Util.getString("SystemSource.Sign_desc"), NUMERIC, FUNCTION_CLASS, "sign", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.SIGN, QueryPlugin.Util.getString("SystemSource.Sign_desc"), NUMERIC, FUNCTION_CLASS, "sign", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("number", type, QueryPlugin.Util.getString("SystemSource.Sign_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Sign_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
@@ -348,7 +347,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     
     private void addTypedSqrtFunction(String type) {        
         functions.add(
-            new FunctionMethod("sqrt", QueryPlugin.Util.getString("SystemSource.Sqrt_desc"), NUMERIC, FUNCTION_CLASS, "sqrt", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.SQRT, QueryPlugin.Util.getString("SystemSource.Sqrt_desc"), NUMERIC, FUNCTION_CLASS, "sqrt", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("number", type, QueryPlugin.Util.getString("SystemSource.Sqrt_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Sqrt_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
@@ -393,21 +392,21 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addTimestampAddFunction() {
 		functions.add(
-			new FunctionMethod("timestampAdd", QueryPlugin.Util.getString("SystemSource.Timestampadd_d_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg2")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg3"))}, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 		functions.add(
-			new FunctionMethod("timestampAdd", QueryPlugin.Util.getString("SystemSource.Timestampadd_t_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_arg2")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_arg3"))}, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 		functions.add(
-			new FunctionMethod("timestampAdd", QueryPlugin.Util.getString("SystemSource.Timestampadd_ts_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_ts_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampadd_ts_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Timestampadd_ts_arg2")),  //$NON-NLS-1$ //$NON-NLS-2$
@@ -417,14 +416,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addTimestampDiffFunction() {
         functions.add(
-            new FunctionMethod("timestampDiff", QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.TIMESTAMPDIFF, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("time1", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("time2", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg3"))}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("timestampDiff", QueryPlugin.Util.getString("SystemSource.Timestampdiff_ts_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.TIMESTAMPDIFF, QueryPlugin.Util.getString("SystemSource.Timestampdiff_ts_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampdiff_ts_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("timestamp1", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.Timestampdiff_ts_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -434,7 +433,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     
     private void addTimestampCreateFunction() {
         functions.add(
-              new FunctionMethod("timestampCreate", QueryPlugin.Util.getString("SystemSource.TimestampCreate_desc"), DATETIME, FUNCTION_CLASS, "timestampCreate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+              new FunctionMethod(SourceSystemFunctions.TIMESTAMPCREATE, QueryPlugin.Util.getString("SystemSource.TimestampCreate_desc"), DATETIME, FUNCTION_CLASS, "timestampCreate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                   new FunctionParameter[] {
                       new FunctionParameter("date", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.TimestampCreate_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
                       new FunctionParameter("time", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.TimestampCreate_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
@@ -472,7 +471,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addConcatFunction() {
         functions.add(
-            new FunctionMethod("concat", QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.CONCAT, QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -494,14 +493,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addSubstringFunction() {
         functions.add(
-            new FunctionMethod("substring", QueryPlugin.Util.getString("SystemSource.Substring_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.SUBSTRING, QueryPlugin.Util.getString("SystemSource.Substring_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("substring", QueryPlugin.Util.getString("SystemSource.Susbstring2_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.SUBSTRING, QueryPlugin.Util.getString("SystemSource.Susbstring2_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring2_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -510,13 +509,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addLeftRightFunctions() {
         functions.add(
-            new FunctionMethod("left", QueryPlugin.Util.getString("SystemSource.Left_desc"), STRING, FUNCTION_CLASS, "left", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.LEFT, QueryPlugin.Util.getString("SystemSource.Left_desc"), STRING, FUNCTION_CLASS, "left", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Left_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Left_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Left2_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("right", QueryPlugin.Util.getString("SystemSource.Right_desc"), STRING, FUNCTION_CLASS, "right", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.RIGHT, QueryPlugin.Util.getString("SystemSource.Right_desc"), STRING, FUNCTION_CLASS, "right", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Right_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Right_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -525,14 +524,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
            
     private void addLocateFunction() {
         functions.add(
-            new FunctionMethod("locate", QueryPlugin.Util.getString("SystemSource.Locate_desc"), STRING, FUNCTION_CLASS, "locate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.LOCATE, QueryPlugin.Util.getString("SystemSource.Locate_desc"), STRING, FUNCTION_CLASS, "locate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Locate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Locate_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Locate_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Locate_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("locate", QueryPlugin.Util.getString("SystemSource.Locate2_desc"), STRING, FUNCTION_CLASS, "locate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.LOCATE, QueryPlugin.Util.getString("SystemSource.Locate2_desc"), STRING, FUNCTION_CLASS, "locate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Locate2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Locate2_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -541,7 +540,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addReplaceFunction() {
         functions.add(
-            new FunctionMethod("replace", QueryPlugin.Util.getString("SystemSource.Replace_desc"), STRING, FUNCTION_CLASS, "replace", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.REPLACE, QueryPlugin.Util.getString("SystemSource.Replace_desc"), STRING, FUNCTION_CLASS, "replace", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Replace_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Replace_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -551,7 +550,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addRepeatFunction() {
 		functions.add(
-			new FunctionMethod("repeat", QueryPlugin.Util.getString("SystemSource.Repeat_desc"), STRING, FUNCTION_CLASS, "repeat", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.REPEAT, QueryPlugin.Util.getString("SystemSource.Repeat_desc"), STRING, FUNCTION_CLASS, "repeat", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Repeat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Repeat_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
@@ -560,7 +559,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addSpaceFunction() {
 		functions.add(
-			new FunctionMethod("space", QueryPlugin.Util.getString("SystemSource.Space_desc"), STRING, FUNCTION_CLASS, "space", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(FunctionLibrary.SPACE, QueryPlugin.Util.getString("SystemSource.Space_desc"), STRING, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Space_arg1"))}, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Space_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
@@ -568,7 +567,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addInsertFunction() {
 		functions.add(
-			new FunctionMethod("insert", QueryPlugin.Util.getString("SystemSource.Insert_desc"), STRING, FUNCTION_CLASS, "insert", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.INSERT, QueryPlugin.Util.getString("SystemSource.Insert_desc"), STRING, FUNCTION_CLASS, "insert", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("str1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Insert_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("start", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Insert_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -579,36 +578,33 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		
     private void addAsciiFunction() {
         functions.add(
-            new FunctionMethod("ascii", QueryPlugin.Util.getString("SystemSource.Ascii_desc"), STRING, FUNCTION_CLASS, "ascii", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.ASCII, QueryPlugin.Util.getString("SystemSource.Ascii_desc"), STRING, FUNCTION_CLASS, "ascii", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Ascii_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Ascii_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("ascii", QueryPlugin.Util.getString("SystemSource.Ascii2_desc"), STRING, FUNCTION_CLASS, "ascii", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.ASCII, QueryPlugin.Util.getString("SystemSource.Ascii2_desc"), STRING, FUNCTION_CLASS, "ascii", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("char", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Ascii2_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Ascii2_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    private void addChrFunction() {
-        functions.add(
-            new FunctionMethod("chr", QueryPlugin.Util.getString("SystemSource.Chr_desc"), STRING, FUNCTION_CLASS, "chr", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("code", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Chr_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Chr_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-	
 	private void addCharFunction() {
 		functions.add(
-			new FunctionMethod("char", QueryPlugin.Util.getString("SystemSource.Char_desc"), STRING, FUNCTION_CLASS, "chr", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod(SourceSystemFunctions.CHAR, QueryPlugin.Util.getString("SystemSource.Char_desc"), STRING, FUNCTION_CLASS, "chr", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("code", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Char_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Char_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(
+                new FunctionMethod("chr", QueryPlugin.Util.getString("SystemSource.Chr_desc"), STRING, FUNCTION_CLASS, "chr", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    new FunctionParameter[] {
+                        new FunctionParameter("code", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Chr_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Chr_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     private void addInitCapFunction() {
         functions.add(
-            new FunctionMethod("initcap", QueryPlugin.Util.getString("SystemSource.Initcap_desc"), STRING, FUNCTION_CLASS, "initCap", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.INITCAP, QueryPlugin.Util.getString("SystemSource.Initcap_desc"), STRING, FUNCTION_CLASS, "initCap", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Initcap_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Initcap_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -616,20 +612,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addLpadFunction() {
         functions.add(
-            new FunctionMethod("lpad", QueryPlugin.Util.getString("SystemSource.Lpad_desc"), STRING, FUNCTION_CLASS, "lpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.LPAD, QueryPlugin.Util.getString("SystemSource.Lpad_desc"), STRING, FUNCTION_CLASS, "lpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lpad_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Lpad_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lpad_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("lpad", QueryPlugin.Util.getString("SystemSource.Lpad2_desc"), STRING, FUNCTION_CLASS, "lpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lpad2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Lpad2_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("char", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Lpad2_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lpad2_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
-        functions.add(
-            new FunctionMethod("lpad", QueryPlugin.Util.getString("SystemSource.Lpad3_desc"), STRING, FUNCTION_CLASS, "lpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.LPAD, QueryPlugin.Util.getString("SystemSource.Lpad3_desc"), STRING, FUNCTION_CLASS, "lpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lpad3_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Lpad3_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -639,20 +628,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addRpadFunction() {
         functions.add(
-            new FunctionMethod("rpad", QueryPlugin.Util.getString("SystemSource.Rpad1_desc"), STRING, FUNCTION_CLASS, "rpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.RPAD, QueryPlugin.Util.getString("SystemSource.Rpad1_desc"), STRING, FUNCTION_CLASS, "rpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Rpad1_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rpad1_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Rpad1_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod("rpad", QueryPlugin.Util.getString("SystemSource.Rpad2_desc"), STRING, FUNCTION_CLASS, "rpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Rpad2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rpad2_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("char", DataTypeManager.DefaultDataTypes.CHAR, QueryPlugin.Util.getString("SystemSource.Rpad2_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Rpad2_result")) ) ); //$NON-NLS-1$ //$NON-NLS-2$
-        functions.add(
-            new FunctionMethod("rpad", QueryPlugin.Util.getString("SystemSource.Rpad3_desc"), STRING, FUNCTION_CLASS, "rpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.RPAD, QueryPlugin.Util.getString("SystemSource.Rpad3_desc"), STRING, FUNCTION_CLASS, "rpad", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Rpad3_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rpad3_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -662,7 +644,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
     private void addTranslateFunction() {
         functions.add(
-            new FunctionMethod("translate", QueryPlugin.Util.getString("SystemSource.Translate_desc"), STRING, FUNCTION_CLASS, "translate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod(SourceSystemFunctions.TRANSLATE, QueryPlugin.Util.getString("SystemSource.Translate_desc"), STRING, FUNCTION_CLASS, "translate", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Translate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("source", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Translate_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -672,7 +654,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     
     private void addConversionFunctions() {
     	for (String type : DataTypeManager.getAllDataTypeNames()) {
-            addTypedConversionFunction("convert", type); //$NON-NLS-1$
+            addTypedConversionFunction(SourceSystemFunctions.CONVERT, type); //$NON-NLS-1$
             addTypedConversionFunction("cast", type); //$NON-NLS-1$
     	}
     }
@@ -725,21 +707,20 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }    
     
     private void addDecodeFunctions(){
-        
         addDecodeFunction("decodeInteger", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         addDecodeFunction("decodeString", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
     }
         
     private void addDecodeFunction(String functionName, String resultType) {
         functions.add(
-            new FunctionMethod(functionName, QueryPlugin.Util.getString("SystemSource.Decode1_desc"), MISCELLANEOUS, FUNCTION_CLASS, functionName, //$NON-NLS-1$
+            new FunctionMethod(functionName, QueryPlugin.Util.getString("SystemSource.Decode1_desc"), MISCELLANEOUS, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
                 new FunctionParameter[] { 
                     new FunctionParameter("input", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Decode1_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("decodeString", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Decode1_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", resultType, QueryPlugin.Util.getString("SystemSource.Decode1_result") ) ) );    //$NON-NLS-1$ //$NON-NLS-2$
                      
         functions.add(
-            new FunctionMethod(functionName, QueryPlugin.Util.getString("SystemSource.Decode2_desc"), MISCELLANEOUS, FUNCTION_CLASS, functionName, //$NON-NLS-1$
+            new FunctionMethod(functionName, QueryPlugin.Util.getString("SystemSource.Decode2_desc"), MISCELLANEOUS, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
                 new FunctionParameter[] { 
                     new FunctionParameter("input", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Decode2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("decodeString", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Decode2_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -790,21 +771,16 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                  new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.CommandPayload_result")), false, FunctionMethod.COMMAND_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    private void addNvlFunctions() {
+    private void addIfNullFunctions() {
     	for (String type : DataTypeManager.getAllDataTypeNames()) {
-            addNvlFunction(type);    
+            addNvlFunction(type);
+            addIfNullFunction(type);
     	}
     }
-
-	private void addIfNullFunctions() {
-    	for (String type : DataTypeManager.getAllDataTypeNames()) {
-    		addIfNullFunction(type);    
-    	}
-	}
 	
     private void addNvlFunction(String valueType) {
         FunctionMethod nvl = 
-            new FunctionMethod("nvl", QueryPlugin.Util.getString("SystemSource.Nvl_desc"), MISCELLANEOUS, FUNCTION_CLASS, "nvl", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new FunctionMethod("nvl", QueryPlugin.Util.getString("SystemSource.Nvl_desc"), MISCELLANEOUS, FUNCTION_CLASS, "ifnull", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
                     new FunctionParameter("value", valueType, QueryPlugin.Util.getString("SystemSource.Nvl_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("valueIfNull", valueType, QueryPlugin.Util.getString("SystemSource.Nvl_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -815,7 +791,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addIfNullFunction(String valueType) {
 		FunctionMethod nvl = 
-			new FunctionMethod("ifnull", QueryPlugin.Util.getString("SystemSource.Ifnull_desc"), MISCELLANEOUS, FUNCTION_CLASS, "nvl", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new FunctionMethod("ifnull", QueryPlugin.Util.getString("SystemSource.Ifnull_desc"), MISCELLANEOUS, FUNCTION_CLASS, "ifnull", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new FunctionParameter[] {
 					new FunctionParameter("value", valueType, QueryPlugin.Util.getString("SystemSource.Ifnull_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("valueIfNull", valueType, QueryPlugin.Util.getString("SystemSource.Ifnull_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -921,13 +897,13 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      * @since 4.2
      */
     private void addXpathFunction() {
-        functions.add(new FunctionMethod("xpathValue", QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             new FunctionParameter[] { 
                                 new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
-        functions.add(new FunctionMethod("xpathValue", QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpath_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                          new FunctionParameter[] { 
                                              new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                              new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -936,14 +912,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
     
     private void addTimeZoneFunctions() {
-        functions.add(new FunctionMethod("modifyTimeZone", QueryPlugin.Util.getString("SystemSource.modifyTimeZone_description"), DATETIME, FUNCTION_CLASS, "modifyTimeZone", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        functions.add(new FunctionMethod(SourceSystemFunctions.MODIFYTIMEZONE, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_description"), DATETIME, FUNCTION_CLASS, "modifyTimeZone", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             new FunctionParameter[] { 
                                 new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("startTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param2")), //$NON-NLS-1$ //$NON-NLS-2$
                                 new FunctionParameter("endTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
-        functions.add(new FunctionMethod("modifyTimeZone", QueryPlugin.Util.getString("SystemSource.modifyTimeZone_description"), DATETIME, FUNCTION_CLASS, "modifyTimeZone", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        functions.add(new FunctionMethod(SourceSystemFunctions.MODIFYTIMEZONE, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_description"), DATETIME, FUNCTION_CLASS, "modifyTimeZone", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                          new FunctionParameter[] { 
                                              new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                              new FunctionParameter("endTimeZone", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.modifyTimeZone_param3"))}, //$NON-NLS-1$ //$NON-NLS-2$ 

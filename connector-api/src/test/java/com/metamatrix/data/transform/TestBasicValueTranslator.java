@@ -37,33 +37,14 @@ import com.metamatrix.connector.basic.BasicValueTranslator;
  */
 public class TestBasicValueTranslator extends TestCase {
 
-
     public void testExceptionFromTransform() throws Exception {
-    	BasicValueTranslator<String, Short> adaptor = BasicValueTranslator.createTranslator(String.class, Short.class, new FakeTypeFacility());
+    	BasicValueTranslator<String, Short> adaptor = BasicValueTranslator.createTranslator(String.class, Short.class, Mockito.mock(TypeFacility.class));
         try {
             adaptor.translate("mmuuid:blah", Mockito.mock(ExecutionContext.class)); //$NON-NLS-1$
             fail("exceptoin expected"); //$NON-NLS-1$
         } catch(ConnectorException e) {
             // expected
         }
-    }
-    
-    static class FakeTypeFacility extends TypeFacility{
-
-		@Override
-		public boolean hasTransformation(Class sourceClass, Class targetClass) {
-			return false;
-		}
-
-		@Override
-		public Object transformValue(Object value, Class sourceClass, Class targetClass) throws ConnectorException {
-			throw new ConnectorException("not supported");
-		}
-		
-		@Override
-		public Object convertToRuntimeType(Object value) {
-			return value;
-		}
     }
     
 }

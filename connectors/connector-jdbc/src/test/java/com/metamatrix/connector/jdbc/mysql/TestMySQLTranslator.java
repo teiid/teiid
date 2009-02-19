@@ -30,7 +30,6 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.MetadataFactory;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;
 
@@ -39,12 +38,12 @@ import com.metamatrix.connector.language.ICommand;
 public class TestMySQLTranslator extends TestCase {
 
     private static Map MODIFIERS;
-    private static SQLTranslator TRANSLATOR; 
+    private static MySQLTranslator TRANSLATOR; 
     
     static {
         try {
             TRANSLATOR = new MySQLTranslator();        
-            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
             MODIFIERS = TRANSLATOR.getFunctionModifiers();
         } catch(ConnectorException e) {
             e.printStackTrace();    
@@ -63,7 +62,7 @@ public class TestMySQLTranslator extends TestCase {
         return MetadataFactory.BQT_VDB; 
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, int expectedType, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
         ICommand obj = MetadataFactory.helpTranslate(vdb, input);
         
@@ -73,7 +72,6 @@ public class TestMySQLTranslator extends TestCase {
         
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-        assertEquals("Did not get expected command type", expectedType, tc.getExecutionType());         //$NON-NLS-1$
     }
 
     public void testRewriteConversion1() throws Exception {
@@ -83,7 +81,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -94,7 +91,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -105,7 +101,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -116,7 +111,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion5() throws Exception {
@@ -126,7 +120,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion6() throws Exception {
@@ -136,17 +129,15 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion8() throws Exception {
-        String input = "SELECT nvl(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
+        String input = "SELECT ifnull(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT ifnull(PARTS.PART_WEIGHT, 'otherString') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion7() throws Exception {
@@ -156,7 +147,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteInsert() throws Exception {
@@ -166,7 +156,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteLocate() throws Exception {
@@ -176,7 +165,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteSubstring1() throws Exception {
@@ -186,7 +174,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteSubstring2() throws Exception {
@@ -196,7 +183,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteUnionWithOrderBy() throws Exception {
@@ -206,7 +192,6 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -217,7 +202,7 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestBQTVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }
     public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
@@ -226,7 +211,7 @@ public class TestMySQLTranslator extends TestCase {
         helpTestVisitor(getTestBQTVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }
           
 }

@@ -93,8 +93,7 @@ public class BasicResultsTranslator implements ResultsTranslator {
         }               
     }
     
-    
-    public TypeFacility getTypefacility() {
+    public TypeFacility getTypeFacility() {
     	return typeFacility;
     }
     

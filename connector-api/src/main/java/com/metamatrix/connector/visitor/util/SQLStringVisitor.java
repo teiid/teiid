@@ -29,7 +29,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.ICaseExpression;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.ICriteria;
@@ -72,7 +72,6 @@ import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.visitor.framework.AbstractLanguageVisitor;
 import com.metamatrix.core.util.StringUtil;
 
@@ -87,7 +86,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
     
-    protected RuntimeMetadata metadata;
     protected StringBuffer buffer = new StringBuffer();
                 
     /**
@@ -96,12 +94,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @return the name of that element or group as defined in the source
      */
     protected String getName(MetadataID id) {
-        if (metadata == null) {
-            return id.getName();
-        }
-        
         try {
-            MetadataObject obj = metadata.getObject(id);
+            MetadataObject obj = id.getMetadataObject();
             if (obj == null) {
                 return id.getName();
             }
@@ -193,84 +187,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.ICaseExpression)
-     */
-    public void visit(ICaseExpression obj) {
-        final IElement element = obj.getExpression() instanceof IElement ? (IElement)obj.getExpression() : null;
-        final IFunction function = obj.getExpression() instanceof IFunction ? (IFunction)obj.getExpression() : null ;   
-
-        buffer.append(CASE);
-        buffer.append(SPACE);
-       
-        // checking for null compare in decode string case 2969 GCSS
-        for (int i =0; i < obj.getWhenCount(); i++) {                          
-            if (NULL.equalsIgnoreCase(obj.getWhenExpression(i).toString() ) ) { 
-                buffer.append(WHEN);
-                buffer.append(SPACE);
-                
-                if(element != null) {
-                    visit(element);
-                }else if(function != null) {
-                    visit(function);
-                }else {
-                    append(obj.getExpression() );
-                }
-
-                buffer.append(SPACE);
-                buffer.append(IS);
-                buffer.append(SPACE);
-                buffer.append(NULL);
-                buffer.append(SPACE);
-                buffer.append(THEN);
-                buffer.append(SPACE);
-                append(obj.getThenExpression(i));
-                buffer.append(SPACE);
-            }
-        }
-        
-        for (int i = 0; i < obj.getWhenCount(); i++) {
-            if(!NULL.equalsIgnoreCase(obj.getWhenExpression(i).toString() ) ) {
-                buffer.append(WHEN);
-                buffer.append(SPACE);
-                
-                if(element != null) {
-                    visit(element);
-                }else if(function != null) {
-                    visit(function);
-                }else {
-                    append(obj.getExpression() );
-                }
-
-                buffer.append(EQ);
-                append(obj.getWhenExpression(i));
-                buffer.append(SPACE);
-                buffer.append(THEN);
-                buffer.append(SPACE);
-                append(obj.getThenExpression(i));
-                buffer.append(SPACE);
-            }
-        }
-
-        if (obj.getElseExpression() != null) {
-            buffer.append(ELSE);
-            buffer.append(SPACE);
-            if(obj.getElseExpression() instanceof IElement || obj.getElseExpression() instanceof IFunction) {
-                if(element != null) {
-                    visit(element);
-                }else if(function != null) {
-                    visit(function);
-                }else {
-                    append(obj.getExpression() );
-                }
-            }else {
-                append(obj.getElseExpression());
-            }
-            buffer.append(SPACE);
-        }
-        buffer.append(END);              
-    }
-
-    /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.ICompareCriteria)
      */
     public void visit(ICompareCriteria obj) {
@@ -329,7 +245,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IDelete obj) {
         buffer.append(DELETE)
               .append(SPACE);
-        buffer.append(addProcessComment());
+        buffer.append(getSourceComment(obj));
         buffer.append(FROM)
               .append(SPACE);
         append(obj.getGroup());
@@ -365,9 +281,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IElement)
      */
     public void visit(IElement obj) {
-        String groupName = null;
+        buffer.append(getElementName(obj, true));
+    }
+
+	private String getElementName(IElement obj, boolean qualify) {
+		String groupName = null;
         IGroup group = obj.getGroup();
-        if (group != null) {
+        if (group != null && qualify) {
             if(group.getDefinition() != null) { 
                 groupName = group.getContext();
             } else {  
@@ -380,24 +300,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             }
         }
         
-        String elemShortName = getElementShortName(obj);
-
-        // Check whether a subclass wants to replace the element name to use in special circumstances
-        String replacementElement = replaceElementName(groupName, elemShortName);
-        if(replacementElement != null) {
-            // If so, use it as is
-            buffer.append(replacementElement);
-        } else {
-            // If not, do normal logic:  [group + "."] + element
-            if(groupName != null) {
-                buffer.append(groupName);
-                buffer.append(DOT);
-            }
-            buffer.append(elemShortName);
-        }
-    }
-
-	public String getElementShortName(IElement obj) {
 		String elemShortName = null;        
         MetadataID elementID = obj.getMetadataID();
         if(elementID != null) {
@@ -406,19 +308,29 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             String elementName = obj.getName();
             elemShortName = getShortName(elementName);
         }
-		return elemShortName;
-	}
+
+        // Check whether a subclass wants to replace the element name to use in special circumstances
+        String replacementElement = replaceElementName(groupName, elemShortName);
+        if(replacementElement != null) {
+            // If so, use it as is
+            return replacementElement;
+        } 
+        StringBuffer elementName = new StringBuffer(elemShortName.length());
+        // If not, do normal logic:  [group + "."] + element
+        if(groupName != null) {
+        	elementName.append(groupName);
+        	elementName.append(DOT);
+        }
+        elementName.append(elemShortName);
+        return elementName.toString();
+    }
 
     /** 
      * @param elementName
      * @return
      * @since 4.3
      */
-    public String getShortName(String elementName) {
-        return getElementShortName(elementName);
-    }      
-    
-    public static String getElementShortName(String elementName) {
+    public static String getShortName(String elementName) {
         int lastDot = elementName.lastIndexOf("."); //$NON-NLS-1$
         if(lastDot >= 0) {
             elementName = elementName.substring(lastDot+1);                
@@ -490,30 +402,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         IExpression[] args = obj.getParameters();
         if(name.equalsIgnoreCase(CONVERT) || name.equalsIgnoreCase(CAST)) { 
             
-            // Need to support both Oracle style convert - convert(expression, type)
-            // and SQL Server style convert - convert(type, expression)
-            Object firstArg = null;
-            Object secondArg = null;
-            if (args[1] instanceof IElement) {
-                Object typeValue = ((ILiteral)args[0]).getValue();
-                Object expression = args[1];
-                firstArg = typeValue;
-                secondArg = expression;
-            } else {
-                Object typeValue = ((ILiteral)args[1]).getValue();
-                Object expression = args[0];
-                firstArg = expression;
-                secondArg = typeValue;
-            }
+            Object typeValue = ((ILiteral)args[1]).getValue();
                
             buffer.append(name);
             buffer.append(LPAREN); 
             
-            if(firstArg instanceof IExpression) {
-                this.append( (IExpression)firstArg);
-            }else {
-                buffer.append(firstArg);
-            }
+            append(args[0]);
 
             if(name.equalsIgnoreCase(CONVERT)) { 
                 buffer.append(COMMA); 
@@ -523,15 +417,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                 buffer.append(AS); 
                 buffer.append(SPACE); 
             }
-            
-            if(secondArg instanceof IExpression) {
-                this.append( (IExpression)secondArg);
-            }else {
-                buffer.append(secondArg);
-            }
+            buffer.append(typeValue);
             buffer.append(RPAREN); 
-
-        } else if(name.equals("+") || name.equals("-") || name.equals("*") || name.equals("/") || name.equals("||")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        } else if(name.equals("%") || name.equals("+") || name.equals("-") || name.equals("*") || name.equals("/") || name.equals("||")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             buffer.append(LPAREN); 
 
             if(args != null) {
@@ -669,7 +557,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     private void formatBasicInsert(IInsert obj) {
         buffer.append(INSERT)
               .append(SPACE);
-        buffer.append(addProcessComment());
+        buffer.append(getSourceComment(obj));
         buffer.append(INTO)
               .append(SPACE);
         append(obj.getGroup());
@@ -679,13 +567,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
 
             int elementCount= obj.getElements().size();
             for(int i=0; i<elementCount; i++) {
-	           	String elementShortNmae = getElementShortName((IElement)obj.getElements().get( i ));
-	           	String replacedEmentShortNmae = getElementTrueName(elementShortNmae);
-	           	if(replacedEmentShortNmae != null){
-	           		buffer.append(replacedEmentShortNmae);
-	           	}else{
-	           		buffer.append(elementShortNmae);
-	           	}
+           		buffer.append(getElementName(obj.getElements().get(i), false));
                 if (i<elementCount-1) {
                     buffer.append(COMMA);
                     buffer.append(SPACE);
@@ -696,10 +578,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         }
     }
     
-    protected String getElementTrueName(String element) {
-    	return null;
-    }
-
     public void visit(IBulkInsert obj) {
         formatBasicInsert(obj);
         buffer.append(SPACE)
@@ -934,11 +812,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IQuery)
      */
     public void visit(IQuery obj) {
-        appendQuery(obj);
-    }
-
-    protected void appendQuery(IQuery obj) {
-        append(obj.getSelect());
+        visitSelect(obj.getSelect(), obj);
         if (obj.getFrom() != null) {
             buffer.append(SPACE);
             append(obj.getFrom());
@@ -999,29 +873,23 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.ISelect)
      */
     public void visit(ISelect obj) {
-        visitSelect(obj);
+    	visitSelect(obj, null);
     }
-    
 
-    protected String addProcessComment() {
-        return ""; //$NON-NLS-1$
-    }
-    
-    /**
-     * This method outputs the 'SELECT' keyword and select symbols.  Subclasses
-     * should override to change/add behavior.
-     * @param obj ISelect object
-     * @since 4.3
-     */
-    protected void visitSelect(ISelect obj) {
-        buffer.append(SELECT).append(SPACE);
-        buffer.append(addProcessComment());
+	private void visitSelect(ISelect obj, ICommand command) {
+		buffer.append(SELECT).append(SPACE);
+        buffer.append(getSourceComment(command));
         if (obj.isDistinct()) {
             buffer.append(DISTINCT).append(SPACE);
         }
         append(obj.getSelectSymbols());
-    }
+	}
+    
 
+    protected String getSourceComment(ICommand command) {
+        return ""; //$NON-NLS-1$
+    }
+    
     /*
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IScalarSubquery)
      */
@@ -1095,7 +963,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IUpdate obj) {
         buffer.append(UPDATE)
               .append(SPACE);
-        buffer.append(addProcessComment());
+        buffer.append(getSourceComment(obj));
         append(obj.getGroup());
         buffer.append(SPACE)
               .append(SET)
@@ -1114,7 +982,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     }
     
     public void visit(ISetClause clause) {
-        buffer.append(getElementShortName(clause.getSymbol()));
+        buffer.append(getElementName(clause.getSymbol(), false));
         buffer.append(SPACE).append(EQ).append(SPACE);
         append(clause.getValue());
     }
@@ -1123,6 +991,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         appendSetQuery(obj.getLeftQuery());
         
         buffer.append(SPACE);
+        
         appendSetOperation(obj.getOperation());
 
         if(obj.isAll()) {
@@ -1149,14 +1018,18 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     protected void appendSetOperation(ISetQuery.Operation operation) {
         buffer.append(operation);
     }
+    
+    protected boolean useParensForSetQueries() {
+    	return false;
+    }
 
     protected void appendSetQuery(IQueryCommand obj) {
-        if(obj instanceof ISetQuery) {
+        if(obj instanceof ISetQuery || useParensForSetQueries()) {
             buffer.append(LPAREN);
             append(obj);
             buffer.append(RPAREN);
         } else {
-            appendQuery((IQuery)obj);
+            append(obj);
         }
     }
  
@@ -1167,15 +1040,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * command
      * @return the SQL representation of that ILanguageObject hierarchy
      */
-    public static String getSQLString(ILanguageObject obj, RuntimeMetadata metadata) {
+    public static String getSQLString(ILanguageObject obj) {
         SQLStringVisitor visitor = new SQLStringVisitor();
-        visitor.setRuntimeMetadata(metadata);
         visitor.append(obj);
         return visitor.toString();
     }
 
-    public void setRuntimeMetadata(RuntimeMetadata metadata) {
-        this.metadata = metadata;        
-    }
-    
 }

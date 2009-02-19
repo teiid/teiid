@@ -30,7 +30,6 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.MetadataFactory;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;
 
@@ -39,12 +38,12 @@ import com.metamatrix.connector.language.ICommand;
 public class TestPostgreSQLTranslator extends TestCase {
 
     private static Map MODIFIERS;
-    private static SQLTranslator TRANSLATOR; 
+    private static PostgreSQLTranslator TRANSLATOR; 
 
     static {
         try {
             TRANSLATOR = new PostgreSQLTranslator();        
-            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
             MODIFIERS = TRANSLATOR.getFunctionModifiers();
         } catch(ConnectorException e) {
             e.printStackTrace();    
@@ -63,7 +62,7 @@ public class TestPostgreSQLTranslator extends TestCase {
         return MetadataFactory.BQT_VDB;
     }
         
-    public void helpTestVisitor(String vdb, String input, Map modifiers, int expectedType, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
         ICommand obj = MetadataFactory.helpTranslate(vdb, input);
         
@@ -73,7 +72,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-        assertEquals("Did not get expected command type", expectedType, tc.getExecutionType());         //$NON-NLS-1$
     }
 
     public void testRewriteConversion1() throws Exception {
@@ -83,7 +81,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -94,7 +91,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -105,7 +101,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
           
@@ -116,7 +111,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion5() throws Exception {
@@ -126,7 +120,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion6() throws Exception {
@@ -136,7 +129,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion7() throws Exception {
@@ -146,7 +138,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion8() throws Exception {
@@ -156,7 +147,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion9() throws Exception {
@@ -166,7 +156,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion10() throws Exception {
@@ -176,7 +165,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion11() throws Exception {
@@ -186,7 +174,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion12() throws Exception {
@@ -196,7 +183,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion13() throws Exception {
@@ -206,7 +192,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion14() throws Exception {
@@ -216,7 +201,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion15() throws Exception {
@@ -226,7 +210,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion16() throws Exception {
@@ -236,7 +219,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion17() throws Exception {
@@ -246,7 +228,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion18() throws Exception {
@@ -256,17 +237,15 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteConversion19() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, boolean), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN cast(PARTS.PART_WEIGHT AS boolean)=TRUE THEN '1' ELSE '0' END FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CASE WHEN cast(PARTS.PART_WEIGHT AS boolean) = TRUE THEN '1' ELSE '0' END FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -277,7 +256,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
         input = "SELECT log10(convert(PART_WEIGHT, double)) FROM PARTS"; //$NON-NLS-1$
         output = "SELECT log(cast(PARTS.PART_WEIGHT AS float8)) FROM PARTS";  //$NON-NLS-1$
@@ -285,28 +263,25 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
     public void testRewriteLeft() throws Exception {
         String input = "SELECT left(PART_WEIGHT, 2) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, 1, 2) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT SUBSTR(PARTS.PART_WEIGHT, 1, 2) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRewriteRight() throws Exception {
         String input = "SELECT right(PART_WEIGHT, 2) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, ((LENGTH(PARTS.PART_WEIGHT) + 1) - 2)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT SUBSTR(PARTS.PART_WEIGHT, (-1 * 2)) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -317,7 +292,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testDayOfMonth() throws Exception {
@@ -327,7 +301,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testDayOfYear() throws Exception {
@@ -337,7 +310,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testHour() throws Exception {
@@ -347,7 +319,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testMinute() throws Exception {
@@ -357,7 +328,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testMonth() throws Exception {
@@ -367,7 +337,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testQuarter() throws Exception {
@@ -377,7 +346,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testSecond() throws Exception {
@@ -387,7 +355,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testWeek() throws Exception {
@@ -397,7 +364,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testYear() throws Exception {
@@ -407,7 +373,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testDayName() throws Exception {
@@ -417,7 +382,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testMonthName() throws Exception {
@@ -427,17 +391,15 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
-    public void testNVL() throws Exception {
-        String input = "SELECT nvl(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
+    public void testIfnull() throws Exception {
+        String input = "SELECT ifnull(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT coalesce(PARTS.PART_WEIGHT, 'otherString') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testSubstring1() throws Exception {
@@ -447,7 +409,6 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testSubstring2() throws Exception {
@@ -457,17 +418,15 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testBooleanAggregate() throws Exception {
         String input = "SELECT MIN(convert(PART_WEIGHT, boolean)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CASE MIN(CASE cast(PARTS.PART_WEIGHT AS boolean) WHEN TRUE THEN 1 ELSE 0 END) WHEN 1 THEN TRUE ELSE FALSE END FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT bool_and(cast(PARTS.PART_WEIGHT AS boolean)) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     public void testRowLimit2() throws Exception {
@@ -477,7 +436,7 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestBQTVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }
     public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
@@ -486,7 +445,7 @@ public class TestPostgreSQLTranslator extends TestCase {
         helpTestVisitor(getTestBQTVDB(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }    
     
 }

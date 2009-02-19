@@ -42,27 +42,8 @@ import com.metamatrix.connector.visitor.util.CollectorVisitor;
  */
 public class TranslatedCommand {
 
-    /** the translated command is a query */
-    public static final int EXEC_TYPE_QUERY = 0;
-
-    /** the translated command is an insert, update, or delete */
-    public static final int EXEC_TYPE_UPDATE = 1;
-
-    /** the translated command is an execute-type command */
-    public static final int EXEC_TYPE_EXECUTE = 2;
-    
-    /** execution of translated command requires a jdbc Statement */
-    public static final int STMT_TYPE_STATEMENT = 0;
-
-    /** execution of translated command requires a jdbc Prepared Statement */
-    public static final int STMT_TYPE_PREPARED_STATEMENT = 1;
-
-    /** execution of translated command requires a jdbc Callable Statement */
-    public static final int STMT_TYPE_CALLABLE_STATEMENT = 2;
-    
     private String sql;
-    private int executionType;
-    private int statementType;
+    private boolean prepared;
     private List preparedValues;
     private List preparedTypes;
     
@@ -79,9 +60,8 @@ public class TranslatedCommand {
     	this.context = context;
     	this.sqlTranslator = sqlTranslator;
     	
-    	Map modifiers = sqlTranslator.getFunctionModifiers();
-        this.sqlConversionVisitor = sqlTranslator.getTranslationVisitor();
-        sqlConversionVisitor.setFunctionModifiers(modifiers);
+    	Map<String, FunctionModifier> modifiers = sqlTranslator.getFunctionModifiers();
+        this.sqlConversionVisitor = new SQLConversionVisitor(sqlTranslator);
         sqlConversionVisitor.setExecutionContext(context);
         this.functionVisitor = new FunctionReplacementVisitor(modifiers);
     }
@@ -102,18 +82,17 @@ public class TranslatedCommand {
      */
     public void translateCommand(ICommand command) throws ConnectorException {
         this.sql = getSQL(command);
-        this.statementType = this.sqlConversionVisitor.getStmtType();
-        this.executionType = this.sqlConversionVisitor.getExecType();
         this.preparedValues = this.sqlConversionVisitor.getPreparedValues();
         this.preparedTypes = this.sqlConversionVisitor.getPreparedTypes();
+        this.prepared = this.sqlConversionVisitor.isPrepared();
     }
 	
 	private String getSQL(ICommand command) throws ConnectorException {
         command = sqlTranslator.modifyCommand(command, context);
 		command.acceptVisitor(functionVisitor);
         
-        if (this.sqlConversionVisitor.getStmtType() == STMT_TYPE_PREPARED_STATEMENT || hasBindValue(command)) {
-            this.sqlConversionVisitor.setStmtType(STMT_TYPE_PREPARED_STATEMENT);
+        if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
+            this.sqlConversionVisitor.setPrepared(true);
             
             command.acceptVisitor(new BindValueVisitor());
         }
@@ -151,16 +130,6 @@ public class TranslatedCommand {
     }
     
     /**
-     * Return the execution type, one of {@link #EXEC_TYPE_QUERY},
-     * {@link #EXEC_TYPE_UPDATE}, or
-     * {@link #EXEC_TYPE_EXECUTE}
-     * @return execution type of translated command
-     */
-    public int getExecutionType() {
-        return executionType;
-    }
-
-    /**
      * Return List of values to set on a prepared statement, if 
      * necessary (see {@link #getStatementType})
      * @return List of values to be set on a prepared statement
@@ -195,8 +164,8 @@ public class TranslatedCommand {
      * {@link #STMT_TYPE_CALLABLE_STATEMENT}
      * @return statement type of translated command
      */
-    public int getStatementType() {
-        return statementType;
+    public boolean isPrepared() {
+        return prepared;
     }
 
 }

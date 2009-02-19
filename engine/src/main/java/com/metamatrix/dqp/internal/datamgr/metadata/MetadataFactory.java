@@ -30,6 +30,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.*;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
@@ -38,14 +39,16 @@ import com.metamatrix.query.metadata.StoredProcedureInfo;
  */
 public class MetadataFactory {
     private QueryMetadataInterface metadata;
+    private RuntimeMetadataImpl runtimeMetadata;
        
     public MetadataFactory (QueryMetadataInterface metadata){
         ArgCheck.isNotNull(metadata);
         this.metadata = metadata;
+        this.runtimeMetadata = new RuntimeMetadataImpl(this);
     }
     
-    public RuntimeMetadata createRuntimeMetadata(){
-        return new RuntimeMetadataImpl(this);
+    public RuntimeMetadataImpl getRuntimeMetadata(){
+        return this.runtimeMetadata;
     }
     
     /**
@@ -56,11 +59,11 @@ public class MetadataFactory {
      * @throws QueryMetadataException
      * @throws MetaMatrixComponentException
      */
-    public MetadataID createMetadataID(Object metadataID, int type) throws QueryMetadataException, MetaMatrixComponentException{
-    	if (type == MetadataID.TYPE_GROUP && metadata.isVirtualGroup(metadataID)) {
+    public MetadataID createMetadataID(Object metadataID, Type type) throws QueryMetadataException, MetaMatrixComponentException{
+    	if (type == Type.TYPE_GROUP && metadata.isVirtualGroup(metadataID)) {
     		return null;
     	}
-        MetadataIDImpl id = new MetadataIDImpl(metadataID, metadata);
+        MetadataIDImpl id = new MetadataIDImpl(metadataID, getRuntimeMetadata());
         id.setType(type);
         return id;
     }
@@ -75,8 +78,8 @@ public class MetadataFactory {
     public MetadataID createProcedureID(Object metadataID) throws QueryMetadataException, MetaMatrixComponentException{
         String procName = metadata.getFullName(metadataID);
         StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(procName);        
-        MetadataIDImpl id = new ProcedureIDImpl(metadataID, info, this, metadata);
-        id.setType(MetadataID.TYPE_PROCEDURE);
+        MetadataIDImpl id = new ProcedureIDImpl(metadataID, info, this);
+        id.setType(Type.TYPE_PROCEDURE);
         return id;
     }
     
@@ -88,8 +91,8 @@ public class MetadataFactory {
      * @throws MetaMatrixComponentException
      */
     public MetadataID createParameterID(ProcedureIDImpl procedureID, Object metadataID) throws QueryMetadataException, MetaMatrixComponentException{
-        ParameterIDImpl id = new ParameterIDImpl(metadataID, procedureID, metadata);
-        id.setType(MetadataID.TYPE_PARAMETER);
+        ParameterIDImpl id = new ParameterIDImpl(metadataID, procedureID, getRuntimeMetadata());
+        id.setType(Type.TYPE_PARAMETER);
         return id;
     }
 
@@ -101,25 +104,25 @@ public class MetadataFactory {
      * @throws MetaMatrixComponentException
      */
     public MetadataID createResultSetID(ProcedureIDImpl procedureID, Object metadataID, List resultSetColumns) throws QueryMetadataException, MetaMatrixComponentException{
-        ParameterIDImpl id = new ParameterIDImpl(metadataID, procedureID, metadata, resultSetColumns);
-        id.setType(MetadataID.TYPE_PARAMETER);
+        ParameterIDImpl id = new ParameterIDImpl(metadataID, procedureID, getRuntimeMetadata(), resultSetColumns);
+        id.setType(Type.TYPE_PARAMETER);
         return id;
     }
     
     public MetadataObject createMetadataObject(MetadataID id) throws QueryMetadataException, MetaMatrixComponentException, ConnectorException {
-        int type = id.getType();
+    	Type type = id.getType();
         MetadataIDImpl idImpl = (MetadataIDImpl) id;
         MetadataObject mObj = null;
-        if(type == MetadataID.TYPE_GROUP){
+        if(type == Type.TYPE_GROUP){
             mObj = new GroupImpl(idImpl);
             
-        } else if(type == MetadataID.TYPE_ELEMENT){            
+        } else if(type == Type.TYPE_ELEMENT){            
             mObj = new ElementImpl(idImpl);
             
-        } else if(type == MetadataID.TYPE_PROCEDURE){
+        } else if(type == Type.TYPE_PROCEDURE){
             mObj = new ProcedureImpl(idImpl);
             
-        } else if(type == MetadataID.TYPE_PARAMETER) {
+        } else if(type == Type.TYPE_PARAMETER) {
             mObj = new ParameterImpl(idImpl);                
             
         } else{
@@ -139,4 +142,8 @@ public class MetadataFactory {
     public String[] getVDBResourcePaths() throws MetaMatrixComponentException, QueryMetadataException {
         return metadata.getVDBResourcePaths();
     }
+    
+    public QueryMetadataInterface getMetadata() {
+		return metadata;
+	}
 }

@@ -124,7 +124,7 @@ public class MySQLCapabilities extends JDBCCapabilities {
         //   ADDITIONAL functions supported by MySQL
         
 //        // Comparison
-//        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$

@@ -36,6 +36,8 @@ import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.ConnectionListener;
 import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
+import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.xa.api.XAConnection;
 
 public class JDBCSourceXAConnection extends JDBCSourceConnection implements XAConnection {
@@ -43,8 +45,8 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
     private XAResource resource;
     private boolean errorOccurred;
     
-    public JDBCSourceXAConnection(Connection conn, javax.sql.XAConnection xaConn, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ConnectionListener connectionListener) throws ConnectorException, SQLException {       
-        super(conn, environment, connectionStrategy, connectionListener);
+    public JDBCSourceXAConnection(Connection conn, javax.sql.XAConnection xaConn, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ConnectionListener connectionListener, ResultsTranslator resultsTranslator, SQLTranslator sqlTranslator) throws ConnectorException, SQLException {       
+        super(conn, environment, connectionStrategy, connectionListener, resultsTranslator, sqlTranslator);
         this.xaConn = xaConn;
         this.xaConn.addConnectionEventListener(new ConnectionEventListener() {
         	@Override

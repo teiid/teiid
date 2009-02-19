@@ -64,6 +64,6 @@ public class TestLog10FunctionModifier extends TestCase {
         assertEquals(Integer.class, newArg.getType());
         assertEquals(new Integer(10), newArg.getValue());
         
-        assertEquals("log(10, 5.2)", SQLStringVisitor.getSQLString(outFunc, null));              //$NON-NLS-1$
+        assertEquals("log(10, 5.2)", SQLStringVisitor.getSQLString(outFunc));              //$NON-NLS-1$
     }
 }

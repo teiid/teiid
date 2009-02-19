@@ -53,6 +53,7 @@ import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
+import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.eval.Evaluator;
@@ -60,7 +61,6 @@ import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
-import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
@@ -121,7 +121,6 @@ import com.metamatrix.query.sql.proc.LoopStatement;
 import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.proc.TranslateCriteria;
 import com.metamatrix.query.sql.proc.WhileStatement;
-import com.metamatrix.query.sql.symbol.AbstractCaseExpression;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
@@ -159,6 +158,17 @@ public class QueryRewriter {
     private final static Timestamp EXAMPLE_TIMESTAMP = Timestamp.valueOf("2001-02-03 13:04:05.01"); //$NON-NLS-1$
     private final static Time EXAMPLE_TIME = Time.valueOf("13:04:05"); //$NON-NLS-1$
     private final static Date EXAMPLE_DATE = Date.valueOf("2001-02-03"); //$NON-NLS-1$
+    
+    private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
+    
+    static {
+    	ALIASED_FUNCTIONS.put("lower", SourceSystemFunctions.LCASE);
+    	ALIASED_FUNCTIONS.put("upper", SourceSystemFunctions.UCASE);
+    	ALIASED_FUNCTIONS.put("cast", SourceSystemFunctions.CONVERT);
+    	ALIASED_FUNCTIONS.put("nvl", SourceSystemFunctions.IFNULL);
+    	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT);
+    	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR);
+    }
 
 	private QueryRewriter() { }
 
@@ -1981,15 +1991,26 @@ public class QueryRewriter {
 		return expression;
 	}
 
-	/**
-     * <p>Do 2 things:
-     * <ol>
-     * <li> If function is a type conversion of type X to type X - eliminate it</li>
-     * <li> If this is a function totally based on constants, execute it now
-     * rather than many times in the processor, and return the equivalent constant</li>
-     * </ol></p>
-     */
 	private static Expression rewriteFunction(Function function, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+		//rewrite alias functions
+		String actualName =ALIASED_FUNCTIONS.get(function.getName().toLowerCase());
+		if (actualName != null) {
+			function.setName(actualName);
+		}
+		
+		//space(x) => repeat(' ', x)
+		if (function.getName().equalsIgnoreCase(FunctionLibrary.SPACE)) {
+			//change the function into timestampadd
+			Function result = new Function(SourceSystemFunctions.REPEAT,
+					new Expression[] {new Constant(" "), function.getArg(0)});
+			//resolve the function
+			FunctionDescriptor descriptor = 
+	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
+			result.setFunctionDescriptor(descriptor);
+			result.setType(DataTypeManager.DefaultDataClasses.STRING);
+			return rewriteFunction(result, procCommand, context, metadata);
+		}
+		
 		//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.FROM_UNIXTIME)) {
 			//change the function into timestampadd
@@ -2018,11 +2039,11 @@ public class QueryRewriter {
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
 			Expression[] args = function.getArgs();
 			if (args.length == 2) {
-				Function result = new Function(FunctionLibrary.IFNULL,
+				Function result = new Function(SourceSystemFunctions.IFNULL,
 						new Expression[] {function.getArg(0), function.getArg(1) });
 				//resolve the function
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.IFNULL, new Class[] { function.getType(), function.getType()  });
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
 				result.setFunctionDescriptor(descriptor);
 				result.setType(function.getType());
 				return rewriteFunction(result, procCommand, context, metadata);
@@ -2051,18 +2072,18 @@ public class QueryRewriter {
 			Function[] newArgs = new Function[args.length];
 
 			for(int i=0; i<args.length; i++) {
-				newArgs[i] = new Function(FunctionLibrary.NVL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
+				newArgs[i] = new Function(SourceSystemFunctions.IFNULL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
 				newArgs[i].setType(args[i].getType());
 				Assertion.assertTrue(args[i].getType() == DataTypeManager.DefaultDataClasses.STRING);
 		        FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.NVL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
 		        newArgs[i].setFunctionDescriptor(descriptor);
 			}
 			
-			Function concat = new Function(FunctionLibrary.CONCAT, newArgs);
+			Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
 			concat.setType(DataTypeManager.DefaultDataClasses.STRING);
 			FunctionDescriptor descriptor = 
-	        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
 			concat.setFunctionDescriptor(descriptor);
 			
 			List when = Arrays.asList(new Criteria[] {new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1]))});
@@ -2142,16 +2163,22 @@ public class QueryRewriter {
         while (tokenizer.hasMoreTokens()) {
             String resultString;
             String compareString =
-            	FunctionMethods.convertString(tokenizer.nextToken().trim());
+            	convertString(tokenizer.nextToken().trim());
             if (tokenizer.hasMoreTokens()) {
-                resultString = FunctionMethods.convertString(tokenizer.nextToken().trim());
-                newWhens.add(new Constant(compareString));
+                resultString = convertString(tokenizer.nextToken().trim());
+                Criteria crit;
+                if (compareString == null) {
+                	crit = new IsNullCriteria((Expression) exprs[0].clone());
+                } else {
+                	crit = new CompareCriteria((Expression) exprs[0].clone(), CompareCriteria.EQ, new Constant(compareString));
+                }
+                newWhens.add(crit);
                 newThens.add(new Constant(resultString));
             }else {
                 elseConst = new Constant(compareString);
             }
         }
-        CaseExpression newCaseExpr = new CaseExpression(exprs[0], newWhens, newThens);
+        SearchedCaseExpression newCaseExpr = new SearchedCaseExpression(newWhens, newThens);
         if(elseConst != null) {
             newCaseExpr.setElseExpression(elseConst);
         }else {
@@ -2162,52 +2189,92 @@ public class QueryRewriter {
         return newCaseExpr;
 	}
 	
+    public static String convertString(String string) {
+        /*
+         * if there are no characters in the compare string we designate that as
+         * an indication of null.  ie if the decode string looks like this:
+         *
+         * "'this', 1,,'null'"
+         *
+         * Then if the value in the first argument is null then the String 'null' is
+         * returned from the function.
+         */
+        if (string.equals("")) { //$NON-NLS-1$
+            return null;
+        }
+
+        /*
+         * we also allow the use of the keyword null in the decode string.  if it
+         * wished to match on the string 'null' then the string must be qualified by
+         * ' designators.
+         */
+         if(string.equalsIgnoreCase("null")){ //$NON-NLS-1$
+            return null;
+         }
+
+        /*
+         * Here we check to see if the String in the decode String submitted
+         * was surrounded by String literal characters. In this case we strip
+         * these literal characters from the String.
+         */
+        if ((string.startsWith("\"") && string.endsWith("\"")) //$NON-NLS-1$ //$NON-NLS-2$
+            || (string.startsWith("'") && string.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (string.length() == 2) {
+                /*
+                 * This is an indication that the desired string to be compared is
+                 * the "" empty string, so we return it as such.
+                 */
+                string = ""; //$NON-NLS-1$
+            } else if (!string.equalsIgnoreCase("'") && !string.equalsIgnoreCase("\"")){ //$NON-NLS-1$ //$NON-NLS-2$
+                string = string.substring(1);
+                string = string.substring(0, string.length()-1);
+            }
+        }
+
+        return string;
+    }
+	
     private static Expression rewriteCaseExpression(CaseExpression expr, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
         throws QueryValidatorException {
-        Expression rewrittenExpr = rewriteExpression(expr.getExpression(), procCommand, context, metadata);
-        expr.setExpression(rewrittenExpr);
-        
+    	List<CompareCriteria> whens = new ArrayList<CompareCriteria>(expr.getWhenCount());
+    	for (Expression expression: (List<Expression>)expr.getWhen()) {
+    		whens.add(new CompareCriteria((Expression)expr.getExpression().clone(), CompareCriteria.EQ, expression));
+    	}
+    	SearchedCaseExpression sce = new SearchedCaseExpression(whens, expr.getThen());
+    	sce.setElseExpression(expr.getElseExpression());
+    	sce.setType(expr.getType());
+    	return rewriteCaseExpression(sce, procCommand, context, metadata);
+    }
+
+    private static Expression rewriteCaseExpression(SearchedCaseExpression expr, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
+        throws QueryValidatorException {
         int whenCount = expr.getWhenCount();
         ArrayList whens = new ArrayList(whenCount);
         ArrayList thens = new ArrayList(whenCount);
-        
-        boolean tryToSimplify = EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenExpr, true);        
+
         for (int i = 0; i < whenCount; i++) {
-            Expression rewrittenWhen = rewriteExpression(expr.getWhenExpression(i), procCommand, context, metadata);
-            if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
-                CompareCriteria crit = new CompareCriteria(rewrittenExpr, CompareCriteria.EQ, rewrittenWhen);
+            
+            // Check the when to see if this CASE can be rewritten due to an always true/false when
+            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), procCommand, context, metadata);
+            if(EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
                 try {
-                    boolean eval = Evaluator.evaluate(crit);
+                	boolean eval = Evaluator.evaluate(rewrittenWhen);
                     if(eval) {
-                        // This WHEN will always match, so return the THEN expression
+                        // WHEN is always true, so just return the THEN
                         return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
                     } 
-                    
-                    // This WHEN will never match, so remove it from the CASE
+
+                    // WHEN is never true, so just skip this WHEN/THEN pair in the lists
                     continue;
                 } catch(Exception e) {
                     // ignore and don't simplify - shouldn't happen
-                    tryToSimplify = false;
-                }                       
-            } else {
-                tryToSimplify = false;
-            }
-                        
+                }
+            } 
+            
             whens.add(rewrittenWhen);
             thens.add(rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata));
         }
-        
-        return simplifyCaseExpression(expr, procCommand,context, whenCount, whens, thens, metadata);
-    }
 
-    private static Expression simplifyCaseExpression(AbstractCaseExpression expr,
-                                                       Command procCommand,
-                                                       CommandContext context,
-                                                       int whenCount,
-                                                       ArrayList whens,
-                                                       ArrayList thens,
-                                                       QueryMetadataInterface metadata) throws QueryValidatorException {
-        
         expr.setElseExpression(rewriteExpression(expr.getElseExpression(), procCommand, context, metadata));
         
         Expression elseExpr = expr.getElseExpression();
@@ -2245,42 +2312,6 @@ public class QueryRewriter {
         }
         
         return expr;
-    }
-
-    private static Expression rewriteCaseExpression(SearchedCaseExpression expr, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
-        throws QueryValidatorException {
-        int whenCount = expr.getWhenCount();
-        ArrayList whens = new ArrayList(whenCount);
-        ArrayList thens = new ArrayList(whenCount);
-
-        boolean tryToSimplify = true;
-        for (int i = 0; i < whenCount; i++) {
-            
-            // Check the when to see if this CASE can be rewritten due to an always true/false when
-            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), procCommand, context, metadata);
-            if(tryToSimplify && EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
-                try {
-                	boolean eval = Evaluator.evaluate(rewrittenWhen);
-                    if(eval) {
-                        // WHEN is always true, so just return the THEN
-                        return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
-                    } 
-
-                    // WHEN is never true, so just skip this WHEN/THEN pair in the lists
-                    continue;
-                } catch(Exception e) {
-                    // ignore and don't simplify - shouldn't happen
-                    tryToSimplify = false;
-                }
-            } else {
-                tryToSimplify = false;
-            }
-            
-            whens.add(rewrittenWhen);
-            thens.add(rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata));
-        }
-
-        return simplifyCaseExpression(expr, procCommand,context, whenCount, whens, thens, metadata);
     }
         
     private static Command rewriteExec(StoredProcedure storedProcedure, Command procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {

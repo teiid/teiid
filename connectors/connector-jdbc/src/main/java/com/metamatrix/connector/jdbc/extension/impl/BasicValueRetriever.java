@@ -25,7 +25,6 @@ package com.metamatrix.connector.jdbc.extension.impl;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +77,7 @@ public class BasicValueRetriever implements ValueRetriever {
     /* 
      * @see com.metamatrix.connector.jdbc.extension.ValueRetriever#retrieveValue(java.sql.ResultSet, int, java.lang.Class, java.util.Calendar)
      */
-    public Object retrieveValue(ResultSet results, int columnIndex, Class expectedType, int nativeSQLType, Calendar cal, TypeFacility typeFacility) throws SQLException {
+    public Object retrieveValue(ResultSet results, int columnIndex, Class expectedType, Calendar cal, TypeFacility typeFacility) throws SQLException {
         Integer code = (Integer) TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
             // Calling the specific methods here is more likely to get uniform (and fast) results from different
@@ -153,20 +152,7 @@ public class BasicValueRetriever implements ValueRetriever {
             }
         }
 
-        // otherwise fall through and call getObject() and rely on the normal translation routines
-        switch(nativeSQLType) {
-	        case Types.BLOB: 
-                return typeFacility.convertToRuntimeType(results.getBlob(columnIndex));
-	        case Types.CLOB: 
-	        	return typeFacility.convertToRuntimeType(results.getClob(columnIndex));
-	        case Types.BINARY:
-	        case Types.VARBINARY:
-	        case Types.LONGVARBINARY:
-	            return typeFacility.convertToRuntimeType(results.getBytes(columnIndex));
-        }
-        
         return typeFacility.convertToRuntimeType(results.getObject(columnIndex));
-                        
     }
 
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class expectedType, Calendar cal, TypeFacility typeFacility) throws SQLException{

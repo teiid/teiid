@@ -253,7 +253,7 @@ public class AliasGenerator extends PreOrderNavigator {
      * visit the query in definition order
      */
     public void visit(Query obj) {
-        if (obj.getOrderBy() != null) {
+        if (obj.getOrderBy() != null || obj.getLimit() != null) {
             visitor.namingContext.aliasColumns = true;
         }        
         visitNode(obj.getFrom());

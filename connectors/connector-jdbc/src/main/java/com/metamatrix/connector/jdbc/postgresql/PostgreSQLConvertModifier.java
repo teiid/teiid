@@ -34,6 +34,7 @@ import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 
 /**
  */
@@ -157,10 +158,10 @@ class PostgreSQLConvertModifier extends BasicFunctionModifier implements Functio
         switch(srcCode) { 
             case BOOLEAN:
                 // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
-                List when = Arrays.asList(new IExpression[] {langFactory.createLiteral(Boolean.TRUE, Boolean.class)});
+                List when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters()[0], langFactory.createLiteral(Boolean.TRUE, Boolean.class)));
                 List then = Arrays.asList(new IExpression[] {langFactory.createLiteral("1", String.class)}); //$NON-NLS-1$
                 IExpression elseExpr = langFactory.createLiteral("0", String.class); //$NON-NLS-1$
-                return langFactory.createCaseExpression(function.getParameters()[0], when, then, elseExpr, String.class);
+                return langFactory.createSearchedCaseExpression(when, then, elseExpr, String.class);
             case BYTE:
             case SHORT:
             case INTEGER:

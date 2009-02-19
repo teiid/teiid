@@ -54,11 +54,9 @@ public class TestOracleConvertModifier extends TestCase {
 
     public String helpGetString(IExpression expr) throws Exception {
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        SQLConversionVisitor sqlVisitor = trans.getTranslationVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
         
         return sqlVisitor.toString();        
@@ -71,7 +69,7 @@ public class TestOracleConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral(tgtType, String.class)},
             TypeFacility.getDataTypeClass(tgtType));
         
-        OracleConvertModifier mod = new OracleConvertModifier(LANG_FACTORY, null, null);
+        OracleConvertModifier mod = new OracleConvertModifier(LANG_FACTORY, null);
         IExpression expr = mod.modify(func);
         
         assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -487,7 +485,7 @@ public class TestOracleConvertModifier extends TestCase {
     }
 
     public void testDateToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "to_date(to_char({d'2003-11-01'}, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "cast({d'2003-11-01'} AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIME
@@ -497,7 +495,7 @@ public class TestOracleConvertModifier extends TestCase {
     }
 
     public void testTimeToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "to_date(to_char({ts'1970-01-01 23:59:59'}, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "cast({ts'1970-01-01 23:59:59'} AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIMESTAMP
@@ -514,7 +512,7 @@ public class TestOracleConvertModifier extends TestCase {
 
     public void testTimestampToTime() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "to_date(('1970-01-01 ' || substr(to_char({ts'2003-11-01 12:05:02.0'}, 'FXYYYY-MM-DD HH24:MI:SS'), 12)), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "to_date(('1970-01-01 ' || to_char({ts'2003-11-01 12:05:02.0'}, 'HH24:MI:SS')), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
 }

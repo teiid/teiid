@@ -25,132 +25,113 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
+import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator;
+import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
-public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
+public class OracleSpatialSQLTranslator extends SQLTranslator {
 
-    /**
-     * This method is overridden to find function modifiers that modify functions in the incoming command.
-     */
-    public Map getFunctionModifiers() {
-        Map modifiers = super.getFunctionModifiers();
-        Iterator iter = OracleSpatialFunctions.relateFunctions.iterator();
+	@Override
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+        Iterator<String> iter = OracleSpatialFunctions.relateFunctions.iterator();
         while (iter.hasNext()) {
-            modifiers.put(iter.next(), new RelateFunctionModifier());
+            registerFunctionModifier(iter.next(), new RelateFunctionModifier());
         }
         iter = OracleSpatialFunctions.nearestNeighborFunctions.iterator();
         while (iter.hasNext()) {
-            modifiers.put(iter.next(), new NearestNeighborFunctionModifier());
+            registerFunctionModifier(iter.next(), new NearestNeighborFunctionModifier());
         }
         iter = OracleSpatialFunctions.filterFunctions.iterator();
         while (iter.hasNext()) {
-            modifiers.put(iter.next(), new FilterFunctionModifier());
+            registerFunctionModifier(iter.next(), new FilterFunctionModifier());
         }
         iter = OracleSpatialFunctions.withinDistanceFunctions.iterator();
         while (iter.hasNext()) {
-            modifiers.put(iter.next(), new WithinDistanceFunctionModifier());
+            registerFunctionModifier(iter.next(), new WithinDistanceFunctionModifier());
         }
         iter = OracleSpatialFunctions.nnDistanceFunctions.iterator();
         while (iter.hasNext()) {
-            modifiers.put(iter.next(), new NnDistanceFunctionModifier());
+            registerFunctionModifier(iter.next(), new NnDistanceFunctionModifier());
         }
-        return modifiers;
     }
 
     /**
      * This method is overridden to modify the incoming command to add the hint to the ISelect in the command.
      */
-public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
+	@Override
+	public ICommand modifyCommand(ICommand command, com.metamatrix.connector.api.ExecutionContext context) throws ConnectorException {
         if (command instanceof IQuery) {
             IQuery query = (IQuery)command;
-            String hint = getHint(query);
             
             ISelect select = ((IQuery)command).getSelect();
-            List symbols = select.getSelectSymbols();
-            if(symbols.toString().indexOf("SDO_NN_DISTANCE") != -1){ //$NON-NLS-1$
-                ICriteria criteria = query.getWhere();
-                if(criteria != null && criteria.toString().indexOf("SDO_NN") == -1){ //$NON-NLS-1$
-            	  	    throw(new ConnectorException(
-            	    	Messages.getString("OracleSpatialSQLTranslator.SDO_NN_DEPENDENCY_ERROR"))); //$NON-NLS-1$
-            	}    
-            }
-            /*Iterator iter = symbols.iterator();
-            while(iter.hasNext()){
-                if(((ISelectSymbol)iter.next()).getExpression().compareToIgnoreCase("SDO_NN_DISTANCE") != 0){ //$NON-NLS-1$
+            List<ISelectSymbol> symbols = select.getSelectSymbols();
+            
+            Collection<IFunction> functions = CollectorVisitor.collectObjects(IFunction.class, select);
+            for (IFunction function : functions) {
+				if (function.getName().equalsIgnoreCase("SDO_NN_DISTANCE")) {//$NON-NLS-1$
                     ICriteria criteria = query.getWhere();
-                    if(criteria != null && criteria.toString().compareToIgnoreCase("SDO_NN") != 0){ //$NON-NLS-1$
-                	        break;
-                	} else{
+                    if(criteria == null || criteria.toString().indexOf("SDO_NN") == -1){ //$NON-NLS-1$
                 	    throw(new ConnectorException(
                 	    	Messages.getString("OracleSpatialSQLTranslator.SDO_NN_DEPENDENCY_ERROR"))); //$NON-NLS-1$
                 	}
-                }   	
-            }
-            */
-            if (hint != null) {
-                SpatialSelectProxy proxy = new SpatialSelectProxy(select, hint);
-                query.setSelect(proxy);
+                    break;
+				}
+			}
+            
+            for (int i = 0; i < symbols.size(); i++) {
+            	ISelectSymbol symbol = symbols.get(i);
+            	if (symbol.getExpression().getType().equals(Object.class)) {
+                    String outName = symbol.getOutputName();
+                    int lIndx = outName.lastIndexOf("."); //$NON-NLS-1$
+                    symbol.setOutputName(outName.substring(lIndx + 1));
+                    symbol.setExpression(getLanguageFactory().createLiteral(null, TypeFacility.RUNTIME_TYPES.OBJECT));
+                    symbol.setAlias(true);
+                }
             }
         }
 
         return command;
     }
-    /**
-     * This method is overridden to use a special variant of the SQL conversion visitor so that the hint can be inserted into the
-     * SQL.
-     */
-    public SQLConversionVisitor getTranslationVisitor() {
-        OracleSpatialConversionVisitor visitor = new OracleSpatialConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(getFunctionModifiers());
-        visitor.setProperties(getConnectorEnvironment().getProperties());
-        visitor.setLanguageFactory(getConnectorEnvironment().getLanguageFactory());
-        return visitor; 
-    }
 
     /**
      * This method figures out what the hint is by looking at the query and returns it.
-     * 
      * @param query
+     * 
      * @return The hint or null for no hint
      */
-    private String getHint(IQuery query) {
-        //
-        // This simple algorithm determines the hint which will be added to the
-        // query.
-        // Right now, we look through all functions passed in the query
-        // (returned as a collection)
-        // Then we check if any of those functions contain the strings 'sdo' and
-        // 'relate'
-        // If so, the ORDERED hint is added, if not, it isn't
-        Class iFunction = null;
-        try {
-            iFunction = Class.forName("com.metamatrix.data.language.IFunction"); //$NON-NLS-1$
-        } catch (ClassNotFoundException cex) {
-            System.err.println("BML: IFunction Class Missing"); //$NON-NLS-1$
-        }
-        Collection col = CollectorVisitor.collectObjects(iFunction, query);
-        Iterator it = col.iterator();
-        while (it.hasNext()) {
-            IFunction func = (IFunction)it.next();
-            String funcName = func.getName().toUpperCase();
-            int indx1 = funcName.indexOf("SDO"); //$NON-NLS-1$
-            int indx2 = funcName.indexOf("RELATE"); //$NON-NLS-1$
-            if (indx1 >= 0 && indx2 > indx1)
-                return "/* + ORDERED */"; //$NON-NLS-1$
-        }
-        return " "; //$NON-NLS-1$
+	@Override
+	public String getSourceComment(ExecutionContext context, ICommand command) {
+		String comment = super.getSourceComment(context, command);
+		
+		if (command instanceof IQuery) {
+	        //
+	        // This simple algorithm determines the hint which will be added to the
+	        // query.
+	        // Right now, we look through all functions passed in the query
+	        // (returned as a collection)
+	        // Then we check if any of those functions contain the strings 'sdo' and
+	        // 'relate'
+	        // If so, the ORDERED hint is added, if not, it isn't
+	        Collection<IFunction> col = CollectorVisitor.collectObjects(IFunction.class, command);
+	        for (IFunction func : col) {
+	            String funcName = func.getName().toUpperCase();
+	            int indx1 = funcName.indexOf("SDO"); //$NON-NLS-1$
+	            int indx2 = funcName.indexOf("RELATE"); //$NON-NLS-1$
+	            if (indx1 >= 0 && indx2 > indx1)
+	                return comment + " /* + ORDERED */"; //$NON-NLS-1$
+	        }
+		}
+        return comment; //$NON-NLS-1$
     }
 
 }

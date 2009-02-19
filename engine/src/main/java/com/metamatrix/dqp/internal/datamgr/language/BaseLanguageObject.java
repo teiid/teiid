@@ -36,7 +36,7 @@ public abstract class BaseLanguageObject implements ILanguageObject {
     }
     
     public String toString() {
-        return SQLStringVisitor.getSQLString(this, null);
+        return SQLStringVisitor.getSQLString(this);
     }
 
 }

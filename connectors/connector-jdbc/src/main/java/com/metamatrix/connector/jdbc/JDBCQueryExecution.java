@@ -107,16 +107,13 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
         try {
 
-            if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_STATEMENT) {
+            if (!translatedComm.isPrepared()) {
                 results = getStatement().executeQuery(sql);
-            } else if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT) {
-                PreparedStatement pstatement = getPreparedStatement(sql);
+            } else {
+            	PreparedStatement pstatement = getPreparedStatement(sql);
                 resultsTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
                 results = pstatement.executeQuery();
-            } else {
-                throw new ConnectorException(
-                                             JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
-            }
+            } 
             addStatementWarnings();
             initResultSetInfo();
 
@@ -157,13 +154,13 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
-                    Object value = resultsTranslator.getValueRetriever().retrieveValue(results, i+1, columnDataTypes[i], nativeTypes[i], calendar, env.getTypeFacility());
+                    Object value = resultsTranslator.getValueRetriever().retrieveValue(results, i+1, columnDataTypes[i], calendar, env.getTypeFacility());
                     if(value != null) {
                         // Determine transformation if unknown
                         if(! transformKnown[i]) {
                             Class valueType = value.getClass();
                             if(!columnDataTypes[i].isAssignableFrom(valueType)) {
-                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], resultsTranslator.getValueTranslators(), resultsTranslator.getTypefacility());
+                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], resultsTranslator.getValueTranslators(), resultsTranslator.getTypeFacility());
                             }
                             transformKnown[i] = true;
                         }

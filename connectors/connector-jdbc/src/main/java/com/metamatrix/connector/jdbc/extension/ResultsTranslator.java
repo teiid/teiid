@@ -122,5 +122,5 @@ public interface ResultsTranslator {
     int getMaxResultRows();
     
     
-    TypeFacility getTypefacility();
+    TypeFacility getTypeFacility();
 }

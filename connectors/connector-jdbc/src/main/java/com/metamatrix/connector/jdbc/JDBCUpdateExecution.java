@@ -109,16 +109,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             
             for (int i = 0; i < commands.length; i++) {
                 TranslatedCommand command = translateCommand(commands[i]);
-                if (command.getStatementType() == TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT) {
-                    throw new ConnectorException(
-                                                 JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", //$NON-NLS-1$
-                                                                           new Integer(command.getStatementType()),
-                                                                           command.getSql()));
-                }
-                if (command.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT) {
+                if (command.isPrepared()) {
                     PreparedStatement pstmt = null;
-                    if (previousCommand != null && previousCommand.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT 
-                                    && previousCommand.getSql().equals(command.getSql())) {
+                    if (previousCommand != null && previousCommand.isPrepared() && previousCommand.getSql().equals(command.getSql())) {
                         pstmt = (PreparedStatement)statement;
                     } else {
                         if (!executedCmds.isEmpty()) {
@@ -129,7 +122,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                     resultsTranslator.bindPreparedStatementValues(this.connection, pstmt, command);
                     pstmt.addBatch();
                 } else {
-                    if (previousCommand != null && previousCommand.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT) {
+                    if (previousCommand != null && previousCommand.isPrepared()) {
                         executeBatch(i, results, executedCmds);
                         getStatement();
                     }
@@ -220,18 +213,13 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
 
         try {
         	int updateCount;
-            if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_STATEMENT) {
+            if (!translatedComm.isPrepared()) {
                 updateCount = getStatement().executeUpdate(sql);
-            } else if (translatedComm.getStatementType() == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT) {
-                PreparedStatement pstatement = getPreparedStatement(sql);
+            } else {
+            	PreparedStatement pstatement = getPreparedStatement(sql);
                 resultsTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
                 updateCount = pstatement.executeUpdate();
-            } else {
-                throw new ConnectorException(
-                                             JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", //$NON-NLS-1$
-                                                                       new Integer(translatedComm.getStatementType()),
-                                                                       sql));
-            }
+            } 
             addStatementWarnings();
             return updateCount;
         } catch (SQLException err) {

@@ -22,21 +22,20 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
 import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
 import com.metamatrix.connector.language.*;
 
 /**
- * Convert left(string, count) --> substr(string, 0, count)
- * or right(string, count) --> substr(string, length(string) - count)
+ * Convert left(string, count) --> substr(string, 1, count)
+ * or right(string, count) --> substr(string, -1 * count) - we lack a way to express a unary negation
  */
 public class LeftOrRightFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
     private ILanguageFactory langFactory;
-    private String target;
     
-    public LeftOrRightFunctionModifier(ILanguageFactory langFactory, String target) {
+    public LeftOrRightFunctionModifier(ILanguageFactory langFactory) {
         this.langFactory = langFactory;
-        this.target = target;
     }
     
     /* 
@@ -46,26 +45,22 @@ public class LeftOrRightFunctionModifier extends BasicFunctionModifier implement
         IExpression[] args = function.getParameters();
         IFunction func = null;
         
-        if (target.equalsIgnoreCase("left")) { //$NON-NLS-1$
+        if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
             func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
                 new IExpression[] {
                     args[0], 
-                    langFactory.createLiteral(new Integer(0), Integer.class),
+                    langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER),
                     args[1]},
                     String.class);   
-        } else if (target.equalsIgnoreCase("right")) { //$NON-NLS-1$
-            IFunction inner = langFactory.createFunction("LENGTH",  //$NON-NLS-1$
-                new IExpression[] {args[0]},
+        } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
+            IFunction negIndex = langFactory.createFunction("*",  //$NON-NLS-1$
+                new IExpression[] {langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args[1]},
                 Integer.class);
-            
-            IExpression substrArgs = langFactory.createFunction("-",  //$NON-NLS-1$
-                new IExpression[] {inner, args[1] }, 
-                    Integer.class);    
-                
+                            
             func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
                 new IExpression[] {
                     args[0], 
-                    substrArgs},
+                    negIndex},
                     String.class);      
         }
 

@@ -51,7 +51,7 @@ public abstract class MetadataObjectImpl implements MetadataObject {
     }
 
     QueryMetadataInterface getMetadata() {
-        return metadataID.getMetadata();
+        return metadataID.getMetadata().getMetadata();
     }
 
     public String getNameInSource() throws ConnectorException {

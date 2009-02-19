@@ -266,7 +266,7 @@ public class TestLimit extends TestCase {
 
         String sql = "SELECT * FROM pm1.g1 limit 50, 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT (100 + 50)" //$NON-NLS-1$
+            "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT (100 + 50)" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
@@ -532,7 +532,7 @@ public class TestLimit extends TestCase {
 
         String sql = "SELECT * FROM pm1.g1 UNION SELECT * FROM PM1.g2 LIMIT 50, 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT PM1.g2.e1, PM1.g2.e2, PM1.g2.e3, PM1.g2.e4 FROM PM1.g2 LIMIT (100 + 50)", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT (100 + 50)" //$NON-NLS-1$ //$NON-NLS-2$
+            "SELECT PM1.g2.e1 AS c_0, PM1.g2.e2 AS c_1, PM1.g2.e3 AS c_2, PM1.g2.e4 AS c_3 FROM PM1.g2 LIMIT (100 + 50)", "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT (100 + 50)" //$NON-NLS-1$ //$NON-NLS-2$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
@@ -598,7 +598,7 @@ public class TestLimit extends TestCase {
 
         String sql = "SELECT * from (SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 10, 100) x LIMIT 20, 75";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm1.g1.e1 FROM pm1.g1 LIMIT CASE WHEN (75 + (20 + 10)) < (100 + 10) THEN (75 + (20 + 10)) ELSE (100 + 10) END" //$NON-NLS-1$
+            "SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 LIMIT CASE WHEN (75 + (20 + 10)) < (100 + 10) THEN (75 + (20 + 10)) ELSE (100 + 10) END" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  
@@ -632,7 +632,7 @@ public class TestLimit extends TestCase {
 
         String sql = "SELECT * from (SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 10, 100) x LIMIT 20, 75";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm1.g1.e1 FROM pm1.g1 LIMIT (20 + 10), CASE WHEN 75 < 100 THEN 75 ELSE 100 END" //$NON-NLS-1$
+            "SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 LIMIT (20 + 10), CASE WHEN 75 < 100 THEN 75 ELSE 100 END" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  

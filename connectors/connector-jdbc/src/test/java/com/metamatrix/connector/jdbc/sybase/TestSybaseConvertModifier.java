@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.sybase;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Properties;
 
@@ -29,12 +31,12 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
@@ -53,11 +55,9 @@ public class TestSybaseConvertModifier extends TestCase {
 
     public String helpGetString(IExpression expr) throws Exception {
         SybaseSQLTranslator trans = new SybaseSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        SybaseSQLConversionVisitor sqlVisitor = new SybaseSQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
         
         return sqlVisitor.toString();        
@@ -67,15 +67,21 @@ public class TestSybaseConvertModifier extends TestCase {
         SybaseConvertModifier mod = new SybaseConvertModifier(LANG_FACTORY);
         IExpression expr = mod.modify(func);
         
-        SybaseSQLTranslator trans = new SybaseSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        assertEquals(expectedStr, helpGetString(expr)); 
+    }
+    
+    public void helpTest(IExpression srcExpression, String tgtType, String expectedExpression) throws Exception {
+        IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
+            new IExpression[] { 
+                srcExpression,
+                LANG_FACTORY.createLiteral(tgtType, String.class)},
+            DataTypeManager.getDataTypeClass(tgtType));
         
-        SybaseSQLConversionVisitor sqlVisitor = new SybaseSQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
-        sqlVisitor.append(expr);
-          
-        assertEquals(expectedStr, sqlVisitor.toString()); 
+        SybaseConvertModifier mod = new SybaseConvertModifier(LANG_FACTORY);
+        IExpression expr = mod.modify(func);
+        
+        assertEquals("Error converting from " + DataTypeManager.getDataTypeName(srcExpression.getType()) + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
+            expectedExpression, helpGetString(expr)); 
     }
     
     // original test -- this is not a drop one anymore
@@ -115,35 +121,9 @@ public class TestSybaseConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral("date", String.class)}, //$NON-NLS-1$
             java.sql.Date.class);
         
-        helpGetString1(func,  "convert(datetime, convert(varchar, {ts'1989-03-03 07:08:12.000099999'}, 1))");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(datetime, convert(varchar, {ts'1989-03-03 07:08:12.000099999'}, 109))");  //$NON-NLS-1$
     }
     
-    public void testConvertFormat() throws Exception {
-        
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);
-        IFunction func1 = LANG_FACTORY.createFunction("formattimestamp",  //$NON-NLS-1$
-            new IExpression[] { 
-                LANG_FACTORY.createLiteral(ts, Timestamp.class), 
-                LANG_FACTORY.createLiteral("MM/dd/yyyy", String.class)}, //$NON-NLS-1$
-            String.class);
-
-        IFunction func2 = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
-                func1, 
-                LANG_FACTORY.createLiteral("date", String.class)}, //$NON-NLS-1$
-            java.sql.Date.class);
-        
-        SybaseSQLTranslator trans = new SybaseSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
-
-        // Perform function replacement, per standard function modifiers
-        FunctionReplacementVisitor functionVisitor = new FunctionReplacementVisitor(trans.getFunctionModifiers());
-        ISelectSymbol holder = LANG_FACTORY.createSelectSymbol("holder", func2); //$NON-NLS-1$
-        holder.acceptVisitor(functionVisitor);
-        IExpression expr = holder.getExpression();
-        
-        assertEquals("convert(datetime, convert(varchar, {ts'2003-11-01 12:05:02.0'}, 1))", helpGetString(expr)); //$NON-NLS-1$
-    }
     /********************END of convert(INPUT, date) ******************/
     /********************Beginning of convert(INPUT, time) ******************/
     public void testStringToTime() throws Exception {
@@ -188,7 +168,7 @@ public class TestSybaseConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
         
-        helpGetString1(func,  "convert(datetime, {t'12:02:03'})");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(datetime, {ts'1970-01-01 12:02:03'})");  //$NON-NLS-1$
     }
         
     public void testDateToTimestamp() throws Exception {
@@ -253,7 +233,7 @@ public class TestSybaseConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
         
-        helpGetString1(func,  "convert(varchar, {t'03:10:01'}, 108)");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(varchar, {ts'1970-01-01 03:10:01'}, 108)");  //$NON-NLS-1$
     }    
     
     public void testBigDecimalToString() throws Exception {
@@ -829,6 +809,233 @@ public class TestSybaseConvertModifier extends TestCase {
             java.math.BigDecimal.class);
 
         helpGetString1(func, "convert(float, 0)"); //$NON-NLS-1$
+    }    
+
+    // Source = CHAR
+    
+    public void testCharToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Character('5'), Character.class), "string", "convert(varchar, '5')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+
+    // Source = BOOLEAN
+    
+    public void testBooleanToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToByte() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "byte", "convert(tinyint, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToShort() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "short", "convert(smallint, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "integer", "convert(int, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "long", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "biginteger", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBooleanToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    // Source = BYTE
+    
+    public void testByteToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testByteToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "long", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testByteToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "biginteger", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testByteToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testByteToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testByteToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    // Source = SHORT
+    
+    public void testShortToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testShortToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "long", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testShortToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "biginteger", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testShortToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testShortToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testShortToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    // Source = INTEGER
+    
+    public void testIntegerToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testIntegerToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "long", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testIntegerToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "biginteger", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testIntegerToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testIntegerToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testIntegerToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    // Source = LONG
+    
+    public void testLongToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testLongToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "biginteger", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testLongToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testLongToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testLongToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    // Source = BIGINTEGER
+    
+    public void testBigIntegerToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "convert(varchar, 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigIntegerToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "long", "convert(numeric, 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigIntegerToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "float", "convert(real, 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigIntegerToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigIntegerToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "bigdecimal", "convert(float, 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    // Source = FLOAT
+    
+    public void testFloatToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "convert(varchar, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testFloatToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "long", "convert(numeric, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testFloatToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "biginteger", "convert(numeric, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testFloatToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "double", "convert(float, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testFloatToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "bigdecimal", "convert(float, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    // Source = DOUBLE
+    
+    public void testDoubleToString() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "convert(varchar, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testDoubleToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "long", "convert(numeric, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testDoubleToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "biginteger", "convert(numeric, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testDoubleToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "float", "convert(real, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testDoubleToBigDecimal() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "bigdecimal", "convert(float, 1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testBigDecimalToLong() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "long", "convert(numeric, 1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigDecimalToBigInteger() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "biginteger", "convert(numeric, 1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigDecimalToFloat() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "float", "convert(real, 1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public void testBigDecimalToDoublel() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "double", "convert(float, 1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
         
 }

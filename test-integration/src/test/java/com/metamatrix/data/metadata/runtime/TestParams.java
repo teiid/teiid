@@ -35,6 +35,7 @@ import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.metadata.runtime.TypeModel;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
@@ -103,7 +104,7 @@ public class TestParams extends TestCase {
         assertEquals(scale, p.getScale());
         assertEquals(null, param.getValue());
         assertEquals(false, param.getValueSpecified());        
-        assertEquals(MetadataID.TYPE_PARAMETER, metadataID.getType());
+        assertEquals(Type.TYPE_PARAMETER, metadataID.getType());
 
         //System.out.println("\n" + p.getModeledType() + "\n" + p.getModeledBaseType() + "\n" + p.getModeledPrimitiveType());
         

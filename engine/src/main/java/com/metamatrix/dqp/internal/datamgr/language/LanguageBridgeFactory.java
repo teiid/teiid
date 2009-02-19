@@ -31,7 +31,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBatchedUpdates;
-import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
@@ -71,6 +70,7 @@ import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.language.ISubqueryCompareCriteria.Quantifier;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.ProcedureIDImpl;
@@ -483,19 +483,6 @@ public class LanguageBridgeFactory {
         return null;
     }
 
-    ICaseExpression translate(CaseExpression expr) throws MetaMatrixComponentException {
-        ArrayList whens = new ArrayList();
-        ArrayList thens = new ArrayList();
-        for (int i = 0; i < expr.getWhenCount(); i++) {
-            whens.add(translate(expr.getWhenExpression(i)));
-            thens.add(translate(expr.getThenExpression(i)));
-        }
-        return new CaseExpressionImpl(translate(expr.getExpression()),
-                                      whens,
-                                      thens,
-                                      translate(expr.getElseExpression()), expr.getType());
-    }
-
     ILiteral translate(Constant constant) {
         return new LiteralImpl(constant.getValue(), constant.getType());
     }
@@ -563,7 +550,7 @@ public class LanguageBridgeFactory {
         
         if(! (mid instanceof TempMetadataID)) { 
             try {
-                element.setMetadataID(metadataFactory.createMetadataID(mid, MetadataID.TYPE_ELEMENT));
+                element.setMetadataID(metadataFactory.createMetadataID(mid, Type.TYPE_ELEMENT));
             } catch(QueryMetadataException e) {
                 LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_element_{0}._10", symbol.getName())); //$NON-NLS-1$
                 throw new MetaMatrixComponentException(e);
@@ -700,7 +687,7 @@ public class LanguageBridgeFactory {
 			return group;
 		}
         try {
-            group.setMetadataID(metadataFactory.createMetadataID(symbol.getMetadataID(), MetadataID.TYPE_GROUP));
+            group.setMetadataID(metadataFactory.createMetadataID(symbol.getMetadataID(), Type.TYPE_GROUP));
         } catch(Exception e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_group_{0}._11", symbol.getName())); //$NON-NLS-1$
             throw new MetaMatrixComponentException(e);

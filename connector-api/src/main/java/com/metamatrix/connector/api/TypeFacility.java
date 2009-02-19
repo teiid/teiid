@@ -22,6 +22,9 @@
 
 package com.metamatrix.connector.api;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 
@@ -72,18 +75,61 @@ public abstract class TypeFacility {
         public static final String XML         	= DataTypeManager.DefaultDataTypes.XML;
     }
     
-    public static Class getDataTypeClass(String type) {
+    /**
+     * Get the Class constant for the given String type name
+     */
+    public static Class<?> getDataTypeClass(String type) {
     	return DataTypeManager.getDataTypeClass(type);    	
     }
     
-    public static final int getSQLTypeFromRuntimeType(Class type) {
+    /**
+     * Get the SQL type for the given runtime type Class constant
+     * @param type
+     * @return
+     */
+    public static final int getSQLTypeFromRuntimeType(Class<?> type) {
         return MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
     }    
     
-    public abstract boolean hasTransformation(Class sourceClass, Class targetClass);
+    /**
+     * Checks if the given transformation exists.
+     * @param <S>
+     * @param <T>
+     * @param sourceClass
+     * @param targetClass
+     * @return
+     */
+    public abstract <S, T> boolean hasTransformation(Class<S> sourceClass, Class<T> targetClass);
     
-    public abstract <T> T transformValue(Object value, Class sourceClass, Class<T> targetClass) throws ConnectorException;
+    /**
+     * Transform the given value into the target type, or throw an exception if this is not
+     * possible.
+     * @param <S>
+     * @param <T>
+     * @param value
+     * @param sourceClass
+     * @param targetClass
+     * @return
+     * @throws ConnectorException
+     */
+    public abstract <S, T> T transformValue(S value, Class<S> sourceClass, Class<T> targetClass) throws ConnectorException;
     
+    /**
+     * Convert the given value to the closest runtime type see {@link RUNTIME_TYPES}
+     * @param value
+     * @return
+     */
     public abstract Object convertToRuntimeType(Object value);
+
+    /**
+     * Convert the given date to a target type, optionally adjusting its display 
+     * for a given target Calendar.
+     * @param date
+     * @param initial
+     * @param target
+     * @param targetType
+     * @return
+     */
+    public abstract Object convertDate(java.util.Date date, TimeZone initial, Calendar target, Class targetType);
 
 }

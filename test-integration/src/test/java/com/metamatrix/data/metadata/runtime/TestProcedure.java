@@ -36,6 +36,7 @@ import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -130,7 +131,7 @@ public class TestProcedure extends TestCase {
         MetadataID elemID = (MetadataID) rsCols.get(0);
         assertEquals("RSCol1", elemID.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol1", elemID.getFullName());         //$NON-NLS-1$
-        assertEquals(MetadataID.TYPE_ELEMENT, elemID.getType());        
+        assertEquals(Type.TYPE_ELEMENT, elemID.getType());        
         Element e1 = (Element) rmd.getObject(elemID);
         assertEquals("Result set column name in source", e1.getNameInSource());         //$NON-NLS-1$
         assertEquals(java.sql.Timestamp.class, e1.getJavaType());
@@ -139,7 +140,7 @@ public class TestProcedure extends TestCase {
         MetadataID elemID2 = (MetadataID) rsCols.get(1);        
         assertEquals("RSCol2", elemID2.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol2", elemID2.getFullName());         //$NON-NLS-1$
-        assertEquals(MetadataID.TYPE_ELEMENT, elemID2.getType());        
+        assertEquals(Type.TYPE_ELEMENT, elemID2.getType());        
         Element e2 = (Element) rmd.getObject(elemID2);
         assertEquals(null, e2.getNameInSource());         //$NON-NLS-1$
         assertEquals(String.class, e2.getJavaType());

@@ -22,13 +22,14 @@
 
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.dqp.message.ParameterInfo;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.sql.lang.SPParameter;
 
@@ -44,10 +45,10 @@ public class ProcedureIDImpl extends MetadataIDImpl {
      * @param metadata
      * @throws MetaMatrixComponentException
      */
-    public ProcedureIDImpl(Object actualMetadataID, StoredProcedureInfo procInfo, MetadataFactory factory, QueryMetadataInterface metadata)
+    public ProcedureIDImpl(Object actualMetadataID, StoredProcedureInfo procInfo, MetadataFactory factory)
         throws MetaMatrixComponentException {
             
-        super(actualMetadataID, metadata);
+        super(actualMetadataID, factory.getRuntimeMetadata());
         this.procInfo = procInfo;
         this.factory = factory;            
     }

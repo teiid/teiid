@@ -37,8 +37,8 @@ public interface ILimit extends ILanguageObject {
     int getRowLimit();
     
     /**
-     * Gets the offset (relative to the sarting row of the produced resultset) of the
-     * first row returned by the connector.
+     * Gets the offset (relative to the starting row of the produced resultset) of the
+     * first row returned by the connector. 0 or less indicates no offset.
      * @return
      * @since 5.0 SP1
      */

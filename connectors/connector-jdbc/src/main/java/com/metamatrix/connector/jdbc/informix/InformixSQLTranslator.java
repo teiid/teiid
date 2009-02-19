@@ -24,37 +24,25 @@
  */
 package com.metamatrix.connector.jdbc.informix;
 
-import java.util.*;
-
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.extension.impl.*;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
 
 /**
  */
-public class InformixSQLTranslator extends BasicSQLTranslator {
+public class InformixSQLTranslator extends SQLTranslator {
 
-    private Map functionModifiers;
-
-    public void initialize(ConnectorEnvironment env,
-                           RuntimeMetadata metadata) throws ConnectorException {
-        
-        super.initialize(env, metadata);
-        initializeFunctionModifiers();  
+	@Override
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, new DropFunctionModifier());      //$NON-NLS-1$       
     }
-
-    private void initializeFunctionModifiers() {
-        functionModifiers = new HashMap();
-        functionModifiers.putAll(super.getFunctionModifiers());
-        functionModifiers.put("cast", new DropFunctionModifier());        //$NON-NLS-1$ 
-        functionModifiers.put("convert", new DropFunctionModifier());      //$NON-NLS-1$       
-    }
+	
+	@Override
+	public String getConnectionTestQuery() {
+		return "select 'x' from informix.sysusers where 1=0"; //$NON-NLS-1$
+	}
     
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getFunctionModifiers()
-     */
-    public Map getFunctionModifiers() {
-        return this.functionModifiers;
-    }
 }

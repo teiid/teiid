@@ -30,6 +30,7 @@ import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -54,13 +55,11 @@ public class TestSubstringFunctionModifier extends TestCase {
             args, TypeFacility.RUNTIME_TYPES.STRING);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
 
         IExpression expr = ((FunctionModifier)trans.getFunctionModifiers().get("substring")).modify(func); //$NON-NLS-1$
         
-        OracleSQLConversionVisitor sqlVisitor = new OracleSQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
         
         assertEquals(expectedStr, sqlVisitor.toString());

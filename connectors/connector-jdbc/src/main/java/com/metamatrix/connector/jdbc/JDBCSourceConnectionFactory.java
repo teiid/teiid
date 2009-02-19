@@ -35,6 +35,8 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.pool.ConnectorIdentity;
 import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 
@@ -53,6 +55,8 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
     private String deregisterType;
     
     private ConnectorIdentityFactory connectorIdentityFactory;
+    private SQLTranslator sqlTranslator;
+    private ResultsTranslator resultsTranslator;
     
     /**
      *
@@ -65,6 +69,34 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
         this.environment = env;
         Properties props = env.getProperties();
         this.deregisterType = props.getProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSLOADER);
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
+        Properties connectorProps = environment.getProperties();
+        //create SQLTranslator
+        String className = connectorProps.getProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS);  
+        if(className == null){
+            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnection.Property_{0}_is_required,_but_not_defined_1", JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS)); //$NON-NLS-1$
+        }
+        try {
+			Class sqlTransClass = Thread.currentThread().getContextClassLoader().loadClass(className);
+	        sqlTranslator = (SQLTranslator) sqlTransClass.newInstance();
+	        sqlTranslator.initialize(environment);
+	        
+	        //create ResultsTranslator
+	        className = connectorProps.getProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS);  
+	        if(className == null){
+	            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnection.Property_{0}_is_required,_but_not_defined_1", JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS)); //$NON-NLS-1$
+	        }
+	        Class resultsTransClass = loader.loadClass(className);
+	        resultsTranslator = (ResultsTranslator) resultsTransClass.newInstance();
+	        resultsTranslator.initialize(environment);
+        } catch (ClassNotFoundException e) {
+			throw new ConnectorException(e);
+		} catch (InstantiationException e) {
+			throw new ConnectorException(e);
+		} catch (IllegalAccessException e) {
+			throw new ConnectorException(e);
+		}
     }
     
     protected ConnectorEnvironment getConnectorEnvironment() {
@@ -117,7 +149,7 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
             throw new ConnectorException(e);
         }
 
-        return new JDBCSourceConnection(connection, this.environment, createConnectionStrategy(), getConnectionListener());
+        return new JDBCSourceConnection(connection, this.environment, createConnectionStrategy(), getConnectionListener(), resultsTranslator, sqlTranslator);
     }
 
     /**
@@ -186,5 +218,13 @@ public abstract class JDBCSourceConnectionFactory implements ConnectorIdentityFa
     		throws ConnectorException {
     	return this.connectorIdentityFactory.createIdentity(context);
     }
+    
+    public ResultsTranslator getResultsTranslator() {
+		return resultsTranslator;
+	}
+    
+    public SQLTranslator getSqlTranslator() {
+		return sqlTranslator;
+	}
     
 }

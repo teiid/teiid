@@ -27,7 +27,6 @@ import java.util.Collection;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBatchedUpdates;
 import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.IDelete;
@@ -116,7 +115,6 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     
     public void visit(IAggregate obj) {}
     public void visit(IBatchedUpdates obj) {}
-    public void visit(ICaseExpression obj) {}
     public void visit(ICompareCriteria obj) {}
     public void visit(ICompoundCriteria obj) {}
     public void visit(IDelete obj) {}

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.access;
+package com.metamatrix.connector.jdbc.oracle;
 
 import java.util.Properties;
 
@@ -29,56 +29,40 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.jdbc.access.AccessSQLTranslator;
 import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;
 
-
-/** 
- * @since 4.3
- */
-public class TestAccessSQLTranslator extends TestCase {
-
-    private static SQLTranslator TRANSLATOR; 
+public class TestOracleTranslator extends TestCase {
+	
+	private static SQLTranslator TRANSLATOR; 
 
     static {
         try {
-            TRANSLATOR = new AccessSQLTranslator();        
+            TRANSLATOR = new OracleSQLTranslator();        
             TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         } catch(ConnectorException e) {
             e.printStackTrace();    
         }
     }
-    
-    public void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
+
+	public void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
-        ICommand obj = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(input);
+        ICommand obj = FakeTranslationFactory.getInstance().getAutoIncrementTranslationUtility().parseCommand(input);
         
         TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), TRANSLATOR);
         tc.translateCommand(obj);
         
-        
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
-
-    public void testRowLimit() throws Exception {
-        String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
-        String output = "SELECT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
-
-        helpTestVisitor(
-            input, 
-            output);
-
-    }
-    
-    public void testRowLimit1() throws Exception {
-        String input = "select distinct intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
-        String output = "SELECT DISTINCT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
-
-        helpTestVisitor(
-            input, 
-            output);
-
-    }
+	
+	public void testInsertWithSequnce() throws Exception {
+		helpTestVisitor("insert into test.group (e0) values (1)", "INSERT INTO group (e0, e1) VALUES (1, MYSEQUENCE.nextVal)");
+	}
+	
+	public void testInsertWithSequnce1() throws Exception {
+		helpTestVisitor("insert into test.group (e0, e1) values (1, 'x')", "INSERT INTO group (e0, e1) VALUES (1, 'x')");
+	}
 }

@@ -28,6 +28,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.*;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**
  */
@@ -78,4 +79,9 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
             throw new ConnectorException(e);
         }
     }
+    
+    QueryMetadataInterface getMetadata() {
+    	return this.factory.getMetadata();
+    }
+    
 }

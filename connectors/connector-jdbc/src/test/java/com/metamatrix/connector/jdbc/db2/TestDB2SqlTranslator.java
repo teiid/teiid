@@ -32,7 +32,6 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -42,12 +41,12 @@ import com.metamatrix.core.util.UnitTestUtil;
 public class TestDB2SqlTranslator extends TestCase {
 
     private static Map MODIFIERS;
-    private static SQLTranslator TRANSLATOR; 
+    private static DB2SQLTranslator TRANSLATOR; 
 
     static {
         try {
             TRANSLATOR = new DB2SQLTranslator();        
-            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+            TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
             MODIFIERS = TRANSLATOR.getFunctionModifiers();
         } catch(ConnectorException e) {
             e.printStackTrace();    
@@ -66,7 +65,7 @@ public class TestDB2SqlTranslator extends TestCase {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
     }
     
-    public void helpTestVisitor(TranslationUtility util, String input, Map modifiers, int expectedType, String expectedOutput) throws ConnectorException {
+    public void helpTestVisitor(TranslationUtility util, String input, Map modifiers,  String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
         ICommand obj = util.parseCommand(input);
         
@@ -76,7 +75,6 @@ public class TestDB2SqlTranslator extends TestCase {
         tc.translateCommand(obj);
         
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-        assertEquals("Did not get expected command type", expectedType, tc.getExecutionType());         //$NON-NLS-1$
     }
             
     public void testRowLimit() throws Exception {
@@ -86,18 +84,16 @@ public class TestDB2SqlTranslator extends TestCase {
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
     public void testCrossJoin() throws Exception{
         String input = "SELECT bqt1.smalla.stringkey FROM bqt1.smalla cross join bqt1.smallb"; //$NON-NLS-1$
-        String output = "SELECT SmallA.StringKey FROM SmallA INNER JOIN SmallB ON 1=1";  //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA INNER JOIN SmallB ON 1 = 1";  //$NON-NLS-1$
 
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
             input, 
             MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
 }

@@ -22,66 +22,40 @@
 
 package com.metamatrix.connector.jdbc.derby;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
+import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.EscapeSyntaxModifier;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 
 /** 
  * @since 4.3
  */
-public class DerbySQLTranslator extends BasicSQLTranslator {
+public class DerbySQLTranslator extends SQLTranslator {
 
-    private Map functionModifiers;
-    private Properties connectorProperties;
-    private ILanguageFactory languageFactory;
-
-    public void initialize(ConnectorEnvironment env,
-                           RuntimeMetadata metadata) throws ConnectorException {
-        
-        super.initialize(env, metadata);
-        ConnectorEnvironment connEnv = getConnectorEnvironment();
-        this.connectorProperties = connEnv.getProperties();
-        this.languageFactory = connEnv.getLanguageFactory();
-        initializeFunctionModifiers();  
-
-    }
-
-    private void initializeFunctionModifiers() {
-        functionModifiers = new HashMap();
-        functionModifiers.putAll(super.getFunctionModifiers());
-        
-        functionModifiers.put("concat", new EscapeSyntaxModifier()); //$NON-NLS-1$
-        functionModifiers.put("substring", new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("dayofmonth", new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("timestampadd", new DerbyTimestampFunctionModifier()); //$NON-NLS-1$
-        functionModifiers.put("timestampdiff", new DerbyTimestampFunctionModifier()); //$NON-NLS-1$
-        functionModifiers.put("cast", new DerbyConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("convert", new DerbyConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("ifnull", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        functionModifiers.put("nvl", new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$        
+	@Override
+	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+		super.initialize(env);
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DerbyConvertModifier(getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$        
     }  
  
-    public Map getFunctionModifiers() {
-        return functionModifiers;
+    @Override
+    public boolean addSourceComment() {
+        return false;
+    }
+    
+    @Override
+    public String getConnectionTestQuery() {
+    	return "Select 0 from sys.systables where 1 = 2"; //$NON-NLS-1$
     }
 
-    public SQLConversionVisitor getTranslationVisitor() {
-        SQLConversionVisitor visitor = new DerbyConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(functionModifiers);
-        visitor.setProperties(connectorProperties);
-        visitor.setLanguageFactory(languageFactory);
-        visitor.setDatabaseTimeZone(getDatabaseTimeZone());
-        return visitor;
-    }
 }

@@ -38,6 +38,7 @@ import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -75,7 +76,7 @@ public class TestMetadataID extends TestCase {
         MetadataID groupID = getGroupID(fullGroupName, transUtil);     
         assertEquals(fullGroupName, groupID.getFullName());
         assertEquals(shortGroupName, groupID.getName());
-        assertEquals(MetadataID.TYPE_GROUP, groupID.getType());
+        assertEquals(Type.TYPE_GROUP, groupID.getType());
         assertNull(groupID.getParentID());
         
         // Check children
@@ -84,7 +85,7 @@ public class TestMetadataID extends TestCase {
         Iterator childIter = children.iterator();
         while(childIter.hasNext()) {
             MetadataID childID = (MetadataID) childIter.next();
-            assertEquals(MetadataID.TYPE_ELEMENT, childID.getType());
+            assertEquals(Type.TYPE_ELEMENT, childID.getType());
             assertEquals(groupID, childID.getParentID());
             assertTrue(childID.getFullName().startsWith(groupID.getFullName()));            
         }
@@ -109,7 +110,7 @@ public class TestMetadataID extends TestCase {
     
     public void helpTestElementID(String groupName, String elementName, TranslationUtility transUtil) throws Exception {
         MetadataID elementID = getElementID(groupName, elementName, transUtil);     
-        assertEquals(MetadataID.TYPE_ELEMENT, elementID.getType());
+        assertEquals(Type.TYPE_ELEMENT, elementID.getType());
         assertEquals(groupName + "." + elementName, elementID.getFullName()); //$NON-NLS-1$
         assertEquals(elementName, elementID.getName());
         assertEquals(Collections.EMPTY_LIST, elementID.getChildIDs());
@@ -145,7 +146,7 @@ public class TestMetadataID extends TestCase {
     
     public void helpTestProcedureID(String procName, String shortName, int inputParamCount, String[] paramNames, TranslationUtility transUtil) throws Exception {
         MetadataID procID = getProcedureID(procName, inputParamCount, transUtil);     
-        assertEquals(MetadataID.TYPE_PROCEDURE, procID.getType());
+        assertEquals(Type.TYPE_PROCEDURE, procID.getType());
         assertEquals(procName, procID.getFullName()); //$NON-NLS-1$
         assertNull(procID.getParentID());
         assertEquals(shortName, procID.getName());
@@ -157,7 +158,7 @@ public class TestMetadataID extends TestCase {
         Iterator childIter = children.iterator();
         while(childIter.hasNext()) {
             MetadataID childID = (MetadataID) childIter.next();
-            assertEquals(MetadataID.TYPE_PARAMETER, childID.getType());
+            assertEquals(Type.TYPE_PARAMETER, childID.getType());
             assertEquals(procID, childID.getParentID());
             assertTrue(childID.getFullName().startsWith(procID.getFullName()));
             

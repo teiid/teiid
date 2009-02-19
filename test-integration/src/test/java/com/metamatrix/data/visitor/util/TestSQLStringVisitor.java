@@ -34,8 +34,8 @@ import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.AggregateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.ElementImpl;
@@ -43,7 +43,6 @@ import com.metamatrix.dqp.internal.datamgr.language.FunctionImpl;
 import com.metamatrix.dqp.internal.datamgr.language.GroupImpl;
 import com.metamatrix.dqp.internal.datamgr.language.LiteralImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestAggregateImpl;
-import com.metamatrix.dqp.internal.datamgr.language.TestCaseExpressionImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestCompareCriteriaImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestDeleteImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestElementImpl;
@@ -66,9 +65,9 @@ import com.metamatrix.dqp.internal.datamgr.language.TestScalarSubqueryImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestSearchedCaseExpressionImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestSelectImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestSelectSymbolImpl;
+import com.metamatrix.dqp.internal.datamgr.language.TestSetQueryImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestSubqueryCompareCriteriaImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestSubqueryInCriteriaImpl;
-import com.metamatrix.dqp.internal.datamgr.language.TestSetQueryImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestUpdateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
@@ -84,7 +83,7 @@ import com.metamatrix.query.unittest.FakeMetadataStore;
 
 public class TestSQLStringVisitor extends TestCase {
 
-    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory.createRuntimeMetadata();
+    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory.getRuntimeMetadata();
         
   
     /**
@@ -96,11 +95,11 @@ public class TestSQLStringVisitor extends TestCase {
     }
 
     private String getString(ILanguageObject obj) {
-        return SQLStringVisitor.getSQLString(obj, metadata);
+        return SQLStringVisitor.getSQLString(obj);
     }
     
     private String getString(ILanguageObject obj, RuntimeMetadata metadata) {
-        return SQLStringVisitor.getSQLString(obj, metadata);
+        return SQLStringVisitor.getSQLString(obj);
     }
         
     /** create fake BQT metadata to test this case, name in source is important */
@@ -138,54 +137,6 @@ public class TestSQLStringVisitor extends TestCase {
         assertEquals(expected, getString(impl)); 
     }
 
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpression() throws Exception {
-        String expected = "CASE WHEN g1.e1='a' THEN 0 WHEN g1.e1='b' THEN 1 WHEN g1.e1='c' THEN 2 ELSE 9999 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.example()));
-    }
-
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpressionNulFirst() throws Exception {
-        String expected = "CASE WHEN g1.e1 IS NULL THEN 0 WHEN g1.e1='b' THEN 1 WHEN g1.e1='c' THEN 2 ELSE 9999 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.exampleNullFirst()));
-    }
-
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpressionNullMiddle() throws Exception {
-        String expected = "CASE WHEN g1.e1 IS NULL THEN 1 WHEN g1.e1='a' THEN 0 WHEN g1.e1='c' THEN 2 ELSE 9999 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.exampleNullMiddle()));
-    }
-    
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpressionNullLast() throws Exception {
-        String expected = "CASE WHEN g1.e1 IS NULL THEN 2 WHEN g1.e1='a' THEN 0 WHEN g1.e1='b' THEN 1 ELSE 9999 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.exampleNullLast()));
-    }
-    
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpressionNullElse() throws Exception {
-        String expected = "CASE WHEN g1.e1='a' THEN 0 WHEN g1.e1='b' THEN 1 WHEN g1.e1='c' THEN 2 ELSE g1.e1 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.exampleElementElse() ) );
-    }
-    
-    /*
-     * Test for void visit(ICaseExpression)
-     */
-    public void testVisitICaseExpressionInteger() throws Exception {
-        String expected = "CASE WHEN g1.e1='a' THEN 0 WHEN g1.e1='b' THEN 1 WHEN g1.e1='c' THEN 2 ELSE g1.e1 END"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestCaseExpressionImpl.exampleInteger() ) );
-    }
-    
     /*
      * Test for void visit(ICompareCriteria)
      */
@@ -269,8 +220,8 @@ public class TestSQLStringVisitor extends TestCase {
 
         IExpression [] params = null;
         params = new IExpression[2];
-        IGroup g = new GroupImpl("SmallA", null, metadataFactory.createMetadataID(facade.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP), MetadataID.TYPE_GROUP)); //$NON-NLS-1$
-        IElement e = new ElementImpl(g, "DoubleNum", metadataFactory.createMetadataID(facade.getStore().findObject("DoubleNum", FakeMetadataObject.ELEMENT), MetadataID.TYPE_ELEMENT), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
+        IGroup g = new GroupImpl("SmallA", null, metadataFactory.createMetadataID(facade.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP), Type.TYPE_GROUP)); //$NON-NLS-1$
+        IElement e = new ElementImpl(g, "DoubleNum", metadataFactory.createMetadataID(facade.getStore().findObject("DoubleNum", FakeMetadataObject.ELEMENT), Type.TYPE_ELEMENT), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
         params[0] = e;
         params[1] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
 
@@ -292,19 +243,6 @@ public class TestSQLStringVisitor extends TestCase {
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
         
         assertEquals(expected, getString(test)); 
-    }
-
-    public void testVisitConvertFunctionSQLServerStyle() throws Exception {
-        String expected = "convert(integer, columnA)"; //$NON-NLS-1$
-        
-        IExpression [] params = null;
-        params = new IExpression[2];
-        params[0] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
-        params[1] = new ElementImpl(null, "columnA", null, String.class); //$NON-NLS-1$
-        IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
-        
-        assertEquals(expected, getString(test)); 
-        
     }
 
     /*

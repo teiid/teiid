@@ -24,7 +24,6 @@ package com.metamatrix.connector.visitor.framework;
 
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBatchedUpdates;
-import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.IDelete;
@@ -80,16 +79,6 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     
     public void visit(IBatchedUpdates obj) {
         visitNodes(obj.getUpdateCommands());
-    }
-    
-    public void visit(ICaseExpression obj) {
-        visitNode(obj.getExpression());
-        int whenCount = obj.getWhenCount();
-        for (int i = 0; i < whenCount; i++) {
-            visitNode(obj.getWhenExpression(i));
-            visitNode(obj.getThenExpression(i));
-        }
-        visitNode(obj.getElseExpression());
     }
     
     public void visit(ICompareCriteria obj) {

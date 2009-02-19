@@ -7940,7 +7940,7 @@ public class TestProcessor extends TestCase {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData2(dataManager);
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT (5 + 1)"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 LIMIT (5 + 1)"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         helpProcess(plan, dataManager, expected);          
     }
     

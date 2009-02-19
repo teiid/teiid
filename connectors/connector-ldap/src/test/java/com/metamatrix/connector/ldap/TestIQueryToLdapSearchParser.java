@@ -203,7 +203,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
 	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws ConnectorException {
 		ConnectorLogger logger = new SysLogger(false);
     	QueryMetadataInterface metadata = exampleLdap();
-    	RuntimeMetadata rm = new MetadataFactory(metadata).createRuntimeMetadata();
+    	RuntimeMetadata rm = new MetadataFactory(metadata).getRuntimeMetadata();
     	Properties props = new Properties();
     	
     	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);

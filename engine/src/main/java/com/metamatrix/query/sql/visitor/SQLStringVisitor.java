@@ -193,38 +193,18 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(CaseExpression obj) {
         parts.add(ReservedWords.CASE);
         parts.add(SPACE);
-
-        // checking for null compare in decode string case 2969 GCSS
-        for (int i =0; i < obj.getWhenCount(); i++) {          
-            if (ReservedWords.NULL.equalsIgnoreCase(obj.getWhenExpression(i).toString() ) ) {
-                parts.add(ReservedWords.WHEN);
-                parts.add(SPACE);
-                parts.add(registerNode(obj.getExpression()) );
-                parts.add(SPACE);
-                parts.add(ReservedWords.IS);
-                parts.add(SPACE);
-                parts.add(ReservedWords.NULL);
-                parts.add(SPACE);
-                parts.add(ReservedWords.THEN);
-                parts.add(SPACE);
-                parts.add(registerNode(obj.getThenExpression(i)));
-                parts.add(SPACE);
-            }
-        }
+        parts.add(registerNode(obj.getExpression()) ); 
+        parts.add(SPACE);
 
         for (int i = 0; i < obj.getWhenCount(); i++) {
-            if(!ReservedWords.NULL.equalsIgnoreCase(obj.getWhenExpression(i).toString() ) ) {
-                parts.add(ReservedWords.WHEN);
-                parts.add(SPACE);
-                parts.add(registerNode(obj.getExpression()) ); 
-                parts.add("="); //$NON-NLS-1$
-                parts.add(registerNode(obj.getWhenExpression(i)) );
-                parts.add(SPACE);
-                parts.add(ReservedWords.THEN);
-                parts.add(SPACE);
-                parts.add(registerNode(obj.getThenExpression(i)));
-                parts.add(SPACE);
-            }
+            parts.add(ReservedWords.WHEN);
+            parts.add(SPACE);
+            parts.add(registerNode(obj.getWhenExpression(i)) );
+            parts.add(SPACE);
+            parts.add(ReservedWords.THEN);
+            parts.add(SPACE);
+            parts.add(registerNode(obj.getThenExpression(i)));
+            parts.add(SPACE);
         }
 
         if (obj.getElseExpression() != null) {

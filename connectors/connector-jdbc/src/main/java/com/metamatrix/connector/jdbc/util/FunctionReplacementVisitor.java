@@ -22,10 +22,25 @@
 
 package com.metamatrix.connector.jdbc.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroupBy;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.IInlineView;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.IIsNullCriteria;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria;
+import com.metamatrix.connector.language.ISubqueryInCriteria;
 import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
@@ -53,22 +68,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
     
     public void visit(IInlineView obj) {
         visitNode(obj.getQuery());
-    }
-
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICaseExpression)
-     */
-    public void visit(ICaseExpression obj) {
-        super.visit(obj);
-        obj.setExpression(replaceFunction(obj.getExpression()));
-        int whenCount = obj.getWhenCount();
-        for(int i=0; i<whenCount; i++) {
-            obj.setWhenExpression(i, replaceFunction(obj.getWhenExpression(i)));
-        }
-        for(int i=0; i<whenCount; i++) {
-            obj.setThenExpression(i, replaceFunction(obj.getThenExpression(i)));
-        }
-        obj.setElseExpression(replaceFunction(obj.getElseExpression()));
     }
 
     /* 

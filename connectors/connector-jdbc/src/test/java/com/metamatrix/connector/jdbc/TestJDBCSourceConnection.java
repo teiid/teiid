@@ -27,17 +27,11 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
-
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 import com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator;
 import com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.SimpleMock;
 
 
@@ -81,7 +75,7 @@ public class TestJDBCSourceConnection extends TestCase {
      * @since 4.3
      */
     public void testIsAlive() throws Exception {
-        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, strategy); 
+        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, strategy, null, null); 
         
         //closed connections should not be 'alive'        
         fakeConnection.closed = true;
@@ -102,7 +96,7 @@ public class TestJDBCSourceConnection extends TestCase {
      * @since 4.3
      */
     public void testIsAliveNullStrategy() throws Exception {
-        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, null); 
+        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, null, null, null); 
         
         //closed connections should not be 'alive'        
         fakeConnection.closed = true;
@@ -116,13 +110,6 @@ public class TestJDBCSourceConnection extends TestCase {
         fakeConnection.fail = true;
         assertTrue(sourceConnection.isAlive());
         
-    }
-    
-    public void testSqlTranslatorInit() throws Exception {
-    	JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, null); 
-        JDBCQueryExecution exec = (JDBCQueryExecution)sourceConnection.createExecution(Mockito.mock(IQuery.class), Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class));
-        SQLTranslator trans = exec.getSqlTranslator();
-        assertTrue(trans.getFunctionModifiers().size() > 0);
     }
     
 }

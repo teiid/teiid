@@ -1840,24 +1840,24 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testCaseExpression1() {
         helpTest(TestCaseExpression.example(2),
-                 "CASE WHEN x='a' THEN 0 WHEN x='b' THEN 1 ELSE 9999 END"); //$NON-NLS-1$
+                 "CASE x WHEN 'a' THEN 0 WHEN 'b' THEN 1 ELSE 9999 END"); //$NON-NLS-1$
     }
     
     public void testCaseExpression2() {
         CaseExpression example = TestCaseExpression.example(2);
         example.setElseExpression(null);
-        helpTest(example, "CASE WHEN x='a' THEN 0 WHEN x='b' THEN 1 END"); //$NON-NLS-1$
+        helpTest(example, "CASE x WHEN 'a' THEN 0 WHEN 'b' THEN 1 END"); //$NON-NLS-1$
     }
     
     public void testCaseExpression3() {
         CaseExpression example = TestCaseExpression.example(3, 0, true);
-        helpTest(example, "CASE WHEN x IS NULL THEN 0 WHEN x='b' THEN 1 WHEN x='c' THEN 2 ELSE 9999 END"); //$NON-NLS-1$
+        helpTest(example, "CASE x WHEN null THEN 0 WHEN 'b' THEN 1 WHEN 'c' THEN 2 ELSE 9999 END"); //$NON-NLS-1$
     }
     
     public void testCaseExpression4() {
         CaseExpression example = TestCaseExpression.example(3, 2, true);
         example.setElseExpression(null);
-        helpTest(example, "CASE WHEN x IS NULL THEN 2 WHEN x='a' THEN 0 WHEN x='b' THEN 1 END"); //$NON-NLS-1$
+        helpTest(example, "CASE x WHEN 'a' THEN 0 WHEN 'b' THEN 1 WHEN null THEN 2 END"); //$NON-NLS-1$
     }
     
     public void testSearchedCaseExpression1() {

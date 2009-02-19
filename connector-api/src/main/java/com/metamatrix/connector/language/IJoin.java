@@ -94,5 +94,5 @@ public interface IJoin extends IFromItem {
      * Set List of CompareCriteria specifying join criteria.
      * @param criteria List of Criteria
      */
-    void setCriteria(List<ICriteria> criteria);    
+    void setCriteria(List<? extends ICriteria> criteria);    
 }

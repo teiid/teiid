@@ -46,18 +46,6 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     }
 
     /* 
-     * @see com.metamatrix.data.language.ILanguageFactory#createCaseExpression(com.metamatrix.data.language.IExpression, java.util.List, java.util.List, com.metamatrix.data.language.IExpression, java.lang.Class)
-     */
-    public ICaseExpression createCaseExpression(
-        IExpression mainExpression,
-        List whenExpressions,
-        List thenExpressions,
-        IExpression elseExpression,
-        Class type) {
-        return new CaseExpressionImpl(mainExpression, whenExpressions, thenExpressions, elseExpression, type);
-    }
-
-    /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createCompareCriteria(int, com.metamatrix.data.language.IExpression, com.metamatrix.data.language.IExpression)
      */
     public ICompareCriteria createCompareCriteria(

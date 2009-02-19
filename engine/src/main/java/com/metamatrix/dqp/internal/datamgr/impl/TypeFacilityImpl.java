@@ -22,7 +22,12 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 import com.metamatrix.common.types.*;
+import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.TypeFacility;
 
@@ -48,6 +53,12 @@ public class TypeFacilityImpl extends TypeFacility {
 	@Override
 	public Object convertToRuntimeType(Object value) {
 		return DataTypeManager.convertToRuntimeType(value);
+	}
+	
+	@Override
+	public Object convertDate(Date date, TimeZone initial, Calendar target,
+			Class targetType) {
+		return TimestampWithTimezone.create(date, initial, target, targetType);
 	}
 
 }

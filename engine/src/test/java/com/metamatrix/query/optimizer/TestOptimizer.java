@@ -39,6 +39,7 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
@@ -2505,7 +2506,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2515,7 +2516,7 @@ public class TestOptimizer extends TestCase {
             "SELECT e1 FROM pm1.g1 WHERE upper(e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT e1 FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT e1 FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2528,8 +2529,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2539,7 +2540,7 @@ public class TestOptimizer extends TestCase {
             "SELECT lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT lower(e1) FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2552,8 +2553,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2563,7 +2564,7 @@ public class TestOptimizer extends TestCase {
             "SELECT lower(e1), upper(e1), e2 FROM pm1.g1 WHERE upper(e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT lower(e1), upper(e1), e2 FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT lower(e1), upper(e1), e2 FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2576,8 +2577,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", false); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2587,7 +2588,7 @@ public class TestOptimizer extends TestCase {
             "SELECT lower(e1), upper(e1) FROM pm1.g1 WHERE upper(e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT e1 FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT e1 FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
@@ -2615,8 +2616,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2626,7 +2627,7 @@ public class TestOptimizer extends TestCase {
             "SELECT x FROM (SELECT lower(e1) AS x, upper(e1) AS y FROM pm1.g1 WHERE upper(e1) = 'X') AS z",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT lcase(e1) FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2639,8 +2640,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2650,7 +2651,7 @@ public class TestOptimizer extends TestCase {
             "SELECT y, e, x FROM (SELECT lower(e1) AS x, upper(e1) AS y, 5 as z, e1 AS e FROM pm1.g1 WHERE upper(e1) = 'X') AS w",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT upper(e1), e1, lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X'"}, //$NON-NLS-1$
+            new String[] {"SELECT ucase(e1), e1, lcase(e1) FROM pm1.g1 WHERE ucase(e1) = 'X'"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2700,8 +2701,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2711,7 +2712,7 @@ public class TestOptimizer extends TestCase {
             "SELECT e1, lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY e1",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT e1, lower(e1) FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY e1"}, //$NON-NLS-1$
+            new String[] {"SELECT e1, lcase(e1) FROM pm1.g1 WHERE ucase(e1) = 'X' ORDER BY e1"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2726,8 +2727,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2737,7 +2738,7 @@ public class TestOptimizer extends TestCase {
             "SELECT e1, lower(e1) AS x FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY x",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT e1, lower(e1) AS x FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY x"}, //$NON-NLS-1$
+            new String[] {"SELECT e1, lcase(e1) AS x FROM pm1.g1 WHERE ucase(e1) = 'X' ORDER BY x"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2752,8 +2753,8 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
-        caps.setFunctionSupport("lower", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2763,7 +2764,7 @@ public class TestOptimizer extends TestCase {
             "SELECT e1, x FROM (SELECT e1, lower(e1) AS x FROM pm1.g1 WHERE upper(e1) = 'X') AS z ORDER BY x",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT e1, lower(e1) AS EXPR FROM pm1.g1 WHERE upper(e1) = 'X' ORDER BY EXPR"}, //$NON-NLS-1$
+            new String[] {"SELECT e1, lcase(e1) AS EXPR FROM pm1.g1 WHERE ucase(e1) = 'X' ORDER BY EXPR"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2777,7 +2778,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -2788,7 +2789,7 @@ public class TestOptimizer extends TestCase {
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (upper(pm1.g1.e1) = 'X') AND (upper(convert(pm1.g2.e2, string)) = 'X')"}, //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (ucase(pm1.g1.e1) = 'X') AND (ucase(convert(pm1.g2.e2, string)) = 'X')"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
@@ -2802,7 +2803,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -2813,7 +2814,7 @@ public class TestOptimizer extends TestCase {
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2, pm1.g3 WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND pm1.g1.e1 = concat(pm1.g3.e1, 'a') AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (upper(pm1.g1.e1) = 'X') AND (upper(convert(pm1.g2.e2, string)) = 'X')", //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (ucase(pm1.g1.e1) = 'X') AND (ucase(convert(pm1.g2.e2, string)) = 'X')", //$NON-NLS-1$
                     "SELECT pm1.g3.e1 FROM pm1.g3"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
@@ -2843,7 +2844,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("upper", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -2854,7 +2855,7 @@ public class TestOptimizer extends TestCase {
             "SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2, (SELECT e1 AS x FROM pm1.g3) AS g WHERE pm1.g1.e1 = convert(pm1.g2.e2, string) AND pm1.g1.e1 = concat(g.x, 'a') AND upper(pm1.g1.e1) = 'X'",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (upper(pm1.g1.e1) = 'X') AND (upper(convert(pm1.g2.e2, string)) = 'X')", //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1, pm1.g2.e3 FROM pm1.g1, pm1.g2 WHERE (pm1.g1.e1 = convert(pm1.g2.e2, string)) AND (ucase(pm1.g1.e1) = 'X') AND (ucase(convert(pm1.g2.e2, string)) = 'X')", //$NON-NLS-1$
                     "SELECT e1 FROM pm1.g3"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
@@ -3508,7 +3509,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("||", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -7156,7 +7157,7 @@ public class TestOptimizer extends TestCase {
         
         ProcessorPlan plan = helpPlan("select * from (select v1.e1, v2.e1 as e1_1, v1.e2, v2.e2 as e2_2 from (select * from vm1.g7 where vm1.g7.e2 = 1) v1 left outer join (select * from vm1.g7 where vm1.g7.e2 = 1) v2 on v1.e2 = v2.e2) as v3 where v3.e2 = 1", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT CASE WHEN g_0.e1='S' THEN 'Pay' WHEN g_0.e1='P' THEN 'Rec' ELSE g_0.e1 END, CASE WHEN g_1.e1='S' THEN 'Pay' WHEN g_1.e1='P' THEN 'Rec' ELSE g_1.e1 END, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_1.e2 = 1 WHERE g_0.e2 = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[] { "SELECT CASE WHEN g_0.e1 = 'S' THEN 'Pay' WHEN g_0.e1 = 'P' THEN 'Rec' ELSE g_0.e1 END, CASE WHEN g_1.e1 = 'S' THEN 'Pay' WHEN g_1.e1 = 'P' THEN 'Rec' ELSE g_1.e1 END, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_1.e2 = 1 WHERE g_0.e2 = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
           
         checkSubPlanCount(plan, 0);        

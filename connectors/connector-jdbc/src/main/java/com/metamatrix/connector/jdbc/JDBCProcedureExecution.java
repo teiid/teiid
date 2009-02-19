@@ -50,7 +50,6 @@ import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  */
@@ -90,9 +89,6 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         //create statement or CallableStatement and execute
         String sql = translatedComm.getSql();
         try{
-            if(translatedComm.getStatementType() != TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT){
-            	throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSynchExecution.Statement_type_not_support_for_command_1", new Integer(translatedComm.getStatementType()), sql)); //$NON-NLS-1$
-            }
             //create parameter index map
             parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
             CallableStatement cstmt = getCallableStatement(sql);
@@ -200,7 +196,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             if(value == null){
                 return null;
             }
-            Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.resultsTranslator.getValueTranslators(), this.resultsTranslator.getTypefacility(), trimString, context);
+            Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.resultsTranslator.getValueTranslators(), this.resultsTranslator.getTypeFacility(), trimString, context);
             return result;
         } catch (SQLException e) {
             throw new ConnectorException(e);

@@ -43,7 +43,6 @@ public class JDBCConnector implements Connector, ConnectorIdentityFactory {
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
     private JDBCSourceConnectionFactory factory;
-    
     private ConnectorCapabilities capabilities;
     
 	static ConnectorCapabilities createCapabilities(ConnectorEnvironment environment, ClassLoader loader)

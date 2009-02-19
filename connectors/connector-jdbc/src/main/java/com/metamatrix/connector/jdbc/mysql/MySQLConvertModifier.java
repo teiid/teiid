@@ -31,6 +31,7 @@ import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.ICompareCriteria.Operator;
 
 
 /** 
@@ -94,11 +95,11 @@ class MySQLConvertModifier extends BasicFunctionModifier {
         int srcCode = getSrcCode(function);
         switch(srcCode) {
             case BOOLEAN:
-                // convert(booleanSrc, string) --> CASE booleanSrc WHEN 1 THEN '1' ELSE '0' END
-                List when = Arrays.asList(new IExpression[] {langFactory.createLiteral(new Integer(1), Integer.class)});
+                // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
+                List when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters()[0], langFactory.createLiteral(Boolean.TRUE, Boolean.class)));
                 List then = Arrays.asList(new IExpression[] {langFactory.createLiteral("1", String.class)}); //$NON-NLS-1$
                 IExpression elseExpr = langFactory.createLiteral("0", String.class); //$NON-NLS-1$
-                return langFactory.createCaseExpression(function.getParameters()[0], when, then, elseExpr, String.class);
+                return langFactory.createSearchedCaseExpression(when, then, elseExpr, String.class);
             case BYTE:
             case SHORT:
             case INTEGER:
@@ -156,10 +157,11 @@ class MySQLConvertModifier extends BasicFunctionModifier {
         switch(srcCode) {
             case STRING:
                 // convert(src, boolean) --> CASE src WHEN 'true' THEN 1 ELSE 0 END
-                List when = Arrays.asList(new IExpression[] {langFactory.createLiteral("true", String.class)}); //$NON-NLS-1$
-                List then = Arrays.asList(new IExpression[] {langFactory.createLiteral(new Integer(1), Integer.class)});
-                IExpression elseExpr = langFactory.createLiteral(new Integer(0), Integer.class);
-                return langFactory.createCaseExpression(function.getParameters()[0], when, then, elseExpr, Integer.class); 
+                // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
+                List when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters()[0], langFactory.createLiteral("true", String.class)));
+                List then = Arrays.asList(new IExpression[] {langFactory.createLiteral(Integer.valueOf(1), Integer.class)}); //$NON-NLS-1$
+                IExpression elseExpr = langFactory.createLiteral(Integer.valueOf(0), Integer.class); //$NON-NLS-1$
+                return langFactory.createSearchedCaseExpression(when, then, elseExpr, String.class);
             default:
                 return DROP_MODIFIER.modify(function);
         }

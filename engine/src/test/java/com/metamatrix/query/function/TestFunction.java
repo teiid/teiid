@@ -112,8 +112,8 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected result from lpad", expected, actual); //$NON-NLS-1$
     }
 
-    public static void helpTestLpad(String input, int length, char c, String expected) throws FunctionExecutionException {
-        String actual = (String) FunctionMethods.lpad(input, new Integer(length), new Character(c));
+    public static void helpTestLpad(String input, int length, String pad, String expected) throws FunctionExecutionException {
+        String actual = (String) FunctionMethods.lpad(input, new Integer(length), pad);
         assertEquals("Didn't get expected result from lpad", expected, actual); //$NON-NLS-1$
     }
 
@@ -122,8 +122,8 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected result from rpad", expected, actual); //$NON-NLS-1$
     }
 
-    public static void helpTestRpad(String input, int length, char c, String expected) throws FunctionExecutionException {
-        String actual = (String) FunctionMethods.rpad(input, new Integer(length), new Character(c));
+    public static void helpTestRpad(String input, int length, String c, String expected) throws FunctionExecutionException {
+        String actual = (String) FunctionMethods.rpad(input, new Integer(length), c);
         assertEquals("Didn't get expected result from rpad", expected, actual); //$NON-NLS-1$
     }
 
@@ -519,152 +519,6 @@ public class TestFunction extends TestCase {
         helpConvert(ts, "string", "2003-08-22 22:43:53.003333333"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    /*
-     * Test for Object decodeInteger(Object, Object)
-     */
-    public void testDecodeIntegerObjectObject() throws FunctionExecutionException {
-        decodeIntegerTests(null);
-    }
-
-
-    /*
-     * Test for Object decodeString(Object, Object)
-     */
-    public void testDecodeStringObjectObject() throws FunctionExecutionException {
-        decodeStringTests(null);
-    }
-
-    /*
-     * Test for Object decodeInteger(Object, Object, Object)
-     */
-    public void testDecodeIntegerObjectObjectObject() throws FunctionExecutionException {
-        decodeIntegerTests(","); //$NON-NLS-1$
-
-    }
-
-    /*
-     * Test for Object decodeString(Object, Object, Object)
-     */
-    public void testDecodeStringObjectObjectObject() throws FunctionExecutionException {
-        decodeStringTests(","); //$NON-NLS-1$
-    }
-
-    private void decodeStringTests(String delimiter) throws FunctionExecutionException {
-        String decodeString = "a,1,b,2,c, 3, 8"; //$NON-NLS-1$
-
-        String columnValue = "a"; //$NON-NLS-1$
-        String expectedResult = "1"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "b"; //$NON-NLS-1$
-        expectedResult = "2"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "g"; //$NON-NLS-1$
-        expectedResult = "8"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = decodeString.substring(0, decodeString.length() - 3);
-        columnValue = "6"; //$NON-NLS-1$
-        expectedResult = "6"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = "a,1,null,2, g,5"; //$NON-NLS-1$
-        columnValue = null;
-        expectedResult = "2"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "8"; //$NON-NLS-1$
-        expectedResult = "8"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = "'a', 1, ' b', 2, 'c', '3'"; //$NON-NLS-1$
-        columnValue = "c"; //$NON-NLS-1$
-        expectedResult = "3"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = "' ', 1, 'b', 2, 'c', '3'"; //$NON-NLS-1$
-        columnValue = " "; //$NON-NLS-1$
-        expectedResult = "1"; //$NON-NLS-1$
-        runDecodeStringTest(columnValue, decodeString, expectedResult, delimiter);
-    }
-
-    private void decodeIntegerTests(String delimiter) throws FunctionExecutionException {
-
-        String decodeString = "a,1,b,2,c, 3, 8"; //$NON-NLS-1$
-
-        String columnValue = "a"; //$NON-NLS-1$
-        Integer expectedResult = new Integer(1);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "b"; //$NON-NLS-1$
-        expectedResult = new Integer(2);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "g"; //$NON-NLS-1$
-        expectedResult = new Integer(8);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = decodeString.substring(0, decodeString.length() - 3);
-        columnValue = "6"; //$NON-NLS-1$
-        expectedResult = new Integer(6);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = "a,1,null,2, g,5"; //$NON-NLS-1$
-        columnValue = null;
-        expectedResult = new Integer(2);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        columnValue = "8"; //$NON-NLS-1$
-        expectedResult = new Integer(8);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        decodeString = "'a', 1, ' b', 2, 'c', '3'"; //$NON-NLS-1$
-        columnValue = "c"; //$NON-NLS-1$
-        expectedResult = new Integer(3);
-        runDecodeIntegerTest(columnValue, decodeString, expectedResult, delimiter);
-
-        Integer intColumnValue = new Integer(12);
-        expectedResult = new Integer(12);
-        runDecodeIntegerTest(intColumnValue, decodeString, expectedResult, delimiter);
-
-
-    }
-
-    private void runDecodeIntegerTest(Object columnValue,
-                                      String decodeString,
-                                      Object expectedResult,
-                                      String delimiter) throws FunctionExecutionException {
-        Object result = null;
-        if (delimiter == null) {
-            result = FunctionMethods.decodeInteger(columnValue, decodeString);
-        } else {
-            result = FunctionMethods.decodeInteger(columnValue, decodeString, delimiter);
-        }
-
-        assertEquals("Decode did not properly translate column value: " + columnValue, //$NON-NLS-1$
-                     expectedResult,
-                     result);
-
-    }
-
-    private void runDecodeStringTest(Object columnValue,
-                                     String decodeString,
-                                     Object expectedResult,
-                                     String delimiter) throws FunctionExecutionException {
-        Object result = null;
-        if (delimiter == null) {
-            result = FunctionMethods.decodeString(columnValue, decodeString);
-        } else {
-            result = FunctionMethods.decodeString(columnValue, decodeString, delimiter);
-        }
-
-        assertEquals("Decode did not properly translate column value: " + columnValue, //$NON-NLS-1$
-                     expectedResult,
-                     result);
-
-    }
-
     public void testAscii1() throws FunctionExecutionException {
         Integer code = (Integer) FunctionMethods.ascii(new Character(' '));
         assertEquals("Didn't get expected code", 32, code.intValue()); //$NON-NLS-1$
@@ -704,17 +558,17 @@ public class TestFunction extends TestCase {
     }
 
     public void testNvl1() {
-        String ret = (String) FunctionMethods.nvl("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
+        String ret = (String) FunctionMethods.ifnull("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Didn't get expected value", "x", ret); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testNvl2() {
-        String ret = (String) FunctionMethods.nvl(null, "y"); //$NON-NLS-1$
+        String ret = (String) FunctionMethods.ifnull(null, "y"); //$NON-NLS-1$
         assertEquals("Didn't get expected value", "y", ret); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testNvl3() {
-        String ret = (String) FunctionMethods.nvl(null, null);
+        String ret = (String) FunctionMethods.ifnull(null, null);
         assertEquals("Didn't get expected value", null, ret); //$NON-NLS-1$
     }
 
@@ -751,15 +605,19 @@ public class TestFunction extends TestCase {
     }
 
     public void testLpad4() throws FunctionExecutionException {
-        helpTestLpad("xx", 1, "xx"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLpad("xx", 1, "x"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLpad5() throws FunctionExecutionException {
-        helpTestLpad("", 4, 'x', "xxxx");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLpad("", 4, "x", "xxxx");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLpad6() throws FunctionExecutionException {
-        helpTestLpad("10", 6, '0', "000010"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLpad("10", 6, "0", "000010"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testLpad7() throws FunctionExecutionException {
+    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     public void testRpad1() throws FunctionExecutionException {
@@ -775,15 +633,15 @@ public class TestFunction extends TestCase {
     }
 
     public void testRpad4() throws FunctionExecutionException {
-        helpTestRpad("xx", 1, "xx"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRpad("xx", 1, "x"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testRpad5() throws FunctionExecutionException {
-        helpTestRpad("", 4, 'x', "xxxx"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRpad("", 4, "x", "xxxx"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testRpad6() throws FunctionExecutionException {
-        helpTestRpad("10", 6, '0', "100000"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRpad("10", 6, "0", "100000"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTranslate1() throws FunctionExecutionException {

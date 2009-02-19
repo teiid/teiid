@@ -67,7 +67,7 @@ public class TestInsertImpl extends TestCase {
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
         
         ArrayList values = new ArrayList();
-        values.add(TestCaseExpressionImpl.helpExample());
+        values.add(TestSearchedCaseExpressionImpl.helpExample());
         
         return new Insert(group,
                           elements,

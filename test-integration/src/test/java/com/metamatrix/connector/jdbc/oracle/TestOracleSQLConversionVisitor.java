@@ -24,7 +24,6 @@ package com.metamatrix.connector.jdbc.oracle;
 
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 
 import junit.framework.TestCase;
 
@@ -34,6 +33,8 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.jdbc.JDBCPropertyNames;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
@@ -42,7 +43,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -61,7 +61,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         OracleSQLTranslator trans = new OracleSQLTranslator();
         
         try {
-            trans.initialize(new ConnectorEnvironmentImpl(new Properties(), null, null), null);
+            trans.initialize(new ConnectorEnvironmentImpl(new Properties(), null, null));
         } catch(ConnectorException e) {
             e.printStackTrace();
         }
@@ -84,59 +84,51 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplierOracle.vdb"; //$NON-NLS-1$
     }
     
-    private String getTimestampTestVDB() {
-        return UnitTestUtil.getTestDataPath() + "/tstest.vdb"; //$NON-NLS-1$
+    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, false);
     }
 
-    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, int expectedType, String expectedOutput) throws ConnectorException {
-        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedType, expectedOutput, false);
+    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, correctNaming);
     }
 
-    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, int expectedType, String expectedOutput, boolean correctNaming) throws ConnectorException {
-        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedType, expectedOutput, correctNaming);
-    }
-
-    private void helpTestVisitor(String vdb, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, int expectedType, String expectedOutput, boolean correctNaming) throws ConnectorException {
+    private void helpTestVisitor(String vdb, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
         // Convert from sql to objects
         TranslationUtility util = new TranslationUtility(vdb);
         ICommand obj =  util.parseCommand(input, correctNaming, true);        
-		this.helpTestVisitor(obj, util.createRuntimeMetadata(), modifiers, context, dbmsTimeZone, expectedType, expectedOutput);
+		this.helpTestVisitor(obj, util.createRuntimeMetadata(), modifiers, context, dbmsTimeZone, expectedOutput);
     }
 
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
      * @throws ConnectorException 
      */
-    private void helpTestVisitor(QueryMetadataInterface metadata, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, int expectedType, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(QueryMetadataInterface metadata, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         ICommand obj = commandBuilder.getCommand(input);
         RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(new MetadataFactory(metadata));
-		this.helpTestVisitor(obj, runtimeMetadata, modifiers, context, dbmsTimeZone, expectedType, expectedOutput);
+		this.helpTestVisitor(obj, runtimeMetadata, modifiers, context, dbmsTimeZone, expectedOutput);
     }
     
-    private void helpTestVisitor(ICommand obj, RuntimeMetadata metadata, Map modifiers, ExecutionContext context, String dbmsTimeZone, int expectedType, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(ICommand obj, RuntimeMetadata metadata, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
 
         
         // Apply function replacement
         FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
-        
-        // Convert back to SQL
-        OracleSQLConversionVisitor sqlVisitor = new OracleSQLConversionVisitor();      
-        sqlVisitor.setFunctionModifiers(modifiers);  
-        sqlVisitor.setExecutionContext(context);
-        sqlVisitor.setRuntimeMetadata(metadata);        
-        if(dbmsTimeZone != null && dbmsTimeZone.trim().length() > 0) {
-            sqlVisitor.setDatabaseTimeZone(TimeZone.getTimeZone(dbmsTimeZone));            
-        }    
-        sqlVisitor.setLanguageFactory(LanguageFactoryImpl.INSTANCE);
         OracleSQLTranslator translator = new OracleSQLTranslator();
-        translator.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), metadata);
+        Properties p = new Properties();
+        if (dbmsTimeZone != null) {
+        	p.setProperty(JDBCPropertyNames.DATABASE_TIME_ZONE, dbmsTimeZone);
+        }
+        translator.initialize(EnvironmentUtility.createEnvironment(p, false));
+        // Convert back to SQL
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(translator);      
+        sqlVisitor.setExecutionContext(context);
         TranslatedCommand tc = new TranslatedCommand(context, translator, sqlVisitor, funcVisitor);
         tc.translateCommand(obj);
         
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-        assertEquals("Did not get expected command type", expectedType, tc.getExecutionType());         //$NON-NLS-1$
     }
     
     /**
@@ -151,19 +143,17 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         input, 
                         MODIFIERS, null,
-                        TranslatedCommand.EXEC_TYPE_QUERY,
                         output);
     }
     
     /** defect 21775 */
     public void testDateStuff() throws Exception {
         String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY datevalue"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN (CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE ('0' || to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')) < 10 THEN CASE WHEN to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) IS NULL THEN NULL ELSE ('0' || to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')))) END ELSE to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) END IS NULL) THEN NULL ELSE (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE ('0' || to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END || CASE WHEN TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')) < 10 THEN CASE WHEN to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) IS NULL THEN NULL ELSE ('0' || to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')))) END ELSE to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) END) END IS NULL) OR (to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL) THEN NULL ELSE (CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE ('0' || to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')) < 10 THEN CASE WHEN to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) IS NULL THEN NULL ELSE ('0' || to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')))) END ELSE to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) END IS NULL) THEN NULL ELSE (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE ('0' || to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END || CASE WHEN TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')) < 10 THEN CASE WHEN to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) IS NULL THEN NULL ELSE ('0' || to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')))) END ELSE to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) END) END || to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN (CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL) THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END IS NULL) OR (to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL) THEN NULL ELSE concat(CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL) THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END, to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
         
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                         input, 
                         MODIFIERS, EMPTY_CONTEXT, null,
-                        TranslatedCommand.EXEC_TYPE_QUERY,
                         output);
     }
     
@@ -180,7 +170,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);
     }
     
@@ -192,7 +181,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }    
 
     public void testLcaseFunction() throws Exception {
@@ -203,7 +192,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testUcaseFunction() throws Exception {
@@ -214,7 +203,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testIfnullFunction() throws Exception {
@@ -225,7 +214,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testLogFunction() throws Exception {
@@ -236,7 +225,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testLog10Function() throws Exception {
@@ -247,7 +236,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionInteger() throws Exception {
@@ -259,7 +248,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionChar() throws Exception {
@@ -270,7 +259,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionBoolean() throws Exception {
@@ -282,7 +271,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionDate() throws Exception {
@@ -293,7 +282,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionTime() throws Exception {
@@ -305,7 +294,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testConvertFunctionTimestamp() throws Exception {
@@ -317,7 +306,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
     
     public void testExtractFunctionTimestamp() throws Exception {
@@ -327,38 +316,14 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);
     }
 
-    public void testFormatFunctionTimestamp() throws Exception {
-        String input = "SELECT formattimestamp(TIMESTAMPVALUE, 'YYYY-DD-MM HH24:MI:SS.fffffffff') FROM BQT1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT to_char(SmallA.TimestampValue, 'YYYY-DD-MM HH24:MI:SS.fffffffff') FROM SmallA"; //$NON-NLS-1$
-               
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
-                output);
-    }
-
-    public void testFormatFunctionTime() throws Exception {
-        String input = "SELECT formattime(TIMEVALUE, 'HH24:MI:SS') FROM BQT1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT to_char(SmallA.TimeValue, 'HH24:MI:SS') FROM SmallA"; //$NON-NLS-1$
-               
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
-                output);
-    }
-        
     public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT y.PART_NAME FROM PARTS y"); //$NON-NLS-1$
     }
     
@@ -367,7 +332,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             "select {d'2002-12-31'} FROM parts", //$NON-NLS-1$
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT {d'2002-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
@@ -376,7 +340,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
@@ -385,34 +348,14 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             "select {ts'2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT {ts'2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testTimestampLiteralInCriteria() throws Exception {
-        helpTestVisitor(getTimestampTestVDB(),
-            "select timestampvalue FROM hugea WHERE timestampvalue = {ts'2002-12-31 13:59:59.0'}", //$NON-NLS-1$
-            MODIFIERS,
-            null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            "SELECT HUGEA.TIMESTAMPVALUE FROM HUGEA WHERE HUGEA.TIMESTAMPVALUE = to_timestamp('2002-12-31 13:59:59.0','YYYY-MM-DD HH24:MI:SS.FF')"); //$NON-NLS-1$
-    }
-
-    public void testTimestampLiteralInCriteria2() throws Exception {
-        helpTestVisitor(getTimestampTestVDB(),
-            "select datevalue FROM hugea WHERE datevalue = {ts'2002-12-31 13:59:59.0'}", //$NON-NLS-1$
-            MODIFIERS,
-            null,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            "SELECT HUGEA.DATEVALUE FROM HUGEA WHERE HUGEA.DATEVALUE = to_date('2002-12-31 13:59:59','YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$
-    }
-    
     public void testUnionOrderByWithThreeBranches() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id", //$NON-NLS-1$
                         MODIFIERS,
                         null,
-                        TranslatedCommand.EXEC_TYPE_QUERY,
                         "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0", true); //$NON-NLS-1$
     }
     
@@ -421,7 +364,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                         "select part_id FROM parts UNION ALL select part_name FROM parts ORDER BY part_id", //$NON-NLS-1$
                         MODIFIERS,
                         null,
-                        TranslatedCommand.EXEC_TYPE_QUERY,
                         "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0", true); //$NON-NLS-1$
     }
 
@@ -430,7 +372,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                         "select part_id as p FROM parts UNION ALL select part_name FROM parts ORDER BY p", //$NON-NLS-1$
                         MODIFIERS,
                         null,
-                        TranslatedCommand.EXEC_TYPE_QUERY,
                         "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p"); //$NON-NLS-1$
     }
 
@@ -441,7 +382,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_UPDATE,
                 output);
     }
     
@@ -463,7 +403,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);
+            output);
     }
 
     /**
@@ -482,7 +422,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }
     
     /**
@@ -500,32 +440,8 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             input, 
             MODIFIERS,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output);        
+            output);        
     }    
-    
-    /**
-     * Test using an Oracle sequence object to generate (via "nextVal") a value to use
-     * in an insert statement.  Currently, MM does not allow column names in the value list
-     * of an Insert statement.  This depends on the column being modeled with special stuff
-     * in it's "name in source" field.  Case 3743
-     * 
-     * @since 4.3
-     */
-    public void testInsertUsingSequence() throws Exception {
-        
-        String input = "INSERT INTO PARTS (PART_ID, PART_NAME, PART_COLOR, PART_WEIGHT) VALUES ('blah', 'Toaster', 'Beige', '2 kilos')"; //$NON-NLS-1$
-        
-        // Column "PART_ID" is modeled with a name in source of 'PART_ID:USE_SEQUENCE=MY_SEQ.nextVal',
-        // the Oracle SQL Connector will extract the sequence value and put it in the db-specific SQL
-        String output = "INSERT INTO PARTS (PART_ID, PART_NAME, PART_COLOR, PART_WEIGHT) VALUES (MY_SEQ.nextVal, 'Toaster', 'Beige', '2 kilos')"; //$NON-NLS-1$
-               
-        helpTestVisitor(getTestVDB(),
-            input, 
-            MODIFIERS,
-            null,
-            TranslatedCommand.EXEC_TYPE_UPDATE, output);        
-        
-    }
     
     /**
      * Case 3744.  Test that an Oracle-specific db hint, delivered as a String via command
@@ -545,7 +461,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             MODIFIERS,
             context,
             null,
-            TranslatedCommand.EXEC_TYPE_QUERY, output, false);        
+            output, false);        
     }
     
     /**
@@ -559,7 +475,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
 
         FakeMetadataFacade metadata = exampleCase3845();
 
-        helpTestVisitor(metadata, input, MODIFIERS, EMPTY_CONTEXT, null, TranslatedCommand.EXEC_TYPE_QUERY, output);
+        helpTestVisitor(metadata, input, MODIFIERS, EMPTY_CONTEXT, null, output);
     }
     
     /** create fake BQT metadata to test this case, name in source is important */
@@ -578,61 +494,36 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     }
 
 	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
-		helpTestVisitor(vdb, input, MODIFIERS, null, TranslatedCommand.EXEC_TYPE_QUERY, expectedOutput);
+		helpTestVisitor(vdb, input, MODIFIERS, null, expectedOutput);
 	}
 
     public void testRowLimit2() throws Exception {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
-        String output = "SELECT MM_VIEW_FOR_LIMIT.intkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, ROWNUM AS MM_ROWNUM FROM (SELECT SmallA.IntKey AS intkey FROM SmallA) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 100"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT SmallA.IntKey FROM SmallA) WHERE ROWNUM <= 100"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);        
     }
     
     public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
-        String output = "SELECT MM_VIEW_FOR_LIMIT.intkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, ROWNUM AS MM_ROWNUM FROM (SELECT SmallA.IntKey AS intkey FROM SmallA) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE (MM_VIEW_FOR_LIMIT.MM_ROWNUM > 50) AND (MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 150)"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 100) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);        
     }
-    
-    public void testRowLimit4() throws Exception {
-        String input = "select intkey, null, null, null from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
-        String output = "SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.expr, MM_VIEW_FOR_LIMIT.expr0, MM_VIEW_FOR_LIMIT.expr1 FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.expr, MM_VIEW_FOR_LIMIT.expr0, MM_VIEW_FOR_LIMIT.expr1, ROWNUM AS MM_ROWNUM FROM (SELECT SmallA.IntKey AS intkey, NULL AS expr, NULL AS expr0, NULL AS expr1 FROM SmallA) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE (MM_VIEW_FOR_LIMIT.MM_ROWNUM > 50) AND (MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 150)"; //$NON-NLS-1$
-               
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
-                output);        
-    }
-    
-    public void testRowLimitWithOrderBy() throws Exception {
-        String input = "select null, intkey as expr, null from bqt1.smalla order by expr limit 50, 100"; //$NON-NLS-1$
-        String output = "SELECT MM_VIEW_FOR_LIMIT.expr, MM_VIEW_FOR_LIMIT.expr0, MM_VIEW_FOR_LIMIT.expr1 FROM (SELECT MM_VIEW_FOR_LIMIT.expr, MM_VIEW_FOR_LIMIT.expr0, MM_VIEW_FOR_LIMIT.expr1, ROWNUM AS MM_ROWNUM FROM (SELECT NULL AS expr, SmallA.IntKey AS expr0, NULL AS expr1 FROM SmallA ORDER BY expr0) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE (MM_VIEW_FOR_LIMIT.MM_ROWNUM > 50) AND (MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 150)"; //$NON-NLS-1$
-               
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
-                output);        
-    }
-    
+            
     public void testLimitWithNestedInlineView() throws Exception {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by intkey"; //$NON-NLS-1$
-        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.stringkey FROM (SELECT MM_VIEW_FOR_LIMIT.intkey, MM_VIEW_FOR_LIMIT.stringkey, ROWNUM AS MM_ROWNUM FROM (SELECT SmallA.IntKey AS intkey, SmallA.StringKey AS stringkey FROM SmallA ORDER BY intkey) MM_VIEW_FOR_LIMIT) MM_VIEW_FOR_LIMIT WHERE MM_VIEW_FOR_LIMIT.MM_ROWNUM <= 100) x GROUP BY x.intkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.intkey"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);        
     }
     
@@ -643,7 +534,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
                 MODIFIERS, EMPTY_CONTEXT, null,
-                TranslatedCommand.EXEC_TYPE_QUERY,
                 output);        
     }
 

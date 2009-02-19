@@ -31,6 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -936,7 +937,7 @@ public class TestJoinOptimization extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
         caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-        caps.setFunctionSupport("nvl", true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.IFNULL, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -944,7 +945,7 @@ public class TestJoinOptimization extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
                                       null, capFinder, 
                                       new String[] { 
-                                          "SELECT v_0.c_0 FROM pm1.g1 AS g_0 LEFT OUTER JOIN (SELECT nvl(g_1.e2, 1) AS c_0 FROM pm1.g2 AS g_1) AS v_0 ON g_0.e2 = v_0.c_0" }, //$NON-NLS-1$
+                                          "SELECT v_0.c_0 FROM pm1.g1 AS g_0 LEFT OUTER JOIN (SELECT ifnull(g_1.e2, 1) AS c_0 FROM pm1.g2 AS g_1) AS v_0 ON g_0.e2 = v_0.c_0" }, //$NON-NLS-1$
                                           TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    

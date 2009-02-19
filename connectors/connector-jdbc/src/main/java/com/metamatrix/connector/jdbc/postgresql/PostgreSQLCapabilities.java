@@ -200,7 +200,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
 //        supportedFunctions.add("TIMEOFDAY"); //$NON-NLS-1$
 //        
 //        // Conditional
-//        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+          supportedFunctions.add("COALESCE"); //$NON-NLS-1$
 //        supportedFunctions.add("NULLIF"); //$NON-NLS-1$
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$

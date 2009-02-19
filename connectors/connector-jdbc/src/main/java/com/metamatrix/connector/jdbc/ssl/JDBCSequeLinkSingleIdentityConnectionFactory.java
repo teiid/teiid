@@ -92,6 +92,6 @@ public class JDBCSequeLinkSingleIdentityConnectionFactory extends
             throw new ConnectorException(e);
         }
 
-        return new JDBCSourceConnection(connection, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener());
+        return new JDBCSourceConnection(connection, getConnectorEnvironment(), createConnectionStrategy(), getConnectionListener(), getResultsTranslator(), getSqlTranslator());
     }
 }

@@ -28,6 +28,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.dqp.internal.datamgr.metadata.TestMetadataFactory;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -106,7 +107,7 @@ public class TestElementImpl extends TestCase {
     public void testSetMetadataID() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getElementID("pm1.g1.e1"); //$NON-NLS-1$
         ElementImpl element = example("pm1.g1", "e1", metadataID); //$NON-NLS-1$ //$NON-NLS-2$
-        MetadataID connID = TstLanguageBridgeFactory.metadataFactory.createMetadataID(metadataID, MetadataID.TYPE_ELEMENT);
+        MetadataID connID = TstLanguageBridgeFactory.metadataFactory.createMetadataID(metadataID, Type.TYPE_ELEMENT);
         element.setMetadataID(connID);
         assertNotNull(element.getMetadataID());
         assertEquals(connID, element.getMetadataID());

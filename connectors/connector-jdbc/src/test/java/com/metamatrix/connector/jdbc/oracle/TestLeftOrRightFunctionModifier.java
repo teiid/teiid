@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -52,15 +53,13 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
             new IExpression[] { c, d },
             String.class);
         
-        LeftOrRightFunctionModifier mod = new LeftOrRightFunctionModifier (LANG_FACTORY, target);
+        LeftOrRightFunctionModifier mod = new LeftOrRightFunctionModifier (LANG_FACTORY);
         IExpression expr = mod.modify(func);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        OracleSQLConversionVisitor sqlVisitor = new OracleSQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
         //System.out.println(" expected: " + expectedStr + " \t actual: " + sqlVisitor.toString());
         assertEquals(expectedStr, sqlVisitor.toString());
@@ -72,13 +71,13 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         ILiteral arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
         ILiteral count = LANG_FACTORY.createLiteral(new Integer(11), Integer.class);
         helpTestMod(arg1, count, "left", //$NON-NLS-1$
-            "SUBSTR('1234214', 0, 11)"); //$NON-NLS-1$
+            "SUBSTR('1234214', 1, 11)"); //$NON-NLS-1$
     }
     
     public void test2() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
         ILiteral count = LANG_FACTORY.createLiteral(new Integer(2), Integer.class);
         helpTestMod(arg1, count, "right", //$NON-NLS-1$
-            "SUBSTR('1234214', (LENGTH('1234214') - 2))"); //$NON-NLS-1$
+            "SUBSTR('1234214', (-1 * 2))"); //$NON-NLS-1$
     }
 }

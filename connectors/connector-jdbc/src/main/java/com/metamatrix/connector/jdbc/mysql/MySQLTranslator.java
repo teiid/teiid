@@ -22,59 +22,51 @@
 
 package com.metamatrix.connector.jdbc.mysql;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
 
 
 /** 
  * @since 4.3
  */
-public class MySQLTranslator extends BasicSQLTranslator {
+public class MySQLTranslator extends SQLTranslator {
 
-    private Map functionModifiers;
-    private Properties connectorProperties;
-    private ILanguageFactory languageFactory;
-
-    public void initialize(ConnectorEnvironment env,
-                           RuntimeMetadata metadata) throws ConnectorException {
-        
-        super.initialize(env, metadata);
-        ConnectorEnvironment connEnv = getConnectorEnvironment();
-        this.connectorProperties = connEnv.getProperties();
-        this.languageFactory = connEnv.getLanguageFactory();
-        initializeFunctionModifiers();  
-
-    }
-
-    private void initializeFunctionModifiers() {
-        functionModifiers = new HashMap();
-        functionModifiers.putAll(super.getFunctionModifiers());
-        
-        functionModifiers.put("cast", new MySQLConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("convert", new MySQLConvertModifier(languageFactory)); //$NON-NLS-1$
-        functionModifiers.put("nvl", new AliasModifier("ifnull")); //$NON-NLS-1$ //$NON-NLS-2$
+	@Override
+    public void initialize(ConnectorEnvironment env) throws ConnectorException {
+        super.initialize(env);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new MySQLConvertModifier(getLanguageFactory())); //$NON-NLS-1$
     }  
- 
-    public Map getFunctionModifiers() {
-        return functionModifiers;
+	
+	@Override
+    public String translateLiteralDate(Date dateValue, Calendar cal) {
+        return "DATE('" + formatDateValue(dateValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
-    public SQLConversionVisitor getTranslationVisitor() {
-        SQLConversionVisitor visitor = new MySQLConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(functionModifiers);
-        visitor.setProperties(connectorProperties);
-        visitor.setLanguageFactory(languageFactory);
-        visitor.setDatabaseTimeZone(getDatabaseTimeZone());
-        return visitor;
+	@Override
+    public String translateLiteralTime(Time timeValue, Calendar cal) {
+        return "TIME('" + formatDateValue(timeValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
+
+	@Override
+    public String translateLiteralTimestamp(Timestamp timestampValue, Calendar cal) {
+        return "TIMESTAMP('" + formatDateValue(timestampValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    }
+	
+	@Override
+	public boolean useParensForSetQueries() {
+		return true;
+	}
+	
+	@Override
+	public int getTimestampNanoSecondPrecision() {
+		return 6;
+	}
+	
 }

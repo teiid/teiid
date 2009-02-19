@@ -46,17 +46,6 @@ public interface ILanguageFactory {
     IAggregate createAggregate(String name, boolean isDistinct, IExpression expression, Class type);
 
     /**
-     * Create case expression.
-     * @param mainExpression First expression in the case, used to choose WHEN clause
-     * @param whenExpressions List of when expressions, should match thenExpressions
-     * @param thenExpressions List of then expressions, should match whenExpressions
-     * @param elseExpression Else expression, may be null
-     * @param type Data type
-     * @return New ICaseExpression
-     */    
-    ICaseExpression createCaseExpression(IExpression mainExpression, List<IExpression> whenExpressions, List<IExpression> thenExpressions, IExpression elseExpression, Class type);
-    
-    /**
      * Create compare criteria.
      * @param operator Operator, as defined in constants in {@link ICompareCriteria}
      * @param leftExpression Left expression

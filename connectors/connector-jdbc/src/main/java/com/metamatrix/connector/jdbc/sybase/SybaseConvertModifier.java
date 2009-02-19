@@ -408,7 +408,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
                     new IExpression[] { 
                         langFactory.createLiteral("varchar", String.class),  //$NON-NLS-1$
                         args[0],
-                        langFactory.createLiteral(new Integer(1), Integer.class) },
+                        langFactory.createLiteral(new Integer(109), Integer.class) },
                     String.class);
                 
                 // Build outer convert

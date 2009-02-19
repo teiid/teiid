@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.jdbc.sybase;
 
-import java.util.Map;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -30,6 +29,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.MetadataFactory;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
@@ -38,19 +38,6 @@ import com.metamatrix.connector.language.ICommand;
  */
 public class TestSybaseSQLConversionVisitor extends TestCase {
 
-    private static Map MODIFIERS;
-    
-    static {
-        SybaseSQLTranslator trans = new SybaseSQLTranslator();
-        
-        try {
-            trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
-        } catch(ConnectorException e) {
-            e.printStackTrace();
-        }
-        
-        MODIFIERS = trans.getFunctionModifiers();
-    }
     /**
      * Constructor for TestSqlServerConversionVisitor.
      * @param name
@@ -67,17 +54,22 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
         return MetadataFactory.BQT_VDB;
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, int expectedType, String expectedOutput) {
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) {
         // Convert from sql to objects
         ICommand obj = MetadataFactory.helpTranslate(vdb, input);
         
         // Apply function replacement
-        FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
-        
+        SybaseSQLTranslator trans = new SybaseSQLTranslator();
+        try {
+			trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+		} catch (ConnectorException e1) {
+			throw new RuntimeException(e1);
+		}
+        FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(trans.getFunctionModifiers());
+
         // Convert back to SQL
-        SybaseSQLConversionVisitor sqlVisitor = new SybaseSQLConversionVisitor();      
-        sqlVisitor.setFunctionModifiers(modifiers);  
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), new SybaseSQLTranslator(), sqlVisitor, funcVisitor);
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans);      
+        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans, sqlVisitor, funcVisitor);
 		try {
 			tc.translateCommand(obj);
 		} catch (ConnectorException e) {
@@ -88,7 +80,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
 //        System.out.println("in: " + input); //$NON-NLS-1$
         //System.out.println("out: " + tc.getSql()); //$NON-NLS-1$
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-        assertEquals("Did not get expected command type", expectedType, tc.getExecutionType());         //$NON-NLS-1$
     }
 
     public void testModFunction() {
@@ -98,8 +89,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     } 
 
@@ -109,31 +98,7 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
-    }    
-
-    public void testConcatOperatorFunction() {
-        String input = "SELECT PART_NAME || 'b' FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT (PARTS.PART_NAME + 'b') FROM PARTS"; //$NON-NLS-1$
-        
-        helpTestVisitor(getTestVDB(),
-            input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            output);    
-    }    
-
-    public void testChrFunction() {
-        String input = "SELECT chr(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT char(convert(int, PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
-        
-        helpTestVisitor(getTestVDB(),
-            input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            output);    
     }    
 
     public void testLcaseFunction() {
@@ -141,8 +106,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
         String output = "SELECT lower(PARTS.PART_NAME) FROM PARTS"; //$NON-NLS-1$
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -152,8 +115,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
      
@@ -163,8 +124,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
 
@@ -174,8 +133,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
 
@@ -185,8 +142,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -197,8 +152,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -208,8 +161,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
     
@@ -219,8 +170,6 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }
 
@@ -230,57 +179,50 @@ public class TestSybaseSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            output);
-    }    
-
-    public void testNvlFunction() {
-        String input = "SELECT nvl(PART_NAME, 'abc') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT isnull(PARTS.PART_NAME, 'abc') FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             output);
     }    
 
     public void testDateLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {d'2002-12-31'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT {d'2002-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testTimeLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
-            "SELECT {t'13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testTimestampLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {ts'2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT {ts'2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
     }
     
     public void testDefect12120() {
         helpTestVisitor(getBQTVDB(),
             "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.BooleanValue IN ({b'false'}, {b'true'}) ORDER BY IntKey", //$NON-NLS-1$
-            MODIFIERS,
-            TranslatedCommand.EXEC_TYPE_QUERY,
             "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.BooleanValue IN (0, 1) ORDER BY IntKey"); //$NON-NLS-1$
                 
     }
+    
+    public void testConvertFunctionString() throws Exception {
+        String input = "SELECT convert(PARTS.PART_ID, integer) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT convert(int, PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
+    
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+        
+    public void testNonIntMod() throws Exception {
+    	String input = "select mod(intkey/1.5, 3) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT ((convert(float, SmallA.IntKey) / 1.5) - (floor(((convert(float, SmallA.IntKey) / 1.5) / 3.0)) * 3.0)) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);
+    }
 
-	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
-		helpTestVisitor(vdb, input, MODIFIERS, TranslatedCommand.EXEC_TYPE_QUERY, expectedOutput);
-		
-	}
 }

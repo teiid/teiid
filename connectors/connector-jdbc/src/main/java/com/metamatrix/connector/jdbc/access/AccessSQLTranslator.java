@@ -24,38 +24,34 @@
  */
 package com.metamatrix.connector.jdbc.access;
 
-import java.util.Properties;
+import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.language.ILimit;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.extension.impl.BasicSQLTranslator;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+public class AccessSQLTranslator extends SQLTranslator {
+	
+	@Override
+	public boolean hasTimeType() {
+		return false;
+	}
 
-public class AccessSQLTranslator extends BasicSQLTranslator {
-    private Properties connectorProperties;
-    private ILanguageFactory languageFactory;
-    
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#getTranslationVisitor()
-     */
-    public SQLConversionVisitor getTranslationVisitor() {
-        SQLConversionVisitor visitor = new AccessSQLConversionVisitor();
-        visitor.setRuntimeMetadata(getRuntimeMetadata());
-        visitor.setFunctionModifiers(getFunctionModifiers());
-        visitor.setProperties(connectorProperties);
-        visitor.setLanguageFactory(languageFactory);
-        visitor.setDatabaseTimeZone(getDatabaseTimeZone());
-        return visitor;
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+        if(booleanValue.booleanValue()) {
+            return "-1"; //$NON-NLS-1$
+        }
+        return "0"; //$NON-NLS-1$
     }
     
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#initialize(com.metamatrix.data.api.ConnectorEnvironment, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
-     */
-    public void initialize(ConnectorEnvironment env, RuntimeMetadata metadata) throws ConnectorException {
-        super.initialize(env, metadata);
-        connectorProperties = getConnectorEnvironment().getProperties();
-        languageFactory = getConnectorEnvironment().getLanguageFactory();
+    @Override
+    public String addLimitString(String queryCommand, ILimit limit) {
+    	int index = queryCommand.startsWith("SELECT DISTINCT")?15:6;
+    	return new StringBuffer(queryCommand.length() + 8).append(queryCommand)
+				.insert(index, " TOP " + limit.getRowLimit()).toString();
     }
+    
+    @Override
+    public boolean addSourceComment() {
+    	return false;
+    }
+    
 }

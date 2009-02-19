@@ -22,12 +22,14 @@
 
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**
  */
@@ -36,14 +38,14 @@ public class ParameterIDImpl extends MetadataIDImpl {
     private ProcedureIDImpl procID;
     private List resultSetColumns;
 
-    public ParameterIDImpl(Object actualMetadataID, ProcedureIDImpl procedureID, QueryMetadataInterface metadata)
+    public ParameterIDImpl(Object actualMetadataID, ProcedureIDImpl procedureID, RuntimeMetadataImpl metadata)
         throws MetaMatrixComponentException {
         super(actualMetadataID, metadata);
         
         this.procID = procedureID;
     }
 
-    public ParameterIDImpl(Object actualMetadataID, ProcedureIDImpl procedureID, QueryMetadataInterface metadata, List resultSetColumns)
+    public ParameterIDImpl(Object actualMetadataID, ProcedureIDImpl procedureID, RuntimeMetadataImpl metadata, List resultSetColumns)
         throws MetaMatrixComponentException {
         super(actualMetadataID, metadata);
         
@@ -67,7 +69,7 @@ public class ParameterIDImpl extends MetadataIDImpl {
                 while(iter.hasNext()){
                     Object colID = iter.next();
                     MetadataIDImpl id = new MetadataIDImpl(colID, getMetadata());
-                    id.setType(MetadataID.TYPE_ELEMENT);
+                    id.setType(Type.TYPE_ELEMENT);
                     childIDs.add(id);
                 }
                 return childIDs;

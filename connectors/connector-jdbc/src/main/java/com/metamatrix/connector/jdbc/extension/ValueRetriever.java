@@ -47,7 +47,7 @@ public interface ValueRetriever {
      * @return The object that was retrieved
      * @throws SQLException If an error occurred retrieving the value
      */
-    Object retrieveValue(ResultSet results, int columnIndex, Class expectedType, int nativeSQLType, Calendar cal, TypeFacility typeFacility) throws SQLException;
+    Object retrieveValue(ResultSet results, int columnIndex, Class expectedType, Calendar cal, TypeFacility typeFacility) throws SQLException;
         
     /**
      * Retrieve the value at <code>parameterIndex</code> from the callable statement

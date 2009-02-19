@@ -6059,17 +6059,8 @@ public class TestParser extends TestCase {
             .append(" ELSE 9999") //$NON-NLS-1$
             .append(" END") //$NON-NLS-1$
             .append(" FROM m.g").toString(); //$NON-NLS-1$
-        String expected = new StringBuffer("SELECT y, z, ") //$NON-NLS-1$
-        .append("CASE") //$NON-NLS-1$
-        .append(" WHEN x='a' THEN 0") //$NON-NLS-1$
-        .append(" WHEN x='b' THEN 1") //$NON-NLS-1$
-        .append(" WHEN x='c' THEN 2") //$NON-NLS-1$
-        .append(" WHEN x='d' THEN 3") //$NON-NLS-1$
-        .append(" ELSE 9999") //$NON-NLS-1$
-        .append(" END") //$NON-NLS-1$
-        .append(" FROM m.g").toString(); //$NON-NLS-1$
         
-        helpTest(query, expected, q);
+        helpTest(query, query, q);
     }
     
     public void testCaseExpression2() {
@@ -6094,15 +6085,8 @@ public class TestParser extends TestCase {
             .append(" WHEN 'd' THEN 3") //$NON-NLS-1$
             .append(" END") //$NON-NLS-1$
             .append(" FROM m.g").toString(); //$NON-NLS-1$
-        String expected = new StringBuffer("SELECT y, z, ") //$NON-NLS-1$
-        .append("CASE") //$NON-NLS-1$
-        .append(" WHEN x='a' THEN 0") //$NON-NLS-1$
-        .append(" WHEN x='b' THEN 1") //$NON-NLS-1$
-        .append(" WHEN x='c' THEN 2") //$NON-NLS-1$
-        .append(" WHEN x='d' THEN 3") //$NON-NLS-1$
-        .append(" END") //$NON-NLS-1$
-        .append(" FROM m.g").toString(); //$NON-NLS-1$
-        helpTest(query, expected, q);
+       
+        helpTest(query, query, q);
     }
     
     public void testCaseExpression3() {

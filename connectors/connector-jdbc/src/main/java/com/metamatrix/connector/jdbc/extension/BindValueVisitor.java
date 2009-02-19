@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.jdbc.extension;
 
-import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IExistsCriteria;
 import com.metamatrix.connector.language.IFunction;
@@ -101,20 +100,8 @@ final class BindValueVisitor extends HierarchyVisitor {
     }
 
     /**
-     * Will look for bind values in the when expressions.
-     * The actual restriction for case statements seems to be that at least on branch must
-     * not contain a bind variable.
-     */
-    public void visit(ICaseExpression obj) {
-        replaceWithBinding = true;
-        for (int i = 0; i < obj.getWhenCount(); i++) {
-            visitNode(obj.getWhenExpression(i));
-        }
-    }
-
-    /**
      * Will look for bind values in the when criteria.
-     * The actual restriction for case statements seems to be that at least on branch must
+     * The actual restriction for case statements seems to be that at least one branch must
      * not contain a bind variable.
      */
     public void visit(ISearchedCaseExpression obj) {
@@ -122,7 +109,8 @@ final class BindValueVisitor extends HierarchyVisitor {
             visitNode(obj.getWhenCriteria(i));
         }
     }
-    
+
+    @Override
     public void visit(IInsert obj) {
         replaceWithBinding = true;
         visitNodes(obj.getValues());
@@ -139,7 +127,7 @@ final class BindValueVisitor extends HierarchyVisitor {
             obj.setBindValue(true);
         }
     }
-
+    
     public void visitNode(ILanguageObject obj) {
         boolean replacementMode = replaceWithBinding;
         super.visitNode(obj);

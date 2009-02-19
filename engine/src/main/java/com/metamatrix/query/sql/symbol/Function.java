@@ -62,6 +62,10 @@ public class Function implements Expression {
 		return this.name;
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	/**
 	 * Get function arguments
 	 * @return Get function arguments

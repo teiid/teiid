@@ -54,11 +54,9 @@ public class TestDB2ConvertModifier extends TestCase {
 
     public String helpGetString(IExpression expr) throws Exception {
         DB2SQLTranslator trans = new DB2SQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(); 
-        sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
         sqlVisitor.append(expr);  
         
         return sqlVisitor.toString();        

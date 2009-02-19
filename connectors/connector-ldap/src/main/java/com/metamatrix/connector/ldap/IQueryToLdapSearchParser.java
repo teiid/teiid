@@ -45,15 +45,14 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
 
+import javax.naming.NamingException;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
-import javax.naming.NamingException;
 
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.language.IAggregate;
-import com.metamatrix.connector.language.ICaseExpression;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.ICriteria;
@@ -412,8 +411,6 @@ public class IQueryToLdapSearchParser {
 		} else {
 			if(e instanceof IAggregate) {
 				logger.logError("Received IAggregate, but it is not supported. Check capabilities."); //$NON-NLS-1$
-			} else if(e instanceof ICaseExpression) {
-				logger.logError("Received ICaseExpression, but it is not supported. Check capabilties."); //$NON-NLS-1$
 			} else if(e instanceof IFunction) {
 				logger.logError("Received IFunction, but it is not supported. Check capabilties."); //$NON-NLS-1$
 			} else if(e instanceof IScalarSubquery) {

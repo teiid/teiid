@@ -120,7 +120,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL"); //$NON-NLS-1$
-        
+        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         return supportedFunctions;
     }
 

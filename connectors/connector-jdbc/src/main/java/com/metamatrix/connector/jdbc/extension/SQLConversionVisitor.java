@@ -27,74 +27,67 @@ package com.metamatrix.connector.jdbc.extension;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.text.FieldPosition;
-import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TimeZone;
 
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.JDBCPropertyNames;
 import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.ILanguageObject;
+import com.metamatrix.connector.language.ILimit;
 import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.connector.language.IParameter.Direction;
+import com.metamatrix.connector.language.ISetQuery.Operation;
+import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  * This visitor takes an ICommand and does DBMS-specific conversion on it
  * to produce a SQL String.  This class is expected to be subclassed.
  * Specialized instances of this class can be gotten from a SQL Translator
- * {@link SQLTranslator#getTranslationVisitor() using this method}.
+ * {@link SQLTranslator#getTranslationVisitor(RuntimeMetadata) using this method}.
  */
 public class SQLConversionVisitor extends SQLStringVisitor{
 
-    private static DecimalFormat decimalFormatter = 
+    private static DecimalFormat DECIMAL_FORMAT = 
         new DecimalFormat("#############################0.0#############################"); //$NON-NLS-1$    
     private static double SCIENTIC_LOW = Math.pow(10, -3);
     private static double SCIENTIC_HIGH = Math.pow(10, 7);
-    private static final MessageFormat COMMENT = new MessageFormat("/*metamatrix sessionid:{0}, requestid:{1}.{2}*/ "); //$NON-NLS-1$
-    private boolean useComment = false;
     
-    private Map modifiers;
+    private Map<String, FunctionModifier> modifiers;
     private ExecutionContext context;
-    private ILanguageFactory languageFactory;
-    private TimeZone databaseTimeZone;
+    private SQLTranslator translator;
+    private Calendar cal;
 
-    private int execType = TranslatedCommand.EXEC_TYPE_QUERY;
-    private int stmtType = TranslatedCommand.STMT_TYPE_STATEMENT;
+    private boolean prepared;
     
     private List preparedValues = new ArrayList();
     private List preparedTypes = new ArrayList();
     
-    public SQLConversionVisitor() {
-        super();
-    }
-
-    /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IInsert)
-     */
-    public void visit(IInsert obj) {
-        this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
-        super.visit(obj);
+    public SQLConversionVisitor(SQLTranslator translator) {
+        this.translator = translator;
+        this.prepared = translator.usePreparedStatements();
+        this.modifiers = translator.getFunctionModifiers();
+        TimeZone tz = translator.getDatabaseTimeZone();
+        if (tz != null) {
+        	this.cal = Calendar.getInstance(tz);
+        }
     }
 
     public void visit(IBulkInsert obj) {
-        this.stmtType = TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT;
+        this.prepared = true;
 
         super.visit(obj);
         
@@ -130,19 +123,21 @@ public class SQLConversionVisitor extends SQLStringVisitor{
                 // where toString will use for numbers greater than 10p7 and
                 // less than 10p-3, where database may not understand.
                 if (useFormatting) {
-                    valuesbuffer.append(decimalFormatter.format(obj));
+                	synchronized (DECIMAL_FORMAT) {
+                        valuesbuffer.append(DECIMAL_FORMAT.format(obj));
+					}
                 }
                 else {
                     valuesbuffer.append(obj);
                 }
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN)) {
-                valuesbuffer.append(translateLiteralBoolean((Boolean)obj));
+                valuesbuffer.append(translator.translateLiteralBoolean((Boolean)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
-                valuesbuffer.append(translateLiteralTimestamp((Timestamp)obj));
+                valuesbuffer.append(translator.translateLiteralTimestamp((Timestamp)obj, cal));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-                valuesbuffer.append(translateLiteralTime((Time)obj));
+                valuesbuffer.append(translator.translateLiteralTime((Time)obj, cal));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
-                valuesbuffer.append(translateLiteralDate((java.sql.Date)obj));
+                valuesbuffer.append(translator.translateLiteralDate((java.sql.Date)obj, cal));
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 
@@ -154,40 +149,15 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IUpdate)
-     */
-    public void visit(IUpdate obj) {
-        this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
-        super.visit(obj);
-    }
-
-    /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IQuery)
-     */
-    public void visit(IQuery obj) {
-        this.execType = TranslatedCommand.EXEC_TYPE_QUERY;
-        super.visit(obj);
-    }
-
-    /**
      * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IProcedure)
      */
     public void visit(IProcedure obj) {
-        this.execType = TranslatedCommand.EXEC_TYPE_EXECUTE;
-        this.stmtType = TranslatedCommand.STMT_TYPE_CALLABLE_STATEMENT;
+        this.prepared = true;
         /*
          * preparedValues is now a list of procedure params instead of just values
          */
         this.preparedValues = obj.getParameters();
         super.buffer.append(generateSqlForStoredProcedure(obj));
-    }
-
-    /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IDelete)
-     */
-    public void visit(IDelete obj) {
-        this.execType = TranslatedCommand.EXEC_TYPE_UPDATE;
-        super.visit(obj);
     }
 
     /**
@@ -221,7 +191,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.ILiteral)
      */
     public void visit(ILiteral obj) {
-        if (this.stmtType == TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT && obj.isBindValue()) {
+        if (this.prepared && obj.isBindValue()) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj.getValue());
             preparedTypes.add(obj.getType());
@@ -230,102 +200,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         }
     }
 
-    /**
-     * Subclasses should override this method to provide a different sql translation
-     * of the literal boolean value.  By default, a boolean literal is represented as:
-     * <code>'0'</code> or <code>'1'</code>.
-     * @param booleanValue Boolean value, never null
-     * @return Translated string
-     */
-    protected String translateLiteralBoolean(Boolean booleanValue) {
-        if(booleanValue.booleanValue()) {
-            return "1"; //$NON-NLS-1$
-        }
-        return "0"; //$NON-NLS-1$
-    }
-
-    /**
-     * Subclasses should override this method to provide a different sql translation
-     * of the literal date value.  By default, a date literal is represented as:
-     * <code>{d'2002-12-31'}</code>
-     * @param dateValue Date value, never null
-     * @return Translated string
-     */
-    protected String translateLiteralDate(java.sql.Date dateValue) {
-        return "{d'" + formatDateValue(dateValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Subclasses should override this method to provide a different sql translation
-     * of the literal time value.  By default, a time literal is represented as:
-     * <code>{t'23:59:59'}</code>
-     * @param timeValue Time value, never null
-     * @return Translated string
-     */
-    protected String translateLiteralTime(Time timeValue) {
-        return "{t'" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Subclasses should override this method to provide a different sql translation
-     * of the literal timestamp value.  By default, a timestamp literal is
-     * represented as: <code>{ts'2002-12-31 23:59:59'}</code>.
-     * @param timestampValue Timestamp value, never null
-     * @return Translated string
-     */
-    protected String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "{ts'" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    /**
-     * Format the dateObject (of type date, time, or timestamp) into a string
-     * using the DatabaseTimeZone format.
-     * @param dateObject
-     * @return Formatted string
-     */
-    protected String formatDateValue(Object dateObject) {
-        if(this.databaseTimeZone == null) {
-            return dateObject.toString();
-        }
-        
-//System.out.println("!!! translating timestamp value " + dateObject + " (" + ((java.util.Date)dateObject).getTime() + " in " + this.databaseTimeZone);        
-        
-        if(dateObject instanceof Timestamp) {
-            SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
-            timestampFormatter.setTimeZone(this.databaseTimeZone);
-
-            Timestamp ts = (Timestamp) dateObject;                  
-            String nanoStr = "" + (1000000000L + ts.getNanos()); //$NON-NLS-1$
-            while(nanoStr.length() > 2 && nanoStr.charAt(nanoStr.length()-1) == '0') {
-                nanoStr = nanoStr.substring(0, nanoStr.length()-1);
-            }
-            String tsStr = timestampFormatter.format(ts) + "." + nanoStr.substring(1); //$NON-NLS-1$
-            
-//System.out.println("!!!   returning " + tsStr);            
-            
-            return tsStr;
-                    
-        } else if(dateObject instanceof java.sql.Date) {
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
-            dateFormatter.setTimeZone(this.databaseTimeZone);
-            return dateFormatter.format((java.sql.Date)dateObject);
-            
-        } else if(dateObject instanceof Time) {
-            SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
-            timeFormatter.setTimeZone(this.databaseTimeZone);
-            return timeFormatter.format((java.sql.Time)dateObject);
-            
-        } else {
-            return dateObject.toString();
-        }       
-    }    
-
-    /**
-     */
-    public void setFunctionModifiers(Map modifiers) {
-        this.modifiers = modifiers;
-    }
-    
     /**
      * Set the per-command execution context on this visitor. 
      * @param context ExecutionContext
@@ -345,37 +219,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         return this.context;
     }
 
-    public void setProperties(Properties props) {
-        String useBindVariables = props.getProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.FALSE.toString());
-        if (useBindVariables.equals(Boolean.TRUE.toString())) {
-            this.stmtType = TranslatedCommand.STMT_TYPE_PREPARED_STATEMENT;
-        }   
-        
-        String useCommentInSource = props.getProperty(JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY);
-        if (useCommentInSource != null) {
-            this.useComment = Boolean.valueOf(useCommentInSource).booleanValue();
-        }
+    protected String getSourceComment(ICommand command) {
+    	return this.translator.getSourceComment(this.context, command);
     }
-    
-    /**
-     * inserting the comments is the source SQL supported or not by the 
-     * source data source. By default it is turned on; user has choice to
-     * turn off by setting the connector property; the data base source has
-     * option to turn off by overloading this. 
-     * @return true if yes; false otherwise.
-     */
-    protected boolean supportsComments() {
-        return this.useComment;
-    }
-    
-    static final FieldPosition FIELD_ZERO = new FieldPosition(0);
-    protected String addProcessComment() {
-        if (supportsComments() && this.context != null) {
-            return COMMENT.format(new Object[] {this.context.getConnectionIdentifier(), this.context.getRequestIdentifier(), this.context.getPartIdentifier()});
-        }
-        return super.addProcessComment(); 
-    }
-    
     
     /**
      * This is a generic implementation. Subclass should override this method
@@ -400,7 +246,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
             }
         }
         
-        prepareCallBuffer.append(addProcessComment());
+        prepareCallBuffer.append(getSourceComment(exec));
         
         if(needQuestionMark){
             prepareCallBuffer.append("?="); //$NON-NLS-1$
@@ -427,35 +273,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         return prepareCallBuffer.toString();
     }
     
-    /**
-     * @param factory
-     */
-    public void setLanguageFactory(ILanguageFactory factory) {
-        languageFactory = factory;
-    }
-
-    /**
-     * @return
-     */
-    public ILanguageFactory getLanguageFactory() {
-        return languageFactory;
-    }
-
-    public void setDatabaseTimeZone(TimeZone zone) {
-        databaseTimeZone = zone;
-    }
-
-    protected TimeZone getDatabaseTimeZone() {
-        return databaseTimeZone;
-    }
-    
-    /** 
-     * @return the execType
-     */
-    protected int getExecType() {
-        return this.execType;
-    }
-    
     /** 
      * @return the preparedValues
      */
@@ -470,15 +287,61 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         return this.preparedTypes;
     }
     
-    /** 
-     * @return the stmtType
-     */
-    int getStmtType() {
-        return this.stmtType;
+    public boolean isPrepared() {
+		return prepared;
+	}
+    
+    public void setPrepared(boolean prepared) {
+		this.prepared = prepared;
+	}
+    
+    @Override
+    protected boolean useAsInGroupAlias() {
+    	return this.translator.useAsInGroupAlias();
     }
     
-    protected void setStmtType(int stmtType) {
-        this.stmtType = stmtType;
+    @Override
+    public void visit(IQuery obj) {
+    	if (obj.getLimit() != null) {
+    		handleLimit(obj);
+    	} else {
+    		super.visit(obj);
+    	}
     }
-            
+    
+    @Override
+    public void visit(ISetQuery obj) {
+    	if (obj.getLimit() != null) {
+    		handleLimit(obj);
+    	} else {
+    		super.visit(obj);
+    	}
+    }
+    
+    @Override
+    protected boolean useParensForSetQueries() {
+    	return translator.useParensForSetQueries();
+    }
+    
+	private void handleLimit(IQueryCommand obj) {
+		ILimit limit = obj.getLimit();
+    	obj.setLimit(null);
+    	StringBuffer current = this.buffer;
+    	this.buffer = new StringBuffer();
+    	append(obj);
+    	current.append(this.translator.addLimitString(this.buffer.toString(), limit));
+    	this.buffer = current;
+    	obj.setLimit(limit);
+	}
+	
+	@Override
+	protected String replaceElementName(String group, String element) {
+		return translator.replaceElementName(group, element);
+	}
+	
+	@Override
+	protected void appendSetOperation(Operation operation) {
+		buffer.append(translator.getSetOperationString(operation));
+	}
+                
 }

@@ -23,7 +23,6 @@
 package com.metamatrix.connector.jdbc.oracle;
 
 import java.sql.Timestamp;
-import java.util.Map;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -31,6 +30,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.TypeFacility;
+import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
@@ -62,17 +62,12 @@ public class TestExtractFunctionModifier extends TestCase {
         IExpression expr = mod.modify(func);
 
         OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false), null);
+        trans.registerFunctionModifier("extract", mod);
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
-        OracleSQLConversionVisitor sqlVisitor = new OracleSQLConversionVisitor(); 
-
-        // register this ExtractFunctionModifier with the OracleSQLConversionVisitor
-        Map modifier = trans.getFunctionModifiers();
-        modifier.put("extract", mod); //$NON-NLS-1$
-        sqlVisitor.setFunctionModifiers(modifier);
+        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans); 
 
         //sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
-        sqlVisitor.setLanguageFactory(LANG_FACTORY);  
         sqlVisitor.append(expr);  
         //System.out.println(" expected: " + expectedStr + " \t actual: " + sqlVisitor.toString());
         assertEquals(expectedStr, sqlVisitor.toString());
@@ -101,18 +96,18 @@ public class TestExtractFunctionModifier extends TestCase {
     
     public void test5() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, "EXTRACT(DAY FROM {d'2004-01-21'})", "day"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(DAY FROM {d'2004-01-21'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void test6() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 17, 5, 0, 0), Timestamp.class);
-        helpTestMod(arg1, "EXTRACT(DAY FROM {ts'2004-01-21 17:05:00.0'})", "day"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(arg1, "EXTRACT(DAY FROM {ts'2004-01-21 17:05:00.0'})", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     public void test11() throws Exception {
         IGroup group = LANG_FACTORY.createGroup(null, "group", null); //$NON-NLS-1$
         IElement elem = LANG_FACTORY.createElement("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
-        helpTestMod(elem, "EXTRACT(DAY FROM col)", "day"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestMod(elem, "EXTRACT(DAY FROM col)", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

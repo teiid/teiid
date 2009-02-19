@@ -22,38 +22,50 @@
 
 package com.metamatrix.connector.jdbc.sybase;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.jdbc.extension.FunctionModifier;
+import com.metamatrix.connector.api.TypeFacility.RUNTIME_TYPES;
+import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
 
-/**
- */
-public class ModFunctionModifier implements FunctionModifier {
+public class ModFunctionModifier extends AliasModifier {
 
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
-        return function;
+	private ILanguageFactory langFactory;
+    
+    public ModFunctionModifier(ILanguageFactory langFactory) {
+    	super("%"); //$NON-NLS-1$
+        this.langFactory = langFactory;
     }
-
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.data.language.IFunction)
-     */
-    public List translate(IFunction function) {
-        List parts = new ArrayList();
-        parts.add("(");//$NON-NLS-1$
-        
-        IExpression[] args = function.getParameters();
-        parts.add(args[0]);
-        parts.add(" % "); //$NON-NLS-1$
-        parts.add(args[1]);
-        parts.add(")");             //$NON-NLS-1$
-        
-        return parts;
-    }
+	
+	@Override
+	public IExpression modify(IFunction function) {
+		IExpression[] expressions = function.getParameters();
+		if (RUNTIME_TYPES.INTEGER.equals(expressions[0].getType())) {
+			return super.modify(function);
+		}
+		//x % y => x - floor(x / y) * y
+		IExpression[] divideArgs = new IExpression[2];
+		System.arraycopy(expressions, 0, divideArgs, 0, 2);
+		IFunction divide = langFactory.createFunction("/", divideArgs, divideArgs[0].getType()); //$NON-NLS-1$
+		
+		IFunction floor = langFactory.createFunction("floor", new IExpression[] {divide}, divide.getType()); //$NON-NLS-1$
+		
+		IExpression[] multArgs = new IExpression[] {
+				floor, expressions[1]
+		};
+		IFunction mult = langFactory.createFunction("*", multArgs, multArgs[1].getType()); //$NON-NLS-1$
+		
+		IExpression[] minusArgs = new IExpression[] {
+				expressions[0], mult
+		};
+		return langFactory.createFunction("-", minusArgs, minusArgs[0].getType()); //$NON-NLS-1$
+	}
+	
+	@Override
+	public List translate(IFunction function) {
+		return null;
+	}
 
 }
