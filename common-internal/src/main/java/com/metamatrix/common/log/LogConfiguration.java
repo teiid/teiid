@@ -27,10 +27,6 @@ import java.util.Collection;
 
 public interface LogConfiguration extends Comparable, Cloneable {
 
-    boolean isContextDiscarded( String context );
-
-    boolean isLevelDiscarded( int level );
-
     /**
      * Obtain the set of contexts for messages that are to be discarded.
      * If this method returns an empty set, then messages in all contexts
@@ -55,44 +51,16 @@ public interface LogConfiguration extends Comparable, Cloneable {
     int getMessageLevel();
 
     /**
-     * Compares this object to another. If the specified object is an instance of
-     * the MetadataID class, then this method compares the name; otherwise, it throws a
-     * ClassCastException (as instances are comparable only to instances of the same
-     * class).
-     * Note:  this method <i>is</i> consistent with <code>equals()</code>, meaning
-     * that <code>(compare(x, y)==0) == (x.equals(y))</code>.
-     * <p>
-     * @param obj the object that this instance is to be compared to.
-     * @return a negative integer, zero, or a positive integer as this object
-     *      is less than, equal to, or greater than the specified object, respectively.
-     * @throws IllegalArgumentException if the specified object reference is null
-     * @throws ClassCastException if the specified object's type prevents it
-     *      from being compared to this instance.
-     */
-    int compareTo(Object obj);
-
-    /**
-     * Returns true if the specified object is semantically equal to this instance.
-     * Note:  this method is consistent with <code>compareTo()</code>.
-     * <p>
-     * @param obj the object that this instance is to be compared to.
-     * @return whether the object is equal to this object.
-     */
-    boolean equals(Object obj);
-
-	/**
-	 * String representation of logging configuration.
-	 * @return String representation
-	 */
-	String toString();
-
-    Object clone();
-
-    /**
      * Direct the log configuration to record all known logging contexts.
      */
     void recordAllContexts();
 
+    /**
+     * Clone the object.
+     * @return
+     */
+    Object clone();
+    
     /**
      * Direct the log configuration to discard the given contexts and
      * not record them.
@@ -112,4 +80,7 @@ public interface LogConfiguration extends Comparable, Cloneable {
      * @param level the lowest level to record.
      */
     void setMessageLevel(int level);
+    
+    
+    boolean isMessageToBeRecorded(String context, int msgLevel);
 }

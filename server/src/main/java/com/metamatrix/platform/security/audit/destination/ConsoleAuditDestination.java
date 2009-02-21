@@ -39,9 +39,6 @@ public class ConsoleAuditDestination extends AbstractAuditDestination {
     /**
      * The name of the property that contains the name of the LogMessageFormat
      * class that is used to format messages sent to the console.
-     * This is an optional property; if not specified then the
-     * {@link com.metamatrix.common.logging.format.DelimitedLogMessageFormat DelimitedLogMessageFormat}
-     * is used.
      */
     public static final String MESSAGE_FORMAT_PROPERTY_NAME = AuditDestination.PROPERTY_PREFIX + "consoleFormat"; //$NON-NLS-1$
 

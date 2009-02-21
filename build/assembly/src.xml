@@ -36,6 +36,8 @@
               <exclude>.classpath</exclude>
               <exclude>.project</exclude>
               <exclude>**/.settings/**</exclude>
+              <exclude>**/*.log</exclude>
+              
             </excludes>
             </fileSet>
           </fileSets>      

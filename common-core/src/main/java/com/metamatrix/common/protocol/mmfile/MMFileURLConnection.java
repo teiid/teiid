@@ -40,6 +40,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.StringTokenizer;
 
 import com.metamatrix.common.protocol.MMURLConnection;
@@ -56,8 +58,7 @@ import com.metamatrix.common.protocol.URLHelper;
  * @since 4.4
  */
 public class MMFileURLConnection extends MMURLConnection {
-
-    public static String PROTOCOL = "mmfile"; //$NON-NLS-1$
+	public static String PROTOCOL = "mmfile"; //$NON-NLS-1$
     File file;
     File deleted;
     public static String DELETED = ".deleted"; //$NON-NLS-1$
@@ -167,12 +168,39 @@ public class MMFileURLConnection extends MMURLConnection {
                     return false;
                 }                
             };
-            
+
             File[] matchedFiles = file.listFiles(fileFilter);
             String[] urls = new String[matchedFiles.length];
+            
+            String sort = props.getProperty(FILE_LIST_SORT, DATE);
+            if (sort.equals(DATE)) { 
+            	Arrays.sort(matchedFiles, new Comparator<File>() {
+					@Override
+					public int compare(File o1, File o2) { 
+						return Long.valueOf(o2.lastModified()).compareTo(o1.lastModified()); // latest first.
+					}
+            	});
+            } else if (sort.equals(ALPHA)) {
+            	Arrays.sort(matchedFiles, new Comparator<File>() {
+					@Override
+					public int compare(File o1, File o2) {
+						return o1.getName().compareTo(o2.getName()); 
+					}
+            	});
+            	
+            } else if (sort.equals(REVERSEALPHA)) { 
+            	Arrays.sort(matchedFiles, new Comparator<File>() {
+					@Override
+					public int compare(File o1, File o2) { 
+						return o2.getName().compareTo(o1.getName());
+					}
+            	});            	
+            }
+            
             for (int i = 0; i < matchedFiles.length; i++) {
                 urls[i] = URLHelper.buildURL(url, matchedFiles[i].getName()).toString();
             }
+            
             // Build input stream from the object
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(out);
@@ -237,7 +265,7 @@ public class MMFileURLConnection extends MMURLConnection {
                 } catch (IOException e) {
                 }
             }
-        } else if (name.equalsIgnoreCase("date")) //$NON-NLS-1$
+        } else if (name.equalsIgnoreCase(DATE)) 
             headerField = String.valueOf(file.lastModified());
         else {
             // This always returns null currently

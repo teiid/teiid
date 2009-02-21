@@ -23,9 +23,8 @@
 package com.metamatrix.jdbc;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,15 +33,22 @@ import java.util.Properties;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.DQPConfigSource;
+import com.metamatrix.common.application.exception.ApplicationInitializationException;
+import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.ResourceFinder;
-import com.metamatrix.dqp.application.ClientConnectionListener;
-import com.metamatrix.dqp.embedded.DQPListener;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.internal.process.DQPCore;
+import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.jdbc.transport.LocalTransportHandler;
 
 
@@ -55,46 +61,34 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     private static final int ACTIVE = 3;
     private boolean initialized = false;
     private LocalTransportHandler handler = null;    
-    private boolean shutdownInProgress = false;
-    
-    // List of Connection Listeners for the DQP
-    private ArrayList connectionListeners = new ArrayList(); 
-        
+    private volatile boolean shutdownInProgress = false;
+    private DQPCore dqp;
+    private long starttime = -1L;
+    private Thread shutdownThread;
+
     private EmbeddedConnectionListener listener = new EmbeddedConnectionListener();    
 
-    /**
-     * Factory Constructor 
-     */
-    static EmbeddedConnectionFactoryImpl newInstance() {
-        return new EmbeddedConnectionFactoryImpl();        
-    }
-    
     /** 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#createConnection()
      */
     public Connection createConnection(Properties props) throws SQLException {
-		Injector injector = Guice.createInjector(new EmbeddedGuiceModule());
-		ResourceFinder.setInjector(injector); 
-    	    	
-        // Initialize the transport
-        initialize(props);
 
-        try {            
-            // create a server connection. If the VDB_VERSION used as "UseLatest" the client
-            // connection is based on String "UseLatest"
-        	this.handler.initManager(props);
-            // check for the valid connection properties
+    	try {
+            // Initialize the transport
+        	initialize(props);
+        	
+        	// check for the valid connection properties
             checkConnectionProperties (props);
 
             ServerConnection serverConn = this.handler.createConnection(props);
                         
-            // Should occur every time in classloader using existing attributes
-            return EmbeddedConnection.newInstance(this.handler.getManager(), serverConn, props, listener);            
+            // Should occur every time in class loader using existing attributes
+            return new EmbeddedConnection(this, serverConn, props, listener);            
         } catch (ConnectionException e) {
             throw new EmbeddedSQLException(e);
-        } catch (CommunicationException e) {
-            throw new EmbeddedSQLException(e);            
-        }
+        }  catch (ApplicationInitializationException e) {
+        	throw new EmbeddedSQLException(e);
+		}
     }
         
     /**
@@ -106,40 +100,72 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      * @throws SQLException
      * @since 4.3
      */
-    private void initialize(Properties props) throws SQLException {
-        if (!initialized || !this.handler.isAlive()) {
+    private synchronized void initialize(Properties props) throws ApplicationInitializationException {
+        if (!initialized) {
             
-            // This monitors the life cycle events for the DQP
-            DQPListener dqpListener = new DQPListener() {
-                public void onStart() {
-                }
-                public void onShutdown() {
-                    try {
-                        shutdown();
-                    }catch (SQLException e) {
-                        DriverManager.println(e.getMessage());
-                    }
-                }                
-            };
+    		Injector injector = Guice.createInjector(new EmbeddedGuiceModule(props));
+    		ResourceFinder.setInjector(injector); 
+    		DQPConfigSource configSource = injector.getInstance(DQPConfigSource.class);
+
+    		// start the DQP
+    		this.dqp = new DQPCore();
+    		this.dqp.start(configSource);
+    		
+    		// make the configuration service listen for the connection life-cycle events
+    		// used during VDB delete
+            ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
+    		
+            //in new class loader - all of these should be created lazily and held locally
+            this.handler = new LocalTransportHandler(this.dqp);
+        	this.handler.registerListener(configService.getConnectionListener());
+        	this.shutdownThread = new ShutdownWork();
+        	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
             
-            // This monitors the lifecyle events for the connections inside a DQP
-            // these are DQP side connections.
-            ClientConnectionListener connectionListener = new ClientConnectionListener() {
-                public void connectionAdded(ServerConnection connection) {
-                }
-                public void connectionRemoved(ServerConnection connection) {
-                	listener.connectionTerminated(connection.getLogonResult().getSessionID().toString());
-                }
-            };
-            
-            //in new classloader - all of these should be created lazily and held locally
-            this.handler = new LocalTransportHandler(dqpListener, connectionListener); 
-            this.initialized = true;            
+            this.initialized = true;       
+            this.starttime = System.currentTimeMillis();
+            DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
         }
     }
+    
+    class ShutdownWork extends Thread {
+    	ShutdownWork(){
+    		super("embedded-shudown-thread"); //$NON-NLS-1$
+    	}
+    	
+		@Override
+		public void run() {
+			try {
+				shutdown(false);
+			} catch (SQLException e) {
+				// ignore
+			}
+		}
+    }
+   
+    public synchronized boolean isAlive() {
+        return (dqp != null);
+    }
+    
+    public long getStartTime() {
+    	return this.starttime;
+    }
+    
+    public Properties getProperties() {
+        if (isAlive()) {
+            return ((ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE)).getSystemProperties();
+        }
+        return null;
+    }
         
-    public void registerConnectionListener(ConnectionListener listener) {
-        connectionListeners.add(listener);
+    public synchronized DQPCore getDQP() {
+        if (!isAlive()) {
+            throw new MetaMatrixRuntimeException(JDBCPlugin.Util.getString("LocalTransportHandler.Transport_shutdown")); //$NON-NLS-1$
+        }
+        return this.dqp;
+    }    
+        
+    public ApplicationService findService(String type) {
+    	return this.dqp.getEnvironment().findService(type);
     }
     
     /**  
@@ -149,11 +175,20 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      * 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#shutdown()
      */
-    public void shutdown() throws SQLException{
+    public void shutdown() throws SQLException {
+    	shutdown(true);
+    }
+     
+    private void shutdown(boolean undoShutdownHook) throws SQLException {
+    	
+    	if (undoShutdownHook) {
+    		Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
+    	}
+    	
         // Make sure shutdown is not already in progress; as call to shutdown will close
         // connections; and after the last connection closes, the listener also calls shutdown
         // for normal route.
-        if (!shutdownInProgress) {
+        if (!this.shutdownInProgress && this.initialized) {
 
             // this will by pass, and only let shutdown called once.
             shutdownInProgress = true;
@@ -162,14 +197,25 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             // connections are not properly closed; or somebody called shutdown.
             listener.closeConnections();
                     
-            // then close the dqp handler it self, which root for the factory.
-            this.handler.shutdown();
+        	try {
+				this.dqp.stop();
+			} catch (ApplicationLifecycleException e) {
+				LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+			}
+            
+            this.dqp = null;
+            
+            this.handler = null;
+            
+            this.initialized = false;
             
             // shutdown the cache.
             ResourceFinder.getCacheFactory().destroy();
-        }
+            
+            shutdownInProgress = false;
+        }    	
     }
-     
+    
     /**
      * Are the connection properties supplied for connection match with those of the
      * DQP   
@@ -182,7 +228,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION, EmbeddedDataSource.USE_LATEST_VDB_VERSION);
                         
         try {
-            VDBService service = (VDBService)handler.getManager().getDQP().getEnvironment().findService(DQPServiceNames.VDB_SERVICE);
+            VDBService service = (VDBService)findService(DQPServiceNames.VDB_SERVICE);
             List<VDBArchive> vdbs = service.getAvailableVDBs();
 
             // We are looking for the latest version find that now 
@@ -226,29 +272,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     }    
     
     /**
-     * Notify all the connection listeners that a connection is added 
-     * @param connection
-     */
-    void notifyConnectionAdded(String id, Connection connection) {
-        for (Iterator i = connectionListeners.iterator(); i.hasNext();) {
-            ConnectionListener listner = (ConnectionListener)i.next();
-            listner.connectionAdded(id, connection);
-        }
-    }
-    
-    /**
-     * Notify all the connection listeners that a connection is added 
-     * @param connection
-     */
-    void notifyConnectionRemoved(String id, Connection connection) {
-        for (Iterator i = connectionListeners.iterator(); i.hasNext();) {
-            ConnectionListener listner = (ConnectionListener)i.next();
-            listner.connectionRemoved(id, connection);
-        }
-    }
-
-
-    /**
      * A internal connection listener for the connections; based on this 
      * it manages the DQP instance. These are client side (JDBC) connections
      */
@@ -260,17 +283,11 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         public void connectionAdded(String id, Connection connection) {
             // Add the connection to locol count
             connections.put(id, connection);
-            
-            // then also notify all the listeners
-            notifyConnectionAdded(id, connection);
         }
     
         public void connectionRemoved(String id, Connection connection) {
             // remove from local count 
             connections.remove(id);
-            
-            // also notify all the listeners
-            notifyConnectionRemoved(id, connection);            
         }
         
         /**
@@ -300,18 +317,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             if (firstException != null) {
                 throw new EmbeddedSQLException(firstException);
             }
-        }      
-        
-        /**
-         * A hook which notifies the client connections that a server connection
-         * has been terminated 
-         * @param connection
-         */
-        private void connectionTerminated(String id) {
-            // remove from local count 
-            Connection connection = (Connection)connections.remove(id);
-
-            notifyConnectionRemoved(id, connection);
-        }      
+        }        
     }
 }

@@ -31,13 +31,13 @@ import java.util.Set;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.dqp.application.ClientConnectionListener;
 
 
 
@@ -115,14 +115,6 @@ public interface ConfigurationService extends ApplicationService {
      * @return configured log level or default one supplied.
      */
     public String getLogLevel();
-
-    /**
-     * Capture the System.out and System.err streams and direct them to the
-     * log file. 
-     * @return true if yes; false otherwise
-     * @throws MetaMatrixComponentException
-     */
-    public String captureSystemStreams() throws MetaMatrixComponentException;
 
     /**
      * Save the given vdb file into underlying persistent mechanism used by
@@ -312,8 +304,7 @@ public interface ConfigurationService extends ApplicationService {
      * @throws MetaMatrixComponentException
      * @since 4.3.2
      */
-    public ClientConnectionListener getConnectionListener() 
-        throws MetaMatrixComponentException;
+    public ServerConnectionListener getConnectionListener(); 
      
  
     /**
@@ -393,12 +384,7 @@ public interface ConfigurationService extends ApplicationService {
      */
     public String getInstanceIdenifier();    
     
-    /**
-     * Should DQP use the unified class loader? 
-     * @return true if yes; false otherwise
-     */
-    public boolean useUnifiedClassLoader();
-    
+
     /**
      * This returns the active client connections that have been made to the DQP 
      * @return list of connections which are currently available;never null

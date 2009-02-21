@@ -64,6 +64,11 @@
 			<artifactId>stringtemplate</artifactId>
 		</dependency>
 		
+        <dependency>
+          <groupId>com.google.code.guice</groupId>
+          <artifactId>guice</artifactId>
+        </dependency>  
+        
 	</dependencies>
 	
 </project>

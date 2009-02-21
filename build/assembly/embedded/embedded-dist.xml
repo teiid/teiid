@@ -17,10 +17,17 @@
       <includes>
         <include>teiid-${version}-embedded.jar</include>
       </includes>
-      <outputDirectory>/</outputDirectory>      
+      <outputDirectory>lib</outputDirectory>      
     </fileSet>
     
-    
+      <fileSet>
+      <directory>target/distribution</directory>
+      <includes>
+        <include>teiid-${version}-client.jar</include>
+      </includes>
+      <outputDirectory>/</outputDirectory>      
+    </fileSet>
+      
     <fileSet>
       <directory>target/distribution/teiid-${version}-embedded-dependencies.dir</directory>
       <includes>

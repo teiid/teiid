@@ -49,9 +49,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.VMNaming;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -60,7 +58,6 @@ import com.metamatrix.platform.registry.HostMonitor;
 import com.metamatrix.platform.registry.VMRegistryBinding;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
-import com.metamatrix.platform.vm.util.VMUtils;
 
 @Singleton
 public class HostController implements HostManagement {
@@ -95,7 +92,7 @@ public class HostController implements HostManagement {
     	// normal startup.
     	StartupStateController.performSystemInitialization(true);
     	
-        startLogging();
+        createTempDirectories();
         
 		Runtime.getRuntime().addShutdownHook(new ShutdownThread());        
 		
@@ -149,13 +146,7 @@ public class HostController implements HostManagement {
     	return null;
     }
     
-    private void startLogging() throws ConfigurationException, IOException {
-        
-        // setup the log file
-        String hostFileName = StringUtil.replaceAll(host.getFullName(), ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        VMUtils.startLogFile(host.getLogDirectory(), hostFileName + "_hc.log"); //$NON-NLS-1$
-        
+    private void createTempDirectories() throws ConfigurationException, IOException {
         // If the java-i-tmp directory doesn't exist, it needs to be created
         // because extension jars class loading will fail because
         // java internals can' write to a non-existent directory.

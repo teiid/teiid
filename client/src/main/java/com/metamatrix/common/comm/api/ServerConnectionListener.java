@@ -20,10 +20,26 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.log.config;
+package com.metamatrix.common.comm.api;
+
+import com.metamatrix.common.comm.api.ServerConnection;
 
 
-
-public interface LogConfigurationFactory {
-
+/** 
+ * An implementor of this interface, when registered with the ServerConnection will
+ * receive notifications about the connection life cycle events.
+ */
+public interface ServerConnectionListener {
+    /**
+     * A connection has been added to DQP
+     * @param connection The client connection instance, never null
+     */
+    void connectionAdded(ServerConnection connection);
+    
+    /**
+     * A connection has been removed for DQP
+     * @param connection The client connection instance, never null
+     */
+    void connectionRemoved(ServerConnection connection);
+    
 }

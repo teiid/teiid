@@ -35,7 +35,6 @@ import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.admin.DQPConfigAdminImpl;
 import com.metamatrix.dqp.embedded.admin.DQPMonitoringAdminImpl;
 import com.metamatrix.dqp.embedded.admin.DQPRuntimeStateAdminImpl;
@@ -55,26 +54,21 @@ public class EmbeddedConnection extends MMConnection {
     // constant value giving product name
     private final static String SERVER_NAME = "MetaMatrix Query"; //$NON-NLS-1$
     
-    DQPEmbeddedManager manager = null;
+    EmbeddedConnectionFactoryImpl manager = null;
     ConnectionListener listener = null;
-    
-    public static EmbeddedConnection newInstance(DQPEmbeddedManager manager, ServerConnection serverConn, Properties info, ConnectionListener listner) {
-        return new EmbeddedConnection(manager, serverConn, info, listner);        
-    }
     
     /**
      * ctor 
      */
-    public EmbeddedConnection(DQPEmbeddedManager manager,
-                              ServerConnection serverConn,
-                              Properties info,
-                              ConnectionListener listner) {
+    public EmbeddedConnection(EmbeddedConnectionFactoryImpl manager, ServerConnection serverConn, Properties info, ConnectionListener listener) {
         super(serverConn, info, null);
         this.manager = manager;
-        this.listener = listner;
+        this.listener = listener;
 
         // tell the listener that connection has been created
-        this.listener.connectionAdded(getConnectionId(), this);
+        if (listener != null) {
+	        this.listener.connectionAdded(getConnectionId(), this);
+        }
     }
 
    /**
@@ -98,7 +92,7 @@ public class EmbeddedConnection extends MMConnection {
                 Exception ex = null;
                 
                 // We we perform any DQP functions check if the DQP is still alive
-                if (!manager.isDQPAlive()) {
+                if (!manager.isAlive()) {
                     throw new AdminProcessingException(JDBCPlugin.Util.getString("EmbeddedConnection.DQP_shutDown")); //$NON-NLS-1$
                 }
                 
@@ -158,5 +152,13 @@ public class EmbeddedConnection extends MMConnection {
 	@Override
 	boolean isSameProcess(MMConnection conn) {
 		return (conn instanceof EmbeddedConnection);
+	}
+
+	@Override
+	public void close() throws SQLException {
+		if (this.listener != null) {
+			this.listener.connectionRemoved(getConnectionId(), this);
+		}
+		super.close();
 	}
 }

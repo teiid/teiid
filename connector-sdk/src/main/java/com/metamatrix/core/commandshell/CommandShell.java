@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.FileLogWriter;
@@ -146,25 +147,13 @@ public class CommandShell implements Cloneable {
 
     
     private void redirectLogging() {
-        //get the java System property: redirect if "false", not if "true" or null
-        String logConsoleString = System.getProperty(PROPERTY_LOG_CONSOLE);  
-        String FALSE = Boolean.toString(false);
-        boolean redirect = FALSE.equalsIgnoreCase(logConsoleString);
-        
-        if (redirect) {        
-            //remove the listener that writes to System.out and System.err
-            Collection listeners = PlatformLog.getInstance().getLogListeners();
-            for (Iterator it = listeners.iterator(); it.hasNext();) {
-                LogListener ll = (LogListener) it.next();
-                if (ll instanceof SystemLogWriter) {
-                    PlatformLog.getInstance().removeListener(ll);
-                }
-            }
-            
-            //add a listener that writes to a file
-            File file = new File(DEFAULT_LOG_FILE);
-            PlatformLog.getInstance().addListener(new FileLogWriter(file));
-        }
+        //add a listener that writes to a file
+        File file = new File(DEFAULT_LOG_FILE);
+		FileLogWriter flw = new FileLogWriter(file);
+
+        PlatformLog logger = new PlatformLog();
+		logger.addListener(flw);
+		LogManager.setLogListener(logger);
     }
     
     

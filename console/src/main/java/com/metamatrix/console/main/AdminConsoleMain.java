@@ -254,7 +254,9 @@ public final class AdminConsoleMain {
     			System.setErr(log);
     		}
     		FileLogWriter flw = new FileLogWriter(tmpFile);
-            PlatformLog.getInstance().addListener(flw);
+    		PlatformLog logger = new PlatformLog();
+    		logger.addListener(flw);
+    		LogManager.setLogListener(logger);
     	} catch (Exception ex) {
     		ex.printStackTrace();
     	}

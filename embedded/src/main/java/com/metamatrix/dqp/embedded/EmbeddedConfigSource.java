@@ -24,19 +24,18 @@ package com.metamatrix.dqp.embedded;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import com.google.inject.Binder;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 import com.metamatrix.dqp.embedded.services.EmbeddedDataService;
@@ -45,16 +44,19 @@ import com.metamatrix.dqp.embedded.services.EmbeddedTrackingService;
 import com.metamatrix.dqp.embedded.services.EmbeddedTransactionService;
 import com.metamatrix.dqp.embedded.services.EmbeddedVDBService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.jdbc.EmbeddedDataSource;
+import com.metamatrix.jdbc.JDBCPlugin;
 
 /**
  * This class is main hook point for the Embedded DQP configuration. This classe's
- * responsibility is to encapsulate the knowedge of creating of the various application
+ * responsibility is to encapsulate the knowledge of creating of the various application
  * services used the DQP.
  * 
  */
 public class EmbeddedConfigSource implements DQPConfigSource {
+	private static final String SERVER_CONFIG_FILE_EXTENSION = ".properties"; //$NON-NLS-1$
     
-    private Properties props;
+	private Properties props;
     private boolean useTxn;
     
     /**  
@@ -62,13 +64,24 @@ public class EmbeddedConfigSource implements DQPConfigSource {
     * @param configFile
     * @throws ApplicationInitializationException
     */    
-    public EmbeddedConfigSource(URL dqpURL, Properties connectionProperties) throws ApplicationInitializationException {
+    public EmbeddedConfigSource(Properties connectionProperties) {
+            
+    	URL dqpURL = (URL)connectionProperties.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE);            
+        if(dqpURL == null) {
+            throw new MetaMatrixRuntimeException(JDBCPlugin.Util.getString("LocalTransportHandler.No_configuration_file_set_in_property", DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE)); //$NON-NLS-1$
+        }
+
+        String dqpFileName = dqpURL.toString().toLowerCase(); 
+        if (!dqpFileName.endsWith(SERVER_CONFIG_FILE_EXTENSION)) {
+            throw new MetaMatrixRuntimeException(JDBCPlugin.Util.getString("LocalTransportHandler.Invalid_config_file_extension", dqpFileName) ); //$NON-NLS-1$                    
+        }    	
+    	
         String dqpURLString = dqpURL.toString(); 
         try {
             dqpURL = URLHelper.buildURL(dqpURLString);
             InputStream in = dqpURL.openStream();
             if (in == null) {
-            	throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigSource.Can_not_load_config_file_2", dqpURL)); //$NON-NLS-1$
+            	throw new MetaMatrixRuntimeException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigSource.Can_not_load_config_file_2", dqpURL)); //$NON-NLS-1$
             }
 
             // Load the "dqp.properties" file.
@@ -95,12 +108,9 @@ public class EmbeddedConfigSource implements DQPConfigSource {
             // this path.
             props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, dqpURL);
             
-            // First configure logging..
-            configureLogging(dqpURL);
-            
             useTxn = PropertiesUtils.getBooleanProperty(props, EmbeddedTransactionService.TRANSACTIONS_ENABLED, true);
         } catch (IOException e) {
-            throw new ApplicationInitializationException(e);
+            throw new MetaMatrixRuntimeException(e);
         }        
     }  
 
@@ -124,44 +134,6 @@ public class EmbeddedConfigSource implements DQPConfigSource {
         return this.props;
     }
     
-    /**
-     * Configure the logging for the DQP 
-     * @throws MetaMatrixComponentException
-     * @since 4.3
-     */
-    void configureLogging(URL dqpURL) throws ApplicationInitializationException{
-        boolean captureSystemStreams = Boolean.valueOf(props.getProperty(DQPEmbeddedProperties.DQP_CAPTURE_SYSTEM_PRINTSTREAMS, "false")).booleanValue(); //$NON-NLS-1$
-        String logLevel = props.getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
-        String logFile = props.getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
-        String classpath = props.getProperty(DQPEmbeddedProperties.DQP_CLASSPATH);
-        boolean unifiedClassLoader = !(classpath != null && classpath.length()>0);
-        String instanceId = props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY);        
-        
-        try {
-            // Configure Logging            
-            try {
-                if (logFile != null && !logFile.equalsIgnoreCase(EmbeddedConfigUtil.STDOUT)) {
-                    String modifiedLogFileName = logFile;                    
-                    int dotIndex = logFile.lastIndexOf('.');
-                    if (dotIndex != -1) {
-                        modifiedLogFileName = logFile.substring(0,dotIndex)+"_"+instanceId+"."+logFile.substring(dotIndex+1); //$NON-NLS-1$ //$NON-NLS-2$
-                    }
-                    else {
-                        modifiedLogFileName = logFile+"_"+instanceId; //$NON-NLS-1$
-                    }
-                    URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
-                    logFile = logURL.getPath();
-                }
-            } catch (MalformedURLException e) {
-                // we may have absolute source, this is just for notification to somewhere.
-                e.printStackTrace();                                
-            }
-            EmbeddedConfigUtil.configureLogger(logFile, logLevel, captureSystemStreams, unifiedClassLoader);
-        } catch (MetaMatrixComponentException e) {
-            throw new ApplicationInitializationException(e);
-        }
-    }
-
 	@Override
 	public void updateBindings(Binder binder) {
 		

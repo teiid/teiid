@@ -34,10 +34,16 @@ import java.util.StringTokenizer;
  * @since 4.4
  */
 public abstract class MMURLConnection extends URLConnection {
-   protected static final String READ = "read";      //$NON-NLS-1$
-   protected static final String WRITE = "write";    //$NON-NLS-1$
-   protected static final String LIST = "list";      //$NON-NLS-1$
-   protected static final String DELETE = "delete";  //$NON-NLS-1$
+    protected static final String READ = "read"; //$NON-NLS-1$
+	protected static final String WRITE = "write"; //$NON-NLS-1$
+	protected static final String LIST = "list"; //$NON-NLS-1$
+	protected static final String DELETE = "delete"; //$NON-NLS-1$
+
+   	public static final String FILE_LIST_SORT = "sort"; //$NON-NLS-1$
+	public static final String DATE = "date"; //$NON-NLS-1$
+	public static final String ALPHA = "alpha"; //$NON-NLS-1$
+	public static final String REVERSEALPHA = "reversealpha"; //$NON-NLS-1$
+   
     
    protected String action = READ;
    protected Properties props = null;

@@ -36,9 +36,13 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
+import com.metamatrix.common.log.LogConfiguration;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.VMMessageBus;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.LogListener;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.VMMonitor;
 import com.metamatrix.platform.service.proxy.ProxyManager;
@@ -96,6 +100,18 @@ class ServerGuiceModule extends AbstractModule {
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(PlatformProxyHelper.class);
+		
+		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
+		bind(LogListener.class).toProvider(ServerLogListernerProvider.class).in(Scopes.SINGLETON);  
+
+        // Start the log file
+        String logFileName = StringUtil.replaceAll(host.getFullName(), ".", "_")+".log"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		bind(LogListener.class).toProvider(new ServerLogListernerProvider(host.getLogDirectory(), logFileName, true)).in(Scopes.SINGLETON);  
+
+		
+		// this needs to be removed.
+		binder().requestStaticInjection(LogManager.class);
+		
 	}
 
 }

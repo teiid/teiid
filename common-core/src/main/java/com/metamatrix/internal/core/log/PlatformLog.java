@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.SystemLogWriter;
 
 /**
  * The PlatformLog class is designed to be extended by any {@link Logger} implementation that is to
@@ -83,42 +82,10 @@ import com.metamatrix.core.log.SystemLogWriter;
  */
 public class PlatformLog implements LogListener {
     
-    // =========================================================================
-    //                      Static Members
-    // =========================================================================
-    private static final PlatformLog INSTANCE = new PlatformLog();
-    private static ShutdownThread SHUTDOWNTHREAD = null;
-    private static final String SHUTDOWN_HOOK_INSTALLED_PROPERTY = "shutdownHookInstalled"; //$NON-NLS-1$
-    
-    static {
-        String hook = System.getProperty(SHUTDOWN_HOOK_INSTALLED_PROPERTY);
-        if ( hook == null || hook.equalsIgnoreCase(String.valueOf(Boolean.FALSE))) {
-            /**
-             * By default, add a listener to write to System.out and System.err,
-             * and that is automatically shutdown upon VM termination.
-             */
-            SHUTDOWNTHREAD = new ShutdownThread(INSTANCE);
-            INSTANCE.addListener(  new SystemLogWriter() );
-            try {
-                Runtime.getRuntime().addShutdownHook(SHUTDOWNTHREAD);
-                System.setProperty(SHUTDOWN_HOOK_INSTALLED_PROPERTY, Boolean.TRUE.toString());
-            } catch (IllegalStateException e) {
-                //ignore: this happens if we try to register the shutdown hook after the system
-                //is already shutting down.  there's nothing we can do about it.
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        }
-    }
-    
-    public static PlatformLog getInstance() {
-        return INSTANCE;
-    }
-
     private static final String DEFAULT_LOG_WORKER_THREAD_NAME = "LogWorker"; //$NON-NLS-1$
     
     private static final long DEFAULT_TIMEOUT = 60000;       // time to wait for a message
-    private static final long SHUTDOWN_TIMEOUT = 20000;             // max time to wait for shutdown
+    private static final long SHUTDOWN_TIMEOUT = 20000;      // max time to wait for shutdown
 
     /**
      * Flag specifying whether to write debugging statements to {@link #DEBUG_STREAM}.
@@ -182,24 +149,6 @@ public class PlatformLog implements LogListener {
     }
     
     /**
-     * Used by the DQP to ensure that the shutdown thread is removed from the VM 
-     * in which the DQP is embedded.
-     * @since 4.2
-     */
-    public static void deregisterShutdownHook() {
-        try {
-            if (SHUTDOWNTHREAD != null) {
-                Runtime.getRuntime().removeShutdownHook(SHUTDOWNTHREAD);
-            }
-        } catch (IllegalStateException e) {
-            //ignore: this happens if we try to register the shutdown hook after the system
-            //is already shutting down.  there's nothing we can do about it.
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-    
-    /**
      * Shut down and process all content.  This method is equivalent to calling
      * {@link #shutdown(boolean)} with a parameter value of <code>true</code>.
      */
@@ -258,6 +207,8 @@ public class PlatformLog implements LogListener {
             }
             this.logListeners.clear();
         }
+        
+        this.executor = null;
     }
     
     public synchronized void start() {
@@ -340,22 +291,6 @@ public class PlatformLog implements LogListener {
             return msg.getText();
         }        
     }
-
-}
-     
-class ShutdownThread extends Thread {
-	private static final String SHUTDOWN_THREAD_NAME = "Shutdown"; //$NON-NLS-1$
-	private PlatformLog log;
-
-	ShutdownThread(final PlatformLog platformLog) {
-		super(SHUTDOWN_THREAD_NAME);
-		this.log = platformLog;
-	}
-
-	public void run() {
-		final boolean processRemainingContent = true;
-		this.log.shutdown(processRemainingContent);
-	}
 
 }
     

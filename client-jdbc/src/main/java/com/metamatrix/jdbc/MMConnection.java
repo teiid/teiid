@@ -119,7 +119,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
      * @param info contains properies needed to establish a MetaMatrix connection.
      * @throws SQLException if the driver cannot establish connection to metamatrix.
      */
-    MMConnection(ServerConnection serverConn, Properties info, String url) {        
+    public MMConnection(ServerConnection serverConn, Properties info, String url) {        
     	this.serverConn = serverConn;
         this.url = url;
         this.dqp = serverConn.getService(ClientSideDQP.class);

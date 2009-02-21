@@ -22,7 +22,7 @@
 
 package com.metamatrix.common.log;
 
-import com.metamatrix.core.log.LogMessage;
+import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.log.MessageLevel;
 
 /**
@@ -31,7 +31,8 @@ import com.metamatrix.core.log.MessageLevel;
  */
 public final class I18nLogManager {
     private static I18nLogManager INSTANCE = new I18nLogManager();
-
+    private static final String NULL_MSG_TEXT = "Null"; //$NON-NLS-1$
+    
     private I18nLogManager() {
     }
 
@@ -114,46 +115,56 @@ public final class I18nLogManager {
     }
 
     private void logMessage(int level, String msgID, String context, Object[] msgParts) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
         if (!LogManager.isMessageToBeRecorded(context, level)) {
         	return;
         }
 
-
-        LogMessage msg = new LogMessage(msgID, context, level, msgParts);
-        	LogManager.getInstance().forwardMessage(msg);
-//            System.out.println("Enqueuing message: " + msg.getText() );
+        LogManager.log(level, context, geti18nMsg(msgID, msgParts));
     }
 
+	private String geti18nMsg(String msgID, Object[] msgParts) {
+		if (msgID != null) {
+			if (msgParts == null) {
+				return CorePlugin.Util.getString(msgID);
+			} else {
+
+				return CorePlugin.Util.getString(msgID, msgParts);
+
+			}
+		}
+		else {
+			StringBuffer text = null;
+			if(msgParts != null) {
+				text = new StringBuffer();
+			    for(int i=0; i<msgParts.length; i++) {
+			        if (i>0) text.append(" "); //$NON-NLS-1$
+	                Object omsg = msgParts[i];
+	                if ( omsg != null ) {
+			            text.append(omsg.toString());
+	                }
+			    }
+			}
+
+	        if (text == null) {
+	        	return NULL_MSG_TEXT;
+	        } else {
+	        	return text.toString();
+	        }			
+		}
+	}
+
     private void logMessage(int level, String msgID, String context, Throwable e) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
         if (!LogManager.isMessageToBeRecorded(context, level)) {
         	return;
         }
-
-
-        LogMessage msg = new LogMessage(msgID, context, level, e);
-//            System.out.println("Enqueuing message: " + msg.getText() );
-        	LogManager.getInstance().forwardMessage(msg);
+        LogManager.log(level, context, e, geti18nMsg(msgID, null));
     }
 
     private void logMessage(int level, String msgID, String context, Throwable e, Object[] msgParts) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
         if (!LogManager.isMessageToBeRecorded(context, level)) {
         	return;
         }
-
-
-        LogMessage msg = new LogMessage(msgID, context, level, e, msgParts);
-//            System.out.println("Enqueuing message: " + msg.getText() );
-           LogManager.getInstance().forwardMessage(msg);
+        LogManager.log(level, context, e, geti18nMsg(msgID, msgParts));
     }
-
 }
 

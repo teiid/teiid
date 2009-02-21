@@ -396,7 +396,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         
         MMRequest request = (MMRequest) results.iterator().next();
         assertEquals(REQUEST_1_1, request.getIdentifier()); 
-        assertEquals(1, request.getSessionID());
+        assertEquals("1", request.getSessionID()); //$NON-NLS-1$
         assertEquals("1", request.getRequestID()); //$NON-NLS-1$
         assertEquals("user1", request.getUserName()); //$NON-NLS-1$
         
@@ -443,7 +443,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         
         MMSourceRequest request = (MMSourceRequest) results.iterator().next();
         assertEquals(REQUEST_1_1_1, request.getIdentifier()); 
-        assertEquals(1, request.getSessionID());
+        assertEquals("1", request.getSessionID()); //$NON-NLS-1$
         assertEquals(REQUEST_1_1, request.getRequestID()); 
         assertEquals("connectorBinding1", request.getConnectorBindingName()); //$NON-NLS-1$
         assertEquals("user1", request.getUserName()); //$NON-NLS-1$

@@ -32,6 +32,7 @@ import java.util.Properties;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
@@ -46,7 +47,7 @@ import com.metamatrix.core.util.StringUtil;
  */
 public class DbLogWriter {
 
-    /**
+	/**
      * Static String to use as the user name when checking out connections from the pool
      */
     static final String LOGGING = "LOGGING";//$NON-NLS-1$
@@ -55,8 +56,7 @@ public class DbLogWriter {
 	 * The name of the System property that contains the name of the LogMessageFormat
 	 * class that is used to format messages sent to the file destination.
 	 * This is an optional property; if not specified and the file destination
-	 * is used, then the {@link com.metamatrix.common.logging.format.DelimitedLogMessageFormat DelimitedLogMessageFormat}
-	 * is used.
+	 * is used
 	 */
 	static final String PROPERTY_PREFIX    = "metamatrix.log."; //$NON-NLS-1$  
 
@@ -193,7 +193,7 @@ public class DbLogWriter {
 	 * itself.
 	 * @throws LogDestinationInitFailedException if there was an error during initialization.
 	 */
-	public void initialize() throws DbWriterException {
+	public void initialize() {
 		sequenceNumber = 0;
 		lastSequenceStart = 0;
 
@@ -309,10 +309,10 @@ public class DbLogWriter {
 			stmt.setString(5, StringUtil.truncString(message.getText(), maxMsgLength));
 
 			// Message hostname column
-			stmt.setString(6, StringUtil.truncString(message.getHostName(), maxGeneralLength));
+			stmt.setString(6, StringUtil.truncString(VMNaming.getConfigName(), maxGeneralLength)); 
 
 			// Message VM ID column
-			stmt.setString(7, StringUtil.truncString(message.getVMName(), maxGeneralLength));
+			stmt.setString(7, StringUtil.truncString(VMNaming.getVMName(), maxGeneralLength));
 
 			// Message thread name column
 			stmt.setString(8, StringUtil.truncString(message.getThreadName(), maxGeneralLength));

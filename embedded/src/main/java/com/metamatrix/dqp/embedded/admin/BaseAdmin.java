@@ -62,12 +62,12 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -96,9 +96,9 @@ abstract class BaseAdmin {
         Cache.QUERY_SERVICE_RESULT_SET_CACHE
         };    
     
-    DQPEmbeddedManager manager = null; 
+    EmbeddedConnectionFactoryImpl manager = null; 
     
-    BaseAdmin(DQPEmbeddedManager manager){
+    BaseAdmin(EmbeddedConnectionFactoryImpl manager){
         this.manager = manager;       
     }
             
@@ -135,20 +135,20 @@ abstract class BaseAdmin {
      * @return Returns the manager.
      * @since 4.3
      */
-    public DQPEmbeddedManager getManager() {
+    public EmbeddedConnectionFactoryImpl getManager() {
         return this.manager;
     }
     
     VDBService getVDBService() {
-        return (VDBService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.VDB_SERVICE);            
+        return (VDBService)getManager().findService(DQPServiceNames.VDB_SERVICE);            
     }
     
     DataService getDataService() {
-        return (DataService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.DATA_SERVICE);
+        return (DataService)getManager().findService(DQPServiceNames.DATA_SERVICE);
     }
     
     ConfigurationService getConfigurationService() {
-        return (ConfigurationService)getManager().getDQP().getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
+        return (ConfigurationService)getManager().findService(DQPServiceNames.CONFIGURATION_SERVICE);
     }
         
     protected Object convertToAdminObjects(Object src) {
@@ -511,9 +511,9 @@ abstract class BaseAdmin {
      */
     public SystemObject getSystem() {
         MMSystem system = new MMSystem();
-        system.setStartTime(new Date(manager.getDQPStartTime()));
-        system.setStarted(manager.isDQPAlive());
-        system.setProperties(manager.getDQPProperties());
+        system.setStartTime(new Date(manager.getStartTime()));
+        system.setStarted(manager.isAlive());
+        system.setProperties(manager.getProperties());
         return system;
     }
 

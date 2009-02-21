@@ -4,6 +4,6 @@
 CLIENT_PATH=java/*:PortfolioModel/
 
 #Second one for the JARs in Teiid embedded
-TEIID_PATH=../../teiid-6.0.0-SNAPSHOT-embedded.jar:../../lib/*:../../extensions/*
+TEIID_PATH=../../teiid-6.0.0-SNAPSHOT-client.jar:../../lib/*:../../extensions/*
 
 java -cp ${CLIENT_PATH}:${TEIID_PATH} JDBCClient "select * from CustomerAccount"

@@ -22,35 +22,10 @@
 
 package com.metamatrix.core.log;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.Serializable;
 
-import com.metamatrix.core.CorePlugin;
 
-public class LogMessage implements Externalizable {
-
-  public static final String VM_NAME = "VMName"; //$NON-NLS-1$
-  public static final String HOST_NAME = "HostName"; //$NON-NLS-1$
-    
-//    public static String VM_NAME = VMNaming.getVMName();
-//    public static String HOST_NAME = VMNaming.getLogicalHostName();
-//
-//    private static final String DEFAULT_VM_NAME = ""; //$NON-NLS-1$
-
-    private static final String NULL_MSG_TEXT = "Null"; //$NON-NLS-1$
-//
-//    static {
-//        if ( VM_NAME == null || VM_NAME.trim().length() == 0 ) {
-//            VM_NAME = VMNaming.getVMIDString();
-//        }
-//        if ( VM_NAME == null || VM_NAME.trim().length() == 0 ) {
-//            VM_NAME = DEFAULT_VM_NAME;
-//        }
-//    }
-
-	private String msgID;
+public class LogMessage implements Serializable{
 
 	private String context;
     private int level;
@@ -58,55 +33,17 @@ public class LogMessage implements Externalizable {
 	private Throwable exception;
 	private long timestamp;
     private String threadName;
-    private String hostName;
-    private String vmName;
     private int errorCode;
     
     public LogMessage() {
     }
 
-    public LogMessage(String msgID, String context, int level) {
-		this.msgID = msgID;
-	    this.context = context;
-	    this.level = level;
-	    this.msgParts = null;
-	    this.timestamp = System.currentTimeMillis();
-        this.threadName = Thread.currentThread().getName();
-        this.hostName = HOST_NAME;
-        this.vmName = VM_NAME;
-	}
-
-	public LogMessage(String msgID, String context, int level, Throwable e) {
-        this(msgID, context, level);
-	    this.exception = e;
-	}
-
-
-	public LogMessage(String msgID, String context, int level, Object[] msgParts ) {
-		this.msgID = msgID;
-	    this.context = context;
-	    this.level = level;
-	    this.msgParts = convertMsgParts(msgParts);
-	    this.timestamp = System.currentTimeMillis();
-        this.threadName = Thread.currentThread().getName();
-        this.hostName = HOST_NAME;
-        this.vmName = VM_NAME;
-	}
-
-	public LogMessage(String msgID, String context, int level, Throwable e, Object[] msgParts ) {
-        this(msgID, context, level, msgParts);
-	    this.exception = e;
-	}
-
 	public LogMessage(String context, int level, Object[] msgParts ) {
-		this.msgID= null;
 	    this.context = context;
 	    this.level = level;
 	    this.msgParts = convertMsgParts(msgParts);
 	    this.timestamp = System.currentTimeMillis();
         this.threadName = Thread.currentThread().getName();
-        this.hostName = HOST_NAME;
-        this.vmName = VM_NAME;
 	}
 
 	public LogMessage(String context, int level, Throwable e, Object[] msgParts) {
@@ -139,14 +76,6 @@ public class LogMessage implements Externalizable {
         return this.threadName;
     }
 
-    public String getVMName() {
-        return this.vmName;
-    }
-
-    public String getHostName() {
-        return this.hostName;
-    }
-
     public long getTimestamp() {
         return this.timestamp;
     }
@@ -155,72 +84,6 @@ public class LogMessage implements Externalizable {
 		return this.exception;
 	}
 
-	public String getText() {
-		String msg = null;
-
-		if (msgID != null) {
-			if (msgParts == null) {
-				msg = CorePlugin.Util.getString(msgID);
-			} else {
-
-				msg = CorePlugin.Util.getString(msgID, msgParts);
-
-			}
-
-		} else {
-
-			StringBuffer text = null;
-			if(msgParts != null) {
-				text = new StringBuffer();
-			    for(int i=0; i<msgParts.length; i++) {
-			        if (i>0) text.append(" "); //$NON-NLS-1$
-	                Object omsg = msgParts[i];
-	                if ( omsg != null ) {
-			            text.append(omsg.toString());
-	                }
-			    }
-			}
-
-	        if (text == null) {
-	        	msg = NULL_MSG_TEXT;
-	        } else {
-	        	msg = text.toString();
-	        }
-
-
-		}
-
-        if (msg == null || msg.length() == 0) {
-            msg = NULL_MSG_TEXT;
-        }
-
-
-		return msg;
-	}
-
-	// implements Externalizable
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(context);
-		out.writeInt(level);
-		out.writeObject(msgParts);
-		out.writeObject(exception);
-		out.writeLong(timestamp);
-		out.writeObject(threadName);
-		out.writeObject(vmName);
-		out.writeInt(this.errorCode);
-	}
-
-	// implements Externalizable
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		this.context = (String) in.readObject();
-		this.level = in.readInt();
-		this.msgParts = (Object[]) in.readObject();
-		this.exception = (Throwable) in.readObject();
-		this.timestamp = in.readLong();
-		this.threadName = (String) in.readObject();
-		this.vmName = (String) in.readObject();
-		this.errorCode = in.readInt();
-	}
 
 
     //do a toString() to the object array before adding to the worker
@@ -237,6 +100,25 @@ public class LogMessage implements Externalizable {
 		return oriMsgParts;
 	}
 
+	public String getText() {
+		StringBuffer text = null;
+		if(msgParts != null) {
+			text = new StringBuffer();
+		    for(int i=0; i<msgParts.length; i++) {
+		        if (i>0) text.append(" "); //$NON-NLS-1$
+                Object omsg = msgParts[i];
+                if ( omsg != null ) {
+		            text.append(omsg.toString());
+                }
+		    }
+		}
+
+        if (text == null) {
+        	return "NULL"; //$NON-NLS-1$
+        } else {
+        	return text.toString();
+        }			
+	}
     
     /** 
      * @return Returns the errorCode.

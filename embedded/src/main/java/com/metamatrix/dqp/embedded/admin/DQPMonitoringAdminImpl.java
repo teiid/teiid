@@ -44,8 +44,8 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 
@@ -55,7 +55,7 @@ import com.metamatrix.server.serverapi.RequestInfo;
  */
 public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitoringAdmin {
 
-    public DQPMonitoringAdminImpl(DQPEmbeddedManager manager) {
+    public DQPMonitoringAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 
@@ -328,7 +328,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
             switch(type) {
             
                 case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                    Properties properties = manager.getDQPProperties();
+                    Properties properties = manager.getProperties();
                     return convertPropertyDefinitions(properties);
                     
                 case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:

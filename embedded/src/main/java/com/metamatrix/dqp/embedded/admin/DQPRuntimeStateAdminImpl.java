@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -40,10 +41,10 @@ import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.EmbeddedConfigUtil;
 import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
 
 /** 
@@ -51,7 +52,7 @@ import com.metamatrix.dqp.message.RequestID;
  */
 public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRuntimeStateAdmin {
 
-    public DQPRuntimeStateAdminImpl(DQPEmbeddedManager manager) {
+    public DQPRuntimeStateAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 
@@ -66,7 +67,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             terminateSession(AdminObject.WILDCARD);
             
             getManager().shutdown();
-        } catch (ApplicationLifecycleException e) {
+        } catch (SQLException e) {
         	throw new AdminComponentException(e);
         }
     }
@@ -83,7 +84,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             // Now shutdown the DQP, it will automatically start next timea new connection is 
             // requested.
             getManager().shutdown();                        
-        } catch (ApplicationLifecycleException e) {
+        } catch (SQLException e) {
         	throw new AdminComponentException(e);
         } 
     }
@@ -211,21 +212,17 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     public void terminateSession(String identifier) 
         throws AdminException {
         
-        if (identifier == null || (!identifier.equals(AdminObject.WILDCARD) && !identifier.matches("\\d+"))) { //$NON-NLS-1$
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_identifier")); //$NON-NLS-1$                
-        }
-        
         Set<ServerConnection> connections = getClientConnections();
         ArrayList matchedConnections = new ArrayList();
-        for (Iterator i = connections.iterator(); i.hasNext();) {
-        	ServerConnection clientConnection = (ServerConnection)i.next();
+        
+        for (ServerConnection clientConnection:connections) {
             String id = clientConnection.getLogonResult().getSessionID().toString();
             if (matches(identifier, id)) {
                 matchedConnections.add(clientConnection);
             }
         }
 
-        // Double iteration because to avoid concurrent modification of underlaying map.
+        // Double iteration because to avoid concurrent modification of underlying map.
         for (Iterator i = matchedConnections.iterator(); i.hasNext();) {
         	ServerConnection clientConnection = (ServerConnection)i.next();
         
@@ -323,11 +320,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     public void setLogListener(EmbeddedLogger listener) 
         throws AdminException {
         if(listener != null) {
-            try{
-                EmbeddedConfigUtil.installLogListener(new DQPLogListener(listener));
-            }catch(MetaMatrixComponentException e) {
-            	throw new AdminProcessingException(e);
-            }
+        	LogManager.setLogListener(new DQPLogListener(listener));
         }
         else {
             throw new AdminProcessingException("Admin_invalid_log_listener"); //$NON-NLS-1$

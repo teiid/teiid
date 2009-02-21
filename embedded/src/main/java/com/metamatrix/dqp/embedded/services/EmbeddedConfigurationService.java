@@ -43,6 +43,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -60,7 +61,6 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.vdb.VDBStatus;
-import com.metamatrix.dqp.application.ClientConnectionListener;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
@@ -277,14 +277,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         return level;
     }
     
-    /** 
-     * @see com.metamatrix.dqp.service.ConfigurationService#getResetSystemStreams()
-     * @since 4.3
-     */
-    public String captureSystemStreams() throws MetaMatrixComponentException {
-        return userPreferences.getProperty(DQPEmbeddedProperties.DQP_CAPTURE_SYSTEM_PRINTSTREAMS);
-    }
-
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getVDBs()
      * @since 4.3
@@ -1267,8 +1259,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getConnectionListener()
      * @since 4.3.2
      */
-    public ClientConnectionListener getConnectionListener() throws MetaMatrixComponentException {
-        return new ClientConnectionListener() {
+    public ServerConnectionListener getConnectionListener() {
+        return new ServerConnectionListener() {
             /**
              * A Client Connection to DQP has been added  
              */
@@ -1498,16 +1490,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         return userPreferences.getProperty(DQPEmbeddedProperties.DQP_IDENTITY);
     }
     
-    /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#useUnifiedClassLoader()
-     */
-    public boolean useUnifiedClassLoader() {
-        String val = userPreferences.getProperty(DQPEmbeddedProperties.DQP_CLASSPATH); 
-        if (val == null || val.length() == 0) {
-            return true;
-        }
-        return false;
-    }
     
     public String getProcessorBatchSize() {
         return userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$

@@ -24,6 +24,7 @@ package com.metamatrix.dqp.embedded;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -33,6 +34,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeVDBService;
+import com.metamatrix.jdbc.EmbeddedDataSource;
 
 public class TestEmbeddedConfigSource extends TestCase {
     
@@ -45,7 +47,10 @@ public class TestEmbeddedConfigSource extends TestCase {
     }    
 
     public void testServiceLoading() throws Exception {
-        EmbeddedConfigSource source = new EmbeddedConfigSource(buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"), null);//$NON-NLS-1$        
+    	Properties p = new Properties();
+    	p.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties")); //$NON-NLS-1$
+    	
+        EmbeddedConfigSource source = new EmbeddedConfigSource(p);        
         Application application = new Application();
         application.start(source);
         assertTrue(application.getEnvironment().findService(DQPServiceNames.VDB_SERVICE) instanceof FakeVDBService);

@@ -517,23 +517,17 @@ public abstract class VMController implements VMControllerInterface {
 			return;
 		}
 
-        // Create a thread that will actually kill the vm so that this method can (the stub anyway) return.
-        Thread stopper = new Thread() {
-
+		this.startServicePool.execute(new Runnable() {
             public void run() {
                 // Wait before killing the VM.
                 try {
-                    sleep(force_shutdown_time * 1000);
+                    Thread.sleep(force_shutdown_time * 1000);
                 } catch (Exception e) {}
-
                 // And exit.
                 System.exit(1);
             }
-        };
-
-	    stopper.start();
+        });
     }
-
 
 	private synchronized void stop(boolean now, boolean shutdown) {
 		try {
@@ -616,9 +610,11 @@ public abstract class VMController implements VMControllerInterface {
      * Shut down all services without waiting for work to complete.
      * Essential services will also be shutdown.
      */
-    public void shutdownNow() {
+    public synchronized void shutdownNow() {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0041));
         doStopVM(true, true);
+        this.shuttingDown = true;
+        notifyAll();
     }
 
     public void shutdownService(ServiceID serviceID) {
@@ -687,7 +683,7 @@ public abstract class VMController implements VMControllerInterface {
 	public void ping() {
 	}
 
-	public boolean isShuttingDown() {
+	public synchronized boolean isShuttingDown() {
 		return shuttingDown;
 	}
 

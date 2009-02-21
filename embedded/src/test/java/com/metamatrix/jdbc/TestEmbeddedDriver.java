@@ -50,105 +50,105 @@ public class TestEmbeddedDriver extends TestCase {
      */
     public void testAcceptsURL() throws SQLException {    
         // Windows Path
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES")); //$NON-NLS-1$
         
         // Alternative windows path
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@c:/metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES")); //$NON-NLS-1$
 
         // Abosolute path (Unix or windows)
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES")); //$NON-NLS-1$
 
         // relative path
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@../../metamatrix/dqp/dqp.properties;version=1;txnAutoWrap=ON;partialResultsMode=YES")); //$NON-NLS-1$
         
         // File URL should be supported (not sure)
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@file:///c:/metamatrix/dqp/dqp.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@file:///c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
         // ClassPath based URL
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@classpath:/dqp.properties;partialResultsMode=true"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
         // These are specific to the MMDriver and should not be suported
-        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT@mm://host:7001;version=1"));
-        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT@mms://host:7001;version=1"));
+        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT@mm://host:7001;version=1")); //$NON-NLS-1$
+        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT@mms://host:7001;version=1")); //$NON-NLS-1$
         //assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT@http://host:7001;version=1"));
         
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT"));
-        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT!/path/foo.properties"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT;"));
-        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT;version=1;logFile=foo.txt"));
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT")); //$NON-NLS-1$
+        assertFalse(driver.acceptsURL("jdbc:metamatrix:BQT!/path/foo.properties")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT;")); //$NON-NLS-1$
+        assertTrue(driver.acceptsURL("jdbc:metamatrix:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
     }
 
     public void testParseURL() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/c:/metamatrix/dqp/dqp.properties"));
+        driver.parseURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
         assertEquals(2, p.size());        
     }
 
     public void testParseURL2() throws SQLException {
         Properties p = new Properties();       
-        driver.parseURL("jdbc:metamatrix:BQT@\\metamatrix\\dqp\\dqp.properties;version=3", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/metamatrix/dqp/dqp.properties"));
-        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3"));
-        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3"));
+        driver.parseURL("jdbc:metamatrix:BQT@\\metamatrix\\dqp\\dqp.properties;version=3", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
         assertEquals(4, p.size());
     }
     
     public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=4;txnAutoWrap=ON;partialResultsMode=YES;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/metamatrix/dqp/dqp.properties"));
-        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));
-        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4"));
-        assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON"));
-        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES"));
-        assertTrue(p.getProperty(BaseDataSource.LOG_FILE).equals("D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log"));
+        driver.parseURL("jdbc:metamatrix:BQT@/metamatrix/dqp/dqp.properties;version=4;txnAutoWrap=ON;partialResultsMode=YES;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
+        assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
+        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.LOG_FILE).equals("D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertEquals(7, p.size());        
     }
     
     public void testParseURL4() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:testdata/dqp/dqp.properties"));
-        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true"));
+        driver.parseURL("jdbc:metamatrix:BQT@testdata/dqp/dqp.properties;partialResultsMode=true", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:testdata/dqp/dqp.properties")); //$NON-NLS-1$
+        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
         assertEquals(3, p.size());                
     }
     
     public void testParseURL5() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));        
+        driver.parseURL("jdbc:metamatrix:BQT", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/deploy.properties"));         //$NON-NLS-1$
     }
     
     public void testParseURL55() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT;", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));        
+        driver.parseURL("jdbc:metamatrix:BQT;", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/deploy.properties"));         //$NON-NLS-1$
     }    
        
     public void testParseURL6() throws SQLException{
         Properties p = new Properties();
-        driver.parseURL("jdbc:metamatrix:BQT;partialResultsMode=true;version=1", p);
-        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT"));
-        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/mm.properties"));
-        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true"));
-        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1"));
-        assertTrue(p.getProperty("vdb.definition").equals("BQT.vdb"));
+        driver.parseURL("jdbc:metamatrix:BQT;partialResultsMode=true;version=1", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("classpath:/deploy.properties")); //$NON-NLS-1$
+        assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1")); //$NON-NLS-1$
+        assertTrue(p.getProperty("vdb.definition").equals("BQT.vdb")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(6, p.size());                
         
     }

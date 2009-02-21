@@ -59,7 +59,6 @@ import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.vdb.VDBStatus;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationReader;
@@ -67,6 +66,7 @@ import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationWriter;
 import com.metamatrix.dqp.embedded.configuration.ServerConfigFileWriter;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.ConfigurationService;
+import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
 
 /** 
@@ -75,7 +75,7 @@ import com.metamatrix.dqp.service.ConfigurationService;
  */
 public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin {
     
-    public DQPConfigAdminImpl(DQPEmbeddedManager manager) {
+    public DQPConfigAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 

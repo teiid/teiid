@@ -27,18 +27,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import com.google.inject.Inject;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.log.config.DefaultLogConfigurationFactory;
-import com.metamatrix.common.log.config.LogConfigurationException;
-import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.internal.core.log.PlatformLog;
+import com.metamatrix.core.log.NullLogWriter;
 
 
 /**
@@ -92,85 +89,12 @@ import com.metamatrix.internal.core.log.PlatformLog;
  */
 public final class LogManager {
 
-    /**
-     * The name of the System property that contains the set of comma-separated
-     * context names for messages <i>not</i> to be recorded.  A message context is simply
-     * some string that identifies something about the component that generates
-     * the message.  The value for the contexts is application specific.
-     * <p>
-     * This is an optional property that defaults to no contexts (i.e., messages
-     * with any context are recorded).
-     */
-    public static final String SYSTEM_LOG_CONTEXT_PROPERTY_NAME = DefaultLogConfigurationFactory.LOG_CONTEXT_PROPERTY_NAME;
-
-    /**
-     * The name of the System property that contains 'true' if the log messages
-     * are to be sent to System.out, or 'false' otherwise.  This is an optional
-     * property that defaults to 'true'.  Note, however, that if the message
-     * level for the logger is specified to be something other than NONE but
-     * no file destination is specified, the value for this propery is
-     * always assumed to be 'true'.
-     * <p>
-     * If the System.out is captured by the LogManager, the LogManager always
-     * treats this property value as 'false'.
-     */
-    public static final String SYSTEM_LOG_CONSOLE_PROPERTY_NAME = "metamatrix.log.console"; //$NON-NLS-1$
-
-    /**
-     * The name of the System property that should be 'true' if System.out is to
-     * be captured by the LogManager, or false if System.out is not be be captured.
-     * This is an optional property that defaults to 'false'.
-     */
-    public static final String SYSTEM_LOG_CAPTURE_SYSTEM_OUT    = "metamatrix.log.captureSystemOut"; //$NON-NLS-1$
-
-    /**
-     * The name of the System property that should be 'true' if System.err is to
-     * be captured by the LogManager, or false if System.err is not be be captured.
-     * This is an optional property that defaults to 'false'.
-     */
-    public static final String SYSTEM_LOG_CAPTURE_SYSTEM_ERR    = "metamatrix.log.captureSystemErr"; //$NON-NLS-1$
-
-    /**
-     * The name of the System property that should be set to the name of the file
-     * to which System.out is sent only if also captured by the LogManager.
-     * This is an optional property.  If set to the same value as
-     * #SYSTEM_ERR_FILENAME (case insensitive comparison), then the same file will be used for both.
-     */
-    public static final String SYSTEM_OUT_FILENAME              = "metamatrix.log.systemOutFilename"; //$NON-NLS-1$
-
-    /**
-     * The name of the System property that should be set to the name of the file
-     * to which System.err is sent only if also captured by the LogManager.
-     * This is an optional property.  If set to the same value as
-     * #SYSTEM_OUT_FILENAME (case insensitive comparison), then the same file will be used for both.
-     */
-    public static final String SYSTEM_ERR_FILENAME              = "metamatrix.log.systemErrFilename"; //$NON-NLS-1$
-
-    private static LogManager INSTANCE = new LogManager(PlatformLog.getInstance());
-
-    private LogConfiguration configuration;
-    private PlatformLog platformLog;
+    @Inject
+    static LogConfiguration configuration = new BasicLogConfiguration(); // either injected or manually set using the set methods
     
-    protected LogManager(PlatformLog platformLog) {
-    	this.platformLog = platformLog;
-    	// Get the preferred LogConfiguration ...
-        try {
-            configuration = (LogConfiguration)CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration().clone();
-        } catch ( ConfigurationException e ) {
+    @Inject
+    static LogListener logListener = new NullLogWriter(); // either injected or manually set using the set methods
 
-            // Get the initial LogConfiguration from the System properties ...
-            try {
-                configuration = BasicLogConfiguration.createLogConfiguration(System.getProperties());
-            } catch ( LogConfigurationException le ) {
-                throw new MetaMatrixRuntimeException(le, ErrorMessageKeys.LOG_ERR_0005, CommonPlugin.Util.getString( ErrorMessageKeys.LOG_ERR_0005) );
-
-            }
-        }
-    }
-
-    static LogManager getInstance() {
-        return INSTANCE;
-    }
 
     /**
      * Send a critical message to the log.  This level of message is generally
@@ -187,7 +111,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logCritical(String context, String message) {
-    	LogManager.getInstance().logMessage(MessageLevel.CRITICAL, context, message);
+    	logMessage(MessageLevel.CRITICAL, context, message);
     }
 
     /**
@@ -206,7 +130,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logCritical(String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.CRITICAL,context,e,message);
+        logMessage(MessageLevel.CRITICAL,context,e,message);
     }
 
     /**
@@ -222,7 +146,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logError(String context, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.ERROR, context,message);
+        logMessage(MessageLevel.ERROR, context,message);
     }
 
     /**
@@ -239,7 +163,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logError(String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.ERROR,context,e,message);
+        logMessage(MessageLevel.ERROR,context,e,message);
     }
     
     /**
@@ -255,7 +179,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logWarning(String context, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.WARNING, context,message);
+        logMessage(MessageLevel.WARNING, context,message);
     }
 
     /**
@@ -272,7 +196,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logWarning(String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.WARNING,context,e,message);
+        logMessage(MessageLevel.WARNING,context,e,message);
     }
     
     /**
@@ -289,7 +213,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logInfo(String context, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.INFO, context,message);
+        logMessage(MessageLevel.INFO, context,message);
     }
     
     /**
@@ -305,7 +229,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logDetail(String context, Object ... msgParts) {
-        LogManager.getInstance().logMessage(MessageLevel.DETAIL, context, msgParts);
+        logMessage(MessageLevel.DETAIL, context, msgParts);
     }
 
     /**
@@ -322,7 +246,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logDetail(String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(MessageLevel.DETAIL,context,e,message);
+        logMessage(MessageLevel.DETAIL,context,e,message);
     }
 
     /**
@@ -339,7 +263,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logTrace(String context, Object ... msgParts) {
-        LogManager.getInstance().logMessage(MessageLevel.TRACE, context, msgParts);
+        logMessage(MessageLevel.TRACE, context, msgParts);
     }
 
     /**
@@ -357,7 +281,7 @@ public final class LogManager {
      * @param msgParts the individual parts of the log message (may be null)
      */
     public static void logTrace(String context, Throwable e, Object ... msgParts) {
-        LogManager.getInstance().logMessage(MessageLevel.TRACE,context,e,msgParts);
+        logMessage(MessageLevel.TRACE,context,e,msgParts);
     }
 
     /**
@@ -372,7 +296,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, String message) {
-        LogManager.getInstance().logMessage(msgLevel, context, message);
+        logMessage(msgLevel, context, message);
     }
 
     /**
@@ -388,7 +312,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, Throwable e, String message) {
-        LogManager.getInstance().logMessage(msgLevel, context, e, message);
+        logMessage(msgLevel, context, e, message);
     }
 
     /**
@@ -398,24 +322,29 @@ public final class LogManager {
      * @return a modifiable copy of the current log configuration
      */
     public static LogConfiguration getLogConfigurationCopy() {
-    	return getInstance().getConfigurationCopy();
+    	if (configuration == null) {
+    		throw new MetaMatrixRuntimeException(CommonPlugin.Util.getString("LogManager_not_configured")); //$NON-NLS-1$
+    	}
+    	return (LogConfiguration)configuration.clone(); 
     }
 
     public static void setLogConfiguration( LogConfiguration config ) {
-    	getInstance().setConfiguration(config);
-    }
-    
-    public LogConfiguration getConfigurationCopy() {
-    	return (LogConfiguration)configuration.clone(); 
-	}
-	
-	public void setConfiguration(LogConfiguration config) {
 		if ( config != null ) {
         	logMessage(MessageLevel.INFO, LogCommonConstants.CTX_LOGGING, CommonPlugin.Util.getString("MSG.003.014.0015", config)); //$NON-NLS-1$
             configuration = (LogConfiguration) config.clone();
         }
-	}
-
+    }
+    
+    public static void setLogListener(LogListener listener) {
+    	logListener.shutdown();
+    	if (listener != null) {
+    		logListener = listener;
+    	}
+    	else {
+    		logListener = new NullLogWriter();
+    	}
+    }
+    	
     /**
      * Utility method to identify whether a log message with the specified
      * context and level will be recorded in the LogManager's destinations.
@@ -425,42 +354,23 @@ public final class LogManager {
      * or false if it would be discarded by the LogManager.
      */
     public static boolean isMessageToBeRecorded(String context, int msgLevel) {
-    	return getInstance().isLoggingEnabled(context, msgLevel);
-    }
-    
-    public boolean isLoggingEnabled(String context, int msgLevel) {
-    	if ( context == null ) {
-            return false;
-        }
-                
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        if ( configuration.getMessageLevel() == MessageLevel.NONE || msgLevel <= MessageLevel.NONE ||
-        		configuration.isLevelDiscarded( msgLevel ) || configuration.isContextDiscarded( context )) {
-            return false;
-        }
-
-        return true;
+    	return configuration.isMessageToBeRecorded(context, msgLevel);
     }
 
-    protected void logMessage(int level, String context, Object ... msgParts) {
+    private static void logMessage(int level, String context, Object ... msgParts) {
     	logMessage(level, context, null, msgParts);
     }
 
-    protected void logMessage(int level, String context, Throwable e, Object ... msgParts) {
-		if (msgParts == null || msgParts.length == 0 || !isLoggingEnabled(context, level)) {
+    private static void logMessage(int level, String context, Throwable e, Object ... msgParts) {
+		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
 			return;
 		} 
-
-        LogMessage msg = new LogMessage( context, level, e, msgParts);
-        forwardMessage(msg);
+		
+		LogMessage msg = new LogMessage( context, level, e, msgParts);
+		logListener.logMessage(msg);
     }
 
 
-    protected void forwardMessage(LogMessage msg) {
-        platformLog.logMessage(msg);
-    }
-    
     public static Object createLoggingProxy(final String loggingContext,
                                              final Object instance,
                                              final Class[] interfaces,

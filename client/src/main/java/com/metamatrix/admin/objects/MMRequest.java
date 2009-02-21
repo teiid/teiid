@@ -34,7 +34,7 @@ import com.metamatrix.core.util.DateUtil;
 public class MMRequest extends MMAdminObject implements Request{
 	
 	String userName = ""; //$NON-NLS-1$;
-	long sessionID;
+	String sessionID;
     String requestID;
 	Date created;
 	Date processingDate;
@@ -52,7 +52,7 @@ public class MMRequest extends MMAdminObject implements Request{
     public MMRequest(String[] identifierParts) {
         super(identifierParts);
         
-        this.sessionID = Long.parseLong(identifierParts[0]);
+        this.sessionID = identifierParts[0];
         this.requestID = identifierParts[1];
         if (identifierParts.length >= 3) {
             this.nodeID = identifierParts[2];
@@ -100,7 +100,7 @@ public class MMRequest extends MMAdminObject implements Request{
 	 * 
 	 * @return long SessionID
 	 */
-	public long getSessionID() {
+	public String getSessionID() {
 		return sessionID;
 	}
 
@@ -167,7 +167,7 @@ public class MMRequest extends MMAdminObject implements Request{
      * @param sessionID The sessionID to set.
      * @since 4.3
      */
-    public void setSessionID(long sessionID) {
+    public void setSessionID(String sessionID) {
         this.sessionID = sessionID;
     }
     /** 

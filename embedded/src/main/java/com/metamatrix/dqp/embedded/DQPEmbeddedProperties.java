@@ -28,10 +28,8 @@ public interface DQPEmbeddedProperties {
 
     public static final String DQP_LOGFILE = "dqp.logFile"; //$NON-NLS-1$
     public static final String DQP_LOGLEVEL = "dqp.logLevel"; //$NON-NLS-1$
-    public static final String DQP_CAPTURE_SYSTEM_PRINTSTREAMS = "dqp.captureSystemStreams"; //$NON-NLS-1$
     public static final String DQP_SERVICE_METADATA = "dqp.service.metadata"; //$NON-NLS-1$
     public static final String DQP_SERVICE_DATA = "dqp.service.data"; //$NON-NLS-1$ 
-    public static final String DQP_CLASSPATH = "dqp.classpath"; //$NON-NLS-1$
     public static final String DQP_EXTENSIONS = "dqp.extensions"; //$NON-NLS-1$
     public static final String DQP_CONFIGFILE = "dqp.configFile"; //$NON-NLS-1$
     public static final String DQP_METADATA_SYSTEMURL = "dqp.metadata.systemURL"; //$NON-NLS-1$    

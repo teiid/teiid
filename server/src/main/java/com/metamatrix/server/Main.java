@@ -23,7 +23,6 @@
 package com.metamatrix.server;
 
 import java.io.File;
-import java.util.Properties;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -32,23 +31,15 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.log.DbLogListener;
-import com.metamatrix.common.log.DbWriterException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
-import com.metamatrix.internal.core.log.PlatformLog;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.config.ConfigurationChangeListener;
-import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
-import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.util.VMUtils;
 
 /**
  * This is main server starter class.
@@ -60,6 +51,9 @@ public class Main {
 	
 	@Inject
 	VMControllerInterface vmController;
+	
+	@Inject
+	LogListener logListener;
 	
 	public static void main(String[] args) throws Exception{
         
@@ -90,10 +84,7 @@ public class Main {
 		
         // write info log
         writeInfoLog(host, vmName);
-        
-        // Start the log file
-        VMUtils.startLogFile(host.getLogDirectory(), buildPrefix(host.getName(), vmName) +  ".log"); //$NON-NLS-1$
-        
+                
         createTempDirectory();                    
         
         // wire up guice modules
@@ -116,23 +107,17 @@ public class Main {
 	private void launchServer() {
         
         try {          
-            DbLogListener dbListener = startDbLogging();
-            ConfigurationChangeListener configListener = new ConfigurationChangeListener(dbListener);
-            this.messageBus.addListener(ConfigurationChangeEvent.class, configListener);
-        	
+            Runtime.getRuntime().addShutdownHook(new ShutdownWork());
+            
             // start the VM
             this.vmController.startVM();
             
-            while(!this.vmController.isShuttingDown()) {
-            	Thread.sleep(1000);
-            }
+            synchronized (this.vmController) {
+                while(!this.vmController.isShuttingDown()) {
+                	this.vmController.wait(1000);
+                }
+			}
             
-            configListener.shutdown();
-            
-            this.messageBus.shutdown();
-
-            // shutdown cache
-            ResourceFinder.getCacheFactory().destroy();
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -159,25 +144,33 @@ public class Main {
 	    String hostFileName = StringUtil.replaceAll(hostName, ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
 	    return hostFileName + "_" + vmName; //$NON-NLS-1$
 	}   
-	
-    private static DbLogListener startDbLogging() throws Exception, DbWriterException {
-        Properties currentProps = CurrentConfiguration.getInstance().getProperties();
-        Properties resultsProps = PropertiesUtils.clone(currentProps, null, true, false);
-        
-        // write a db log listener
-        DbLogListener dll = new DbLogListener(resultsProps);
-        
-        // start the logger
-        PlatformLog.getInstance().addListener(dll);
-        LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString(LogMessageKeys.VM_0052));
-        
-        return dll;
-    }
-	
+
 
     private static void writeInfoLog(Host host, String vmName) {
         // trigger the logging of the current application info to a log file for debugging        
         LogApplicationInfo logApplInfo = new LogApplicationInfo(host.getFullName(), vmName, host.getLogDirectory(), buildPrefix(host.getFullName(), vmName) + "_info.log"); //$NON-NLS-1$
         logApplInfo.start();        	
+    }
+    
+    /**
+     * All work to be done during shutdown
+     */
+    class ShutdownWork extends Thread {
+
+		@Override
+		public void run() {
+
+			try {
+				messageBus.shutdown();
+			} catch (MessagingException e) {
+				e.printStackTrace();
+			}
+            
+			// shutdown cache
+            ResourceFinder.getCacheFactory().destroy();
+     
+            // shutdown logging
+            logListener.shutdown();
+		}
     }
 }

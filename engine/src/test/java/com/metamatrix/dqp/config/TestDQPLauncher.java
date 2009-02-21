@@ -66,7 +66,7 @@ public class TestDQPLauncher extends TestCase {
         DQPCore dqpCore = new DQPCore();
         dqpCore.start(configSource);
     	
-        PlatformLog log = PlatformLog.getInstance();
+        PlatformLog log = new PlatformLog();
     	List<LogListener> list = log.getLogListeners();
     	for(LogListener l: list) {
     		log.removeListener(l);

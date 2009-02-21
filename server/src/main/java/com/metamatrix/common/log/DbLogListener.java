@@ -42,7 +42,7 @@ public class DbLogListener implements LogListener {
 	/**
 	 * Listen for log messages and write them to a database.
 	 */
-	public DbLogListener(Properties prop) throws DbWriterException {
+	public DbLogListener(Properties prop){
 		if (prop == null) {
 			final String msg = CommonPlugin.Util.getString("DbLogListener.The_Properties_reference_may_not_be_null");  //$NON-NLS-1$
 			throw new IllegalArgumentException(msg);
@@ -50,12 +50,8 @@ public class DbLogListener implements LogListener {
         writer = new DbLogWriter(prop);
         writer.initialize();
         enabled = PropertiesUtils.getBooleanProperty(prop, LOG_DB_ENABLED, true);
-
 	}
 
-    protected void init(Properties props) throws DbWriterException {
-
-    }
 
     public void logMessage(LogMessage msg) {
         
@@ -64,9 +60,6 @@ public class DbLogListener implements LogListener {
         }
 	}
 
-	/* (non-Javadoc)
-	 * @see com.metamatrix.core.log.LogListener#shutdown()
-	 */
 	public void shutdown() {
 		writer.shutdown();
 	}
@@ -77,7 +70,7 @@ public class DbLogListener implements LogListener {
 
     }
     
-    public void enableDBLogging(boolean enable) {
+    void enableDBLogging(boolean enable) {
         enabled = enable;
     }
 

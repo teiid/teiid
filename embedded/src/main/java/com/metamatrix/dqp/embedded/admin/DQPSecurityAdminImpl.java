@@ -23,7 +23,7 @@
 package com.metamatrix.dqp.embedded.admin;
 
 import com.metamatrix.admin.api.embedded.EmbeddedSecurityAdmin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
+import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
 
 /** 
@@ -31,7 +31,7 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedManager;
  */
 public class DQPSecurityAdminImpl  extends BaseAdmin implements EmbeddedSecurityAdmin {
 
-    public DQPSecurityAdminImpl(DQPEmbeddedManager manager) {
+    public DQPSecurityAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 }

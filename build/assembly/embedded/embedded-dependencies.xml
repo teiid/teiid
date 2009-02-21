@@ -45,7 +45,6 @@
                 <!-- these should have been excluded by module dependency structure, but until we fix those this will help-->
                 <exclude>antlr*</exclude>
                 <exclude>bsh*</exclude>
-                <exclude>jgroups*</exclude>
                 <exclude>netty*</exclude>
                 <exclude>stringtemplate*</exclude>
               </excludes>              

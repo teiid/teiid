@@ -33,8 +33,12 @@ import com.metamatrix.cache.jboss.JBossCacheFactory;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.log.LogConfiguration;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.VMMessageBus;
+import com.metamatrix.core.log.LogListener;
+import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostMonitor;
 
@@ -70,6 +74,14 @@ class HostControllerGuiceModule extends AbstractModule {
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
 		bind(HostMonitor.class).in(Scopes.SINGLETON);
+		
+		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
+		
+        String logFileName = StringUtil.replaceAll(host.getFullName(), ".", "_")+"_hc.log"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		bind(LogListener.class).toProvider(new ServerLogListernerProvider(host.getLogDirectory(), logFileName, false)).in(Scopes.SINGLETON);  
+
+		// this needs to be removed.
+		binder().requestStaticInjection(LogManager.class);		
 	}
 
 }

@@ -41,12 +41,6 @@ public interface EmbeddedConnectionFactory {
     public Connection createConnection(Properties properties) throws SQLException;  
     
     /**
-     * Register a Connection lifecycle listener to the this DQP instance  
-     * @param listener a listerner for connection related events.
-     */
-    public void registerConnectionListener(ConnectionListener listener);
-    
-    /**
      * Shutdown the connection factory, including the DQP and all its existing connections 
      */
     public void shutdown() throws SQLException;

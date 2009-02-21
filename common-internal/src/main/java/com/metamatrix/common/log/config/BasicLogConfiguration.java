@@ -39,7 +39,7 @@ import com.metamatrix.core.log.MessageLevel;
  * LogConfiguration, plus static utility methods for converting a
  * LogConfiguration object to and from a Properties object representation.
  */
-public class BasicLogConfiguration implements LogConfiguration, Serializable {
+public class BasicLogConfiguration implements LogConfiguration, Serializable, Cloneable  {
 
     //************************************************************
     // static constants, members, methods
@@ -216,13 +216,12 @@ public class BasicLogConfiguration implements LogConfiguration, Serializable {
         this.unmodifiableContexts = Collections.unmodifiableSet(this.discardedContexts);
     }
 
-    public boolean isContextDiscarded( String context ) {
-		boolean discarded = ((context != null) && 
-    			this.discardedContexts.contains(context));
+    boolean isContextDiscarded( String context ) {
+		boolean discarded = ((context != null) && this.discardedContexts.contains(context));
     	return discarded;
     }
 
-    public boolean isLevelDiscarded( int level ) {
+    boolean isLevelDiscarded( int level ) {
         return ( level > msgLevel );
     }
 
@@ -406,4 +405,19 @@ public class BasicLogConfiguration implements LogConfiguration, Serializable {
     public void setMessageLevel(int level) {
 		this.msgLevel = level;
     }
+
+    
+	@Override
+	public boolean isMessageToBeRecorded(String context, int msgLevel) {
+    	if ( context == null ) {
+            return false;
+        }
+                
+        // If the messsage's level is greater than the logging level,
+        // then the message should NOT be recorded ...
+        if ( getMessageLevel() == MessageLevel.NONE || msgLevel <= MessageLevel.NONE || isLevelDiscarded( msgLevel ) || isContextDiscarded( context )) {
+            return false;
+        }
+        return true;	
+	}
 }

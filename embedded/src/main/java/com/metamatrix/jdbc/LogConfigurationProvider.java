@@ -19,46 +19,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
 package com.metamatrix.jdbc;
 
-import java.util.Properties;
-
-import org.jboss.cache.Cache;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.metamatrix.cache.CacheFactory;
-import com.metamatrix.cache.jboss.JBossCacheFactory;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.LogListener;
-import com.metamatrix.dqp.embedded.EmbeddedConfigSource;
+import com.metamatrix.common.log.config.BasicLogConfiguration;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
-public class EmbeddedGuiceModule extends AbstractModule {
-	
-	private Properties props;
-	
-	public EmbeddedGuiceModule(Properties props) {
-		this.props = props;
-	}
-	
+@Singleton
+class LogConfigurationProvider implements Provider<LogConfiguration> {
+
+	@Inject
+	DQPConfigSource configSource;
+		
 	@Override
-	protected void configure() {
-				
-		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
-		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
-		bind(DQPConfigSource.class).toInstance(new EmbeddedConfigSource(this.props));
-		
-		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
-		bind(LogListener.class).toProvider(LogListernerProvider.class).in(Scopes.SINGLETON);  
-
-		
-		// this needs to be removed.
-		binder().requestStaticInjection(LogManager.class);
+	public LogConfiguration get() {
+        String logLevel = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
+        int level = 0;
+        if(logLevel != null && logLevel.trim().length() > 0) {
+            try {
+                level = Integer.parseInt(logLevel);                        
+            } catch(NumberFormatException e) {
+                throw new MetaMatrixRuntimeException(DQPEmbeddedPlugin.Util.getString("DQPComponent.Unable_to_parse_level") + logLevel);      //$NON-NLS-1$
+            }            
+        }
+        return new BasicLogConfiguration(level);
 	}
-	
-    
-}
 
+}

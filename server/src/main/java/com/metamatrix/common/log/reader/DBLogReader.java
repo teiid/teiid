@@ -38,15 +38,9 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
-import com.metamatrix.common.config.ResourceNames;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.connection.ManagedConnectionException;
-import com.metamatrix.common.jdbc.JDBCUtil;
-import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.util.DateUtil;
 
 
@@ -58,7 +52,7 @@ public class DBLogReader implements LogReader {
      * The name of the System property that contains the name of the LogMessageFormat
      * class that is used to format messages sent to the file destination.
      * This is an optional property; if not specified and the file destination
-     * is used, then the {@link com.metamatrix.common.logging.format.DelimitedLogMessageFormat DelimitedLogMessageFormat}
+     * is used
      * is used.
      */
     static final String PROPERTY_PREFIX    = "metamatrix.log."; //$NON-NLS-1$

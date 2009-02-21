@@ -28,6 +28,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
@@ -46,6 +47,13 @@ public class TestLogManager extends TestCase {
         super(name);
     }
     
+	@Override
+	protected void setUp() throws Exception {
+    	LogManager.configuration = new BasicLogConfiguration();
+    	LogManager.logListener = new PlatformLog();
+		
+	}    
+    
     // =========================================================================
     //                         T E S T     C A S E S
     // =========================================================================
@@ -55,26 +63,26 @@ public class TestLogManager extends TestCase {
      */
     public void testIsMessageToBeRecordedStringI() {
     	String context = "SomeContext"; //$NON-NLS-1$
-    	LogManager manager = new LogManager(null);
-    	assertTrue(manager.isLoggingEnabled(context, MessageLevel.CRITICAL) ); 
-    	LogConfiguration cfg = LogManager.getInstance().getConfigurationCopy();
+    	
+    	assertTrue(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) ); 
+    	
+    	LogConfiguration cfg = LogManager.getLogConfigurationCopy();
         cfg.discardContext(context);
-        manager.setConfiguration(cfg);
-        assertFalse(manager.isLoggingEnabled(context, MessageLevel.CRITICAL) );
+        LogManager.setLogConfiguration(cfg);
+        assertFalse(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) );
     }
 
     /**
      * Test that all msgs logged are equal and output in same order.
      */
     public void testLogMessage() throws Exception {
-    	PlatformLog log = new PlatformLog();
-    	LogManager manager = new LogManager(log);
-        LogConfiguration cfg = manager.getConfigurationCopy();
+    	
+        LogConfiguration cfg = LogManager.getLogConfigurationCopy();
         cfg.setMessageLevel( MessageLevel.INFO );
-        manager.setConfiguration(cfg);
-        
+        LogManager.setLogConfiguration(cfg);
+         
         ListLogger listener = new ListLogger(6);
-        log.addListener(listener);
+        LogManager.logListener = listener;
 
         List<String> sentMsgList = new ArrayList<String>();
         sentMsgList.add("A message 1"); //$NON-NLS-1$
@@ -86,12 +94,11 @@ public class TestLogManager extends TestCase {
 
         for (Iterator iter = sentMsgList.iterator(); iter.hasNext();) {
             String msg = (String) iter.next();
-            manager.logMessage(MessageLevel.INFO, "SomeContext", msg); //$NON-NLS-1$
+            LogManager.logInfo("SomeContext", msg); //$NON-NLS-1$
         }
         
         List recevedMsgList = listener.getLoggedMessages();
         assertEquals(sentMsgList, recevedMsgList);
-        log.shutdown();
     }
 
     /**
@@ -138,5 +145,7 @@ public class TestLogManager extends TestCase {
         }
 
     }
+
+
 
 }
