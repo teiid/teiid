@@ -176,6 +176,46 @@ public class TestMMFileURLHandler extends TestCase {
         
         foo.delete();
     }
+    
+    public void testSort() throws Exception {
+        String tmpDir = System.getProperty("java.io.tmpdir"); //$NON-NLS-1$
+        File f = new File(tmpDir+File.separator+"x"); //$NON-NLS-1$
+        f.mkdirs();
+        
+        File a = new File(tmpDir+File.separator+"/x/a.txt"); //$NON-NLS-1$
+        File z = new File(tmpDir+File.separator+"/x/z.txt"); //$NON-NLS-1$
+        
+        // Create File using the File
+        createFile(a);
+        createFile(z);
+        
+        assertTrue(a.exists());
+        assertTrue(z.exists());
+                
+        URL fooURL = URLHelper.buildURL(f.getAbsolutePath()+"/?action=list&filter=.txt&sort=alpha"); //$NON-NLS-1$
+        assertTrue(fooURL.toString().startsWith("mmfile:")); //$NON-NLS-1$
+        assertTrue(fooURL.toString().endsWith("?action=list&filter=.txt&sort=alpha")); //$NON-NLS-1$
+                
+        ObjectInputStream in = new ObjectInputStream(fooURL.openStream());
+        String[] list = (String[])in.readObject();
+        in.close();
+        
+        String[] expected = {"a.txt", "z.txt"}; //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertTrue(list[0].endsWith(expected[0]));
+        assertTrue(list[1].endsWith(expected[1]));
+        
+        fooURL = URLHelper.buildURL(f.getAbsolutePath()+"/?action=list&filter=.txt&sort=reversealpha"); //$NON-NLS-1$
+        in = new ObjectInputStream(fooURL.openStream());
+        list = (String[])in.readObject();
+        in.close();
+        
+        assertTrue(list[0].endsWith(expected[1]));
+        assertTrue(list[1].endsWith(expected[0]));
+        
+        a.delete();
+        z.delete();
+    }    
 
     public void testDelete() throws Exception {
 
