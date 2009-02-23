@@ -22,15 +22,11 @@
 
 package com.metamatrix.server;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.EventObject;
 import java.util.Properties;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
@@ -49,62 +45,52 @@ import com.metamatrix.internal.core.log.PlatformLog;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
 
 @Singleton
-class ServerLogListernerProvider implements Provider<LogListener> {
-
-	String logFile;
-	String path;
-	boolean addDBLogger;
-	DbLogListener dbLogger;
+class ServerLogListernerProvider extends FileLogListenerProvider {
+    public static final String LOG_DB_ENABLED = "metamatrix.log.jdbcDatabase.enabled"; //$NON-NLS-1$
 	
 	@Inject
 	MessageBus messsgeBus;
 	
-	public ServerLogListernerProvider(String path, String fileName, boolean addDbLogger) {
-		this.path = path;
-		this.logFile = fileName;
-		this.addDBLogger = addDbLogger;
-	}
-	
 	@Override
 	public LogListener get() {
         
-		final PlatformLog realLog = new PlatformLog();
+		final PlatformLog log = new PlatformLog();
 
 		try {
 			FileLimitSizeLogWriter flw = buildFileLogger();		
-			realLog.addListener(flw);
+			log.addListener(flw);
 			
 		} catch (FileNotFoundException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
 				
-		if (this.addDBLogger) {
-			this.dbLogger = buildDBLogger();
-			realLog.addListener(this.dbLogger);	
-	        
-			try {
-				
-				this.messsgeBus.addListener(ConfigurationChangeEvent.class, new EventObjectListener() {
-				
-					public void processEvent(EventObject obj) {
+		final DbLogListener dbLogger = buildDBLogger();
+		log.addListener(dbLogger);	
+        
+		try {
+			
+			this.messsgeBus.addListener(ConfigurationChangeEvent.class, new EventObjectListener() {
+			
+				public void processEvent(EventObject obj) {
+					if(obj instanceof ConfigurationChangeEvent){
 						if(obj instanceof ConfigurationChangeEvent){
-							if(obj instanceof ConfigurationChangeEvent){
-								try {
-									Configuration currentConfig = CurrentConfiguration.getInstance().getConfiguration();
-									dbLogger.determineIfEnabled(currentConfig.getProperties());
-								} catch( ConfigurationException ce ) {
-									LogManager.logError(LogContextsUtil.CommonConstants.CTX_MESSAGE_BUS, ce, ce.getMessage());
-								}
+							try {
+								Configuration currentConfig = CurrentConfiguration.getInstance().getConfiguration();
+								Properties props = currentConfig.getProperties();
+								boolean enabled = PropertiesUtils.getBooleanProperty(props, LOG_DB_ENABLED, true);
+								dbLogger.enableDBLogging(enabled);
+							} catch( ConfigurationException ce ) {
+								LogManager.logError(LogContextsUtil.CommonConstants.CTX_MESSAGE_BUS, ce, ce.getMessage());
 							}
 						}
-					}					
-				});
-				
-			} catch (MessagingException e) {
-				throw new MetaMatrixRuntimeException(e);
-			}	
-		}
-		return realLog;
+					}
+				}					
+			});
+			
+		} catch (MessagingException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}	
+		return log;
 	}
 
 	private DbLogListener buildDBLogger() {
@@ -112,38 +98,5 @@ class ServerLogListernerProvider implements Provider<LogListener> {
 		Properties resultsProps = PropertiesUtils.clone(currentProps, null, true, false);
 		return new DbLogListener(resultsProps);
 	}
-
-	private FileLimitSizeLogWriter buildFileLogger()
-			throws FileNotFoundException {
-		File tmpFile = new File(path, logFile);
-		tmpFile.getParentFile().mkdirs();
-
-		// if log file exists then create a archive
-		if (tmpFile.exists()) {
-			int index = logFile.lastIndexOf("."); //$NON-NLS-1$
-			String archiveName = FileLimitSizeLogWriter.buildArchiveFileName(logFile.substring(0, index), logFile.substring(index));
-			tmpFile.renameTo(new File(path, archiveName));
-		}
-
-		FileOutputStream fos = new FileOutputStream(tmpFile);
-		PrintStream ps = new PrintStream(fos);
-
-		System.setOut(ps);
-		System.setErr(ps);
-
-		Properties logProps = new Properties();
-		Properties configProps = CurrentConfiguration.getInstance().getProperties();
-		if (configProps.containsKey(FileLimitSizeLogWriter.FILE_SIZE_LIMIT)) {
-			logProps.setProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT,configProps.getProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT));
-		}
-		if (configProps.containsKey(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME)) {
-			logProps.setProperty(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME,configProps.getProperty(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME));
-		}
-
-		FileLimitSizeLogWriter flw = new FileLimitSizeLogWriter(tmpFile,logProps, false);
-		return flw;
-	}
-
-	
 	
 }

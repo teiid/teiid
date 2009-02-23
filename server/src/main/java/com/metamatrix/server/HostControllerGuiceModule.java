@@ -64,6 +64,9 @@ class HostControllerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
+		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_hc.log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
+		
 				
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
@@ -77,8 +80,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		
 		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
 		
-        String logFileName = StringUtil.replaceAll(host.getFullName(), ".", "_")+"_hc.log"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		bind(LogListener.class).toProvider(new ServerLogListernerProvider(host.getLogDirectory(), logFileName, false)).in(Scopes.SINGLETON);  
+		bind(LogListener.class).toProvider(FileLogListenerProvider.class).in(Scopes.SINGLETON);  
 
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);		

@@ -55,44 +55,49 @@ public class Main {
 	@Inject
 	LogListener logListener;
 	
-	public static void main(String[] args) throws Exception{
+	public static void main(String[] args) {
         
-		if (args.length < 2 || args.length > 4) {
-            System.out.println("Usage: java com.metamatrix.server.Main <vm_name> <host_name>"); //$NON-NLS-1$
-            System.exit(1);        	
-        }
+		try {
+			if (args.length < 2 || args.length > 4) {
+			    System.out.println("Usage: java com.metamatrix.server.Main <vm_name> <host_name>"); //$NON-NLS-1$
+			    System.exit(1);        	
+			}
 
-        String vmName = args[0];
-        String hostName = args[1];
+			String vmName = args[0];
+			String hostName = args[1];
 
-        Host host = null;
-        try {
-			host = CurrentConfiguration.getInstance().getHost(hostName);        
-		} catch (ConfigurationException e) {
-		}
-		
-		if (host == null) {
-		    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5", hostName)); //$NON-NLS-1$
-		    System.exit(-1);
-		}
-		
-        VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(hostName, vmName);
-        String bindAddress = deployedVM.getBindAddress();
-		
-		VMNaming.setVMName(vmName);
-		VMNaming.setup(host.getFullName(), host.getHostAddress(), bindAddress);
-		
-        // write info log
-        writeInfoLog(host, vmName);
-                
-        createTempDirectory();                    
-        
-        // wire up guice modules
-        Main main = loadMain(host, vmName);
-        
-        // launch the server
-        
-		main.launchServer();
+			Host host = null;
+			try {
+				host = CurrentConfiguration.getInstance().getHost(hostName);        
+			} catch (ConfigurationException e) {
+			}
+			
+			if (host == null) {
+			    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5", hostName)); //$NON-NLS-1$
+			    System.exit(-1);
+			}
+			
+			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(hostName, vmName);
+			String bindAddress = deployedVM.getBindAddress();
+			
+			VMNaming.setVMName(vmName);
+			VMNaming.setup(host.getFullName(), host.getHostAddress(), bindAddress);
+			
+			// write info log
+			writeInfoLog(host, vmName);
+			        
+			createTempDirectory();                    
+			
+			// wire up guice modules
+			Main main = loadMain(host, vmName);
+			
+			// launch the server
+			
+			main.launchServer();
+		} catch (Throwable e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		} 
 	}
 	
 	

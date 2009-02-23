@@ -83,6 +83,8 @@ class ServerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.VMID)).to(vmID);
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
+		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
 				
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
@@ -101,13 +103,9 @@ class ServerGuiceModule extends AbstractModule {
 		// this needs to be removed.
 		binder().requestStaticInjection(PlatformProxyHelper.class);
 		
+        // Start the log file
 		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
 		bind(LogListener.class).toProvider(ServerLogListernerProvider.class).in(Scopes.SINGLETON);  
-
-        // Start the log file
-        String logFileName = StringUtil.replaceAll(host.getFullName(), ".", "_")+".log"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		bind(LogListener.class).toProvider(new ServerLogListernerProvider(host.getLogDirectory(), logFileName, true)).in(Scopes.SINGLETON);  
-
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);
