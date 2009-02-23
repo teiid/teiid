@@ -25,7 +25,6 @@ package com.metamatrix.common.log;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 
@@ -34,27 +33,23 @@ import com.metamatrix.core.log.LogMessage;
  */
 public class DbLogListener implements LogListener {
 
-    public static final String LOG_DB_ENABLED = "metamatrix.log.jdbcDatabase.enabled"; //$NON-NLS-1$
-
 	private DbLogWriter writer = null;
     private boolean enabled = true;
 
 	/**
 	 * Listen for log messages and write them to a database.
 	 */
-	public DbLogListener(Properties prop){
+	public DbLogListener(Properties prop, boolean enable){
 		if (prop == null) {
 			final String msg = CommonPlugin.Util.getString("DbLogListener.The_Properties_reference_may_not_be_null");  //$NON-NLS-1$
 			throw new IllegalArgumentException(msg);
 		}
         writer = new DbLogWriter(prop);
         writer.initialize();
-        enabled = PropertiesUtils.getBooleanProperty(prop, LOG_DB_ENABLED, true);
+        this.enabled = enable;
 	}
 
-
     public void logMessage(LogMessage msg) {
-        
         if (enabled) {
             writer.logMessage(msg);
         }
@@ -63,15 +58,8 @@ public class DbLogListener implements LogListener {
 	public void shutdown() {
 		writer.shutdown();
 	}
-    
-    public void determineIfEnabled(Properties props) {
-        boolean isenabled = PropertiesUtils.getBooleanProperty(props, LOG_DB_ENABLED, true);
-        enableDBLogging(isenabled);
 
-    }
-    
-    void enableDBLogging(boolean enable) {
+    public void enableDBLogging(boolean enable) {
         enabled = enable;
     }
-
 }

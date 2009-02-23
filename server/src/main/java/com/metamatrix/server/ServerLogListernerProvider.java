@@ -96,7 +96,8 @@ class ServerLogListernerProvider extends FileLogListenerProvider {
 	private DbLogListener buildDBLogger() {
 		Properties currentProps = CurrentConfiguration.getInstance().getProperties();
 		Properties resultsProps = PropertiesUtils.clone(currentProps, null, true, false);
-		return new DbLogListener(resultsProps);
+		boolean enabled = PropertiesUtils.getBooleanProperty(resultsProps, LOG_DB_ENABLED, true);
+		return new DbLogListener(resultsProps, enabled);
 	}
 	
 }
