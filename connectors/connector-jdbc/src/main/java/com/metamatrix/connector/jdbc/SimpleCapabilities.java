@@ -344,13 +344,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
         return null;
     }
 
-    /*
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsXATransactions()
-     */
-    public boolean supportsXATransactions() {
-        return false;
-    }
-
     public boolean supportsInlineViews() {
         return false;
     }       

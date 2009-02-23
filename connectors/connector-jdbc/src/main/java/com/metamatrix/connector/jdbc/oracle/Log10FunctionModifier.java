@@ -22,8 +22,8 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
-import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.*;
 
 public class Log10FunctionModifier extends BasicFunctionModifier implements FunctionModifier {

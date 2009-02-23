@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.extension.impl;
+package com.metamatrix.connector.jdbc.translator;
 
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
@@ -40,7 +40,7 @@ public class SubstringFunctionModifier extends BasicFunctionModifier {
     }
 
     /**
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.query.sql.symbol.Function)
+     * @see com.metamatrix.connector.jdbc.translator.FunctionModifier#modify(com.metamatrix.query.sql.symbol.Function)
      */
     public IExpression modify(IFunction function) {
         IExpression[] args = function.getParameters();

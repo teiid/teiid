@@ -22,7 +22,7 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.extension;
+package com.metamatrix.connector.jdbc.translator;
 
 import java.util.List;
 import java.util.Map;
@@ -50,13 +50,13 @@ public class TranslatedCommand {
     private SQLConversionVisitor sqlConversionVisitor;
     private FunctionReplacementVisitor functionVisitor;
     private ExecutionContext context;
-    private SQLTranslator sqlTranslator;
+    private Translator sqlTranslator;
     
     /**
      * Constructor, takes a SQLConversionVisitor subclass 
      * @param visitor a SQLConversionVisitor subclass 
      */
-    public TranslatedCommand(ExecutionContext context, SQLTranslator sqlTranslator){
+    public TranslatedCommand(ExecutionContext context, Translator sqlTranslator){
     	this.context = context;
     	this.sqlTranslator = sqlTranslator;
     	
@@ -66,7 +66,7 @@ public class TranslatedCommand {
         this.functionVisitor = new FunctionReplacementVisitor(modifiers);
     }
     
-    public TranslatedCommand(ExecutionContext context, SQLTranslator sqlTranslator, SQLConversionVisitor sqlConversionVisitor, FunctionReplacementVisitor functionVisitor) {
+    public TranslatedCommand(ExecutionContext context, Translator sqlTranslator, SQLConversionVisitor sqlConversionVisitor, FunctionReplacementVisitor functionVisitor) {
     	this.context = context;
     	this.sqlTranslator = sqlTranslator;
     	this.sqlConversionVisitor = sqlConversionVisitor;

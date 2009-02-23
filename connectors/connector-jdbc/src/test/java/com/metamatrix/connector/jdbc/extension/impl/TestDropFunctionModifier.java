@@ -25,6 +25,7 @@ package com.metamatrix.connector.jdbc.extension.impl;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
+import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILiteral;

@@ -22,17 +22,15 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.extension;
+package com.metamatrix.connector.jdbc.translator;
 
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
@@ -57,7 +55,7 @@ import com.metamatrix.connector.visitor.util.SQLStringVisitor;
  * This visitor takes an ICommand and does DBMS-specific conversion on it
  * to produce a SQL String.  This class is expected to be subclassed.
  * Specialized instances of this class can be gotten from a SQL Translator
- * {@link SQLTranslator#getTranslationVisitor(RuntimeMetadata) using this method}.
+ * {@link Translator#getTranslationVisitor(RuntimeMetadata) using this method}.
  */
 public class SQLConversionVisitor extends SQLStringVisitor{
 
@@ -68,22 +66,17 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     private Map<String, FunctionModifier> modifiers;
     private ExecutionContext context;
-    private SQLTranslator translator;
-    private Calendar cal;
+    private Translator translator;
 
     private boolean prepared;
     
     private List preparedValues = new ArrayList();
     private List preparedTypes = new ArrayList();
     
-    public SQLConversionVisitor(SQLTranslator translator) {
+    public SQLConversionVisitor(Translator translator) {
         this.translator = translator;
         this.prepared = translator.usePreparedStatements();
         this.modifiers = translator.getFunctionModifiers();
-        TimeZone tz = translator.getDatabaseTimeZone();
-        if (tz != null) {
-        	this.cal = Calendar.getInstance(tz);
-        }
     }
 
     public void visit(IBulkInsert obj) {
@@ -133,11 +126,11 @@ public class SQLConversionVisitor extends SQLStringVisitor{
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN)) {
                 valuesbuffer.append(translator.translateLiteralBoolean((Boolean)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
-                valuesbuffer.append(translator.translateLiteralTimestamp((Timestamp)obj, cal));
+                valuesbuffer.append(translator.translateLiteralTimestamp((Timestamp)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-                valuesbuffer.append(translator.translateLiteralTime((Time)obj, cal));
+                valuesbuffer.append(translator.translateLiteralTime((Time)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
-                valuesbuffer.append(translator.translateLiteralDate((java.sql.Date)obj, cal));
+                valuesbuffer.append(translator.translateLiteralDate((java.sql.Date)obj));
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 

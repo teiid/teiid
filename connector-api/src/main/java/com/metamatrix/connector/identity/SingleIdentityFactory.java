@@ -20,30 +20,17 @@
  * 02110-1301 USA.
  */
 
-/*
- * Created on Mar 20, 2004 To change the template for this generated file go to Window&gt;Preferences&gt;Java&gt;Code
- * Generation&gt;Code and Comments
- */
-package com.metamatrix.connector.jdbc.oracle.spatial;
+package com.metamatrix.connector.identity;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator;
-
-public class OracleSpatialResultsTranslator extends OracleResultsTranslator {
-
-    private List translators;
-
-    public OracleSpatialResultsTranslator() {
-        ArrayList translators = new ArrayList();
-        if (super.getValueTranslators() != null) {
-            translators.addAll(super.getValueTranslators());
-        }
-    }
-
-    public List getValueTranslators() {
-        return translators;
-    }
-
+public class SingleIdentityFactory implements ConnectorIdentityFactory {
+	
+	@Override
+	public ConnectorIdentity createIdentity(ExecutionContext context)
+			throws ConnectorException {
+		return new SingleIdentity();
+	}
+	
 }

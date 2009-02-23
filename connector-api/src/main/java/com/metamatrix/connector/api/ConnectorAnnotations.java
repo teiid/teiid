@@ -27,8 +27,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.metamatrix.connector.identity.ConnectorIdentityFactory;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.pool.ConnectorIdentityFactory;
 
 public class ConnectorAnnotations {
 	

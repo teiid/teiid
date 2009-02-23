@@ -20,28 +20,57 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.pool;
+package com.metamatrix.connector.identity;
 
 import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
 
 /**
- * Segregates connections by user.  It is assumed that no single identity
- * exists.
- * 
- * If multiple users use the same credentials, consider using a more specific
- * form of connector identity to prevent pool fragmentation. 
+ * Segregates connections by user determined by the CredentialMap.  
  */
 public class UserIdentityFactory implements ConnectorIdentityFactory {
 
+	private boolean useCredentialMap;
+	private boolean adminConnectionsAllowed = true;
+	private String connectorName;
+	
 	@Override
 	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
 		if (context == null) {
+			if (adminConnectionsAllowed) {
+				return new SingleIdentity();
+			}
 			throw new ConnectorException(DataPlugin.Util.getString("UserIdentityFactory.single_identity_not_supported")); //$NON-NLS-1$
 		}
-		return new UserIdentity(context);
+		Object payload = context.getTrustedPayload();
+		if (!(payload instanceof CredentialMap)) {
+			if (useCredentialMap) {
+				throw new ConnectorException(DataPlugin.Util.getString("UserIdentityFactory.single_identity_not_supported")); //$NON-NLS-1$
+			}
+			return new SingleIdentity();
+		}
+		CredentialMap credMap = (CredentialMap)payload;
+		String user = credMap.getUser(connectorName);
+		String password = credMap.getPassword(connectorName);
+		if (user == null || password == null) {
+			throw new ConnectorException("Payload missing credentials for " + connectorName); //$NON-NLS-1$
+		}
+		return new UserIdentity(context.getUser(), user, password);
+	}
+	
+	public void setConnectorName(String connectorName) {
+		this.connectorName = connectorName;
+	}
+	
+	public void setUseCredentialMap(boolean useCredentialMap) {
+		this.useCredentialMap = useCredentialMap;
+	}
+	
+	public void setAdminConnectionsAllowed(boolean adminConnectionsAllowed) {
+		this.adminConnectionsAllowed = adminConnectionsAllowed;
 	}
 	
 }

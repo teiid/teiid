@@ -25,17 +25,20 @@ package com.metamatrix.connector.jdbc.userpool;
 import java.io.Serializable;
 import java.util.Properties;
 
-import junit.framework.TestCase;
+import javax.sql.DataSource;
 
 import org.mockito.Mockito;
 
+import junit.framework.TestCase;
+
+import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import com.metamatrix.connector.jdbc.JDBCConnector;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
-import com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**
@@ -50,10 +53,12 @@ public class TestPerUserPool extends TestCase {
     
     public void testWrongCredentials() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
-        factory.initialize(env);
-        ExecutionContext ctx = createSecurityContext("pw1", false, factory); //$NON-NLS-1$
+        JDBCConnector factory = new JDBCConnector();
+        factory.setUseCredentialMap(true);
+        factory.setAdminConnectionsAllowed(false);
+        factory.start(env);
         try {
+            ExecutionContext ctx = createSecurityContext("pw1", false, factory); //$NON-NLS-1$
 			factory.getConnection(ctx);
 			fail("expected failure"); //$NON-NLS-1$
 		} catch (ConnectorException e) {
@@ -63,20 +68,14 @@ public class TestPerUserPool extends TestCase {
     
     private ConnectorEnvironment initConnectorEnvironment() throws Exception {
         final Properties connProps = new Properties();
-        connProps.put(JDBCPropertyNames.DRIVER_CLASS, "com.metamatrix.jdbc.oracle.OracleDriver"); //$NON-NLS-1$
+        connProps.put(JDBCPropertyNames.CONNECTION_SOURCE_CLASS, "com.metamatrix.jdbc.oracle.OracleDriver"); //$NON-NLS-1$
         connProps.put(JDBCPropertyNames.URL, TEST_URL); 
         connProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "oracle system"); //$NON-NLS-1$
         connProps.put(JDBCPropertyNames.EXT_CAPABILITY_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleCapabilities"); //$NON-NLS-1$
-        connProps.put(JDBCPropertyNames.EXT_CONNECTION_FACTORY_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleUserIdentityConnectionFactory"); //$NON-NLS-1$
-        connProps.put(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator"); //$NON-NLS-1$
-        connProps.put(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, "com.metamatrix.connector.jdbc.oracle.OracleResultsTranslator"); //$NON-NLS-1$
-        ConnectorEnvironment env = Mockito.mock(ConnectorEnvironment.class);
-        Mockito.stub(env.getConnectorName()).toReturn("oracle system"); //$NON-NLS-1$
-        Mockito.stub(env.getProperties()).toReturn(connProps);
-        return env;
+        return EnvironmentUtility.createEnvironment(connProps, false);
     }
     
-    private ExecutionContext createSecurityContext(String credentialsStr, boolean useMap, JDBCSourceConnectionFactory factory) throws Exception {
+    private ExecutionContext createSecurityContext(String credentialsStr, boolean useMap, JDBCConnector factory) throws Exception {
         Serializable credentials = credentialsStr;
     	if (useMap) {
     		credentials = CredentialMap.parseCredentials(credentialsStr);
@@ -90,28 +89,37 @@ public class TestPerUserPool extends TestCase {
     
     public void testCredentialMapInSessionPayload() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
-        factory.initialize(env);
+        JDBCConnector factory = new JDBCConnector() {
+        	@Override
+        	public DataSource getDataSource() {
+        		return Mockito.mock(DataSource.class);
+        	}
+        };
+        factory.setUseCredentialMap(true);
+        factory.setAdminConnectionsAllowed(false);
+        factory.setConnectorName("oracle system");
+        factory.start(env);
         
         ExecutionContext ctx = createSecurityContext("(system=oracle system,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
-        MockSourceConnection conn = (MockSourceConnection)factory.getConnection(ctx);
-        assertEquals("bqt2", conn.getUser()); //$NON-NLS-1$
-        assertEquals("mm", conn.getPassword()); //$NON-NLS-1$
+        factory.getConnection(ctx);
     }
     
     public void testCredentialMapMissingSystem() throws Exception {
         ConnectorEnvironment env = initConnectorEnvironment();
-        JDBCSourceConnectionFactory factory = new MockExampleConnectionFactory();
-        factory.initialize(env);
+        JDBCConnector factory = new JDBCConnector();
+        factory.setUseCredentialMap(true);
+        factory.setAdminConnectionsAllowed(false);
+        factory.setConnectorName("oracle system");
+        factory.start(env);
 
         // Set system to "x" instead of "oracle system" which will cause no credentials to be found
-        ExecutionContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
         try {
+            ExecutionContext ctx = createSecurityContext("(system=x,user=bqt2,password=mm)", true, factory); //$NON-NLS-1$
             factory.getConnection(ctx);
             fail("Expected exception when creating connection with missing system credentials"); //$NON-NLS-1$
         } catch(Exception e) {
             // expected
-            assertEquals("Required connection property \"user\" missing for system \"oracle system\".", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Payload missing credentials for oracle system", e.getMessage()); //$NON-NLS-1$
         }
     }
 

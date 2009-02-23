@@ -341,7 +341,15 @@ public class FunctionLibrary {
 
         // Invoke the method and return the result
         try {
-            return method.invoke(null, values);
+            Object result = method.invoke(null, values);
+            if (result instanceof String) {
+            	String str = (String)result;
+    			if (str.length() > DataTypeManager.MAX_STRING_LENGTH) {
+    				return str.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+    			}
+    			return result;
+            } 
+            return DataTypeManager.convertToRuntimeType(result);
         } catch(InvocationTargetException e) {
             throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName()));
         } catch(IllegalAccessException e) {

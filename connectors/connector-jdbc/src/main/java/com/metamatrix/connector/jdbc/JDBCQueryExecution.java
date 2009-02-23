@@ -32,10 +32,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
-import java.util.TimeZone;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
@@ -45,9 +43,8 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.ValueTranslator;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQueryCommand;
@@ -63,7 +60,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
     protected ResultSet results;
     protected Class[] columnDataTypes;
-    protected Calendar calendar;
     protected ConnectorEnvironment env;
     protected ICommand command;
 	private boolean[] transformKnown;
@@ -76,22 +72,13 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // ===========================================================================================================================
 
     public JDBCQueryExecution(ICommand command, Connection connection,
-                              SQLTranslator sqlTranslator,
-                              ResultsTranslator resultsTranslator,
+                              Translator sqlTranslator,
                               ConnectorLogger logger,
                               Properties props,
                               ExecutionContext context,
                               ConnectorEnvironment env) {
-        super(connection, sqlTranslator, resultsTranslator, logger, props, context);
+        super(connection, sqlTranslator, logger, props, context);
         this.command = command;
-        TimeZone dbmsTimeZone = resultsTranslator.getDatabaseTimezone();
-
-        if (dbmsTimeZone != null) {
-            calendar = Calendar.getInstance(dbmsTimeZone);
-        } else {
-            calendar = Calendar.getInstance();
-        }
-        
         this.env = env;
     }
     
@@ -111,7 +98,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 results = getStatement().executeQuery(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-                resultsTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
+                sqlTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
                 results = pstatement.executeQuery();
             } 
             addStatementWarnings();
@@ -154,13 +141,13 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
-                    Object value = resultsTranslator.getValueRetriever().retrieveValue(results, i+1, columnDataTypes[i], calendar, env.getTypeFacility());
+                    Object value = sqlTranslator.retrieveValue(results, i+1, columnDataTypes[i]);
                     if(value != null) {
                         // Determine transformation if unknown
                         if(! transformKnown[i]) {
                             Class valueType = value.getClass();
                             if(!columnDataTypes[i].isAssignableFrom(valueType)) {
-                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], resultsTranslator.getValueTranslators(), resultsTranslator.getTypeFacility());
+                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], sqlTranslator.getValueTranslators(), sqlTranslator.getTypeFacility());
                             }
                             transformKnown[i] = true;
                         }

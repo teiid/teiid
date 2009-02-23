@@ -245,8 +245,8 @@ public class ConnectorService extends AbstractService implements ConnectorServic
             String connID = id.getVMControllerID().getID() + "|" + id.getID();         //$NON-NLS-1$
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
-            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, loader);
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getVMName());
+            connectorManager.setClassloader(loader);
             connectorManager.initialize(deMaskedProps);
             return connectorManager;
             
@@ -263,7 +263,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // Decrypt masked properties
         Properties deMaskedProps = decryptMaskedProperties(props);
 
-        String urls = deMaskedProps.getProperty(ConnectorServicePropertyNames.CONNECTOR_CLASS_PATH);
+        String urls = deMaskedProps.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
         
         ClassLoader loader = getCustomClassLoader(urls);
         // Build a Connector manager using the custom class loader and initialize

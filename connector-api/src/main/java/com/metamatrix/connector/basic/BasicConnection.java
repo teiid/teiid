@@ -22,6 +22,7 @@
 
 package com.metamatrix.connector.basic;
 
+import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
@@ -29,12 +30,11 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
+import com.metamatrix.connector.identity.ConnectorIdentity;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  * Provides a default implementation of a {@link PoolAwareConnection} for a Connector
@@ -44,7 +44,7 @@ import com.metamatrix.connector.pool.PoolAwareConnection;
  * {@link #createUpdateExecution(IProcedure, ExecutionContext, RuntimeMetadata)}
  * as necessary.
  */
-public abstract class BasicConnection implements PoolAwareConnection {
+public abstract class BasicConnection implements Connection {
 
 	@Override
 	public Execution createExecution(ICommand command,
@@ -70,26 +70,34 @@ public abstract class BasicConnection implements PoolAwareConnection {
 	public UpdateExecution createUpdateExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
 		throw new ConnectorException("Unsupported Execution");
 	}
-	
+		
 	@Override
 	public boolean isAlive() {
 		return true;
 	}
 	
 	@Override
+	public ConnectorCapabilities getCapabilities() {
+		return null;
+	}
+		
+    /**
+     * Called by the pool to indicate that the connection was returned to the pool.
+     * The actual close call will be made when the pool wants to purge this connection.
+     */	
 	public void closeCalled() {
 		
 	}
 	
-	@Override
+    /**
+     * Called by the pool when an existing connection is leased so that the underlying
+     * Connection may have it's identity switched to a different user.
+     * @param identity
+     * @throws ConnectorException
+     */
 	public void setConnectorIdentity(ConnectorIdentity context)
 			throws ConnectorException {
 		
-	}
-	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return null;
 	}
 	
 }

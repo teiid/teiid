@@ -31,59 +31,13 @@ package com.metamatrix.connector.jdbc.xa;
  */
 public class XAJDBCPropertyNames {
 
-    /**
-     * The environment property used to identify a routing ID.  This value should
-     * be used to locate this particular connector from the DQP.
-     * @since 4.0
-     */
-    public static final String CONNECTOR_ID = "ConnectorID"; //$NON-NLS-1$
-
     /** An XA Transaction-related property. The <code>XADataSource</code>'s unique
      * resource name for the underlying <code>ConnectionPoolDataSource</code> object.
      */
     public static final String DATASOURCE_NAME = "dataSourceName"; //$NON-NLS-1$
 
-    public static final String DATABASE_NAME = "databaseName";//$NON-NLS-1$
-
-    public static final String DESCRIPTION = "description";//$NON-NLS-1$
-
-    public static final String NETWORK_PROTOCOL = "networkProtocol";//$NON-NLS-1$
-
-    public static final String PASSWORD = "password";//$NON-NLS-1$
-
     public static final String PORT_NUMBER = "portNumber";//$NON-NLS-1$
 
-    public static final String ROLE_NAME = "roleName";//$NON-NLS-1$
-
     public static final String SERVER_NAME = "serverName";//$NON-NLS-1$
-
-    public static final String USER = "user";//$NON-NLS-1$
-
-    /** <i>Not</i> a standard DataSource property - only for debugging */
-    public static final String SPYING = "spyAttributes";//$NON-NLS-1$
-
-    /**
-     * Oracle-specific properties
-     */
-    public static class Oracle {
-        public static final String SID = "sid";//$NON-NLS-1$
-    }
-
-    /**
-     * DB2-specific properties
-     */
-    public static class DB2 {
-        public static final String COLLECTIONID = "CollectionID";//$NON-NLS-1$
-        public static final String PACKAGENAME = "PackageName";//$NON-NLS-1$
-    }
-
-    public static final String IS_XA = "isXA";//$NON-NLS-1$
-    
-    /**
-     * If true, the XAConnection obtained from the pool will not be 
-     * returned until the transaction is finished. 
-     */
-    public static final String USE_CONNECTION_EXCLUSIVE = "UseConnectionExclusive"; //$NON-NLS-1$
-
 
 }

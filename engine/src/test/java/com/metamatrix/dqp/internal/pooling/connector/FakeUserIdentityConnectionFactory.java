@@ -26,9 +26,9 @@ package com.metamatrix.dqp.internal.pooling.connector;
 
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.ConnectorIdentityFactory;
-import com.metamatrix.connector.pool.UserIdentity;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.identity.ConnectorIdentityFactory;
+import com.metamatrix.connector.identity.UserIdentity;
 
 /**
  */
@@ -42,7 +42,7 @@ public class FakeUserIdentityConnectionFactory extends FakeSourceConnectionFacto
         	return null;
         }
     	//use user name for now
-        return new UserIdentity(context);
+        return new UserIdentity(context.getUser(), null, null);
     }
     
 }

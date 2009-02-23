@@ -20,24 +20,35 @@
  * 02110-1301 USA.
  */
 
-/*
+package com.metamatrix.connector.jdbc.translator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.metamatrix.connector.language.IFunction;
+
+/**
+ * Wrap a function in standard JDBC escape syntax.  In some cases, the 
+ * driver can then convert to the correct database syntax for us. 
+ * @since 5.0
  */
-package com.metamatrix.connector.jdbc.oracle;
+public class EscapeSyntaxModifier extends BasicFunctionModifier {
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Calendar;
-
-import com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator;
-
-public class OracleResultsTranslator extends BasicResultsTranslator {
-    protected void bindValue(PreparedStatement stmt, Object param, Class paramType, int i, Calendar cal) throws SQLException {
-    	if(param == null && Object.class.equals(paramType)){
-    		//Oracle drive does not support JAVA_OBJECT type
-    		stmt.setNull(i, Types.LONGVARBINARY);
-    		return;
-    	}
-    	super.bindValue(stmt, param, paramType, i, cal);
+    public EscapeSyntaxModifier() {
+        super();
     }
+    
+    /** 
+     * @see com.metamatrix.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
+     * @since 5.0
+     */
+    public List translate(IFunction function) {
+        List normalParts = super.translate(function);
+        List wrappedParts = new ArrayList(normalParts.size() + 2);
+        wrappedParts.add("{fn "); //$NON-NLS-1$
+        wrappedParts.addAll(normalParts);
+        wrappedParts.add("}"); //$NON-NLS-1$
+        return wrappedParts;
+    }
+
 }

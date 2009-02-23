@@ -39,12 +39,11 @@ import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /** 
  * Represents a connection to an LDAP data source. 
  */
-public class LDAPConnection extends BasicConnection implements PoolAwareConnection {  
+public class LDAPConnection extends BasicConnection {  
 
 	// Standard Connection data members
 	private ConnectorLogger logger;

@@ -1205,9 +1205,6 @@ public final class FunctionMethods {
 			for (int i = 0; i < repeatCount && result.length() <= DataTypeManager.MAX_STRING_LENGTH; i++) {
 				result.append((String)str);
 			}
-			if (result.length() > DataTypeManager.MAX_STRING_LENGTH) {
-				return result.substring(0, DataTypeManager.MAX_STRING_LENGTH);
-			}
 			return result.toString();
 		}
 

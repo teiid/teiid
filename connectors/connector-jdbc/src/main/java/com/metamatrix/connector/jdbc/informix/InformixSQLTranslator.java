@@ -27,12 +27,12 @@ package com.metamatrix.connector.jdbc.informix;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
 
 /**
  */
-public class InformixSQLTranslator extends SQLTranslator {
+public class InformixSQLTranslator extends Translator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -41,7 +41,7 @@ public class InformixSQLTranslator extends SQLTranslator {
     }
 	
 	@Override
-	public String getConnectionTestQuery() {
+	public String getDefaultConnectionTestQuery() {
 		return "select 'x' from informix.sysusers where 1=0"; //$NON-NLS-1$
 	}
     

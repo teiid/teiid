@@ -20,23 +20,26 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.pool;
+package com.metamatrix.connector.identity;
 
-import com.metamatrix.connector.api.ExecutionContext;
 
 /**
- * This class represents a ConnectorIdentity based on user name. Connections are 
- * pooled based on user name.
+ * This class represents a ConnectorIdentity keyed on a username with
+ * a mapped identity
  */
 public class UserIdentity implements ConnectorIdentity {
-    private ExecutionContext context;
+	private String username;
+	private String mappedUser;
+	private String password;
     
     /**
      * Construct with a security context
      * @param context The context
      */
-    public UserIdentity(ExecutionContext context){
-        this.context = context;
+    public UserIdentity(String username, String mappedUser, String password){
+        this.username = username;
+        this.mappedUser = mappedUser;
+        this.password = password;
     }    
     
     /**
@@ -51,7 +54,7 @@ public class UserIdentity implements ConnectorIdentity {
 
         if (obj instanceof UserIdentity) {
             UserIdentity that = (UserIdentity)obj;
-            return this.context.getUser().equals(that.context.getUser());
+            return username.equals(that.username);
         }
         
         return false;        
@@ -61,10 +64,18 @@ public class UserIdentity implements ConnectorIdentity {
      * Get hash code, based on user name
      */
     public int hashCode(){
-        return context.getUser().hashCode();
+        return username.hashCode();
     }    
     
     public String toString(){
-        return "UserIdentity " + context.getUser(); //$NON-NLS-1$
+        return "UserIdentity " + username; //$NON-NLS-1$
     }  
+    
+    public String getMappedUser() {
+		return mappedUser;
+	}
+    
+    public String getPassword() {
+		return password;
+	}
 }

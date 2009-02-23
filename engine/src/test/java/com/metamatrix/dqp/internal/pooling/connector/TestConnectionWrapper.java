@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.pool.PoolAwareConnection;
+import com.metamatrix.connector.identity.PoolAwareConnection;
 
 public class TestConnectionWrapper extends TestCase {
 

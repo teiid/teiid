@@ -25,7 +25,7 @@ package com.metamatrix.connector.jdbc.sybase;
 import java.util.List;
 
 import com.metamatrix.connector.api.TypeFacility.RUNTIME_TYPES;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;

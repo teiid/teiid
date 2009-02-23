@@ -29,8 +29,8 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.MetadataFactory;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.SQLConversionVisitor;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
 

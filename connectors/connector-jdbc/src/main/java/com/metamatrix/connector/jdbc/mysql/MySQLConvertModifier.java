@@ -25,8 +25,8 @@ package com.metamatrix.connector.jdbc.mysql;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;

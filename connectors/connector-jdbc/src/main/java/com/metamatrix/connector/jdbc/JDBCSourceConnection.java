@@ -24,7 +24,9 @@
  */
 package com.metamatrix.connector.jdbc;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
@@ -34,91 +36,91 @@ import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  * 
  */
-public class JDBCSourceConnection extends BasicConnection implements PoolAwareConnection {
+public class JDBCSourceConnection extends BasicConnection {
     protected java.sql.Connection physicalConnection;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
-    private ConnectionStrategy connectionStrategy;
-    private ConnectionListener connectionListener;
-    private SQLTranslator sqlTranslator;
-    private ResultsTranslator resultsTranslator;
+    private Translator sqlTranslator;
 
-    /**
-     * @param connection
-     */
-    public JDBCSourceConnection(java.sql.Connection connection, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ResultsTranslator resultsTranslator, SQLTranslator sqlTranslator) throws ConnectorException{
-        this(connection, environment, connectionStrategy, null, resultsTranslator, sqlTranslator);
-    }
-    
-    public JDBCSourceConnection(java.sql.Connection connection, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ConnectionListener connectionListener, ResultsTranslator resultsTranslator, SQLTranslator sqlTranslator) throws ConnectorException {
-        physicalConnection = connection;
+    public JDBCSourceConnection(java.sql.Connection connection, ConnectorEnvironment environment, Translator sqlTranslator) throws ConnectorException {
+        this.physicalConnection = connection;
         this.environment = environment;
         this.logger = environment.getLogger();
-        this.connectionStrategy = connectionStrategy;
-        this.connectionListener = connectionListener;
-        
-
-        // notify the listner that coneection created
-        if (this.connectionListener != null) { 
-            this.connectionListener.afterConnectionCreation(this.physicalConnection, this.environment);
-        }
+        this.sqlTranslator = sqlTranslator;
+        this.sqlTranslator.afterConnectionCreation(connection);
     }
     
     @Override
     public ResultSetExecution createResultSetExecution(IQueryCommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCQueryExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
+    	return new JDBCQueryExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), executionContext, this.environment);
     }
     
     @Override
     public ProcedureExecution createProcedureExecution(IProcedure command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCProcedureExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
+    	return new JDBCProcedureExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), metadata, executionContext, this.environment);
     }
 
     @Override
     public UpdateExecution createUpdateExecution(ICommand command,
     		ExecutionContext executionContext, RuntimeMetadata metadata)
     		throws ConnectorException {
-    	return new JDBCUpdateExecution(command, this.physicalConnection, sqlTranslator, resultsTranslator, logger, this.environment.getProperties(), executionContext);    
+    	return new JDBCUpdateExecution(command, this.physicalConnection, sqlTranslator, logger, this.environment.getProperties(), executionContext);    
     }
     
     @Override
     public void close() {
-        try {
-            // notify the listener that connection being destroyed
-            if (connectionListener != null) { 
-                connectionListener.beforeConnectionClose(physicalConnection, environment);
-            }
+		closeSourceConnection();
+	}
+
+	protected void closeSourceConnection() {
+		try {
             this.physicalConnection.close();
         } catch(SQLException e) {
         	logger.logDetail("Exception during close: " + e.getMessage());
         }
-    }
+	}
 
     @Override
     public boolean isAlive() {
-        if (connectionStrategy == null) {
-            try {
-                return !this.physicalConnection.isClosed();
-            } catch (SQLException e) {
+    	Connection connection = this.physicalConnection;
+        Statement statement = null;
+    	try {
+    		int timeout = this.sqlTranslator.getIsValidTimeout();
+    		if (timeout >= 0) {
+    			return connection.isValid(timeout);
+    		}
+            if(connection.isClosed()){
                 return false;
+            } 
+            String connectionTestQuery = sqlTranslator.getConnectionTestQuery();
+            if (connectionTestQuery != null) {
+		        statement = connection.createStatement();
+		        statement.executeQuery(connectionTestQuery);
+            }
+        } catch(SQLException e) {
+        	return false;
+        } finally {
+            if ( statement != null ) {
+                try {
+                    statement.close();
+                } catch ( SQLException e ) {
+                }
             }
         }
-        return connectionStrategy.isConnectionAlive(this.physicalConnection);
+        return true;
     }
     
     @Override

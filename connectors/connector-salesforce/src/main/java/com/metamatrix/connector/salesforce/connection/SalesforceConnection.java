@@ -33,7 +33,6 @@ import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
@@ -41,7 +40,7 @@ import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdateExecutionParent;
 import com.sforce.soap.partner.QueryResult;
 
-public class SalesforceConnection extends BasicConnection implements PoolAwareConnection {
+public class SalesforceConnection extends BasicConnection {
 
 	private ConnectorEnvironment connectorEnv;
 	private ConnectionImpl connection;

@@ -61,7 +61,9 @@ import com.metamatrix.connector.api.ConnectorAnnotations.SynchronousWorkers;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.connector.xa.api.XAConnector;
+import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.cache.ResultSetCache;
@@ -338,17 +340,21 @@ public class ConnectorManager implements ApplicationService {
      */
     private void initStartConnector(String connectorName, ConnectorEnvironment env) throws ApplicationLifecycleException {
         String connectorClassName = env.getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
-        classloader = (ClassLoader)props.get(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER);
         if(classloader == null){
             classloader = getClass().getClassLoader();
+        } else {
+        	env.getProperties().setProperty(ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, Boolean.TRUE.toString());
         }
         Thread currentThread = Thread.currentThread();
         ClassLoader threadContextLoader = currentThread.getContextClassLoader();
         try {
         	currentThread.setContextClassLoader(classloader);
-        	Class<?> clazz = classloader.loadClass(connectorClassName);
-
-        	Connector c = (Connector) clazz.newInstance();
+        	Connector c;
+			try {
+				c = (Connector)ReflectionHelper.create(connectorClassName, null, classloader);
+			} catch (MetaMatrixCoreException e) {
+	            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
+			}
             if(c instanceof XAConnector){
             	this.isXa = true;
                 if (this.getTransactionService() == null) {                    
@@ -371,15 +377,21 @@ public class ConnectorManager implements ApplicationService {
             if (this.isXa) {
                 if (this.connector.supportsSingleIdentity()) {
                 	// add this connector as the recovery source
-					final XAConnection xaConn = ((XAConnector)connector).getXAConnection(null, null);
-
 	                TransactionServer ts = this.getTransactionService().getTransactionServer(); 
 	                ts.registerRecoverySource(connectorName, new TransactionProvider.XAConnectionSource() {
-
+	                	XAConnection conn = null;
+	                	
 	                	@Override
 	                	public XAResource getXAResource() throws SQLException {
+	                		if (conn == null) {
+	                			try {
+									conn = ((XAConnector)connector).getXAConnection(null, null);
+								} catch (ConnectorException e) {
+									throw new SQLException(e);
+								}
+	                		}
 	                		try {
-								return xaConn.getXAResource();
+								return conn.getXAResource();
 							} catch (ConnectorException e) {
 								throw new SQLException(e);
 							}
@@ -387,19 +399,15 @@ public class ConnectorManager implements ApplicationService {
 	                	
 	                	@Override
 	                	public void close() {
-	                		xaConn.close();
+	                		if (conn != null) {
+	                			conn.close();
+	                		}
 	                	}
 	                });
                 } else {
                 	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.getName())); //$NON-NLS-1$	                
                 }
             }
-        } catch (InstantiationException e) {
-            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_instantiate_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
-        } catch (IllegalAccessException e) {
-            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_access_Connector_class", new Object[]{connectorClassName})); //$NON-NLS-1$
-        } catch (ClassNotFoundException e) {
-            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
         } catch (ConnectorException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_start_Connector", new Object[] {this.getConnectorID(), e.getMessage()})); //$NON-NLS-1$
         } finally {
@@ -607,6 +615,10 @@ public class ConnectorManager implements ApplicationService {
 	
 	public boolean isXa() {
 		return isXa;
+	}
+	
+	public void setClassloader(ClassLoader classloader) {
+		this.classloader = classloader;
 	}
 	
 	/**

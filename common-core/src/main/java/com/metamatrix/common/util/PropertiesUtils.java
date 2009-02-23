@@ -29,6 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.StringUtil;
 
 
 /**
@@ -938,4 +940,53 @@ public final class PropertiesUtils {
 
         return bPass;
     }
+
+    public static void setBeanProperties(Object bean, Properties props, String prefix) {
+		// Move all prop names to lower case so we can use reflection to get
+	    // method names and look them up in the connection props.
+	    final Properties connProps = lowerCaseAllPropNames(props);
+	    final Method[] methods = bean.getClass().getMethods();
+	    for (int i = 0; i < methods.length; i++) {
+	        final Method method = methods[i];
+	        final String methodName = method.getName();
+	        // If setter ...
+	        if ( methodName.startsWith("set") && method.getParameterTypes().length == 1 ) { //$NON-NLS-1$
+	            // Get the property name
+	            final String propertyName = methodName.substring(3);    // remove the "set"
+	            String shortName = propertyName.toLowerCase();
+	            String propertyValue = null;
+	            if (prefix != null) {
+	            	propertyValue = connProps.getProperty(prefix + "." + shortName);
+	            } else {
+	            	propertyValue = connProps.getProperty(shortName);
+	            }
+	            if (propertyValue == null) {
+	            	continue;
+	            }
+                final Class<?> argType = method.getParameterTypes()[0];
+                try {
+                    final Object[] params = new Object[] {StringUtil.valueOf(propertyValue, argType)};
+                    method.invoke(bean, params);
+                } catch (Throwable e) {
+                	throw new InvalidPropertyException(propertyName, propertyValue, argType, e);
+                }
+	        }
+	    }
+	}
+
+	private static Properties lowerCaseAllPropNames(final Properties connectionProps) {
+	    final Properties lcProps = new Properties();
+	    final Iterator itr = connectionProps.keySet().iterator();
+	    while ( itr.hasNext() ) {
+	        final String name = (String) itr.next();
+	        Object propValue = connectionProps.get(name);
+	        if (propValue instanceof String) {
+	            // we're only interested in prop values of type String
+	            // here since we'll be looking for params to reflected methods
+	            lcProps.setProperty(name.toLowerCase(), (String)propValue);
+	        } // if
+	    }
+	    return lcProps;
+	}
+
 }

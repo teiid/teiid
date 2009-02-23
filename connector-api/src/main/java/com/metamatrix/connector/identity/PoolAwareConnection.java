@@ -22,15 +22,29 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc;
+package com.metamatrix.connector.identity;
 
-import java.sql.Connection;
+import com.metamatrix.connector.api.Connection;
+import com.metamatrix.connector.api.ConnectorException;
 
-public interface ConnectionStrategy {
+/**
+ * Pooled Connections can optionally implement this interface to provide implementations
+ * for Connection testing and pool life-cycle events.
+ */
+public interface PoolAwareConnection extends Connection {
     
     /**
-     * @return true if the connection is alive.  false if the connection is closed or failed. 
+     * Called by the pool to indicate that the connection was returned to the pool.
+     * The actual close call will be made when the pool wants to purge this connection.
      */
-    boolean isConnectionAlive(Connection connection);
+    void closeCalled();
+
+    /**
+     * Called by the pool when an existing connection is leased so that the underlying
+     * Connection may have it's identity switched to a different user.
+     * @param identity
+     * @throws ConnectorException
+     */
+	void setConnectorIdentity(ConnectorIdentity identity) throws ConnectorException;
     
 }

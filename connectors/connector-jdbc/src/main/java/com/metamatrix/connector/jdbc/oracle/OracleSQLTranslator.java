@@ -24,14 +24,21 @@
  */
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.List;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
+import com.metamatrix.connector.jdbc.JDBCPlugin;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IGroup;
@@ -44,7 +51,7 @@ import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
 /**
  */
-public class OracleSQLTranslator extends SQLTranslator {
+public class OracleSQLTranslator extends Translator {
 
     public final static String HINT_PREFIX = "/*+"; //$NON-NLS-1$
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
@@ -223,8 +230,52 @@ public class OracleSQLTranslator extends SQLTranslator {
     }
     
     @Override
-    public String getConnectionTestQuery() {
+    public String getDefaultConnectionTestQuery() {
     	return "Select 'x' from DUAL"; //$NON-NLS-1$
     }
     
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param, Class paramType, int i) throws SQLException {
+    	if(param == null && Object.class.equals(paramType)){
+    		//Oracle drive does not support JAVA_OBJECT type
+    		stmt.setNull(i, Types.LONGVARBINARY);
+    		return;
+    	}
+    	super.bindValue(stmt, param, paramType, i);
+    }
+    
+    @Override
+    public void afterInitialConnectionCreation(Connection connection) {
+    	String errorStr = JDBCPlugin.Util.getString("ConnectionListener.failed_to_report_oracle_connection_details"); //$NON-NLS-1$
+    	ResultSet rs = null;
+        Statement stmt = null;
+        try {                
+            stmt = connection.createStatement();
+            rs = stmt.executeQuery("select * from v$instance"); 
+            
+            int columnCount = rs.getMetaData().getColumnCount();
+            while (rs.next()) {
+                StringBuffer sb = new StringBuffer();
+                for (int i = 1; i <= columnCount; i++) {
+                    sb.append(rs.getMetaData().getColumnName(i)).append("=").append(rs.getString(i)).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
+                }                    
+                // log the queried information
+                getEnvironment().getLogger().logInfo(sb.toString());                    
+            }                
+            
+        } catch (SQLException e) {
+            getEnvironment().getLogger().logInfo(errorStr); 
+        }finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                } 
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e1) {
+                getEnvironment().getLogger().logInfo(errorStr);
+            }
+        }
+    }
 }

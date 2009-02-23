@@ -30,7 +30,7 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IFunction;
@@ -39,7 +39,7 @@ import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
-public class OracleSpatialSQLTranslator extends SQLTranslator {
+public class OracleSpatialSQLTranslator extends Translator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {

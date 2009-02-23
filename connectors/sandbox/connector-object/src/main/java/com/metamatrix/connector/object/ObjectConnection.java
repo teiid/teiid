@@ -35,13 +35,12 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.extension.IObjectSource;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.core.util.ArgCheck;
 
 /**
  * Implementation of Connection interface for Object connection.
  */
-public class ObjectConnection extends BasicConnection implements PoolAwareConnection {
+public class ObjectConnection extends BasicConnection {
     
 //    private static final String DEFAULT_TRANSLATOR = "com.metamatrix.connector.object.extension.source.BasicSourceTranslator";//$NON-NLS-1$
     

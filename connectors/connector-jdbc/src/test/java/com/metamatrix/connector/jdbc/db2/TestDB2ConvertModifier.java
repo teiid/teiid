@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.extension.SQLConversionVisitor;
+import com.metamatrix.connector.jdbc.translator.SQLConversionVisitor;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;

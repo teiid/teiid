@@ -25,9 +25,9 @@ package com.metamatrix.connector.jdbc.oracle;
 import java.util.List;
 
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -46,7 +46,7 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
     /**
      * Intentionally return null, rely on the SQLStringVisitor being used by caller
      * (Oracle or Oracle8 SQLConversionVisitor (SQLConversionVisitor))
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.translator.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      */
     public List translate(IFunction function) {
         return null;

@@ -22,24 +22,15 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.mm;
+package com.metamatrix.connector.identity;
 
-import com.metamatrix.connector.jdbc.*;
-import com.metamatrix.connector.jdbc.ConnectionStrategy;
-import com.metamatrix.connector.jdbc.JDBCSingleIdentityConnectionFactory;
 
-/** 
- * @since 4.3
+/**
+ * Represents the identity of a connection in the pool.  Identities are 
+ * used to determine whether two connections can be put in the same pool.
+ * Implementors must supply appropriate {@link java.lang.Object#equals(java.lang.Object)} and
+ * {@link java.lang.Object#hashCode()} methods.  
  */
-public class MMSingleIdentityConnectionFactory extends JDBCSingleIdentityConnectionFactory{
-    private String queryTest = "Select 1"; //$NON-NLS-1$
-    
-    /** 
-     * @see com.metamatrix.connector.jdbc.JDBCSourceConnectionFactory#createConnectionStrategy()
-     * @since 4.3
-     */
-    protected ConnectionStrategy createConnectionStrategy() {
-        return new ConnectionQueryStrategy(queryTest);        
-    }
-    
+public interface ConnectorIdentity {
+	
 }

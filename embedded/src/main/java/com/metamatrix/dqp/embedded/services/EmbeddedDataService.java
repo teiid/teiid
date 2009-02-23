@@ -72,7 +72,6 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataService {
     private static final String SYSTEM_PHYSICAL_MODEL_CONNECTOR_BINDING_CLASSNAME = "com.metamatrix.dqp.embedded.services.DefaultIndexConnectorBinding";     //$NON-NLS-1$
     private static final String CONNECTOR_MGR_IMPL = "com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager"; //$NON-NLS-1$    
-    private static final String CONNECTOR_CLASSPATH = "ConnectorClassPath"; //$NON-NLS-1$
     
     // Map of connector binding name to ConnectorID
     private Map connectorIDs = new HashMap();
@@ -562,34 +561,26 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         throws ApplicationLifecycleException{
 
         try {
-            ConnectorManager mgr = null;
             // Ask the configuration if we can use the extension class loader. 
             boolean useExtensionClassPath = (getConfigurationService().useExtensionClasspath());        
-            String classPath = connectorProperties.getProperty(CONNECTOR_CLASSPATH);
+            String classPath = connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
             if (classPath == null || classPath.length() == 0) {
                 useExtensionClassPath = false;
             }
             
             if (!useExtensionClassPath) {
-            	connectorProperties.setProperty(ConnectorPropertyNames.DEREGISTER_DRIVER, ConnectorPropertyNames.DEREGISTER_BY_CLASSNAME);
-                mgr = new ConnectorManager();
+                return new ConnectorManager();
             }
-            else {
-                DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
-                URL context = getConfigurationService().getExtensionPath();
-                URL[] urlPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, context);
-                
-                ClassLoader classLoader = new URLFilteringClassLoader(urlPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
-                Class cmgrImplClass = classLoader.loadClass(CONNECTOR_MGR_IMPL);
-                
-                // Here even though we use a new class loader for the CM, we actually setting the
-                // class loader for the JDBC Connectors. Since the CM may already be loaded, getClass().getCL()
-                // will return a another CL than, above so to cheat we do this below property.
-                connectorProperties.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, classLoader);
-                
-                return (ConnectorManager)cmgrImplClass.newInstance();                    
-            }
-            return mgr;
+            DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
+            URL context = getConfigurationService().getExtensionPath();
+            URL[] urlPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, context);
+            
+            ClassLoader classLoader = new URLFilteringClassLoader(urlPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            Class cmgrImplClass = classLoader.loadClass(CONNECTOR_MGR_IMPL);
+            
+            ConnectorManager cm = (ConnectorManager)cmgrImplClass.newInstance();
+            cm.setClassloader(classLoader);
+            return cm;
         } catch (Exception e) {
             throw new ApplicationLifecycleException(e);
         }

@@ -30,8 +30,7 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
-import com.metamatrix.connector.jdbc.extension.impl.BasicResultsTranslator;
-import com.metamatrix.connector.jdbc.oracle.OracleSQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.core.util.SimpleMock;
 
 
@@ -41,18 +40,13 @@ import com.metamatrix.core.util.SimpleMock;
  */
 public class TestJDBCSourceConnection extends TestCase {
     
-    private final static String TEST_QUERY = "select 'x' from dual"; //$NON-NLS-1$
-    
-    
     private FakeConnection fakeConnection;
     private Connection connection;
     private ConnectorEnvironment environment;
-    private ConnectionQueryStrategy strategy;
     
     
     public TestJDBCSourceConnection(String name) {
         super(name);
-        
     }
     
     public void setUp() throws Exception {
@@ -60,13 +54,9 @@ public class TestJDBCSourceConnection extends TestCase {
         connection = SimpleMock.createSimpleMock(fakeConnection, Connection.class);
 
         final Properties properties = new Properties();
-        properties.setProperty(JDBCPropertyNames.EXT_SQL_TRANSLATOR_CLASS, OracleSQLTranslator.class.getName()); 
-        properties.setProperty(JDBCPropertyNames.EXT_RESULTS_TRANSLATOR_CLASS, BasicResultsTranslator.class.getName());  
         properties.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, BasicConnectorCapabilities.class.getName());  
         
         environment = EnvironmentUtility.createEnvironment(properties, false); 
-        
-        strategy = new ConnectionQueryStrategy(TEST_QUERY);
     }
     
 
@@ -75,7 +65,12 @@ public class TestJDBCSourceConnection extends TestCase {
      * @since 4.3
      */
     public void testIsAlive() throws Exception {
-        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, strategy, null, null); 
+        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, new Translator() {
+        	@Override
+        	public String getConnectionTestQuery() {
+        		return "select 1";
+        	}
+        }); 
         
         //closed connections should not be 'alive'        
         fakeConnection.closed = true;
@@ -96,7 +91,12 @@ public class TestJDBCSourceConnection extends TestCase {
      * @since 4.3
      */
     public void testIsAliveNullStrategy() throws Exception {
-        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, null, null, null); 
+        JDBCSourceConnection sourceConnection = new JDBCSourceConnection(connection, environment, new Translator() {
+        	@Override
+        	public String getConnectionTestQuery() {
+        		return null;
+        	}
+        }); 
         
         //closed connections should not be 'alive'        
         fakeConnection.closed = true;

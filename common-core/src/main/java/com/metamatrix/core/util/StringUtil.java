@@ -983,7 +983,8 @@ public final class StringUtil {
      * @param type
      * @return
      */
-    public static <T> T valueOf(String value, Class<T> type){
+    @SuppressWarnings("unchecked")
+	public static <T> T valueOf(String value, Class<T> type){
     	
     	if(type == String.class) {
     		return (T) value;
@@ -992,7 +993,7 @@ public final class StringUtil {
     		return (T) Boolean.valueOf(value);
     	}
     	else if (type == Integer.class || type == Integer.TYPE) {
-    		return (T) Integer.valueOf(value);
+    		return (T) Integer.decode(value);
     	}
     	else if (type == Float.class || type == Float.TYPE) {
     		return (T) Float.valueOf(value);
@@ -1001,10 +1002,10 @@ public final class StringUtil {
     		return (T) Double.valueOf(value);
     	}
     	else if (type == Long.class || type == Long.TYPE) {
-    		return (T) Long.valueOf(value);
+    		return (T) Long.decode(value);
     	}
     	else if (type == Short.class || type == Short.TYPE) {
-    		return (T) Short.valueOf(value);
+    		return (T) Short.decode(value);
     	}
     	else if (type.isAssignableFrom(List.class)) {
     		return (T)new ArrayList<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$

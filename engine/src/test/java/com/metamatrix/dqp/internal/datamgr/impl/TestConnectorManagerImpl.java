@@ -137,7 +137,6 @@ public final class TestConnectorManagerImpl extends TestCase {
     	ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
-        props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, this.getClass().getClassLoader());
         startConnectorManager(cm, props);
         assertTrue(cm.isXa());
         cm.stop();
@@ -154,7 +153,6 @@ public final class TestConnectorManagerImpl extends TestCase {
         final String connectorName = FakeConnector.class.getName();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);//$NON-NLS-1$
         URLClassLoader cl = new URLClassLoader(new URL[0]);
-        props.put(ConnectorPropertyNames.CONNECTOR_CLASS_LOADER, cl);
         startConnectorManager(cm, props);
         ((FakeConnector)cm.getConnector().getActualConnector()).setClassloader(cl);
         AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);

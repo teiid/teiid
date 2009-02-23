@@ -22,36 +22,29 @@
 
 /*
  */
-package com.metamatrix.connector.jdbc.extension;
+package com.metamatrix.connector.identity;
 
-import java.util.List;
-
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
 
 /**
- * Implementations of this interface are used to modify metamatrix functions
- * coming in to the connector into alternate datasource-specific language, if
- * necessary. 
+ * This class represents a single ConnectorIdentity. All the connections are treated the same.
  */
-public interface FunctionModifier {
+public class SingleIdentity implements ConnectorIdentity {
+
+    public SingleIdentity(){
+    }
     
     /**
-     * Takes an IFunction and returns the datasource-specific IExpression,
-     * or can possibly return the unmodified function parameter itself. 
-     * @param function
-     * @return IExpression or unmodified function
-     * @since 4.2
+     * Return true for everything - all identities are identical.
      */
-    IExpression modify(IFunction function);
+    public boolean equals(Object obj){
+        return obj instanceof SingleIdentity;
+    }
     
-    /**
-     * Return a List of translated parts (LanguageObjects and Strings), or null
-     * if this FunctionModifier wishes to rely on the default translation of the
-     * conversion visitor. 
-     * @param function IFunction to be translated
-     * @return List of translated parts, or null
-     * @since 4.2
-     */
-    List translate(IFunction function);
+    public String toString(){
+        return "SingleIdentity"; //$NON-NLS-1$
+    }    
+    
+    public int hashCode(){
+        return 0; 
+    }
 }

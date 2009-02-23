@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
@@ -54,7 +54,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     }
 
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#modify(com.metamatrix.connector.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.translator.BasicFunctionModifier#modify(com.metamatrix.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         List when = new ArrayList();
@@ -111,7 +111,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     }
         
     /** 
-     * @see com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
+     * @see com.metamatrix.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      */
     public List translate(IFunction function) {
         return null; //allow default translation

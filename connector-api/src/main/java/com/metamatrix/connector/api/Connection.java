@@ -22,9 +22,9 @@
 
 package com.metamatrix.connector.api;
 
+import com.metamatrix.connector.identity.PoolAwareConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 
 /**
  * <p>Represents a connection to this connector.  A connection will be obtained

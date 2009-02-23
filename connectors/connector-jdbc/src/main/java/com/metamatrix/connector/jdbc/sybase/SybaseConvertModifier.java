@@ -25,9 +25,9 @@ package com.metamatrix.connector.jdbc.sybase;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.jdbc.extension.FunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.BasicFunctionModifier;
-import com.metamatrix.connector.jdbc.extension.impl.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.*;
 
 /**

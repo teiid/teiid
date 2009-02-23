@@ -81,42 +81,25 @@ public class ConnectorPropertyNames {
     public static final String CONNECTOR_ID = "ConnectorID"; //$NON-NLS-1$
     
     /**
-     * The environment property used as a flag to deregister the driver
-     */
-    public static final String DEREGISTER_DRIVER = "deregisterDriver"; //$NON-NLS-1$
-    
-    /**
-     * The environment property used as a flag to deregister the driver by ClassLoader
-     */
-    public static final String DEREGISTER_BY_CLASSLOADER = "deregisterByClassLoader"; //$NON-NLS-1$
-    
-    /**
-     * The environment property used as a flag to deregister the driver by ClassName
-     */
-    public static final String DEREGISTER_BY_CLASSNAME = "deregisterByClassName"; //$NON-NLS-1$
-    
-    /**
-     * The environment property used to identify a class loader to load connector.
-     * The default class loader will be used if it is not defined.
-     * This is an optional property.
-     * @since 4.0
-     */
-    public static final String CONNECTOR_CLASS_LOADER = "ConnectorClassLoader"; //$NON-NLS-1$
-
-    /**
      * The name of the VM where the connector is running on.
      * @since 4.0
      */
     public static final String CONNECTOR_VM_NAME = "ConnectorVMName"; //$NON-NLS-1$
-
-    public static final String USE_RESULTSET_CACHE = "ResultSetCacheEnabled"; //$NON-NLS-1$
-    public static final String MAX_RESULTSET_CACHE_SIZE = "ResultSetCacheMaxSize"; //$NON-NLS-1$
-    public static final String MAX_RESULTSET_CACHE_AGE = "ResultSetCacheMaxAge"; //$NON-NLS-1$
-    public static final String RESULTSET_CACHE_SCOPE = "ResultSetCacheScope"; //$NON-NLS-1$
 
     /**
      * Indicates whether the connector represents a pooled resource.  If it does, then
      * synchronous workers will be used.
      */
     public static final String SYNCH_WORKERS = "SynchWorkers"; //$NON-NLS-1$
+    
+    public static final String USING_CUSTOM_CLASSLOADER = "UsingCustomClassloader"; //$NON-NLS-1$
+    
+    public static final String CONNECTOR_CLASSPATH = "ConnectorClassPath"; //$NON-NLS-1$
+    
+    public static final String IS_XA = "IsXA"; //$NON-NLS-1$
+    
+    public static final String USE_CREDENTIALS_MAPS = "UseCredentialMaps"; //$NON-NLS-1$
+    
+    public static final String ADMIN_CONNECTIONS_ALLOWED = "AdminConnectionsAllowed"; //$NON-NLS-1$
+
 }

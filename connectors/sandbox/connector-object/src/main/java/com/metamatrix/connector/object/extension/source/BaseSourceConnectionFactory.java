@@ -28,11 +28,11 @@ import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.identity.SingleIdentity;
 import com.metamatrix.connector.object.ObjectConnection;
 import com.metamatrix.connector.object.SourceConnectionFactory;
 import com.metamatrix.connector.object.extension.IObjectSource;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.SingleIdentity;
 
 /**
  * Represents a base factory class for the creation of the source connection.  Subclasses
@@ -60,7 +60,7 @@ public abstract class BaseSourceConnectionFactory implements SourceConnectionFac
 
     
     /** 
-     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(com.metamatrix.connector.pool.ConnectorIdentity)
+     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(com.metamatrix.connector.identity.ConnectorIdentity)
      * @since 4.3
      */
     public final Connection createConnection(ConnectorIdentity id) throws ConnectorException {
@@ -81,7 +81,7 @@ public abstract class BaseSourceConnectionFactory implements SourceConnectionFac
      * @since 4.3
      */
     public ConnectorIdentity createIdentity(ExecutionContext context) throws ConnectorException {
-        return new SingleIdentity(context);
+        return new SingleIdentity();
     }
     
 }

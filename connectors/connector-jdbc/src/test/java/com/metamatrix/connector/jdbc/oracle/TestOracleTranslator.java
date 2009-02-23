@@ -30,13 +30,13 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.jdbc.access.AccessSQLTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 
 public class TestOracleTranslator extends TestCase {
 	
-	private static SQLTranslator TRANSLATOR; 
+	private static Translator TRANSLATOR; 
 
     static {
         try {

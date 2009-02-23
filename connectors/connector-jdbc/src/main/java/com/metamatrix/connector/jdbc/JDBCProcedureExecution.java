@@ -38,10 +38,8 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
-import com.metamatrix.connector.jdbc.extension.ValueRetriever;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.jdbc.util.JDBCExecutionHelper;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IParameter;
@@ -61,20 +59,18 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     /**
      * @param connection
      * @param sqlTranslator
-     * @param resultsTranslator
-     * @param id
      * @param logger
      * @param props
+     * @param id
      */
     public JDBCProcedureExecution(ICommand command,
         Connection connection,
-        SQLTranslator sqlTranslator,
-        ResultsTranslator resultsTranslator,
+        Translator sqlTranslator,
         ConnectorLogger logger,
-        Properties props, RuntimeMetadata metadata,
-        ExecutionContext context,
+        Properties props,
+        RuntimeMetadata metadata, ExecutionContext context,
         ConnectorEnvironment env) {
-        super(command, connection, sqlTranslator, resultsTranslator, logger, props, context, env);
+        super(command, connection, sqlTranslator, logger, props, context, env);
         this.metadata = metadata;
     }
 
@@ -92,7 +88,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             //create parameter index map
             parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
             CallableStatement cstmt = getCallableStatement(sql);
-            results = resultsTranslator.executeStoredProcedure(cstmt, translatedComm);
+            results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm);
             if (results != null) {
             	initResultSetInfo();
             }
@@ -191,12 +187,11 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCProcedureExecution.Unexpected_exception_1")); //$NON-NLS-1$
         }
         try {
-        	ValueRetriever valueRetriver = this.resultsTranslator.getValueRetriever();
-        	Object value = valueRetriver.retrieveValue((CallableStatement)this.statement, index.intValue(), parameter.getType(), calendar, env.getTypeFacility());
+        	Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, index.intValue(), parameter.getType());
             if(value == null){
                 return null;
             }
-            Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.resultsTranslator.getValueTranslators(), this.resultsTranslator.getTypeFacility(), trimString, context);
+            Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.sqlTranslator.getValueTranslators(), this.sqlTranslator.getTypeFacility(), trimString, context);
             return result;
         } catch (SQLException e) {
             throw new ConnectorException(e);

@@ -25,18 +25,17 @@ package com.metamatrix.connector.jdbc.mysql;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Calendar;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 
 
 /** 
  * @since 4.3
  */
-public class MySQLTranslator extends SQLTranslator {
+public class MySQLTranslator extends Translator {
 
 	@Override
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -45,18 +44,18 @@ public class MySQLTranslator extends SQLTranslator {
     }  
 	
 	@Override
-    public String translateLiteralDate(Date dateValue, Calendar cal) {
-        return "DATE('" + formatDateValue(dateValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    public String translateLiteralDate(Date dateValue) {
+        return "DATE('" + formatDateValue(dateValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
 	@Override
-    public String translateLiteralTime(Time timeValue, Calendar cal) {
-        return "TIME('" + formatDateValue(timeValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    public String translateLiteralTime(Time timeValue) {
+        return "TIME('" + formatDateValue(timeValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
 	@Override
-    public String translateLiteralTimestamp(Timestamp timestampValue, Calendar cal) {
-        return "TIMESTAMP('" + formatDateValue(timestampValue, cal) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "TIMESTAMP('" + formatDateValue(timestampValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 	
 	@Override

@@ -25,15 +25,15 @@ package com.metamatrix.connector.jdbc.derby;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.EscapeSyntaxModifier;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.EscapeSyntaxModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
 
 
 /** 
  * @since 4.3
  */
-public class DerbySQLTranslator extends SQLTranslator {
+public class DerbySQLTranslator extends Translator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -54,7 +54,7 @@ public class DerbySQLTranslator extends SQLTranslator {
     }
     
     @Override
-    public String getConnectionTestQuery() {
+    public String getDefaultConnectionTestQuery() {
     	return "Select 0 from sys.systables where 1 = 2"; //$NON-NLS-1$
     }
 

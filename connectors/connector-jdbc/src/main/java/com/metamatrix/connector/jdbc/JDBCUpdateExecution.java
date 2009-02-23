@@ -34,9 +34,8 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.DataNotAvailableException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.IBatchedUpdates;
 import com.metamatrix.connector.language.IBulkInsert;
 import com.metamatrix.connector.language.ICommand;
@@ -52,18 +51,16 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
     /**
      * @param connection
      * @param sqlTranslator
-     * @param resultsTranslator
-     * @param id
      * @param logger
      * @param props
+     * @param id
      */
     public JDBCUpdateExecution(ICommand command, Connection connection,
-                               SQLTranslator sqlTranslator,
-                               ResultsTranslator resultsTranslator,
+                               Translator sqlTranslator,
                                ConnectorLogger logger,
                                Properties props,
                                ExecutionContext context) {
-        super(connection, sqlTranslator, resultsTranslator, logger, props, context);
+        super(connection, sqlTranslator, logger, props, context);
         this.command = command;
     }
 
@@ -119,7 +116,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                         }
                         pstmt = getPreparedStatement(command.getSql());
                     }
-                    resultsTranslator.bindPreparedStatementValues(this.connection, pstmt, command);
+                    sqlTranslator.bindPreparedStatementValues(this.connection, pstmt, command);
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
@@ -174,7 +171,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                 connection.setAutoCommit(false);
             }
             PreparedStatement stmt = getPreparedStatement(sql);
-            updateCount = resultsTranslator.executeStatementForBulkInsert(this.connection, stmt, translatedComm);
+            updateCount = sqlTranslator.executeStatementForBulkInsert(this.connection, stmt, translatedComm);
             addStatementWarnings();
             succeeded = true;
         } catch (SQLException e) {
@@ -217,7 +214,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                 updateCount = getStatement().executeUpdate(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-                resultsTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
+                sqlTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
                 updateCount = pstatement.executeUpdate();
             } 
             addStatementWarnings();

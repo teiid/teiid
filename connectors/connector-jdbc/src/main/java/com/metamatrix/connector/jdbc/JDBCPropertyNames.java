@@ -23,18 +23,10 @@
 package com.metamatrix.connector.jdbc;
 
 public class JDBCPropertyNames {
-    public static final String DRIVER_CLASS = "Driver"; //$NON-NLS-1$
+    public static final String CONNECTION_SOURCE_CLASS = "Driver"; //$NON-NLS-1$
     public static final String URL = "URL"; //$NON-NLS-1$
     public static final String USERNAME = "User"; //$NON-NLS-1$
     public static final String PASSWORD = "Password"; //$NON-NLS-1$
-    public static final String MAX_SQL_LENGTH = "MaxSQLLength"; //$NON-NLS-1$
-
-    /**
-    * This is the property name of the ConnectorService property that defines
-    * what character, if any, will be used to wrap date type of criteria values
-    * in SQL statements submitted to the data source.
-    */
-    public static final String DATE_WRAP_CHAR = "DateWrapChar"; //$NON-NLS-1$
 
     /**
     * This is the property name of the ConnectorService property that defines
@@ -61,20 +53,6 @@ public class JDBCPropertyNames {
     public static final String TRANSACTION_ISOLATION_LEVEL = "TransactionIsolationLevel"; //$NON-NLS-1$
 
     /**
-      * This property can be used to specify a limit on the size of Blobs, in bytes, that 
-      * will be retrieved from a source.
-      * @since 3.0 
-      */
-     public static final String MAX_BLOB_BYTES = "MaxBlobBytes";    //$NON-NLS-1$
-
-     /**
-      * This property can be used to specify a limit on the size of Clobs, in characters, that 
-      * will be retrieved from a source.
-      * @since 3.0 
-      */
-     public static final String MAX_CLOB_CHARS= "MaxClobChars"; //$NON-NLS-1$
-
-    /**
      * This is the property name of the ConnectorService property that defines
      * the time zone of the source database.  This property should only be used in 
      * cases where the source database is in a different time zone than the 
@@ -92,22 +70,10 @@ public class JDBCPropertyNames {
 
     /**
      * This property is used to specify the implementation of
-     * com.metamatrix.connector.jdbc.extension.SQLTranslator
+     * com.metamatrix.connector.jdbc.extension.Translator
      */
-    public static final String EXT_SQL_TRANSLATOR_CLASS= "ExtensionSQLTranslationClass"; //$NON-NLS-1$
+    public static final String EXT_TRANSLATOR_CLASS= "ExtensionTranslationClass"; //$NON-NLS-1$
 
-    /**
-     * This property is used to specify the implementation of
-     * com.metamatrix.connector.jdbc.extension.ResultsTranslator. 
-     */
-    public static final String EXT_RESULTS_TRANSLATOR_CLASS= "ExtensionResultsTranslationClass"; //$NON-NLS-1$
-
-    /**
-     * This property is used to specify the implementation of
-     * com.metamatrix.data.pool.SourceConnectionFactory
-     */
-    public static final String EXT_CONNECTION_FACTORY_CLASS= "ExtensionConnectionFactoryClass"; //$NON-NLS-1$
-    
     /**
      * This property can be used to specify the fetch size used from the connector to
      * its underlying source.
@@ -126,5 +92,10 @@ public class JDBCPropertyNames {
      * This property is used to turn on/off the use of the default comments like
      * connection id and requestid in the source SQL query.
      */
-    public static final String USE_COMMENTS_SOURCE_QUERY= "UseCommentsInSourceQuery";    //$NON-NLS-1$
+    public static final String USE_COMMENTS_SOURCE_QUERY= "UseCommentsInSourceQuery";    //$NON-NLS-1$    
+    
+    public static final String CONNECTION_TEST_QUERY = "ConnectionTestQuery"; //$NON-NLS-1$
+    
+    public static final String IS_VALID_TIMEOUT = "IsValidTimeout"; //$NON-NLS-1$
+
 }

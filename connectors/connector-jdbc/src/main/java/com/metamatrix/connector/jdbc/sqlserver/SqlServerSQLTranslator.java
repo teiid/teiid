@@ -27,9 +27,8 @@ package com.metamatrix.connector.jdbc.sqlserver;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.sybase.SybaseSQLTranslator;
-import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
 
 /**
  */
@@ -37,7 +36,7 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
-        //FEDERATE-168 remove mod modifier for SQL Server 2008
+        //TEIID-31 remove mod modifier for SQL Server 2008
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -47,9 +46,4 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
     	return "len"; //$NON-NLS-1$
     }
     
-    @Override
-    public String addLimitString(String queryCommand, ILimit limit) {
-    	return "SELECT TOP " + limit.getRowLimit() + " * FROM (" + queryCommand + ") AS X"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-
 }

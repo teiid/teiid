@@ -37,11 +37,10 @@ import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.pool.ConnectorIdentity;
 
 /**
  */
@@ -53,8 +52,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 
     // Passed to constructor
     protected Connection connection;
-    protected SQLTranslator sqlTranslator;
-    protected ResultsTranslator resultsTranslator;
+    protected Translator sqlTranslator;
     protected ConnectorIdentity id;
     protected ConnectorLogger logger;
     protected ExecutionContext context;
@@ -71,14 +69,12 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // ===========================================================================================================================
 
     protected JDBCBaseExecution(Connection connection,
-                                SQLTranslator sqlTranslator,
-                                ResultsTranslator resultsTranslator,
+                                Translator sqlTranslator,
                                 ConnectorLogger logger,
                                 Properties props,
                                 ExecutionContext context) {
         this.connection = connection;
         this.sqlTranslator = sqlTranslator;
-        this.resultsTranslator = resultsTranslator;
         this.logger = logger;
         this.context = context;
 
@@ -88,7 +84,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         }
         
         fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, context.getBatchSize());
-        int max = resultsTranslator.getMaxResultRows();
+        int max = sqlTranslator.getMaxResultRows();
         if (max > 0) {
         	fetchSize = Math.min(fetchSize, max);
         }
@@ -224,8 +220,8 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     }
 
     protected void setSizeContraints(Statement statement) throws SQLException {
-        if (resultsTranslator.getMaxResultRows() > 0) {
-            statement.setMaxRows(resultsTranslator.getMaxResultRows());
+        if (sqlTranslator.getMaxResultRows() > 0) {
+            statement.setMaxRows(sqlTranslator.getMaxResultRows());
         }
     	statement.setFetchSize(fetchSize);
     }
@@ -270,7 +266,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         return this.connection;
     }
     
-    public SQLTranslator getSqlTranslator() {
+    public Translator getSqlTranslator() {
 		return sqlTranslator;
 	}
     

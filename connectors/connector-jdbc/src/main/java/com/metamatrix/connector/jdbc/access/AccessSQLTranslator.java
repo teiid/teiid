@@ -24,10 +24,10 @@
  */
 package com.metamatrix.connector.jdbc.access;
 
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ILimit;
 
-public class AccessSQLTranslator extends SQLTranslator {
+public class AccessSQLTranslator extends Translator {
 	
 	@Override
 	public boolean hasTimeType() {

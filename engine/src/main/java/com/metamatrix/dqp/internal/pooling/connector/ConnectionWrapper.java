@@ -29,10 +29,10 @@ import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.identity.PoolAwareConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.PoolAwareConnection;
 import com.metamatrix.connector.xa.api.XAConnection;
 
 public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
@@ -66,13 +66,11 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 		if (isDead) {
 			return false;
 		}
-		if (connection instanceof PoolAwareConnection) {
-			long now = System.currentTimeMillis();
-			if (now - lastTest > testInterval) {
-				boolean result = ((PoolAwareConnection)connection).isAlive();
-				lastTest = now; 
-				this.isDead = !result;
-			}
+		long now = System.currentTimeMillis();
+		if (now - lastTest > testInterval) {
+			boolean result = connection.isAlive();
+			lastTest = now; 
+			this.isDead = !result;
 		}
 		return !isDead;
 	}

@@ -33,11 +33,8 @@ import javax.transaction.xa.XAResource;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.jdbc.ConnectionListener;
-import com.metamatrix.connector.jdbc.ConnectionStrategy;
 import com.metamatrix.connector.jdbc.JDBCSourceConnection;
-import com.metamatrix.connector.jdbc.extension.ResultsTranslator;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.xa.api.XAConnection;
 
 public class JDBCSourceXAConnection extends JDBCSourceConnection implements XAConnection {
@@ -45,8 +42,8 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
     private XAResource resource;
     private boolean errorOccurred;
     
-    public JDBCSourceXAConnection(Connection conn, javax.sql.XAConnection xaConn, ConnectorEnvironment environment, ConnectionStrategy connectionStrategy, ConnectionListener connectionListener, ResultsTranslator resultsTranslator, SQLTranslator sqlTranslator) throws ConnectorException, SQLException {       
-        super(conn, environment, connectionStrategy, connectionListener, resultsTranslator, sqlTranslator);
+    public JDBCSourceXAConnection(Connection conn, javax.sql.XAConnection xaConn, ConnectorEnvironment environment, Translator sqlTranslator) throws ConnectorException, SQLException {       
+        super(conn, environment, sqlTranslator);
         this.xaConn = xaConn;
         this.xaConn.addConnectionEventListener(new ConnectionEventListener() {
         	@Override
@@ -84,7 +81,7 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
      */
     @Override
     public void closeCalled() {
-    	super.closeCalled();
+    	closeSourceConnection();
     	try {
 			this.physicalConnection = this.xaConn.getConnection();
 		} catch (SQLException e) {
@@ -98,6 +95,10 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
     		return false;
     	}
     	return super.isAlive();
+    }
+    
+    public javax.sql.XAConnection getXAConnection() {
+    	return this.xaConn;
     }
     
 }

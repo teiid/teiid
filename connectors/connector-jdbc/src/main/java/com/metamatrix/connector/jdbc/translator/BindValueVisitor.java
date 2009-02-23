@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.extension;
+package com.metamatrix.connector.jdbc.translator;
 
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IExistsCriteria;

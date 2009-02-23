@@ -34,10 +34,10 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.ConnectorIdentityFactory;
-import com.metamatrix.connector.pool.SingleIdentityFactory;
-import com.metamatrix.connector.pool.UserIdentityFactory;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.identity.ConnectorIdentityFactory;
+import com.metamatrix.connector.identity.SingleIdentityFactory;
+import com.metamatrix.connector.identity.UserIdentityFactory;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
 @ConnectionPooling

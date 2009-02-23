@@ -22,29 +22,36 @@
 
 /*
  */
-package com.metamatrix.connector.pool;
+package com.metamatrix.connector.jdbc.translator;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorException;
+import java.util.List;
+
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
 
 /**
- * Pooled Connections can optionally implement this interface to provide implementations
- * for Connection testing and pool life-cycle events.
+ * Implementations of this interface are used to modify metamatrix functions
+ * coming in to the connector into alternate datasource-specific language, if
+ * necessary. 
  */
-public interface PoolAwareConnection extends Connection {
+public interface FunctionModifier {
     
     /**
-     * Called by the pool to indicate that the connection was returned to the pool.
-     * The actual close call will be made when the pool wants to purge this connection.
+     * Takes an IFunction and returns the datasource-specific IExpression,
+     * or can possibly return the unmodified function parameter itself. 
+     * @param function
+     * @return IExpression or unmodified function
+     * @since 4.2
      */
-    void closeCalled();
-
-    /**
-     * Called by the pool when an existing connection is leased so that the underlying
-     * Connection may have it's identity switched to a different user.
-     * @param identity
-     * @throws ConnectorException
-     */
-	void setConnectorIdentity(ConnectorIdentity identity) throws ConnectorException;
+    IExpression modify(IFunction function);
     
+    /**
+     * Return a List of translated parts (LanguageObjects and Strings), or null
+     * if this FunctionModifier wishes to rely on the default translation of the
+     * conversion visitor. 
+     * @param function IFunction to be translated
+     * @return List of translated parts, or null
+     * @since 4.2
+     */
+    List translate(IFunction function);
 }

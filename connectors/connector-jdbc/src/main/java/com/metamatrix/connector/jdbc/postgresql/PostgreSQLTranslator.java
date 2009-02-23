@@ -25,17 +25,16 @@ package com.metamatrix.connector.jdbc.postgresql;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Calendar;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
 import com.metamatrix.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import com.metamatrix.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILimit;
@@ -46,7 +45,7 @@ import com.metamatrix.connector.visitor.util.SQLReservedWords;
 /** 
  * @since 4.3
  */
-public class PostgreSQLTranslator extends SQLTranslator {
+public class PostgreSQLTranslator extends Translator {
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         
@@ -88,18 +87,18 @@ public class PostgreSQLTranslator extends SQLTranslator {
     }
 
     @Override
-    public String translateLiteralDate(Date dateValue, Calendar cal) {
-        return "DATE '" + formatDateValue(dateValue, cal) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    public String translateLiteralDate(Date dateValue) {
+        return "DATE '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
 
     @Override
-    public String translateLiteralTime(Time timeValue, Calendar cal) {
-        return "TIME '" + formatDateValue(timeValue, cal) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    public String translateLiteralTime(Time timeValue) {
+        return "TIME '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
     
     @Override
-    public String translateLiteralTimestamp(Timestamp timestampValue, Calendar cal) {
-        return "to_timestamp('" + formatDateValue(timestampValue, cal) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "to_timestamp('" + formatDateValue(timestampValue) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
     
     @Override

@@ -33,6 +33,9 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.jdbc.JDBCPropertyNames;
+import com.metamatrix.connector.jdbc.translator.SQLConversionVisitor;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILanguageObject;
@@ -115,7 +118,7 @@ public class TestSQLConversionVisitor extends TestCase {
     private String getStringWithContext(ILanguageObject obj) throws ConnectorException {
         Properties props = new Properties();      
         props.setProperty(JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, Boolean.TRUE.toString());
-        SQLTranslator trans = new SQLTranslator();
+        Translator trans = new Translator();
         trans.initialize(EnvironmentUtility.createEnvironment(props, false));
         SQLConversionVisitor visitor = new SQLConversionVisitor(trans);
         visitor.setExecutionContext(context);
@@ -136,7 +139,7 @@ public class TestSQLConversionVisitor extends TestCase {
                                             boolean useMetadata, boolean usePreparedStatement) throws ConnectorException {
         // Apply function replacement
         FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
-        SQLTranslator trans = new SQLTranslator();
+        Translator trans = new Translator();
         Properties p = new Properties();
         if (usePreparedStatement) {
         	p.setProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.TRUE.toString());

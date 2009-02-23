@@ -43,9 +43,9 @@ import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.pool.ConnectorIdentity;
-import com.metamatrix.connector.pool.PoolAwareConnection;
-import com.metamatrix.connector.pool.SingleIdentity;
+import com.metamatrix.connector.identity.ConnectorIdentity;
+import com.metamatrix.connector.identity.PoolAwareConnection;
+import com.metamatrix.connector.identity.SingleIdentity;
 import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.log.MessageLevel;
@@ -208,7 +208,7 @@ public class ConnectionPool {
         	id = executionContext.getConnectorIdentity();
         }
         if (id == null) {
-        	id = new SingleIdentity(executionContext);
+        	id = new SingleIdentity();
         }
                 
         LogManager.logTrace(CTX_CONNECTOR, new Object[] {"Obtaining connection for id", id}); //$NON-NLS-1$ 

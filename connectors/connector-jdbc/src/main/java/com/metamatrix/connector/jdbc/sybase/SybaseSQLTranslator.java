@@ -27,13 +27,14 @@ package com.metamatrix.connector.jdbc.sybase;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
-import com.metamatrix.connector.jdbc.extension.impl.SubstringFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.SubstringFunctionModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
+import com.metamatrix.connector.language.ILimit;
 
 /**
  */
-public class SybaseSQLTranslator extends SQLTranslator {
+public class SybaseSQLTranslator extends Translator {
     
     /* 
      * @see com.metamatrix.connector.jdbc.extension.SQLTranslator#initialize(com.metamatrix.data.api.ConnectorEnvironment, com.metamatrix.data.metadata.runtime.RuntimeMetadata)
@@ -62,6 +63,11 @@ public class SybaseSQLTranslator extends SQLTranslator {
     @Override
     public boolean hasTimeType() {
     	return false;
+    }
+    
+    @Override
+    public String addLimitString(String queryCommand, ILimit limit) {
+    	return "SELECT TOP " + limit.getRowLimit() + " * FROM (" + queryCommand + ") AS X"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
 }

@@ -32,7 +32,7 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.extension.TranslatedCommand;
+import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.core.util.UnitTestUtil;
 

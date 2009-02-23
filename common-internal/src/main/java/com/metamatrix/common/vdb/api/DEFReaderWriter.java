@@ -37,6 +37,7 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 
+import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
@@ -79,7 +80,7 @@ public class DEFReaderWriter {
             loadConnectorBindings(vdbDefn, root);
             
         } catch (JDOMException e) {
-            throw new IOException("VDBDefnXMLHelper.Unable_to_read_defn_file");//$NON-NLS-1$
+            throw new IOException(CommonPlugin.Util.getString("VDBDefnXMLHelper.Unable_to_read_defn_file"));//$NON-NLS-1$
         } 
         return vdbDefn;
     }

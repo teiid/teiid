@@ -29,7 +29,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.pool.UserIdentity;
+import com.metamatrix.connector.identity.UserIdentity;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
@@ -69,7 +69,7 @@ public class TestConnectionPool extends TestCase{
     public static ExecutionContext createContext(final String user, boolean userIdentity) {
     	ExecutionContextImpl context = new ExecutionContextImpl(null, null, user, null, null, null, null, null, null, null, false);
     	if (userIdentity) {
-    		context.setConnectorIdentity(new UserIdentity(context));
+    		context.setConnectorIdentity(new UserIdentity(context.getUser(), null, null));
     	}
     	return context;
     }

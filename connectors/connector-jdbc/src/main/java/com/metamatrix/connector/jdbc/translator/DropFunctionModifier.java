@@ -20,32 +20,31 @@
  * 02110-1301 USA.
  */
 
-/*
- */
-package com.metamatrix.connector.jdbc.extension.impl;
+package com.metamatrix.connector.jdbc.translator;
 
+import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.language.*;
 
 /**
+ * This FunctionModifier will cause this function to be dropped by replacing the function
+ * with (by default) the first argument of the function.  Optionally, the replacement index 
+ * can be overridden.  This modifier should only be used with functions having the
+ * minimum or more number of arguments. 
  */
-public class AliasModifier extends BasicFunctionModifier {
-    // The alias to use
-    private String alias;
-        
-    /**
-     * Constructor that takes the alias to use for functions.
-     * @param alias The alias to replace the incoming function name with
-     */
-    public AliasModifier(String alias) {
-        this.alias = alias;    
+public class DropFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
+
+    private int replaceIndex = 0;
+    
+    public void setReplaceIndex(int index) {
+        this.replaceIndex = index;
     }
     
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.connector.language.IFunction)
-     */
     public IExpression modify(IFunction function) {
-        function.setName(alias);
-        return function;
-    }
+        IExpression[] args = function.getParameters();
+        if(args.length <= replaceIndex) { 
+            throw new IllegalArgumentException(JDBCPlugin.Util.getString("DropFunctionModifier.DropFunctionModifier_can_only_be_used_on_functions_with___1") + function); //$NON-NLS-1$
+        }
 
+        return args[replaceIndex];
+    }
 }

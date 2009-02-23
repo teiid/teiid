@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.jdbc.extension.FunctionModifier;
+import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IExpression;

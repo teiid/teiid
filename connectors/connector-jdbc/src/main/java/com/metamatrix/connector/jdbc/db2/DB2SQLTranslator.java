@@ -31,8 +31,8 @@ import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.extension.SQLTranslator;
-import com.metamatrix.connector.jdbc.extension.impl.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.AliasModifier;
+import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IJoin;
 import com.metamatrix.connector.language.ILimit;
@@ -43,7 +43,7 @@ import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */
-public class DB2SQLTranslator extends SQLTranslator {
+public class DB2SQLTranslator extends Translator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -80,7 +80,7 @@ public class DB2SQLTranslator extends SQLTranslator {
 	}
 	
 	@Override
-	public String getConnectionTestQuery() {
+	public String getDefaultConnectionTestQuery() {
 		return "Select 'x' from sysibm.systables where 1 = 2"; //$NON-NLS-1$
 	}
     
