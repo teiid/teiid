@@ -102,7 +102,7 @@ public class PostgreSQLTranslator extends Translator {
     }
     
     @Override
-    public int getTimestampNanoSecondPrecision() {
+    public int getTimestampNanoPrecision() {
     	return 6;
     }
     

@@ -264,11 +264,11 @@ public class Translator {
      * @return Formatted string
      */
     public String formatDateValue(java.util.Date dateObject) {
-        if (dateObject instanceof Timestamp && getTimestampNanoSecondPrecision() < 9) {
+        if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
         	Timestamp ts = (Timestamp)dateObject;
         	Timestamp newTs = new Timestamp(ts.getTime());
-        	if (getTimestampNanoSecondPrecision() > 0) {
-	        	int mask = 10^(9-getTimestampNanoSecondPrecision());
+        	if (getTimestampNanoPrecision() > 0) {
+	        	int mask = 10^(9-getTimestampNanoPrecision());
 	        	newTs.setNanos(ts.getNanos()/mask*mask);
         	}
         	dateObject = newTs;
@@ -330,7 +330,7 @@ public class Translator {
     	return null;
     }
     
-    public int getTimestampNanoSecondPrecision() {
+    public int getTimestampNanoPrecision() {
     	return 9;
     }
     

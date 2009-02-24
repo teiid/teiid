@@ -22,7 +22,10 @@
 
 package com.metamatrix.connector.jdbc.mysql;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 
@@ -64,8 +67,29 @@ public class MySQLTranslator extends Translator {
 	}
 	
 	@Override
-	public int getTimestampNanoSecondPrecision() {
+	public int getTimestampNanoPrecision() {
 		return 6;
+	}
+	
+	@Override
+	public void afterConnectionCreation(Connection connection) {
+		super.afterConnectionCreation(connection);
+		
+		Statement stmt = null;
+		try {
+			stmt = connection.createStatement();
+			stmt.execute("set SESSION sql-mode = 'ANSI'"); //$NON-NLS-1$
+		} catch (SQLException e) {
+			getEnvironment().getLogger().logError("Error setting ANSI mode", e); //$NON-NLS-1$
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					getEnvironment().getLogger().logDetail("Error closing statement", e); //$NON-NLS-1$
+				}
+			}
+		}
 	}
 	
 }
