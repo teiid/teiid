@@ -25,6 +25,7 @@ package com.metamatrix.query.optimizer.proc;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -54,6 +55,7 @@ import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.DynamicCommand;
 import com.metamatrix.query.sql.lang.Into;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.Block;
@@ -107,6 +109,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 
 		// get the current command on the current node of the tree
 		Command procCommand = node.getCommand();
+        
 		// set state of the planner with child nodes
 		// to be used while planning
 		List childNodes = node.getChildren();
@@ -135,6 +138,16 @@ public final class ProcedurePlanner implements CommandPlanner {
         ProcedureEnvironment env = new ProcedureEnvironment();
         env.getProgramStack().push(programBlock);
         ProcedurePlan plan = new ProcedurePlan(env);
+        
+        // propagate procedure parameters to the plan to allow runtime type checking
+        ProcedureContainer container = (ProcedureContainer)((CreateUpdateProcedureCommand) procCommand).getUserCommand();
+        
+        if (container != null) {
+            Map params = container.getProcedureParameters();
+            plan.setParams(params);
+            plan.setMetadata(metadata);
+        }
+        
         env.initialize(plan);
         env.setUpdateProcedure(((CreateUpdateProcedureCommand)procCommand).isUpdateProcedure());
         env.setOutputElements(((CreateUpdateProcedureCommand)procCommand).getProjectedSymbols());
@@ -265,9 +278,9 @@ public final class ProcedurePlanner implements CommandPlanner {
                         intoGroup = into.getGroup();
                     }
                 }
-				List references = ReferenceCollectorVisitor.getReferences(command);
-				ProcessorPlan commandPlan = ((CommandTreeNode)childNodes.get(childIndex.getChildIndex())).getProcessorPlan();
-				childIndex.incrementChildIndex();
+				List references = ReferenceCollectorVisitor.getReferences(command);   
+				ProcessorPlan commandPlan = ((CommandTreeNode)childNodes.get(childIndex.getChildIndex())).getProcessorPlan();                
+                childIndex.incrementChildIndex();
                 
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), references, metadata, idGenerator, capFinder );
@@ -343,7 +356,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 		}
 		return instruction;
     }
-   
+        
     static class ChildIndexHolder{
         private int childIndex;
 

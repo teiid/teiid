@@ -60,6 +60,7 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -176,7 +177,7 @@ public class TestQueryRewriter extends TestCase {
     private Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws MetaMatrixException { 
         Command command = QueryParser.getQueryParser().parseCommand(original);            
         QueryResolver.resolveCommand(command, metadata);
-        Command rewriteCommand = QueryRewriter.rewrite(command, null, FakeMetadataFactory.example1Cached(), null);
+        Command rewriteCommand = QueryRewriter.rewrite(command, null, metadata, null);
         assertEquals("Rewritten command was not expected", expected, rewriteCommand.toString()); //$NON-NLS-1$
         return rewriteCommand;
     }
@@ -1733,6 +1734,17 @@ public class TestQueryRewriter extends TestCase {
     public void testDefect16879_7(){
         helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE 'e' END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    public void testCaseExpressionThatResolvesToNull() {
+        String sqlBefore = "SELECT CASE 'x' WHEN 'Old Inventory System' THEN NULL WHEN 'New Inventory System' THEN NULL END"; //$NON-NLS-1$
+        String sqlAfter = "SELECT null"; //$NON-NLS-1$
+
+        Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
+        
+        ExpressionSymbol es = (ExpressionSymbol)cmd.getProjectedSymbols().get(0);
+        assertEquals( DataTypeManager.DefaultDataClasses.STRING, es.getType() );
+    }
+
 
     //note that the env is now treated as deterministic, however it is really only deterministic within a session
     public void testRewriteExecEnv() throws Exception {
@@ -2096,6 +2108,18 @@ public class TestQueryRewriter extends TestCase {
     
     public void testRewriteCoalesce() throws Exception {
     	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testProcWithNull() throws Exception {
+        String sql = "exec pm1.vsp26(1, null)"; //$NON-NLS-1$
+        
+        try {
+        	helpTestRewriteCommand(sql, "", FakeMetadataFactory.example1Cached());
+        	fail("expected exception");
+        } catch (QueryValidatorException e) {
+        	
+        }
+        
     }
 
 }

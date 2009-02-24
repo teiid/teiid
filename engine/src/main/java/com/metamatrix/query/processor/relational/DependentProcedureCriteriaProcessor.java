@@ -44,13 +44,15 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
     private List inputReferences;
     private List inputDefaults;
     private Criteria critInProgress;
+    private Evaluator eval;
     
     public DependentProcedureCriteriaProcessor(RelationalNode dependentNode,
                                                Criteria dependentCriteria,
                                                List references,
-                                               List defaults) {
+                                               List defaults,
+                                               Evaluator eval) {
         super(1, dependentNode, dependentCriteria);
-        
+        this.eval = eval;
         this.inputDefaults = defaults;
         this.inputReferences = references;
     }
@@ -106,7 +108,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
             }
 
             if (value instanceof Expression) {
-                value = Evaluator.evaluate((Expression)value);
+                value = eval.evaluate((Expression)value, null);
             }
 
             if (value == null && !nullAllowed) {

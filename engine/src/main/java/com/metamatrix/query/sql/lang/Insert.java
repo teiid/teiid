@@ -23,16 +23,20 @@
 package com.metamatrix.query.sql.lang;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 /**
  * Represents a SQL Insert statement of the form:
@@ -209,6 +213,23 @@ public class Insert extends PreparedBatchUpdate {
                EquivalenceUtil.areEqual(getValues(), other.getValues()) &&
                EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
                EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression());
+    }
+    
+    /** 
+     * @see com.metamatrix.query.sql.lang.ProcedureContainer#getParameters()
+     * @since 5.0
+     */
+    public Map getProcedureParameters() {
+        
+        int iSize = getVariables().size();
+        HashMap map = new HashMap();
+        
+        for (int j = 0; j < iSize; j++) {
+            ElementSymbol symbol = (ElementSymbol)((ElementSymbol)variables.get( j )).clone();
+            symbol.setName(ProcedureReservedWords.INPUT + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
+            map.put(symbol, values.get( j ) );
+        } // for 
+        return map;
     }
 
 	/**

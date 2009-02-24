@@ -30,6 +30,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
 
 public class DependentProcedureExecutionNode extends PlanExecutionNode {
@@ -96,7 +97,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
                                           MetaMatrixComponentException, MetaMatrixProcessingException {
 
         if (this.criteriaProcessor == null) {
-            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults);
+            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults, new Evaluator(null, null, getContext()));
         }
         
         return criteriaProcessor.prepareNextCommand();

@@ -22,14 +22,19 @@
 
 package com.metamatrix.query.sql.lang;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
 /**
@@ -249,6 +254,25 @@ public class Update extends PreparedBatchUpdate {
 	public boolean areResultsCachable(){
 		return false;
 	}
+    
+    /** 
+     * @see com.metamatrix.query.sql.lang.ProcedureContainer#getProcedureParameters()
+     * @since 5.0
+     */
+    public Map getProcedureParameters() {
+        
+        HashMap map = new HashMap();
+        
+        for (Iterator iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
+        	SetClause setClause = (SetClause)iter.next();
+            ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
+            symbol.setName(ProcedureReservedWords.INPUT + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
+            map.put( symbol, setClause.getValue() );
+            
+        } // for
+        
+        return map;
+    }
     
 }
 

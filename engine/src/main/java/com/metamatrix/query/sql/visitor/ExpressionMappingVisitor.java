@@ -278,26 +278,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         }
         obj.setRowLimit(replaceExpression(obj.getRowLimit()));
     }
-    
-    public void visit(Insert obj) {                
-        // iterate over the list containing virtual elements/constants
-        Iterator valuesIter = obj.getValues().iterator();
-        
-        // create a new list containing physical elements and constants
-        List valuesList = new ArrayList(obj.getValues().size());
-        while(valuesIter.hasNext()) {
-            Expression exp = (Expression) valuesIter.next();
-            valuesList.add( replaceExpression(exp) );
-        }  
-        obj.setValues(valuesList);
-    }    
-    
-    public void visit(AssignmentStatement obj) {
-        if (obj.hasExpression()) {
-            obj.setExpression(replaceExpression(obj.getExpression()));
-        }
-    }
-    
+       
     public void visit(DynamicCommand obj) {
         obj.setSql(replaceExpression(obj.getSql()));
         if (obj.getUsing() != null) {
@@ -342,5 +323,25 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     protected Map getVariableValues() {
         return symbolMap;
     }    
-
+    
+    /** 
+     * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.proc.AssignmentStatement)
+     * @since 5.0
+     */
+    public void visit(AssignmentStatement obj) {
+        if (obj.hasExpression()) {
+            obj.setExpression(replaceExpression(obj.getExpression()));
+        }
+    }
+    
+    /** 
+     * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.Insert)
+     * @since 5.0
+     */
+    public void visit(Insert obj) {
+        for (int i = 0; i < obj.getValues().size(); i++) {
+            obj.getValues().set(i, replaceExpression((Expression)obj.getValues().get(i)));
+        }
+    }
+    
 }

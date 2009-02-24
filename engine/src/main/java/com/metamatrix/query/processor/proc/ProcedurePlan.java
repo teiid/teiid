@@ -25,11 +25,13 @@ package com.metamatrix.query.processor.proc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -39,9 +41,11 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.processor.BaseProcessorPlan;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -51,6 +55,9 @@ import com.metamatrix.query.processor.TempTableDataManager;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.processor.program.ProgramUtil;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
@@ -79,7 +86,9 @@ public class ProcedurePlan extends BaseProcessorPlan {
     private TupleSource finalTupleSource;
     private int beginBatch = 1;
     private List batchRows;
-    private boolean lastBatch = false;    
+    private boolean lastBatch = false;
+    private Map params;
+    private QueryMetadataInterface metadata;
 
     /**
      * Constructor for ProcedurePlan.
@@ -187,8 +196,8 @@ public class ProcedurePlan extends BaseProcessorPlan {
     	return env.getOutputElements();
     }
 
-    public void open()
-        throws MetaMatrixComponentException {
+    public void open() throws MetaMatrixProcessingException, MetaMatrixComponentException {
+        evaluateParams();
     }
 
     /**
@@ -336,7 +345,11 @@ public class ProcedurePlan extends BaseProcessorPlan {
     	clonedEnv.getProgramStack().push(originalProgram.clone());
         clonedEnv.setUpdateProcedure(this.env.isUpdateProcedure());
         clonedEnv.setOutputElements(this.env.getOutputElements());
-        return new ProcedurePlan(clonedEnv);
+        ProcedurePlan plan = new ProcedurePlan(clonedEnv);
+        plan.setParams(params);
+        plan.setMetadata(metadata);
+
+        return plan;
     }
 
     protected void addBatchRow(List row) {
@@ -387,5 +400,36 @@ public class ProcedurePlan extends BaseProcessorPlan {
      */
     public Collection getChildPlans() {
         return this.originalProgram.getChildPlans();
+    }
+        
+    public void setMetadata( QueryMetadataInterface metadata ) {
+        this.metadata = metadata;
+    }
+
+    public void setParams( Map params ) {
+        this.params = params;
+    }
+        
+    public void evaluateParams() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+        
+        if ( params == null ) {
+            return;
+        }
+        
+        for (Iterator iter = params.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry)iter.next();
+            ElementSymbol param = (ElementSymbol)entry.getKey();
+            Expression expr = (Expression)entry.getValue();
+            
+            VariableContext context = env.getCurrentVariableContext();
+            Object value = new Evaluator(null, null, getContext()).evaluate(expr, null);
+
+            //check constraint
+            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+                throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
+            }
+            context.setValue(param, value);
+        } 
+
     }
 }

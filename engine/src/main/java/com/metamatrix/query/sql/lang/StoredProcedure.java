@@ -414,6 +414,22 @@ public class StoredProcedure extends ProcedureContainer {
 	public void setCallableStatement(boolean isCallableStatement) {
 		this.isCallableStatement = isCallableStatement;
 	}
+	    
+	/** 
+	 * @see com.metamatrix.query.sql.lang.ProcedureContainer#getProcedureParameters()
+	 * @since 5.0
+	 */
+	public Map getProcedureParameters() {
+	    
+	    HashMap map = new HashMap();
+	    for (Iterator iter = this.getInputParameters().iterator(); iter.hasNext();) {
+	        
+	        SPParameter element = (SPParameter)iter.next();
+	        map.put(element.getParameterSymbol(), element.getExpression());            
+	   } // for
+	    
+	    return map;
+	}	
 }
 
 

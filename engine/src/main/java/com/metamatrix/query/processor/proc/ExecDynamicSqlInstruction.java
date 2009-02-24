@@ -43,6 +43,7 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -66,6 +67,7 @@ import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetClause;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
+import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -212,7 +214,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
             
             // validation visitor?
 
-            VariableSubstitutionVisitor.substituteVariables(command, command.getVariableValues(), command.getType(), false);
+            VariableSubstitutionVisitor.substituteVariables(command, command.getVariableValues(), command.getType());
             
 			QueryRewriter.rewrite(command, parentProcCommand, metadata,
 					procEnv.getContext());
@@ -334,14 +336,30 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 		Query query = new Query();
 		query.setSelect(select);
 		From from = new From();
-		SubqueryFromClause sqfc = new SubqueryFromClause(subquery_group_name,
-				command);
-		from.addClause(sqfc);
-		query.setFrom(from);
+        
+        GroupSymbol inlineGroup = new GroupSymbol(subquery_group_name);
+        
+        from.addClause(new UnaryFromClause(inlineGroup)); 
+        TempMetadataStore store = new TempMetadataStore();
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
+        
+        store.addTempGroup(inlineGroup.getName(), command.getProjectedSymbols());
+        inlineGroup.setMetadataID(store.getTempGroupID(inlineGroup.getName()));
+        query.setFrom(from); 
+        QueryResolver.resolveCommand(query, tma);
+        query.setOption(command.getOption());
+                
+        from.getClauses().clear();
+        SubqueryFromClause sqfc = new SubqueryFromClause(inlineGroup.getName());
+        sqfc.setCommand(command);
+        sqfc.getGroupSymbol().setMetadataID(inlineGroup.getMetadataID());
+        from.addClause(sqfc);
+        //copy the metadata onto the new query so that temp metadata adapters will be used in later calls
+        query.getTemporaryMetadata().putAll(store.getData()); 
+
 		if (dynamicCommand.getIntoGroup() != null) {
 			query.setInto(new Into(dynamicCommand.getIntoGroup()));
 		}
-		QueryResolver.resolveCommand(query, metadata);
 		return query;
 	}
 

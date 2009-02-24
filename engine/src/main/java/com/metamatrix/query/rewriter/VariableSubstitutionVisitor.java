@@ -74,8 +74,6 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
     // substitution
     private Collection invalidInput;
     private int commandType;
-    private boolean forwardReferences;
-    private boolean referenceRequired;
     
     private QueryResolverException conversionException = null;
     
@@ -83,10 +81,9 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
 	 * Construct a new visitor with the list of references.
 	 * @param references A list of references on to be collected
 	 */
-	public VariableSubstitutionVisitor(Map variableValues, int commandType, boolean forwardReferences) {
+	public VariableSubstitutionVisitor(Map variableValues, int commandType) {
         super(variableValues);
         this.commandType = commandType;
-        this.forwardReferences = forwardReferences;
 	}
 
 	// ############### Visitor methods for language objects ##################
@@ -196,21 +193,16 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
                 Expression value = (Expression)this.getVariableValues().get(symbol.getCanonicalName());
 
                 if (value != null) {
-                    expr = value;
-                    //don't forward references, instead wrap in a new reference
-                    //that will prevent setting the reference value by any other scope than the what
-                    //created the reference
-                    if (!forwardReferences && !ReferenceCollectorVisitor.getReferences(expr).isEmpty()) {
-                        expr = new Reference(0, value);
-                        referenceRequired = true;
+                    //don't forward references
+                    if (!ReferenceCollectorVisitor.getReferences(value).isEmpty()) {
+                        return expr;
                     }
+                    expr = value;
                 } else if (grpName.equals(ProcedureReservedWords.INPUT)) {
                     expr =  new Constant(null, symbol.getType());
                 } else if (grpName.equals(ProcedureReservedWords.CHANGING)) {
                     Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
-                } else if (grpName.equals(ProcedureReservedWords.VARIABLES) || !GroupSymbol.isTempGroupName(grpName)) {
-                    expr = new Reference(0, symbol);
-                }
+                } 
             }
         }
         
@@ -234,14 +226,14 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
 	 * @throws QueryValidatorException 
 	 * @throws QueryValidatorException
 	 */
-	public static final boolean substituteVariables(
+	public static final void substituteVariables(
 		LanguageObject obj,
 		Map variableValues,
-        int commandType, boolean forwardReferences) throws QueryValidatorException {
+        int commandType) throws QueryValidatorException {
 		VariableSubstitutionVisitor visitor =
-			new VariableSubstitutionVisitor(variableValues, commandType, forwardReferences);
+			new VariableSubstitutionVisitor(variableValues, commandType);
         if (obj == null) {
-            return false;
+            return;
         }
         
 		DeepPreOrderNavigator.doVisit(obj, visitor);
@@ -252,7 +244,6 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
         if (visitor.conversionException != null) {
             throw new QueryValidatorException(visitor.conversionException, visitor.conversionException.getMessage());
         }
-        
-        return visitor.referenceRequired;
-	}
+    }
+    
 }

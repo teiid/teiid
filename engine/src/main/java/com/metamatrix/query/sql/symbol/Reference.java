@@ -23,6 +23,7 @@
 package com.metamatrix.query.sql.symbol;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +110,10 @@ public class Reference implements Expression {
     }
 
     public Object getValue(LookupEvaluator dataMgr, CommandContext context) throws ExpressionEvaluationException, MetaMatrixComponentException {
+    	if ( elements == null ) {
+            elements = Collections.EMPTY_MAP;
+        }
+    		 
         return new Evaluator(elements, dataMgr, context).evaluate(expression, tuple);
     }
     

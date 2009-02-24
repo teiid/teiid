@@ -24,6 +24,7 @@ package com.metamatrix.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -128,5 +129,6 @@ public abstract class ProcedureContainer extends Command implements CommandConta
         }
         this.updateCount = updateCount;
     }
-        
+    
+    public abstract Map getProcedureParameters();
 }

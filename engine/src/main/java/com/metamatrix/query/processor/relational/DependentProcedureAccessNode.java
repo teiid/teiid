@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 
@@ -93,7 +94,7 @@ public class DependentProcedureAccessNode extends AccessNode {
     protected boolean prepareNextCommand(Command atomicCommand) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         
         if (this.criteriaProcessor == null) {
-            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults);
+            this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults, new Evaluator(null, null, getContext()));
         }
         
         return criteriaProcessor.prepareNextCommand();

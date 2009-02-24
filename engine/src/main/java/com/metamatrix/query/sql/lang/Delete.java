@@ -22,7 +22,9 @@
 
 package com.metamatrix.query.sql.lang;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
@@ -158,6 +160,14 @@ public class Delete extends PreparedBatchUpdate {
         
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
+    }
+    
+    /** 
+     * @see com.metamatrix.query.sql.lang.ProcedureContainer#getParameters()
+     * @since 5.0
+     */
+    public Map getProcedureParameters() {
+        return Collections.EMPTY_MAP;
     }
 
 	/**

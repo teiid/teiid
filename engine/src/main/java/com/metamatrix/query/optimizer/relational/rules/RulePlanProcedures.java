@@ -32,11 +32,9 @@ import java.util.Set;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
@@ -60,7 +58,6 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 public class RulePlanProcedures implements OptimizerRule {
 
@@ -95,9 +92,6 @@ public class RulePlanProcedures implements OptimizerRule {
             List conjuncts = new LinkedList();
             HashSet coveredParams = new HashSet();
             //List preExecNodes = new LinkedList();
-
-            // Case 6395 - maintain a list of non-nullable elements that are set IS NULL.  
-            List nonNullableElems = new LinkedList();
             
             if (!proc.isProcedureRelational()) {
                 continue;
@@ -111,12 +105,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 inputSymbols.add(symbol);
             }
             
-            findInputNodes(inputSymbols, critNode, conjuncts, coveredParams, nonNullableElems, metadata);
-            
-            // Check for non-nullable elements that are set IS NULL.  throws exception if any found.
-            if(!nonNullableElems.isEmpty()) {
-            	throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanProcedures.nonNullableParam", nonNullableElems.get(0))); //$NON-NLS-1$
-            }
+            findInputNodes(inputSymbols, critNode, conjuncts, coveredParams);
             
             List defaults = new LinkedList();
             
@@ -162,8 +151,7 @@ public class RulePlanProcedures implements OptimizerRule {
 
     private void findInputNodes(final HashSet inputs,
                                PlanNode critNode,
-                               final List conjuncts, final Set params, final List nonNullableElems,
-                               final QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+                               final List conjuncts, final Set params) {
         
         while (critNode.getType() == NodeConstants.Types.SELECT) {
             final PlanNode currentNode = critNode;
@@ -201,24 +189,10 @@ public class RulePlanProcedures implements OptimizerRule {
                     setAbort(true);
                 }
                 
-                // method to add invalid isNull element
-                private void addInvalidElem(ElementSymbol symbol) {
-                	nonNullableElems.add(symbol);
-                }
-                
-                public void visit(IsNullCriteria isNull) {
+                public void visit(IsNullCriteria isNull){
                     if (isNull.isNegated()) {
                         return;
                     }
-                    // Case 6395 - check for non-nullable Elems that are IS NULL
-					Expression expr = isNull.getExpression();
-					if(expr instanceof Reference) {
-						expr = ((Reference)expr).getExpression();
-					}
-					if(expr instanceof ElementSymbol &&!isNullable((ElementSymbol)expr,metadata)) {
-						addInvalidElem((ElementSymbol)expr);
-					}
-					
                     if (checkForInput(isNull.getExpression())) {
                         addInputNode((Reference)isNull.getExpression());
                     }
@@ -262,24 +236,13 @@ public class RulePlanProcedures implements OptimizerRule {
                     }
                     return false;
                 }
-
-                boolean isNullable(ElementSymbol element, QueryMetadataInterface metadata) {                    
-                	Object elemID = element.getMetadataID();
-                	try {
-	                    return metadata.elementSupports(elemID, SupportConstants.Element.NULL) || 
-	                        metadata.elementSupports(elemID, SupportConstants.Element.NULL_UNKNOWN);
-                	} catch (Exception e){
-                        LogManager.logWarning(LogConstants.CTX_QUERY_PLANNER, e , "Error getting isNullable on element: "+element.getShortName()); //$NON-NLS-1$
-                        return false;
-                	}
-                }
                 
             };
 
             PreOrderNavigator.doVisit(crit, visitor);
         }
     }
-
+    
     /** 
      * @see java.lang.Object#toString()
      */

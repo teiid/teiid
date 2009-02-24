@@ -48,8 +48,10 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
@@ -62,6 +64,7 @@ import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -188,8 +191,6 @@ public class QueryRewriter {
      */
 	private static Command rewriteCommand(Command command, Command procCommand, final QueryMetadataInterface metadata, final CommandContext context) throws QueryValidatorException {
 
-        boolean referencesRequired = false;
-        
         //TODO: this should be merged with the normal functioning of the rewriter
         CorrelatedVariableSubstitutionVisitor.substituteVariables(command);
         
@@ -234,11 +235,9 @@ public class QueryRewriter {
                 if (command instanceof ProcedureContainer) {
                        
                     try {
-    	                Map variables = QueryResolver.getVariableValues(command, metadata);
-                        //if we know at this point that the procedure wrapper can be removed, then references will be forwarded in the call below
-                        boolean forwardReferences = canRemoveProceduralWrapper((ProcedureContainer)command);
-                        
-                        referencesRequired |= VariableSubstitutionVisitor.substituteVariables(subCommand, variables, command.getType(), forwardReferences);
+    	                Map variables = QueryResolver.getVariableValues(command, metadata);                        
+                        VariableSubstitutionVisitor.substituteVariables(subCommand, variables, command.getType());
+
                     } catch (QueryMetadataException err) {
                         throw new QueryValidatorException(err, err.getMessage());
                     } catch (QueryResolverException err) {
@@ -253,24 +252,7 @@ public class QueryRewriter {
             }
         }
 
-        //there's a chance that rewriting caused the procedure to simplify, which means that we should check again if the wrapper can be removed
-        //TODO: handle empty procedure blocks
-        if (!referencesRequired && (command instanceof ProcedureContainer) && canRemoveProceduralWrapper((ProcedureContainer)command)) {
-            ProcedureContainer container = (ProcedureContainer)command;
-            Block block = ((CreateUpdateProcedureCommand)container.getSubCommand()).getBlock();
-            Command subCommand = ((CommandStatement)(block.getStatements().get(0))).getCommand();
-            
-            if ( subCommand.getOption() == null ) {
-                subCommand.setOption( command.getOption() );                
-            } else {
-                Option merged = mergeOptions( command.getOption(), subCommand.getOption() );
-                subCommand.setOption(merged);
-            }
-            
-            return subCommand;
-        }
-                
-        return command;
+        return removeProceduralWrapper(command, metadata);
 	}
     
     private static Option mergeOptions( Option sourceOption, Option targetOption ) {
@@ -291,38 +273,70 @@ public class QueryRewriter {
     }
     
 	
-    private static boolean canRemoveProceduralWrapper(ProcedureContainer container) throws QueryValidatorException {
+    private static Command removeProceduralWrapper(Command command, QueryMetadataInterface metadata) throws QueryValidatorException {
         
-        if (container instanceof StoredProcedure && ((StoredProcedure)container).isProcedureRelational()) {
-            return false;
+        if (!(command instanceof StoredProcedure)) {
+            return command;
+        }
+        
+        StoredProcedure container = (StoredProcedure)command;
+        if (container.isProcedureRelational()) {
+            return command;
         }
         
         if (!(container.getSubCommand() instanceof CreateUpdateProcedureCommand)) {
-            return false;
+            return command;
         }
         
         CreateUpdateProcedureCommand subCommand = (CreateUpdateProcedureCommand)container.getSubCommand();
         
         if (subCommand == null) {
-            return false;
+            return command;
         }
+        
+        //if all parameters can be evaluated, we need to validate their values before removing the procedure wrapper
+        for (Iterator iter = container.getInputParameters().iterator(); iter.hasNext();) {
+            SPParameter param = (SPParameter)iter.next();
+            Expression expr = param.getExpression();
+            if (!EvaluateExpressionVisitor.isFullyEvaluatable(expr, true)) {
+                return command;
+            }
+            try {
+                Object value = Evaluator.evaluate(expr);
+
+                //check contraint
+                if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+                    throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
+                }
+            } catch (ExpressionEvaluationException err) {
+            } catch (BlockedException err) {
+            } catch (MetaMatrixComponentException err) {            
+            }
+        } 
+        
         Block block = subCommand.getBlock();
         
         if (block.getStatements().size() != 1) {
-            return false;
+            return command;
         }
         Statement statement = (Statement)block.getStatements().get(0);
         if (statement.getType() != Statement.TYPE_COMMAND) {
-            return false;
+            return command;
         }
         
-        Command command = (((CommandStatement)statement).getCommand());
+        Command child = (((CommandStatement)statement).getCommand());
         
-        if (command != null && command.getType() != Command.TYPE_DYNAMIC) {
-            return true;
+        if (child != null && child.getType() != Command.TYPE_DYNAMIC) {
+            if ( child.getOption() == null ) {
+                child.setOption( command.getOption() );                
+            } else {
+                Option merged = mergeOptions( command.getOption(), child.getOption() );
+                child.setOption(merged);
+            }
+            
+            return child;        
         }
-        
-        return false;
+        return command;
     }
 
 	private static Command rewriteUpdateProcedure(CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context)

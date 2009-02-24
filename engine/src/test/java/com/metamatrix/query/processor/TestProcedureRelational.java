@@ -27,6 +27,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
@@ -523,7 +524,24 @@ public class TestProcedureRelational extends TestCase {
         TestProcedureProcessor.helpTestProcess(plan, expected, new FakeDataManager());  
                
     }
-    
+
+    //virtual group with procedure in transformation
+    public void testCase6395ProcAsVirtualGroup9(){
+        String sql = "SELECT P.e2 as ve3, P.e1 as ve4 FROM pm1.vsp47 as P where param1=1 and param2='a' OPTION DEBUG"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(1), "FOO" }), //$NON-NLS-1$ 
+        };       
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);   
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());       
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected); 
+    }    
+        
     /**
      *  Case 6395 - This test case will now raise a QueryPlannerException.  param2 is required
      *  and not nullable.  This case is expected to fail because of 'param2 is null' 
@@ -538,16 +556,14 @@ public class TestProcedureRelational extends TestCase {
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);       
         // Plan query
-        ProcessorPlan plan = null;
         try {
-        	plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());  
+        	ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());  
             // Run query
-            TestProcessor.helpProcess(plan, dataManager, expected); 
-        } catch (Exception e) {
+            TestProcessor.doProcess(plan, dataManager, expected, TestProcessor.createCommandContext()); 
+            fail("QueryPlannerException was expected.");  //$NON-NLS-1$
+        } catch (QueryValidatorException e) {
         	assertEquals("The procedure parameter is not nullable, but is set to null: pm1.vsp26.param2",e.getMessage());  //$NON-NLS-1$
-        	return;
         }
-        fail("QueryPlannerException was expected.");  //$NON-NLS-1$
     }
     
     /**
@@ -560,6 +576,24 @@ public class TestProcedureRelational extends TestCase {
         // Create expected results
         List[] expected = new List[] { 
                 Arrays.asList(new Object[] { null, new Integer(2112), null, null }) 
+        };        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);       
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, FakeMetadataFactory.example1Cached());  
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected); 
+    }
+    
+    /**
+     *  Case 6395 - This will not throw an exception and the proc will not be invoked.
+     */
+    public void testProcAsVirtualGroup2WithNull3() throws Exception {
+        String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2 = commandpayload()"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] { 
         };        
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
