@@ -45,7 +45,7 @@ class TransactionContextImpl implements
     private MMXid xid;
     private String txnID;
     private Transaction transaction;
-    private int transactionType = TRANSACTION_NONE;
+    private Scope transactionType = Scope.TRANSACTION_NONE;
     private Set suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap());
     private int transactionTimeout = -1;
     private Set xaResources = Collections.newSetFromMap(new ConcurrentHashMap());
@@ -79,11 +79,11 @@ class TransactionContextImpl implements
         return this.txnID;
     }
 
-    void setTransactionType(int transactionType) {
+    void setTransactionType(Scope transactionType) {
         this.transactionType = transactionType;
     }
 
-    public int getTransactionType() {
+    public Scope getTransactionType() {
         return transactionType;
     }
 

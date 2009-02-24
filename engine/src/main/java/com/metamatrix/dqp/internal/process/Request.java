@@ -416,7 +416,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
         
         if (tc != null){ 
-            Assertion.assertTrue(tc.getTransactionType() != TransactionContext.TRANSACTION_REQUEST);
+            Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
         }
         
         if (tc == null || !tc.isInTransaction()) {

@@ -29,12 +29,14 @@ import javax.transaction.Transaction;
  */
 public interface TransactionContext {
     
-    public static final int TRANSACTION_GLOBAL = 0;
-    public static final int TRANSACTION_LOCAL = 1;
-    public static final int TRANSACTION_REQUEST = 2;
-    public static final int TRANSACTION_BLOCK = 3;
-    public static final int TRANSACTION_NONE = 4;
-    
+	public enum Scope {
+		TRANSACTION_BLOCK,
+		TRANSACTION_GLOBAL,
+		TRANSACTION_LOCAL,
+		TRANSACTION_NONE,
+		TRANSACTION_REQUEST
+	}
+	
     public boolean isInTransaction();
     
     /** 
@@ -47,5 +49,5 @@ public interface TransactionContext {
      */
     public String getTxnID();
     
-    public int getTransactionType();
+    public Scope getTransactionType();
 }

@@ -25,6 +25,13 @@ package com.metamatrix.connector.jdbc.oracle;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.jdbc.oracle.ExtractFunctionModifier;
+import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
+import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
+import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
+import org.teiid.connector.jdbc.translator.TranslatedCommand;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
@@ -33,10 +40,6 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.JDBCPropertyNames;
-import com.metamatrix.connector.jdbc.translator.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
-import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -121,7 +124,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         }
         translator.initialize(EnvironmentUtility.createEnvironment(p, false));
         // Convert back to SQL
-        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(translator);      
+        SQLConversionVisitor sqlVisitor = translator.getSQLConversionVisitor();      
         sqlVisitor.setExecutionContext(context);
         TranslatedCommand tc = new TranslatedCommand(context, translator, sqlVisitor, funcVisitor);
         tc.translateCommand(obj);

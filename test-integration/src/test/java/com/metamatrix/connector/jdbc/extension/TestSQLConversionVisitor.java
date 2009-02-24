@@ -26,17 +26,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
+import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
+import org.teiid.connector.jdbc.translator.TranslatedCommand;
+import org.teiid.connector.jdbc.translator.Translator;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.jdbc.JDBCPropertyNames;
-import com.metamatrix.connector.jdbc.translator.SQLConversionVisitor;
-import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
-import com.metamatrix.connector.jdbc.translator.Translator;
-import com.metamatrix.connector.jdbc.util.FunctionReplacementVisitor;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILanguageObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -120,7 +121,7 @@ public class TestSQLConversionVisitor extends TestCase {
         props.setProperty(JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, Boolean.TRUE.toString());
         Translator trans = new Translator();
         trans.initialize(EnvironmentUtility.createEnvironment(props, false));
-        SQLConversionVisitor visitor = new SQLConversionVisitor(trans);
+        SQLConversionVisitor visitor = trans.getSQLConversionVisitor();
         visitor.setExecutionContext(context);
         visitor.append(obj);
         return visitor.toString();
@@ -146,7 +147,7 @@ public class TestSQLConversionVisitor extends TestCase {
         }
         trans.initialize(EnvironmentUtility.createEnvironment(p, false));
         // Convert back to SQL
-        SQLConversionVisitor sqlVisitor = new SQLConversionVisitor(trans);
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
         
         TranslatedCommand tc = new TranslatedCommand(new FakeExecutionContextImpl(), trans, sqlVisitor, funcVisitor);
         tc.translateCommand(obj);

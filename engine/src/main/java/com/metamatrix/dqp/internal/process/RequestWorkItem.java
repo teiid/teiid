@@ -285,7 +285,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 					this.transactionState = TransactionState.END;
 				}
 			}
-			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.TRANSACTION_REQUEST) {
+			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST) {
 				this.transactionService.getTransactionServer().commit(transactionContext);
 				this.transactionState = TransactionState.DONE;
 			}
@@ -345,7 +345,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			this.transactionState = TransactionState.END;
 		} 
 		
-		if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.TRANSACTION_REQUEST) {
+		if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST) {
 			this.transactionState = TransactionState.DONE;
             try {
         		this.transactionService.getTransactionServer().rollback(transactionContext);

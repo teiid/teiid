@@ -28,7 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.metamatrix.connector.jdbc.oracle.OracleCapabilities;
+import org.teiid.connector.jdbc.oracle.OracleCapabilities;
+
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.CapabilitiesConverter;
 import com.metamatrix.query.metadata.QueryMetadataInterface;

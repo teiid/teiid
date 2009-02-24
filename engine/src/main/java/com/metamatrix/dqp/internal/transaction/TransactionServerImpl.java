@@ -42,7 +42,6 @@ import javax.transaction.xa.Xid;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.connector.xa.api.TransactionContext;
-import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
@@ -228,7 +227,7 @@ public class TransactionServerImpl implements
             case XAResource.TMNOFLAGS: {
                 checkXAState(threadId, xid, false, false);
                 tc = transactions.getOrCreateTransactionContext(threadId);
-                if (tc.getTransactionType() != TransactionContext.TRANSACTION_NONE) {
+                if (tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_NONE) {
                     throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
                 }
                 Transaction tx;
@@ -255,14 +254,14 @@ public class TransactionServerImpl implements
                 tc.setTransaction(tx, provider.getTransactionID(tx));
                 tc.setTransactionTimeout(timeout);
                 tc.setXid(xid);
-                tc.setTransactionType(TransactionContext.TRANSACTION_GLOBAL);
+                tc.setTransactionType(TransactionContext.Scope.TRANSACTION_GLOBAL);
                 break;
             }
             case XAResource.TMJOIN:
             case XAResource.TMRESUME: {
                 tc = checkXAState(threadId, xid, true, false);
                 TransactionContextImpl threadContext = transactions.getOrCreateTransactionContext(threadId);
-                if (threadContext.getTransactionType() != TransactionContext.TRANSACTION_NONE) {
+                if (threadContext.getTransactionType() != TransactionContext.Scope.TRANSACTION_NONE) {
                     throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
                 }
                 
@@ -323,7 +322,7 @@ public class TransactionServerImpl implements
             }
             if (!threadBound) {
                 tc = transactions.getOrCreateTransactionContext(threadId);
-                if (tc.getTransactionType() != TransactionContext.TRANSACTION_NONE) {
+                if (tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_NONE) {
                     throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction", new Object[] {xid, threadId})); //$NON-NLS-1$
                 }
             }
@@ -350,8 +349,8 @@ public class TransactionServerImpl implements
 
         final TransactionManager tm = getTransactionManager();
 
-        if (tc.getTransactionType() != TransactionContext.TRANSACTION_NONE) {
-            if (tc.getTransactionType() != TransactionContext.TRANSACTION_LOCAL) {
+        if (tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_NONE) {
+            if (tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_LOCAL) {
                 throw new NotSupportedException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
             }
             if (!transactionExpected) {
@@ -372,7 +371,7 @@ public class TransactionServerImpl implements
             tm.begin();
             Transaction tx = tm.suspend();
             tc.setTransaction(tx, provider.getTransactionID(tx));
-            tc.setTransactionType(TransactionContext.TRANSACTION_LOCAL);
+            tc.setTransactionType(TransactionContext.Scope.TRANSACTION_LOCAL);
             return tc;
         } catch (InvalidTransactionException err) {
             throw new XATransactionException(err);
@@ -446,14 +445,14 @@ public class TransactionServerImpl implements
         TransactionContextImpl tc = (TransactionContextImpl)context;
 
         try {
-            if (tc.getTransactionType() != TransactionContext.TRANSACTION_NONE) {
+            if (tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_NONE) {
                 throw new XATransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
             }
             tm.begin();
             Transaction tx = tm.suspend();
             
             tc.setTransaction(tx, provider.getTransactionID(tx));
-            tc.setTransactionType(TransactionContext.TRANSACTION_REQUEST);
+            tc.setTransactionType(TransactionContext.Scope.TRANSACTION_REQUEST);
             return tc;
         } catch (NotSupportedException e) {
             throw new XATransactionException(e);
@@ -461,13 +460,13 @@ public class TransactionServerImpl implements
     }
 
     public TransactionContext commit(TransactionContext context) throws XATransactionException, SystemException {
-        Assertion.assertTrue(context.getTransactionType() == TransactionContext.TRANSACTION_REQUEST);
+        Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST);
         TransactionContextImpl tc = (TransactionContextImpl)context;
         
         //commit may be called multiple times by the processworker, if this is a subsequent call, then the current
         //context will not be active
         TransactionContextImpl currentContext = transactions.getTransactionContext(tc.getThreadId());
-        if (currentContext == null || currentContext.getTransactionType() == TransactionContext.TRANSACTION_NONE) {
+        if (currentContext == null || currentContext.getTransactionType() == TransactionContext.Scope.TRANSACTION_NONE) {
             return currentContext;
         }
         TransactionManager tm = getTransactionManager();
@@ -494,7 +493,7 @@ public class TransactionServerImpl implements
     }
 
     public TransactionContext rollback(TransactionContext context) throws XATransactionException, SystemException {
-        Assertion.assertTrue(context.getTransactionType() == TransactionContext.TRANSACTION_REQUEST);
+        Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST);
         TransactionManager tm = getTransactionManager();
         try {
             tm.resume(context.getTransaction());
@@ -584,11 +583,11 @@ public class TransactionServerImpl implements
     public void cancelTransactions(String threadId, boolean requestOnly) throws InvalidTransactionException, SystemException {
         TransactionContextImpl tc = transactions.getTransactionContext(threadId);
         
-        if (tc == null || tc.getTransactionType() == TransactionContext.TRANSACTION_NONE) {
+        if (tc == null || tc.getTransactionType() == TransactionContext.Scope.TRANSACTION_NONE) {
             return;
         }
         
-        if (requestOnly && tc.getTransactionType() != TransactionContext.TRANSACTION_REQUEST) {
+        if (requestOnly && tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_REQUEST) {
             return;
         }
         

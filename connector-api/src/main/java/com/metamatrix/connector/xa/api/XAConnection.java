@@ -31,9 +31,8 @@ import com.metamatrix.connector.api.ConnectorException;
 
 public interface XAConnection extends Connection{
     /**
-     * Get XAResource for this connection if the underlining data source is to be
-     * involved in a distributed transaction.
-     * @return
+     * Get XAResource for this connection
+     * @return the XAResource, never null
      */
     XAResource getXAResource() throws ConnectorException;
     

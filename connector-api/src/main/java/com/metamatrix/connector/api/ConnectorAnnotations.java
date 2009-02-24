@@ -51,12 +51,4 @@ public class ConnectorAnnotations {
 		boolean enabled() default true;
 	}
 	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target({ElementType.TYPE})
-	public @interface ConnectorConfiguration {
-		boolean userIdentityCapable() default false;
-		boolean useSynchronousWorkers() default true;
-		boolean useConnectionPooling() default true;
-	}
-
 }

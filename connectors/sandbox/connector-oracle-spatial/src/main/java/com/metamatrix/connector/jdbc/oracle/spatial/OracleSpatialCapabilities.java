@@ -22,8 +22,9 @@
 
 package com.metamatrix.connector.jdbc.oracle.spatial;
 
-import com.metamatrix.connector.jdbc.oracle.*;
 import java.util.*;
+
+import org.teiid.connector.jdbc.oracle.*;
 
 public class OracleSpatialCapabilities extends OracleCapabilities {
 

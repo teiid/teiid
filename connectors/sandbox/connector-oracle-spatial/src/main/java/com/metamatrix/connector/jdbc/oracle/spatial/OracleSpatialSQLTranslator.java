@@ -26,11 +26,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.jdbc.translator.Translator;
+
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IFunction;

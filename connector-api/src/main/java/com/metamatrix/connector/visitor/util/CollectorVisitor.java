@@ -42,7 +42,8 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
         this.type = type;
     }
 
-    private void checkInstance(ILanguageObject obj) {
+    @SuppressWarnings("unchecked")
+	private void checkInstance(ILanguageObject obj) {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
