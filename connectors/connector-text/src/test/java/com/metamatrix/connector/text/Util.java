@@ -33,7 +33,7 @@ import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.core.util.UnitTestUtil;
 
-public class TestHelper {
+public class Util {
 
 	static void helpTestExecution(String vdb, String descriptorFile, String sql, int maxBatchSize, int expectedRowCount) throws Exception {
 		descriptorFile = UnitTestUtil.getTestDataPath() + File.separator + descriptorFile;

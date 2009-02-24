@@ -173,7 +173,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -395,11 +395,6 @@
 				<groupId>antlr</groupId>
 				<artifactId>stringtemplate</artifactId>
 				<version>3.0</version>
-			</dependency>
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>3.8.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.netty</groupId>
