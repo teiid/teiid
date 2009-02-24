@@ -51,6 +51,7 @@ import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.symbol.AbstractCaseExpression;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -60,6 +61,7 @@ import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -597,18 +599,33 @@ public class ResolverUtil {
      */
     public static void resolveNullLiterals(List symbols) {
         for (int i = 0; i < symbols.size(); i++) {
-            SelectSymbol symbol = (SelectSymbol) symbols.get(i);
+            SelectSymbol selectSymbol = (SelectSymbol) symbols.get(i);
+            
+            if (!(selectSymbol instanceof SingleElementSymbol)) {
+                continue;
+            }
+            
+            SingleElementSymbol symbol = (SingleElementSymbol)selectSymbol;
+            
+            if(!DataTypeManager.DefaultDataClasses.NULL.equals(symbol.getType()) && symbol.getType() != null) {
+                continue;
+            }
             if(symbol instanceof AliasSymbol) {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
-            
+                        
             Class replacement = DataTypeManager.DefaultDataClasses.STRING;
             
             if(symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
                 ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
                 Expression expr = exprSymbol.getExpression();
-                if(expr != null && expr instanceof Constant && ((Constant)expr).isNull()) {
+               	
+                if(expr instanceof Constant) {                	
                     exprSymbol.setExpression(new Constant(null, replacement));
+                } else if (expr instanceof AbstractCaseExpression) {
+                    ((AbstractCaseExpression)expr).setType(replacement);
+                } else if (expr instanceof ScalarSubquery) {
+                    ((ScalarSubquery)expr).setType(replacement);                                        
                 } else {
                 	try {
 						ResolverUtil.setTypeIfReference(expr, replacement, symbol);
