@@ -44,16 +44,16 @@ public class WithinDistanceFunctionModifier extends OracleSpatialFunctionModifie
         List objs = new ArrayList();
         objs.add("SDO_WITHIN_DISTANCE"); // recast name from sdoNN to SDO_NN //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
-        IExpression[] params = function.getParameters();
+        List<IExpression> params = function.getParameters();
         //if it doesn't have 3 parms, it is not a version of SDO_RELATE which
         // we are prepared to translate
-        if (params.length == 3) {
-            addParamWithConversion(objs, params[0]);
+        if (params.size() == 3) {
+            addParamWithConversion(objs, params.get(0));
             objs.add(", "); //comma between parms //$NON-NLS-1$
 
-            addParamWithConversion(objs, params[1]);
+            addParamWithConversion(objs, params.get(1));
             objs.add(", "); //$NON-NLS-1$
-            objs.add(params[2]);
+            objs.add(params.get(2));
         } else {
             return super.translate(function);
         }

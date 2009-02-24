@@ -42,10 +42,9 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.PoolAwareConnection;
-import com.metamatrix.connector.identity.SingleIdentity;
+import com.metamatrix.connector.api.SingleIdentity;
 import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.log.MessageLevel;
@@ -455,7 +454,7 @@ public class ConnectionPool {
     }
         
     //for testing purpose
-    final List<ConnectionWrapper> getUsedConnections(PoolAwareConnection connection) {
+    final List<ConnectionWrapper> getUsedConnections(Connection connection) {
     	ConnectorIdentity id = null;
     	ConnectionsForId connLists = null;
     	synchronized (this.lock) {
@@ -471,7 +470,7 @@ public class ConnectionPool {
     }
 
     //for testing purpose
-    final List<ConnectionWrapper> getUnusedConnections(PoolAwareConnection connection) {
+    final List<ConnectionWrapper> getUnusedConnections(Connection connection) {
     	ConnectorIdentity id = null;
     	ConnectionsForId connLists = null;
     	synchronized (this.lock) {

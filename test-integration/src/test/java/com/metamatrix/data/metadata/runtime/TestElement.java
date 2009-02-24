@@ -31,7 +31,6 @@ import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -59,8 +58,7 @@ public class TestElement extends TestCase {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
         ISelectSymbol symbol = (ISelectSymbol) query.getSelect().getSelectSymbols().get(0);
         IElement element = (IElement) symbol.getExpression();
-        MetadataID metadataID = element.getMetadataID();
-        return (Element) transUtil.createRuntimeMetadata().getObject(metadataID);
+        return element.getMetadataObject();
     }
 
     public void helpTestElement(String fullGroupName, String elementShortName, TranslationUtility transUtil,

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.language.ICriteria;
@@ -58,8 +59,8 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
      */
     public IExpression modify(IFunction function) {
         List when = new ArrayList();
-        IExpression a = function.getParameters()[0];
-        IExpression b = function.getParameters()[1];
+        IExpression a = function.getParameters().get(0);
+        IExpression b = function.getParameters().get(1);
         List crits = new ArrayList();
         
         ILiteral nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
@@ -95,8 +96,8 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     	}
     	if (expr instanceof IFunction) {
     		IFunction function = (IFunction)expr;
-    		if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase("IFNULL")) { //$NON-NLS-1$ //$NON-NLS-2$
-    			return isNotNull(function.getParameters()[1]);
+    		if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase(SourceSystemFunctions.IFNULL)) { //$NON-NLS-1$
+    			return isNotNull(function.getParameters().get(0));
     		}
     	}
     	return false;

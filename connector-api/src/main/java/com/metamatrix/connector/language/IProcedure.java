@@ -24,10 +24,12 @@ package com.metamatrix.connector.language;
 
 import java.util.List;
 
+import com.metamatrix.connector.metadata.runtime.Procedure;
+
 /**
  * Represents a procedural execution (such as a stored procedure).  
  */
-public interface IProcedure extends ICommand, IMetadataReference {
+public interface IProcedure extends ICommand, IMetadataReference<Procedure> {
     
     /**
      * Gets the name of the procedure.
@@ -48,11 +50,4 @@ public interface IProcedure extends ICommand, IMetadataReference {
      */
     void setProcedureName(String name);
 
-    /**
-     * Sets list of the IParameter objects associated with this execution.  
-     * The parameters describe inputs and outputs.
-     * @param parameters List of IParameter
-     */
-    void setParameters(List<IParameter> parameters);
-    
 }

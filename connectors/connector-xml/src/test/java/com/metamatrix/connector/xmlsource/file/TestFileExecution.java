@@ -30,6 +30,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
@@ -37,8 +39,8 @@ import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IParameter.Direction;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
@@ -55,10 +57,10 @@ public class TestFileExecution extends TestCase {
         try {
             FileConnection conn = new FileConnection(env);
             assertTrue(conn.isConnected());
-            RuntimeMetadata metadata = new FakeRuntimeMetadata("BookCollection.xml"); //$NON-NLS-1$
+            RuntimeMetadata metadata = Mockito.mock(RuntimeMetadata.class);
 
             ILanguageFactory fact = env.getLanguageFactory();
-           	IProcedure procedure = fact.createProcedure("GetXMLFile", null, null); //$NON-NLS-1$
+           	IProcedure procedure = fact.createProcedure("GetXMLFile", null, createMockProcedureMetadata("BookCollection.xml")); //$NON-NLS-1$
 
             FileExecution exec = (FileExecution)conn.createExecution(procedure, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
             
@@ -97,9 +99,9 @@ public class TestFileExecution extends TestCase {
         try {
             FileConnection conn = new FileConnection(env);
             assertTrue(conn.isConnected());
-            RuntimeMetadata metadata = new FakeRuntimeMetadata("nofile.xml"); //$NON-NLS-1$
+            RuntimeMetadata metadata = Mockito.mock(RuntimeMetadata.class);
             ILanguageFactory fact = env.getLanguageFactory();
-            FileExecution exec = (FileExecution)conn.createExecution(fact.createProcedure("GetXMLFile", null, null), EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            FileExecution exec = (FileExecution)conn.createExecution(fact.createProcedure("GetXMLFile", null, createMockProcedureMetadata("nofile.xml")), EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             
             
             exec.execute();
@@ -120,4 +122,14 @@ public class TestFileExecution extends TestCase {
         reader.close();
         return fileContents.toString();
     }    
+    
+    public static Procedure createMockProcedureMetadata(String nameInSource) {
+    	Procedure rm = Mockito.mock(Procedure.class);
+    	try {
+			Mockito.stub(rm.getNameInSource()).toReturn(nameInSource);
+		} catch (ConnectorException e) {
+			throw new RuntimeException(e);
+		}
+    	return rm;
+    }
 }

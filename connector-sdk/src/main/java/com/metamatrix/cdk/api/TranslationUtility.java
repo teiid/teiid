@@ -28,7 +28,6 @@ import java.net.URL;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -89,6 +88,6 @@ public class TranslationUtility {
      * @return RuntimeMetadata for testing
      */
     public RuntimeMetadata createRuntimeMetadata() {
-        return new RuntimeMetadataImpl(new MetadataFactory(metadata));
+        return new RuntimeMetadataImpl(metadata);
     }
 }

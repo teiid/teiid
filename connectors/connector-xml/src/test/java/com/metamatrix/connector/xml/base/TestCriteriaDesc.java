@@ -43,7 +43,6 @@ import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.language.LanguageUtil;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -77,85 +76,56 @@ public class TestCriteriaDesc extends TestCase {
         System.setProperty("metamatrix.config.none", "true");
     }
 
-    public void testGetCriteriaDescForColumn() {  
+    public void testGetCriteriaDescForColumn() throws Exception {  
     	//case 1: values provided
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam in ('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam in ('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
 
-    public void testGetCriteriaDescForColumnDefaultedValue() {
+    public void testGetCriteriaDescForColumnDefaultedValue() throws Exception {
     	//case 2: param, required, defaulted
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }   	
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnNoCriteria() {
+    public void testGetCriteriaDescForColumnNoCriteria() throws Exception {
     	//case 3: param, not required, not defaulted, not allowed empty
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select OptionalNotAllowedEmptyParam from CriteriaDescTable";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNull("CriteriaDesc is not null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }   	
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select OptionalNotAllowedEmptyParam from CriteriaDescTable";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNull("CriteriaDesc is not null", desc);
     }
     
-    public void testGetCriteriaDescForColumnAllowEmpty() {
+    public void testGetCriteriaDescForColumnAllowEmpty() throws Exception {
     	//case 4: param, not required, not defaulted, allowed empty
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select OptionalAllowedEmptyParam from CriteriaDescTable";
-        	final int colLocation = 0;
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }   	
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select OptionalAllowedEmptyParam from CriteriaDescTable";
+    	final int colLocation = 0;
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
     public void testGetCriteriaDescForColumnError() {
@@ -167,98 +137,66 @@ public class TestCriteriaDesc extends TestCase {
         	final int colLocation = 0;
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
+        	Element elem = ((IElement) expr).getMetadataObject();
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("exception not thrown");
         } catch (ConnectorException ce) {
-            assertNotNull(ce);
         }   	
     }
     
-    public void testGetCriteriaDescForColumnNotParam() {
+    public void testGetCriteriaDescForColumnNotParam() throws Exception {
     	//case 6: not a param
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select OutputColumn from CriteriaDescTable";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNull("CriteriaDesc is not null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }   	
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select OutputColumn from CriteriaDescTable";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNull("CriteriaDesc is not null", desc);
     }
     
-    public void testGetCriteriaDescForColumnCompare() {  
+    public void testGetCriteriaDescForColumnCompare() throws Exception {  
     	//case 7: compare criteria
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam = 'foo'";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam = 'foo'";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
     
-    public void testGetCriteriaDescForColumnMultiElement() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select MultiElementParam from CriteriaDescTable where MultiElementParam in ('foo','bar')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-        	String multiplicityStr = elem.getProperties().getProperty(
-    				CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnMultiElement() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select MultiElementParam from CriteriaDescTable where MultiElementParam in ('foo','bar')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+    	String multiplicityStr = elem.getProperties().getProperty(
+				CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnDelimited() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select DelimitedParam from CriteriaDescTable where DelimitedParam in ('foo','bar')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-        	String multiplicityStr = elem.getProperties().getProperty(
-        			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnDelimited() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select DelimitedParam from CriteriaDescTable where DelimitedParam in ('foo','bar')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+    	String multiplicityStr = elem.getProperties().getProperty(
+    			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
     public void testGetCriteriaDescForColumnLikeSearchable() {  
@@ -269,37 +207,26 @@ public class TestCriteriaDesc extends TestCase {
         	final int colLocation = 0;
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
+        	Element elem = ((IElement) expr).getMetadataObject();
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
             CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("should not be able to handle default value");
         } catch (ConnectorException ce) {
-            assertTrue(true);
         }        
     }
     
-    public void testGetCriteriaDescForColumnUnlikeSearchable() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select UnlikeSearchableParam from CriteriaDescTable where UnlikeSearchableParam in ('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-        	String multiplicityStr = elem.getProperties().getProperty(
-        			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("could not create CriteriaDesc", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnUnlikeSearchable() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select UnlikeSearchableParam from CriteriaDescTable where UnlikeSearchableParam in ('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+    	String multiplicityStr = elem.getProperties().getProperty(
+    			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
     }
     
     public void testGetCriteriaDescForColumnUnsearchable() {  
@@ -310,235 +237,151 @@ public class TestCriteriaDesc extends TestCase {
         	final int colLocation = 0;
         	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
         	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
+        	Element elem = ((IElement) expr).getMetadataObject();
         	String multiplicityStr = elem.getProperties().getProperty(
         			CriteriaDesc.PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
             CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
             fail("should not be able to handle default value");
         } catch (ConnectorException ce) {
-            assertTrue(true);
         }        
     }
     
-    public void testGetCriteriaDescForColumnLike() {  
+    public void testGetCriteriaDescForColumnLike() throws Exception {  
     	//case 1: values provided
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam like 'foo'";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam like 'foo'";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
 
-    public void testGetCriteriaDescForColumnNotEquals() {  
+    public void testGetCriteriaDescForColumnNotEquals() throws Exception {  
     	//case 1: values provided
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam != 'foo'";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam != 'foo'";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnLiteral() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where concat(RequiredDefaultedParam, 'bar') in('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    public void testGetCriteriaDescForColumnLiteral() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where concat(RequiredDefaultedParam, 'bar') in('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnNameMatchFailure() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where AttributeParam in('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
-        
+    public void testGetCriteriaDescForColumnNameMatchFailure() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where AttributeParam in('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
     
-    public void testGetCriteriaDescForColumnLeftLiteral() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable " 
-        			+ "where concat('bar', 'foo') = concat('bar', RequiredDefaultedParam)";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnLeftLiteral() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable " 
+    			+ "where concat('bar', 'foo') = concat('bar', RequiredDefaultedParam)";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnTwoElements() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where OutputColumn = RequiredDefaultedParam";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnTwoElements() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where OutputColumn = RequiredDefaultedParam";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnLeftElementEqualsLiteral() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where AttributeParam = 'foo'";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnLeftElementEqualsLiteral() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where AttributeParam = 'foo'";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetCriteriaDescForColumnLeftElementEqualsNonLiteral() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select RequiredDefaultedParam from CriteriaDescTable where" 
-        			+ " RequiredDefaultedParam = concat('foo', OutputColumn)";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertNotNull("CriteriaDesc is null", desc);
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetCriteriaDescForColumnLeftElementEqualsNonLiteral() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select RequiredDefaultedParam from CriteriaDescTable where" 
+    			+ " RequiredDefaultedParam = concat('foo', OutputColumn)";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertNotNull("CriteriaDesc is null", desc);
     }
     
-    public void testGetInputXPathNoXpath() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select BadNoInputXpath from CriteriaDescTable where BadNoInputXpath in ('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertEquals(desc.getColumnName(), desc.getInputXpath());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetInputXPathNoXpath() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select BadNoInputXpath from CriteriaDescTable where BadNoInputXpath in ('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertEquals(desc.getColumnName(), desc.getInputXpath());
     }
     
     
-    public void testGetInputXPathEmptyXpath() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select BadEmptyInputXPath from CriteriaDescTable where BadEmptyInputXPath in ('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertEquals(desc.getColumnName(), desc.getInputXpath());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetInputXPathEmptyXpath() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select BadEmptyInputXPath from CriteriaDescTable where BadEmptyInputXPath in ('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertEquals(desc.getColumnName(), desc.getInputXpath());
     }  
     
-    public void testGetDataAttributeNameEmptyName() {  
-        try {
-        	assertNotNull("vdb path is null", vdbPath);
-        	String query = "select BadNoDataAttributeName from CriteriaDescTable where BadNoDataAttributeName in ('foo')";
-        	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        	final int colLocation = 0;
-        	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-        	IExpression expr = symbol.getExpression();
-        	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        	MetadataID elementID = ((IElement) expr).getMetadataID();
-        	Element elem = (Element) metadata.getObject(elementID);
-            CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-            assertEquals("", desc.getDataAttributeName());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }        
+    public void testGetDataAttributeNameEmptyName() throws Exception {  
+    	assertNotNull("vdb path is null", vdbPath);
+    	String query = "select BadNoDataAttributeName from CriteriaDescTable where BadNoDataAttributeName in ('foo')";
+    	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
+    	final int colLocation = 0;
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertEquals("", desc.getDataAttributeName());
     } 
     
     
@@ -697,98 +540,65 @@ public class TestCriteriaDesc extends TestCase {
         }
     }
     
-    public void testGetCurrentIndexValueEnumerated() {
+    public void testGetCurrentIndexValueEnumerated() throws Exception {
     	String query = "select DelimitedParam from CriteriaDescTable where DelimitedParam in ('foo', 'bar')";
     	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	final int colLocation = 0;
-    	try {
-	    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-	    	IExpression expr = symbol.getExpression();
-	    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-	    	MetadataID elementID = ((IElement) expr).getMetadataID();
-	    	Element elem = (Element) metadata.getObject(elementID);
-	        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-	        assertEquals("There should be two values" , 2, desc.getNumberOfValues());
-	        assertEquals("foo", desc.getCurrentIndexValue());
-	        desc.incrementIndex();
-	        assertEquals("bar", desc.getCurrentIndexValue());
-    	} catch (ConnectorException ce) {
-    		ce.printStackTrace();
-    		fail(ce.getMessage());
-    	}
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertEquals("There should be two values" , 2, desc.getNumberOfValues());
+        assertEquals("foo", desc.getCurrentIndexValue());
+        desc.incrementIndex();
+        assertEquals("bar", desc.getCurrentIndexValue());
     }
     
-    public void testIncrementIndexEnumerated() {
+    public void testIncrementIndexEnumerated() throws Exception {
     	String query = "select DelimitedParam from CriteriaDescTable where DelimitedParam in ('foo', 'bar')";
     	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	final int colLocation = 0;
-    	try {
-	    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
-	    	IExpression expr = symbol.getExpression();
-	    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-	    	MetadataID elementID = ((IElement) expr).getMetadataID();
-	    	Element elem = (Element) metadata.getObject(elementID);
-	        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
-	        assertTrue("We should be able to increment this CriteriaDesc", desc.incrementIndex());
-    	} catch (ConnectorException ce) {
-    		ce.printStackTrace();
-    		fail(ce.getMessage());
-    	}
+    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	IExpression expr = symbol.getExpression();
+    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
+    	Element elem = ((IElement) expr).getMetadataObject();
+        CriteriaDesc desc = CriteriaDesc.getCriteriaDescForColumn(elem, iquery);
+        assertTrue("We should be able to increment this CriteriaDesc", desc.incrementIndex());
     }
     
-    public void testGetCurrentIndexValueNoValue() {
-        try {
-        	final String query = "select OptionalAllowedEmptyParam from CriteriaDescTable";
-            Element elem = getElement(query);
-            ArrayList list = new ArrayList();
-            CriteriaDesc desc = new CriteriaDesc(elem, list);
-            assertEquals("", desc.getCurrentIndexValue());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }    	
+    public void testGetCurrentIndexValueNoValue() throws Exception {
+    	final String query = "select OptionalAllowedEmptyParam from CriteriaDescTable";
+        Element elem = getElement(query);
+        ArrayList list = new ArrayList();
+        CriteriaDesc desc = new CriteriaDesc(elem, list);
+        assertEquals("", desc.getCurrentIndexValue());
     }
 
-    public void testGetCurrentIndexValueNoValueNotEmpty() {
-        try {
-        	final String query = "select OptionalNotAllowedEmptyParam from CriteriaDescTable";
-            Element elem = getElement(query);
-            ArrayList list = new ArrayList();
-            CriteriaDesc desc = new CriteriaDesc(elem, list);
-            assertNull(desc.getCurrentIndexValue());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }    	
+    public void testGetCurrentIndexValueNoValueNotEmpty() throws Exception {
+    	final String query = "select OptionalNotAllowedEmptyParam from CriteriaDescTable";
+        Element elem = getElement(query);
+        ArrayList list = new ArrayList();
+        CriteriaDesc desc = new CriteriaDesc(elem, list);
+        assertNull(desc.getCurrentIndexValue());
     }
     
-    public void testIncrementIndex() {
-        try {
-            final String value2 = "value2";
-            String query = "select MultiCol from MultiTable where MultiCol in ('" + VALUE + "', '" + value2 + "')";
-            Element elem = getElement(query);
-            ArrayList list = new ArrayList();
-            list.add(VALUE);
-            list.add(value2);           
-            CriteriaDesc desc = new CriteriaDesc(elem, list);
-            assertEquals(VALUE, desc.getCurrentIndexValue());
-            assertTrue("index increment failed", desc.incrementIndex());
-            assertEquals(value2, desc.getCurrentIndexValue());
-            assertFalse("index went beyond number of values", desc.incrementIndex());
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
+    public void testIncrementIndex() throws Exception {
+        final String value2 = "value2";
+        String query = "select MultiCol from MultiTable where MultiCol in ('" + VALUE + "', '" + value2 + "')";
+        Element elem = getElement(query);
+        ArrayList list = new ArrayList();
+        list.add(VALUE);
+        list.add(value2);           
+        CriteriaDesc desc = new CriteriaDesc(elem, list);
+        assertEquals(VALUE, desc.getCurrentIndexValue());
+        assertTrue("index increment failed", desc.incrementIndex());
+        assertEquals(value2, desc.getCurrentIndexValue());
+        assertFalse("index went beyond number of values", desc.incrementIndex());
     }
 
-    public void testResetIndex() {
-        try {
-            CriteriaDesc desc = createCriteriaDesc(QUERY);
-            desc.resetIndex();
-        } catch (ConnectorException ce) {
-            ce.printStackTrace();
-            fail(ce.getMessage());
-        }
+    public void testResetIndex() throws Exception {
+        CriteriaDesc desc = createCriteriaDesc(QUERY);
+        desc.resetIndex();
     }
 
     public void testNameMatch() {
@@ -882,26 +692,11 @@ public class TestCriteriaDesc extends TestCase {
     
     private Element getElement(String query, int colLocation)
 			throws ConnectorException {
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
     	IExpression expr = symbol.getExpression();
-    	MetadataID elementID = ((IElement) expr).getMetadataID();
-    	Element elem = (Element) metadata.getObject(elementID);
+    	Element elem = ((IElement) expr).getMetadataObject();
     	return elem;        		
 	}
-    
-    private Group getTable(String query) throws ConnectorException {
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
-        IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
-        ISelect select = iquery.getSelect();
-        List elems = select.getSelectSymbols();
-        IFrom from = iquery.getFrom();
-        List fromItems = from.getItems();
-        //better be only one
-        IGroup group = (IGroup) fromItems.get(0);
-        MetadataID id = group.getMetadataID();
-        return (Group) metadata.getObject(id);
-    }
     
 }

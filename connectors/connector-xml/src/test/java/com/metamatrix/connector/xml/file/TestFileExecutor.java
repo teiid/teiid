@@ -38,7 +38,6 @@ import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.MockXMLExecution;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
@@ -300,8 +299,7 @@ public class TestFileExecutor extends TestCase {
         IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
     	IExpression expr = symbol.getExpression();
-    	MetadataID elementID = (MetadataID) ((IElement) expr).getMetadataID();
-    	Element elem = (Element) metadata.getObject(elementID);
+    	Element elem = ((IElement) expr).getMetadataObject();
     	return elem;        		
 	}
     

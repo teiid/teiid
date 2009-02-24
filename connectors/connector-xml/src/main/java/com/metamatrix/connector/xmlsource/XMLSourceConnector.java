@@ -29,13 +29,14 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import com.metamatrix.connector.basic.BasicConnector;
 
 /**
  * XML Source connector, will give provide a XML document as source to
  * Metamatrix engine.
  */
 @ConnectionPooling
-public class XMLSourceConnector implements Connector {
+public class XMLSourceConnector extends BasicConnector {
 
     private ConnectorEnvironment env;
     private XMLConnectionFacory connFactory;

@@ -24,18 +24,18 @@ package com.metamatrix.connector.ldap;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.basic.BasicConnector;
 
 /** 
  * LDAPConnector.  This is responsible for initializing 
  * a connection factory, and obtaining connections to LDAP.
  */
-public class LDAPConnector implements Connector {
+public class LDAPConnector extends BasicConnector {
 	private ConnectorEnvironment env;
 	private ConnectorLogger logger;
 	private Properties props;
@@ -59,7 +59,7 @@ public class LDAPConnector implements Connector {
 	
     /** 
 	 * (non-Javadoc)
-	 * @see com.metamatrix.connector.api.Connector#initialize(com.metamatrix.connector.api.ConnectorEnvironment)
+	 * @see com.metamatrix.connector.basic.BasicConnector#initialize(com.metamatrix.connector.api.ConnectorEnvironment)
 	 */
 	@Override
 	public void start(ConnectorEnvironment env) throws ConnectorException {

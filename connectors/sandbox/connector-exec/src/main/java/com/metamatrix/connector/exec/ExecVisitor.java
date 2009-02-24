@@ -82,11 +82,11 @@ public class ExecVisitor extends HierarchyVisitor {
         
         if (whereValue != null) {
             
-            whereClause.put(symbol.getMetadataID().getName(), whereValue);
+            whereClause.put(symbol.getMetadataObject().getName(), whereValue);
 //            System.out.println("SYMBOL: " + symbol.getMetadataID().getName() + " value: " + whereValue );//$NON-NLS-1$ //$NON-NLS-2$
             
         } else {
-            this.exception = new ConnectorException(ExecPlugin.Util.getString("SoapVisitor.No_where_value_found", symbol.getMetadataID().getName())); //$NON-NLS-1$
+            this.exception = new ConnectorException(ExecPlugin.Util.getString("SoapVisitor.No_where_value_found", symbol.getMetadataObject().getName())); //$NON-NLS-1$
                                                  
         }
 

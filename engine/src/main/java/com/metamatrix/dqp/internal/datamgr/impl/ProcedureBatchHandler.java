@@ -55,7 +55,7 @@ class ProcedureBatchHandler {
             while(iter.hasNext()){
                 IParameter param = (IParameter)iter.next();
                 if (param.getDirection() == Direction.RESULT_SET) {
-                    resultSetCols = param.getMetadataID().getChildIDs().size();
+                    resultSetCols = param.getMetadataObject().getChildren().size();
                 } else if(param.getDirection() == Direction.RETURN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                     paramCols += 1;
                 }

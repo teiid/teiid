@@ -28,8 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.metamatrix.common.buffer.impl.BufferConfig;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.identity.ConnectorIdentity;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**

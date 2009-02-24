@@ -39,7 +39,6 @@ import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -169,19 +168,18 @@ public class ObjectQuery implements IObjectQuery {
         if(expression instanceof IFunction) {
             IFunction function = (IFunction) expression;
             functionName = function.getName();
-            IExpression[] expressions = function.getParameters();
-            element = (IElement)expressions[0];
+            List<IExpression> expressions = function.getParameters();
+            element = (IElement)expressions.get(0);
         } else if(expression instanceof IElement) {
             element = (IElement)expression;
         }
         IMetadataReference reference = element;
-        MetadataID id = reference.getMetadataID();
-        MetadataObject obj = metadata.getObject(id);
+        MetadataObject obj = reference.getMetadataObject();
         if (obj != null && obj.getNameInSource() != null) {
             Element elementMetadata = (Element) obj;
             columnTypes.add( elementMetadata.getJavaType() );
             columnNamesInSource.add(obj.getNameInSource());
-            columnNames.add(obj.getMetadataID().getFullName());
+            columnNames.add(obj.getFullName());
             if(functionName == null) {
                 caseTypes.add(NO_CASE);
             } else if(functionName.equalsIgnoreCase("UPPER") || functionName.equalsIgnoreCase("UCASE")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -194,8 +192,7 @@ public class ObjectQuery implements IObjectQuery {
     
     private String getMetadataObjectName(Object element) throws ConnectorException {
         IMetadataReference reference = (IMetadataReference) element;
-        MetadataID id = reference.getMetadataID();
-        MetadataObject obj = metadata.getObject(id);
+        MetadataObject obj = reference.getMetadataObject();
         if (obj != null && obj.getNameInSource() != null) {
             return obj.getNameInSource();
         }
@@ -228,8 +225,8 @@ public class ObjectQuery implements IObjectQuery {
         String functionName = null;
         if(expression instanceof IFunction) {
             IFunction function = (IFunction) expression;
-            IExpression[] expressions = function.getParameters();
-            literal = (ILiteral)expressions[0];
+            List<IExpression> expressions = function.getParameters();
+            literal = (ILiteral)expressions.get(0);
             functionName = function.getName();
         } else if(expression instanceof ILiteral) {
             literal = (ILiteral) expression;
@@ -249,8 +246,8 @@ public class ObjectQuery implements IObjectQuery {
         IElement element = null;
         if(expression instanceof IFunction) {
             IFunction function = (IFunction) expression;
-            IExpression[] expressions = function.getParameters();
-            element = (IElement)expressions[0];
+            List<IExpression> expressions = function.getParameters();
+            element = (IElement)expressions.get(0);
         } else if(expression instanceof IElement) {
             element = (IElement)expression;
         }        

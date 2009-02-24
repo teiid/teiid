@@ -35,7 +35,6 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
@@ -45,7 +44,7 @@ import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 /**
  * 
  */
-public class JDBCSourceConnection extends BasicConnection {
+public class JDBCSourceConnection extends com.metamatrix.connector.basic.BasicConnection {
     protected java.sql.Connection physicalConnection;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;

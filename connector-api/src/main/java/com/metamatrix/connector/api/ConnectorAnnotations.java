@@ -27,7 +27,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.metamatrix.connector.identity.ConnectorIdentityFactory;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 
 public class ConnectorAnnotations {
@@ -50,6 +49,14 @@ public class ConnectorAnnotations {
 	@Target({ElementType.TYPE})
 	public @interface SynchronousWorkers {
 		boolean enabled() default true;
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ElementType.TYPE})
+	public @interface ConnectorConfiguration {
+		boolean userIdentityCapable() default false;
+		boolean useSynchronousWorkers() default true;
+		boolean useConnectionPooling() default true;
 	}
 
 }

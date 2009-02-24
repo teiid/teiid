@@ -68,5 +68,21 @@ public interface Connector {
      * @return ConnectorCapabilities, may return null if the Connector provides User scoped capabilities {@link Connection#getCapabilities()}
      */
     ConnectorCapabilities getCapabilities();
+    
+	/**
+	 * Create an identity object based on a security context.
+	 * 
+	 * If single identity is not supported then an exception should be thrown when a
+	 * null context is supplied.
+	 * 
+	 * Implementors of this class may use a different implementation of the 
+	 * {@link ConnectorIdentity} interface to similarly affect pooling.
+	 *  
+	 * @param context The context provided by the Connector Manager
+	 * @return The associated connector identity
+	 * @throws ConnectorException If a null context is not accepted or an error occurs while creating the identity.
+	 */
+	ConnectorIdentity createIdentity(ExecutionContext context)
+			throws ConnectorException;
 
 }

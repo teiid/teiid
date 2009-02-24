@@ -25,19 +25,19 @@
 package com.metamatrix.dqp.internal.pooling.connector;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */
-public class FakeSourceConnectionFactory implements Connector {
+public class FakeSourceConnectionFactory extends BasicConnector {
     static int connCnt;
     
     static boolean alive = true;

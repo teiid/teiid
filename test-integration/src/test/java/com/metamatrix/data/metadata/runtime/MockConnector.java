@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
@@ -15,6 +14,7 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IGroup;
@@ -25,7 +25,7 @@ import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
-public class MockConnector implements Connector {
+public class MockConnector extends BasicConnector {
 	
 	@Override
 	public ConnectorCapabilities getCapabilities() {
@@ -47,7 +47,7 @@ public class MockConnector implements Connector {
 				Properties props = new Properties();
 				props.setProperty("customBehaviour", "SkipExecute");//$NON-NLS-1$ //$NON-NLS-2$
 			
-		        MetadataObject metaObject = metadata.getObject(procedure.getMetadataID());
+		        MetadataObject metaObject = procedure.getMetadataObject();
 		        
 		        TestCase.assertEquals("AnyModel.ProcedureB",procedure.getProcedureName()); //$NON-NLS-1$
 		        TestCase.assertEquals("PROC", metaObject.getNameInSource()); //$NON-NLS-1$
@@ -64,13 +64,13 @@ public class MockConnector implements Connector {
 				Properties groupProps = new Properties();
 				groupProps.setProperty("customName", "CustomTableA");//$NON-NLS-1$ //$NON-NLS-2$
 				IGroup group = (IGroup)query.getProjectedQuery().getFrom().getItems().get(0);			
-				MetadataObject groupMD = metadata.getObject(group.getMetadataID());
+				MetadataObject groupMD = group.getMetadataObject();
 				TestCase.assertEquals(groupProps, groupMD.getProperties());
 				
 				
 				ISelectSymbol symbl = (ISelectSymbol)query.getProjectedQuery().getSelect().getSelectSymbols().get(0);
 				IElement element = (IElement)symbl.getExpression();
-				Element elementMD = (Element)metadata.getObject(element.getMetadataID());
+				Element elementMD = element.getMetadataObject();
 
 				Properties elementProps = new Properties();
 				elementProps.setProperty("customPosition", "11");//$NON-NLS-1$ //$NON-NLS-2$
@@ -98,7 +98,7 @@ public class MockConnector implements Connector {
 				
 				ISelectSymbol symbl2 = (ISelectSymbol)query.getProjectedQuery().getSelect().getSelectSymbols().get(1);
 				IElement element2 = (IElement)symbl2.getExpression();
-				Element elementMD2 = (Element)metadata.getObject(element2.getMetadataID());
+				Element elementMD2 = element2.getMetadataObject();
 
 				Properties elementProps2 = new Properties();
 				elementProps2.setProperty("customPosition", "12");//$NON-NLS-1$ //$NON-NLS-2$

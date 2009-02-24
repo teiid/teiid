@@ -29,7 +29,6 @@ import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.jdbc.translator.EscapeSyntaxModifier;
-import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILiteral;
 
@@ -50,7 +49,7 @@ public class TestEscapeSyntaxModifier extends TestCase {
     
         ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral("arg1", String.class); //$NON-NLS-1$
         ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral("arg2", String.class);//$NON-NLS-1$
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("concat", new IExpression[] { arg1, arg2}, Integer.class); //$NON-NLS-1$
+        IFunction func = CommandBuilder.getLanuageFactory().createFunction("concat", Arrays.asList( arg1, arg2), Integer.class); //$NON-NLS-1$
                 
         func = (IFunction) mod.modify(func);
         List parts = mod.translate(func);

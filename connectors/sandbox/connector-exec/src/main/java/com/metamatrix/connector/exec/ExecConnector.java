@@ -32,18 +32,18 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 /**
  * Implementation of text connector.
  */
-public class ExecConnector implements Connector {
+public class ExecConnector extends BasicConnector {
     
     private ConnectorLogger logger;
     private ConnectorEnvironment env;

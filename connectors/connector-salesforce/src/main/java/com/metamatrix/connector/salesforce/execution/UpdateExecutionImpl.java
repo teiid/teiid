@@ -51,8 +51,7 @@ public class UpdateExecutionImpl {
 			List<MessageElement> elements = new ArrayList<MessageElement>();
 			for (ISetClause clause : update.getChanges().getClauses()) {
 				IElement element = clause.getSymbol();
-				Element column = (Element) parent.getMetadata().getObject(
-						element.getMetadataID());
+				Element column = element.getMetadataObject();
 				String val = ((ILiteral) clause.getValue())
 						.toString();
 				MessageElement messageElem = new MessageElement(new QName(

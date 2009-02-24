@@ -40,10 +40,4 @@ public interface IOrderBy extends ILanguageObject {
      */
     List<IOrderByItem> getItems();
     
-    /**
-     * Set list of {@link IOrderByItem}s specifying the ordering of the results.
-     * @param items List of IOrderByItem
-     */
-    void setItems(List<IOrderByItem> items);
-    
 }

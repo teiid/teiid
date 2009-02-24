@@ -20,40 +20,15 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.metadata.internal;
+package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
+ * Represents the identity of a connection in the pool.  Identities are 
+ * used to determine whether two connections can be put in the same pool.
+ * Implementors must supply appropriate {@link java.lang.Object#equals(java.lang.Object)} and
+ * {@link java.lang.Object#hashCode()} methods.  
  */
-public class FakeRuntimeMetadata implements RuntimeMetadata {
-
-    /**
-     * 
-     */
-    public FakeRuntimeMetadata() {
-        super();
-    }
-
-    /* 
-     * @see com.metamatrix.data.metadata.runtime.RuntimeMetadata#getObject(com.metamatrix.data.metadata.runtime.MetadataID)
-     */
-    public MetadataObject getObject(MetadataID id) {
-        return null;
-    }
-
-    public byte[] getBinaryVDBResource(String resourcePath) throws ConnectorException {
-        return null;
-    }
-
-    public String getCharacterVDBResource(String resourcePath) throws ConnectorException {
-        return null;
-    }
-
-    public String[] getVDBResourcePaths() throws ConnectorException {
-        return null;
-    }
+public interface ConnectorIdentity {
+	
 }

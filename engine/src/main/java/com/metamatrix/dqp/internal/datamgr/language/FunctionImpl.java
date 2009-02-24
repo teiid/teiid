@@ -22,6 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
@@ -29,12 +32,16 @@ import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 public class FunctionImpl extends BaseLanguageObject implements IFunction {
 
     private String name;
-    private IExpression[] parameters;
+    private List<IExpression> parameters;
     private Class type;
     
-    public FunctionImpl(String name, IExpression[] params, Class type) {
+    public FunctionImpl(String name, List<? extends IExpression> params, Class type) {
         this.name = name;
-        this.parameters = params;
+        if (params == null) {
+        	this.parameters = new ArrayList<IExpression>(0);
+        } else {
+        	this.parameters = new ArrayList<IExpression>(params);
+        }
         this.type = type;
     }
     
@@ -48,7 +55,7 @@ public class FunctionImpl extends BaseLanguageObject implements IFunction {
     /**
      * @see com.metamatrix.connector.language.IFunction#getParameters()
      */
-    public IExpression[] getParameters() {
+    public List<IExpression> getParameters() {
         return parameters;
     }
 
@@ -64,13 +71,6 @@ public class FunctionImpl extends BaseLanguageObject implements IFunction {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /* 
-     * @see com.metamatrix.data.language.IFunction#setParameters(com.metamatrix.data.language.IExpression[])
-     */
-    public void setParameters(IExpression[] parameters) {
-        this.parameters = parameters;
     }
 
     /* 

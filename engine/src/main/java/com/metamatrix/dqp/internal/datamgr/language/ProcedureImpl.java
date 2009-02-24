@@ -24,20 +24,21 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
+import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
 
     private String name;
-    private List parameters;
-    private MetadataID metadataID;
+    private List<IParameter> parameters;
+    private Procedure metadataObject;
     
-    public ProcedureImpl(String name, List parameters, MetadataID metadataID) {
+    public ProcedureImpl(String name, List<IParameter> parameters, Procedure metadataObject) {
         this.name = name;
         this.parameters = parameters;
-        this.metadataID = metadataID;
+        this.metadataObject = metadataObject;
     }
     
     /**
@@ -50,7 +51,7 @@ public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
     /**
      * @see com.metamatrix.data.language.IExecute#getVariableValues()
      */
-    public List getParameters() {
+    public List<IParameter> getParameters() {
         return parameters;
     }
 
@@ -71,22 +72,17 @@ public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
     /* 
      * @see com.metamatrix.data.language.IExecute#setParameters(java.util.List)
      */
-    public void setParameters(List parameters) {
+    public void setParameters(List<IParameter> parameters) {
         this.parameters = parameters;
     }
 
-    /* 
-     * @see com.metamatrix.data.language.IMetadataReference#getMetadataID()
-     */
-    public MetadataID getMetadataID() {
-        return this.metadataID;
+    @Override
+    public Procedure getMetadataObject() {
+    	return this.metadataObject;
     }
 
-    /* 
-     * @see com.metamatrix.data.language.IMetadataReference#setMetadataID(com.metamatrix.data.metadata.runtime.MetadataID)
-     */
-    public void setMetadataID(MetadataID metadataID) {
-        this.metadataID = metadataID;
+    public void setMetadataObject(Procedure metadataID) {
+        this.metadataObject = metadataID;
     }
     
     public boolean equals(Object obj) {

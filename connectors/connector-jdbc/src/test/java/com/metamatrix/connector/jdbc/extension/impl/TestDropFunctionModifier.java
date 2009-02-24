@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.extension.impl;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
@@ -47,7 +49,7 @@ public class TestDropFunctionModifier extends TestCase {
     
         ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral(new Integer(5), Integer.class);
         ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral("string", String.class);//$NON-NLS-1$
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("convert", new IExpression[] { arg1, arg2}, Integer.class); //$NON-NLS-1$
+        IFunction func = CommandBuilder.getLanuageFactory().createFunction("convert", Arrays.asList(arg1, arg2), Integer.class); //$NON-NLS-1$
                 
         IExpression output = mod.modify(func);
         assertEquals("Did not get expected function after using drop modifier", arg1, output); //$NON-NLS-1$
@@ -64,7 +66,7 @@ public class TestDropFunctionModifier extends TestCase {
     
         ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral("string", String.class);//$NON-NLS-1$
         ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral(new Integer(5), Integer.class);
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("convert", new IExpression[] { arg1, arg2}, Integer.class); //$NON-NLS-1$
+        IFunction func = CommandBuilder.getLanuageFactory().createFunction("convert", Arrays.asList(arg1, arg2), Integer.class); //$NON-NLS-1$
                 
         IExpression output = mod.modify(func);
         assertEquals("Did not get expected function after using drop modifier", arg2, output); //$NON-NLS-1$

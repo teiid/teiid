@@ -22,23 +22,14 @@
 
 package com.metamatrix.connector.language;
 
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
 
 /**
  * This interface is used to mark language objects as having a 
  * reference to a MetadataID.  
  */
-public interface IMetadataReference {
+public interface IMetadataReference<T extends MetadataObject> {
 
-    /**
-     * Return the MetadataID that is being referred to.
-     * @return MetadataID
-     */
-    MetadataID getMetadataID();
+    T getMetadataObject();
     
-    /**
-     * Set the MetadataID that is being referred to.
-     * @param metadataID MetadataID
-     */
-    void setMetadataID(MetadataID metadataID);    
 }

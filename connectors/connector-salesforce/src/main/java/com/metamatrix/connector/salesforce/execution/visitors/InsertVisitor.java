@@ -59,7 +59,7 @@ public class InsertVisitor extends CriteriaVisitor {
 			
 			for(int i = 0; i < columns.size(); i++) {
 				IElement element = columns.get(i);
-				Element column = (Element)metadata.getObject(element.getMetadataID());
+				Element column = element.getMetadataObject();
 				Object value = values.get(i);
 				String val;
 				if(value instanceof ILiteral) {

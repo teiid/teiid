@@ -98,5 +98,12 @@ public interface Element extends MetadataObject, TypeModel {
      * @return
      * @throws ConnectorException
      */
-    String getFormat() throws ConnectorException;    
+    String getFormat() throws ConnectorException; 
+    
+    /**
+     * Get the parent
+     * @return Parent
+     */
+    Group getParent() throws ConnectorException;
+
 }

@@ -3,9 +3,9 @@ package com.metamatrix.connector.object;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.SingleIdentity;
+import com.metamatrix.connector.api.SingleIdentity;
 
 public interface SourceConnectionFactory {
 	

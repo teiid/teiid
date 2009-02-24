@@ -24,9 +24,6 @@ package com.metamatrix.connector.api;
 
 import java.io.Serializable;
 
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.ConnectorIdentityFactory;
-import com.metamatrix.connector.identity.SingleIdentity;
 
 /**
  * The security context provides information about the user context in which

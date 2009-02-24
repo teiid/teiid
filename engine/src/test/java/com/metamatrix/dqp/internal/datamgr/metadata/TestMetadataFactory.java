@@ -30,14 +30,12 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 
 public class TestMetadataFactory  extends TestCase {
-    private MetadataFactory metadataFactory;
+    private RuntimeMetadataImpl metadataFactory;
     private FakeMetadataObject pm1g1;
     private FakeMetadataObject pm1g1e1;
     
@@ -54,7 +52,7 @@ public class TestMetadataFactory  extends TestCase {
         pm1g1e1 = (FakeMetadataObject)pm1g1e.get(0);
         store.addObject(pm1g1);
         store.addObjects(pm1g1e);
-        metadataFactory = new MetadataFactory(new FakeMetadataFacade(store));
+        metadataFactory = new RuntimeMetadataImpl(new FakeMetadataFacade(store));
     }
 
 
@@ -105,88 +103,50 @@ public class TestMetadataFactory  extends TestCase {
     
     //tests
     
-    public void testCreateMetadataID(){        
-        try{        
-            //test create MetadataID for Group
-            MetadataIDImpl gID = (MetadataIDImpl)metadataFactory.createMetadataID(pm1g1, Type.TYPE_GROUP);
-            assertEquals(gID.getActualMetadataID(), pm1g1);
-            assertEquals(((MetadataIDImpl)gID.getChildIDs().get(0)).getActualMetadataID(), pm1g1e1);
-            
-            //test create MetadataID for Element
-            MetadataIDImpl eID = (MetadataIDImpl)metadataFactory.createMetadataID(pm1g1e1, Type.TYPE_ELEMENT);
-            assertEquals(eID.getActualMetadataID(), pm1g1e1);
-            assertEquals(((MetadataIDImpl)eID.getParentID()).getActualMetadataID(), pm1g1);
-        }catch(Exception e){
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+    public void testCreateMetadataID() throws Exception {        
+        //test create MetadataID for Group
+        GroupImpl gID = metadataFactory.getGroup(pm1g1);
+        assertEquals(gID.getActualID(), pm1g1);
+        assertEquals(((ElementImpl)gID.getChildren().get(0)).getActualID(), pm1g1e1);
+        
+        //test create MetadataID for Element
+        ElementImpl eID = metadataFactory.getElement(pm1g1e1);
+        assertEquals(eID.getActualID(), pm1g1e1);
+        assertEquals(((GroupImpl)eID.getParent()).getActualID(), pm1g1);
     }
     
-    public void testRuntimeMetadata(){
-        try{
-            RuntimeMetadata runtimeMetadata = metadataFactory.getRuntimeMetadata();
-            MetadataIDImpl gID = (MetadataIDImpl)metadataFactory.createMetadataID(pm1g1, Type.TYPE_GROUP);
-            GroupImpl group = (GroupImpl)runtimeMetadata.getObject(gID);
-            assertEquals(group.getNameInSource(), "g1"); //$NON-NLS-1$
-            assertEquals(((MetadataIDImpl)group.getMetadataID()).getActualMetadataID(), pm1g1);
+    public void testRuntimeMetadata() throws Exception {
+        GroupImpl group = metadataFactory.getGroup(pm1g1);
+        assertEquals(group.getNameInSource(), "g1"); //$NON-NLS-1$
+        assertEquals(group.getActualID(), pm1g1);
 
-            MetadataIDImpl eID = (MetadataIDImpl)metadataFactory.createMetadataID(pm1g1e1, Type.TYPE_ELEMENT);
-            ElementImpl element = (ElementImpl)runtimeMetadata.getObject(eID);
-            assertEquals(element.getLength(), 100);
-            assertEquals(element.getJavaType(), DataTypeManager.DefaultDataClasses.STRING);
-            assertEquals(element.getNameInSource(), "e1"); //$NON-NLS-1$
-            assertEquals(((MetadataIDImpl)element.getMetadataID()).getActualMetadataID(), pm1g1e1);
-        }catch(Exception e){
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        ElementImpl element = metadataFactory.getElement(pm1g1e1);
+        assertEquals(element.getLength(), 100);
+        assertEquals(element.getJavaType(), DataTypeManager.DefaultDataClasses.STRING);
+        assertEquals(element.getNameInSource(), "e1"); //$NON-NLS-1$
+        assertEquals(element.getActualID(), pm1g1e1);
     }
     
-    public void testGetVDBResourcePaths() {
+    public void testGetVDBResourcePaths() throws Exception {
         String[] expectedPaths = new String[] {"my/resource/path"}; //$NON-NLS-1$
-        try {
-            RuntimeMetadata runtimeMetadata = metadataFactory.getRuntimeMetadata();
-            String[] mfPaths = metadataFactory.getVDBResourcePaths();
-            String[] rtmdPaths = runtimeMetadata.getVDBResourcePaths();
-            assertEquals(expectedPaths.length, mfPaths.length);
-            assertEquals(expectedPaths.length, rtmdPaths.length);
-            for (int i = 0; i < expectedPaths.length; i++) {
-                assertEquals(expectedPaths[i], mfPaths[i]);
-                assertEquals(expectedPaths[i], rtmdPaths[i]);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+        String[] mfPaths = metadataFactory.getVDBResourcePaths();
+        assertEquals(expectedPaths.length, mfPaths.length);
+        for (int i = 0; i < expectedPaths.length; i++) {
+            assertEquals(expectedPaths[i], mfPaths[i]);
         }
     }
      
-    public void testGetBinaryVDBResource() {
-        try {
-            RuntimeMetadata runtimeMetadata = metadataFactory.getRuntimeMetadata();
-            byte[] expectedBytes = "ResourceContents".getBytes(); //$NON-NLS-1$
-            byte[] mfBytes =  metadataFactory.getBinaryVDBResource(null);
-            byte[] rtmdBytes = runtimeMetadata.getBinaryVDBResource(null);
-            assertEquals(expectedBytes.length, mfBytes.length);
-            assertEquals(expectedBytes.length, rtmdBytes.length);
-            for (int i = 0; i < expectedBytes.length; i++) {
-                assertEquals("Byte at index " + i + " differs from expected content", expectedBytes[i], mfBytes[i]); //$NON-NLS-1$ //$NON-NLS-2$
-                assertEquals("Byte at index " + i + " differs from expected content", expectedBytes[i], rtmdBytes[i]); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+    public void testGetBinaryVDBResource() throws Exception {
+        byte[] expectedBytes = "ResourceContents".getBytes(); //$NON-NLS-1$
+        byte[] mfBytes =  metadataFactory.getBinaryVDBResource(null);
+        assertEquals(expectedBytes.length, mfBytes.length);
+        for (int i = 0; i < expectedBytes.length; i++) {
+            assertEquals("Byte at index " + i + " differs from expected content", expectedBytes[i], mfBytes[i]); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
      
-    public void testGetCharacterVDBResource() {
-        try {
-            RuntimeMetadata runtimeMetadata = metadataFactory.getRuntimeMetadata();
-            assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(null)); //$NON-NLS-1$
-            assertEquals("ResourceContents", runtimeMetadata.getCharacterVDBResource(null)); //$NON-NLS-1$
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+    public void testGetCharacterVDBResource() throws Exception {
+        assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(null)); //$NON-NLS-1$
     }
      
 }

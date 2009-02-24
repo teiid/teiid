@@ -22,6 +22,7 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -50,7 +51,7 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
 
     public IExpression helpTestMod(ILiteral c, ILiteral d, String target, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction(target,
-            new IExpression[] { c, d },
+            Arrays.asList( c, d ),
             String.class);
         
         LeftOrRightFunctionModifier mod = new LeftOrRightFunctionModifier (LANG_FACTORY);

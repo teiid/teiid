@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import java.util.List;
+
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -56,11 +58,11 @@ public class TestFunctionImpl extends TestCase {
     }
 
     public void testGetParameters() throws Exception {
-        IExpression[] params = example("testFunction").getParameters(); //$NON-NLS-1$
+        List<IExpression> params = example("testFunction").getParameters(); //$NON-NLS-1$
         assertNotNull(params);
-        assertEquals(2, params.length);
-        for (int i = 0; i < params.length; i++) {
-            assertNotNull(params[i]);
+        assertEquals(2, params.size());
+        for (int i = 0; i < params.size(); i++) {
+            assertNotNull(params.get(i));
         }
     }
 

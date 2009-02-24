@@ -36,9 +36,4 @@ public interface IBulkInsert extends IInsert {
      */
     List<List<?>> getRows();
     
-    /**
-     * Set the list of row values for this bulk insert  
-     * @return list; never null
-     */
-    void setRows(List<List<?>> rows);    
 }

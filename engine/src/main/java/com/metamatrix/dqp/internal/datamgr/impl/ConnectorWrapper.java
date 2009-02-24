@@ -27,10 +27,8 @@ import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.ConnectorIdentityFactory;
-import com.metamatrix.connector.identity.SingleIdentity;
 import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.connector.xa.api.XAConnector;
@@ -38,7 +36,7 @@ import com.metamatrix.connector.xa.api.XAConnector;
 /**
  * ConnectorWrapper adds default behavior to the wrapped connector.
  */
-public class ConnectorWrapper implements XAConnector, ConnectorIdentityFactory {
+public class ConnectorWrapper implements XAConnector {
 	
 	private Connector actualConnector;
 	
@@ -113,10 +111,7 @@ public class ConnectorWrapper implements XAConnector, ConnectorIdentityFactory {
 	@Override
 	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
-		if (actualConnector instanceof ConnectorIdentityFactory) {
-			return ((ConnectorIdentityFactory)actualConnector).createIdentity(context);
-		}
-		return new SingleIdentity();
+		return actualConnector.createIdentity(context);
 	}
 	
 	public boolean supportsSingleIdentity() {

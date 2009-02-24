@@ -246,7 +246,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         }
 
         prepareCallBuffer.append(" call ");//$NON-NLS-1$
-        prepareCallBuffer.append(exec.getMetadataID() != null ? getName(exec.getMetadataID()) : exec.getProcedureName());
+        prepareCallBuffer.append(exec.getMetadataObject() != null ? getName(exec.getMetadataObject()) : exec.getProcedureName());
         prepareCallBuffer.append("("); //$NON-NLS-1$
 
         int numberOfParameters = 0;

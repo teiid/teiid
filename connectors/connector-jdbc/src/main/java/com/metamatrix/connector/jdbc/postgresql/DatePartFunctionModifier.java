@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.postgresql;
 
+import java.util.Arrays;
+
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
@@ -43,7 +45,7 @@ class DatePartFunctionModifier extends BasicFunctionModifier {
 
     public IExpression modify(IFunction function) {
         return factory.createFunction("date_part", //$NON-NLS-1$
-                                       new IExpression[] {factory.createLiteral(part, String.class), function.getParameters()[0]},
+                                       Arrays.asList(factory.createLiteral(part, String.class), function.getParameters().get(0)),
                                        Integer.class);
     }
 }

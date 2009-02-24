@@ -24,15 +24,32 @@
  */
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.metadata.runtime.Procedure;
+import com.metamatrix.query.metadata.StoredProcedureInfo;
+import com.metamatrix.query.sql.lang.SPParameter;
 
 /**
  */
 public class ProcedureImpl extends MetadataObjectImpl implements Procedure {
+	
+	private StoredProcedureInfo procInfo;
 
-    ProcedureImpl(MetadataIDImpl metadataID){
-        super(metadataID);
+    ProcedureImpl(RuntimeMetadataImpl factory, StoredProcedureInfo procInfo){
+        super(procInfo.getProcedureID(), factory);
+        this.procInfo = procInfo;
     }
     
+    @Override
+    public List<Parameter> getChildren() {
+    	List<Parameter> result = new ArrayList<Parameter>(procInfo.getParameters().size());
+    	for (SPParameter param : procInfo.getParameters()) {
+    		result.add(new ParameterImpl(getFactory(), param, this));
+    	}
+    	return result;
+    }
     
 }

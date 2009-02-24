@@ -29,30 +29,40 @@ import java.util.Properties;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 /**
  */
 public abstract class MetadataObjectImpl implements MetadataObject {
-    private MetadataIDImpl metadataID;
+    private Object actualID;
+    private RuntimeMetadataImpl factory;
+	private String fullName;
     
-    MetadataObjectImpl(MetadataIDImpl metadataID){
-        this.metadataID = metadataID;
-    }
-    
-    public MetadataID getMetadataID() {
-        return metadataID;
+    MetadataObjectImpl(Object actualID, RuntimeMetadataImpl factory){
+        this.actualID = actualID;
+        this.factory = factory;
+        try {
+			this.fullName = getMetadata().getFullName(actualID);
+		} catch (QueryMetadataException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
     
     Object getActualID() {
-        return metadataID.getActualMetadataID();
+        return actualID;
     }
 
     QueryMetadataInterface getMetadata() {
-        return metadataID.getMetadata().getMetadata();
+        return factory.getMetadata();
     }
+    
+    RuntimeMetadataImpl getFactory() {
+		return factory;
+	}
 
     public String getNameInSource() throws ConnectorException {
         try {
@@ -81,14 +91,25 @@ public abstract class MetadataObjectImpl implements MetadataObject {
 
         if (this.getClass().isInstance(obj)) {
             MetadataObjectImpl that = (MetadataObjectImpl)obj;
-            return this.metadataID.equals(that.metadataID);
+            return this.actualID.equals(that.actualID);
         }
         
         return false;        
     }
     
     public int hashCode(){
-        return metadataID.hashCode();
+        return actualID.hashCode();
     } 
+    
+    @Override
+    public String getName() {
+        int index = fullName.lastIndexOf("."); //$NON-NLS-1$
+        return fullName.substring(index + 1);
+    }
+    
+    @Override
+    public String getFullName() {
+		return fullName;
+	}
 
 }

@@ -34,10 +34,10 @@ import java.util.Properties;
 
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.identity.ConnectorIdentity;
 import com.metamatrix.connector.jdbc.translator.TranslatedCommand;
 import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.language.ICommand;

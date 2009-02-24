@@ -28,31 +28,79 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.*;
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.StoredProcedureInfo;
+import com.metamatrix.query.sql.lang.SPParameter;
 
 /**
  */
 public class RuntimeMetadataImpl implements RuntimeMetadata {
-    private MetadataFactory factory;
+    private QueryMetadataInterface metadata;
     
-    public RuntimeMetadataImpl(MetadataFactory factory){
-        this.factory = factory;
+    public RuntimeMetadataImpl(QueryMetadataInterface metadata){
+    	ArgCheck.isNotNull(metadata);
+        this.metadata = metadata;
     }
     
-    public MetadataObject getObject(MetadataID id) throws ConnectorException {
-
-        try {
-            return factory.createMetadataObject(id);
-        } catch (QueryMetadataException e) {
-            throw new ConnectorException(e);
-        } catch (MetaMatrixComponentException e) {
-            throw new ConnectorException(e);
-        }
+    @Override
+    public Element getElement(String fullName) throws ConnectorException {
+		try {
+			Object elementId = metadata.getElementID(fullName);
+	    	return new ElementImpl(elementId, this);
+		} catch (QueryMetadataException e) {
+			throw new ConnectorException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new ConnectorException(e);
+		}
+    }
+    
+    public ElementImpl getElement(Object elementId) {
+    	return new ElementImpl(elementId, this);
+    }
+    
+    @Override
+    public Group getGroup(String fullName) throws ConnectorException {
+		try {
+			Object groupId = metadata.getGroupID(fullName);
+	    	return getGroup(groupId);
+		} catch (QueryMetadataException e) {
+			throw new ConnectorException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new ConnectorException(e);
+		}
     }
 
+	public GroupImpl getGroup(Object groupId) throws QueryMetadataException, MetaMatrixComponentException {
+		if (!metadata.isVirtualGroup(groupId)) {
+			return new GroupImpl(groupId, this);
+		}
+		return null;
+	}    
+    
+    @Override
+    public Procedure getProcedure(String fullName) throws ConnectorException {
+		try {
+			StoredProcedureInfo sp = metadata.getStoredProcedureInfoForProcedure(fullName);
+	    	return getProcedure(sp);
+		} catch (QueryMetadataException e) {
+			throw new ConnectorException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new ConnectorException(e);
+		}
+    }
+
+	public Procedure getProcedure(StoredProcedureInfo sp) {
+		return new ProcedureImpl(this, sp);
+	}
+	
+	public Parameter getParameter(SPParameter param, Procedure parent) {
+		return new ParameterImpl(this, param, parent);
+	}
+    
     public byte[] getBinaryVDBResource(String resourcePath) throws ConnectorException {
         try {
-            return factory.getBinaryVDBResource(resourcePath);
+            return metadata.getBinaryVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
         } catch (MetaMatrixComponentException e) {
@@ -62,7 +110,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 
     public String getCharacterVDBResource(String resourcePath) throws ConnectorException {
         try {
-            return factory.getCharacterVDBResource(resourcePath);
+            return metadata.getCharacterVDBResource(resourcePath);
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
         } catch (MetaMatrixComponentException e) {
@@ -72,7 +120,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 
     public String[] getVDBResourcePaths() throws ConnectorException {
         try {
-            return factory.getVDBResourcePaths();
+            return metadata.getVDBResourcePaths();
         } catch (QueryMetadataException e) {
             throw new ConnectorException(e);
         } catch (MetaMatrixComponentException e) {
@@ -81,7 +129,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
     
     QueryMetadataInterface getMetadata() {
-    	return this.factory.getMetadata();
+    	return metadata;
     }
     
 }

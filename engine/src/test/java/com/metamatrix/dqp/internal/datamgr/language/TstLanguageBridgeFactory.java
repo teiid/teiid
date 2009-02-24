@@ -22,14 +22,14 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
+import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TstLanguageBridgeFactory {
     
     public static final FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-    public static final MetadataFactory metadataFactory = new MetadataFactory(metadata);
+    public static final RuntimeMetadataImpl metadataFactory = new RuntimeMetadataImpl(metadata);
     public static final LanguageBridgeFactory factory = new LanguageBridgeFactory(metadata);
 
 }

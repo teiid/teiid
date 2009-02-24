@@ -22,6 +22,7 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -52,7 +53,7 @@ public class TestSubstringFunctionModifier extends TestCase {
 
     public IExpression helpTestMod(IExpression[] args, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
-            args, TypeFacility.RUNTIME_TYPES.STRING);
+            Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));

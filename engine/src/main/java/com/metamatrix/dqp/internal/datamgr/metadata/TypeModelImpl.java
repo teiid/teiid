@@ -37,11 +37,10 @@ public abstract class TypeModelImpl extends MetadataObjectImpl implements
                                                 TypeModel {
 
     /** 
-     * @param metadataID
      * @since 4.3
      */
-    public TypeModelImpl(MetadataIDImpl metadataID) {
-        super(metadataID);
+    public TypeModelImpl(Object actualID, RuntimeMetadataImpl factory) {
+        super(actualID, factory);
     }
 
     public int getNullability() throws ConnectorException {

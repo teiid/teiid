@@ -22,9 +22,15 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
-import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILiteral;
 
 /**
  * Modify the locate function to use the Oracle instr function.
@@ -45,33 +51,28 @@ public class LocateFunctionModifier extends BasicFunctionModifier implements Fun
      * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
      */
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();     
-        IExpression[] instrArgs = new IExpression[args.length];
-        instrArgs[0] = args[1];
-        instrArgs[1] = args[0];
-        
-        if(args.length == 3) {
-            if(args[2] instanceof ILiteral) {
-                ILiteral indexConst = (ILiteral)args[2];
-                if(indexConst.getValue() == null) {
-                    instrArgs[2] = args[2];
-                } else {
+    	function.setName("instr"); //$NON-NLS-1$
+        List<IExpression> args = function.getParameters();    
+        IExpression expr = args.get(0);
+        args.set(0, args.get(1));
+        args.set(1, expr);
+        if(args.size() == 3) {
+            if(args.get(2) instanceof ILiteral) {
+                ILiteral indexConst = (ILiteral)args.get(2);
+                if(indexConst.getValue() != null) {
                     // Just modify the constant
-                    Integer index = (Integer) ((ILiteral)args[2]).getValue();
-                    instrArgs[2] = langFactory.createLiteral(new Integer(index.intValue()+1), Integer.class);
+                    Integer index = (Integer) indexConst.getValue();
+                    args.set(2, langFactory.createLiteral(new Integer(index.intValue()+1), Integer.class));
                 }
             } else {
                 // Make plus function since this involves an element or function
                 IFunction plusFunction = langFactory.createFunction("+",  //$NON-NLS-1$
-                    new IExpression[] { args[2], langFactory.createLiteral(new Integer(1), Integer.class) },
+                    Arrays.asList( args.get(2), langFactory.createLiteral(new Integer(1), Integer.class) ),
                     Integer.class);
-                instrArgs[2] = plusFunction;
+                args.set(2, plusFunction);
             }   
-        }
-                
-        IFunction instrFunction = langFactory.createFunction("instr", instrArgs, Integer.class); //$NON-NLS-1$
-        
-        return instrFunction;           
+        }        
+        return function;           
     }
 
 }

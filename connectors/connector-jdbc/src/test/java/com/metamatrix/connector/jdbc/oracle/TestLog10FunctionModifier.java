@@ -22,6 +22,9 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
@@ -44,7 +47,7 @@ public class TestLog10FunctionModifier extends TestCase {
 
     public void testModifier() {
         ILiteral arg = CommandBuilder.getLanuageFactory().createLiteral(new Double(5.2), Double.class);
-        IFunction func = CommandBuilder.getLanuageFactory().createFunction("log10", new IExpression[] {arg}, Double.class); //$NON-NLS-1$
+        IFunction func = CommandBuilder.getLanuageFactory().createFunction("log10", Arrays.asList(arg), Double.class); //$NON-NLS-1$
         
         Log10FunctionModifier modifier = new Log10FunctionModifier(CommandBuilder.getLanuageFactory());
         IExpression outExpr = modifier.modify(func);
@@ -55,12 +58,12 @@ public class TestLog10FunctionModifier extends TestCase {
         assertEquals("log", outFunc.getName()); //$NON-NLS-1$
         assertEquals(func.getType(), outFunc.getType());
         
-        IExpression[] outArgs = func.getParameters();
-        assertEquals(2, outArgs.length);
-        assertEquals(arg, outArgs[1]);
+        List<IExpression> outArgs = func.getParameters();
+        assertEquals(2, outArgs.size());
+        assertEquals(arg, outArgs.get(1));
         
-        assertTrue(outArgs[1] instanceof ILiteral);
-        ILiteral newArg = (ILiteral) outArgs[0];
+        assertTrue(outArgs.get(1) instanceof ILiteral);
+        ILiteral newArg = (ILiteral) outArgs.get(0);
         assertEquals(Integer.class, newArg.getType());
         assertEquals(new Integer(10), newArg.getValue());
         

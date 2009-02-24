@@ -42,12 +42,6 @@ public interface ISelect extends ILanguageObject {
     boolean isDistinct();
     
     /**
-     * Set List of ISelectSymbol.
-     * @param symbols List of ISelectSymbol
-     */
-    void setSelectSymbols(List<ISelectSymbol> symbols);
-    
-    /**
      * Set whether the DISTINCT flag is used in this SELECT.
      * @param distinct True if SELECT DISTINCT, false if SELECT ALL
      */

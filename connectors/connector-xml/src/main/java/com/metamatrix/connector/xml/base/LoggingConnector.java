@@ -25,6 +25,7 @@ package com.metamatrix.connector.xml.base;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 /**
@@ -33,7 +34,7 @@ import com.metamatrix.connector.xml.XMLConnectorState;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public abstract class LoggingConnector implements StatefulConnector {
+public abstract class LoggingConnector extends BasicConnector implements StatefulConnector {
 
     private static ConnectorLogger m_logger;
     private ConnectorEnvironment m_environment;

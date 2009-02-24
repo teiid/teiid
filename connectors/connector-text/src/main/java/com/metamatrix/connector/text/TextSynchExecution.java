@@ -49,11 +49,9 @@ import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IFrom;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.StringUtil;
 
@@ -399,7 +397,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
 			 * attempt to create the request as we may need 
 			 * column names from the header row.
              */
-            String groupName = group.getMetadataID().getFullName();
+            String groupName = group.getMetadataObject().getFullName();
             Map metadataMap = metadataProps;
             groupProps = (Properties) metadataMap.get(groupName.toUpperCase());
 
@@ -412,11 +410,11 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
                 Object[] params = new Object[] { groupName, ex.getMessage() };
                 throw new ConnectorException(ex, TextPlugin.Util.getString("TextSynchExecution.Unable_get_Reader", params)); //$NON-NLS-1$
             }
-            List elementIDs = group.getMetadataID().getChildIDs();
-            numModeledColumns = elementIDs.size();
-            int[] colWidthArray = new int[elementIDs.size()];
+            List<Element> elements = group.getMetadataObject().getChildren();
+            numModeledColumns = elements.size();
+            int[] colWidthArray = new int[elements.size()];
             for (int i = 0; i < colWidthArray.length; i++) {
-                Element element = (Element)rm.getObject((MetadataID)elementIDs.get(i));
+                Element element = elements.get(i);
                 colWidthArray[getColumn(element)] = element.getLength();
             }
             for (int i = 0; i < colWidthArray.length; i++) {
@@ -462,11 +460,9 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         IFrom from = ((IQuery) cmd).getFrom();
         List groups = from.getItems();
         IGroup symbol = (IGroup) groups.get(0);
-        Group group = (Group) rm.getObject(symbol.getMetadataID());
+        Group group = symbol.getMetadataObject();
 
-       
-
-        String groupName = group.getMetadataID().getFullName();
+        String groupName = group.getFullName();
 
         Map metadataMap = (Map) response;
         Properties connProps = (Properties) metadataMap.get(TextPropertyNames.CONNECTOR_PROPERTIES);
@@ -607,8 +603,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      */
     private Element getElementFromSymbol(ISelectSymbol symbol) throws ConnectorException {
         IElement expr = (IElement) symbol.getExpression();
-        MetadataID elementID = expr.getMetadataID();
-        return (Element) rm.getObject(elementID);
+        return expr.getMetadataObject();
     }
 
     /**
@@ -636,16 +631,16 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         } catch(NumberFormatException e) {
         	// Name In Source was not numeric, so look for a column with a heading matching Name In Source
         	if ( colStr == null ) {
-        		colStr = elem.getMetadataID().getName();
+        		colStr = elem.getName();
         	}
         	if ( headerRow == null ) getCurrentReader();
         	if ( headerRow != null ) {
         		for ( int i = 0; i < headerRow.size(); i++ ) {
         			if ( colStr.compareToIgnoreCase((String)headerRow.get(i) )==0) return i;
         		}
-                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Column_not_found_in_header_row", new Object[] {colStr, elem.getMetadataID().getFullName() } )); //$NON-NLS-1$
+                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Column_not_found_in_header_row", new Object[] {colStr, elem.getFullName() } )); //$NON-NLS-1$
         	}
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Invalid_column_number", new Object[] {colStr, elem.getMetadataID().getFullName() } ) ); //$NON-NLS-1$
+            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Invalid_column_number", new Object[] {colStr, elem.getFullName() } ) ); //$NON-NLS-1$
         }
     }
 

@@ -24,20 +24,20 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ElementImpl extends BaseLanguageObject implements IElement {
 
     private IGroup group;
     private String name;
-    private MetadataID metadataID;
+    private Element metadataObject;
     private Class type;
     
-    public ElementImpl(IGroup group, String name, MetadataID metadataID, Class type) {
+    public ElementImpl(IGroup group, String name, Element metadataObject, Class type) {
         this.group = group;
         this.name = name;
-        this.metadataID = metadataID;
+        this.metadataObject = metadataObject;
         this.type = type;
     }
     
@@ -55,17 +55,15 @@ public class ElementImpl extends BaseLanguageObject implements IElement {
         return group;
     }
 
-    /**
-     * @see com.metamatrix.connector.language.IMetadataReference#getMetadataID()
-     */
-    public MetadataID getMetadataID() {
-        return metadataID;
+    @Override
+    public Element getMetadataObject() {
+    	return this.metadataObject;
     }
     
-    public void setMetadataID(MetadataID id){
-        this.metadataID = id;
-    }
-
+    public void setMetadataObject(Element metadataObject) {
+		this.metadataObject = metadataObject;
+	}
+    
     /**
      * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */

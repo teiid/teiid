@@ -32,12 +32,6 @@ import com.metamatrix.connector.api.ConnectorException;
 public interface MetadataObject {
     
     /**
-     * Get the identifier for this object.
-     * @return Unique identifier for the object
-     */
-    MetadataID getMetadataID();
-
-    /**
      * Get name in source for this object, as provided in the model
      * @return Name in source
      * @throws ConnectorException If an error occurs retrieving the data
@@ -53,4 +47,16 @@ public interface MetadataObject {
      * from runtime metadata
      */
     Properties getProperties() throws ConnectorException;
+    
+    /**
+     * Get the short name from the metadataID
+     * @return String shortName
+     */
+    String getName();
+    
+    /**
+     * Get the full name from the metadataID
+     * @return String fullName
+     */
+    String getFullName();
 }

@@ -31,7 +31,6 @@ import java.util.List;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -172,7 +171,7 @@ public class QueryMetadataInterfaceBuilder {
     }
     
     public RuntimeMetadata getRuntimeMetadata(){
-        return new RuntimeMetadataImpl(new MetadataFactory(getQueryMetadata()));
+        return new RuntimeMetadataImpl(getQueryMetadata());
     }
     
     private FakeMetadataObject createPhysicalModel(String name) {

@@ -27,6 +27,8 @@ import java.util.List;
 
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -52,17 +54,17 @@ class MySQLConvertModifier extends BasicFunctionModifier {
     }
 
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
 
-        if (args[0] != null && args[0] instanceof ILiteral && ((ILiteral)args[0]).getValue() == null ) {
-            if (args[1] != null && args[1] instanceof ILiteral) {
+        if (args.get(0) != null && args.get(0) instanceof ILiteral && ((ILiteral)args.get(0)).getValue() == null ) {
+            if (args.get(1) != null && args.get(1) instanceof ILiteral) {
                 // This is a convert(null, ...) or cast(null as ...)
                 return DROP_MODIFIER.modify(function);
             }
         } 
         
-        if (args[1] != null && args[1] instanceof ILiteral) {
-            String target = ((String)((ILiteral)args[1]).getValue()).toLowerCase();
+        if (args.get(1) != null && args.get(1) instanceof ILiteral) {
+            String target = ((String)((ILiteral)args.get(1)).getValue()).toLowerCase();
             if (target.equals("string")) {  //$NON-NLS-1$ 
                 return convertToString(function);
             } else if (target.equals("byte") || //$NON-NLS-1$
@@ -77,11 +79,11 @@ class MySQLConvertModifier extends BasicFunctionModifier {
                        target.equals("bigdecimal")) { //$NON-NLS-1$ 
                 return convertToNumeric(function); 
             } else if (target.equals("date")) { //$NON-NLS-1$ 
-                return convertToDateTime("DATE", args[0], java.sql.Date.class); //$NON-NLS-1$
+                return convertToDateTime("DATE", args.get(0), java.sql.Date.class); //$NON-NLS-1$
             } else if (target.equals("time")) { //$NON-NLS-1$ 
-                return convertToDateTime("TIME", args[0], java.sql.Time.class); //$NON-NLS-1$
+                return convertToDateTime("TIME", args.get(0), java.sql.Time.class); //$NON-NLS-1$
             } else if (target.equals("timestamp")) { //$NON-NLS-1$ 
-                return convertToDateTime("TIMESTAMP", args[0], java.sql.Timestamp.class); //$NON-NLS-1$
+                return convertToDateTime("TIMESTAMP", args.get(0), java.sql.Timestamp.class); //$NON-NLS-1$
             } else if (target.equals("char")) { //$NON-NLS-1$ 
                 return convertToNativeType(function, "CHAR (1)"); //$NON-NLS-1$
             } else if (target.equals("boolean")) {  //$NON-NLS-1$ 
@@ -96,8 +98,8 @@ class MySQLConvertModifier extends BasicFunctionModifier {
         switch(srcCode) {
             case BOOLEAN:
                 // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
-                List when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters()[0], langFactory.createLiteral(Boolean.TRUE, Boolean.class)));
-                List then = Arrays.asList(new IExpression[] {langFactory.createLiteral("1", String.class)}); //$NON-NLS-1$
+                List<ICompareCriteria> when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters().get(0), langFactory.createLiteral(Boolean.TRUE, Boolean.class)));
+                List<ILiteral> then = Arrays.asList(langFactory.createLiteral("1", String.class)); //$NON-NLS-1$
                 IExpression elseExpr = langFactory.createLiteral("0", String.class); //$NON-NLS-1$
                 return langFactory.createSearchedCaseExpression(when, then, elseExpr, String.class);
             case BYTE:
@@ -125,10 +127,9 @@ class MySQLConvertModifier extends BasicFunctionModifier {
     }
     
     private IExpression convertToNativeType(IFunction function, String targetType) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         function.setName("convert"); //$NON-NLS-1$
-        args[1] = langFactory.createLiteral(targetType, String.class);
-        function.setParameters(args);
+        args.set(1, langFactory.createLiteral(targetType, String.class));
         return function;
     }
     
@@ -141,14 +142,14 @@ class MySQLConvertModifier extends BasicFunctionModifier {
     private IExpression convertToNumeric(IFunction function) {
         // convert(x, float/double/bigdecimal) --> (x + 0.0)
         return langFactory.createFunction("+", //$NON-NLS-1$
-                                          new IExpression[] {function.getParameters()[0],
-                                                             langFactory.createLiteral(new Double(0.0), Double.class)},
+                                          Arrays.asList(function.getParameters().get(0),
+                                                             langFactory.createLiteral(new Double(0.0), Double.class)),
                                           Double.class);
     }
     
     private IExpression convertToDateTime(String functionName, IExpression value, Class targetType) {
         return langFactory.createFunction(functionName,
-                                           new IExpression[] {value},
+                                           Arrays.asList(value),
                                            targetType);
     }
     
@@ -158,8 +159,8 @@ class MySQLConvertModifier extends BasicFunctionModifier {
             case STRING:
                 // convert(src, boolean) --> CASE src WHEN 'true' THEN 1 ELSE 0 END
                 // convert(booleanSrc, string) --> CASE WHEN booleanSrc THEN '1' ELSE '0' END
-                List when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters()[0], langFactory.createLiteral("true", String.class)));
-                List then = Arrays.asList(new IExpression[] {langFactory.createLiteral(Integer.valueOf(1), Integer.class)}); //$NON-NLS-1$
+                List<ICompareCriteria> when = Arrays.asList(langFactory.createCompareCriteria(Operator.EQ, function.getParameters().get(0), langFactory.createLiteral("true", String.class)));
+                List<ILiteral> then = Arrays.asList(langFactory.createLiteral(Integer.valueOf(1), Integer.class)); //$NON-NLS-1$
                 IExpression elseExpr = langFactory.createLiteral(Integer.valueOf(0), Integer.class); //$NON-NLS-1$
                 return langFactory.createSearchedCaseExpression(when, then, elseExpr, String.class);
             default:
@@ -169,16 +170,15 @@ class MySQLConvertModifier extends BasicFunctionModifier {
     
     private IFunction convertDateTimeToString(IFunction function, String format) {
         // convert (date, string) --> date_format(date, format)
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         function.setName("date_format"); //$NON-NLS-1$
-        args[1] = langFactory.createLiteral(format, String.class); 
-        function.setParameters(args);
+        args.set(1, langFactory.createLiteral(format, String.class)); 
         return function;
     }
     
     private int getSrcCode(IFunction function) {
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         return ((Integer) typeMap.get(srcType)).intValue();
     }         
 }

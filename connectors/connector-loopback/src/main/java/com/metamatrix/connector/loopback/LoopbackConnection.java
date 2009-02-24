@@ -22,7 +22,10 @@
 
 package com.metamatrix.connector.loopback;
 
-import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.api.ConnectorEnvironment;
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.Execution;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.basic.BasicConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;

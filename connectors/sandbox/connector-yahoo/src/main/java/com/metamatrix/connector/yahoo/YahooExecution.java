@@ -52,7 +52,6 @@ import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -255,8 +254,7 @@ public class YahooExecution extends BasicExecution implements ResultSetExecution
             ISelectSymbol symbol = (ISelectSymbol) iter.next();
             IExpression expr = symbol.getExpression();
             if(expr instanceof IElement) {
-                MetadataID id = ((IElement)expr).getMetadataID();
-                Element element = (Element) metadata.getObject(id);
+                Element element = ((IElement)expr).getMetadataObject();
                 cols[i] = element.getPosition();
             } else {
                 throw new ConnectorException(YahooPlugin.Util.getString("YahooExecution.Invalid_select_symbol", expr)); //$NON-NLS-1$

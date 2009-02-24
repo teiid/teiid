@@ -24,24 +24,21 @@ package com.metamatrix.connector.xml.cache;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.connector.xml.MockCachingConnector;
 
 public class TestRequestRecord extends TestCase {
 
 	ConnectorLogger logger = new SysLogger(false);
-	CachingConnector mockConnector = new MockCachingConnector();
+	CachingConnector mockConnector = Mockito.mock(CachingConnector.class);
 	
-	protected void setUp() throws Exception {
-		super.setUp();
+	public TestRequestRecord() {
+		Mockito.stub(mockConnector.getCache()).toReturn(Mockito.mock(IDocumentCache.class));
 	}
-
-	protected void tearDown() throws Exception {
-		super.tearDown();
-	}
-
+	
 	public void testRequestRecord() {
 		RequestRecord testRecord;
 		try {

@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.language;
 
+import java.util.List;
+
 /**
  * Represents a function in the language.  A function has a name and 0..n 
  * Expressions that are parameters.  
@@ -38,7 +40,7 @@ public interface IFunction extends IExpression {
      * Get the parameters used in this function.
      * @return Array of IExpressions defining the parameters
      */
-    IExpression[] getParameters();
+    List<IExpression> getParameters();
     
     /**
      * Set name of the function
@@ -46,10 +48,4 @@ public interface IFunction extends IExpression {
      */
     void setName(String name);
 
-    /**
-     * Set the parameters used in this function.
-     * @param parameters Array of IExpressions defining the parameters
-     */
-    void setParameters(IExpression[] parameters);
-    
 }

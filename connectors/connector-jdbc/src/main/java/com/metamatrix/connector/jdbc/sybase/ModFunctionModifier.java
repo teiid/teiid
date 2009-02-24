@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.sybase;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.metamatrix.connector.api.TypeFacility.RUNTIME_TYPES;
@@ -41,26 +43,21 @@ public class ModFunctionModifier extends AliasModifier {
 	
 	@Override
 	public IExpression modify(IFunction function) {
-		IExpression[] expressions = function.getParameters();
-		if (RUNTIME_TYPES.INTEGER.equals(expressions[0].getType())) {
+		List<IExpression> expressions = function.getParameters();
+		if (RUNTIME_TYPES.INTEGER.equals(expressions.get(0).getType())) {
 			return super.modify(function);
 		}
 		//x % y => x - floor(x / y) * y
-		IExpression[] divideArgs = new IExpression[2];
-		System.arraycopy(expressions, 0, divideArgs, 0, 2);
-		IFunction divide = langFactory.createFunction("/", divideArgs, divideArgs[0].getType()); //$NON-NLS-1$
+		IFunction divide = langFactory.createFunction("/", new ArrayList<IExpression>(expressions), expressions.get(0).getType()); //$NON-NLS-1$
 		
-		IFunction floor = langFactory.createFunction("floor", new IExpression[] {divide}, divide.getType()); //$NON-NLS-1$
+		IFunction floor = langFactory.createFunction("floor", Arrays.asList(divide), divide.getType()); //$NON-NLS-1$
 		
-		IExpression[] multArgs = new IExpression[] {
-				floor, expressions[1]
-		};
-		IFunction mult = langFactory.createFunction("*", multArgs, multArgs[1].getType()); //$NON-NLS-1$
+		List<IExpression> multArgs = Arrays.asList(floor, expressions.get(1));
+		IFunction mult = langFactory.createFunction("*", multArgs, multArgs.get(1).getType()); //$NON-NLS-1$
+
+		List<IExpression> minusArgs = Arrays.asList(expressions.get(0), mult);
 		
-		IExpression[] minusArgs = new IExpression[] {
-				expressions[0], mult
-		};
-		return langFactory.createFunction("-", minusArgs, minusArgs[0].getType()); //$NON-NLS-1$
+		return langFactory.createFunction("-", minusArgs, minusArgs.get(0).getType()); //$NON-NLS-1$
 	}
 	
 	@Override

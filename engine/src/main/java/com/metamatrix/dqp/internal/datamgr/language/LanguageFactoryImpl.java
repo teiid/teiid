@@ -22,10 +22,53 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.language.*;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.language.IAggregate;
+import com.metamatrix.connector.language.IBulkInsert;
+import com.metamatrix.connector.language.ICompareCriteria;
+import com.metamatrix.connector.language.ICompoundCriteria;
+import com.metamatrix.connector.language.ICriteria;
+import com.metamatrix.connector.language.IDelete;
+import com.metamatrix.connector.language.IElement;
+import com.metamatrix.connector.language.IExistsCriteria;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFrom;
+import com.metamatrix.connector.language.IFromItem;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.IGroup;
+import com.metamatrix.connector.language.IGroupBy;
+import com.metamatrix.connector.language.IInCriteria;
+import com.metamatrix.connector.language.IInlineView;
+import com.metamatrix.connector.language.IInsert;
+import com.metamatrix.connector.language.IIsNullCriteria;
+import com.metamatrix.connector.language.IJoin;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.INotCriteria;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IOrderByItem;
+import com.metamatrix.connector.language.IParameter;
+import com.metamatrix.connector.language.IProcedure;
+import com.metamatrix.connector.language.IQuery;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.language.IScalarSubquery;
+import com.metamatrix.connector.language.ISearchedCaseExpression;
+import com.metamatrix.connector.language.ISelect;
+import com.metamatrix.connector.language.ISelectSymbol;
+import com.metamatrix.connector.language.ISetClause;
+import com.metamatrix.connector.language.ISetClauseList;
+import com.metamatrix.connector.language.ISetQuery;
+import com.metamatrix.connector.language.ISubqueryCompareCriteria;
+import com.metamatrix.connector.language.ISubqueryInCriteria;
+import com.metamatrix.connector.language.IUpdate;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 
 /**
  */
@@ -72,7 +115,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createElement(java.lang.String, com.metamatrix.data.language.IGroup, com.metamatrix.data.metadata.runtime.MetadataID)
      */
-    public IElement createElement(String name, IGroup group, MetadataID metadataReference, Class type) {
+    public IElement createElement(String name, IGroup group, Element metadataReference, Class type) {
         return new ElementImpl(group, name, metadataReference, type);
     }
 
@@ -89,18 +132,24 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     public IFrom createFrom(List items) {
         return new FromImpl(items);
     }
+    
+    @Override
+    public IFunction createFunction(String functionName, IExpression[] args,
+    		Class type) {
+    	return new FunctionImpl(functionName, Arrays.asList(args), type);
+    }
 
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createFunction(java.lang.String, com.metamatrix.data.language.IExpression[], java.lang.Class)
      */
-    public IFunction createFunction(String functionName, IExpression[] args, Class type) {
+    public IFunction createFunction(String functionName, List<? extends IExpression> args, Class type) {
         return new FunctionImpl(functionName, args, type);
     }
 
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createGroup(java.lang.String, java.lang.String, com.metamatrix.data.metadata.runtime.MetadataID)
      */
-    public IGroup createGroup(String context, String definition, MetadataID metadataReference) {
+    public IGroup createGroup(String context, String definition, Group metadataReference) {
         return new GroupImpl(context, definition, metadataReference);
     }
 
@@ -188,14 +237,14 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createParameter(int, int, java.lang.Object, java.lang.Class)
      */
-    public IParameter createParameter(int index, IParameter.Direction direction, Object value, Class type, MetadataID metadataReference) {
+    public IParameter createParameter(int index, IParameter.Direction direction, Object value, Class type, Parameter metadataReference) {
         return new ParameterImpl(index, direction, value, type, metadataReference);
     }
 
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createProcedure(java.lang.String, java.util.List, com.metamatrix.data.metadata.runtime.MetadataID)
      */
-    public IProcedure createProcedure(String name, List parameters, MetadataID metadataReference) {
+    public IProcedure createProcedure(String name, List parameters, Procedure metadataReference) {
         return new ProcedureImpl(name, parameters, metadataReference);
     }
 

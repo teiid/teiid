@@ -45,7 +45,7 @@ public class ExtractFunctionModifier extends BasicFunctionModifier implements Fu
     
     public List translate(IFunction function) {
         StringBuffer buffer = new StringBuffer();
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         
         List objs = new ArrayList();
         buffer.append("EXTRACT("); //$NON-NLS-1$
@@ -54,7 +54,7 @@ public class ExtractFunctionModifier extends BasicFunctionModifier implements Fu
         buffer.append("FROM"); //$NON-NLS-1$
 
         buffer.append(SPACE);               
-        buffer.append(args[0]);
+        buffer.append(args.get(0));
         buffer.append(")"); //$NON-NLS-1$
         objs.add(buffer.toString());
         return objs;

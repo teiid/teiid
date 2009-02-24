@@ -22,10 +22,12 @@
 
 package com.metamatrix.connector.language;
 
+import com.metamatrix.connector.metadata.runtime.Parameter;
+
 /**
  * Represents an execution parameter.
  */
-public interface IParameter extends ILanguageObject, IMetadataReference {
+public interface IParameter extends ILanguageObject, IMetadataReference<Parameter> {
 	
 	public enum Direction {
 		IN,

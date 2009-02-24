@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.metadata.runtime;
 
+import java.util.List;
+
 import com.metamatrix.connector.api.ConnectorException;
 
 /**
@@ -53,5 +55,12 @@ public interface Parameter extends MetadataObject, TypeModel {
      */
     int getDirection() throws ConnectorException;
     
+    /**
+     * Get the parent
+     * @return Parent
+     */
+    Procedure getParent() throws ConnectorException;
+    
+    List<Element> getChildren() throws ConnectorException;
     
 }

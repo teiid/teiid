@@ -41,7 +41,6 @@ import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 
@@ -122,8 +121,7 @@ public class QueryAnalyzer {
         List fromItems = from.getItems();
         //better be only one
         IGroup group = (IGroup) fromItems.get(0);
-        MetadataID id = group.getMetadataID();
-        m_table = (Group) m_metadata.getObject(id);
+        m_table = (Group) group.getMetadataObject();
         m_info.setTableXPath(m_table.getNameInSource());
     }
 
@@ -149,9 +147,7 @@ public class QueryAnalyzer {
                 if (expr instanceof ILiteral) {
                     xpath = new OutputXPathDesc((ILiteral) expr);
                 } else if (expr instanceof IElement) {
-                    MetadataID elementID = (MetadataID) ((IElement) expr)
-                            .getMetadataID();
-                    Element element = (Element) m_metadata.getObject(elementID);
+                    Element element = ((IElement)expr).getMetadataObject();
                     xpath = new OutputXPathDesc(element);
                 }
                 if (xpath != null) {
@@ -175,19 +171,13 @@ public class QueryAnalyzer {
         //  containing names, element (metadata), and equivilence value, or all
         // set values
 
-        MetadataID groupID = m_table.getMetadataID();
-        List elementList = groupID.getChildIDs();
-
         ArrayList params = new ArrayList();
         ArrayList crits = new ArrayList();
         ArrayList responses = new ArrayList();
         ArrayList locations = new ArrayList();
 
         //Iterate through each field in the table
-        Iterator elementListIterator = elementList.iterator();
-        while (elementListIterator.hasNext()) {
-            MetadataID elementID = (MetadataID) elementListIterator.next();
-            Element element = (Element) m_metadata.getObject(elementID);
+        for (Element element : m_table.getChildren()) {
             CriteriaDesc criteria = CriteriaDesc.getCriteriaDescForColumn(
                     element, m_query);
             if (criteria != null) {

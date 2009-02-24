@@ -24,12 +24,36 @@
  */
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
 
 /**
  */
 public class GroupImpl extends MetadataObjectImpl implements Group {
-    GroupImpl(MetadataIDImpl metadataID){
-        super(metadataID);
+	
+    GroupImpl(Object actualID, RuntimeMetadataImpl factory){
+        super(actualID, factory);
+    }
+    
+    @Override
+    public List<Element> getChildren() throws ConnectorException {
+    	try {
+	    	List elementIds = getMetadata().getElementIDsInGroupID(getActualID());
+	    	List<Element> result = new ArrayList<Element>(elementIds.size());
+	    	for (Object elementId : elementIds) {
+				result.add(new ElementImpl(elementId, getFactory()));
+	    	}
+	    	return result;
+    	} catch (QueryMetadataException e) {
+    		throw new ConnectorException(e);
+    	} catch (MetaMatrixComponentException e) {
+    		throw new ConnectorException(e);
+		}
     }
 }

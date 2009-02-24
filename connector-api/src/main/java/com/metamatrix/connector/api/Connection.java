@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.api;
 
-import com.metamatrix.connector.identity.PoolAwareConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
@@ -63,6 +62,20 @@ public interface Connection {
      * @return true if open, false if there is a source error.
      */    
     boolean isAlive();
-
+    
+	/**
+	 * Called by the pool when an existing connection is leased so that the underlying
+	 * Connection may have it's identity switched to a different user.
+	 * @param identity
+	 * @throws ConnectorException
+	 */
+	void setConnectorIdentity(ConnectorIdentity context)
+			throws ConnectorException;
+	
+    /**
+     * Called by the pool to indicate that the connection was returned to the pool.
+     * The actual close call will be made when the pool wants to purge this connection.
+     */
+    void closeCalled();
 }
 

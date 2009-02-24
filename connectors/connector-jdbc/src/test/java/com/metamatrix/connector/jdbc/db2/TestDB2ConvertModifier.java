@@ -25,6 +25,7 @@ package com.metamatrix.connector.jdbc.db2;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -64,9 +65,9 @@ public class TestDB2ConvertModifier extends TestCase {
 
     public void helpTest(IExpression srcExpression, String tgtType, String expectedExpression) throws Exception {
         IFunction func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { 
+            Arrays.asList( 
                 srcExpression,
-                LANG_FACTORY.createLiteral(tgtType, String.class)},
+                LANG_FACTORY.createLiteral(tgtType, String.class)),
             TypeFacility.getDataTypeClass(tgtType));
         
         DB2ConvertModifier mod = new DB2ConvertModifier(LANG_FACTORY);

@@ -22,6 +22,9 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.*;
@@ -47,16 +50,16 @@ public class DayWeekQuarterFunctionModifier extends BasicFunctionModifier implem
      * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
      */
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
 
         IFunction inner = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
-            new IExpression[] { 
-                args[0], 
-                langFactory.createLiteral(format, String.class)},  
+            Arrays.asList( 
+                args.get(0), 
+                langFactory.createLiteral(format, String.class)),  
                 String.class);
             
         IFunction outer = langFactory.createFunction("TO_NUMBER",  //$NON-NLS-1$
-            new IExpression[] {inner},  
+            Arrays.asList(inner),  
                 Integer.class);
                                 
         return outer;    

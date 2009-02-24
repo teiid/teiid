@@ -113,7 +113,7 @@ public class TestSQLConversionVisitor extends TestCase {
 			throw new RuntimeException(e);
 		}    	
     }
-    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory.getRuntimeMetadata();
+    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
 
     private String getStringWithContext(ILanguageObject obj) throws ConnectorException {
         Properties props = new Properties();      

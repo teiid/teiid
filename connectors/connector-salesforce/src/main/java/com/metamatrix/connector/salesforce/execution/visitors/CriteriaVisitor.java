@@ -40,7 +40,6 @@ import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
@@ -158,13 +157,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 	}
 
 	private void generateMultiSelect(IFunction func, String funcName) throws ConnectorException {
-		IExpression[] expressions = func.getParameters();
+		List<IExpression> expressions = func.getParameters();
 		validateFunction(expressions);
-		IExpression columnExpression = expressions[0]; 
-		Element column = (Element)metadata.getObject(((IElement)columnExpression).getMetadataID());
+		IExpression columnExpression = expressions.get(0); 
+		Element column = ((IElement)columnExpression).getMetadataObject();
 		StringBuffer criterion = new StringBuffer();
 		criterion.append(column.getNameInSource()).append(SPACE).append(funcName);
-		addFunctionParams((ILiteral)expressions[1], criterion);
+		addFunctionParams((ILiteral)expressions.get(1), criterion);
 		criteriaList.add(criterion.toString());
 	}
 	
@@ -195,15 +194,14 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 		criteriaList.add(result.toString());
 	}
 
-	private void validateFunction(IExpression[] expressions) throws ConnectorException {
-		if(expressions.length != 2) {
+	private void validateFunction(List<IExpression> expressions) throws ConnectorException {
+		if(expressions.size() != 2) {
 			throw new ConnectorException(Messages.getString("CriteriaVisitor.invalid.arg.count"));
 		}
-		IExpression columnExpression = expressions[0];
-		if(!(expressions[0] instanceof IElement)) {
+		if(!(expressions.get(0) instanceof IElement)) {
 			throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.column.arg"));
 		}
-		if(!(expressions[1] instanceof ILiteral)) {
+		if(!(expressions.get(1) instanceof ILiteral)) {
 			throw new ConnectorException(Messages.getString("CriteriaVisitor.function.not.literal.arg"));
 		}
 	}
@@ -233,7 +231,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 			parseFunction((IFunction)lExpr);
 		} else {
 		IElement left = (IElement) lExpr;
-		Element column = (Element) metadata.getObject(left.getMetadataID());
+		Element column = left.getMetadataObject();
 		String columnName = column.getNameInSource();
 		StringBuffer queryString = new StringBuffer();
 		queryString.append(columnName).append(SPACE);
@@ -268,8 +266,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 		queryString.append(' ');
 		queryString.append("IN");
 		queryString.append('(');
-		Element column = (Element) metadata.getObject(
-				((IElement)criteria.getLeftExpression()).getMetadataID());
+		Element column = ((IElement)criteria.getLeftExpression()).getMetadataObject();
 		boolean timeColumn = isTimeColumn(column);
 		boolean first = true;
 		Iterator iter = criteria.getRightExpressions().iterator();
@@ -299,8 +296,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 		String result;
 		if (expr instanceof IElement) {
 			IElement element = (IElement) expr;
-			Element element2 = (Element) metadata.getObject(element
-					.getMetadataID());
+			Element element2 = element.getMetadataObject();
 			result = element2.getNameInSource();
 		} else if (expr instanceof ILiteral) {
 			ILiteral literal = (ILiteral) expr;
@@ -314,8 +310,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 	}
 
 	protected void loadColumnMetadata(IGroup group) throws ConnectorException {
-		MetadataID id = group.getMetadataID();
-		table = (Group) metadata.getObject(id);
+		table = group.getMetadataObject();
 		String supportsQuery = (String) table.getProperties().get(
 				"Supports Query");
 		if (!Util.convertStringToBoolean(supportsQuery)) {
@@ -325,13 +320,10 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 							+ Messages
 									.getString("CriteriaVisitor.query.not.supported"));
 		}
-		List<MetadataID> columnIds = table.getMetadataID().getChildIDs();
-		Iterator<MetadataID> iter = columnIds.iterator();
-		while (iter.hasNext()) {
-			MetadataID columnID = (MetadataID) iter.next();
-			Element element = (Element) metadata.getObject(columnID);
-			String name = columnID.getParentID().getName() + '.'
-					+ columnID.getName();
+		List<Element> columnIds = table.getChildren();
+		for (Element element : columnIds) {
+			String name = table.getName() + '.'
+					+ element.getName();
 			columnElementsByName.put(name, element);
 		}
 	}
@@ -340,9 +332,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 			throws ConnectorException {
 		boolean result = false;
 		if (expression instanceof IElement) {
-			MetadataID elementID = (MetadataID) ((IElement) expression)
-					.getMetadataID();
-			Element element = (Element) metadata.getObject(elementID);
+			Element element = ((IElement) expression).getMetadataObject();
 			String nameInSource = element.getNameInSource();
 			if (nameInSource.equalsIgnoreCase("id")) {
 				result = true;
@@ -355,9 +345,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 			throws ConnectorException {
 		boolean result = false;
 		if (expression instanceof IElement) {
-			MetadataID elementID = (MetadataID) ((IElement) expression)
-					.getMetadataID();
-			Element element = (Element) metadata.getObject(elementID);
+			Element element = ((IElement) expression).getMetadataObject();
 			String nativeType = element.getNativeType();
 			if (nativeType.equalsIgnoreCase("multipicklist") || 
 					nativeType.equalsIgnoreCase("restrictedmultiselectpicklist")) {

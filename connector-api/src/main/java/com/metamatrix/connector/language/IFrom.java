@@ -35,10 +35,4 @@ public interface IFrom extends ILanguageObject {
      */
     List<IFromItem> getItems();
     
-    /**
-     * Set a List of IFromItem in this FROM clause.
-     * @param items List of IFromItem
-     */
-    void setItems(List<IFromItem> items);
-    
 }

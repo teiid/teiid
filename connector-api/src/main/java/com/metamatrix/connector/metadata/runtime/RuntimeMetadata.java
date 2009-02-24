@@ -31,10 +31,24 @@ public interface RuntimeMetadata {
 
     /**
      * Look up an object by identifier
-     * @param id The identifier
+     * @param fullName
      * @return The object
      */
-    MetadataObject getObject(MetadataID id) throws ConnectorException;
+    Group getGroup(String fullName) throws ConnectorException;
+
+    /**
+     * Look up an object by identifier
+     * @param fullName
+     * @return The object
+     */
+    Element getElement(String fullName) throws ConnectorException;
+
+    /**
+     * Look up an object by identifier
+     * @param fullName
+     * @return The object
+     */
+    Procedure getProcedure(String fullName) throws ConnectorException;
     
     /**
      * Gets the contents of a VDB resource in binary form.

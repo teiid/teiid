@@ -22,11 +22,13 @@
 
 package com.metamatrix.connector.language;
 
+import com.metamatrix.connector.metadata.runtime.Element;
+
 /**
  * Represents an element in the language.  An example of an element 
  * would be a column reference in a SELECT clause. 
  */
-public interface IElement extends IMetadataReference, IExpression {
+public interface IElement extends IMetadataReference<Element>, IExpression {
 
     /**
      * Gets the name of the element.

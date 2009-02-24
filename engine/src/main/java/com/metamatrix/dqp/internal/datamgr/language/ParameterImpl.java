@@ -23,7 +23,7 @@
 package com.metamatrix.dqp.internal.datamgr.language;
 
 import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ParameterImpl extends BaseLanguageObject implements IParameter {
@@ -33,14 +33,14 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     private Object value;
     private boolean valueSpecified;
     private Class type;
-    private MetadataID metadataID;
+    private Parameter metadataObject;
     
-    public ParameterImpl(int index, Direction direction, Object value, Class type, MetadataID metadataID) {
+    public ParameterImpl(int index, Direction direction, Object value, Class type, Parameter metadataObject) {
         setIndex(index);
         setDirection(direction);
         setValue(value);
         setType(type);
-        setMetadataID(metadataID);
+        this.metadataObject = metadataObject;
     }
     
     /**
@@ -109,16 +109,14 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
         }
     }
 
-    public MetadataID getMetadataID() {
-        return this.metadataID;
+    @Override
+    public Parameter getMetadataObject() {
+    	return this.metadataObject;
     }
 
-    /* 
-     * @see com.metamatrix.data.language.IMetadataReference#setMetadataID(com.metamatrix.data.metadata.runtime.MetadataID)
-     */
-    public void setMetadataID(MetadataID metadataID) {
-        this.metadataID = metadataID;
-    }
+    public void setMetadataObject(Parameter metadataObject) {
+		this.metadataObject = metadataObject;
+	}
     
     /** 
      * @see com.metamatrix.connector.language.IParameter#getValueSpecified()

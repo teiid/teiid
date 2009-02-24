@@ -138,7 +138,7 @@ public class CriteriaDesc extends ParameterDescriptor {
         } else if (findIsRequired(element)) {
             throw new ConnectorException(
                     Messages.getString("CriteriaDesc.value.not.found.for.param") //$NON-NLS-1$
-                            + element.getMetadataID().getName());
+                            + element.getName());
         }        
     }
 
@@ -369,7 +369,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     //Thsi should be much more bulletproof and more easily supported
     private static ArrayList parseCriteriaToValues(Element element, IQuery query) throws ConnectorException {
 
-        String fullName = element.getMetadataID().getFullName().trim().toUpperCase();
+        String fullName = element.getFullName().trim().toUpperCase();
         ArrayList parmPair = new ArrayList();
         if (element.getSearchability() == Element.SEARCHABLE
                 || element.getSearchability() == Element.SEARCHABLE_COMPARE) {

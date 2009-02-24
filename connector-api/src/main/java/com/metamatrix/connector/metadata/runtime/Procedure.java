@@ -22,9 +22,12 @@
 
 package com.metamatrix.connector.metadata.runtime;
 
+import java.util.List;
+
 /**
  * Represents a procedure construct (such as a Stored Procedure).
  */
 public interface Procedure extends MetadataObject{
             
+	List<Parameter> getChildren();
 }

@@ -26,7 +26,10 @@ import java.util.List;
 
 import com.metamatrix.connector.language.ICompoundCriteria.Operator;
 import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 
 /**
  * Factory for the construction of language objects that implement the language interfaces.
@@ -61,7 +64,7 @@ public interface ILanguageFactory {
      * @param innerCriteria List of ICriteria, typically containing two criteria
      * @return New ICompoundCriteria
      */
-    ICompoundCriteria createCompoundCriteria(ICompoundCriteria.Operator operator, List<ICriteria> innerCriteria);
+    ICompoundCriteria createCompoundCriteria(ICompoundCriteria.Operator operator, List<? extends ICriteria> innerCriteria);
 
     /**
      * Create a new IDelete.
@@ -79,7 +82,7 @@ public interface ILanguageFactory {
      * @param type Data type
      * @return New IElement
      */
-    IElement createElement(String name, IGroup group, MetadataID metadataReference, Class type);
+    IElement createElement(String name, IGroup group, Element metadataReference, Class type);
     
     /**
      * Create new exists criteria.
@@ -93,8 +96,8 @@ public interface ILanguageFactory {
      * @param items List of IFromItem
      * @return New IFrom
      */
-    IFrom createFrom(List<IFromItem> items);
-    
+    IFrom createFrom(List<? extends IFromItem> items);
+
     /**
      * Create new function
      * @param functionName Name of the function
@@ -103,6 +106,15 @@ public interface ILanguageFactory {
      * @return New IFunction
      */
     IFunction createFunction(String functionName, IExpression[] args, Class type);
+    
+    /**
+     * Create new function
+     * @param functionName Name of the function
+     * @param args Arguments, should never be null
+     * @param type Data type returned
+     * @return New IFunction
+     */
+    IFunction createFunction(String functionName, List<? extends IExpression> args, Class type);
 
     /**
      * Create new group.
@@ -111,14 +123,14 @@ public interface ILanguageFactory {
      * @param metadataReference Reference to metadata identifier
      * @return New IGroup
      */    
-    IGroup createGroup(String context, String definition, MetadataID metadataReference);
+    IGroup createGroup(String context, String definition, Group metadataReference);
     
     /**
      * Create new group by.
      * @param items List of IGroupByItem
      * @return New IGroupBy
      */
-    IGroupBy createGroupBy(List<IExpression> items);
+    IGroupBy createGroupBy(List<? extends IExpression> items);
     
     /**
      * Create new IN criteria
@@ -127,7 +139,7 @@ public interface ILanguageFactory {
      * @param isNegated True if NOT IN, false for IN
      * @return New IInCriteria
      */
-    IInCriteria createInCriteria(IExpression leftExpression, List<IExpression> rightExpressions, boolean isNegated);
+    IInCriteria createInCriteria(IExpression leftExpression, List<? extends IExpression> rightExpressions, boolean isNegated);
 
     /**
      * Create new inline view
@@ -144,7 +156,7 @@ public interface ILanguageFactory {
      * @param values List of IExpression (usually ILiteral)
      * @return New IInsert
      */
-    IInsert createInsert(IGroup group, List<IElement> columns, List<IExpression> values);
+    IInsert createInsert(IGroup group, List<IElement> columns, List<? extends IExpression> values);
  
     /**
      * Create new bulk insert command
@@ -153,7 +165,7 @@ public interface ILanguageFactory {
      * @param List of Lists containing the actual values
      * @return New IBulkInsert
      */
-    IBulkInsert createBulkInsert(IGroup group, List<IElement> columns, List<List<Object>> rows);
+    IBulkInsert createBulkInsert(IGroup group, List<? extends IElement> columns, List<List<Object>> rows);
     
     /**
      * Create new IS NULL criteria
@@ -171,7 +183,7 @@ public interface ILanguageFactory {
      * @param criteria List of ICriteria (considered to be AND'ed together)
      * @return New IJoin
      */
-    IJoin createJoin(IJoin.JoinType joinType, IFromItem leftItem, IFromItem rightItem, List<ICriteria> criteria);
+    IJoin createJoin(IJoin.JoinType joinType, IFromItem leftItem, IFromItem rightItem, List<? extends ICriteria> criteria);
     
     /**
      * Create new LIKE criteria
@@ -203,7 +215,7 @@ public interface ILanguageFactory {
      * @param items List of IOrderByItem
      * @return New IOrderBy
      */
-    IOrderBy createOrderBy(List<IOrderByItem> items);
+    IOrderBy createOrderBy(List<? extends IOrderByItem> items);
     
     /**
      * Create new ORDER BY item
@@ -223,7 +235,7 @@ public interface ILanguageFactory {
      * @param metadataReference Metadata identifier reference
      * @return New IParameter
      */
-    IParameter createParameter(int index, Direction direction, Object value, Class type, MetadataID metadataReference);
+    IParameter createParameter(int index, Direction direction, Object value, Class type, Parameter metadataReference);
     
     /**
      * Create new procedure
@@ -232,7 +244,7 @@ public interface ILanguageFactory {
      * @param metadataReference Metadata identifier reference
      * @return New IProcedure
      */
-    IProcedure createProcedure(String name, List<IParameter> parameters, MetadataID metadataReference);
+    IProcedure createProcedure(String name, List<? extends IParameter> parameters, Procedure metadataReference);
     
     /**
      * Create new query
@@ -263,7 +275,7 @@ public interface ILanguageFactory {
      * @param type Data type
      * @return New ICaseExpression
      */    
-    ISearchedCaseExpression createSearchedCaseExpression(List<IExpression> whenExpressions, List<IExpression> thenExpressions, IExpression elseExpression, Class type);
+    ISearchedCaseExpression createSearchedCaseExpression(List<? extends ICriteria> whenExpressions, List<? extends IExpression> thenExpressions, IExpression elseExpression, Class type);
 
     /**
      * Create new SELECT clause
@@ -271,7 +283,7 @@ public interface ILanguageFactory {
      * @param selectSymbols List of ISelectSymbol
      * @return New ISelect
      */
-    ISelect createSelect(boolean isDistinct, List<ISelectSymbol> selectSymbols);
+    ISelect createSelect(boolean isDistinct, List<? extends ISelectSymbol> selectSymbols);
     
     /**
      * Create new select symbol

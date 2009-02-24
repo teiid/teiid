@@ -22,6 +22,9 @@
 
 package com.metamatrix.connector.jdbc.translator;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -43,20 +46,11 @@ public class SubstringFunctionModifier extends BasicFunctionModifier {
      * @see com.metamatrix.connector.jdbc.translator.FunctionModifier#modify(com.metamatrix.query.sql.symbol.Function)
      */
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
-        IExpression[] newArgs = new IExpression[3];
-        function.setParameters(newArgs);
-
-        newArgs[0] = args[0];
-        newArgs[1] = args[1];
+        List<IExpression> args = function.getParameters();
         
-        if(args.length == 2) {
-            newArgs[2] = languageFactory.createFunction(length_function, new IExpression[] { args[0] }, Integer.class); 
-        } else {
-            newArgs[2] = args[2];
-        }
-        
-        function.setParameters(newArgs);
+        if(args.size() == 2) {
+            args.add(languageFactory.createFunction(length_function, Arrays.asList(args.get(0)), Integer.class)); 
+        } 
                         
         return function;
     }

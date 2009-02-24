@@ -23,8 +23,9 @@
 package com.metamatrix.connector.yahoo;
 
 import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.basic.BasicConnector;
 
-public class YahooConnector implements Connector {
+public class YahooConnector extends BasicConnector {
 
     private ConnectorEnvironment env;
     

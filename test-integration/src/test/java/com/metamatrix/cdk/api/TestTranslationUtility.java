@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -87,11 +86,10 @@ public class TestTranslationUtility extends TestCase {
         // Translate command to get some ids
         IQuery query = (IQuery) util.parseCommand("select * from partssupplier.parts"); //$NON-NLS-1$
         IGroup group = (IGroup) query.getFrom().getItems().get(0);
-        MetadataID mid = group.getMetadataID();
+        MetadataObject mid = group.getMetadataObject();
         assertEquals("PartsSupplier.PARTSSUPPLIER.PARTS", mid.getFullName()); //$NON-NLS-1$
         
         // Use RMD to get stuff
-        MetadataObject groupObj = rmd.getObject(mid);
-        assertEquals("PARTS", groupObj.getNameInSource()); //$NON-NLS-1$
+        assertEquals("PARTS", mid.getNameInSource()); //$NON-NLS-1$
     }
 }

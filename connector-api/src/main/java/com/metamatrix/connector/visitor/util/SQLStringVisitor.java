@@ -70,7 +70,6 @@ import com.metamatrix.connector.language.ISubqueryCompareCriteria;
 import com.metamatrix.connector.language.ISubqueryInCriteria;
 import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.visitor.framework.AbstractLanguageVisitor;
 import com.metamatrix.core.util.StringUtil;
@@ -93,19 +92,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @param id the id of the group or element
      * @return the name of that element or group as defined in the source
      */
-    protected String getName(MetadataID id) {
+    protected String getName(MetadataObject object) {
         try {
-            MetadataObject obj = id.getMetadataObject();
-            if (obj == null) {
-                return id.getName();
-            }
-            String nameInSource = obj.getNameInSource();
+            String nameInSource = object.getNameInSource();
             if(nameInSource != null && nameInSource.length() > 0) {
                 return nameInSource;
             }
-            return id.getName();
+            return object.getName();
         } catch(ConnectorException e) {
-            return id.getName();
+            return object.getName();
         }
     }
     
@@ -291,7 +286,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             if(group.getDefinition() != null) { 
                 groupName = group.getContext();
             } else {  
-                MetadataID groupID = group.getMetadataID();
+                MetadataObject groupID = group.getMetadataObject();
                 if(groupID != null) {              
                     groupName = getName(groupID);
                 } else {
@@ -301,7 +296,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         }
         
 		String elemShortName = null;        
-        MetadataID elementID = obj.getMetadataID();
+        MetadataObject elementID = obj.getMetadataObject();
         if(elementID != null) {
             elemShortName = getName(elementID);            
         } else {
@@ -345,8 +340,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         buffer.append(EXEC)
               .append(SPACE);
         
-        if(obj.getMetadataID() != null) {
-            buffer.append(getName(obj.getMetadataID()));                         
+        if(obj.getMetadataObject() != null) {
+            buffer.append(getName(obj.getMetadataObject()));                         
         } else {
             buffer.append(obj.getProcedureName());
         }
@@ -399,15 +394,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     public void visit(IFunction obj) {
 
         String name = obj.getName();
-        IExpression[] args = obj.getParameters();
+        List<IExpression> args = obj.getParameters();
         if(name.equalsIgnoreCase(CONVERT) || name.equalsIgnoreCase(CAST)) { 
             
-            Object typeValue = ((ILiteral)args[1]).getValue();
+            Object typeValue = ((ILiteral)args.get(1)).getValue();
                
             buffer.append(name);
             buffer.append(LPAREN); 
             
-            append(args[0]);
+            append(args.get(0));
 
             if(name.equalsIgnoreCase(CONVERT)) { 
                 buffer.append(COMMA); 
@@ -423,9 +418,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             buffer.append(LPAREN); 
 
             if(args != null) {
-                for(int i=0; i<args.length; i++) {
-                    append(args[i]);
-                    if(i < (args.length-1)) {
+                for(int i=0; i<args.size(); i++) {
+                    append(args.get(i));
+                    if(i < (args.size()-1)) {
                         buffer.append(SPACE);
                         buffer.append(name);
                         buffer.append(SPACE);
@@ -438,13 +433,16 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             buffer.append(name);
             buffer.append(LPAREN); 
 
-            if(args != null && args.length > 0) {
-                buffer.append(((ILiteral)args[0]).getValue());
+            if(args != null && args.size() > 0) {
+                buffer.append(((ILiteral)args.get(0)).getValue());
 
-                for(int i=1; i<args.length; i++) {
-                    buffer.append(COMMA); 
-                    buffer.append(SPACE); 
-                    append(args[i]);
+                for(int i=1; i<args.size(); i++) {
+                    append(args.get(i));
+                    if(i < (args.size()-1)) {
+                        buffer.append(SPACE);
+                        buffer.append(name);
+                        buffer.append(SPACE);
+                    }
                 }
             }
             buffer.append(RPAREN);
@@ -462,7 +460,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IGroup)
      */
     public void visit(IGroup obj) {
-        MetadataID groupID = obj.getMetadataID();
+        MetadataObject groupID = obj.getMetadataObject();
         if(groupID != null) {              
             buffer.append(getName(groupID));
         } else {

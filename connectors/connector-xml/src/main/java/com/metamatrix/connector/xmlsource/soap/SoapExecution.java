@@ -74,7 +74,7 @@ public class SoapExecution extends XMLSourceExecution {
         ArrayList argsList = new ArrayList();
 
         // look for the name of the Service to return in the metadata, "Name in Source" property
-        MetadataObject metaObject = this.metadata.getObject(procedure.getMetadataID());
+        MetadataObject metaObject = procedure.getMetadataObject();
         String sourceProcedureName = metaObject.getNameInSource();
         
         // if the source procedure name is not supplied then throw an exception

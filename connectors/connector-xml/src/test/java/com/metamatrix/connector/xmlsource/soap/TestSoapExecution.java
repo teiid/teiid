@@ -33,6 +33,8 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.mockito.Mockito;
+
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.connector.api.ConnectorEnvironment;
@@ -42,7 +44,7 @@ import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.xmlsource.FakeRuntimeMetadata;
+import com.metamatrix.connector.xmlsource.file.TestFileExecution;
 import com.metamatrix.connector.xmlsource.soap.service.WebServiceServer;
 import com.metamatrix.core.util.UnitTestUtil;
 
@@ -542,7 +544,7 @@ public class TestSoapExecution extends TestCase {
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, new SysLogger(false));        
 
         SoapConnection conn = new SoapConnection(env);
-        RuntimeMetadata metadata = new FakeRuntimeMetadata(procName);
+        RuntimeMetadata metadata = Mockito.mock(RuntimeMetadata.class);
         ILanguageFactory fact = env.getLanguageFactory();
         List parameters = new ArrayList();
         if (args != null && args.length > 0) {
@@ -551,7 +553,7 @@ public class TestSoapExecution extends TestCase {
                 parameters.add(param);
             }
         }
-        IProcedure procedure = fact.createProcedure("AnyNAME", parameters, null); //$NON-NLS-1$
+        IProcedure procedure = fact.createProcedure("AnyNAME", parameters, TestFileExecution.createMockProcedureMetadata(procName)); //$NON-NLS-1$
 
         ProcedureExecution exec = (ProcedureExecution)conn.createExecution(procedure, EnvironmentUtility.createExecutionContext("100", "100"), metadata); //$NON-NLS-1$ //$NON-NLS-2$
         exec.execute();

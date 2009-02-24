@@ -53,16 +53,4 @@ public interface IInsert extends ICommand {
      */
     void setGroup(IGroup group);
     
-    /**
-     * Set list of elements being inserted into
-     * @param elements List of IElement
-     */
-    void setElements(List<IElement> elements);
-    
-    /**
-     * Set list of values being inserted
-     * @param values List of IExpression
-     */
-    void setValues(List<IExpression> values);
-    
 }

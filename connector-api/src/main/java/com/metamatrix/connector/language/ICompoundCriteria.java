@@ -56,10 +56,4 @@ public interface ICompoundCriteria extends ILogicalCriteria {
      */
     List<ICriteria> getCriteria();
     
-    /**
-     * Set list of ICriteria combined by this compound criteria.
-     * @param criteria List of ICriteria
-     */
-    void setCriteria(List<ICriteria> criteria);
-    
 }

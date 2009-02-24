@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.translator;
 
+import java.util.List;
+
 import com.metamatrix.connector.jdbc.JDBCPlugin;
 import com.metamatrix.connector.language.*;
 
@@ -40,11 +42,11 @@ public class DropFunctionModifier extends BasicFunctionModifier implements Funct
     }
     
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
-        if(args.length <= replaceIndex) { 
+        List<IExpression> args = function.getParameters();
+        if(args.size() <= replaceIndex) { 
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("DropFunctionModifier.DropFunctionModifier_can_only_be_used_on_functions_with___1") + function); //$NON-NLS-1$
         }
 
-        return args[replaceIndex];
+        return args.get(replaceIndex);
     }
 }

@@ -46,7 +46,6 @@ import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -124,15 +123,12 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             }
 
             if(resultSet != null){
-                List columnMetadata = null;
-                columnMetadata = resultSet.getMetadataID().getChildIDs();
+                List<Element> columnMetadata = resultSet.getMetadataObject().getChildren();
 
                 int size = columnMetadata.size();
                 Class[] coulmnDTs = new Class[size];
                 for(int i =0; i<size; i++ ){
-                    MetadataID mID = (MetadataID)columnMetadata.get(i);
-                    Object mObj = metadata.getObject(mID);
-                    coulmnDTs[i] = ((Element)mObj).getJavaType();
+                    coulmnDTs[i] = columnMetadata.get(i).getJavaType();
                 }
                 return coulmnDTs;
             }

@@ -48,7 +48,6 @@ import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.dqp.internal.process.AbstractWorkItem;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
@@ -288,7 +287,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
         this.translatedCommand = factory.translate(command);
 
-        RuntimeMetadata rmd = new RuntimeMetadataImpl(new MetadataFactory(queryMetadata));
+        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
         
         // Create the execution based on mode
         final Execution exec = connection.createExecution(this.translatedCommand, this.securityContext, rmd);

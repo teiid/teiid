@@ -20,34 +20,29 @@
  * 02110-1301 USA.
  */
 
+package com.metamatrix.connector.api;
 
-package com.metamatrix.connector.xml.cache;
 
-public class MockDocumentCache implements IDocumentCache {
+/**
+ * This class represents a single ConnectorIdentity. All the connections are treated the same.
+ */
+public class SingleIdentity implements ConnectorIdentity {
 
-	public void addToCache(String cacheKey, Object obj, int size, String id) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void clearCache() {
-		// TODO Auto-generated method stub
-
-	}
-
-	public Object fetchObject(String id, String requestID) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void release(String cacheKey, String id) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void shutdownCleaner() {
-		// TODO Auto-generated method stub
-
-	}
-
+    public SingleIdentity(){
+    }
+    
+    /**
+     * Return true for everything - all identities are identical.
+     */
+    public boolean equals(Object obj){
+        return obj instanceof SingleIdentity;
+    }
+    
+    public String toString(){
+        return "SingleIdentity"; //$NON-NLS-1$
+    }    
+    
+    public int hashCode(){
+        return 0; 
+    }
 }

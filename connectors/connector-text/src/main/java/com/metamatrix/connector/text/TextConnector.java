@@ -35,17 +35,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.basic.BasicConnector;
 
 /**
  * Implementation of text connector.
  */
-public class TextConnector implements Connector {
+public class TextConnector extends BasicConnector {
 
     private ConnectorLogger logger;
     private ConnectorEnvironment env;

@@ -23,6 +23,7 @@
 package com.metamatrix.connector.jdbc.oracle;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -55,7 +56,7 @@ public class TestExtractFunctionModifier extends TestCase {
 
     public IExpression helpTestMod(IExpression c, String expectedStr, String target) throws Exception {
         IFunction func = LANG_FACTORY.createFunction(target, 
-            new IExpression[] { c },
+            Arrays.asList(c),
             Integer.class);
         
         ExtractFunctionModifier mod = new ExtractFunctionModifier (target);

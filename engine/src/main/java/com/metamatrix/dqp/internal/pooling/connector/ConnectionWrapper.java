@@ -27,15 +27,14 @@ import javax.transaction.xa.XAResource;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.PoolAwareConnection;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xa.api.XAConnection;
 
-public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
+public class ConnectionWrapper implements XAConnection {
 
 	private Connection connection;
     private long timeReturnedToPool = System.currentTimeMillis();
@@ -128,9 +127,7 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 
 	@Override
 	public void closeCalled() {
-		if (this.connection instanceof PoolAwareConnection) {
-			((PoolAwareConnection)this.connection).closeCalled();
-		}
+		this.connection.closeCalled();
 	}
 	
 	public void setTestInterval(long testInterval) {
@@ -140,9 +137,7 @@ public class ConnectionWrapper implements PoolAwareConnection, XAConnection {
 	@Override
 	public void setConnectorIdentity(ConnectorIdentity context)
 			throws ConnectorException {
-		if (this.connection instanceof PoolAwareConnection) {
-			((PoolAwareConnection)this.connection).setConnectorIdentity(context);
-		}
+		this.connection.setConnectorIdentity(context);
 	}
 
 }

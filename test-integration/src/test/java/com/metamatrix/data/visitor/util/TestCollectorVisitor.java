@@ -70,7 +70,7 @@ public class TestCollectorVisitor extends TestCase {
         GroupImpl g = new GroupImpl("g1", null, null); //$NON-NLS-1$
         List symbols = new ArrayList();        
         symbols.add(new ElementImpl(g, "e1", null, String.class)); //$NON-NLS-1$
-        IFunction function = new FunctionImpl("length", new IExpression[] { new ElementImpl(g, "e2", null, String.class) }, Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
+        IFunction function = new FunctionImpl("length", Arrays.asList(new ElementImpl(g, "e2", null, String.class)), Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(function);
         SelectImpl s = new SelectImpl(symbols, false);
         List groups = new ArrayList();

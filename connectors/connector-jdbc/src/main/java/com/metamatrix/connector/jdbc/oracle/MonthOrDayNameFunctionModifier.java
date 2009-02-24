@@ -22,9 +22,14 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
-import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
 
 /**
  * Convert the MONTHNAME etc. function into an equivalent Oracle function.  
@@ -43,17 +48,17 @@ public class MonthOrDayNameFunctionModifier extends BasicFunctionModifier implem
      * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
      */
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
     
         IFunction func = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
-            new IExpression[] { 
-                args[0], 
-                langFactory.createLiteral(format, String.class)},  
+            Arrays.asList( 
+                args.get(0), 
+                langFactory.createLiteral(format, String.class)),  
             String.class);
         
         // For some reason, these values have trailing spaces
         IFunction trimFunc = langFactory.createFunction("RTRIM",  //$NON-NLS-1$
-            new IExpression[] { func }, String.class);
+            Arrays.asList( func ), String.class);
         
         return trimFunc;    
     }

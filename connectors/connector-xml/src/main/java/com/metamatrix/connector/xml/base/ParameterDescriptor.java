@@ -51,7 +51,7 @@ public abstract class ParameterDescriptor {
         if(getElement().getNameInSource() != null) {
         	setColumnName(getElement().getNameInSource());
         } else {
-        	setColumnName(getElement().getMetadataID().getName().trim());
+        	setColumnName(getElement().getName().trim());
         }
        	String nis = getElement().getNameInSource();
       	if (nis != null) {

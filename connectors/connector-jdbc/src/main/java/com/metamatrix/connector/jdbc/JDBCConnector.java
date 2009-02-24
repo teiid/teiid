@@ -37,19 +37,16 @@ import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.connector.DataPlugin;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.api.SingleIdentity;
+import com.metamatrix.connector.api.MappedUserIdentity;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.ConnectorIdentityFactory;
-import com.metamatrix.connector.identity.SingleIdentity;
-import com.metamatrix.connector.identity.UserIdentity;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.jdbc.translator.Translator;
 import com.metamatrix.connector.jdbc.xa.JDBCSourceXAConnection;
@@ -64,7 +61,7 @@ import com.metamatrix.core.util.ReflectionHelper;
  * JDBC implementation of Connector interface.
  */
 @ConnectionPooling
-public class JDBCConnector implements XAConnector, ConnectorIdentityFactory {
+public class JDBCConnector extends BasicConnector implements XAConnector {
 	
     public static final String INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS = "28000"; //$NON-NLS-1$
 
@@ -95,48 +92,7 @@ public class JDBCConnector implements XAConnector, ConnectorIdentityFactory {
     private DataSource ds;
     private XADataSource xaDs;
     private int transIsoLevel = NO_ISOLATION_LEVEL_SET;
-    
-	private boolean useCredentialMap;
-	private boolean adminConnectionsAllowed = true;
-	private String connectorName;
-	
-	@Override
-	public ConnectorIdentity createIdentity(ExecutionContext context)
-			throws ConnectorException {
-		if (context == null) {
-			if (adminConnectionsAllowed) {
-				return new SingleIdentity();
-			}
-			throw new ConnectorException(DataPlugin.Util.getString("UserIdentityFactory.single_identity_not_supported")); //$NON-NLS-1$
-		}
-		Object payload = context.getTrustedPayload();
-		if (!(payload instanceof CredentialMap)) {
-			if (useCredentialMap) {
-				throw new ConnectorException(JDBCPlugin.Util.getString("JDBCUserIdentityConnectionFactory.Unable_to_get_credentials")); //$NON-NLS-1$
-			}
-			return new SingleIdentity();
-		}
-		CredentialMap credMap = (CredentialMap)payload;
-		String user = credMap.getUser(connectorName);
-		String password = credMap.getPassword(connectorName);
-		if (user == null || password == null) {
-			throw new ConnectorException("Payload missing credentials for " + connectorName); //$NON-NLS-1$
-		}
-		return new UserIdentity(context.getUser(), user, password);
-	}
-	
-	public void setConnectorName(String connectorName) {
-		this.connectorName = connectorName;
-	}
-	
-	public void setUseCredentialMap(boolean useCredentialMap) {
-		this.useCredentialMap = useCredentialMap;
-	}
-	
-	public void setAdminConnectionsAllowed(boolean adminConnectionsAllowed) {
-		this.adminConnectionsAllowed = adminConnectionsAllowed;
-	}
-    
+        
     @Override
     public void start(ConnectorEnvironment environment)
     		throws ConnectorException {
@@ -172,7 +128,7 @@ public class JDBCConnector implements XAConnector, ConnectorIdentityFactory {
         }
         sqlTranslator.initialize(environment);
         
-        if (this.adminConnectionsAllowed) {
+        if (areAdminConnectionsAllowed()) {
         	testConnection();
         }
 
@@ -235,8 +191,8 @@ public class JDBCConnector implements XAConnector, ConnectorIdentityFactory {
 		try { 
 			if (context == null || context.getConnectorIdentity() instanceof SingleIdentity) {
 				conn = dataSource.getConnection();
-			} else if (context.getConnectorIdentity() instanceof UserIdentity) {
-				UserIdentity id = (UserIdentity)context.getConnectorIdentity();
+			} else if (context.getConnectorIdentity() instanceof MappedUserIdentity) {
+				MappedUserIdentity id = (MappedUserIdentity)context.getConnectorIdentity();
 				conn = dataSource.getConnection(id.getMappedUser(), id.getPassword());
 			}
 			setDefaultTransactionIsolationLevel(conn);
@@ -258,8 +214,8 @@ public class JDBCConnector implements XAConnector, ConnectorIdentityFactory {
 		try {
 			if (context == null || context.getConnectorIdentity() instanceof SingleIdentity) {
 				conn = xaDataSource.getXAConnection();
-			} else if (context.getConnectorIdentity() instanceof UserIdentity) {
-				UserIdentity id = (UserIdentity)context.getConnectorIdentity();
+			} else if (context.getConnectorIdentity() instanceof MappedUserIdentity) {
+				MappedUserIdentity id = (MappedUserIdentity)context.getConnectorIdentity();
 				conn = xaDataSource.getXAConnection(id.getMappedUser(), id.getPassword());
 			}
 			java.sql.Connection c = conn.getConnection();

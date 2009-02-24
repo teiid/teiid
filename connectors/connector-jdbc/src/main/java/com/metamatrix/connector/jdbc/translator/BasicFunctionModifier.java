@@ -98,13 +98,13 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
         List objs = new ArrayList();
         objs.add(function.getName());
         objs.add("("); //$NON-NLS-1$
-        IExpression[] params = function.getParameters();
-        if(params.length > 0) { 
-            objs.add(params[0]);
-            if(params.length > 1) {
-                for(int i=1; i<params.length; i++) {
+        List<IExpression> params = function.getParameters();
+        if(params.size() > 0) { 
+            objs.add(params.get(0));
+            if(params.size() > 1) {
+                for(int i=1; i<params.size(); i++) {
                     objs.add(", "); //$NON-NLS-1$
-                    objs.add(params[i]);
+                    objs.add(params.get(i));
                 }
             }
         }

@@ -24,8 +24,6 @@
  */
 package com.metamatrix.connector.jdbc.db2;
 
-import java.util.Arrays;
-
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
@@ -70,7 +68,7 @@ public class DB2SQLTranslator extends Translator {
 					return;
 				}
 				ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
-				obj.setCriteria(Arrays.asList(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one)));
+				obj.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
 				obj.setJoinType(JoinType.INNER_JOIN);
 			}
 		};

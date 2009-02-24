@@ -22,6 +22,7 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.metamatrix.connector.api.ConnectorLogger;
@@ -53,10 +54,10 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
     }    
     
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         IExpression modified = null;
 
-        String target = ((String)((ILiteral)args[1]).getValue()).toLowerCase();
+        String target = ((String)((ILiteral)args.get(1)).getValue()).toLowerCase();
         if (target.equals("string")) {  //$NON-NLS-1$ 
             modified = convertToString(function);
         } else if (target.equals("short")) {  //$NON-NLS-1$ 
@@ -93,20 +94,20 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToDate(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         int srcCode = getSrcCode(srcType);
 
         switch(srcCode) {
             case STRING:
                 // convert(STRING, date) --> to_date(STRING, format)
                 String format = "YYYY-MM-DD";  //$NON-NLS-1$ 
-                convert = dateTypeHelper("to_date", new IExpression[] {args[0],  //$NON-NLS-1$ 
-                    langFactory.createLiteral(format, String.class)}, java.sql.Date.class);
+                convert = dateTypeHelper("to_date", Arrays.asList(args.get(0),  //$NON-NLS-1$ 
+                    langFactory.createLiteral(format, String.class)), java.sql.Date.class);
                 break;
             case TIMESTAMP:
                 // convert(TSELEMENT, date) --> trunc(TSELEMENT) 
-                convert = dateTypeHelper("trunc", new IExpression[] {args[0]}, java.sql.Date.class);  //$NON-NLS-1$ 
+                convert = dateTypeHelper("trunc", Arrays.asList(args.get(0)), java.sql.Date.class);  //$NON-NLS-1$ 
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -123,8 +124,8 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
      */
     private IExpression convertToTime(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         String format = "YYYY-MM-DD HH24:MI:SS";  //$NON-NLS-1$ 
         
         int srcCode = getSrcCode(srcType);
@@ -132,20 +133,20 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
             case STRING:
                 //convert(STRING, time) --> to_date('1970-01-01 ' || to_char(timevalue, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
                 IFunction inner0 = langFactory.createFunction("to_char",  //$NON-NLS-1$
-                    new IExpression[] { 
-                        args[0],
-                        langFactory.createLiteral("HH24:MI:SS", String.class)},  //$NON-NLS-1$
+                    Arrays.asList( 
+                        args.get(0),
+                        langFactory.createLiteral("HH24:MI:SS", String.class)),  //$NON-NLS-1$
                         String.class); 
                         
                 IExpression prependedPart0 = langFactory.createFunction("||",  //$NON-NLS-1$
-                new IExpression[] {
+                Arrays.asList(
                     langFactory.createLiteral("1970-01-01 ", String.class),  //$NON-NLS-1$
-                    inner0},
+                    inner0),
                     String.class);    
                     
                 convert = langFactory.createFunction("to_date",  //$NON-NLS-1$
-                    new IExpression[] {prependedPart0,
-                        langFactory.createLiteral(format, String.class)}, 
+                    Arrays.asList(prependedPart0,
+                        langFactory.createLiteral(format, String.class)), 
                         java.sql.Time.class);   
                 break;                                                                 
             case TIMESTAMP:
@@ -153,20 +154,20 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
                 // --> to_date(('1970-01-01 ' || to_char(timestampvalue, 'HH24:MI:SS'))),  
                 //         'YYYY-MM-DD HH24:MI:SS') 
                 IFunction inner = langFactory.createFunction("to_char",  //$NON-NLS-1$
-                    new IExpression[] { 
-                        args[0],
-                        langFactory.createLiteral("HH24:MI:SS", String.class)},  //$NON-NLS-1$
+                    Arrays.asList( 
+                        args.get(0),
+                        langFactory.createLiteral("HH24:MI:SS", String.class)),  //$NON-NLS-1$
                         String.class); 
                 
                 IExpression prependedPart =  langFactory.createFunction("||",  //$NON-NLS-1$
-                    new IExpression[] {
+                    Arrays.asList(
                         langFactory.createLiteral("1970-01-01 ", String.class),  //$NON-NLS-1$
-                        inner},
+                        inner),
                         String.class);
                                           
                 convert = langFactory.createFunction("to_date",  //$NON-NLS-1$
-                    new IExpression[] {prependedPart,
-                        langFactory.createLiteral(format, String.class)}, 
+                    Arrays.asList(prependedPart,
+                        langFactory.createLiteral(format, String.class)), 
                         java.sql.Time.class);                                     
                 break;
             default:
@@ -179,20 +180,20 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToTimestamp(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         int srcCode = getSrcCode(srcType);
         switch(srcCode) {
             case STRING:
                 // convert(STRING, timestamp) --> to_date(timestampvalue, 'YYYY-MM-DD HH24:MI:SS.FF')))  
                 String format = "YYYY-MM-DD HH24:MI:SS.FF";  //$NON-NLS-1$
-                convert = dateTypeHelper("to_timestamp", new IExpression[] {args[0],  //$NON-NLS-1$ 
-                    langFactory.createLiteral(format, String.class)}, java.sql.Timestamp.class);
+                convert = dateTypeHelper("to_timestamp", Arrays.asList(args.get(0),  //$NON-NLS-1$ 
+                    langFactory.createLiteral(format, String.class)), java.sql.Timestamp.class);
                 break;
             case TIME:
             case DATE:
-            	convert = dateTypeHelper("cast", new IExpression[] {args[0],  //$NON-NLS-1$ 
-                        langFactory.createLiteral("timestamp", String.class)}, java.sql.Timestamp.class); //$NON-NLS-1$
+            	convert = dateTypeHelper("cast", Arrays.asList(args.get(0),  //$NON-NLS-1$ 
+                        langFactory.createLiteral("timestamp", String.class)), java.sql.Timestamp.class); //$NON-NLS-1$
                 break; 
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -212,18 +213,18 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
 
     private IExpression convertToString(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         String format = null;
 
         int srcCode = getSrcCode(function);
         switch(srcCode) { // convert(input, string) --> to_char(input)
             case BOOLEAN:
-                convert = langFactory.createFunction("decode", new IExpression[]  //$NON-NLS-1$
-                    {   args[0],
+                convert = langFactory.createFunction("decode", Arrays.asList( //$NON-NLS-1$
+                        args.get(0),
                         langFactory.createLiteral(new Integer(0), Integer.class),
                         langFactory.createLiteral("false", String.class), //$NON-NLS-1$
                         langFactory.createLiteral(new Integer(1), Integer.class),
-                        langFactory.createLiteral("true", String.class) },  //$NON-NLS-1$
+                        langFactory.createLiteral("true", String.class) ),  //$NON-NLS-1$
                     String.class);
                 
                 break;
@@ -235,19 +236,19 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createStringFunction(args[0]);
+                convert = createStringFunction(args.get(0));
                 break;
             // convert(input, string) --> to_char(input, format)
             case DATE:
                 format = "YYYY-MM-DD"; //$NON-NLS-1$
-                convert = createStringFunction(args[0], format); 
+                convert = createStringFunction(args.get(0), format); 
                 break;
             case TIME:
                 format = "HH24:MI:SS"; //$NON-NLS-1$
-                convert = createStringFunction(args[0], format); 
+                convert = createStringFunction(args.get(0), format); 
                 break;
             case TIMESTAMP:
-                convert = createStringFunction(args[0], "YYYY-MM-DD HH24:MI:SS.FF"); //$NON-NLS-1$ 
+                convert = createStringFunction(args.get(0), "YYYY-MM-DD HH24:MI:SS.FF"); //$NON-NLS-1$ 
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function);
@@ -446,7 +447,7 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
         return convert;
     }  
 
-    private IFunction dateTypeHelper(String functionName, IExpression[] args, Class target) {
+    private IFunction dateTypeHelper(String functionName, List<IExpression> args, Class target) {
         IFunction convert = langFactory.createFunction(functionName,  
             args, target);
         return convert;          
@@ -454,50 +455,48 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
        
     private IFunction booleanHelper(IFunction function) {
         // using decode(value, 'true', 1, 'false', 0)
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
        
-        IExpression[] modified = new IExpression[] {
-            args[0],
-            langFactory.createLiteral("true", String.class), //$NON-NLS-1$ 
-            langFactory.createLiteral(new Byte((byte)1), Byte.class),
-            langFactory.createLiteral("false", String.class), //$NON-NLS-1$ 
-            langFactory.createLiteral(new Byte((byte)0), Byte.class)                        
-        };
-        
         return langFactory.createFunction("decode", //$NON-NLS-1$
-            modified, java.lang.Boolean.class);  
+        		Arrays.asList(
+        	            args.get(0),
+        	            langFactory.createLiteral("true", String.class), //$NON-NLS-1$ 
+        	            langFactory.createLiteral(new Byte((byte)1), Byte.class),
+        	            langFactory.createLiteral("false", String.class), //$NON-NLS-1$ 
+        	            langFactory.createLiteral(new Byte((byte)0), Byte.class)                        
+        	        ), java.lang.Boolean.class);  
     }
             
     private IExpression stringSrcHelper(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         // switch the target type
         String functionName = "to_number"; //$NON-NLS-1$
         int targetCode = getTargetCode(function.getType());
         switch(targetCode) {
             case BYTE:
-                convert = createFunction(functionName, args[0], Byte.class);
+                convert = createFunction(functionName, args.get(0), Byte.class);
                 break;
             case SHORT:
-                convert = createFunction(functionName, args[0], Short.class);
+                convert = createFunction(functionName, args.get(0), Short.class);
                 break;                    
             case INTEGER:
-                convert = createFunction(functionName, args[0], Integer.class);
+                convert = createFunction(functionName, args.get(0), Integer.class);
                 break;
             case LONG:
-                convert = createFunction(functionName, args[0], Long.class);
+                convert = createFunction(functionName, args.get(0), Long.class);
                 break;           
             case BIGINTEGER:
-                convert = createFunction(functionName, args[0], java.math.BigInteger.class);
+                convert = createFunction(functionName, args.get(0), java.math.BigInteger.class);
                 break;    
             case FLOAT:
-                convert = createFunction(functionName, args[0], Float.class);
+                convert = createFunction(functionName, args.get(0), Float.class);
                 break;
             case DOUBLE:
-                convert = createFunction(functionName, args[0], Double.class);
+                convert = createFunction(functionName, args.get(0), Double.class);
                 break;
             case BIGDECIMAL:
-                convert = createFunction(functionName, args[0], java.math.BigDecimal.class);
+                convert = createFunction(functionName, args.get(0), java.math.BigDecimal.class);
                 break;   
             default:
                 convert = DROP_MODIFIER.modify(function);
@@ -508,26 +507,26 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
           
     private IFunction createFunction(String functionName, IExpression args0, Class targetClass) {
         IFunction created = langFactory.createFunction(functionName,
-            new IExpression[] {args0}, targetClass);
+            Arrays.asList(args0), targetClass);
         return created;            
     }
 
     private IFunction createStringFunction(IExpression args0, String format) {
         IFunction created = langFactory.createFunction("to_char", //$NON-NLS-1$ 
-            new IExpression[] {args0, langFactory.createLiteral(format, String.class)}, 
+            Arrays.asList(args0, langFactory.createLiteral(format, String.class)), 
             String.class);
         return created;            
     }
     
     private IFunction createStringFunction(IExpression args) {
         IFunction created = langFactory.createFunction("to_char", //$NON-NLS-1$ 
-            new IExpression[] { args }, String.class); 
+            Arrays.asList( args ), String.class); 
         return created;
     }
     
     private int getSrcCode(IFunction function) {
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         return ((Integer) typeMap.get(srcType)).intValue();
     }
     

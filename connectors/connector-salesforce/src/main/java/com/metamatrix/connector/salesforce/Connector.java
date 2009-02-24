@@ -34,19 +34,14 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.identity.ConnectorIdentity;
-import com.metamatrix.connector.identity.ConnectorIdentityFactory;
-import com.metamatrix.connector.identity.SingleIdentityFactory;
-import com.metamatrix.connector.identity.UserIdentityFactory;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
 @ConnectionPooling
-public class Connector implements com.metamatrix.connector.api.Connector, ConnectorIdentityFactory {
+public class Connector extends com.metamatrix.connector.basic.BasicConnector {
 
 	private ConnectorLogger logger;
 
 	private ConnectorEnvironment connectorEnv;
-	private ConnectorIdentityFactory connectorIdentityFactory;
 	private ConnectorState state;
 	private boolean singleIdentity;
 	private String username;
@@ -102,20 +97,18 @@ public class Connector implements com.metamatrix.connector.api.Connector, Connec
 		//validate that both are empty or both have values
 		if(null == username && null == password) {
 			
-		} else if ((null == username || username.equals("")) && (null != password || !password.equals("")) ||
-				((null == password || password.equals("")) && (null != username || !username.equals("")))) {
+		} else if ((null == username || username.equals("")) && (null != password && !password.equals("")) ||
+				((null == password || password.equals("")) && (null != username && !username.equals("")))) {
 					String msg = Messages.getString("SalesforceSourceConnectionFactory.Invalid.username.password.pair");
 					env.getLogger().logError(msg);
 					throw new ConnectorException(msg);
-		} else if(null != username || !username.equals("")) {
+		} else if(null != username && !username.equals("")) {
 			singleIdentity = true;
 			this.password = password;
 			this.username = username;
-		}
-		if (singleIdentity) {
-			this.connectorIdentityFactory = new SingleIdentityFactory();
 		} else {
-			this.connectorIdentityFactory = new UserIdentityFactory();
+			this.setAdminConnectionsAllowed(false);
+			this.setUseCredentialMap(true);
 		}
 		
 		String capabilitiesClass = env.getProperties().getProperty("ConnectorCapabilities", SalesforceCapabilities.class.getName());
@@ -166,12 +159,6 @@ public class Connector implements com.metamatrix.connector.api.Connector, Connec
 
 	public ConnectorState getState() {
 		return state;
-	}
-
-	@Override
-	public ConnectorIdentity createIdentity(ExecutionContext context)
-			throws ConnectorException {
-		return this.connectorIdentityFactory.createIdentity(context);
 	}
 	
 	@Override

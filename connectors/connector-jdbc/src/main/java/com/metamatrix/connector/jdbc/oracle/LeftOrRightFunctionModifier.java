@@ -22,6 +22,9 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
@@ -42,25 +45,25 @@ public class LeftOrRightFunctionModifier extends BasicFunctionModifier implement
      * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
      */
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         IFunction func = null;
         
         if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
             func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
-                new IExpression[] {
-                    args[0], 
+                Arrays.asList(
+                    args.get(0), 
                     langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER),
-                    args[1]},
+                    args.get(1)),
                     String.class);   
         } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
             IFunction negIndex = langFactory.createFunction("*",  //$NON-NLS-1$
-                new IExpression[] {langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args[1]},
+                Arrays.asList(langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args.get(1)),
                 Integer.class);
                             
             func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
-                new IExpression[] {
-                    args[0], 
-                    negIndex},
+                Arrays.asList(
+                    args.get(0), 
+                    negIndex),
                     String.class);      
         }
 

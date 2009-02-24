@@ -23,12 +23,16 @@
 package com.metamatrix.connector.jdbc.sybase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.DropFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
-import com.metamatrix.connector.language.*;
+import com.metamatrix.connector.language.IExpression;
+import com.metamatrix.connector.language.IFunction;
+import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILiteral;
 
 /**
  */
@@ -47,11 +51,11 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     }
 
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         IExpression modified = null;
         
-        if (args[1] != null && args[1] instanceof ILiteral) {
-            String target = ((String)((ILiteral)args[1]).getValue()).toLowerCase();
+        if (args.get(1) != null && args.get(1) instanceof ILiteral) {
+            String target = ((String)((ILiteral)args.get(1)).getValue()).toLowerCase();
             if (target.equals("string")) {  //$NON-NLS-1$ 
                 modified = convertToString(function);
             } else if (target.equals("short")) {  //$NON-NLS-1$ 
@@ -96,17 +100,17 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
         List parts = new ArrayList();
         parts.add("convert("); //$NON-NLS-1$
             
-        IExpression[] args = function.getParameters();
+        List<IExpression> args = function.getParameters();
         
-        if(args != null && args.length > 0) {
-            ILiteral type = (ILiteral) args[0];
+        if(args != null && args.size() > 0) {
+            ILiteral type = (ILiteral) args.get(0);
             String typeStr = type.getValue().toString();
             
             parts.add(typeStr);
             
-            for(int i=1; i<args.length; i++) {
+            for(int i=1; i<args.size(); i++) {
                 parts.add(", "); //$NON-NLS-1$
-                parts.add(args[i]);
+                parts.add(args.get(i));
             }
         }
         parts.add(")"); //$NON-NLS-1$
@@ -115,8 +119,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToBoolean(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
         
         switch(srcCode) {
@@ -130,7 +134,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "bit", Boolean.class); //$NON-NLS-1$      
+                convert = createFunction(args.get(0), "bit", Boolean.class); //$NON-NLS-1$      
                 break;                
             default:
                 convert = DROP_MODIFIER.modify(function);
@@ -142,8 +146,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToByte(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
         
         switch(srcCode) {
@@ -156,7 +160,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "tinyint", String.class);  //$NON-NLS-1$ 
+                convert = createFunction(args.get(0), "tinyint", String.class);  //$NON-NLS-1$ 
                 break;  
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -168,8 +172,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToString(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
         
         switch(srcCode) { 
@@ -183,17 +187,17 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:       
-                convert = createFunction(args[0], "varchar", String.class); //$NON-NLS-1$                                            
+                convert = createFunction(args.get(0), "varchar", String.class); //$NON-NLS-1$                                            
                 break;                        
             case DATE: // convert(date, string) --> convert(varchar, date, 112) 
                 //TODO: what is the best format 111/110/101?
-                convert = createFunction(args[0], 101, String.class);
+                convert = createFunction(args.get(0), 101, String.class);
                 break;
             case TIME: // convert(time, string) --> convert(varchar, time, 108)
-                convert = createFunction(args[0], 108, String.class);                        
+                convert = createFunction(args.get(0), 108, String.class);                        
                 break;
             case TIMESTAMP:  // convert(time, string) --> convert(varchar, timestamp, 109)          
-                convert = createFunction(args[0], 109, String.class);                          
+                convert = createFunction(args.get(0), 109, String.class);                          
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function);
@@ -205,8 +209,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
 
     private IExpression convertToShort(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -219,7 +223,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "smallint", Short.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "smallint", Short.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -231,8 +235,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
         
     private IExpression convertToInteger(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -245,7 +249,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "int", Integer.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "int", Integer.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -257,8 +261,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
       
     private IExpression convertToLong(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -271,7 +275,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "numeric", Long.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "numeric", Long.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -283,8 +287,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToBigInteger(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -297,7 +301,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case FLOAT:
             case DOUBLE:
             case BIGDECIMAL:
-                convert = createFunction(args[0], "numeric", java.math.BigInteger.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "numeric", java.math.BigInteger.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -309,8 +313,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
 
     private IExpression convertToFloat(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -323,7 +327,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case BIGINTEGER:                                 
             case DOUBLE: 
             case BIGDECIMAL:
-                convert = createFunction(args[0], "real", Float.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "real", Float.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -335,8 +339,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
        
     private IExpression convertToDouble(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -349,7 +353,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case BIGINTEGER:                                 
             case FLOAT:       
             case BIGDECIMAL:   
-                convert = createFunction(args[0], "float", Double.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "float", Double.class); //$NON-NLS-1$
                 break;
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -361,8 +365,8 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IExpression convertToBigDecimal(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class src = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class src = args.get(0).getType();
         int srcCode = getSrcCode(src);
 
         switch(srcCode) {
@@ -375,7 +379,7 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             case BIGINTEGER:                                 
             case FLOAT:       
             case DOUBLE:
-                convert = createFunction(args[0], "float", java.math.BigDecimal.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "float", java.math.BigDecimal.class); //$NON-NLS-1$
                 break;            
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -386,36 +390,36 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     }
         
     private IExpression convertToChar(IFunction function) {
-        IExpression[] args = function.getParameters();
-        return createFunction(args[0], "char", Character.class); //$NON-NLS-1$
+        List<IExpression> args = function.getParameters();
+        return createFunction(args.get(0), "char", Character.class); //$NON-NLS-1$
     } 
              
     private IExpression convertToDate(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         int srcCode = getSrcCode(srcType);
 
         switch(srcCode) {
             case STRING:
                 // convert(STRING, date) --> convert(datetime, STRING)
-                convert = createFunction(args[0], "datetime", java.sql.Date.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "datetime", java.sql.Date.class); //$NON-NLS-1$
                 break;
             case TIMESTAMP:
                 // convert(TIMESTAMP, date) --> convert(datetime, convert(varchar, TIMESTAMP, 1/101))
                 // Build inner convert
                 IFunction innerConvert = langFactory.createFunction("convert",  //$NON-NLS-1$
-                    new IExpression[] { 
+                    Arrays.asList( 
                         langFactory.createLiteral("varchar", String.class),  //$NON-NLS-1$
-                        args[0],
-                        langFactory.createLiteral(new Integer(109), Integer.class) },
+                        args.get(0),
+                        langFactory.createLiteral(new Integer(109), Integer.class) ),
                     String.class);
                 
                 // Build outer convert
                 convert = langFactory.createFunction("convert",  //$NON-NLS-1$
-                    new IExpression[] { 
+                    Arrays.asList( 
                         langFactory.createLiteral("datetime", String.class),  //$NON-NLS-1$
-                        innerConvert },
+                        innerConvert ),
                     java.sql.Timestamp.class);
             
                 break;
@@ -429,30 +433,30 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
 
     private IExpression convertToTime(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         
         int srcCode = getSrcCode(srcType);
         switch(srcCode) {
             case STRING:
                 //convert(STRING, time) --> convert(datetime, STRING)
-                convert = createFunction(args[0], "datetime", java.sql.Time.class); //$NON-NLS-1$
+                convert = createFunction(args.get(0), "datetime", java.sql.Time.class); //$NON-NLS-1$
                 break;                                                                 
             case TIMESTAMP:
                 // convert(TIMESTAMP, time) --> convert(datetime, convert(varchar, TIMESTAMP, 108/8) 
                 // Build inner convert
                 IFunction innerConvert = langFactory.createFunction("convert",  //$NON-NLS-1$
-                    new IExpression[] { 
+                    Arrays.asList( 
                         langFactory.createLiteral("varchar", String.class),  //$NON-NLS-1$
-                        args[0],
-                        langFactory.createLiteral(new Integer(108), Integer.class) },
+                        args.get(0),
+                        langFactory.createLiteral(new Integer(108), Integer.class) ),
                     String.class);
                     
                 // Build outer convert
                 convert = langFactory.createFunction("convert",  //$NON-NLS-1$
-                    new IExpression[] { 
+                    Arrays.asList( 
                         langFactory.createLiteral("datetime", String.class),  //$NON-NLS-1$
-                        innerConvert },
+                        innerConvert ),
                     java.sql.Time.class);
                                  
                 break;
@@ -466,15 +470,15 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
             
     private IExpression convertToTimestamp(IFunction function) {
         IExpression convert = null;
-        IExpression[] args = function.getParameters();
-        Class srcType = args[0].getType();
+        List<IExpression> args = function.getParameters();
+        Class srcType = args.get(0).getType();
         int srcCode = getSrcCode(srcType);
         switch(srcCode) {
             case STRING:
             case TIME:                
             case DATE:
                 // convert(DATE/TIME/STRING, timestamp) --> convert(datetime, DATE)
-                convert = createFunction(args[0], "datetime", java.sql.Timestamp.class); //$NON-NLS-1$ 
+                convert = createFunction(args.get(0), "datetime", java.sql.Timestamp.class); //$NON-NLS-1$ 
                     break;              
             default:
                 convert = DROP_MODIFIER.modify(function); 
@@ -486,18 +490,18 @@ public class SybaseConvertModifier extends BasicFunctionModifier implements Func
     
     private IFunction createFunction(IExpression args0, String targetType, Class targetClass) {
         IFunction created = langFactory.createFunction("convert", //$NON-NLS-1$
-            new IExpression[] {
+            Arrays.asList(
                 langFactory.createLiteral(targetType, String.class),
-                args0}, 
+                args0), 
                 targetClass);
         return created;            
     }
                 
     private IFunction createFunction(IExpression args0, int formatNumber, Class targetClass) {
         IFunction created = langFactory.createFunction("convert",  //$NON-NLS-1$
-            new IExpression[] { langFactory.createLiteral("varchar", String.class), //$NON-NLS-1$ 
+            Arrays.asList( langFactory.createLiteral("varchar", String.class), //$NON-NLS-1$ 
                 args0,
-                langFactory.createLiteral(new Integer(formatNumber), Integer.class) }, 
+                langFactory.createLiteral(new Integer(formatNumber), Integer.class) ), 
                 targetClass);
         return created;            
     }

@@ -35,7 +35,6 @@ import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
@@ -80,9 +79,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 				// get the name in source
 				IExpression expression = symbol.getExpression();
 				if (expression instanceof IElement) {
-					MetadataID elementID = (MetadataID) ((IElement) expression)
-							.getMetadataID();
-					Element element = (Element) metadata.getObject(elementID);
+					Element element = ((IElement) expression).getMetadataObject();
 					selectSymbolIndexToElement.put(index, element);
 					selectSymbolNameToIndex .put(element.getNameInSource(), index);
 					String nameInSource = element.getNameInSource();

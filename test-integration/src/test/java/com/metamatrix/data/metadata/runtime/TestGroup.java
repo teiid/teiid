@@ -30,7 +30,6 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
@@ -60,8 +59,7 @@ public class TestGroup extends TestCase {
     public Group getGroup(String groupName, TranslationUtility transUtil) throws Exception {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT 1 FROM " + groupName); //$NON-NLS-1$
         IGroup group = (IGroup) query.getFrom().getItems().get(0);
-        MetadataID metadataID = group.getMetadataID();
-        return (Group) transUtil.createRuntimeMetadata().getObject(metadataID);
+        return group.getMetadataObject();
     }
 
     public void helpTestGroup(String fullGroupName, String nameInSource, Properties expectedProps, TranslationUtility transUtil) throws Exception {

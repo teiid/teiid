@@ -29,7 +29,6 @@ import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IMetadataReference;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.ObjectPlugin;
@@ -51,8 +50,7 @@ public class ObjectConnectorUtil {
         if(reference == null) {
             return null;
         }
-        MetadataID id = reference.getMetadataID();
-        MetadataObject obj = metadata.getObject(id);
+        MetadataObject obj = reference.getMetadataObject();
         if (obj != null) {
             if (obj.getNameInSource() != null) {
                 return obj.getNameInSource();

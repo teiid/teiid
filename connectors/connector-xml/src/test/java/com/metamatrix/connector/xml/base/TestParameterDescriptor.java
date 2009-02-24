@@ -33,8 +33,6 @@ import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * created by JChoate on Jun 27, 2005
@@ -70,76 +68,43 @@ public class TestParameterDescriptor extends TestCase {
     /*
      * Class under test for void ParameterDescriptor(Element)
      */
-    public void testParameterDescriptorElement() {
+    public void testParameterDescriptorElement() throws Exception {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-            if (expr instanceof IElement) {
-                MetadataID elementID = ((IElement) expr).getMetadataID();    
-                element = (Element) metadata.getObject(elementID); 
-            } else {
-                fail("select symbols is not an element");
-            }        
-            ParameterDescriptor desc = new ParameterDescriptorImpl(element);
-            assertNotNull(desc);
-        } catch (ConnectorException ex) {
-            ex.printStackTrace();
-            fail(ex.getMessage());
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject(); 
+        ParameterDescriptor desc = new ParameterDescriptorImpl(element);
+        assertNotNull(desc);
     }
     
     
-    public void testParameterDescriptorElementParameter() {
+    public void testParameterDescriptorElementParameter() throws Exception {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select RequiredDefaultedParam from CriteriaDescTable");
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-            if (expr instanceof IElement) {
-                MetadataID elementID = ((IElement) expr).getMetadataID();    
-                element = (Element) metadata.getObject(elementID); 
-            } else {
-                fail("select symbols is not an element");
-            }        
-            ParameterDescriptor desc = new ParameterDescriptorImpl(element);
-            assertNotNull(desc);
-        } catch (ConnectorException ex) {
-            ex.printStackTrace();
-            fail(ex.getMessage());
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject(); 
+        ParameterDescriptor desc = new ParameterDescriptorImpl(element);
+        assertNotNull(desc);
     }
     
     
     
-    public void testParameterDescriptorElementSpaceXPath() {
+    public void testParameterDescriptorElementSpaceXPath() throws Exception {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, "select OutputColumnSpaceXPath from CriteriaDescTable");
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-            if (expr instanceof IElement) {
-                MetadataID elementID = ((IElement) expr).getMetadataID();    
-                element = (Element) metadata.getObject(elementID); 
-            } else {
-                fail("select symbols is not an element");
-            }        
-            ParameterDescriptor desc = new ParameterDescriptorImpl(element);
-            assertNotNull(desc);
-        } catch (ConnectorException ex) {
-            ex.printStackTrace();
-            fail(ex.getMessage());
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject(); 
+        ParameterDescriptor desc = new ParameterDescriptorImpl(element);
+        assertNotNull(desc);
     }
 
     /*
@@ -153,116 +118,80 @@ public class TestParameterDescriptor extends TestCase {
     	assertNull(desc.getColumnName());
     }
 
-    public void testSetGetXPath() {
+    public void testSetGetXPath() throws Exception {
     	ParameterDescriptor desc = getParameterDescriptor();
     	String xpath = "/foo";
     	desc.setXPath(xpath);
     	assertEquals(xpath, desc.getXPath());
     }
 
-    public void testSetIsParameter() {
+    public void testSetIsParameter() throws Exception {
     	ParameterDescriptor desc = getParameterDescriptor();
     	boolean is = !desc.isParameter();
     	desc.setIsParameter(is);
     	assertEquals(is, desc.isParameter());
     }
 
-    public void testSetGetColumnName() {
+    public void testSetGetColumnName() throws Exception {
     	ParameterDescriptor desc = getParameterDescriptor();
     	String name = "myColumn";
     	desc.setColumnName(name);
     	assertEquals(name, desc.getColumnName());
     }
 
-    public void testSetGetColumnNumber() {
+    public void testSetGetColumnNumber() throws Exception {
     	ParameterDescriptor desc = getParameterDescriptor();
     	int number = desc.getColumnNumber() + 1;
     	desc.setColumnNumber(number);
     	assertEquals(number, desc.getColumnNumber());
     }
 
-    public void testGetElement() {
+    public void testGetElement() throws Exception {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-            if (expr instanceof IElement) {
-                MetadataID elementID = ((IElement) expr).getMetadataID();    
-                element = (Element) metadata.getObject(elementID); 
-            } else {
-                fail("select symbols is not an element");
-            }        
-            ParameterDescriptor desc = new ParameterDescriptorImpl(element);
-            assertEquals(element, desc.getElement());
-        } catch (ConnectorException ce) {
-        	ce.printStackTrace();
-        	fail(ce.getMessage());
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject(); 
+        ParameterDescriptor desc = new ParameterDescriptorImpl(element);
+        assertEquals(element, desc.getElement());
     }
 
-    public void testTestForParam() {
+    public void testTestForParam() throws Exception {
     	String trueQuery = "select EmptyCol from EmptyTable where EmptyCol = 'foo'";
     	String falseQuery = "select Company_id from Company";
-    	RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
     	
     	IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, trueQuery);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-             MetadataID elementID = ((IElement) expr).getMetadataID();    
-             element = (Element) metadata.getObject(elementID);
-             assertTrue(ParameterDescriptor.testForParam(element));
-        } catch (ConnectorException ce) {
-        	ce.printStackTrace();
-        	fail(ce.getMessage());
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject();
+        assertTrue(ParameterDescriptor.testForParam(element));
         
         query = ProxyObjectFactory.getDefaultIQuery(vdbPath, falseQuery);
         select = query.getSelect();
         symbols = select.getSelectSymbols();
         selectSymbol = (ISelectSymbol) symbols.get(0);
         expr = selectSymbol.getExpression();
-        element = null;
-        try {
-             MetadataID elementID = ((IElement) expr).getMetadataID();    
-             element = (Element) metadata.getObject(elementID);
-             assertFalse(ParameterDescriptor.testForParam(element));
-        } catch (ConnectorException ce) {
-        	ce.printStackTrace();
-        	fail(ce.getMessage());
-        } 
+    	assertTrue(expr instanceof IElement);
+    	element = ((IElement) expr).getMetadataObject();
+        assertFalse(ParameterDescriptor.testForParam(element));
     }
     
-    private ParameterDescriptor getParameterDescriptor() {
+    private ParameterDescriptor getParameterDescriptor() throws Exception {
         IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
-        RuntimeMetadata metadata = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
         ISelect select = query.getSelect();
         List symbols = select.getSelectSymbols();
         ISelectSymbol selectSymbol = (ISelectSymbol) symbols.get(0);
         IExpression expr = selectSymbol.getExpression();
-        Element element = null;
-        try {
-            if (expr instanceof IElement) {
-                MetadataID elementID = ((IElement) expr).getMetadataID();    
-                element = (Element) metadata.getObject(elementID); 
-            } else {
-                fail("select symbols is not an element");
-            }        
-            ParameterDescriptor desc = new ParameterDescriptorImpl(element);
-            assertNotNull(desc);
-            return desc;
-        } catch (ConnectorException ex) {
-            ex.printStackTrace();
-            fail(ex.getMessage());
-            return null;
-        }
+    	assertTrue(expr instanceof IElement);
+    	Element element = ((IElement) expr).getMetadataObject();        
+        ParameterDescriptor desc = new ParameterDescriptorImpl(element);
+        assertNotNull(desc);
+        return desc;
     }
 
     private class ParameterDescriptorImpl extends ParameterDescriptor {

@@ -23,17 +23,17 @@
 package com.metamatrix.connector.metadata.adapter;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 
 /**
  * Adapter to expose the object processing logic via the standard connector API.
  */
-public abstract class ObjectConnector implements Connector {
+public abstract class ObjectConnector extends BasicConnector {
     private ConnectorEnvironment environment;
     
     public ConnectorCapabilities getCapabilities() {

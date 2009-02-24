@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.jdbc.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -84,12 +83,10 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      */
     public void visit(IFunction obj) {
         super.visit(obj);
-        IExpression[] args = obj.getParameters();
-        IExpression[] newArgs = new IExpression[args.length];
-        for(int i=0; i<args.length; i++) {
-            newArgs[i] = replaceFunction(args[i]);
+        List<IExpression> args = obj.getParameters();
+        for(int i=0; i<args.size(); i++) {
+            args.set(i, replaceFunction(args.get(i)));
         }
-        obj.setParameters(newArgs);
     }    
     
     /** 
@@ -98,14 +95,12 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      */
     public void visit(IGroupBy obj) {
         super.visit(obj);
-        List expressions = obj.getElements();
+        List<IExpression> expressions = obj.getElements();
         
         for (int i=0; i<expressions.size(); i++) {
             IExpression expression = (IExpression)expressions.get(i);
             expressions.set(i, replaceFunction(expression));
         }
-        
-        obj.setElements(expressions);
     }      
 
     /* 
@@ -114,14 +109,12 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
     public void visit(IInCriteria obj) {
         super.visit(obj);
         obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
-        List rightExprs = obj.getRightExpressions();
-        List newRightExprs = new ArrayList(rightExprs.size());
+        List<IExpression> rightExprs = obj.getRightExpressions();
         
         for(int i=0; i<rightExprs.size(); i++) {
             IExpression expr = (IExpression) rightExprs.get(i);
-            newRightExprs.add(replaceFunction(expr));
+            rightExprs.set(i, replaceFunction(expr));
         }
-        obj.setRightExpressions(newRightExprs);
     }
 
     /**
@@ -129,14 +122,12 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      */
     public void visit(IInsert obj) {
         super.visit(obj);
-        List values = obj.getValues();
-        List newValues = new ArrayList(values.size());
+        List<IExpression> values = obj.getValues();
         
         for(int i=0; i<values.size(); i++) {
             IExpression expr = (IExpression) values.get(i);
-            newValues.add(replaceFunction(expr));
+            values.set(i, replaceFunction(expr));
         }
-        obj.setValues(newValues);        
     }  
 
     /* 

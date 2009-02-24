@@ -27,8 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.IBatchedUpdates;
 import com.metamatrix.connector.language.ICommand;
@@ -69,11 +69,10 @@ import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.language.ISubqueryCompareCriteria.Quantifier;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
+import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
-import com.metamatrix.dqp.internal.datamgr.metadata.ProcedureIDImpl;
+import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -126,11 +125,11 @@ import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 public class LanguageBridgeFactory {
-    private MetadataFactory metadataFactory = null;
+    private RuntimeMetadataImpl metadataFactory = null;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
-            metadataFactory = new MetadataFactory(metadata);
+            metadataFactory = new RuntimeMetadataImpl(metadata);
         }
     }
 
@@ -489,11 +488,10 @@ public class LanguageBridgeFactory {
 
     IFunction translate(Function function) throws MetaMatrixComponentException {
         Expression [] args = function.getArgs();
-        IExpression [] params = null;
+        List<IExpression> params = new ArrayList<IExpression>(args.length);
         if (args != null) {
-            params = new IExpression[args.length];
             for (int i = 0; i < args.length; i++) {
-                params[i] = translate(args[i]);
+                params.add(translate(args[i]));
             }
         }
         return new FunctionImpl(function.getName(), params, function.getType());
@@ -542,19 +540,14 @@ public class LanguageBridgeFactory {
         ElementImpl element = null;
         element = new ElementImpl(translate(symbol.getGroupSymbol()), symbol.getOutputName(), null, symbol.getType());
         
-        if (element.getGroup().getMetadataID() == null) {
+        if (element.getGroup().getMetadataObject() == null) {
             return element;
         }
 
         Object mid = symbol.getMetadataID();
         
         if(! (mid instanceof TempMetadataID)) { 
-            try {
-                element.setMetadataID(metadataFactory.createMetadataID(mid, Type.TYPE_ELEMENT));
-            } catch(QueryMetadataException e) {
-                LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_element_{0}._10", symbol.getName())); //$NON-NLS-1$
-                throw new MetaMatrixComponentException(e);
-            }
+            element.setMetadataObject(metadataFactory.getElement(mid));
         }
         return element;
     }
@@ -627,26 +620,25 @@ public class LanguageBridgeFactory {
 
     /* Execute */
     IProcedure translate(StoredProcedure sp) throws MetaMatrixComponentException {
-        ProcedureIDImpl metadataID = null;
+        Procedure proc = null;
         if(sp.getProcedureID() != null) {
             try {
-                metadataID = (ProcedureIDImpl) metadataFactory.createProcedureID(sp.getProcedureID());
-            } catch(Exception e) {
-                LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_element_{0}._10", sp.getProcedureName())); //$NON-NLS-1$
+                proc = this.metadataFactory.getProcedure(sp.getGroup().getName());
+            } catch(ConnectorException e) {
                 throw new MetaMatrixComponentException(e);
             }
         }
 
         List parameters = sp.getParameters();
-        List translatedParameters = new ArrayList();
+        List<IParameter> translatedParameters = new ArrayList<IParameter>();
         for (Iterator i = parameters.iterator(); i.hasNext();) {
-            translatedParameters.add(translate((SPParameter)i.next(), metadataID));
+            translatedParameters.add(translate((SPParameter)i.next(), proc));
         }
                         
-        return new ProcedureImpl(sp.getProcedureName(), translatedParameters, metadataID);
+        return new ProcedureImpl(sp.getProcedureName(), translatedParameters, proc);
     }
 
-    IParameter translate(SPParameter param, ProcedureIDImpl procID) throws MetaMatrixComponentException {
+    IParameter translate(SPParameter param, Procedure parent) throws MetaMatrixComponentException {
         Direction direction = Direction.IN;
         switch(param.getParameterType()) {
             case ParameterInfo.IN:    
@@ -666,19 +658,8 @@ public class LanguageBridgeFactory {
                 break;
         }
         
-        try {
-            MetadataID metadataID = null;            
-            if(direction == Direction.RESULT_SET) {
-                metadataID = metadataFactory.createResultSetID(procID, param.getMetadataID(), param.getResultSetIDs());
-                return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataID);                
-                
-            }            
-            metadataID = metadataFactory.createParameterID(procID, param.getMetadataID());
-            return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataID);                
-        } catch(QueryMetadataException e) {
-            throw new MetaMatrixComponentException(e);            
-        }
-        
+        Parameter metadataParam = metadataFactory.getParameter(param, parent);
+        return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataParam);                
     }
 
     IGroup translate(GroupSymbol symbol) throws MetaMatrixComponentException {
@@ -687,7 +668,7 @@ public class LanguageBridgeFactory {
 			return group;
 		}
         try {
-            group.setMetadataID(metadataFactory.createMetadataID(symbol.getMetadataID(), Type.TYPE_GROUP));
+            group.setMetadataObject(metadataFactory.getGroup(symbol.getMetadataID()));
         } catch(Exception e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("LanguageBridgeFactory.Unable_to_set_the_metadata_ID_for_group_{0}._11", symbol.getName())); //$NON-NLS-1$
             throw new MetaMatrixComponentException(e);

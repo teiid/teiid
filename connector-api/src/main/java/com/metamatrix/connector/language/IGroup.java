@@ -22,12 +22,14 @@
 
 package com.metamatrix.connector.language;
 
+import com.metamatrix.connector.metadata.runtime.Group;
+
 /**
  * Represents a group in the language objects.  An example of a group would 
  * be a table reference in the FROM clause.  An IGroup may have a context name
  * used in references to this group. 
  */
-public interface IGroup extends IMetadataReference, IFromItem, ILanguageObject {
+public interface IGroup extends IMetadataReference<Group>, IFromItem, ILanguageObject {
     
     /**
      * Get the name of the group as defined in the VDB. This is null if the 

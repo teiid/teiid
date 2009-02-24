@@ -76,7 +76,7 @@ public class FileExecution extends XMLSourceExecution {
     public void execute() throws ConnectorException {
         
         // look for the name of the file to return in the metadata, "Name in Source" property
-        MetadataObject metaObject = this.metadata.getObject(procedure.getMetadataID());
+        MetadataObject metaObject = procedure.getMetadataObject();
         String fileName = metaObject.getNameInSource();
                 
         // if the source procedure name is not supplied then throw an exception

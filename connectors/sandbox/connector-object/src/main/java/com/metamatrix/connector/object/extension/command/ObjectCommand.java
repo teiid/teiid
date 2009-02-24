@@ -25,7 +25,7 @@ package com.metamatrix.connector.object.extension.command;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IMetadataReference;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
@@ -78,7 +78,7 @@ public abstract class ObjectCommand implements IObjectCommand {
     protected String determineName(IMetadataReference reference) throws ConnectorException {        
         String nis = getMetadataObjectNameInSource(reference);
         if (nis == null || nis.length() == 0) {
-            MetadataID id = reference.getMetadataID();
+            MetadataObject id = reference.getMetadataObject();
             return id.getName();
         }
         return nis;

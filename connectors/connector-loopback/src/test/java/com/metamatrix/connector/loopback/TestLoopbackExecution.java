@@ -38,7 +38,6 @@ public class TestLoopbackExecution extends TestCase {
 
     public TestLoopbackExecution(String name) {
         super(name);
-        System.setProperty("metamatrix.config.none", "true");
     }
 
     public Properties exampleProperties(int waitTime, int rowCount) {

@@ -25,6 +25,8 @@ package com.metamatrix.data.visitor.util;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -35,7 +37,6 @@ import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.ILanguageObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.AggregateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.ElementImpl;
@@ -70,7 +71,6 @@ import com.metamatrix.dqp.internal.datamgr.language.TestSubqueryCompareCriteriaI
 import com.metamatrix.dqp.internal.datamgr.language.TestSubqueryInCriteriaImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TestUpdateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.ReservedWords;
@@ -83,7 +83,7 @@ import com.metamatrix.query.unittest.FakeMetadataStore;
 
 public class TestSQLStringVisitor extends TestCase {
 
-    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory.getRuntimeMetadata();
+    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
         
   
     /**
@@ -103,8 +103,8 @@ public class TestSQLStringVisitor extends TestCase {
     }
         
     /** create fake BQT metadata to test this case, name in source is important */
-    private RuntimeMetadata exampleRuntimeMetadata(QueryMetadataInterface metadata) {  
-        return new RuntimeMetadataImpl(new MetadataFactory(metadata));
+    private RuntimeMetadataImpl exampleRuntimeMetadata(QueryMetadataInterface metadata) {  
+        return new RuntimeMetadataImpl(metadata);
     }
     
     /** create fake BQT metadata to test this case, name in source is important */
@@ -215,17 +215,11 @@ public class TestSQLStringVisitor extends TestCase {
     public void testVisitConvertFunctionOracleStyleWithNIS() throws Exception {
         
         FakeMetadataFacade facade = new FakeMetadataFacade(exampleMetadataStore());
-        RuntimeMetadata metadata = exampleRuntimeMetadata(facade);
-        MetadataFactory metadataFactory = new MetadataFactory(facade);
+        RuntimeMetadataImpl metadata = exampleRuntimeMetadata(facade);
 
-        IExpression [] params = null;
-        params = new IExpression[2];
-        IGroup g = new GroupImpl("SmallA", null, metadataFactory.createMetadataID(facade.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP), Type.TYPE_GROUP)); //$NON-NLS-1$
-        IElement e = new ElementImpl(g, "DoubleNum", metadataFactory.createMetadataID(facade.getStore().findObject("DoubleNum", FakeMetadataObject.ELEMENT), Type.TYPE_ELEMENT), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
-        params[0] = e;
-        params[1] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
-
-        
+        IGroup g = new GroupImpl("SmallA", null, metadata.getGroup("BQT1.SmallA")); //$NON-NLS-1$
+        IElement e = new ElementImpl(g, "DoubleNum", metadata.getElement("DoubleNum"), Double.class); //$NON-NLS-1$ //$NON-NLS-2$
+        List<? extends IExpression> params = Arrays.asList(e, new LiteralImpl("integer", String.class)); //$NON-NLS-1$
         
         final String expected = "convert(SmallishA.doublishNum, integer)"; //$NON-NLS-1$
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
@@ -236,10 +230,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testVisitConvertFunctionOracleStyle() throws Exception {
         String expected = "convert(columnA, integer)"; //$NON-NLS-1$
         
-        IExpression [] params = null;
-        params = new IExpression[2];
-        params[0] = new ElementImpl(null, "columnA", null, String.class); //$NON-NLS-1$
-        params[1] = new LiteralImpl("integer", String.class); //$NON-NLS-1$
+        List<? extends IExpression> params = Arrays.asList(new ElementImpl(null, "columnA", null, String.class), new LiteralImpl("integer", String.class));
         IFunction test = new FunctionImpl("convert", params, Integer.class); //$NON-NLS-1$
         
         assertEquals(expected, getString(test)); 

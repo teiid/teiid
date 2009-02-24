@@ -40,7 +40,7 @@ import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
+import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -203,7 +203,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
 	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws ConnectorException {
 		ConnectorLogger logger = new SysLogger(false);
     	QueryMetadataInterface metadata = exampleLdap();
-    	RuntimeMetadata rm = new MetadataFactory(metadata).getRuntimeMetadata();
+    	RuntimeMetadata rm = new RuntimeMetadataImpl(metadata);
     	Properties props = new Properties();
     	
     	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(logger,rm,props);

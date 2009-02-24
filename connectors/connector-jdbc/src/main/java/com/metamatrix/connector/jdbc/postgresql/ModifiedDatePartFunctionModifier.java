@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.postgresql;
 
+import java.util.Arrays;
+
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -44,7 +46,7 @@ class ModifiedDatePartFunctionModifier extends DatePartFunctionModifier {
     public IExpression modify(IFunction function) {
         IExpression expr = super.modify(function);
         return factory.createFunction(modifier,
-                                       new IExpression[] {expr, factory.createLiteral(arg, arg.getClass())},
+                                       Arrays.asList(expr, factory.createLiteral(arg, arg.getClass())),
                                        arg.getClass());
     }
     

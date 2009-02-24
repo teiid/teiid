@@ -36,7 +36,6 @@ import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
 import com.metamatrix.metadata.runtime.FakeQueryMetadata;
@@ -73,7 +72,7 @@ public class TestObjectQueryProcessor extends TestCase {
     }
 
     public static RuntimeMetadata getRuntimeMetadata() {
-        return new RuntimeMetadataImpl(new MetadataFactory(FakeQueryMetadata.getQueryMetadata()));
+        return new RuntimeMetadataImpl(FakeQueryMetadata.getQueryMetadata());
     }
 
     private void checkResults(String expected, String actual) {

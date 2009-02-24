@@ -44,17 +44,17 @@ public class NearestNeighborFunctionModifier extends OracleSpatialFunctionModifi
         List objs = new ArrayList();
         objs.add("SDO_NN"); // recast name from sdoNN to SDO_NN //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
-        IExpression[] params = function.getParameters();
-        if (params.length >= 3) {
-            addParamWithConversion(objs, params[0]);
+        List<IExpression> params = function.getParameters();
+        if (params.size() >= 3) {
+            addParamWithConversion(objs, params.get(0));
             objs.add(", "); //comma between parms //$NON-NLS-1$
 
-            addParamWithConversion(objs, params[1]);
+            addParamWithConversion(objs, params.get(1));
             objs.add(", "); //$NON-NLS-1$
-            objs.add(params[2]);
-            if (params.length == 4) {
+            objs.add(params.get(2));
+            if (params.size() == 4) {
                 objs.add(", "); //$NON-NLS-1$
-                objs.add(params[3]);
+                objs.add(params.get(3));
             }
         } else {
             return super.translate(function);

@@ -29,14 +29,15 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
 import com.metamatrix.query.metadata.SupportConstants;
 
 /**
  */
 public class ElementImpl extends TypeModelImpl implements Element {
     
-    ElementImpl(MetadataIDImpl metadataID){
-        super(metadataID);
+    ElementImpl(Object actualID, RuntimeMetadataImpl factory){
+        super(actualID, factory);
     }
     
     public Class getJavaType() throws ConnectorException {
@@ -140,5 +141,18 @@ public class ElementImpl extends TypeModelImpl implements Element {
         } catch(MetaMatrixComponentException e) {
             throw new ConnectorException(e);            
         }
+	}
+
+	@Override
+	public Group getParent() throws ConnectorException {
+		Object groupId;
+		try {
+			groupId = this.getMetadata().getGroupIDForElementID(getActualID());
+		} catch (QueryMetadataException e) {
+			throw new ConnectorException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new ConnectorException(e);
+		}
+		return new GroupImpl(groupId, getFactory());
 	}  
 }

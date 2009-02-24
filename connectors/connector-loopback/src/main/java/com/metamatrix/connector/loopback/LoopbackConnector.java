@@ -23,11 +23,12 @@
 package com.metamatrix.connector.loopback;
 
 import com.metamatrix.connector.api.*;
+import com.metamatrix.connector.basic.BasicConnector;
 
 /**
  * Starting point for the Loopback connector.
  */
-public class LoopbackConnector implements Connector {
+public class LoopbackConnector extends BasicConnector {
 
     private ConnectorEnvironment env;
     

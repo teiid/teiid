@@ -30,7 +30,6 @@ import javax.transaction.xa.XAResource;
 import junit.framework.Assert;
 
 import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
@@ -40,6 +39,7 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
 import com.metamatrix.connector.basic.BasicConnection;
+import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 import com.metamatrix.connector.basic.BasicExecution;
 import com.metamatrix.connector.language.ICommand;
@@ -49,7 +49,7 @@ import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.connector.xa.api.XAConnection;
 import com.metamatrix.connector.xa.api.XAConnector;
 
-public class FakeConnector implements Connector, XAConnector {
+public class FakeConnector extends BasicConnector implements XAConnector {
 	private static final int RESULT_SIZE = 5;
 	
 	private boolean executeBlocks;
@@ -73,10 +73,10 @@ public class FakeConnector implements Connector, XAConnector {
     @Override
 	public XAConnection getXAConnection(ExecutionContext executionContext,
 			TransactionContext transactionContext) throws ConnectorException {
-		return new FakeXAConnection();
+		return new FakeConnection();
 	}
 	
-    private class FakeConnection extends BasicConnection {
+    private class FakeConnection extends BasicConnection implements XAConnection {
         public boolean released = false;
         public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
             return new FakeBlockingExecution(executionContext);
@@ -84,15 +84,6 @@ public class FakeConnector implements Connector, XAConnector {
         public ConnectorCapabilities getCapabilities() {
         	return new BasicConnectorCapabilities();
         }
-        public void close() {
-            Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
-            released = true;
-        }
-    }
-    
-    private final class FakeXAConnection extends FakeConnection implements XAConnection {
-        public boolean released = false;
-
         public void close() {
             Assert.assertFalse("The connection should not be released more than once", released); //$NON-NLS-1$
             released = true;

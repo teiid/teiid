@@ -39,7 +39,6 @@ import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -118,15 +117,14 @@ public class ObjectProcedure {
      * @since 4.2
      */
     private void initResultSet() throws ConnectorException {
-        List columnMetadata = resultSetParameter.getMetadataID().getChildIDs();
+        List<Element> columnMetadata = resultSetParameter.getMetadataObject().getChildren();
         int size = columnMetadata.size();
         columnNames = new String[size];
         columnNamesInSource = new String[size];
         columnTypes = new Class[size];
         for(int i =0; i<size; i++ ){
-            MetadataID mID = (MetadataID)columnMetadata.get(i);
-            Element element = (Element) metadata.getObject(mID);
-            columnNames[i] = element.getMetadataID().getFullName();
+            Element element = columnMetadata.get(i);
+            columnNames[i] = element.getFullName();
             columnNamesInSource[i] = element.getNameInSource();
             columnTypes[i] = element.getJavaType();
         }
@@ -271,8 +269,7 @@ public class ObjectProcedure {
         if(reference == null) {
             return null;
         }
-        MetadataID id = reference.getMetadataID();
-        MetadataObject obj = metadata.getObject(id);
+        MetadataObject obj = reference.getMetadataObject();
         if (obj != null && obj.getNameInSource() != null) {
             return obj.getNameInSource();
         }

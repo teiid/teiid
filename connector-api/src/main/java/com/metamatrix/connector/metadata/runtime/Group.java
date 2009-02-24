@@ -22,8 +22,15 @@
 
 package com.metamatrix.connector.metadata.runtime;
 
+import java.util.List;
+
+import com.metamatrix.connector.api.ConnectorException;
+
 /**
  * Represents a group, such as a table, in the runtime metadata.
  */
 public interface Group extends MetadataObject {
+	
+	List<Element> getChildren() throws ConnectorException;
+	
 }

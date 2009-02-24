@@ -25,12 +25,12 @@ package com.metamatrix.connector.basic;
 import com.metamatrix.connector.api.Connection;
 import com.metamatrix.connector.api.ConnectorCapabilities;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ConnectorIdentity;
 import com.metamatrix.connector.api.Execution;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.ProcedureExecution;
 import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.identity.ConnectorIdentity;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQueryCommand;
@@ -81,20 +81,12 @@ public abstract class BasicConnection implements Connection {
 		return null;
 	}
 		
-    /**
-     * Called by the pool to indicate that the connection was returned to the pool.
-     * The actual close call will be made when the pool wants to purge this connection.
-     */	
+	@Override
 	public void closeCalled() {
 		
 	}
 	
-    /**
-     * Called by the pool when an existing connection is leased so that the underlying
-     * Connection may have it's identity switched to a different user.
-     * @param identity
-     * @throws ConnectorException
-     */
+	@Override
 	public void setConnectorIdentity(ConnectorIdentity context)
 			throws ConnectorException {
 		

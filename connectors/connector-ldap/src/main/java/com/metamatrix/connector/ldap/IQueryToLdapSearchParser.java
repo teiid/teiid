@@ -75,7 +75,6 @@ import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
@@ -240,7 +239,7 @@ public class IQueryToLdapSearchParser {
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
 		if(fromItem instanceof IGroup) {
-			Group group = (Group) rm.getObject(((IGroup)fromItem).getMetadataID());
+			Group group = ((IGroup)fromItem).getMetadataObject();
 			nameInSource = group.getNameInSource();
 			// if NameInSource is null set it to an empty
 			// string instead so we can safely call split on it
@@ -277,13 +276,12 @@ public class IQueryToLdapSearchParser {
 	private String getRestrictToNamedClass(IFromItem fromItem) throws ConnectorException {
 		String nameInSource;
 		String namedClass = null;
-		MetadataID mdIDGroup;
 		if(fromItem instanceof IGroup) {
 			// Here we use slightly different logic than in
 			// getContextNameFromFromItem so it is easier to get
 			// the group name later if needed
-			mdIDGroup = ((IGroup)fromItem).getMetadataID();
-			nameInSource = rm.getObject(mdIDGroup).getNameInSource();
+			Group mdIDGroup = ((IGroup)fromItem).getMetadataObject();
+			nameInSource = mdIDGroup.getNameInSource();
 			// groupName = mdIDGroup.getName();
 			// if NameInSource is null set it to an empty
 			// string instead so we can safely call split on it
@@ -319,7 +317,7 @@ public class IQueryToLdapSearchParser {
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
 		if(fromItem instanceof IGroup) {
-			Group group = (Group) rm.getObject(((IGroup)fromItem).getMetadataID());
+			Group group = ((IGroup)fromItem).getMetadataObject();
 			String nameInSource = group.getNameInSource();
 			// if NameInSource is null set it to an empty
 			// string instead so we can safely call split on it
@@ -384,8 +382,8 @@ public class IQueryToLdapSearchParser {
 		// GHH 20080326 - changed around the IElement handling here
 		// - the rest of this method is unchanged
 		if(e instanceof IElement) {
-			MetadataID mdIDElement = ((IElement)e).getMetadataID();
-			expressionName = rm.getObject(mdIDElement).getNameInSource();
+			Element mdIDElement = ((IElement)e).getMetadataObject();
+			expressionName = mdIDElement.getNameInSource();
 			if(expressionName == null || expressionName.equals("")) {  //$NON-NLS-1$
 				expressionName = mdIDElement.getName();
 			}
@@ -597,10 +595,9 @@ public class IQueryToLdapSearchParser {
 	// code from another custom connector.
 	public String getNameFromElement(Element e) throws ConnectorException {
 		String ldapAttributeName = null;
-		MetadataID mdIDElement = e.getMetadataID();
-		ldapAttributeName = rm.getObject(mdIDElement).getNameInSource();
+		ldapAttributeName = e.getNameInSource();
 		if (ldapAttributeName == null || ldapAttributeName.equals("")) { //$NON-NLS-1$
-			ldapAttributeName = mdIDElement.getName();
+			ldapAttributeName = e.getName();
 			// If name in source is not set, then fall back to the column name.
 		}
 		return ldapAttributeName;
@@ -653,8 +650,7 @@ public class IQueryToLdapSearchParser {
      */
     private Element getElementFromSymbol(ISelectSymbol symbol) throws ConnectorException {
         IElement expr = (IElement) symbol.getExpression();
-        MetadataID elementID = expr.getMetadataID();
-        return (Element) rm.getObject(elementID);
+        return expr.getMetadataObject();
     }
 	
 	

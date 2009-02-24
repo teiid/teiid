@@ -89,7 +89,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Scope;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
- * The <code>ConnectorManager</code> manages a {@link com.metamatrix.connector.api.Connector Connector}
+ * The <code>ConnectorManager</code> manages a {@link com.metamatrix.connector.basic.BasicConnector Connector}
  * and its associated workers' state.
  */
 public class ConnectorManager implements ApplicationService {

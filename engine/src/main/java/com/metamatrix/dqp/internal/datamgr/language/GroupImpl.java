@@ -23,20 +23,21 @@
 package com.metamatrix.dqp.internal.datamgr.language;
 
 import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
+import com.metamatrix.connector.metadata.runtime.Group;
 import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
 import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.metadata.runtime.api.MetadataID;
 
 public class GroupImpl extends BaseLanguageObject implements IGroup {
 
     private String context;
     private String definition;    
-    private MetadataID metadataID;
+    private Group metadataObject;
     
-    public GroupImpl(String context, String definition, MetadataID id) {
+    public GroupImpl(String context, String definition, Group group) {
         this.context = context;
         this.definition = definition;
-        this.metadataID = id;
+        this.metadataObject = group;
     }
 
     /**
@@ -53,16 +54,14 @@ public class GroupImpl extends BaseLanguageObject implements IGroup {
         return this.definition;
     }
 
-    /**
-     * @see com.metamatrix.connector.language.IMetadataReference#getMetadataID()
-     */
-    public MetadataID getMetadataID() {
-        return metadataID;
+    @Override
+    public Group getMetadataObject() {
+    	return this.metadataObject;
     }
-        
-    public void setMetadataID(MetadataID id){
-        this.metadataID = id;
-    }
+    
+    public void setMetadataObject(Group metadataObject) {
+		this.metadataObject = metadataObject;
+	}
 
     /**
      * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)

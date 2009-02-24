@@ -46,7 +46,6 @@ import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.ILimit;
 import com.metamatrix.connector.language.ISetQuery.Operation;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
 /**
@@ -99,7 +98,7 @@ public class OracleSQLTranslator extends Translator {
          * then pull the Sequence name out of the name in source of the column.
          */
     	IInsert insert = (IInsert)command;
-    	List<MetadataID> allElements = insert.getGroup().getMetadataID().getChildIDs();
+    	List<Element> allElements = insert.getGroup().getMetadataObject().getChildren();
     	if (allElements.size() == insert.getValues().size()) {
     		return command;
     	}
@@ -107,8 +106,7 @@ public class OracleSQLTranslator extends Translator {
     	int index = 0;
     	List<IElement> elements = insert.getElements();
     	
-    	for (MetadataID metadataID : allElements) {
-    		Element element = (Element)metadataID.getMetadataObject();
+    	for (Element element : allElements) {
     		if (!element.isAutoIncremented()) {
     			continue;
     		}
@@ -119,7 +117,7 @@ public class OracleSQLTranslator extends Translator {
     		}
     		boolean found = false;
     		while (index < elements.size()) {
-    			if (metadataID.equals(elements.get(index).getMetadataID())) {
+    			if (element.equals(elements.get(index).getMetadataObject())) {
     				found = true;
     				break;
     			}
@@ -140,7 +138,7 @@ public class OracleSQLTranslator extends Translator {
                 
             IGroup sequenceGroup = this.getLanguageFactory().createGroup(sequenceGroupName, null, null);
             IElement sequenceElement = this.getLanguageFactory().createElement(sequenceElementName, sequenceGroup, null, element.getJavaType());
-            insert.getElements().add(index, this.getLanguageFactory().createElement(element.getMetadataID().getName(), insert.getGroup(), metadataID, element.getJavaType()));
+            insert.getElements().add(index, this.getLanguageFactory().createElement(element.getName(), insert.getGroup(), element, element.getJavaType()));
             insert.getValues().add(index, sequenceElement);
 		}
         return command;

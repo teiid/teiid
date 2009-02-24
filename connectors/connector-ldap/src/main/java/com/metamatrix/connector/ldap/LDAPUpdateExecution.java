@@ -50,7 +50,6 @@ import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.ISetClause;
 import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
@@ -405,20 +404,13 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 		if (elementNameDirect == null) {
 		} else {
 		}
-		MetadataID mdIDElement = e.getMetadataID();
-		if (mdIDElement == null) {
-			return "";  //$NON-NLS-1$
-		}
-		if (rm == null) {
-			return "";  //$NON-NLS-1$
-		}
-		MetadataObject mdObject = rm.getObject(mdIDElement);
+		MetadataObject mdObject = e.getMetadataObject();
 		if (mdObject == null) {
 			return "";  //$NON-NLS-1$
 		}
 		ldapAttributeName = mdObject.getNameInSource();
 		if(ldapAttributeName == null || ldapAttributeName.equals("")) {	   //$NON-NLS-1$	
-			ldapAttributeName = mdIDElement.getName();
+			ldapAttributeName = mdObject.getName();
 			//	If name in source is not set, then fall back to the column name.
 		}
 		return ldapAttributeName;

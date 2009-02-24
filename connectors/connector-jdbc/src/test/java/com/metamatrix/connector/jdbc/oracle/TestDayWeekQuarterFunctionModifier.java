@@ -23,6 +23,7 @@
 package com.metamatrix.connector.jdbc.oracle;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -52,7 +53,7 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
 
     public IExpression helpTestMod(ILiteral c, String format, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction("dayweekquarter",  //$NON-NLS-1$ 
-            new IExpression[] { c },
+            Arrays.asList(c),
             String.class);
         
         DayWeekQuarterFunctionModifier mod = new DayWeekQuarterFunctionModifier (LANG_FACTORY, format);

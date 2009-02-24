@@ -43,7 +43,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.metadata.MetadataFactory;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -106,7 +105,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         ICommand obj = commandBuilder.getCommand(input);
-        RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(new MetadataFactory(metadata));
+        RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(metadata);
 		this.helpTestVisitor(obj, runtimeMetadata, modifiers, context, dbmsTimeZone, expectedOutput);
     }
     

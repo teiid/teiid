@@ -35,10 +35,4 @@ public interface IGroupBy extends ILanguageObject {
      */
     List<IExpression> getElements();
 
-    /**
-     * Set list of IExpression that the GROUP BY should be grouped on.
-     * @param elements List of IExpression
-     */
-    void setElements(List<IExpression> elements);
-
 }

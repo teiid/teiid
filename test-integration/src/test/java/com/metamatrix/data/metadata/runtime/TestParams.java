@@ -32,10 +32,8 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.Parameter;
 import com.metamatrix.connector.metadata.runtime.TypeModel;
-import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
@@ -88,10 +86,9 @@ public class TestParams extends TestCase {
                                 int precision,
                                 int scale,
                                 TranslationUtility transUtil, String modeledType, String modeledBaseType, String modeledPrimitiveType) throws Exception {
-        MetadataID metadataID = param.getMetadataID();
-        Parameter p = (Parameter)transUtil.createRuntimeMetadata().getObject(metadataID);
-        assertEquals(name, metadataID.getName());
-        assertEquals(fullName, metadataID.getFullName());
+        Parameter p = param.getMetadataObject();
+        assertEquals(name, p.getName());
+        assertEquals(fullName, p.getFullName());
         assertEquals(index, param.getIndex());
         assertEquals(direction, param.getDirection());
         assertEquals(nameInSource, p.getNameInSource());
@@ -104,7 +101,6 @@ public class TestParams extends TestCase {
         assertEquals(scale, p.getScale());
         assertEquals(null, param.getValue());
         assertEquals(false, param.getValueSpecified());        
-        assertEquals(Type.TYPE_PARAMETER, metadataID.getType());
 
         //System.out.println("\n" + p.getModeledType() + "\n" + p.getModeledBaseType() + "\n" + p.getModeledPrimitiveType());
         

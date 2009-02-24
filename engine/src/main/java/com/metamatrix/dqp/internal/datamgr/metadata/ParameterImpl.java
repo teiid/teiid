@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -29,9 +31,9 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.ParameterInfo;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.sql.lang.SPParameter;
 
@@ -40,27 +42,18 @@ import com.metamatrix.query.sql.lang.SPParameter;
 public class ParameterImpl extends TypeModelImpl implements Parameter {
 
     private SPParameter param;
+    private Procedure parent;
 
     /**
      * @param metadataID
      */
-    ParameterImpl(MetadataIDImpl metadataID) {
-        super(metadataID);
+    ParameterImpl(RuntimeMetadataImpl factory, SPParameter param, Procedure parent) {
+        super(param.getMetadataID(), factory);
+        this.parent = parent;
+        this.param = param;
     }
 
     private SPParameter getParameterInfo() throws ConnectorException {
-        if(param == null) {
-            ParameterIDImpl paramID = (ParameterIDImpl) getMetadataID();
-            StoredProcedureInfo procInfo = ((ProcedureIDImpl)paramID.getParentID()).getProcedureInfo();        
-            List params = procInfo.getParameters();
-            for(int i=0; i<params.size(); i++) {
-                SPParameter aParam = (SPParameter) params.get(i);
-                if(aParam.getMetadataID().equals(paramID.getActualMetadataID())) {
-                    this.param = aParam;
-                    break;
-                }
-            }
-        }        
         return param;  
     }
 
@@ -118,6 +111,21 @@ public class ParameterImpl extends TypeModelImpl implements Parameter {
         }
     }
     
+    @Override
+    public List<Element> getChildren() throws ConnectorException {
+    	if (param.getParameterType() == SPParameter.RESULT_SET) {
+    		List<Element> result = new ArrayList<Element>(param.getResultSetIDs().size());
+    		for (Object elementId : param.getResultSetIDs()) {
+    			result.add(new ElementImpl(elementId, getFactory()));
+    		}
+    		return result;
+    	}
+    	return Collections.emptyList();
+    }
     
+    @Override
+    public Procedure getParent() throws ConnectorException {
+    	return parent;
+    }
 
 }

@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import java.util.List;
+
 import com.metamatrix.connector.jdbc.translator.BasicFunctionModifier;
 import com.metamatrix.connector.jdbc.translator.FunctionModifier;
 import com.metamatrix.connector.language.*;
@@ -37,12 +39,9 @@ public class Log10FunctionModifier extends BasicFunctionModifier implements Func
     public IExpression modify(IFunction function) {
         function.setName("log"); //$NON-NLS-1$
         
-        IExpression[] args = function.getParameters();
-        IExpression[] newArgs = new IExpression[args.length+1];
-        newArgs[1] = args[0];
-        newArgs[0] = languageFactory.createLiteral(new Integer(10), Integer.class);
-        function.setParameters(newArgs); 
-        
+        List<IExpression> args = function.getParameters();
+        args.add(args.get(0));
+        args.set(0, languageFactory.createLiteral(new Integer(10), Integer.class));
         return function;
     }
 

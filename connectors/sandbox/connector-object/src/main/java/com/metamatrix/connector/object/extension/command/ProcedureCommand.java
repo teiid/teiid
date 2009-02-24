@@ -34,7 +34,6 @@ import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
@@ -145,7 +144,7 @@ public class ProcedureCommand extends ObjectCommand {
     }
     
     public static final String getMethodName(final RuntimeMetadata metadata, final IProcedure procedure) throws ConnectorException {
-        String procName=procedure.getMetadataID().getName();
+        String procName=procedure.getMetadataObject().getName();
         
         String procNameInSource =  ObjectConnectorUtil.getMetadataObjectNameInSource(metadata, procedure, procedure);
 
@@ -157,7 +156,7 @@ public class ProcedureCommand extends ObjectCommand {
 
     protected void initParameters() throws ConnectorException {
         
-        this.procName=this.procedure.getMetadataID().getName();
+        this.procName=this.procedure.getMetadataObject().getName();
                
         this.procNameInSource = getMetadataObjectNameInSource(procedure);         
         
@@ -187,20 +186,19 @@ public class ProcedureCommand extends ObjectCommand {
      * @since 4.2
      */
     protected void initResultSet() throws ConnectorException {
-        List columnMetadata = resultSetParameter.getMetadataID().getChildIDs();
+        List<Element> columnMetadata = resultSetParameter.getMetadataObject().getChildren();
         int size = columnMetadata.size();
         columnNames = new String[size];
         columnNamesInSource = new String[size];
         columnTypes = new Class[size];
         for(int i =0; i<size; i++ ){
-            MetadataID mID = (MetadataID)columnMetadata.get(i);
-            Element element = (Element) this.getMetadata().getObject(mID);
+            Element element = (Element) columnMetadata.get(i);
             if (element.getNameInSource() != null && element.getNameInSource().length() > 0) {
                 columnNamesInSource[i] = element.getNameInSource();
             } else {
                 columnNamesInSource[i] = null;
             }
-            columnNames[i] = element.getMetadataID().getName();
+            columnNames[i] = element.getName();
 
             columnTypes[i] = element.getJavaType();
             hasResults=true;
@@ -212,7 +210,7 @@ public class ProcedureCommand extends ObjectCommand {
         columnTypes = new Class[1];
         columnNamesInSource = new String[1];
 
-        columnNames[0] = resultSetParameter.getMetadataID().getName();
+        columnNames[0] = resultSetParameter.getMetadataObject().getName();
         columnTypes[0] = resultSetParameter.getType();
         columnNamesInSource[0] = this.getMetadataObjectNameInSource(resultSetParameter);
         

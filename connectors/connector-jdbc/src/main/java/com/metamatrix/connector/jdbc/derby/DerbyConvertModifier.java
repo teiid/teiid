@@ -23,6 +23,7 @@
 package com.metamatrix.connector.jdbc.derby;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.metamatrix.connector.api.TypeFacility;
@@ -54,9 +55,9 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         
         List parts = new ArrayList();
         parts.add("cast("); //$NON-NLS-1$
-        parts.add(function.getParameters()[0]);
+        parts.add(function.getParameters().get(0));
         parts.add(" as ");         //$NON-NLS-1$
-        ILiteral type = (ILiteral) function.getParameters()[1];        
+        ILiteral type = (ILiteral) function.getParameters().get(1);        
         parts.add(type.getValue());
         parts.add(")"); //$NON-NLS-1$
         
@@ -64,9 +65,9 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
     }
     
     public IExpression modify(IFunction function) {
-        IExpression[] args = function.getParameters();
-        Class sourceType = args[0].getType();
-        String targetTypeString = getTargetType(args[1]);
+        List<IExpression> args = function.getParameters();
+        Class sourceType = args.get(0).getType();
+        String targetTypeString = getTargetType(args.get(1));
         Class targetType = TypeFacility.getDataTypeClass(targetTypeString);
         IExpression returnExpr = null;
         
@@ -74,40 +75,40 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         
             // targetType is always lower-case due to getTargetType implementation
             if(targetType.equals(TypeFacility.RUNTIME_TYPES.STRING)) { 
-                returnExpr = convertToString(args[0], sourceType);
+                returnExpr = convertToString(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) { 
-                returnExpr = convertToTimestamp(args[0], sourceType);
+                returnExpr = convertToTimestamp(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.DATE)) { 
-                returnExpr = convertToDate(args[0], sourceType);
+                returnExpr = convertToDate(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.TIME)) { 
-                returnExpr = convertToTime(args[0], sourceType);
+                returnExpr = convertToTime(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN) || 
                             targetType.equals(TypeFacility.RUNTIME_TYPES.BYTE) || 
                             targetType.equals(TypeFacility.RUNTIME_TYPES.SHORT)) {  
-                returnExpr = convertToSmallInt(args[0], sourceType, targetType);
+                returnExpr = convertToSmallInt(args.get(0), sourceType, targetType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.INTEGER)) {  
-                returnExpr = convertToInteger(args[0], sourceType);
+                returnExpr = convertToInteger(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.LONG) || 
                             targetType.equals(TypeFacility.RUNTIME_TYPES.BIG_INTEGER)) {  
-                returnExpr = convertToBigInt(args[0], sourceType);
+                returnExpr = convertToBigInt(args.get(0), sourceType);
                 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.FLOAT)) {  
-                returnExpr = convertToFloat(args[0], sourceType);
+                returnExpr = convertToFloat(args.get(0), sourceType);
 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.DOUBLE)) {  
-                returnExpr = convertToDouble(args[0], sourceType);
+                returnExpr = convertToDouble(args.get(0), sourceType);
 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)) {  
-                returnExpr = convertToBigDecimal(args[0], sourceType);
+                returnExpr = convertToBigDecimal(args.get(0), sourceType);
 
             } else if(targetType.equals(TypeFacility.RUNTIME_TYPES.CHAR)) { 
-                returnExpr = convertToChar(args[0], sourceType);
+                returnExpr = convertToChar(args.get(0), sourceType);
             } 
             
             if(returnExpr != null) {
@@ -174,7 +175,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
                                         Class sourceType) {
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
             ILiteral literalOne = this.langFactory.createLiteral(new Integer(1), TypeFacility.RUNTIME_TYPES.INTEGER);
-            return this.langFactory.createFunction("char", new IExpression[] { expression, literalOne }, TypeFacility.RUNTIME_TYPES.CHAR); //$NON-NLS-1$
+            return this.langFactory.createFunction("char", Arrays.asList( expression, literalOne ), TypeFacility.RUNTIME_TYPES.CHAR); //$NON-NLS-1$
         } 
         
         return null;
@@ -251,11 +252,11 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(string_expr, float)
             // AFTER:  cast(cast(string_expr as decimal) as float)
             IFunction inner = langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
 
             IFunction outer = langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { inner, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( inner, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.FLOAT);
 
             return outer; 
@@ -266,7 +267,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(num_expr, float)
             // AFTER:  cast(num_expr as float)
             return langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { expression, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( expression, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.FLOAT);
         }
 
@@ -280,11 +281,11 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(string_expr, double)
             // AFTER:  cast(cast(string_expr as decimal) as double)
             IFunction inner = langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
 
             return langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { inner, langFactory.createLiteral("double", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( inner, langFactory.createLiteral("double", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.DOUBLE);
         }
 
@@ -298,7 +299,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(string_expr, bigdecimal)
             // AFTER:  cast(string_expr as decimal)
             return langFactory.createFunction("convert",  //$NON-NLS-1$
-                new IExpression[] { expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) },  //$NON-NLS-1$
+                Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
         }
 
@@ -340,13 +341,13 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
             // BEFORE: convert(EXPR, timestamp)
             // AFTER:  timestamp(EXPR, '00:00:00')
             ILiteral timeString = this.langFactory.createLiteral("00:00:00", TypeFacility.RUNTIME_TYPES.STRING); //$NON-NLS-1$
-            return this.langFactory.createFunction("timestamp", new IExpression[] {expression, timeString}, TypeFacility.RUNTIME_TYPES.TIMESTAMP);             //$NON-NLS-1$
+            return this.langFactory.createFunction("timestamp", Arrays.asList(expression, timeString), TypeFacility.RUNTIME_TYPES.TIMESTAMP);             //$NON-NLS-1$
             
         } else if(sourceType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
             // BEFORE: convert(EXPR, timestamp)
             // AFTER:  timestamp(EXPR, '1970-01-01', EXPR)
             ILiteral dateString = this.langFactory.createLiteral("1970-01-01", TypeFacility.RUNTIME_TYPES.STRING); //$NON-NLS-1$
-            return this.langFactory.createFunction("timestamp", new IExpression[] {dateString, expression}, TypeFacility.RUNTIME_TYPES.TIMESTAMP);             //$NON-NLS-1$
+            return this.langFactory.createFunction("timestamp", Arrays.asList(dateString, expression), TypeFacility.RUNTIME_TYPES.TIMESTAMP);             //$NON-NLS-1$
         }
         
         return null;
@@ -363,7 +364,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
                                       String functionName,
                                       Class outputType) {
         return langFactory.createFunction(functionName, 
-            new IExpression[] { expression },
+            Arrays.asList( expression ),
             outputType);
     }
 

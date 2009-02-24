@@ -26,13 +26,12 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.identity.PoolAwareConnection;
+import com.metamatrix.connector.basic.BasicConnection;
 
 public class TestConnectionWrapper extends TestCase {
 
 	public void testIdleTime() throws Exception {
-		ConnectionWrapper wrapper = new ConnectionWrapper(Mockito.mock(Connection.class), Mockito.mock(ConnectionPool.class), 1);
+		ConnectionWrapper wrapper = new ConnectionWrapper(Mockito.mock(BasicConnection.class), Mockito.mock(ConnectionPool.class), 1);
 		long time = wrapper.getTimeReturnedToPool();
 		Thread.sleep(5);
 		wrapper.close();
@@ -40,7 +39,7 @@ public class TestConnectionWrapper extends TestCase {
 	}
 	
 	public void testIsAliveTestInterval() throws Exception {
-		PoolAwareConnection connection = Mockito.mock(PoolAwareConnection.class);
+		BasicConnection connection = Mockito.mock(BasicConnection.class);
 		Mockito.stub(connection.isAlive()).toReturn(Boolean.TRUE);
 		ConnectionWrapper wrapper = new ConnectionWrapper(connection, Mockito.mock(ConnectionPool.class), 1);
 		wrapper.setTestInterval(-1); //trigger an actual call.

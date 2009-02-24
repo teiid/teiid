@@ -23,9 +23,7 @@
 package com.metamatrix.data.metadata.runtime;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,13 +35,15 @@ import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.MetadataID;
-import com.metamatrix.connector.metadata.runtime.MetadataID.Type;
+import com.metamatrix.connector.metadata.runtime.Element;
+import com.metamatrix.connector.metadata.runtime.Group;
+import com.metamatrix.connector.metadata.runtime.Parameter;
+import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */
-public class TestMetadataID extends TestCase {
+public class TestMetadataObject extends TestCase {
 
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
 
@@ -51,7 +51,7 @@ public class TestMetadataID extends TestCase {
      * Constructor for TestMetadataID.
      * @param name
      */
-    public TestMetadataID(String name) {
+    public TestMetadataObject(String name) {
         super(name);
     }
 
@@ -66,28 +66,23 @@ public class TestMetadataID extends TestCase {
     
     // ################ TEST GROUP METADATAID ######################
     
-    public MetadataID getGroupID(String groupName, TranslationUtility transUtil) {
+    public Group getGroupID(String groupName, TranslationUtility transUtil) {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT 1 FROM " + groupName); //$NON-NLS-1$
         IGroup group = (IGroup) query.getFrom().getItems().get(0);
-        return group.getMetadataID();
+        return group.getMetadataObject();
     }
 
     public void helpTestGroupID(String fullGroupName, String shortGroupName, int elementCount, TranslationUtility transUtil) throws Exception {
-        MetadataID groupID = getGroupID(fullGroupName, transUtil);     
+        Group groupID = getGroupID(fullGroupName, transUtil);     
         assertEquals(fullGroupName, groupID.getFullName());
         assertEquals(shortGroupName, groupID.getName());
-        assertEquals(Type.TYPE_GROUP, groupID.getType());
-        assertNull(groupID.getParentID());
         
         // Check children
-        List children = groupID.getChildIDs();
+        List<Element> children = groupID.getChildren();
         assertEquals(elementCount, children.size());
-        Iterator childIter = children.iterator();
-        while(childIter.hasNext()) {
-            MetadataID childID = (MetadataID) childIter.next();
-            assertEquals(Type.TYPE_ELEMENT, childID.getType());
-            assertEquals(groupID, childID.getParentID());
-            assertTrue(childID.getFullName().startsWith(groupID.getFullName()));            
+        for (Element element : children) {
+            assertEquals(groupID, element.getParent());
+            assertTrue(element.getFullName().startsWith(groupID.getFullName()));            
         }
     }
     
@@ -101,21 +96,19 @@ public class TestMetadataID extends TestCase {
 
     // ################ TEST ELEMENT METADATAID ######################
     
-    public MetadataID getElementID(String groupName, String elementName, TranslationUtility transUtil) {
+    public Element getElementID(String groupName, String elementName, TranslationUtility transUtil) {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
         ISelectSymbol symbol = (ISelectSymbol) query.getSelect().getSelectSymbols().get(0);
         IElement element = (IElement) symbol.getExpression();
-        return element.getMetadataID();
+        return element.getMetadataObject();
     }
     
     public void helpTestElementID(String groupName, String elementName, TranslationUtility transUtil) throws Exception {
-        MetadataID elementID = getElementID(groupName, elementName, transUtil);     
-        assertEquals(Type.TYPE_ELEMENT, elementID.getType());
+        Element elementID = getElementID(groupName, elementName, transUtil);     
         assertEquals(groupName + "." + elementName, elementID.getFullName()); //$NON-NLS-1$
         assertEquals(elementName, elementID.getName());
-        assertEquals(Collections.EMPTY_LIST, elementID.getChildIDs());
-        assertNotNull(elementID.getParentID());
-        assertEquals(groupName, elementID.getParentID().getFullName());        
+        assertNotNull(elementID.getParent());
+        assertEquals(groupName, elementID.getParent().getFullName());        
     }
     
     public void testElementID() throws Exception {
@@ -128,7 +121,7 @@ public class TestMetadataID extends TestCase {
 
     // ################ TEST PROCEDURE AND PARAMETER METADATAID ######################
     
-    public MetadataID getProcedureID(String procName, int inputParamCount, TranslationUtility transUtil) {
+    public Procedure getProcedureID(String procName, int inputParamCount, TranslationUtility transUtil) {
         StringBuffer sql = new StringBuffer("EXEC "); //$NON-NLS-1$
         sql.append(procName);
         sql.append("("); //$NON-NLS-1$
@@ -141,27 +134,21 @@ public class TestMetadataID extends TestCase {
         sql.append(")"); //$NON-NLS-1$
         
         IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString()); 
-        return proc.getMetadataID();
+        return proc.getMetadataObject();
     }
     
     public void helpTestProcedureID(String procName, String shortName, int inputParamCount, String[] paramNames, TranslationUtility transUtil) throws Exception {
-        MetadataID procID = getProcedureID(procName, inputParamCount, transUtil);     
-        assertEquals(Type.TYPE_PROCEDURE, procID.getType());
+        Procedure procID = getProcedureID(procName, inputParamCount, transUtil);     
         assertEquals(procName, procID.getFullName()); //$NON-NLS-1$
-        assertNull(procID.getParentID());
         assertEquals(shortName, procID.getName());
         
         // Check children
-        List children = procID.getChildIDs();
+        List<Parameter> children = procID.getChildren();
         assertEquals(paramNames.length, children.size());
         Set actualParamNames = new HashSet();
-        Iterator childIter = children.iterator();
-        while(childIter.hasNext()) {
-            MetadataID childID = (MetadataID) childIter.next();
-            assertEquals(Type.TYPE_PARAMETER, childID.getType());
-            assertEquals(procID, childID.getParentID());
+        for (Parameter childID : children) {
+            assertEquals(procID, childID.getParent());
             assertTrue(childID.getFullName().startsWith(procID.getFullName()));
-            
             actualParamNames.add(childID.getName());            
         }
         
