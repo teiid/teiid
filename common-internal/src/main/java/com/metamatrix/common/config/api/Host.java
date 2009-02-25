@@ -55,16 +55,7 @@ public interface Host extends ComponentDefn {
      */    
     String getTempDirectory();    
     
-    
-    /**
-     *  returns the host controller port number;
-     * @return
-     * @since 4.3
-     */
-    String getPort();
-    
-    
-    
+        
     /**
      * Return the address that should be used to bind to the host 
      * @return

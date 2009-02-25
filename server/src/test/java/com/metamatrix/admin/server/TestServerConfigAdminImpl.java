@@ -151,7 +151,6 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     public void testAddHost() throws Exception {
         String hostIdentifier = BOGUS_HOST; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.PORT_NUMBER, String.valueOf(15001));
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
         hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
@@ -162,7 +161,6 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     public void testAddHostIP() throws Exception {
         String hostIdentifier = BOGUS_HOST_IP; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.PORT_NUMBER, String.valueOf(15001));
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
         hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
@@ -173,7 +171,6 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     public void testAddHostFullyQualifiedName() throws Exception {
         String hostIdentifier = BOGUS_HOST_FULLY_QUALIFIED; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.PORT_NUMBER, String.valueOf(15001));
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
         hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$

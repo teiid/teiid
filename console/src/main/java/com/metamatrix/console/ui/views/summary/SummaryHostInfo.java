@@ -29,21 +29,15 @@ public class SummaryHostInfo {
     public static final int NOT_RUNNING = 2;
 
     private String hostName;
-    private String hostPortNum;
     private int hostStatus;
 
-    public SummaryHostInfo(String hostName, String hostPortNum, int status){
+    public SummaryHostInfo(String hostName, int status){
         this.hostName = hostName;
-        this.hostPortNum = hostPortNum;
         this.hostStatus = status;
     }
 
     public String getHostName(){
         return hostName;
-    }
-
-    public String getHostPortNum(){
-        return hostPortNum;
     }
 
     public int getHostStatus(){

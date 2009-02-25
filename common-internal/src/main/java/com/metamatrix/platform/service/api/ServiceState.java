@@ -30,4 +30,12 @@ public interface ServiceState {
     public static final int STATE_INIT_FAILED = 4;
     public static final int STATE_NOT_REGISTERED = 5;
     public static final int STATE_DATA_SOURCE_UNAVAILABLE = 6;
+    
+    public final static String[] stateAsString = {"Not_Initialized", //$NON-NLS-1$
+        "Running", //$NON-NLS-1$
+        "Closed", //$NON-NLS-1$
+        "Failed", //$NON-NLS-1$
+        "Init_Failed", //$NON-NLS-1$
+        "Not_Registered",  //$NON-NLS-1$
+        "Data_Source_Unavailable"}; //$NON-NLS-1$    
 }

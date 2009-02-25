@@ -37,21 +37,7 @@ public interface PropertyConstants {
     static final String ESSENTIAL_PROP =
         DeployPkgUtils.getString("property.service.essential"); //$NON-NLS-1$
 
-    //
-    // Process
-    //
-//    static final String LOG_PROP =
-//        DeployPkgUtils.getString("property.process.logfile"); //$NON-NLS-1$
-//    static final String MAX_HEAP_PROP =
-//        DeployPkgUtils.getString("property.process.maxheap"); //$NON-NLS-1$
-//    static final String MIN_HEAP_PROP =
-//        DeployPkgUtils.getString("property.process.minheap"); //$NON-NLS-1$
 
-    //
-    // Host
-    //
-    static final String PORT_PROP = HostType.PORT_NUMBER;
-//        DeployPkgUtils.getString("property.host.portnumber"); //$NON-NLS-1$
 
 
 }

@@ -32,14 +32,7 @@ package com.metamatrix.admin.api.objects;
  * @since 4.3
  */
 public interface Host extends AdminObject {
-    
 
-
-    /**
-     * Port Number Property
-     */
-    public static final String PORT_NUMBER = "hostControllerPortNumber"; //$NON-NLS-1$ 
-    
     /**
      * Install Directory Property
      */

@@ -30,8 +30,6 @@ public interface HostType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "Host"; //$NON-NLS-1$
     
-    public static final String PORT_NUMBER = com.metamatrix.admin.api.objects.Host.PORT_NUMBER;
-    
     public static final String INSTALL_DIR = com.metamatrix.admin.api.objects.Host.INSTALL_DIR;
     
     public static final String LOG_DIRECTORY = com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY;

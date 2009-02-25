@@ -113,10 +113,6 @@ public class HelperTestConfiguration {
 		validateComponentObject(h);
 		
     	ArgCheck.isNotNull(h.getProperties(), "Host does not have any properties"); //$NON-NLS-1$
-    	String hostPortNumber = h.getProperty(HostType.PORT_NUMBER);
-    	ArgCheck.isNotNull(hostPortNumber, "Host " + h.getFullName() + " does not have a host port number"); //$NON-NLS-1$ //$NON-NLS-2$
-   	
-    	
     }
     
     public static void validateAuthenticationProviders(Collection providers) throws ConfigurationException {

@@ -70,13 +70,7 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
         return FileUtils.buildDirectoryPath(new String[] {datadir, "temp"}); //$NON-NLS-1$
         
     }
-    /** 
-     * @see com.metamatrix.common.config.api.Host#getPort()
-     * @since 4.3
-     */
-    public String getPort() {
-        return getProperty(HostType.PORT_NUMBER);
-    }
+
 /**
  * Return a deep cloned instance of this object.  Subclasses must override
  *  this method.

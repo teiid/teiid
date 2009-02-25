@@ -92,7 +92,7 @@ public class SummaryPanel extends JPanel
     private JPanel stopLightPanel;
 	private String[] connectionsTableColumns = {"Product", "Connections"};
     private TableWidget hostTable;
-    private String[] hostTableColumns = {"Host Identifier", "Port Number", "Status"};
+    private String[] hostTableColumns = {"Host Identifier", "Status"};
     private GridBagLayout sysStateLayout;
     private AutoRefresher arRefresher;
 
@@ -314,17 +314,15 @@ public class SummaryPanel extends JPanel
             data = new Object[1][3];
             data[0][0] = "";
             data[0][1] = "";
-            data[0][2] = "";
         } else {
             data = new Object[hostInfo.length][3];
             for (int i = 0; i < hostInfo.length; i++) {
                 data[i][0] = hostInfo[i].getHostName();
-                data[i][1]  = hostInfo[i].getHostPortNum();
                 if (hostInfo[i].getHostStatus() == SummaryHostInfo.RUNNING) {
-                	data[i][2] = "Running";
+                	data[i][1] = "Running";
                 } else if (hostInfo[i].getHostStatus() == 
                 		SummaryHostInfo.NOT_RUNNING) {
-                	data[i][2] = "Not Running";
+                	data[i][1] = "Not Running";
                 }
             }
         }

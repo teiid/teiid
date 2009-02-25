@@ -120,9 +120,7 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
         it = hosts.iterator();
         for (int i = 0; it.hasNext(); i++) {
             Host curHost = (Host)it.next();
-            info[i] = new SummaryHostInfo(curHost.getName(),
-                    curHost.getProperty(HostType.PORT_NUMBER),
-                    hostStatus(curHost.getName(), hostData));
+            info[i] = new SummaryHostInfo(curHost.getName(), hostStatus(curHost.getName(), hostData));
         }
         return info;
     }
