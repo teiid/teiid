@@ -27,11 +27,9 @@ import com.metamatrix.connector.language.IBatchedUpdates;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.ICompoundCriteria;
 import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExistsCriteria;
 import com.metamatrix.connector.language.IFrom;
 import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IGroupBy;
 import com.metamatrix.connector.language.IInCriteria;
 import com.metamatrix.connector.language.IInlineView;
@@ -39,11 +37,8 @@ import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.IIsNullCriteria;
 import com.metamatrix.connector.language.IJoin;
 import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.INotCriteria;
 import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IOrderByItem;
-import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.IScalarSubquery;
@@ -70,7 +65,14 @@ import com.metamatrix.connector.language.IUpdate;
  */
 public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
 
-    public HierarchyVisitor() {
+	private boolean visitSubcommands;
+	
+	public HierarchyVisitor() {
+		this(true);
+	}
+	
+    public HierarchyVisitor(boolean visitSubcommands) {
+    	this.visitSubcommands = visitSubcommands;
     }
     
     public void visit(IAggregate obj) {
@@ -95,15 +97,14 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getCriteria());
     }
     
-    public void visit(IElement obj) {
-    }
-    
     public void visit(IProcedure obj) {
         visitNodes(obj.getParameters());
     }
     
     public void visit(IExistsCriteria obj) {
-        visitNode(obj.getQuery());
+        if (visitSubcommands) {
+        	visitNode(obj.getQuery());
+        }
     }
     
     public void visit(IFrom obj) {
@@ -114,12 +115,6 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNodes(obj.getParameters());
     }
 
-    public void visit(IGroup obj) {
-    }
-    
-//    public void visit(IGroup obj) {
-//    }
-    
     public void visit(IGroupBy obj) {
         visitNodes(obj.getElements());
     }
@@ -152,9 +147,6 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getRightExpression());
     }
 
-    public void visit(ILiteral obj) {
-    }
-        
     public void visit(INotCriteria obj) {
         visitNode(obj.getCriteria());
     }
@@ -163,12 +155,6 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNodes(obj.getItems());
     }
 
-    public void visit(IOrderByItem obj) {
-    }
-
-    public void visit(IParameter obj) {
-    }
-        
     public void visit(IQuery obj) {
         visitNode(obj.getSelect());
         visitNode(obj.getFrom());
@@ -180,7 +166,9 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(IScalarSubquery obj) {
-        visitNode(obj.getQuery());
+    	if (visitSubcommands) {
+    		visitNode(obj.getQuery());
+    	}
     }
     
     public void visit(ISearchedCaseExpression obj) {
@@ -202,17 +190,23 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
 
     public void visit(ISubqueryCompareCriteria obj) {
         visitNode(obj.getLeftExpression());
-        visitNode(obj.getQuery());
+        if (visitSubcommands) {
+        	visitNode(obj.getQuery());
+        }
     }
 
     public void visit(ISubqueryInCriteria obj) {
         visitNode(obj.getLeftExpression());        
-        visitNode(obj.getQuery());
+        if (visitSubcommands) {
+        	visitNode(obj.getQuery());
+        }
     }
     
     public void visit(ISetQuery obj) {
-        visitNode(obj.getLeftQuery());
-        visitNode(obj.getRightQuery());        
+    	if (visitSubcommands) {
+	    	visitNode(obj.getLeftQuery());
+	        visitNode(obj.getRightQuery());
+    	}
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
     }
@@ -225,7 +219,9 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     
     @Override
     public void visit(IInlineView obj) {
-    	visitNode(obj.getQuery());
+    	if (visitSubcommands) {
+    		visitNode(obj.getQuery());
+    	}
     }
     
     @Override

@@ -25,14 +25,13 @@
 package org.teiid.connector.jdbc.translator;
 
 import java.util.List;
-import java.util.Map;
-
 
 import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.visitor.framework.DelegatingHierarchyVisitor;
 import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
 /**
@@ -48,7 +47,7 @@ public class TranslatedCommand {
     private List preparedTypes;
     
     private SQLConversionVisitor sqlConversionVisitor;
-    private FunctionReplacementVisitor functionVisitor;
+    private ReplacementVisitor functionVisitor;
     private ExecutionContext context;
     private Translator sqlTranslator;
     
@@ -59,18 +58,9 @@ public class TranslatedCommand {
     public TranslatedCommand(ExecutionContext context, Translator sqlTranslator){
     	this.context = context;
     	this.sqlTranslator = sqlTranslator;
-    	
-    	Map<String, FunctionModifier> modifiers = sqlTranslator.getFunctionModifiers();
         this.sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
-        sqlConversionVisitor.setExecutionContext(context);
-        this.functionVisitor = new FunctionReplacementVisitor(modifiers);
-    }
-    
-    public TranslatedCommand(ExecutionContext context, Translator sqlTranslator, SQLConversionVisitor sqlConversionVisitor, FunctionReplacementVisitor functionVisitor) {
-    	this.context = context;
-    	this.sqlTranslator = sqlTranslator;
-    	this.sqlConversionVisitor = sqlConversionVisitor;
-    	this.functionVisitor = functionVisitor;
+        this.sqlConversionVisitor.setExecutionContext(context);
+        this.functionVisitor = new ReplacementVisitor(context, sqlTranslator);
     }
     
     /**
@@ -89,7 +79,7 @@ public class TranslatedCommand {
 	
 	private String getSQL(ICommand command) throws ConnectorException {
         command = sqlTranslator.modifyCommand(command, context);
-		command.acceptVisitor(functionVisitor);
+		command.acceptVisitor(new DelegatingHierarchyVisitor(null, this.functionVisitor));
         
         if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
             this.sqlConversionVisitor.setPrepared(true);
@@ -166,6 +156,16 @@ public class TranslatedCommand {
      */
     public boolean isPrepared() {
         return prepared;
+    }
+    
+    @Override
+    public String toString() {
+    	StringBuffer sb = new StringBuffer();
+    	if (prepared) {
+    		sb.append("Prepared Values: ").append(preparedValues).append(" "); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
+    	sb.append("SQL: ").append(sql); //$NON-NLS-1$
+    	return sb.toString();
     }
 
 }

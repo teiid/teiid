@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.jdbc.JDBCPlugin;
@@ -45,6 +46,7 @@ import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IQueryCommand;
 import com.metamatrix.connector.language.ISetQuery.Operation;
 import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.visitor.util.SQLReservedWords;
@@ -88,8 +90,7 @@ public class OracleSQLTranslator extends Translator {
     }
     
     @Override
-    public ICommand modifyCommand(ICommand command, ExecutionContext context)
-    		throws ConnectorException {
+    public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
     	if (!(command instanceof IInsert)) {
     		return command;
     	}
@@ -144,27 +145,37 @@ public class OracleSQLTranslator extends Translator {
 		}
         return command;
     }
-
-    @Override
-    public String addLimitString(String queryCommand, ILimit limit) {
-    	StringBuffer limitQuery = new StringBuffer(queryCommand.length());
-		if (limit.getRowOffset() > 0) {
-			limitQuery.append("SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (");
-		} else {
-			limitQuery.append("SELECT * FROM (");
-		}
-		limitQuery.append(queryCommand);
-		if (limit.getRowOffset() > 0) {
-			limitQuery.append(") VIEW_FOR_LIMIT WHERE ROWNUM <= ").append(
-					limit.getRowLimit() + limit.getRowOffset()).append(") WHERE ROWNUM_ > ").append(
-					limit.getRowOffset());
-		} else {
-			limitQuery.append(") WHERE ROWNUM <= ").append(
-					limit.getRowLimit());
-		}
-		return limitQuery.toString();
-    }
     
+    @Override
+    public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    	if (!(command instanceof IQueryCommand)) {
+    		return null;
+    	}
+		IQueryCommand queryCommand = (IQueryCommand)command;
+		if (queryCommand.getLimit() == null) {
+			return null;
+    	}
+		ILimit limit = queryCommand.getLimit();
+		queryCommand.setLimit(null);
+    	List<Object> parts = new ArrayList<Object>();
+		if (limit.getRowOffset() > 0) {
+			parts.add("SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (");
+		} else {
+			parts.add("SELECT * FROM (");
+		}
+		parts.add(queryCommand);
+		if (limit.getRowOffset() > 0) {
+			parts.add(") VIEW_FOR_LIMIT WHERE ROWNUM <= ");
+			parts.add(limit.getRowLimit() + limit.getRowOffset());
+			parts.add(") WHERE ROWNUM_ > ");
+			parts.add(limit.getRowOffset());
+		} else {
+			parts.add(") WHERE ROWNUM <= ");
+			parts.add(limit.getRowLimit());
+		}
+		return parts;
+    }
+
     @Override
     public boolean useAsInGroupAlias(){
         return false;

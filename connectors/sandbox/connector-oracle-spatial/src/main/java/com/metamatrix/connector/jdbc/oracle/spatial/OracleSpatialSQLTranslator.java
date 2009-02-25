@@ -70,7 +70,7 @@ public class OracleSpatialSQLTranslator extends Translator {
      * This method is overridden to modify the incoming command to add the hint to the ISelect in the command.
      */
 	@Override
-	public ICommand modifyCommand(ICommand command, com.metamatrix.connector.api.ExecutionContext context) throws ConnectorException {
+	public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
         if (command instanceof IQuery) {
             IQuery query = (IQuery)command;
             

@@ -20,8 +20,6 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package org.teiid.connector.jdbc;
 
 import java.lang.reflect.InvocationHandler;

@@ -24,14 +24,21 @@
  */
 package org.teiid.connector.jdbc.sybase;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.SubstringFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 
 import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.SourceSystemFunctions;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IQueryCommand;
 
 /**
  */
@@ -67,8 +74,28 @@ public class SybaseSQLTranslator extends Translator {
     }
     
     @Override
-    public String addLimitString(String queryCommand, ILimit limit) {
-    	return "SELECT TOP " + limit.getRowLimit() + " * FROM (" + queryCommand + ") AS X"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    	if (!(command instanceof IQueryCommand)) {
+    		return null;
+    	}
+		IQueryCommand queryCommand = (IQueryCommand)command;
+		if (queryCommand.getLimit() == null) {
+			return null;
+    	}
+		ILimit limit = queryCommand.getLimit();
+		IOrderBy orderBy = queryCommand.getOrderBy();
+		queryCommand.setLimit(null);
+		queryCommand.setOrderBy(null);
+		List<Object> parts = new ArrayList<Object>(6);
+		parts.add("SELECT TOP ");
+		parts.add(limit.getRowLimit());
+		parts.add(" * FROM (");
+		parts.add(queryCommand);
+		parts.add(") AS X");
+		if (orderBy != null) {
+			parts.add(orderBy);
+		}
+		return parts;
     }
     
 }

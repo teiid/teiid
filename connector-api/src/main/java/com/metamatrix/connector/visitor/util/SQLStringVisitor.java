@@ -780,7 +780,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             String name = getShortName(obj.getName());
             buffer.append(name);
         } else if (obj.getElement() != null) {
-            visit(obj.getElement());            
+            append(obj.getElement());            
         } else {
             buffer.append(UNDEFINED);
         }
@@ -879,7 +879,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         }
         append(obj.getSelectSymbols());
 	}
-    
 
     protected String getSourceComment(ICommand command) {
         return ""; //$NON-NLS-1$

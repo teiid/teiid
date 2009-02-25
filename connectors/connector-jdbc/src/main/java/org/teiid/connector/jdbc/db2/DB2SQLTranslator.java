@@ -20,9 +20,10 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package org.teiid.connector.jdbc.db2;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.Translator;
@@ -36,6 +37,7 @@ import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IJoin;
 import com.metamatrix.connector.language.ILimit;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.language.IJoin.JoinType;
 import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
@@ -53,28 +55,30 @@ public class DB2SQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-	
+		
+	@SuppressWarnings("unchecked")
 	@Override
-	public String addLimitString(String queryCommand, ILimit limit) {
-		return queryCommand + " FETCH FIRST " + limit.getRowLimit() + " ROWS ONLY"; //$NON-NLS-1$
+	public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+		return Arrays.asList("FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ 
 	}
 	
 	@Override
-	public ICommand modifyCommand(ICommand command, ExecutionContext context)
-			throws ConnectorException {
-		HierarchyVisitor hierarchyVisitor = new HierarchyVisitor() {
-			@Override
-			public void visit(IJoin obj) {
-				if (obj.getJoinType() != JoinType.CROSS_JOIN) {
-					return;
+	public ICommand modifyCommand(ICommand command, ExecutionContext context) {
+		if (command instanceof IQuery) {
+			HierarchyVisitor hierarchyVisitor = new HierarchyVisitor(false) {
+				@Override
+				public void visit(IJoin obj) {
+					if (obj.getJoinType() != JoinType.CROSS_JOIN) {
+						return;
+					}
+					ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
+					obj.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
+					obj.setJoinType(JoinType.INNER_JOIN);
 				}
-				ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
-				obj.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
-				obj.setJoinType(JoinType.INNER_JOIN);
-			}
-		};
-		
-		command.acceptVisitor(hierarchyVisitor);
+			};
+			
+			command.acceptVisitor(hierarchyVisitor);
+		}
 		return command;
 	}
 	

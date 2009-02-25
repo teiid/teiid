@@ -94,6 +94,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         ICommand[] commands = (ICommand[])batchedCommand.getUpdateCommands().toArray(new ICommand[batchedCommand.getUpdateCommands().size()]);
         int[] results = new int[commands.length];
 
+        TranslatedCommand command = null;
+        
         try {
             // temporarily turn the auto commit off, and set it back to what it was
             // before at the end of the command execution.
@@ -101,12 +103,12 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                 connection.setAutoCommit(false);
             }
 
-            List executedCmds = new ArrayList();
-            
+            List<TranslatedCommand> executedCmds = new ArrayList<TranslatedCommand>();
+
             TranslatedCommand previousCommand = null;
             
             for (int i = 0; i < commands.length; i++) {
-                TranslatedCommand command = translateCommand(commands[i]);
+                command = translateCommand(commands[i]);
                 if (command.isPrepared()) {
                     PreparedStatement pstmt = null;
                     if (previousCommand != null && previousCommand.isPrepared() && previousCommand.getSql().equals(command.getSql())) {
@@ -137,7 +139,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             }
             succeeded = true;
         } catch (SQLException e) {
-            throw createAndLogError(e, null);
+        	throw new JDBCExecutionException(e, command);
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, null);
@@ -176,7 +178,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             addStatementWarnings();
             succeeded = true;
         } catch (SQLException e) {
-            throw createAndLogError(e, translatedComm);
+        	throw new JDBCExecutionException(e, translatedComm);
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, translatedComm);
@@ -187,7 +189,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
 
     private void executeBatch(int commandCount,
                               int[] results,
-                              List commands) throws ConnectorException {
+                              List<TranslatedCommand> commands) throws ConnectorException {
         try {
             int[] batchResults = statement.executeBatch();
             addStatementWarnings();
@@ -196,7 +198,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             }
             commands.clear();
         } catch (SQLException err) {
-            throw createAndLogError(err, "JDBCQueryExecution.Error_executing_query__3", commands); //$NON-NLS-1$
+            throw new JDBCExecutionException(err, commands.toArray(new TranslatedCommand[commands.size()])); //$NON-NLS-1$
         }
     }
 
@@ -221,7 +223,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             addStatementWarnings();
             return updateCount;
         } catch (SQLException err) {
-            throw createError(err, translatedComm);
+        	throw new JDBCExecutionException(err, translatedComm);
         }
     }
 
@@ -234,7 +236,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
-            throw createAndLogError(err, command);
+        	throw new JDBCExecutionException(err, command);
         }
     }
 
@@ -253,7 +255,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             }
             connection.setAutoCommit(true);
         } catch (SQLException err) {
-            throw createAndLogError(err, command);
+        	throw new JDBCExecutionException(err, command);
         }
     }
     

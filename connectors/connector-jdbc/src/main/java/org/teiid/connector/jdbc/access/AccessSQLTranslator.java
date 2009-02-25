@@ -24,9 +24,16 @@
  */
 package org.teiid.connector.jdbc.access;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.teiid.connector.jdbc.translator.Translator;
 
+import com.metamatrix.connector.api.ExecutionContext;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.IQueryCommand;
 
 public class AccessSQLTranslator extends Translator {
 	
@@ -44,12 +51,30 @@ public class AccessSQLTranslator extends Translator {
     }
     
     @Override
-    public String addLimitString(String queryCommand, ILimit limit) {
-    	int index = queryCommand.startsWith("SELECT DISTINCT")?15:6;
-    	return new StringBuffer(queryCommand.length() + 8).append(queryCommand)
-				.insert(index, " TOP " + limit.getRowLimit()).toString();
+    public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    	if (!(command instanceof IQueryCommand)) {
+    		return null;
+    	}
+		IQueryCommand queryCommand = (IQueryCommand)command;
+		if (queryCommand.getLimit() == null) {
+			return null;
+    	}
+		ILimit limit = queryCommand.getLimit();
+		IOrderBy orderBy = queryCommand.getOrderBy();
+		queryCommand.setLimit(null);
+		queryCommand.setOrderBy(null);
+		List<Object> parts = new ArrayList<Object>(6);
+		parts.add("SELECT TOP ");
+		parts.add(limit.getRowLimit());
+		parts.add(" * FROM (");
+		parts.add(queryCommand);
+		parts.add(") AS X");
+		if (orderBy != null) {
+			parts.add(orderBy);
+		}
+		return parts;
     }
-    
+                
     @Override
     public boolean addSourceComment() {
     	return false;

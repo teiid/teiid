@@ -25,7 +25,8 @@ package org.teiid.connector.jdbc.translator;
 import java.util.List;
 import java.util.Map;
 
-
+import com.metamatrix.connector.api.ConnectorException;
+import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.ICompareCriteria;
 import com.metamatrix.connector.language.IExpression;
@@ -36,44 +37,52 @@ import com.metamatrix.connector.language.IInlineView;
 import com.metamatrix.connector.language.IInsert;
 import com.metamatrix.connector.language.IIsNullCriteria;
 import com.metamatrix.connector.language.ILikeCriteria;
+import com.metamatrix.connector.language.IQueryCommand;
+import com.metamatrix.connector.language.IScalarSubquery;
 import com.metamatrix.connector.language.ISearchedCaseExpression;
 import com.metamatrix.connector.language.ISelectSymbol;
 import com.metamatrix.connector.language.ISubqueryCompareCriteria;
 import com.metamatrix.connector.language.ISubqueryInCriteria;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
+import com.metamatrix.connector.visitor.framework.AbstractLanguageVisitor;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  */
-public class FunctionReplacementVisitor extends HierarchyVisitor {
+public class ReplacementVisitor extends AbstractLanguageVisitor {
 
-    private Map functionModifiers;   
+    private Translator translator;  
+    private Map<String, FunctionModifier> functionModifiers;
+    private ExecutionContext context;
 
     /**
      * Set the functon modifiers.  
      * @param Map of function names to function modifiers.
      */
-    public FunctionReplacementVisitor(Map functionModifiers){
-        super();
-        this.functionModifiers = functionModifiers;
+    public ReplacementVisitor(ExecutionContext context, Translator translator){
+        this.translator = translator;
+        this.functionModifiers = translator.getFunctionModifiers();
+        this.context = context;
     }
             
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IAggregate)
      */
     public void visit(IAggregate obj) {
-        super.visit(obj);
         obj.setExpression(replaceFunction(obj.getExpression()));
     }
     
     public void visit(IInlineView obj) {
-        visitNode(obj.getQuery());
+    	try {
+			obj.setQuery((IQueryCommand)translator.modifyCommand(obj.getQuery(), context));
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
 
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompareCriteria)
      */
     public void visit(ICompareCriteria obj) {
-        super.visit(obj);
         obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
         obj.setRightExpression(replaceFunction(obj.getRightExpression()));
     }
@@ -82,7 +91,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IFunction)
      */
     public void visit(IFunction obj) {
-        super.visit(obj);
         List<IExpression> args = obj.getParameters();
         for(int i=0; i<args.size(); i++) {
             args.set(i, replaceFunction(args.get(i)));
@@ -94,7 +102,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @since 4.3
      */
     public void visit(IGroupBy obj) {
-        super.visit(obj);
         List<IExpression> expressions = obj.getElements();
         
         for (int i=0; i<expressions.size(); i++) {
@@ -107,7 +114,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IInCriteria)
      */
     public void visit(IInCriteria obj) {
-        super.visit(obj);
         obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
         List<IExpression> rightExprs = obj.getRightExpressions();
         
@@ -121,7 +127,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(com.metamatrix.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
-        super.visit(obj);
         List<IExpression> values = obj.getValues();
         
         for(int i=0; i<values.size(); i++) {
@@ -129,12 +134,11 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
             values.set(i, replaceFunction(expr));
         }
     }  
-
+    
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IIsNullCriteria)
      */
     public void visit(IIsNullCriteria obj) {
-        super.visit(obj);
         obj.setExpression(replaceFunction(obj.getExpression()));
     }
 
@@ -142,7 +146,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ILikeCriteria)
      */
     public void visit(ILikeCriteria obj) {
-        super.visit(obj);
         obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
         obj.setRightExpression(replaceFunction(obj.getRightExpression()));
     }
@@ -151,7 +154,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISearchedCaseExpression)
      */
     public void visit(ISearchedCaseExpression obj) {
-        super.visit(obj);
         int whenCount = obj.getWhenCount();
         for(int i=0; i<whenCount; i++) {
             obj.setThenExpression(i, replaceFunction(obj.getThenExpression(i)));
@@ -163,7 +165,6 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISelectSymbol)
      */
     public void visit(ISelectSymbol obj) {
-        super.visit(obj);
         obj.setExpression(replaceFunction(obj.getExpression()));
     }
 
@@ -171,15 +172,32 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryCompareCriteria)
      */
     public void visit(ISubqueryCompareCriteria obj) {
-        super.visit(obj);
-        obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
+        try {
+			obj.setQuery((IQueryCommand)translator.modifyCommand(obj.getQuery(), context));
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+    	obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
+    }
+    
+    @Override
+    public void visit(IScalarSubquery obj) {
+    	try {
+			obj.setQuery((IQueryCommand)translator.modifyCommand(obj.getQuery(), context));
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
     }
 
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ISubqueryInCriteria)
      */
     public void visit(ISubqueryInCriteria obj) {
-        super.visit(obj);
+    	try {
+			obj.setQuery((IQueryCommand)translator.modifyCommand(obj.getQuery(), context));
+		} catch (ConnectorException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
         obj.setLeftExpression(replaceFunction(obj.getLeftExpression()));
     }
          
@@ -200,5 +218,4 @@ public class FunctionReplacementVisitor extends HierarchyVisitor {
         return expression;
     }    
     
-
 }

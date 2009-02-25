@@ -28,9 +28,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.api.TypeFacility;
@@ -43,9 +46,6 @@ import com.metamatrix.connector.language.ILimit;
 import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.connector.language.IParameter.Direction;
 import com.metamatrix.connector.language.ISetQuery.Operation;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
@@ -64,7 +64,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     private static double SCIENTIC_LOW = Math.pow(10, -3);
     private static double SCIENTIC_HIGH = Math.pow(10, 7);
     
-    private Map<String, FunctionModifier> modifiers;
     private ExecutionContext context;
     private Translator translator;
 
@@ -73,11 +72,55 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     private List preparedValues = new ArrayList();
     private List preparedTypes = new ArrayList();
     
+    private Set<ILanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<ILanguageObject, Boolean>());
+    
     public SQLConversionVisitor(Translator translator) {
         this.translator = translator;
         this.prepared = translator.usePreparedStatements();
-        this.modifiers = translator.getFunctionModifiers();
     }
+    
+    @Override
+    public void append(ILanguageObject obj) {
+    	if ((obj instanceof IFunction || obj instanceof ICommand || obj instanceof ILimit) && !recursionObjects.contains(obj)) {
+	    	recursionObjects.add(obj);
+	    	try {
+	    		List<?> parts = null;
+    	    	if (obj instanceof IFunction) {
+    	    		IFunction function = (IFunction)obj;
+    	    		Map<String, FunctionModifier> functionModifiers = translator.getFunctionModifiers();
+    	    		if (functionModifiers != null) {
+    	    			FunctionModifier modifier = functionModifiers.get(function.getName().toLowerCase());
+    	    			if (modifier != null) {
+    	    				parts = modifier.translate(function);
+    	    			}
+    	    		}
+    	    	} else if (obj instanceof ICommand) {
+    	    		parts = translator.translateCommand((ICommand)obj, context);
+    	    	} else if (obj instanceof ILimit) {
+    	    		parts = translator.translateLimit((ILimit)obj, context);
+    	    	}
+	    		if (parts != null) {
+	    			this.appendParts(parts);
+	    			return;
+	    		}
+	    	} finally {
+	    		recursionObjects.remove(obj);
+	    	}
+    	} 
+    	super.append(obj);
+    }
+    
+	private void appendParts(List parts) {
+		Iterator iter = parts.iterator();
+		while(iter.hasNext()) {
+		    Object part = iter.next();
+		    if(part instanceof ILanguageObject) {
+		        append((ILanguageObject)part);
+		    } else {
+		        buffer.append(part);
+		    }
+		}
+	}
 
     public void visit(IBulkInsert obj) {
         this.prepared = true;
@@ -150,34 +193,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
          * preparedValues is now a list of procedure params instead of just values
          */
         this.preparedValues = obj.getParameters();
-        super.buffer.append(generateSqlForStoredProcedure(obj));
-    }
-
-    /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IFunction)
-     */
-    public void visit(IFunction obj) {
-        if(this.modifiers != null) {
-            FunctionModifier functionModifier = (FunctionModifier)this.modifiers.get(obj.getName().toLowerCase());
-            if(functionModifier != null) {
-                List parts = functionModifier.translate(obj);
-                
-                // null means the FunctionModifier will rely on default translation
-                if (parts != null) {
-                    Iterator iter = parts.iterator();
-                    while(iter.hasNext()) {
-                        Object part = iter.next();
-                        if(part instanceof String) {
-                            buffer.append(part);
-                        } else {
-                            append((ILanguageObject)part);
-                        }
-                    }
-                    return;
-                } 
-            } 
-        } 
-        super.visit(obj);
+        buffer.append(generateSqlForStoredProcedure(obj));
     }
 
     /**
@@ -292,41 +308,12 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     protected boolean useAsInGroupAlias() {
     	return this.translator.useAsInGroupAlias();
     }
-    
-    @Override
-    public void visit(IQuery obj) {
-    	if (obj.getLimit() != null) {
-    		handleLimit(obj);
-    	} else {
-    		super.visit(obj);
-    	}
-    }
-    
-    @Override
-    public void visit(ISetQuery obj) {
-    	if (obj.getLimit() != null) {
-    		handleLimit(obj);
-    	} else {
-    		super.visit(obj);
-    	}
-    }
-    
+        
     @Override
     protected boolean useParensForSetQueries() {
     	return translator.useParensForSetQueries();
     }
-    
-	private void handleLimit(IQueryCommand obj) {
-		ILimit limit = obj.getLimit();
-    	obj.setLimit(null);
-    	StringBuffer current = this.buffer;
-    	this.buffer = new StringBuffer();
-    	append(obj);
-    	current.append(this.translator.addLimitString(this.buffer.toString(), limit));
-    	this.buffer = current;
-    	obj.setLimit(limit);
-	}
-	
+    	
 	@Override
 	protected String replaceElementName(String group, String element) {
 		return translator.replaceElementName(group, element);

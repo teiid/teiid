@@ -27,11 +27,14 @@ import java.util.Map;
 
 import org.teiid.connector.jdbc.MetadataFactory;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
-import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.jdbc.translator.ReplacementVisitor;
+import org.teiid.connector.jdbc.translator.Translator;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.visitor.framework.DelegatingHierarchyVisitor;
 
 /**
  */
@@ -43,7 +46,6 @@ public class TestFunctionReplacementVisitor extends TestCase {
      */
     public TestFunctionReplacementVisitor(String name) {
         super(name);
-        System.setProperty("metamatrix.config.none", "true");
     }
 
     public Map getModifierSet1() {
@@ -58,11 +60,16 @@ public class TestFunctionReplacementVisitor extends TestCase {
         return MetadataFactory.PARTS_VDB;
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput) {
+    public void helpTestVisitor(String vdb, String input, final Map modifiers, String expectedOutput) {
         ICommand obj = MetadataFactory.helpTranslate(vdb, input);
         
-        FunctionReplacementVisitor visitor = new FunctionReplacementVisitor(modifiers);
-        obj.acceptVisitor(visitor);
+        ReplacementVisitor visitor = new ReplacementVisitor(null, new Translator() {
+        	@Override
+        	public Map<String, FunctionModifier> getFunctionModifiers() {
+        		return modifiers;
+        	}
+        });
+        obj.acceptVisitor(new DelegatingHierarchyVisitor(null, visitor));
         
         //System.out.println(obj);               
         assertEquals("Did not get expected sql", expectedOutput, obj.toString()); //$NON-NLS-1$

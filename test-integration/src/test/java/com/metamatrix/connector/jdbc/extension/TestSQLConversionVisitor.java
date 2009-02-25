@@ -22,17 +22,14 @@
 
 package com.metamatrix.connector.jdbc.extension;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.jdbc.JDBCPropertyNames;
-import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
@@ -96,20 +93,20 @@ public class TestSQLConversionVisitor extends TestCase {
         return util.parseCommand(sql);
     }
 
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput) {
-        helpTestVisitor(vdb, input, modifiers, expectedOutput, false);
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) {
+        helpTestVisitor(vdb, input, expectedOutput, false);
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput, boolean useMetadata) {
-        helpTestVisitor(vdb, input, modifiers, expectedOutput, useMetadata, false);
+    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean useMetadata) {
+        helpTestVisitor(vdb, input, expectedOutput, useMetadata, false);
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput, boolean useMetadata, boolean usePreparedStatement) {
+    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean useMetadata, boolean usePreparedStatement) {
         // Convert from sql to objects
         ICommand obj = helpTranslate(vdb, input);
 
         try {
-			helpTestVisitorWithCommand(modifiers, expectedOutput, obj, useMetadata, usePreparedStatement);
+			helpTestVisitorWithCommand(expectedOutput, obj, useMetadata, usePreparedStatement);
 		} catch (ConnectorException e) {
 			throw new RuntimeException(e);
 		}    	
@@ -128,28 +125,24 @@ public class TestSQLConversionVisitor extends TestCase {
     }    
     
     /** 
-     * @param modifiers
      * @param expectedOutput
      * @param obj
      * @throws ConnectorException 
      * @since 4.2
      */
-    private void helpTestVisitorWithCommand(Map modifiers,
-                                            String expectedOutput,
+    private void helpTestVisitorWithCommand(String expectedOutput,
                                             ICommand obj,
-                                            boolean useMetadata, boolean usePreparedStatement) throws ConnectorException {
+                                            boolean useMetadata,
+                                            boolean usePreparedStatement) throws ConnectorException {
         // Apply function replacement
-        FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
         Translator trans = new Translator();
         Properties p = new Properties();
         if (usePreparedStatement) {
         	p.setProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.TRUE.toString());
         }
         trans.initialize(EnvironmentUtility.createEnvironment(p, false));
-        // Convert back to SQL
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
         
-        TranslatedCommand tc = new TranslatedCommand(new FakeExecutionContextImpl(), trans, sqlVisitor, funcVisitor);
+        TranslatedCommand tc = new TranslatedCommand(new FakeExecutionContextImpl(), trans);
         tc.translateCommand(obj);
 
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
@@ -158,252 +151,216 @@ public class TestSQLConversionVisitor extends TestCase {
     public void testSimple() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testAliasInSelect() {
         helpTestVisitor(getTestVDB(),
             "select part_name as x from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME AS x FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testAliasedGroup() {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts y", //$NON-NLS-1$
-            new HashMap(),
             "SELECT y.PART_NAME FROM PARTS AS y"); //$NON-NLS-1$
     }
 
     public void testAliasedGroupAndElement() {
         helpTestVisitor(getTestVDB(),
             "select y.part_name AS z from parts y", //$NON-NLS-1$
-            new HashMap(),
             "SELECT y.PART_NAME AS z FROM PARTS AS y"); //$NON-NLS-1$
     }
 
     public void testLiteralString() {
         helpTestVisitor(getTestVDB(),
             "select 'x' from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 'x' FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralInteger() {
         helpTestVisitor(getTestVDB(),
             "select 5 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 5 FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralFloat() {
         helpTestVisitor(getTestVDB(),
             "select 5.2 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 5.2 FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralLowFloat() {
         helpTestVisitor(getTestVDB(),
             "select 0.012 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 0.012 FROM PARTS"); //$NON-NLS-1$
     }
     
     public void testLiteralLowFloat2() {
         helpTestVisitor(getTestVDB(),
             "select 0.00012 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 0.00012 FROM PARTS"); //$NON-NLS-1$
     }    
     
     public void testLiteralHighFloat() {
         helpTestVisitor(getTestVDB(),
             "select 12345.123 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 12345.123 FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralHighFloat2() {
         helpTestVisitor(getTestVDB(),
             "select 1234567890.1234567 from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 1234567890.1234567 FROM PARTS"); //$NON-NLS-1$
     }
     
     public void testLiteralBoolean() {
         helpTestVisitor(getTestVDB(),
             "select {b'true'}, {b'false'} from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT 1, 0 FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralDate() {
         helpTestVisitor(getTestVDB(),
             "select {d'2003-12-31'} from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT {d'2003-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralTime() {
         helpTestVisitor(getTestVDB(),
             "select {t'23:59:59'} from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT {t'23:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralNull() {
         helpTestVisitor(getTestVDB(),
             "select null from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT NULL FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testLiteralTimestamp() {
         helpTestVisitor(getTestVDB(),
             "select {ts'2003-12-31 23:59:59.123'} from parts", //$NON-NLS-1$
-            new HashMap(),
             "SELECT {ts'2003-12-31 23:59:59.123'} FROM PARTS"); //$NON-NLS-1$
     }
 
     public void testSQL89Join() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p, supplier_parts s where p.part_id = s.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM PARTS AS p, SUPPLIER_PARTS AS s WHERE p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
     public void testSQL92Join() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM PARTS AS p INNER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
     public void testSelfJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p join parts p2 on p.part_id = p2.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM PARTS AS p INNER JOIN PARTS AS p2 ON p.PART_ID = p2.PART_ID"); //$NON-NLS-1$
     }
 
     public void testRightOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p right join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM SUPPLIER_PARTS AS s LEFT OUTER JOIN PARTS AS p ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
     public void testLeftOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p left join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM PARTS AS p LEFT OUTER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
     public void testFullOuterJoin() {
         helpTestVisitor(getTestVDB(),
             "select p.part_name from parts p full join supplier_parts s on p.part_id = s.part_id", //$NON-NLS-1$
-            new HashMap(),
             "SELECT p.PART_NAME FROM PARTS AS p FULL OUTER JOIN SUPPLIER_PARTS AS s ON p.PART_ID = s.PART_ID"); //$NON-NLS-1$
     }
 
     public void testCompare1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id = 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID = 'x'"); //$NON-NLS-1$
     }
 
     public void testCompare2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id <> 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID <> 'x'"); //$NON-NLS-1$
     }
 
     public void testCompare3() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id < 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID < 'x'"); //$NON-NLS-1$
     }
 
     public void testCompare4() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id <= 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID <= 'x'"); //$NON-NLS-1$
     }
 
     public void testCompare5() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id > 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID > 'x'"); //$NON-NLS-1$
     }
 
     public void testCompare6() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id >= 'x'", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID >= 'x'"); //$NON-NLS-1$
     }
 
     public void testIn1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id in ('x')", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID = 'x'"); //$NON-NLS-1$
     }
 
     public void testIn2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id in ('x', 'y')", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IN ('x', 'y')"); //$NON-NLS-1$
     }
 
     public void testIn3() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id not in ('x', 'y')", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID NOT IN ('x', 'y')"); //$NON-NLS-1$
     }
 
     public void testIsNull1() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id is null", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IS NULL"); //$NON-NLS-1$
     }
 
     public void testIsNull2() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts where part_id is not null", //$NON-NLS-1$
-            new HashMap(),
             "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID IS NOT NULL"); //$NON-NLS-1$
     }
 
     public void testInsertNull() {
         helpTestVisitor(getTestVDB(),
             "insert into parts (part_id, part_name, part_color, part_weight) values ('a', null, 'c', 'd')", //$NON-NLS-1$
-            new HashMap(),
             "INSERT INTO PARTS (PART_ID, PART_NAME, PART_COLOR, PART_WEIGHT) VALUES ('a', NULL, 'c', 'd')"); //$NON-NLS-1$
     }
 
     public void testUpdateNull() {
         helpTestVisitor(getTestVDB(),
             "update parts set part_weight = null where part_color = 'b'", //$NON-NLS-1$
-            new HashMap(),
             "UPDATE PARTS SET PART_WEIGHT = NULL WHERE PARTS.PART_COLOR = 'b'"); //$NON-NLS-1$
     }
 
     public void testUpdateWhereNull() {
         helpTestVisitor(getTestVDB(),
             "update parts set part_weight = 'a' where part_weight = null", //$NON-NLS-1$
-            new HashMap(),
             "UPDATE PARTS SET PART_WEIGHT = 'a' WHERE NULL <> NULL"); //$NON-NLS-1$
     }
 
@@ -427,41 +384,41 @@ public class TestSQLConversionVisitor extends TestCase {
 
         ICommand result =  new LanguageBridgeFactory(metadata).translate(command);
 
-        helpTestVisitorWithCommand(new HashMap(), "SELECT PARTS.PART_NAME FROM PARTS GROUP BY concat(PARTS.PART_ID, 'a')", 
-            result, //$NON-NLS-1$
-            false, false);
+        helpTestVisitorWithCommand("SELECT PARTS.PART_NAME FROM PARTS GROUP BY concat(PARTS.PART_ID, 'a')", result, 
+            false, //$NON-NLS-1$
+            false);
     }
     
     public void testPreparedStatementCreationWithUpdate() {
         helpTestVisitor(getTestVDB(),
                         "update parts set part_weight = 'a' where part_weight < 5", //$NON-NLS-1$
-                        new HashMap(),
                         "UPDATE PARTS SET PART_WEIGHT = ? WHERE PARTS.PART_WEIGHT < ?",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     public void testPreparedStatementCreationWithInsert() {
         helpTestVisitor(getTestVDB(),
                         "insert into parts (part_weight) values (5)", //$NON-NLS-1$
-                        new HashMap(),
                         "INSERT INTO PARTS (PART_WEIGHT) VALUES (?)",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     public void testPreparedStatementCreationWithSelect() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_id not in ('x', 'y') and part_weight < 6", //$NON-NLS-1$
-                        new HashMap(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE (PARTS.PART_ID NOT IN (?, ?)) AND (PARTS.PART_WEIGHT < ?)",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     public void testPreparedStatementCreationWithLike() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_name like '%foo'", //$NON-NLS-1$
-                        new HashMap(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_NAME LIKE ?",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     /**
@@ -471,9 +428,9 @@ public class TestSQLConversionVisitor extends TestCase {
     public void testPreparedStatementCreationWithLeftConstant() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where 'x' = 'y'", //$NON-NLS-1$
-                        new HashMap(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE 1 = ?",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     /**
@@ -483,17 +440,17 @@ public class TestSQLConversionVisitor extends TestCase {
     public void testPreparedStatementCreationWithFunction() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where concat(part_name, 'x') = concat('y', part_weight)", //$NON-NLS-1$
-                        new HashMap(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(PARTS.PART_NAME, 'x') = concat('y', PARTS.PART_WEIGHT)",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
     
     public void testPreparedStatementCreationWithCase() {
         helpTestVisitor(getTestVDB(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME='a' THEN 'b' ELSE 'c' END", //$NON-NLS-1$
-                        new HashMap(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME = ? THEN 'b' ELSE 'c' END",
-                        false, true); //$NON-NLS-1$
+                        false,
+                        true); //$NON-NLS-1$
     }
 
     public void testVisitIDeleteWithComment() throws Exception {

@@ -25,6 +25,8 @@ package org.teiid.connector.jdbc.postgresql;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.List;
 
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
@@ -39,6 +41,8 @@ import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.language.IAggregate;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.ILimit;
+import com.metamatrix.connector.language.IOrderBy;
+import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
@@ -107,14 +111,13 @@ public class PostgreSQLTranslator extends Translator {
     	return 6;
     }
     
-    @Override
-    public String addLimitString(String queryCommand, ILimit limit) {
-        StringBuffer sb = new StringBuffer(queryCommand);
-        sb.append(" LIMIT ").append(limit.getRowLimit());
-        if (limit.getRowOffset() > 0) {
-            sb.append(" OFFSET ").append(limit.getRowOffset());
-        }
-        return sb.toString();
+    @SuppressWarnings("unchecked")
+	@Override
+    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    	if (limit.getRowOffset() > 0) {
+    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	}
+        return null;
     }
 
     /**

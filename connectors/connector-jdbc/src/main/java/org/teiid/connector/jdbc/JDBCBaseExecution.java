@@ -28,8 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
@@ -94,91 +93,6 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // ===========================================================================================================================
     // Methods
     // ===========================================================================================================================
-
-    private void addSql(TranslatedCommand command,
-                        StringBuffer message) {
-        String sql = command.getSql();
-        int ndx = sql.indexOf('?');
-        if (ndx >= 0) {
-            message.append(sql.substring(0, ndx));
-            int len = sql.length();
-            for (Iterator itr = command.getPreparedValues().iterator(); itr.hasNext() && ndx < len;) {
-                message.append(itr.next());
-                int nextNdx = sql.indexOf('?', ++ndx);
-                if (nextNdx >= 0) {
-                    message.append(sql.substring(ndx, nextNdx));
-                } else {
-                    message.append(sql.substring(ndx));
-                }
-                ndx = nextNdx;
-            }
-        } else {
-            message.append(sql);
-        }
-    }
-
-    /**
-     * @param error
-     * @param command
-     * @return
-     * @since 5.5
-     */
-    protected ConnectorException createAndLogError(SQLException error,
-                                                   TranslatedCommand command) {
-        ConnectorException connectorErr = createError(error, command);
-        this.logger.logError(connectorErr.getMessage());
-        return connectorErr;
-    }
-
-    /**
-     * @param error
-     * @param messageKey
-     * @param commands
-     * @return
-     * @throws ConnectorException
-     * @since 5.5
-     */
-    protected ConnectorException createAndLogError(Throwable error,
-                                                   String messageKey,
-                                                   List commands) throws ConnectorException {
-        String msg;
-        if (commands.isEmpty()) {
-            msg = error.getMessage();
-        } else {
-            msg = JDBCPlugin.Util.getString(messageKey, error.getMessage());
-            StringBuffer buf = new StringBuffer(msg);
-            for (Iterator itr = commands.iterator(); itr.hasNext();) {
-                buf.append("\n  "); //$NON-NLS-1$
-                addSql((TranslatedCommand)itr.next(), buf);
-            }
-            msg = buf.toString();
-        }
-        this.logger.logError(msg);
-        if (error instanceof ConnectorException) {
-            error = ((ConnectorException)error).getCause();
-        }
-        throw new ConnectorException(error, msg);
-    }
-
-    /**
-     * @param error
-     * @param command
-     * @return
-     * @since 5.5
-     */
-    protected ConnectorException createError(SQLException error,
-                                             TranslatedCommand command) {
-        String msg = (command == null ? error.getMessage()
-                        : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
-                                                    error.getMessage(), createSql(command)));
-        return new ConnectorException(error, msg);
-    }
-
-    private String createSql(TranslatedCommand command) {
-        StringBuffer msg = new StringBuffer();
-        addSql(command, msg);
-        return msg.toString();
-    }
 
     protected TranslatedCommand translateCommand(ICommand command) throws ConnectorException {
         TranslatedCommand translatedCommand = new TranslatedCommand(context, sqlTranslator);

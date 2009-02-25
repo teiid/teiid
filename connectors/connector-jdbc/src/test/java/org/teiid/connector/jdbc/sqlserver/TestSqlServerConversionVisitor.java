@@ -22,16 +22,13 @@
 
 package org.teiid.connector.jdbc.sqlserver;
 
-import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.teiid.connector.jdbc.MetadataFactory;
-import org.teiid.connector.jdbc.sqlserver.SqlServerSQLTranslator;
-import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
-import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.api.ConnectorException;
@@ -39,29 +36,13 @@ import com.metamatrix.connector.language.ICommand;
 
 /**
  */
-public class TestSqlServerConversionVisitor extends TestCase {
+public class TestSqlServerConversionVisitor {
 
-    private static final Properties EMPTY_PROPERTIES = new Properties();
-    private static Map MODIFIERS;
+    private static SqlServerSQLTranslator trans = new SqlServerSQLTranslator();
     
-    static {
-        SqlServerSQLTranslator trans = new SqlServerSQLTranslator();
-        
-        try {
-            trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
-        } catch(ConnectorException e) {
-            e.printStackTrace();
-        }
-        
-        MODIFIERS = trans.getFunctionModifiers();
-    }
-
-    /**
-     * Constructor for TestSqlServerConversionVisitor.
-     * @param name
-     */
-    public TestSqlServerConversionVisitor(String name) {
-        super(name);
+    @BeforeClass
+    public static void setup() throws ConnectorException {
+        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
     }
 
     public String getTestVDB() {
@@ -72,67 +53,54 @@ public class TestSqlServerConversionVisitor extends TestCase {
         return MetadataFactory.BQT_VDB;
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String expectedOutput) throws ConnectorException {
-		helpTestVisitor(vdb, input, modifiers, new String[] {expectedOutput}, EMPTY_PROPERTIES);
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
+		helpTestVisitor(vdb, input, new String[] {expectedOutput});
     }
     
-    public void helpTestVisitor(String vdb, String input, Map modifiers, String[] expectedOutputs, Properties props) throws ConnectorException {
-        // Convert from sql to objects
+    public void helpTestVisitor(String vdb, String input, String[] expectedOutputs) throws ConnectorException {
         ICommand obj = MetadataFactory.helpTranslate(vdb, input);
-        
-        // Apply function replacement
-        FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
-        
-        SqlServerSQLTranslator trans = new SqlServerSQLTranslator();
-        trans.initialize(EnvironmentUtility.createEnvironment(props, false));
-        // Convert back to SQL
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
-        
-        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans, sqlVisitor, funcVisitor); //$NON-NLS-1$
+        TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), trans); //$NON-NLS-1$
         tc.translateCommand(obj);
-        
-        // Check stuff
-
-        assertEquals("Did not get correct sql", expectedOutputs[0], tc.getSql());             //$NON-NLS-1$
+        Assert.assertEquals("Did not get correct sql", expectedOutputs[0], tc.getSql());             //$NON-NLS-1$
     }
 
+    @Test
     public void testModFunction() throws Exception {
         String input = "SELECT mod(CONVERT(PART_ID, INTEGER), 13) FROM parts"; //$NON-NLS-1$
         String output = "SELECT (convert(int, PARTS.PART_ID) % 13) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             output);
     } 
 
+    @Test
     public void testConcatFunction() throws Exception {
         String input = "SELECT concat(part_name, 'b') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT (PARTS.PART_NAME + 'b') FROM PARTS"; //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             output);
     }    
 
+    @Test
     public void testDayOfMonthFunction() throws Exception {
         String input = "SELECT dayofmonth(convert(PARTS.PART_ID, date)) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT day(convert(datetime, PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             output);
     }
 
+    @Test
     public void testRowLimit() throws Exception {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
         String output = "SELECT TOP 100 * FROM (SELECT SmallA.IntKey FROM SmallA) AS X"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
-            MODIFIERS,
             output);        
     }
     

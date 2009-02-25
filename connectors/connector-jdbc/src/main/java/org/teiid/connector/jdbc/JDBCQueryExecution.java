@@ -105,7 +105,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
             initResultSetInfo();
 
         } catch (SQLException e) {
-            throw createAndLogError(e, translatedComm);
+            throw new JDBCExecutionException(e, translatedComm);
         }
     }
 

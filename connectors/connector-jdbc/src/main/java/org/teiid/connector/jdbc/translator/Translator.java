@@ -52,7 +52,9 @@ import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.api.ValueTranslator;
 import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.connector.language.ICommand;
+import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
+import com.metamatrix.connector.language.ILanguageObject;
 import com.metamatrix.connector.language.ILimit;
 import com.metamatrix.connector.language.IParameter;
 import com.metamatrix.connector.language.ISetQuery;
@@ -192,6 +194,14 @@ public class Translator {
     	return command;
     }
     
+    public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    	return null;
+    }
+
+    public List<?> translateLimit(ILimit limit, ExecutionContext context) {
+    	return null;
+    }
+    
     /**
      * Return a map of function name in lower case to FunctionModifier.
      * @return Map of function name to FunctionModifier.
@@ -286,10 +296,6 @@ public class Translator {
     public boolean addSourceComment() {
         return useComments;
     }   
-    
-    public String addLimitString(String queryCommand, ILimit limit) {
-    	return queryCommand + " " + limit.toString(); //$NON-NLS-1$
-    }
     
     /**
      * Indicates whether group alias should be of the form
@@ -562,13 +568,25 @@ public class Translator {
                     return new Float(value);
                 }
                 case TIME_CODE: {
-                	return results.getTime(columnIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getTime(columnIndex, cal);
+                	}
+                	return results.getTime(columnIndex);
                 }
                 case DATE_CODE: {
-                    return results.getDate(columnIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getDate(columnIndex, cal);
+                	}
+                	return results.getDate(columnIndex);
                 }
                 case TIMESTAMP_CODE: {
-                    return results.getTimestamp(columnIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getTimestamp(columnIndex, cal);
+                	}
+                	return results.getTimestamp(columnIndex);
                 }
     			case BLOB_CODE: {
     				try {
@@ -635,13 +653,25 @@ public class Translator {
                     return new Float(value);
                 }
                 case TIME_CODE: {
-                    return results.getTime(parameterIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getTime(parameterIndex, cal);
+                	}
+                	return results.getTime(parameterIndex);
                 }
                 case DATE_CODE: {
-                    return results.getDate(parameterIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getDate(parameterIndex, cal);
+                	}
+                	return results.getDate(parameterIndex);
                 }
                 case TIMESTAMP_CODE: {
-                    return results.getTimestamp(parameterIndex, getDatabaseCalendar());
+                	Calendar cal = getDatabaseCalendar();
+                	if (cal != null) {
+                		return results.getTimestamp(parameterIndex, cal);
+                	}
+                	return results.getTimestamp(parameterIndex);
                 }
     			case BLOB_CODE: {
     				try {
@@ -703,5 +733,5 @@ public class Translator {
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this);
     }
-
+    
 }
