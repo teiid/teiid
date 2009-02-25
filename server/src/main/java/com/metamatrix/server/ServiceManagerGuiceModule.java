@@ -34,7 +34,13 @@ class ServiceManagerGuiceModule extends HostControllerGuiceModule {
 	
 	@Override
 	protected void configure() {
-		super.configure();
+		
+		super.commonComponents();
+		
 		bind(HostManagement.class).toProvider(HostManagementProvider.class).in(Scopes.SINGLETON);
+		
+		// no logging is required for svcmgr, as it writes using the system.out any log 
+		// messages will be sent to null logger. One thing we do not want to do is capture 
+		// the system streams for svcmgr.
 	}
 }

@@ -53,6 +53,21 @@ class HostControllerGuiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		
+		commonComponents();
+		
+		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
+		
+		bind(LogListener.class).toProvider(FileLogListenerProvider.class).in(Scopes.SINGLETON);  
+
+		// this needs to be removed.
+		binder().requestStaticInjection(LogManager.class);		
+	}
+	
+	/**
+	 * These resources are common between hostcontroller and svcmgr.
+	 */
+	protected void commonComponents() {
+		
 		String systemName = null;
 		try {
 		    systemName = CurrentConfiguration.getInstance().getClusterName();
@@ -66,7 +81,6 @@ class HostControllerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_hc.log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
-		
 				
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
@@ -76,14 +90,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
-		bind(HostMonitor.class).in(Scopes.SINGLETON);
-		
-		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
-		
-		bind(LogListener.class).toProvider(FileLogListenerProvider.class).in(Scopes.SINGLETON);  
-
-		// this needs to be removed.
-		binder().requestStaticInjection(LogManager.class);		
+		bind(HostMonitor.class).in(Scopes.SINGLETON);		
 	}
 
 }
