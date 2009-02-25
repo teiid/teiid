@@ -101,7 +101,6 @@ import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ContextProperties;
 import com.metamatrix.query.util.TypeRetrievalUtil;
 import com.metamatrix.query.validator.AbstractValidationVisitor;
-import com.metamatrix.query.validator.ValidateCriteriaVisitor;
 import com.metamatrix.query.validator.ValidationVisitor;
 import com.metamatrix.query.validator.Validator;
 import com.metamatrix.query.validator.ValidatorFailure;
@@ -357,10 +356,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         AbstractValidationVisitor visitor = new ValidationVisitor();
         validateWithVisitor(visitor, metadata, command, false);
 
-        // Create criteria validation visitor
-        visitor = new ValidateCriteriaVisitor();
-        validateWithVisitor(visitor, metadata, command, true);
-        
         if (validateVisibility) {
 	        // Create model visibility validation visitor
 	        visitor = new ModelVisibilityValidationVisitor(this.vdbService, this.vdbName, this.vdbVersion);

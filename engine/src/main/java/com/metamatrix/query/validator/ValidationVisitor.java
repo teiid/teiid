@@ -231,6 +231,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	public void visit(SubquerySetCriteria obj) {
+		if (isNonComparable(obj.getExpression())) {
+			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);
+    	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
         
 		Collection projSymbols = obj.getCommand().getProjectedSymbols();
@@ -957,6 +960,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.3
      */
     public void visit(BetweenCriteria obj) {
+    	if (isNonComparable(obj.getExpression())) {
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
 
@@ -989,6 +995,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.3
      */
     public void visit(SetCriteria obj) {
+    	if (isNonComparable(obj.getExpression())) {
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
 
@@ -997,6 +1006,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.3
      */
     public void visit(SubqueryCompareCriteria obj) {
+    	if (isNonComparable(obj.getLeftExpression())) {
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
     
@@ -1042,6 +1054,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (!drop.getTable().isTempTable()) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_nontemptable", drop.getTable()), drop); //$NON-NLS-1$
         }
+    }
+    
+    @Override
+    public void visit(CompareCriteria obj) {
+    	if (isNonComparable(obj.getLeftExpression())) {
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    	}
     }
         
 }

@@ -44,10 +44,6 @@ public class Validator {
         throws MetaMatrixComponentException {
 
         ValidatorReport report1 = Validator.validate(object, metadata, new ValidationVisitor(), false);
-        if (validateCriteria) {
-            ValidatorReport report2 = Validator.validate(object, metadata, new ValidateCriteriaVisitor(), true);
-            report1.addItems(report2.getItems());
-        }
         return report1;
     }
 
