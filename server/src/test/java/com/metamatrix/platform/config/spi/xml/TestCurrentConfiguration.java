@@ -135,30 +135,7 @@ public class TestCurrentConfiguration extends BaseTest {
             printMsg("Completed testCurrentHost"); //$NON-NLS-1$        
     }   
     
-    public void testFindHostByFullyQualifiedName() {
-        
-        printMsg("Starting testFindHostByFullyQualifiedName");       //$NON-NLS-1$
-
-        try {
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Host host = CurrentConfiguration.getInstance().getHost("slwxp141.quadrian.com"); //$NON-NLS-1$
-            
-            if (host == null) { 
-                fail(" host was not found in configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        
-            printMsg("Completed testFindHostByFullyQualifiedName"); //$NON-NLS-1$        
-    }   
-    
+     
     public void test30SystemInitialization() {
         
         printMsg("**** Starting test30SystemInitialization");       //$NON-NLS-1$

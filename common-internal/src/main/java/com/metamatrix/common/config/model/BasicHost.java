@@ -23,7 +23,9 @@
 package com.metamatrix.common.config.model;
 
 
+import java.io.File;
 import java.io.Serializable;
+import java.util.Properties;
 
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;
@@ -49,7 +51,7 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
      * @since 4.3
      */
     public String getDataDirectory() {
-        return getProperty(HostType.DATA_DIRECTORY);
+        return getProperty(HostType.HOST_DIRECTORY)+File.separator+ "data"; //$NON-NLS-1$
     }
     /** 
      * @see com.metamatrix.common.config.api.Host#getLogDirectory()
@@ -102,5 +104,9 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
     */
    public String getHostAddress() {
        return getProperty(HostType.HOST_PHYSICAL_ADDRESS);
+   }
+   
+   public void setProperties(Properties props) {
+	   super.setProperties(props);
    }
 }

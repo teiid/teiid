@@ -2377,21 +2377,20 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public ComponentObject addProperties(Element propertiesElement, ComponentObject object, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
 
         if (!propertiesElement.getName().equals(XMLConfig_42_ElementNames.Properties.ELEMENT)) {
-
             propertiesElement = propertiesElement.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-
-            if (propertiesElement == null) {           
-                throw new InvalidConfigurationElementException("A Properties object cannot be created from a null properties element", null); //$NON-NLS-1$ 
-        
-            }
         }
 
-        Properties props = getProperties(propertiesElement);
+        Properties props = null;
+        if (propertiesElement == null) {           
+        	props = new Properties();
+        }
+        else {
+        	props = getProperties(propertiesElement);
+        }
 
         object = editor.modifyProperties(object, props, ConfigurationObjectEditor.ADD);
         return object;
     }
-
 
 
     private Properties getProperties(Element propertiesElement) {

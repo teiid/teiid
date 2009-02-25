@@ -117,7 +117,7 @@ public class SocketServerConnection implements ServerConnection {
 		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
 		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
 		int knownHosts = hostKeys.size();
-		for (int i = 0; i < hostKeys.size(); i++) {
+		while (hostKeys.size() > 0) {
 			HostInfo hostInfo = hostKeys.remove((int) (Math.random() * hostKeys.size()));
 
 			SocketServerInstance instance = existingConnections.get(hostInfo);

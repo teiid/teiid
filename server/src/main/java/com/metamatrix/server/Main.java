@@ -58,26 +58,25 @@ public class Main {
 	public static void main(String[] args) {
         
 		try {
-			if (args.length < 2 || args.length > 4) {
-			    System.out.println("Usage: java com.metamatrix.server.Main <vm_name> <host_name>"); //$NON-NLS-1$
+			if (args.length != 1) {
+			    System.out.println("Usage: java com.metamatrix.server.Main <vm_name>"); //$NON-NLS-1$
 			    System.exit(1);        	
 			}
 
 			String vmName = args[0];
-			String hostName = args[1];
 
 			Host host = null;
 			try {
-				host = CurrentConfiguration.getInstance().getHost(hostName);        
+				host = CurrentConfiguration.getInstance().getDefaultHost();        
 			} catch (ConfigurationException e) {
 			}
 			
 			if (host == null) {
-			    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5", hostName)); //$NON-NLS-1$
+			    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5")); //$NON-NLS-1$
 			    System.exit(-1);
 			}
 			
-			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(hostName, vmName);
+			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(host.getName(), vmName);
 			String bindAddress = deployedVM.getBindAddress();
 			
 			VMNaming.setVMName(vmName);

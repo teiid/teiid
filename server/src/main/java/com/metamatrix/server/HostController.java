@@ -23,7 +23,6 @@
 package com.metamatrix.server;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,7 +38,6 @@ import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.StartupStateController;
-import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -82,7 +80,7 @@ public class HostController implements HostManagement {
         this.messageBus = bus;        
     }
     
-    public void run(boolean startProcesses) throws ConfigurationException, IOException, StartupStateException {
+    public void run(boolean startProcesses) throws Throwable {
     	
     	if (isHostRunning()) {
     		System.err.println(PlatformPlugin.Util.getString("HostController.Host_is_already_running_startprocesses", host.getFullName())); //$NON-NLS-1$
@@ -101,8 +99,9 @@ public class HostController implements HostManagement {
         if (startProcesses ) {
             try {
 				startServers(host.getFullName());
-			} catch (MetaMatrixComponentException e) {
+			} catch (Throwable e) {
 				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, e.getMessage());
+				shutdown(this.host.getFullName());
 			}
         }    	
     }
@@ -146,7 +145,7 @@ public class HostController implements HostManagement {
     	return null;
     }
     
-    private void createTempDirectories() throws ConfigurationException, IOException {
+    private void createTempDirectories() {
         // If the java-i-tmp directory doesn't exist, it needs to be created
         // because extension jars class loading will fail because
         // java internals can' write to a non-existent directory.
@@ -280,6 +279,7 @@ public class HostController implements HostManagement {
             
         } catch (Throwable e) {
             LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0011));//$NON-NLS-1$
+            e.printStackTrace();
             System.exit(1);
         }
     }
@@ -291,12 +291,12 @@ public class HostController implements HostManagement {
 	}    
     
    private Process startDeployVM( String vmName, String hostName, Properties vmprops) {
-	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM " + vmName + " on host"+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
-       String command = buildVMCommand(vmprops);
+	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM = " + vmName + " on host = "+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
+       String command = buildVMCommand(vmName, vmprops);
        return execCommand(command);
    }
 
-   private String buildVMCommand(Properties vmprops) {
+   private String buildVMCommand(String vmName, Properties vmprops) {
 	   String java = null;
 	   String java_home = System.getProperty("java.home"); //$NON-NLS-1$
 	   if (java_home != null) {
@@ -306,15 +306,11 @@ public class HostController implements HostManagement {
 	   }
 	   String java_opts = vmprops.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$
 	   java_opts = java_opts + " -Dcom.sun.management.jmxremote " + System.getProperty(VMComponentDefnType.JAVA_OPTS, ""); //$NON-NLS-1$ //$NON-NLS-2$
-	   String java_main = vmprops.getProperty(VMComponentDefnType.JAVA_MAIN, DEFAULT_JAVA_MAIN);
-	   String java_args = vmprops.getProperty(VMComponentDefnType.JAVA_ARGS, ""); //$NON-NLS-1$
 	   
 	   java = replaceToken(java, vmprops);
 	   java_opts = replaceToken(java_opts, vmprops);
-	   java_main = replaceToken(java_main, vmprops);
-	   java_args = replaceToken(java_args, vmprops);
    
-	   String cmd = java + " " +java_opts+ " " +java_main + " " +java_args; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	   String cmd = java + " " +java_opts+ " " + DEFAULT_JAVA_MAIN + " " + vmName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
        return cmd;
    }
    
@@ -332,7 +328,7 @@ public class HostController implements HostManagement {
 		   if (endidx < startidx)  return rtn;
 		   
 		   String tokenprop = rtn.substring(startidx + 2, endidx);
-		   String tokenvalue = props.getProperty(tokenprop);
+		   String tokenvalue = props.getProperty(tokenprop).trim();
 		   StringBuffer buf = new StringBuffer(rtn);
 		   rtn = buf.replace(startidx, endidx + 1, tokenvalue).toString();
 	   }

@@ -62,10 +62,4 @@ public interface VMComponentDefnType extends ServiceComponentType {
      */
     
     public static final String JAVA_OPTS = "vm.starter.cmd.java_opts"; //$NON-NLS-1$
-    public static final String JAVA_MAIN = "vm.starter.cmd.java_main"; //$NON-NLS-1$
-    public static final String JAVA_ARGS = "vm.starter.cmd.java_args"; //$NON-NLS-1$
-    
-    
-    
-  
 } 

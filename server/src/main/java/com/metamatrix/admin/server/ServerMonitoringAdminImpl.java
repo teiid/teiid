@@ -628,6 +628,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		                               process.setQueueWorkerPool(workerPool);
 		                           }
 		                       }
+			            	   process.setInetAddress(getRuntimeStateAdminAPIHelper().getVMHostName(processID));
 		                   } catch (MetaMatrixComponentException e) {
 		                       //do nothing: sometimes when the process is just starting the RMI stub
 		                       //for SocketVMController is not initialized yet
@@ -635,7 +636,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		               }
 		               
 		               process.setDeployed(false);  
-	            	   process.setInetAddress(getRuntimeStateAdminAPIHelper().getVMHostName(processID));
 		               String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 		               runtimeMap.put(key, process);
 		               results.add(process);

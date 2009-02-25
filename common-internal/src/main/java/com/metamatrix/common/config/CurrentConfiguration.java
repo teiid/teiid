@@ -28,12 +28,16 @@ import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.BasicHost;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.config.reader.PropertiesConfigurationReader;
 import com.metamatrix.common.properties.UnmodifiableProperties;
@@ -69,7 +73,7 @@ public final class CurrentConfiguration {
     public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
     public static final String CLUSTER_NAME = "metamatrix.cluster.name"; //$NON-NLS-1$
-    private static final String CONFIGURATION_NAME= "configuration.name"; //$NON-NLS-1$
+    public static final String CONFIGURATION_NAME= "configuration.name"; //$NON-NLS-1$
     
 	private CurrentConfigurationReader reader;
     private Properties bootstrapProperties;
@@ -212,12 +216,11 @@ public final class CurrentConfiguration {
      */
     public Host getDefaultHost() throws ConfigurationException {
     	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME);
-        return getReader().getConfigurationModel().getHost(name);
+    	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), new ComponentTypeID(name));
+        host.setProperties(getBootStrapProperties());
+        return host;
     }  
 
-    public Host getHost(String name) throws ConfigurationException {
-        return getReader().getConfigurationModel().getHost(name);
-    }  
     
     /**
      * Reset causes not just a refresh, but the bootstrapping process
