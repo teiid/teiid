@@ -25,8 +25,9 @@ package com.metamatrix.connector.metadata.adapter;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 /**
  * Describes the capabilities of the object connector, which are few.
@@ -64,7 +65,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsLikeCriteria()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsLikeCriteria()
      * @since 4.3
      */
     public boolean supportsLikeCriteria() {
@@ -79,7 +80,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsScalarFunctions()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsScalarFunctions()
      * @since 4.3
      */
     public boolean supportsScalarFunctions() {
@@ -87,7 +88,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#getSupportedFunctions()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#getSupportedFunctions()
      * @since 4.3
      */
     public List getSupportedFunctions() {
@@ -104,7 +105,7 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsLikeCriteriaEscapeCharacter()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsLikeCriteriaEscapeCharacter()
      * @since 5.0
      */
     public boolean supportsLikeCriteriaEscapeCharacter() {

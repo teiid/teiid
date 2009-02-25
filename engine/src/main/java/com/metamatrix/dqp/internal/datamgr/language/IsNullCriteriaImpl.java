@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IIsNullCriteria;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IIsNullCriteria;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class IsNullCriteriaImpl extends BaseLanguageObject implements IIsNullCriteria {
     
@@ -37,21 +37,21 @@ public class IsNullCriteriaImpl extends BaseLanguageObject implements IIsNullCri
     }
 
     /**
-     * @see com.metamatrix.connector.language.IIsNullCriteria#getExpression()
+     * @see org.teiid.connector.language.IIsNullCriteria#getExpression()
      */
     public IExpression getExpression() {
         return expression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IIsNullCriteria#isNegated()
+     * @see org.teiid.connector.language.IIsNullCriteria#isNegated()
      */
     public boolean isNegated() {
         return this.negated;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

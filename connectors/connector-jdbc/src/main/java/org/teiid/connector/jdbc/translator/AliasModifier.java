@@ -24,7 +24,7 @@
  */
 package org.teiid.connector.jdbc.translator;
 
-import com.metamatrix.connector.language.*;
+import org.teiid.connector.language.*;
 
 /**
  */
@@ -41,7 +41,7 @@ public class AliasModifier extends BasicFunctionModifier {
     }
     
     /**
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(com.metamatrix.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(org.teiid.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         function.setName(alias);

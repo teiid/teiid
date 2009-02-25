@@ -23,9 +23,10 @@ package com.metamatrix.connector.salesforce.execution.visitors;
 
 import java.util.Iterator;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 

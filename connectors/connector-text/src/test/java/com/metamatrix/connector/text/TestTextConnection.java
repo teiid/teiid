@@ -25,11 +25,12 @@ package com.metamatrix.connector.text;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

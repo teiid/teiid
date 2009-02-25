@@ -28,6 +28,8 @@ import java.util.Properties;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -37,7 +39,6 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;

@@ -41,6 +41,12 @@ import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQuery;
+
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.file.ConfigReaderWriter;
 import com.metamatrix.cdk.file.XMLConfigReaderWriter;
@@ -53,11 +59,6 @@ import com.metamatrix.common.config.model.BasicConnectorArchive;
 import com.metamatrix.common.config.model.BasicExtensionModule;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.util.ByteArrayHelper;
-import com.metamatrix.connector.api.Connector;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.commandshell.ConnectorResultUtility;
 import com.metamatrix.core.factory.ComponentLoader;

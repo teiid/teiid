@@ -32,21 +32,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

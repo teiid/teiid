@@ -24,12 +24,13 @@
  */
 package com.metamatrix.dqp.internal.datamgr.metadata;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
 import com.metamatrix.query.metadata.SupportConstants;
 
 /**

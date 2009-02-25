@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.IOrderByItem;
+import org.teiid.connector.language.IOrderByItem;
+
 import com.metamatrix.query.sql.lang.OrderBy;
 
 import junit.framework.TestCase;

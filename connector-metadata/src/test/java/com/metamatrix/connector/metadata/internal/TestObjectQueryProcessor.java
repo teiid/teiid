@@ -29,11 +29,12 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;

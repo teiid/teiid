@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ParameterImpl extends BaseLanguageObject implements IParameter {
 
@@ -44,21 +44,21 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     }
     
     /**
-     * @see com.metamatrix.connector.language.IParameter#getIndex()
+     * @see org.teiid.connector.language.IParameter#getIndex()
      */
     public int getIndex() {
         return this.index;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IParameter#getDirection()
+     * @see org.teiid.connector.language.IParameter#getDirection()
      */
     public Direction getDirection() {
         return this.direction;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IParameter#getType()
+     * @see org.teiid.connector.language.IParameter#getType()
      */
     public Class getType() {
         return this.type;
@@ -72,7 +72,7 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
@@ -119,7 +119,7 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
 	}
     
     /** 
-     * @see com.metamatrix.connector.language.IParameter#getValueSpecified()
+     * @see org.teiid.connector.language.IParameter#getValueSpecified()
      * @since 4.3.2
      */
     public boolean getValueSpecified() {
@@ -127,7 +127,7 @@ public class ParameterImpl extends BaseLanguageObject implements IParameter {
     }
     
     /** 
-     * @see com.metamatrix.connector.language.IParameter#setValueSpecified(boolean)
+     * @see org.teiid.connector.language.IParameter#setValueSpecified(boolean)
      * @since 4.3.2
      */
     public void setValueSpecified(boolean specified) {

@@ -26,9 +26,10 @@ package com.metamatrix.connector.xml.base;
 
 import java.io.Serializable;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.CredentialMap;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.CredentialMap;
+
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 
 public abstract class TrustedPayloadBridge implements TrustedPayloadHandler {

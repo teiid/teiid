@@ -25,7 +25,8 @@ package com.metamatrix.connector.text;
 import java.util.*;
 import java.text.*;
 
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorLogger;
+
 
 /**
  * <p>This is a helper class for  TextTranslators that can be used to translate

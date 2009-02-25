@@ -22,8 +22,9 @@
 
 package com.metamatrix.connector.xml;
 
-import com.metamatrix.connector.api.Execution;
-import com.metamatrix.connector.api.ExecutionContext;
+import org.teiid.connector.api.Execution;
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.cache.IDocumentCache;
 

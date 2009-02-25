@@ -24,15 +24,16 @@ package com.metamatrix.connector.object;
 
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.IObjectSource;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
@@ -81,7 +82,7 @@ public class ObjectProcedureExecution extends BasicExecution implements Procedur
     
     
     /** 
-     * @see com.metamatrix.connector.api.ProcedureExecution#execute(com.metamatrix.connector.language.IProcedure, int)
+     * @see org.teiid.connector.api.ProcedureExecution#execute(org.teiid.connector.language.IProcedure, int)
      * @since 4.2
      */
     public void execute() throws ConnectorException {
@@ -104,7 +105,7 @@ public class ObjectProcedureExecution extends BasicExecution implements Procedur
     
    
     /** 
-     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
+     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
      * @since 4.2
      */
     public Object getOutputValue(IParameter parameter) throws ConnectorException {

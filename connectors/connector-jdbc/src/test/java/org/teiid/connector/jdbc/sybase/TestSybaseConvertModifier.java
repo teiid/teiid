@@ -30,16 +30,16 @@ import java.util.Properties;
 import org.teiid.connector.jdbc.sybase.SybaseConvertModifier;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**

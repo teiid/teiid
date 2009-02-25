@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbol {
 
@@ -37,7 +37,7 @@ public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbo
         this.expression = expression;
     }
     /**
-     * @see com.metamatrix.connector.language.ISelectSymbol#hasAlias()
+     * @see org.teiid.connector.language.ISelectSymbol#hasAlias()
      */
     public boolean hasAlias() {
         return hasAlias;
@@ -48,21 +48,21 @@ public class SelectSymbolImpl extends BaseLanguageObject implements ISelectSymbo
     }
     
     /**
-     * @see com.metamatrix.connector.language.ISelectSymbol#getOutputName()
+     * @see org.teiid.connector.language.ISelectSymbol#getOutputName()
      */
     public String getOutputName() {
         return name;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISelectSymbol#getExpression()
+     * @see org.teiid.connector.language.ISelectSymbol#getExpression()
      */
     public IExpression getExpression() {
         return expression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

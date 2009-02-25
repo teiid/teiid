@@ -32,12 +32,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
 
 class LargeTextExtractingXmlFilter extends XMLFilterImpl {
     LargeTextExtractingXmlFilter(int maxInMemoryStringSize,

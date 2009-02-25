@@ -22,14 +22,15 @@
 
 package com.metamatrix.connector.object;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorIdentity;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.basic.BasicConnector;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.basic.BasicConnector;
+
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
 
 /**

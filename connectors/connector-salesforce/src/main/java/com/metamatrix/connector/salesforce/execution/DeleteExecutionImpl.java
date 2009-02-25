@@ -21,8 +21,9 @@
  */
 package com.metamatrix.connector.salesforce.execution;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IDelete;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IDelete;
+
 import com.metamatrix.connector.salesforce.execution.visitors.DeleteVisitor;
 
 public class DeleteExecutionImpl {

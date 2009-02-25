@@ -30,12 +30,12 @@ import java.util.List;
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.ICompareCriteria.Operator;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
 
 /**
  */

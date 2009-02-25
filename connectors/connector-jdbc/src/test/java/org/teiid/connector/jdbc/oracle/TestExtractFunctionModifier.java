@@ -26,21 +26,21 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.oracle.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILiteral;
 import com.metamatrix.query.unittest.TimestampUtil;
 
 /**

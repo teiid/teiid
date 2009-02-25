@@ -22,8 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.*;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.*;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

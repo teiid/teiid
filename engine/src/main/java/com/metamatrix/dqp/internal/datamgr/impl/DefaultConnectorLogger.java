@@ -26,8 +26,9 @@
  */
 package com.metamatrix.dqp.internal.datamgr.impl;
 
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.util.LogConstants;

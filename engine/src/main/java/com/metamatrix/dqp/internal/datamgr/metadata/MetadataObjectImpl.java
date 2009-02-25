@@ -26,10 +26,11 @@ package com.metamatrix.dqp.internal.datamgr.metadata;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 

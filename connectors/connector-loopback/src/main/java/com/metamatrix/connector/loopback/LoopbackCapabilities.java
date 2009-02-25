@@ -25,7 +25,8 @@ package com.metamatrix.connector.loopback;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 /**
  * Specifies the capabilities of this connector.  Since we want this 

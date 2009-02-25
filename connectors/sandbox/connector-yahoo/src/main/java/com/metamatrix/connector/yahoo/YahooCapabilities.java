@@ -25,7 +25,8 @@ package com.metamatrix.connector.yahoo;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 /**
  * Specifies the capabilities of this connector.  The Yahoo connector

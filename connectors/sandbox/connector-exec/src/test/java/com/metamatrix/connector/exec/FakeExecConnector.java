@@ -28,7 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
+
 
 /**
  * Implmentation of text connector.

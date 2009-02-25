@@ -41,24 +41,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.api.ValueTranslator;
+import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.language.IParameter.Direction;
 
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.api.ValueTranslator;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.ISetQuery;
-import com.metamatrix.connector.language.IParameter.Direction;
 
 /**
  * Base class for creating source SQL queries and retrieving results.

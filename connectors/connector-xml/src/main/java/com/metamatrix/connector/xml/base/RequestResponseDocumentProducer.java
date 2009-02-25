@@ -32,8 +32,9 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;
@@ -151,7 +152,7 @@ public abstract class RequestResponseDocumentProducer implements DocumentProduce
 				try {
 					Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(getState().getPluggableInputStreamFilterClass());
 					Constructor ctor = pluggableFilter.getConstructor(
-							new Class[] { java.io.InputStream.class, com.metamatrix.connector.api.ConnectorLogger.class});
+							new Class[] { java.io.InputStream.class, org.teiid.connector.api.ConnectorLogger.class});
 					filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
 				} catch (Exception cnf) {
 					throw new ConnectorException(cnf);

@@ -5,25 +5,25 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.basic.BasicConnector;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.basic.BasicConnector;
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class MockConnector extends BasicConnector {
 	

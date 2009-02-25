@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.language.*;
 
-import com.metamatrix.connector.language.*;
 
 /**
  * This a method for multiple use. It can be used for:

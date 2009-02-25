@@ -43,19 +43,19 @@ import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.taskdefs.ExecuteStreamHandler;
 import org.apache.tools.ant.taskdefs.PumpStreamHandler;
 import org.apache.tools.ant.types.Commandline.Argument;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.OSPlatformUtil;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.TempDirectory;
@@ -134,7 +134,7 @@ public class ExecAntExecution extends BasicExecution implements ResultSetExecuti
 			throws ConnectorException {
 
 		env.getLogger().logTrace("Exec executing command: " + query); //$NON-NLS-1$
-		com.metamatrix.connector.language.ICriteria crit = query.getWhere();
+		org.teiid.connector.language.ICriteria crit = query.getWhere();
 		if (crit == null)
 			throw new ConnectorException(ExecPlugin.Util
 					.getString("ExecExecution.Must_have_criteria")); //$NON-NLS-1$

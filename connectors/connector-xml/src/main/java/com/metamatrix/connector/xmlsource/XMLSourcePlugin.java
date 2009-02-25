@@ -24,7 +24,8 @@ package com.metamatrix.connector.xmlsource;
 
 import java.util.ResourceBundle;
 
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.core.BundleUtil;
 
 /**

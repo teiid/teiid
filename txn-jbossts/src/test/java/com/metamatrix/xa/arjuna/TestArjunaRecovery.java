@@ -30,12 +30,13 @@ import java.util.Properties;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.arjuna.ats.arjuna.common.Configuration;
 import com.arjuna.ats.arjuna.recovery.RecoveryConfiguration;
 import com.metamatrix.common.xa.MMXid;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.dqp.internal.transaction.TransactionProvider;
 import com.metamatrix.dqp.service.TransactionService;
 

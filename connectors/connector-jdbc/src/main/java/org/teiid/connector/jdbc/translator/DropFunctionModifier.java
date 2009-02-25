@@ -25,8 +25,8 @@ package org.teiid.connector.jdbc.translator;
 import java.util.List;
 
 import org.teiid.connector.jdbc.JDBCPlugin;
+import org.teiid.connector.language.*;
 
-import com.metamatrix.connector.language.*;
 
 /**
  * This FunctionModifier will cause this function to be dropped by replacing the function

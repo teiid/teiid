@@ -25,14 +25,15 @@ package com.metamatrix.connector.exec;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
+
 
 /**
  */

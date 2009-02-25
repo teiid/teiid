@@ -26,7 +26,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.Long;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
+
 
 public class FileBackedValueReference implements LargeTextValueReference {
 	private RandomAccessFile file;

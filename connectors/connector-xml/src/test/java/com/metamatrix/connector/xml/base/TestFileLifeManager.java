@@ -25,9 +25,10 @@ package com.metamatrix.connector.xml.base;
 import java.io.File;
 import java.io.IOException;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
 
 public class TestFileLifeManager extends TestCase {
 

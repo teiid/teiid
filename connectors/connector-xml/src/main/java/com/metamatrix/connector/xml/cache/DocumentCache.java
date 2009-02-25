@@ -40,8 +40,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.connector.xml.base.XMLDocument;
 
 /**

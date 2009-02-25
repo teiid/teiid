@@ -28,12 +28,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.connector.api.ConnectorLogger;
 
 class IDGeneratingXmlFilter extends XMLFilterImpl
 {

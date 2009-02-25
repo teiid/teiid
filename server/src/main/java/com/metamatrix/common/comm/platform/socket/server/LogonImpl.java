@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.CredentialMap;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -35,8 +38,6 @@ import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.CredentialMap;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.jdbc.api.ConnectionProperties;

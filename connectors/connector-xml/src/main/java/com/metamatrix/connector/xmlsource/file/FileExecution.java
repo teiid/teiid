@@ -31,12 +31,13 @@ import java.util.Properties;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.xmlsource.XMLSourceExecution;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
 
@@ -70,7 +71,7 @@ public class FileExecution extends XMLSourceExecution {
     }
     
     /** 
-     * @see com.metamatrix.connector.api.ProcedureExecution#execute(com.metamatrix.connector.language.IProcedure, int)
+     * @see org.teiid.connector.api.ProcedureExecution#execute(org.teiid.connector.language.IProcedure, int)
      */
     @Override
     public void execute() throws ConnectorException {

@@ -25,9 +25,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.teiid.connector.language.IElement;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.IElement;
 import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 

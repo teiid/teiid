@@ -24,10 +24,11 @@ package com.metamatrix.connector.text;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

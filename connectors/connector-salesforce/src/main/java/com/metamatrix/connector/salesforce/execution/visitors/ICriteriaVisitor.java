@@ -21,7 +21,7 @@
  */
 package com.metamatrix.connector.salesforce.execution.visitors;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
 
 public interface ICriteriaVisitor {
 

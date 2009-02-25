@@ -25,14 +25,15 @@ package com.metamatrix.data.metadata.runtime;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.Procedure;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.Procedure;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

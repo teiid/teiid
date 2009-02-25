@@ -24,7 +24,8 @@ package com.metamatrix.connector.salesforce;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 public class SalesforceCapabilities extends BasicConnectorCapabilities {
 	

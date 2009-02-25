@@ -25,17 +25,18 @@ package com.metamatrix.connector.metadata.adapter;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IQuery;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.internal.IObjectQuery;
 import com.metamatrix.connector.metadata.internal.MetadataException;
 import com.metamatrix.connector.metadata.internal.ObjectQuery;
 import com.metamatrix.connector.metadata.internal.ObjectQueryProcessor;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Adapter to expose the object processing logic via the standard connector API.

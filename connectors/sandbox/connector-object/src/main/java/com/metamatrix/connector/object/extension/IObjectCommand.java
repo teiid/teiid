@@ -25,7 +25,8 @@ package com.metamatrix.connector.object.extension;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.language.ICommand;
+import org.teiid.connector.language.ICommand;
+
 
 
 /** 

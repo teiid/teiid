@@ -25,14 +25,15 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IFrom;
-import com.metamatrix.connector.language.IGroupBy;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IGroupBy;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class QueryImpl extends QueryCommandImpl implements IQuery {
 
@@ -52,35 +53,35 @@ public class QueryImpl extends QueryCommandImpl implements IQuery {
         this.setOrderBy(orderBy);
     }
     /**
-     * @see com.metamatrix.connector.language.IQuery#getSelect()
+     * @see org.teiid.connector.language.IQuery#getSelect()
      */
     public ISelect getSelect() {
         return select;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getFrom()
+     * @see org.teiid.connector.language.IQuery#getFrom()
      */
     public IFrom getFrom() {
         return from;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getWhere()
+     * @see org.teiid.connector.language.IQuery#getWhere()
      */
     public ICriteria getWhere() {
         return where;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getGroupBy()
+     * @see org.teiid.connector.language.IQuery#getGroupBy()
      */
     public IGroupBy getGroupBy() {
         return groupBy;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getHaving()
+     * @see org.teiid.connector.language.IQuery#getHaving()
      */
     public ICriteria getHaving() {
         return having;
@@ -112,7 +113,7 @@ public class QueryImpl extends QueryCommandImpl implements IQuery {
     }
     
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

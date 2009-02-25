@@ -28,15 +28,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCExecutionHelper;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelect;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.TypeFacilityImpl;
 import com.metamatrix.dqp.internal.datamgr.language.LiteralImpl;

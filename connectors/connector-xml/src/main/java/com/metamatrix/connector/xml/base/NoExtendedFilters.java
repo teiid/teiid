@@ -22,9 +22,9 @@
 
 package com.metamatrix.connector.xml.base;
 
+import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 
 public class NoExtendedFilters implements SAXFilterProvider {

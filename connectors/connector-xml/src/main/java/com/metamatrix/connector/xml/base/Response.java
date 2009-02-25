@@ -32,8 +32,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.apache.commons.codec.binary.Base64;
+import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.cache.DocumentCache;
 import com.metamatrix.connector.xml.cache.IDocumentCache;

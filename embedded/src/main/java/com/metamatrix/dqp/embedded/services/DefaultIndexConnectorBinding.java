@@ -25,12 +25,13 @@ package com.metamatrix.dqp.embedded.services;
 import java.util.Date;
 import java.util.Properties;
 
+import org.teiid.connector.internal.ConnectorPropertyNames;
+
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
 import com.metamatrix.common.namedobject.BaseID;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 

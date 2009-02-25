@@ -22,11 +22,11 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.ISetClauseList;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.ISetClauseList;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     
@@ -41,28 +41,28 @@ public class UpdateImpl extends BaseLanguageObject implements IUpdate {
     }
 
     /**
-     * @see com.metamatrix.connector.language.IUpdate#getGroup()
+     * @see org.teiid.connector.language.IUpdate#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IUpdate#getChanges()
+     * @see org.teiid.connector.language.IUpdate#getChanges()
      */
     public ISetClauseList getChanges() {
         return changes;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IUpdate#getCriteria()
+     * @see org.teiid.connector.language.IUpdate#getCriteria()
      */
     public ICriteria getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

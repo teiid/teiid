@@ -26,7 +26,8 @@ package com.metamatrix.connector.xml.base;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 
 public class XMLCapabilities extends BasicConnectorCapabilities {

@@ -24,7 +24,8 @@ package org.teiid.connector.jdbc;
 
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorCapabilities;
+
 
 /**
  * This is a "simple" capabilities class that allows criteria but no 
@@ -152,7 +153,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsSelectLiterals()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsSelectLiterals()
      * @since 4.2
      */
     public boolean supportsSelectLiterals() {
@@ -338,7 +339,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     /**
      * Return null to indicate no functions are supported.
      * @return null 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#getSupportedFunctions()
+     * @see org.teiid.connector.api.ConnectorCapabilities#getSupportedFunctions()
      */
     public List getSupportedFunctions() {
         return null;
@@ -353,7 +354,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
      * @since 4.2
      */
     public boolean supportsUnionOrderBy() {
@@ -361,7 +362,7 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
     
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnions()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnions()
      * @since 4.2
      */
     public boolean supportsUnions() {

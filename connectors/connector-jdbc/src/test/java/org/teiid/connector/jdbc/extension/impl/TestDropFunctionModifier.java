@@ -25,13 +25,13 @@ package org.teiid.connector.jdbc.extension.impl;
 import java.util.Arrays;
 
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILiteral;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILiteral;
 
 /**
  */

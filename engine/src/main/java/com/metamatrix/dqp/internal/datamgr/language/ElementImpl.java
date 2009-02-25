@@ -22,10 +22,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class ElementImpl extends BaseLanguageObject implements IElement {
 
@@ -42,14 +42,14 @@ public class ElementImpl extends BaseLanguageObject implements IElement {
     }
     
     /**
-     * @see com.metamatrix.connector.language.IElement#getName()
+     * @see org.teiid.connector.language.IElement#getName()
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IElement#getGroup()
+     * @see org.teiid.connector.language.IElement#getGroup()
      */
     public IGroup getGroup() {
         return group;
@@ -65,7 +65,7 @@ public class ElementImpl extends BaseLanguageObject implements IElement {
 	}
     
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

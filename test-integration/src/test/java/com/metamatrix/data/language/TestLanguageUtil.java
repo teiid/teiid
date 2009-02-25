@@ -26,13 +26,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.LanguageUtil;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.LanguageUtil;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 /**

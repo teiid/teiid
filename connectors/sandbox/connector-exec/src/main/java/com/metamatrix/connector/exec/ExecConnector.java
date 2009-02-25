@@ -28,16 +28,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.basic.BasicConnector;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.basic.BasicConnector;
 import com.metamatrix.core.util.ObjectConverterUtil;
 
 /**

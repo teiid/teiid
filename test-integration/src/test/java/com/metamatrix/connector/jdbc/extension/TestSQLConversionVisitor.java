@@ -26,18 +26,18 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;

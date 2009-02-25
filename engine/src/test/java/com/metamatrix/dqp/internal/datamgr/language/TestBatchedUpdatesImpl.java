@@ -25,11 +25,12 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IUpdate;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.IUpdate;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 
 

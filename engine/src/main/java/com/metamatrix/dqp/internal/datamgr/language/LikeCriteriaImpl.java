@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class LikeCriteriaImpl extends BaseLanguageObject implements ILikeCriteria {
         
@@ -42,35 +42,35 @@ public class LikeCriteriaImpl extends BaseLanguageObject implements ILikeCriteri
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILikeCriteria#getLeftExpression()
+     * @see org.teiid.connector.language.ILikeCriteria#getLeftExpression()
      */
     public IExpression getLeftExpression() {
         return leftExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILikeCriteria#getRightExpression()
+     * @see org.teiid.connector.language.ILikeCriteria#getRightExpression()
      */
     public IExpression getRightExpression() {
         return rightExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILikeCriteria#getEscapeCharacter()
+     * @see org.teiid.connector.language.ILikeCriteria#getEscapeCharacter()
      */
     public Character getEscapeCharacter() {
         return this.escapeCharacter;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILikeCriteria#isNegated()
+     * @see org.teiid.connector.language.ILikeCriteria#isNegated()
      */
     public boolean isNegated() {
         return this.isNegated;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

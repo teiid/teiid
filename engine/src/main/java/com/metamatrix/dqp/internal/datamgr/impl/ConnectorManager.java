@@ -41,6 +41,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.xa.api.XAConnection;
+import org.teiid.connector.xa.api.XAConnector;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -50,17 +62,6 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.api.ConnectorAnnotations.SynchronousWorkers;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.xa.api.XAConnection;
-import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -89,7 +90,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Scope;
 import com.metamatrix.query.sql.lang.Command;
 
 /**
- * The <code>ConnectorManager</code> manages a {@link com.metamatrix.connector.basic.BasicConnector Connector}
+ * The <code>ConnectorManager</code> manages a {@link org.teiid.connector.basic.BasicConnector Connector}
  * and its associated workers' state.
  */
 public class ConnectorManager implements ApplicationService {

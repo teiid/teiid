@@ -24,8 +24,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class OrderByImpl extends BaseLanguageObject implements IOrderBy {
 
@@ -36,14 +37,14 @@ public class OrderByImpl extends BaseLanguageObject implements IOrderBy {
     }
     
     /**
-     * @see com.metamatrix.connector.language.IOrderBy#getItems()
+     * @see org.teiid.connector.language.IOrderBy#getItems()
      */
     public List getItems() {
         return items;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

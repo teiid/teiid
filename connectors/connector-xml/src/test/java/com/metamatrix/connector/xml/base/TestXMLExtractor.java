@@ -28,10 +28,10 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.jdom.Document;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
 
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
 
 public class TestXMLExtractor extends TestCase {
 	

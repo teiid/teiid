@@ -28,13 +28,14 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.language.ILanguageFactory;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.queue.WorkerPool;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
-import com.metamatrix.connector.language.ILanguageFactory;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 /**
@@ -67,14 +68,14 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     }
     
     /**  
-     * @see com.metamatrix.connector.api.ConnectorEnvironment#getProperties()
+     * @see org.teiid.connector.api.ConnectorEnvironment#getProperties()
      */
     public Properties getProperties() {
         return this.properties;
     }
 
     /**  
-     * @see com.metamatrix.connector.api.ConnectorEnvironment#getConnectorName() 
+     * @see org.teiid.connector.api.ConnectorEnvironment#getConnectorName() 
      */
     public String getConnectorName() {
         return this.properties.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME);
@@ -109,7 +110,7 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     }
 
     /**  
-     * @see com.metamatrix.connector.api.ConnectorEnvironment#getTypeFacility()
+     * @see org.teiid.connector.api.ConnectorEnvironment#getTypeFacility()
      */
     public TypeFacility getTypeFacility() {
         return TYPE_FACILITY;

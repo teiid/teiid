@@ -26,16 +26,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.ICompoundCriteria.Operator;
 
-import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ICompoundCriteria.Operator;
 
 
 /**
@@ -56,7 +56,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     }
 
     /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#modify(com.metamatrix.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#modify(org.teiid.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         List when = new ArrayList();

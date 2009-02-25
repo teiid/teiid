@@ -22,8 +22,8 @@
 
 package com.metamatrix.connector.yahoo;
 
-import com.metamatrix.connector.api.*;
-import com.metamatrix.connector.basic.BasicConnector;
+import org.teiid.connector.api.*;
+import org.teiid.connector.basic.BasicConnector;
 
 public class YahooConnector extends BasicConnector {
 

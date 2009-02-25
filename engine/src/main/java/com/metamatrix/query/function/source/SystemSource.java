@@ -28,8 +28,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionMetadataSource;

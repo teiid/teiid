@@ -26,8 +26,9 @@ package com.metamatrix.connector.xml;
 
 import java.io.Serializable;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
+
 
 public interface TrustedPayloadHandler {
 	

@@ -22,9 +22,9 @@
 
 package com.metamatrix.connector.xmlsource;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.basic.BasicConnection;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.basic.BasicConnection;
 
 /**
  * A Base XML Connection to an XML Source
@@ -43,7 +43,7 @@ public abstract class XMLSourceConnection extends BasicConnection {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.Connection#release()
+     * @see org.teiid.connector.api.Connection#release()
      */
     public void close() {            
         XMLSourcePlugin.logInfo(this.env.getLogger(), "Connection_closed"); //$NON-NLS-1$

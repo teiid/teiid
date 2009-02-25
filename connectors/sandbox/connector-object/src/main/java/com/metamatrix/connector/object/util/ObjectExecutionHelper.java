@@ -35,16 +35,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.api.ValueTranslator;
+import org.teiid.connector.basic.BasicValueTranslator;
+import org.teiid.connector.visitor.util.SQLReservedWords;
+
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.api.ValueTranslator;
-import com.metamatrix.connector.basic.BasicValueTranslator;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
-import com.metamatrix.connector.visitor.util.SQLReservedWords;
 import com.metamatrix.core.util.StringUtil;
 
 /**

@@ -1,6 +1,7 @@
 package com.metamatrix.data.metadata.runtime;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 

@@ -34,17 +34,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /**
  * Represents the execution of a command.

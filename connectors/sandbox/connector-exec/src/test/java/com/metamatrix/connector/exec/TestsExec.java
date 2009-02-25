@@ -30,11 +30,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ResultSetExecution;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ResultSetExecution;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

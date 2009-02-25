@@ -26,10 +26,10 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.xa.XAJDBCPropertyNames;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorException;
 
 public class TestJDBCConnector {
 

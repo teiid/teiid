@@ -22,10 +22,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IExistsCriteria;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExistsCriteria;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

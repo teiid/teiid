@@ -33,23 +33,23 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.ISetQuery.Operation;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.visitor.util.SQLReservedWords;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.ISetQuery.Operation;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
 /**
  */
@@ -209,7 +209,7 @@ public class OracleSQLTranslator extends Translator {
     /**
      * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
      *  
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
+     * @see org.teiid.connector.visitor.util.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
      * @since 5.0
      */
     @Override

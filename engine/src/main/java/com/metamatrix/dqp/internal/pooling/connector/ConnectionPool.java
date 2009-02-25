@@ -37,16 +37,17 @@ import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.connector.DataPlugin;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SingleIdentity;
+import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.connector.xa.api.XAConnector;
+
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.connector.DataPlugin;
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorIdentity;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SingleIdentity;
-import com.metamatrix.connector.xa.api.TransactionContext;
-import com.metamatrix.connector.xa.api.XAConnector;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;

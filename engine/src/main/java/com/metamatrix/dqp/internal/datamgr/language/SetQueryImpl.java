@@ -22,11 +22,11 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
-public class SetQueryImpl extends QueryCommandImpl implements com.metamatrix.connector.language.ISetQuery {
+public class SetQueryImpl extends QueryCommandImpl implements org.teiid.connector.language.ISetQuery {
 
     private boolean all;
     private IQueryCommand leftQuery;
@@ -44,63 +44,63 @@ public class SetQueryImpl extends QueryCommandImpl implements com.metamatrix.con
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#getLeftQuery()
+     * @see org.teiid.connector.language.ISetQuery#getLeftQuery()
      */
     public IQueryCommand getLeftQuery() {
         return leftQuery;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#getOperation()
+     * @see org.teiid.connector.language.ISetQuery#getOperation()
      */
     public Operation getOperation() {
         return operation;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#getRightQuery()
+     * @see org.teiid.connector.language.ISetQuery#getRightQuery()
      */
     public IQueryCommand getRightQuery() {
         return rightQuery;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#isAll()
+     * @see org.teiid.connector.language.ISetQuery#isAll()
      */
     public boolean isAll() {
         return all;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#setAll(boolean)
+     * @see org.teiid.connector.language.ISetQuery#setAll(boolean)
      */
     public void setAll(boolean all) {
         this.all = all;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#setLeftQuery(com.metamatrix.connector.language.IQueryCommand)
+     * @see org.teiid.connector.language.ISetQuery#setLeftQuery(org.teiid.connector.language.IQueryCommand)
      */
     public void setLeftQuery(IQueryCommand leftQuery) {
         this.leftQuery = leftQuery;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#setOperation(com.metamatrix.connector.language.ISetQuery.Operation)
+     * @see org.teiid.connector.language.ISetQuery#setOperation(org.teiid.connector.language.ISetQuery.Operation)
      */
     public void setOperation(Operation operation) {
         this.operation = operation;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ISetQuery#setRightQuery(com.metamatrix.connector.language.IQueryCommand)
+     * @see org.teiid.connector.language.ISetQuery#setRightQuery(org.teiid.connector.language.IQueryCommand)
      */
     public void setRightQuery(IQueryCommand rightQuery) {
         this.rightQuery = rightQuery;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
@@ -55,7 +57,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.eval.Evaluator;

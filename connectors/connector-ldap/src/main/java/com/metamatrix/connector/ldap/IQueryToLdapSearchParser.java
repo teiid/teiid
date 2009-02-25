@@ -50,32 +50,33 @@ import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.language.IAggregate;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICompoundCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExistsCriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFromItem;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IOrderByItem;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IScalarSubquery;
-import com.metamatrix.connector.language.ISearchedCaseExpression;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.language.IAggregate;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExistsCriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFromItem;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IOrderByItem;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /**
  * Utility class which translates a SQL query into an LDAP search.
@@ -533,7 +534,7 @@ public class IQueryToLdapSearchParser {
 			return;
 		}
 		filterList.add("("); //$NON-NLS-1$
-		filterList.add(parseCompoundCriteriaOp(com.metamatrix.connector.language.ICompoundCriteria.Operator.OR));
+		filterList.add(parseCompoundCriteriaOp(org.teiid.connector.language.ICompoundCriteria.Operator.OR));
 		Iterator rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
 			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionString(lhs), 
@@ -643,8 +644,8 @@ public class IQueryToLdapSearchParser {
 	}
 	
     /**
-     * Helper method for getting runtime {@link com.metamatrix.connector.metadata.runtime.Element} from a
-     * {@link com.metamatrix.connector.language.ISelectSymbol}.
+     * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
+     * {@link org.teiid.connector.language.ISelectSymbol}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */

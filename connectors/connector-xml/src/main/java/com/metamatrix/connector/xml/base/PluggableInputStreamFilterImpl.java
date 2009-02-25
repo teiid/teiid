@@ -26,7 +26,8 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorLogger;
+
 
 public class PluggableInputStreamFilterImpl extends FilterInputStream {
 	

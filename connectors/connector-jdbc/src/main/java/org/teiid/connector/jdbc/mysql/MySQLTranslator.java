@@ -29,11 +29,11 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.translator.Translator;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.SourceSystemFunctions;
 
 
 /** 

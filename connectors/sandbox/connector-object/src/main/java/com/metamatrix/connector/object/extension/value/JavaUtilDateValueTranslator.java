@@ -27,9 +27,10 @@ package com.metamatrix.connector.object.extension.value;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ValueTranslator;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ValueTranslator;
+
 
 /**
  */

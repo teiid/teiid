@@ -27,27 +27,28 @@ import java.util.List;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.Execution;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.basic.BasicConnector;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.connector.xa.api.XAConnection;
+import org.teiid.connector.xa.api.XAConnector;
+
 import junit.framework.Assert;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.Execution;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.basic.BasicConnector;
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.xa.api.TransactionContext;
-import com.metamatrix.connector.xa.api.XAConnection;
-import com.metamatrix.connector.xa.api.XAConnector;
 
 public class FakeConnector extends BasicConnector implements XAConnector {
 	private static final int RESULT_SIZE = 5;
@@ -60,7 +61,7 @@ public class FakeConnector extends BasicConnector implements XAConnector {
     private ClassLoader classloader;
     
     @Override
-    public Connection getConnection(com.metamatrix.connector.api.ExecutionContext context) throws ConnectorException {
+    public Connection getConnection(org.teiid.connector.api.ExecutionContext context) throws ConnectorException {
         return new FakeConnection();
     }
     @Override

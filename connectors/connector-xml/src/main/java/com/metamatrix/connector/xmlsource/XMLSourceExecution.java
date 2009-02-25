@@ -28,13 +28,14 @@ import java.util.List;
 
 import javax.xml.transform.Source;
 
-import com.metamatrix.connector.DataPlugin;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IParameter;
+import org.teiid.connector.DataPlugin;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IParameter;
+
 
 
 /** 
@@ -78,21 +79,21 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     }  
     
     /** 
-     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
+     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
      */
     public Object getOutputValue(IParameter parameter) throws ConnectorException {
         throw new ConnectorException(XMLSourcePlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
     }
 
     /** 
-     * @see com.metamatrix.connector.api.Execution#close()
+     * @see org.teiid.connector.api.Execution#close()
      */
     public void close() throws ConnectorException {
         // no-op
     }
 
     /** 
-     * @see com.metamatrix.connector.api.Execution#cancel()
+     * @see org.teiid.connector.api.Execution#cancel()
      */
     public void cancel() throws ConnectorException {
         // no-op

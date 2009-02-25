@@ -25,13 +25,14 @@ package com.metamatrix.query.optimizer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.connector.api.SourceSystemFunctions;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;

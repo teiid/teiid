@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.IFromItem;
+import org.teiid.connector.language.IFromItem;
+
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 

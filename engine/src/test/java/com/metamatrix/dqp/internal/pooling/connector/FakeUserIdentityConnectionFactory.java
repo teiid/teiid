@@ -24,10 +24,10 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorIdentity;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.MappedUserIdentity;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MappedUserIdentity;
 
 /**
  */

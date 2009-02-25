@@ -27,12 +27,13 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.api.ConnectorException;
 
 public class TestLoopbackExecution extends TestCase {
 

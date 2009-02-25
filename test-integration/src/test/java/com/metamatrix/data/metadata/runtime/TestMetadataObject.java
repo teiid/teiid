@@ -27,18 +27,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.Procedure;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

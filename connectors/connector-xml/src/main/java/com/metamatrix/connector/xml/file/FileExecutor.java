@@ -33,10 +33,10 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 import org.jdom.Document;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.NamedDocumentExecutor;
 import com.metamatrix.connector.xml.SAXFilterProvider;
@@ -180,7 +180,7 @@ public class FileExecutor implements DocumentProducer, NamedDocumentExecutor {
     	try {
     		Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(m_state.getPluggableInputStreamFilterClass());
     		Constructor ctor = pluggableFilter.getConstructor(
-    				new Class[] { java.io.InputStream.class, com.metamatrix.connector.api.ConnectorLogger.class});
+    				new Class[] { java.io.InputStream.class, org.teiid.connector.api.ConnectorLogger.class});
     		filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
     	} catch (Exception cnf) {
     		throw new ConnectorException(cnf);

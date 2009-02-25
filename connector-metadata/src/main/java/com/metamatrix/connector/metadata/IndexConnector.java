@@ -22,10 +22,11 @@
 
 package com.metamatrix.connector.metadata;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
@@ -40,7 +41,7 @@ import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 public class IndexConnector extends ObjectConnector {
     
     /** 
-     * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getObjectSource(com.metamatrix.connector.api.ConnectorEnvironment, com.metamatrix.connector.api.ExecutionContext)
+     * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getObjectSource(org.teiid.connector.api.ConnectorEnvironment, org.teiid.connector.api.ExecutionContext)
      */
     protected IObjectSource getMetadataObjectSource(final ExecutionContext context) throws ConnectorException {
         ConnectorEnvironmentImpl internalEnvironment = (ConnectorEnvironmentImpl) this.getEnvironment();

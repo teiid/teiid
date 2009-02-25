@@ -23,19 +23,20 @@ package com.metamatrix.connector.salesforce.execution;
 
 import java.util.ArrayList;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.execution.visitors.IQueryProvidingVisitor;
@@ -78,13 +79,13 @@ public class UpdateExecutionParent extends BasicExecution implements UpdateExecu
 
 	@Override
 	public void execute() throws ConnectorException {
-		if(command instanceof com.metamatrix.connector.language.IDelete) {
+		if(command instanceof org.teiid.connector.language.IDelete) {
 			DeleteExecutionImpl ex = new DeleteExecutionImpl();
 			result = ex.execute(((IDelete)command), this);
-		} else if (command instanceof com.metamatrix.connector.language.IInsert) {
+		} else if (command instanceof org.teiid.connector.language.IInsert) {
 			InsertExecutionImpl ex = new InsertExecutionImpl();
 			result = ex.execute(((IInsert)command), this);
-		} else if (command instanceof com.metamatrix.connector.language.IUpdate) {
+		} else if (command instanceof org.teiid.connector.language.IUpdate) {
 			UpdateExecutionImpl ex = new UpdateExecutionImpl();
 			result = ex.execute(((IUpdate)command), this);
 		}

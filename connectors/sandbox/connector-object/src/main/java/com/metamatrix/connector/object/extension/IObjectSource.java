@@ -24,7 +24,8 @@ package com.metamatrix.connector.object.extension;
 
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.connector.object.ObjectProcedureExecution;
 
 /**

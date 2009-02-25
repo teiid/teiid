@@ -25,7 +25,8 @@ package org.teiid.connector.jdbc;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 /**
  */
@@ -48,7 +49,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#getMaxInCriteriaSize()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#getMaxInCriteriaSize()
      * @since 4.2
      */
     public int getMaxInCriteriaSize() {
@@ -347,7 +348,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsInlineViews()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsInlineViews()
      */
     public boolean supportsInlineViews() {
         return false;
@@ -358,21 +359,21 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return true;
     }
     
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
      */
     public boolean supportsUnionOrderBy() {
         return true;
     }
     
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsSetQueryOrderBy()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsSetQueryOrderBy()
      */
     @Override
     public boolean supportsSetQueryOrderBy() {
@@ -380,7 +381,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsUnions()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnions()
      */
     public boolean supportsUnions() {
         return true;

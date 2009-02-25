@@ -22,11 +22,12 @@
 
 package com.metamatrix.connector.metadata.internal;
 
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.connector.metadata.index.MetadataSearchCriteria;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.unittest.QueryMetadataInterfaceBuilder;
 

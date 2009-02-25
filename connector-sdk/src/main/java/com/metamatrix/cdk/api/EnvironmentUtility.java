@@ -25,10 +25,11 @@ package com.metamatrix.cdk.api;
 import java.io.Serializable;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 

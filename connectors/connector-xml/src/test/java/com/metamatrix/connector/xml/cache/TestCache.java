@@ -25,12 +25,13 @@ package com.metamatrix.connector.xml.cache;
 
 import java.io.File;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

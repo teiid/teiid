@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.language.*;
 
-import com.metamatrix.connector.language.*;
 
 public class Log10FunctionModifier extends BasicFunctionModifier implements FunctionModifier {
     

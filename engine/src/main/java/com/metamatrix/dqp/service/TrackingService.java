@@ -24,8 +24,9 @@
  */
 package com.metamatrix.dqp.service;
 
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.query.sql.lang.Command;
 
 /**

@@ -22,13 +22,14 @@
 
 package com.metamatrix.cdk.api;
 
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestTranslationUtility extends TestCase {

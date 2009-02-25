@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.IElement;
+import org.teiid.connector.language.IElement;
+
 import com.metamatrix.query.sql.lang.GroupBy;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;

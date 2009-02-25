@@ -24,17 +24,17 @@ package org.teiid.connector.jdbc.oracle;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.access.AccessSQLTranslator;
 import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICommand;
 
 public class TestOracleTranslator extends TestCase {
 	

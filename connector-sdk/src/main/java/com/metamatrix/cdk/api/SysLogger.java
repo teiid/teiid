@@ -24,7 +24,8 @@ package com.metamatrix.cdk.api;
 
 import java.util.Date;
 
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorLogger;
+
 
 /**
  * ConnectorLogger that prints output to System.out.

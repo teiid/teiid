@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.connector.object.ObjectSourceMethodManager;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.IValueRetriever;

@@ -27,8 +27,9 @@ package com.metamatrix.connector.xml.cache;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.connector.xml.CachingConnector;
 
 /**

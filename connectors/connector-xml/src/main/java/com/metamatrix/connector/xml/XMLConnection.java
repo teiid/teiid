@@ -24,9 +24,9 @@
 
 package com.metamatrix.connector.xml;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
 
 public interface XMLConnection extends Connection {
 

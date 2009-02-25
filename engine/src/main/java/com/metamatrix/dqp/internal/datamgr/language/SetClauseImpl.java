@@ -22,10 +22,10 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class SetClauseImpl implements ISetClause {
 

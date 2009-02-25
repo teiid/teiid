@@ -24,9 +24,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class InCriteriaImpl extends BaseLanguageObject implements IInCriteria {
 
@@ -40,28 +41,28 @@ public class InCriteriaImpl extends BaseLanguageObject implements IInCriteria {
         this.negated = negated;
     }
     /**
-     * @see com.metamatrix.connector.language.IInCriteria#getLeftExpression()
+     * @see org.teiid.connector.language.IInCriteria#getLeftExpression()
      */
     public IExpression getLeftExpression() {
         return leftExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IInCriteria#getRightExpressions()
+     * @see org.teiid.connector.language.IInCriteria#getRightExpressions()
      */
     public List getRightExpressions() {
         return rightExpressions;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IInCriteria#isNegated()
+     * @see org.teiid.connector.language.IInCriteria#isNegated()
      */
     public boolean isNegated() {
         return this.negated;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

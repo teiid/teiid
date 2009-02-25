@@ -37,22 +37,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IFrom;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.core.util.StringUtil;
 
 /**
@@ -596,8 +597,8 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
     }
 
     /**
-     * Helper method for getting runtime {@link com.metamatrix.connector.metadata.runtime.Element} from a
-     * {@link com.metamatrix.connector.language.ISelectSymbol}.
+     * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
+     * {@link org.teiid.connector.language.ISelectSymbol}.
      * @param symbol Input ISelectSymbol
      * @return Element returned metadata runtime Element
      */

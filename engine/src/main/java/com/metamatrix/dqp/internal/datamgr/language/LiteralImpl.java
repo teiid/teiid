@@ -22,8 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     
@@ -37,14 +37,14 @@ public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     }
     
     /**
-     * @see com.metamatrix.connector.language.ILiteral#getValue()
+     * @see org.teiid.connector.language.ILiteral#getValue()
      */
     public Object getValue() {
         return this.value;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
@@ -72,14 +72,14 @@ public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ILiteral#isBindValue()
+     * @see org.teiid.connector.language.ILiteral#isBindValue()
      */
     public boolean isBindValue() {
         return bindValue;
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ILiteral#setBindValue(boolean)
+     * @see org.teiid.connector.language.ILiteral#setBindValue(boolean)
      */
     public void setBindValue(boolean bindValue) {
         this.bindValue = bindValue;

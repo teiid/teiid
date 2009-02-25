@@ -25,17 +25,18 @@ package com.metamatrix.connector.metadata;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.ObjectProcedure;
 import com.metamatrix.connector.metadata.internal.ObjectProcedureProcessor;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 
 /** 
@@ -86,7 +87,7 @@ public class MetadataProcedureExecution extends BasicExecution implements Proced
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ProcedureExecution#getOutputValue(com.metamatrix.connector.language.IParameter)
+     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
      * @since 4.2
      */
     public Object getOutputValue(final IParameter parameter) throws ConnectorException {
@@ -98,7 +99,7 @@ public class MetadataProcedureExecution extends BasicExecution implements Proced
     }
 
     /** 
-     * @see com.metamatrix.connector.api.Execution#cancel()
+     * @see org.teiid.connector.api.Execution#cancel()
      * @since 4.2
      */
     public void cancel() throws ConnectorException {
@@ -106,7 +107,7 @@ public class MetadataProcedureExecution extends BasicExecution implements Proced
     }
 
     /** 
-     * @see com.metamatrix.connector.api.Execution#close()
+     * @see org.teiid.connector.api.Execution#close()
      * @since 4.2
      */
     public void close() throws ConnectorException {

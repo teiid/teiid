@@ -27,13 +27,13 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.metadata.runtime.Element;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.connector.salesforce.Util;
 import com.metamatrix.connector.salesforce.execution.visitors.UpdateVisitor;
 

@@ -24,9 +24,10 @@ package org.teiid.connector.jdbc.postgresql;
 
 import java.util.Arrays;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+
 
 
 /** 

@@ -24,15 +24,16 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.Execution;
+import org.teiid.connector.api.ExecutionContext;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.Execution;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;

@@ -31,14 +31,15 @@ import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.xa.api.TransactionContext;
-import com.metamatrix.connector.xa.api.XAConnection;
-import com.metamatrix.connector.xa.api.XAConnector;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.connector.xa.api.XAConnection;
+import org.teiid.connector.xa.api.XAConnector;
+
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 
 /**

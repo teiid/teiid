@@ -24,7 +24,8 @@ package com.metamatrix.dqp.internal.datamgr;
 
 import java.util.*;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorCapabilities;
+
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;

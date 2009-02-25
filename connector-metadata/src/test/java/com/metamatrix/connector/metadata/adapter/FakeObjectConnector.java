@@ -26,8 +26,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 
 public class FakeObjectConnector extends ObjectConnector {
@@ -43,7 +44,7 @@ public class FakeObjectConnector extends ObjectConnector {
         
         
         /** 
-         * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getMetadataObjectSource(com.metamatrix.connector.api.ExecutionContext)
+         * @see com.metamatrix.connector.metadata.adapter.ObjectConnector#getMetadataObjectSource(org.teiid.connector.api.ExecutionContext)
          * @since 4.3
          */
         protected IObjectSource getMetadataObjectSource(ExecutionContext context) throws ConnectorException {

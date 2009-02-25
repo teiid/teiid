@@ -22,13 +22,13 @@
 
 package com.metamatrix.connector.loopback;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.Execution;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.Execution;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Serves as a connection for the Loopback connector.  Since there is no actual

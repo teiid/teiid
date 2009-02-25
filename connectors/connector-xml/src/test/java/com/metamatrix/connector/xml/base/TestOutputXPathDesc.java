@@ -24,19 +24,20 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.LanguageUtil;
+import org.teiid.connector.metadata.runtime.Element;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.language.LanguageUtil;
-import com.metamatrix.connector.metadata.runtime.Element;
 
 /**
  * created by JChoate on Jun 27, 2005

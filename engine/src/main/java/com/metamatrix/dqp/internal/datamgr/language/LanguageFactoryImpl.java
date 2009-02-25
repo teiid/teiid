@@ -25,50 +25,51 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.language.IAggregate;
-import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICompoundCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExistsCriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFrom;
-import com.metamatrix.connector.language.IFromItem;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IGroupBy;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.IInlineView;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.IIsNullCriteria;
-import com.metamatrix.connector.language.IJoin;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.INotCriteria;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IOrderByItem;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.IScalarSubquery;
-import com.metamatrix.connector.language.ISearchedCaseExpression;
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.language.ISetClauseList;
-import com.metamatrix.connector.language.ISetQuery;
-import com.metamatrix.connector.language.ISubqueryCompareCriteria;
-import com.metamatrix.connector.language.ISubqueryInCriteria;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.Procedure;
+import org.teiid.connector.language.IAggregate;
+import org.teiid.connector.language.IBulkInsert;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExistsCriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IFromItem;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IGroupBy;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IInlineView;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IIsNullCriteria;
+import org.teiid.connector.language.IJoin;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.INotCriteria;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IOrderByItem;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.ISetClauseList;
+import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.language.ISubqueryCompareCriteria;
+import org.teiid.connector.language.ISubqueryInCriteria;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.Procedure;
+
 
 /**
  */
@@ -175,7 +176,7 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageFactory#createBulkInsert(com.metamatrix.connector.language.IGroup, java.util.List, java.util.List)
+     * @see org.teiid.connector.language.ILanguageFactory#createBulkInsert(org.teiid.connector.language.IGroup, java.util.List, java.util.List)
      */
     public IBulkInsert createBulkInsert(IGroup group, List columns, List rows) {
         return new BulkInsertImpl(group, columns, rows);

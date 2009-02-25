@@ -24,13 +24,14 @@ package com.metamatrix.connector.object.util;
 
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IMetadataReference;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IMetadataReference;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.ObjectPropertyNames;
 import com.metamatrix.connector.object.SourceConnectionFactory;

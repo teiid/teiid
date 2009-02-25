@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISelectSymbol;
+
 import com.metamatrix.query.sql.lang.Select;
 
 import junit.framework.TestCase;

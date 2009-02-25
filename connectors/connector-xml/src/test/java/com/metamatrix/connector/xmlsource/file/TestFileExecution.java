@@ -31,16 +31,16 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.Procedure;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ILanguageFactory;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.Procedure;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
 
 

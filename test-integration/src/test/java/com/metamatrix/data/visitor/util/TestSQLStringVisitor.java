@@ -28,19 +28,20 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.visitor.util.SQLReservedWords;
+import org.teiid.connector.visitor.util.SQLStringVisitor;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.visitor.util.SQLReservedWords;
-import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.AggregateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.ElementImpl;
 import com.metamatrix.dqp.internal.datamgr.language.FunctionImpl;

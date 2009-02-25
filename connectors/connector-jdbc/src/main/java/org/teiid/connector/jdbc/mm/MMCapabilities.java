@@ -36,7 +36,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
 public class MMCapabilities extends JDBCCapabilities {
     
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#getSupportedFunctions()
+     * @see org.teiid.connector.api.ConnectorCapabilities#getSupportedFunctions()
      * @since 4.3
      */
     public List getSupportedFunctions() {
@@ -144,7 +144,7 @@ public class MMCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

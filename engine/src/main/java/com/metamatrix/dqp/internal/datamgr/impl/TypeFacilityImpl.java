@@ -26,10 +26,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.TypeFacility;
+
 import com.metamatrix.common.types.*;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.TypeFacility;
 
 /**
  */

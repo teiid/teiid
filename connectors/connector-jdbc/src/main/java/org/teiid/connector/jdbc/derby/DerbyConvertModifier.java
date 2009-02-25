@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
+import org.teiid.connector.language.*;
+import org.teiid.connector.language.ICompareCriteria.Operator;
 
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.*;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
 
 /**
  */

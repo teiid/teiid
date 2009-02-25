@@ -28,24 +28,25 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.language.IQuery;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.TestConnectorHost;
 import com.metamatrix.connector.metadata.internal.TestObjectQueryProcessor;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;

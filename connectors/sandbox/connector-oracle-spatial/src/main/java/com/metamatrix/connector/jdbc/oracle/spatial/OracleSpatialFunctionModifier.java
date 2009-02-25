@@ -25,9 +25,9 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 import java.util.List;
 
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ILiteral;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ILiteral;
 
 public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
 

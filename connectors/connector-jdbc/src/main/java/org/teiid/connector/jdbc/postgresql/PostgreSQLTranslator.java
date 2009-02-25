@@ -28,23 +28,23 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.IAggregate;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
+import org.teiid.connector.visitor.util.SQLReservedWords;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.IAggregate;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.ISetQuery;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
-import com.metamatrix.connector.visitor.util.SQLReservedWords;
 
 
 /** 
@@ -123,7 +123,7 @@ public class PostgreSQLTranslator extends Translator {
     /**
      * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as 
      * bool_and(BooleanValue)
-     * @see com.metamatrix.connector.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IAggregate)
+     * @see org.teiid.connector.visitor.framework.LanguageObjectVisitor#visit(org.teiid.connector.language.IAggregate)
      * @since 4.3
      */
     @Override

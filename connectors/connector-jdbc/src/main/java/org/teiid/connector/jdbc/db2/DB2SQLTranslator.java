@@ -25,22 +25,22 @@ package org.teiid.connector.jdbc.db2;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IJoin;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.language.IJoin.JoinType;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IJoin;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.language.IJoin.JoinType;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  */

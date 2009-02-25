@@ -29,12 +29,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;
 import com.metamatrix.core.MetaMatrixRuntimeException;

@@ -28,22 +28,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Group;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Group;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
+
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
 
 /**
  * 

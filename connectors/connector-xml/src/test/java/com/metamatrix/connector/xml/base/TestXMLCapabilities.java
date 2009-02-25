@@ -24,9 +24,10 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
 
 /**
  * created by JChoate on Jun 27, 2005

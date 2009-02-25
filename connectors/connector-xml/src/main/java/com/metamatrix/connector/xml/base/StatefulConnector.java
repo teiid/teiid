@@ -24,9 +24,10 @@
 
 package com.metamatrix.connector.xml.base;
 
-import com.metamatrix.connector.api.Connector;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorLogger;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
+
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 public interface StatefulConnector extends Connector {

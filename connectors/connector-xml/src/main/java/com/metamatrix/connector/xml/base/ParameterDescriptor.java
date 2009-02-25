@@ -23,8 +23,8 @@
 
 package com.metamatrix.connector.xml.base;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.Element;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.Element;
 
 
 public abstract class ParameterDescriptor {

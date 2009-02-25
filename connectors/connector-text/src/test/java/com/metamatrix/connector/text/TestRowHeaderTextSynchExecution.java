@@ -22,9 +22,10 @@
 
 package com.metamatrix.connector.text;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorException;
 
 
 public class TestRowHeaderTextSynchExecution extends TestCase {

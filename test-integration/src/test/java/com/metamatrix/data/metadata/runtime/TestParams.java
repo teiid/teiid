@@ -26,14 +26,15 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.TypeModel;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.TypeModel;
 import com.metamatrix.core.util.UnitTestUtil;
 
 

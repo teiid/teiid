@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.IScalarSubquery;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 /**
  */

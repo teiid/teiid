@@ -27,10 +27,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.unittest.TimestampUtil;
 

@@ -25,9 +25,9 @@ package org.teiid.connector.jdbc;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 
-import com.metamatrix.connector.api.ConnectorException;
 
 public class JDBCExecutionException extends ConnectorException {
 

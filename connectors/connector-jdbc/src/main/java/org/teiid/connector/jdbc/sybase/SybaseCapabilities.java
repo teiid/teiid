@@ -103,7 +103,7 @@ public class SybaseCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -111,14 +111,14 @@ public class SybaseCapabilities extends JDBCCapabilities {
     }
     
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#getMaxFromGroups()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#getMaxFromGroups()
      */
     public int getMaxFromGroups() {
         return 50;
     }
     
     /** 
-     * @see com.metamatrix.connector.basic.BasicConnectorCapabilities#supportsIntersect()
+     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsIntersect()
      */
     @Override
     public boolean supportsIntersect() {

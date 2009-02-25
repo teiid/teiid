@@ -25,11 +25,12 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IParameter;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IParameter;
+
 
 final class FakeProcedureExecution extends BasicExecution implements ProcedureExecution {
 

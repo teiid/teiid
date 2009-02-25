@@ -22,7 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.symbol.Constant;
 

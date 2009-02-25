@@ -24,9 +24,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class InsertImpl extends BaseLanguageObject implements IInsert {
     
@@ -40,28 +41,28 @@ public class InsertImpl extends BaseLanguageObject implements IInsert {
         this.values = values;
     }
     /**
-     * @see com.metamatrix.connector.language.IInsert#getGroup()
+     * @see org.teiid.connector.language.IInsert#getGroup()
      */
     public IGroup getGroup() {
         return group;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IInsert#getElements()
+     * @see org.teiid.connector.language.IInsert#getElements()
      */
     public List getElements() {
         return elements;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IInsert#getValues()
+     * @see org.teiid.connector.language.IInsert#getValues()
      */
     public List getValues() {
         return values;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

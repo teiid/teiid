@@ -24,16 +24,16 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.Execution;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.basic.BasicConnector;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.Execution;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.basic.BasicConnector;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  */

@@ -27,9 +27,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.common.buffer.impl.BufferConfig;
-import com.metamatrix.connector.api.ConnectorIdentity;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**

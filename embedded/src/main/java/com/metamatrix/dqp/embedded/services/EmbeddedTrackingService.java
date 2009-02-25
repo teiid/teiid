@@ -24,10 +24,11 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.query.sql.lang.Command;
 

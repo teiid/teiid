@@ -23,9 +23,10 @@ package com.metamatrix.connector.salesforce.execution.visitors;
 
 import java.util.Iterator;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 

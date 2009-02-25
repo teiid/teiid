@@ -94,14 +94,15 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.SortControl;
 import javax.naming.ldap.SortKey;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /** 
  * LDAPSyncQueryExecution is responsible for executing an LDAP search 

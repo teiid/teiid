@@ -34,10 +34,10 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.internal.ConnectorPropertyNames;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import com.metamatrix.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import com.metamatrix.dqp.internal.process.DQPWorkContext;

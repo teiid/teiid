@@ -35,8 +35,8 @@ import org.jdom.Element;
 import org.jdom.IllegalNameException;
 import org.jdom.Namespace;
 import org.jdom.output.XMLOutputter;
+import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
 
 public class DocumentBuilder {

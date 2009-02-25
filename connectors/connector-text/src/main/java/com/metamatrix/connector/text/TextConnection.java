@@ -25,14 +25,15 @@ package com.metamatrix.connector.text;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /**
  * Implementation of Connection interface for text connection.

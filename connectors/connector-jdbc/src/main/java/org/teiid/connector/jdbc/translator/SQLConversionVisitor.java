@@ -35,21 +35,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
-import com.metamatrix.connector.language.ISetQuery.Operation;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
-import com.metamatrix.connector.visitor.util.SQLStringVisitor;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.language.IBulkInsert;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.language.ISetQuery.Operation;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.visitor.util.SQLStringVisitor;
+
 
 /**
  * This visitor takes an ICommand and does DBMS-specific conversion on it
@@ -185,7 +186,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.IProcedure)
+     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.IProcedure)
      */
     public void visit(IProcedure obj) {
         this.prepared = true;
@@ -197,7 +198,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     /**
-     * @see com.metamatrix.connector.visitor.util.SQLStringVisitor#visit(com.metamatrix.connector.language.ILiteral)
+     * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.ILiteral)
      */
     public void visit(ILiteral obj) {
         if (this.prepared && obj.isBindValue()) {

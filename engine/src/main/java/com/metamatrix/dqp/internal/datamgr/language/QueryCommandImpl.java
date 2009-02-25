@@ -25,24 +25,25 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.ISelectSymbol;
 
-public abstract class QueryCommandImpl extends BaseLanguageObject implements com.metamatrix.connector.language.IQueryCommand {
+
+public abstract class QueryCommandImpl extends BaseLanguageObject implements org.teiid.connector.language.IQueryCommand {
 
     private IOrderBy orderBy = null;
     private ILimit limit = null;
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getOrderBy()
+     * @see org.teiid.connector.language.IQuery#getOrderBy()
      */
     public IOrderBy getOrderBy() {
         return orderBy;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IQuery#getLimit()
+     * @see org.teiid.connector.language.IQuery#getLimit()
      */
     public ILimit getLimit() {
         return limit;

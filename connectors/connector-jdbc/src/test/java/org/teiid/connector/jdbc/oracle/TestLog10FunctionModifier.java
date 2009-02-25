@@ -26,14 +26,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.jdbc.oracle.Log10FunctionModifier;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.visitor.util.SQLStringVisitor;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 
 /**
  */

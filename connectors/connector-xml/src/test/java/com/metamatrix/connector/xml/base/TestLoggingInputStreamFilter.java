@@ -26,9 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.teiid.connector.api.ConnectorLogger;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorLogger;
 
 public class TestLoggingInputStreamFilter extends TestCase {
 

@@ -24,10 +24,11 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.ISearchedCaseExpression;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class SearchedCaseExpressionImpl extends BaseLanguageObject implements ISearchedCaseExpression {
 
@@ -43,35 +44,35 @@ public class SearchedCaseExpressionImpl extends BaseLanguageObject implements IS
         this.type = type;
     }
     /**
-     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getElseExpression()
+     * @see org.teiid.connector.language.ISearchedCaseExpression#getElseExpression()
      */
     public IExpression getElseExpression() {
         return elseExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getThenExpression(int)
+     * @see org.teiid.connector.language.ISearchedCaseExpression#getThenExpression(int)
      */
     public IExpression getThenExpression(int index) {
         return (IExpression)thenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getWhenCount()
+     * @see org.teiid.connector.language.ISearchedCaseExpression#getWhenCount()
      */
     public int getWhenCount() {
         return whenExpressions.size();
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISearchedCaseExpression#getWhenCriteria(int)
+     * @see org.teiid.connector.language.ISearchedCaseExpression#getWhenCriteria(int)
      */
     public ICriteria getWhenCriteria(int index) {
         return (ICriteria)whenExpressions.get(index);
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

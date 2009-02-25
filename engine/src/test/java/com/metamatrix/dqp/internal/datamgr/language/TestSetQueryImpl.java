@@ -25,14 +25,15 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IOrderByItem;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISetQuery;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.language.IOrderByItem;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.language.ISetQuery;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;

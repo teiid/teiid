@@ -28,9 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+
 
 /**
  */
@@ -83,7 +84,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
     
     /**
      * Subclass should override this method as needed.
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(com.metamatrix.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(org.teiid.connector.language.IFunction)
      */
     public IExpression modify(IFunction function) {
         return function;
@@ -91,7 +92,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
 
     /**
      * Subclass should override this method as needed.
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.FunctionModifier#translate(org.teiid.connector.language.IFunction)
      */
     public List translate(IFunction function) {
         return null;

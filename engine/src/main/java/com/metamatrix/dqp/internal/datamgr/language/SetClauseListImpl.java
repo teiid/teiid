@@ -25,9 +25,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.language.ISetClauseList;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.ISetClauseList;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class SetClauseListImpl implements ISetClauseList {
 

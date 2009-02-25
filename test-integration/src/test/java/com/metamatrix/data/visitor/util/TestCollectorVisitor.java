@@ -24,9 +24,10 @@ package com.metamatrix.data.visitor.util;
 
 import java.util.*;
 
-import com.metamatrix.connector.language.*;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.visitor.util.CollectorVisitor;
+import org.teiid.connector.language.*;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.visitor.util.CollectorVisitor;
+
 import com.metamatrix.dqp.internal.datamgr.language.*;
 
 import junit.framework.TestCase;

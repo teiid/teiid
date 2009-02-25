@@ -31,11 +31,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IParameter.Direction;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+
 import com.metamatrix.dqp.DQPPlugin;
 
 class ProcedureBatchHandler {

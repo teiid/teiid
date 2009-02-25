@@ -22,8 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 
 /** 
@@ -39,7 +39,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
         this.rowLimit = rowLimit;
     }
     /** 
-     * @see com.metamatrix.connector.language.ILimit#getRowLimit()
+     * @see org.teiid.connector.language.ILimit#getRowLimit()
      * @since 4.3
      */
     public int getRowLimit() {
@@ -47,7 +47,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ILimit#getRowOffset()
+     * @see org.teiid.connector.language.ILimit#getRowOffset()
      * @since 4.3
      */
     public int getRowOffset() {
@@ -55,7 +55,7 @@ public class LimitImpl extends BaseLanguageObject implements ILimit {
     }
 
     /** 
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.connector.visitor.framework.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(org.teiid.connector.visitor.framework.LanguageObjectVisitor)
      * @since 4.3
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {

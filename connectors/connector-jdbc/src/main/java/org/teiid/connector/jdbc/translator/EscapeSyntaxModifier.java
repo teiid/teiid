@@ -25,7 +25,8 @@ package org.teiid.connector.jdbc.translator;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.language.IFunction;
+import org.teiid.connector.language.IFunction;
+
 
 /**
  * Wrap a function in standard JDBC escape syntax.  In some cases, the 
@@ -39,7 +40,7 @@ public class EscapeSyntaxModifier extends BasicFunctionModifier {
     }
     
     /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
+     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.connector.language.IFunction)
      * @since 5.0
      */
     public List translate(IFunction function) {

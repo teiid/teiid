@@ -27,18 +27,18 @@ package org.teiid.connector.jdbc.sybase;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.SubstringFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IQueryCommand;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SourceSystemFunctions;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IQueryCommand;
 
 /**
  */

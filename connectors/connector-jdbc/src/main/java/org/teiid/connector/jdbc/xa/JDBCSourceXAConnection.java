@@ -31,12 +31,12 @@ import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.transaction.xa.XAResource;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.JDBCSourceConnection;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.xa.api.XAConnection;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.xa.api.XAConnection;
 
 public class JDBCSourceXAConnection extends JDBCSourceConnection implements XAConnection {
     private javax.sql.XAConnection xaConn;
@@ -60,7 +60,7 @@ public class JDBCSourceXAConnection extends JDBCSourceConnection implements XACo
     }
     
     /**
-     * @see com.metamatrix.connector.xa.api.XAConnection#getXAResource()
+     * @see org.teiid.connector.xa.api.XAConnection#getXAResource()
      */
     public XAResource getXAResource() throws ConnectorException {
         return resource;

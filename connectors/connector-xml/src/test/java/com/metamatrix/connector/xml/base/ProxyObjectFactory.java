@@ -30,14 +30,14 @@ import java.util.Properties;
 
 import org.jdom.Document;
 import org.jdom.input.SAXBuilder;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.connector.xml.SecureConnectorState;
 import com.metamatrix.connector.xml.file.FileConnectorState;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;

@@ -23,13 +23,14 @@ package com.metamatrix.connector.ldap;
 
 import java.util.Properties;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.basic.BasicConnector;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.basic.BasicConnector;
+
 
 /** 
  * LDAPConnector.  This is responsible for initializing 
@@ -59,7 +60,7 @@ public class LDAPConnector extends BasicConnector {
 	
     /** 
 	 * (non-Javadoc)
-	 * @see com.metamatrix.connector.basic.BasicConnector#initialize(com.metamatrix.connector.api.ConnectorEnvironment)
+	 * @see org.teiid.connector.basic.BasicConnector#initialize(org.teiid.connector.api.ConnectorEnvironment)
 	 */
 	@Override
 	public void start(ConnectorEnvironment env) throws ConnectorException {

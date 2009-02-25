@@ -28,18 +28,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IIsNullCriteria;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICompoundCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.IIsNullCriteria;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.IParameter;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.connector.metadata.index.MetadataInCriteria;
@@ -284,7 +285,7 @@ public class MetadataSearchCriteriaBuilder {
      * @since 4.3
      */
     private void buildMetadataCompoundCriteria(ICompoundCriteria compoundCriteria) throws ConnectorException {
-        if (compoundCriteria.getOperator() == com.metamatrix.connector.language.ICompoundCriteria.Operator.AND) {
+        if (compoundCriteria.getOperator() == org.teiid.connector.language.ICompoundCriteria.Operator.AND) {
             for(final Iterator critIter = compoundCriteria.getCriteria().iterator(); critIter.hasNext();) {
                 buildMetadataSearchCriteria((ICriteria)critIter.next());
             }

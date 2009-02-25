@@ -39,20 +39,21 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /**
  * Represents the execution of a command.

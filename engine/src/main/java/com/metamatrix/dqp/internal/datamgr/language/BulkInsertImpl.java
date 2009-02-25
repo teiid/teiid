@@ -25,9 +25,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IBulkInsert;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 
 /**
@@ -47,7 +48,7 @@ public class BulkInsertImpl extends InsertImpl implements IBulkInsert {
     }
         
     /**
-     * @see com.metamatrix.connector.language.IBulkInsert#getRows()
+     * @see org.teiid.connector.language.IBulkInsert#getRows()
      */
     public List getRows() {
         if (rowValues == null) {
@@ -65,20 +66,20 @@ public class BulkInsertImpl extends InsertImpl implements IBulkInsert {
     }
     
     /**
-     * @see com.metamatrix.connector.language.IInsert#getValues()
+     * @see org.teiid.connector.language.IInsert#getValues()
      */
     public List getValues() {
         throw new UnsupportedOperationException("This operation is not supported"); //$NON-NLS-1$
     }
     /**
-     * @see com.metamatrix.connector.language.IInsert#setValues(java.util.List)
+     * @see org.teiid.connector.language.IInsert#setValues(java.util.List)
      */
     public void setValues(List values) {
         throw new UnsupportedOperationException("This operation is not supported"); //$NON-NLS-1$        
     }
     
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -24,15 +24,16 @@ package com.metamatrix.connector.salesforce.connection;
 import java.net.URL;
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;

@@ -26,9 +26,10 @@ package com.metamatrix.server.dqp.service.tracker;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
 import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.server.ServerPlugin;

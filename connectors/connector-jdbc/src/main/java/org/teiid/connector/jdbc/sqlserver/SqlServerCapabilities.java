@@ -123,7 +123,7 @@ public class SqlServerCapabilities extends JDBCCapabilities {
     }
 
     /** 
-     * @see com.metamatrix.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
+     * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {

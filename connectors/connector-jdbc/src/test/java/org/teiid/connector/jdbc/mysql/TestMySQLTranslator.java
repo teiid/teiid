@@ -25,15 +25,15 @@ package org.teiid.connector.jdbc.mysql;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.MetadataFactory;
 import org.teiid.connector.jdbc.mysql.MySQLTranslator;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
+import org.teiid.connector.language.ICommand;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.ICommand;
 
 /**
  */

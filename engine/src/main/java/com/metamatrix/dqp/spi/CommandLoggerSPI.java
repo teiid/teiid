@@ -24,7 +24,8 @@ package com.metamatrix.dqp.spi;
 
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ExecutionContext;
+import org.teiid.connector.api.ExecutionContext;
+
 import com.metamatrix.dqp.service.TrackingService;
 
 /** 

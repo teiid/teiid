@@ -30,10 +30,10 @@ import junit.framework.TestCase;
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.XMLFilter;
 import org.xml.sax.XMLReader;
 
-import com.metamatrix.connector.api.ConnectorLogger;
 
 public class TestLargeTextExtractingXmlFilter extends TestCase {
 	

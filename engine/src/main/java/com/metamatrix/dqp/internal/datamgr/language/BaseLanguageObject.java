@@ -22,8 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.visitor.util.SQLStringVisitor;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.visitor.util.SQLStringVisitor;
 
 /**
  */

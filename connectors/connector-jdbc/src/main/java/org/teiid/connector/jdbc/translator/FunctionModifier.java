@@ -26,8 +26,9 @@ package org.teiid.connector.jdbc.translator;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+
 
 /**
  * Implementations of this interface are used to modify metamatrix functions

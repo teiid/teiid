@@ -24,13 +24,14 @@ package com.metamatrix.data.metadata.runtime;
 
 import java.util.Properties;
 
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.runtime.Element;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**

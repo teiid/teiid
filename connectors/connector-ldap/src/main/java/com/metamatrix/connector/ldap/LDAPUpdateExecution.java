@@ -33,25 +33,26 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.basic.BasicExecution;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IDelete;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.language.IUpdate;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.metadata.runtime.MetadataObject;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.IUpdate;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.metadata.runtime.MetadataObject;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 
 /**
  * Please see the user's guide for a full description of capabilties, etc.

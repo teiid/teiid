@@ -24,10 +24,11 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IQuery;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IQuery;
 
 /**
  * created by JChoate on Jun 16, 2005

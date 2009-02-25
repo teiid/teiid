@@ -27,18 +27,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IBaseInCriteria;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.LanguageUtil;
-import com.metamatrix.connector.language.ICompareCriteria.Operator;
-import com.metamatrix.connector.metadata.runtime.Element;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IBaseInCriteria;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.LanguageUtil;
+import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.metadata.runtime.Element;
+
 
 /**
  * @author BLotenberg

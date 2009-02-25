@@ -26,12 +26,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.Procedure;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.Procedure;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.SupportConstants;
@@ -90,7 +91,7 @@ public class ParameterImpl extends TypeModelImpl implements Parameter {
     }
 
     /** 
-     * @see com.metamatrix.connector.metadata.runtime.TypeModel#getNullability()
+     * @see org.teiid.connector.metadata.runtime.TypeModel#getNullability()
      * @since 4.3
      */
     public int getNullability() throws ConnectorException {

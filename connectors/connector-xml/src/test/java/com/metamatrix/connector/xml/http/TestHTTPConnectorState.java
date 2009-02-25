@@ -24,11 +24,12 @@ package com.metamatrix.connector.xml.http;
 
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 
 /**

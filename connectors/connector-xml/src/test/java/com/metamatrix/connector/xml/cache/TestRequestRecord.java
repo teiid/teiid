@@ -25,9 +25,9 @@ package com.metamatrix.connector.xml.cache;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorLogger;
 
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.CachingConnector;
 
 public class TestRequestRecord extends TestCase {

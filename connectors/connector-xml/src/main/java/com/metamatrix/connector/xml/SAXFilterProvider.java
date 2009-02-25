@@ -24,9 +24,9 @@
 
 package com.metamatrix.connector.xml;
 
+import org.teiid.connector.api.ConnectorLogger;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import com.metamatrix.connector.api.ConnectorLogger;
 
 public interface SAXFilterProvider {
 	

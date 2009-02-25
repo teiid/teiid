@@ -24,8 +24,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.ICompoundCriteria;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class CompoundCriteriaImpl extends BaseLanguageObject implements ICompoundCriteria {
     
@@ -38,21 +39,21 @@ public class CompoundCriteriaImpl extends BaseLanguageObject implements ICompoun
     }
 
     /**
-     * @see com.metamatrix.connector.language.ICompoundCriteria#getOperator()
+     * @see org.teiid.connector.language.ICompoundCriteria#getOperator()
      */
     public Operator getOperator() {
         return this.operator;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ICompoundCriteria#getCriteria()
+     * @see org.teiid.connector.language.ICompoundCriteria#getCriteria()
      */
     public List getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

@@ -24,7 +24,8 @@ package com.metamatrix.connector.exec;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
+
 
 /**
  */

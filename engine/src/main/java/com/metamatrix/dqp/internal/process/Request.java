@@ -33,6 +33,8 @@ import java.util.Set;
 
 import javax.transaction.SystemException;
 
+import org.teiid.connector.xa.api.TransactionContext;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -47,7 +49,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
 import com.metamatrix.core.util.Assertion;

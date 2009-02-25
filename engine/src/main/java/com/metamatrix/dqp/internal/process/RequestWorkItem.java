@@ -35,6 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 
+import org.teiid.connector.xa.api.TransactionContext;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -52,7 +54,6 @@ import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.connector.xa.api.TransactionContext;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;

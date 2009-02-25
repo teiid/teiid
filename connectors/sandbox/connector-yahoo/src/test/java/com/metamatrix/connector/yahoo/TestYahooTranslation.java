@@ -22,11 +22,12 @@
 
 package com.metamatrix.connector.yahoo;
 
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IQuery;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IQuery;
 
 public class TestYahooTranslation extends TestCase {
 	

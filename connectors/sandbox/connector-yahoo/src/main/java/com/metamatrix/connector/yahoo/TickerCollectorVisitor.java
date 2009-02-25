@@ -24,9 +24,10 @@ package com.metamatrix.connector.yahoo;
 
 import java.util.*;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.*;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.*;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
+
 
 /**
  */

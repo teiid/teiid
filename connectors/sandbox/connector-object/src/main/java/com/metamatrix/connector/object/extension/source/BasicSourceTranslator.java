@@ -28,13 +28,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.api.ValueTranslator;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.api.ValueTranslator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.object.ObjectPropertyNames;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
@@ -98,7 +99,7 @@ public class BasicSourceTranslator implements ISourceTranslator {
     }       
     
     /** 
-     * @see com.metamatrix.connector.object.extension.ISourceTranslator#createObjectCommand(com.metamatrix.connector.metadata.runtime.RuntimeMetadata, com.metamatrix.connector.language.IProcedure)
+     * @see com.metamatrix.connector.object.extension.ISourceTranslator#createObjectCommand(org.teiid.connector.metadata.runtime.RuntimeMetadata, org.teiid.connector.language.IProcedure)
      * @since 4.3
      */
     public IObjectCommand createObjectCommand(RuntimeMetadata metadata,

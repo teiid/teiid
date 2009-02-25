@@ -22,10 +22,11 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ISubqueryCompareCriteria.Quantifier;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ISubqueryCompareCriteria.Quantifier;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;

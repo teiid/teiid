@@ -22,10 +22,11 @@
 
 package com.metamatrix.connector.xml.base;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.basic.BasicConnector;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.basic.BasicConnector;
+
 import com.metamatrix.connector.xml.XMLConnectorState;
 
 /**

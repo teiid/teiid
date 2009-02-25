@@ -26,13 +26,14 @@ package org.teiid.connector.jdbc.translator;
 
 import java.util.List;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.visitor.framework.DelegatingHierarchyVisitor;
-import com.metamatrix.connector.visitor.util.CollectorVisitor;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.visitor.framework.DelegatingHierarchyVisitor;
+import org.teiid.connector.visitor.util.CollectorVisitor;
+
 
 /**
  * This is a utility class used to translate an ICommand using a SQLConversionVisitor.

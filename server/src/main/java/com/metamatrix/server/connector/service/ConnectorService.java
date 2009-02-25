@@ -41,6 +41,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
@@ -70,8 +73,6 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.internal.ConnectorPropertyNames;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ReflectionHelper;

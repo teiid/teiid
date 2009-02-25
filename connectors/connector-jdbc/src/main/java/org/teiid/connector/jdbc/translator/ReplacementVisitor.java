@@ -25,25 +25,26 @@ package org.teiid.connector.jdbc.translator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.IAggregate;
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IGroupBy;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.IInlineView;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.IIsNullCriteria;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.IQueryCommand;
-import com.metamatrix.connector.language.IScalarSubquery;
-import com.metamatrix.connector.language.ISearchedCaseExpression;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.language.ISubqueryCompareCriteria;
-import com.metamatrix.connector.language.ISubqueryInCriteria;
-import com.metamatrix.connector.visitor.framework.AbstractLanguageVisitor;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.language.IAggregate;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroupBy;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IInlineView;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IIsNullCriteria;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISubqueryCompareCriteria;
+import org.teiid.connector.language.ISubqueryInCriteria;
+import org.teiid.connector.visitor.framework.AbstractLanguageVisitor;
+
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
@@ -88,7 +89,7 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
     }
 
     /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.connector.language.IFunction)
+     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IFunction)
      */
     public void visit(IFunction obj) {
         List<IExpression> args = obj.getParameters();
@@ -98,7 +99,7 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
     }    
     
     /** 
-     * @see com.metamatrix.connector.visitor.framework.HierarchyVisitor#visit(com.metamatrix.connector.language.IGroupBy)
+     * @see org.teiid.connector.visitor.framework.HierarchyVisitor#visit(org.teiid.connector.language.IGroupBy)
      * @since 4.3
      */
     public void visit(IGroupBy obj) {
@@ -124,7 +125,7 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
     }
 
     /**
-     * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(com.metamatrix.connector.language.IInsert)
+     * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(org.teiid.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
         List<IExpression> values = obj.getValues();

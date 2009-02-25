@@ -22,14 +22,14 @@
 
 package com.metamatrix.connector.xmlsource;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.Connector;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
-import com.metamatrix.connector.basic.BasicConnector;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+import org.teiid.connector.basic.BasicConnector;
 
 /**
  * XML Source connector, will give provide a XML document as source to
@@ -58,7 +58,7 @@ public class XMLSourceConnector extends BasicConnector {
 
     /**
      * Stop the Connector 
-     * @see com.metamatrix.connector.api.Connector#stop()
+     * @see org.teiid.connector.api.Connector#stop()
      */
     public void stop() {
         if (!start) {

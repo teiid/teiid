@@ -22,7 +22,8 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.IExpression;
+import org.teiid.connector.language.IExpression;
+
 import com.metamatrix.query.sql.symbol.*;
 
 import junit.framework.TestCase;

@@ -36,8 +36,8 @@ import org.apache.ws.security.WSPasswordCallback;
 import org.apache.ws.security.handler.WSHandlerConstants;
 import org.apache.ws.security.message.token.UsernameToken;
 import org.apache.ws.security.util.Base64;
+import org.teiid.connector.api.ConnectorEnvironment;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
 import com.metamatrix.connector.xml.TrustedPayloadHandler;
 import com.metamatrix.connector.xmlsource.XMLSourcePlugin;
 

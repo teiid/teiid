@@ -27,14 +27,14 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.apache.axis.message.MessageElement;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.metadata.runtime.Element;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 public class InsertVisitor extends CriteriaVisitor {
 

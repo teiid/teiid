@@ -22,18 +22,19 @@
 
 package com.metamatrix.connector.metadata.adapter;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.api.ResultSetExecution;
-import com.metamatrix.connector.basic.BasicConnection;
-import com.metamatrix.connector.language.IProcedure;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.IQueryCommand;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.api.ResultSetExecution;
+import org.teiid.connector.basic.BasicConnection;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+
 import com.metamatrix.connector.metadata.MetadataProcedureExecution;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 
 /**
  * Adapter to make object processing code comply with the standard connector API.

@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareCriteria {
 
@@ -38,21 +38,21 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
         this.operator = operator;
     }
     /**
-     * @see com.metamatrix.connector.language.ICompareCriteria#getLeftExpression()
+     * @see org.teiid.connector.language.ICompareCriteria#getLeftExpression()
      */
     public IExpression getLeftExpression() {
         return leftExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ICompareCriteria#getRightExpression()
+     * @see org.teiid.connector.language.ICompareCriteria#getRightExpression()
      */
     public IExpression getRightExpression() {
         return rightExpression;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ICompareCriteria#getOperator()
+     * @see org.teiid.connector.language.ICompareCriteria#getOperator()
      */
     public Operator getOperator() {
         return this.operator;
@@ -80,7 +80,7 @@ public class CompareCriteriaImpl extends BaseLanguageObject implements ICompareC
     }
     
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

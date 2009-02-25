@@ -27,12 +27,13 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.IndexConnector;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;

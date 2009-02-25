@@ -24,7 +24,8 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.sql.ResultSet;
 
-import com.metamatrix.connector.language.IParameter.Direction;
+import org.teiid.connector.language.IParameter.Direction;
+
 
 import junit.framework.TestCase;
 

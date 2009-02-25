@@ -27,12 +27,13 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.language.IProcedure;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ProcedureExecution;
-import com.metamatrix.connector.language.IProcedure;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;

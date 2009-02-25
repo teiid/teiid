@@ -24,7 +24,7 @@
  */
 package com.metamatrix.dqp.internal.pooling.connector;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
 
 /**
  * This class is for exceptions occurring within the connection pool.

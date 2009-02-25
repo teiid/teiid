@@ -22,11 +22,12 @@
 
 package org.teiid.connector.jdbc;
 
+import org.teiid.connector.language.ICommand;
+
 import junit.framework.Assert;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.connector.language.ICommand;
 
 public class MetadataFactory {
 	

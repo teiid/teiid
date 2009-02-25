@@ -26,18 +26,19 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.CredentialMap;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.ConnectorAnnotations.ConnectionPooling;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.CredentialMap;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+
 import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 
 @ConnectionPooling
-public class Connector extends com.metamatrix.connector.basic.BasicConnector {
+public class Connector extends org.teiid.connector.basic.BasicConnector {
 
 	private ConnectorLogger logger;
 

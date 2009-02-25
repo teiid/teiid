@@ -26,19 +26,19 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.visitor.util.CollectorVisitor;
 
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.TypeFacility;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IQuery;
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.language.ISelectSymbol;
-import com.metamatrix.connector.visitor.util.CollectorVisitor;
 
 public class OracleSpatialSQLTranslator extends Translator {
 

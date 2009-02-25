@@ -26,10 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MappedUserIdentity;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.MappedUserIdentity;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorWrapper;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 

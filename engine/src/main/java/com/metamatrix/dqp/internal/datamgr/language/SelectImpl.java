@@ -24,8 +24,9 @@ package com.metamatrix.dqp.internal.datamgr.language;
 
 import java.util.List;
 
-import com.metamatrix.connector.language.ISelect;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class SelectImpl extends BaseLanguageObject implements ISelect {
     
@@ -38,21 +39,21 @@ public class SelectImpl extends BaseLanguageObject implements ISelect {
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISelect#getSelectSymbols()
+     * @see org.teiid.connector.language.ISelect#getSelectSymbols()
      */
     public List getSelectSymbols() {
         return selectSymbols;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ISelect#isDistinct()
+     * @see org.teiid.connector.language.ISelect#isDistinct()
      */
     public boolean isDistinct() {
         return this.isDistinct;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

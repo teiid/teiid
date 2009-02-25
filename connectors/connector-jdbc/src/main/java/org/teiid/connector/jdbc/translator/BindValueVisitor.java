@@ -22,20 +22,20 @@
 
 package org.teiid.connector.jdbc.translator;
 
-import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.IExistsCriteria;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.IInCriteria;
-import com.metamatrix.connector.language.IInlineView;
-import com.metamatrix.connector.language.IInsert;
-import com.metamatrix.connector.language.ILanguageObject;
-import com.metamatrix.connector.language.ILikeCriteria;
-import com.metamatrix.connector.language.ILiteral;
-import com.metamatrix.connector.language.IScalarSubquery;
-import com.metamatrix.connector.language.ISearchedCaseExpression;
-import com.metamatrix.connector.language.ISetClause;
-import com.metamatrix.connector.language.ISubqueryCompareCriteria;
-import com.metamatrix.connector.visitor.framework.HierarchyVisitor;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.IExistsCriteria;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IInlineView;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.ISubqueryCompareCriteria;
+import org.teiid.connector.visitor.framework.HierarchyVisitor;
 
 /**
  * This visitor will mark literals in well known locations as bindValues.

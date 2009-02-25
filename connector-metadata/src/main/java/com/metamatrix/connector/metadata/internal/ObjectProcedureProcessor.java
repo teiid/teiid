@@ -31,12 +31,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.connector.api.ConnectorException;
+
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.vdb.api.VDBFile;
-import com.metamatrix.connector.api.ConnectorException;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.ResultsIterator;
 import com.metamatrix.core.util.ArgCheck;

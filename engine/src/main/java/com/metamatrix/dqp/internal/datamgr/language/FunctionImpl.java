@@ -25,9 +25,10 @@ package com.metamatrix.dqp.internal.datamgr.language;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
+
 
 public class FunctionImpl extends BaseLanguageObject implements IFunction {
 
@@ -46,21 +47,21 @@ public class FunctionImpl extends BaseLanguageObject implements IFunction {
     }
     
     /**
-     * @see com.metamatrix.connector.language.IFunction#getName()
+     * @see org.teiid.connector.language.IFunction#getName()
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * @see com.metamatrix.connector.language.IFunction#getParameters()
+     * @see org.teiid.connector.language.IFunction#getParameters()
      */
     public List<IExpression> getParameters() {
         return parameters;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

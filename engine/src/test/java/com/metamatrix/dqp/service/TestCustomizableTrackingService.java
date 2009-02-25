@@ -26,12 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ExecutionContext;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
 import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.query.sql.lang.Command;

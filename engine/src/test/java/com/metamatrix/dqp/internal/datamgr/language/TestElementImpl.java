@@ -22,12 +22,13 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.metadata.runtime.Element;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.connector.language.IElement;
-import com.metamatrix.connector.language.IGroup;
-import com.metamatrix.connector.metadata.runtime.Element;
 import com.metamatrix.dqp.internal.datamgr.metadata.TestMetadataFactory;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataObject;

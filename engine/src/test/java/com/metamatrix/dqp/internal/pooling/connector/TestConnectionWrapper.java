@@ -25,8 +25,8 @@ package com.metamatrix.dqp.internal.pooling.connector;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.connector.basic.BasicConnection;
 
-import com.metamatrix.connector.basic.BasicConnection;
 
 public class TestConnectionWrapper extends TestCase {
 

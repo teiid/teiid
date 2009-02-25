@@ -27,8 +27,9 @@ package com.metamatrix.dqp.internal.datamgr.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.connector.metadata.runtime.Parameter;
-import com.metamatrix.connector.metadata.runtime.Procedure;
+import org.teiid.connector.metadata.runtime.Parameter;
+import org.teiid.connector.metadata.runtime.Procedure;
+
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.sql.lang.SPParameter;
 

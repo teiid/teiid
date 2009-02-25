@@ -22,7 +22,7 @@
 
 package com.metamatrix.connector.text;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
 
 public class TextCapabilities extends BasicConnectorCapabilities {
 

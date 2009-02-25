@@ -22,9 +22,9 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
-import com.metamatrix.connector.language.ICriteria;
-import com.metamatrix.connector.language.INotCriteria;
-import com.metamatrix.connector.visitor.framework.LanguageObjectVisitor;
+import org.teiid.connector.language.ICriteria;
+import org.teiid.connector.language.INotCriteria;
+import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class NotCriteriaImpl extends BaseLanguageObject implements INotCriteria {
 
@@ -34,14 +34,14 @@ public class NotCriteriaImpl extends BaseLanguageObject implements INotCriteria 
         this.criteria = criteria;
     }
     /**
-     * @see com.metamatrix.connector.language.INotCriteria#getCriteria()
+     * @see org.teiid.connector.language.INotCriteria#getCriteria()
      */
     public ICriteria getCriteria() {
         return criteria;
     }
 
     /**
-     * @see com.metamatrix.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
+     * @see org.teiid.connector.language.ILanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
      */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

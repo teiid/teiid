@@ -24,12 +24,13 @@
  */
 package com.metamatrix.connector.object.extension.source;
 
-import com.metamatrix.connector.api.Connection;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorIdentity;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.SingleIdentity;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SingleIdentity;
+
 import com.metamatrix.connector.object.ObjectConnection;
 import com.metamatrix.connector.object.SourceConnectionFactory;
 import com.metamatrix.connector.object.extension.IObjectSource;
@@ -60,7 +61,7 @@ public abstract class BaseSourceConnectionFactory implements SourceConnectionFac
 
     
     /** 
-     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(com.metamatrix.connector.api.ConnectorIdentity)
+     * @see com.metamatrix.data.pool.SourceConnectionFactory#createConnection(org.teiid.connector.api.ConnectorIdentity)
      * @since 4.3
      */
     public final Connection createConnection(ConnectorIdentity id) throws ConnectorException {

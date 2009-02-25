@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.TypeFacility.RUNTIME_TYPES;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
 
-import com.metamatrix.connector.api.TypeFacility.RUNTIME_TYPES;
-import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
-import com.metamatrix.connector.language.ILanguageFactory;
 
 public class ModFunctionModifier extends AliasModifier {
 

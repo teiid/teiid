@@ -24,7 +24,7 @@
 
 package com.metamatrix.connector.xml;
 
-import com.metamatrix.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorException;
 
 public interface SecureConnectorState {
 

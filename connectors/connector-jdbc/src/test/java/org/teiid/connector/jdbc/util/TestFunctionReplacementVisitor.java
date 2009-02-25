@@ -30,11 +30,11 @@ import org.teiid.connector.jdbc.translator.DropFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.ReplacementVisitor;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.visitor.framework.DelegatingHierarchyVisitor;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.visitor.framework.DelegatingHierarchyVisitor;
 
 /**
  */

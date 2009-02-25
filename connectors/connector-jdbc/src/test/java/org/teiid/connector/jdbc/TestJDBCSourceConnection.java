@@ -25,6 +25,8 @@ package org.teiid.connector.jdbc;
 import java.sql.Connection;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.jdbc.JDBCSourceConnection;
 import org.teiid.connector.jdbc.translator.Translator;
@@ -32,8 +34,6 @@ import org.teiid.connector.jdbc.translator.Translator;
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
 import com.metamatrix.core.util.SimpleMock;
 
 

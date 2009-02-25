@@ -21,7 +21,7 @@
  */
 package com.metamatrix.connector.ldap;
 
-import com.metamatrix.connector.basic.BasicConnectorCapabilities;
+import org.teiid.connector.basic.BasicConnectorCapabilities;
 
 /**
  * This class extends the BasicConnectorCapabilities class, and establishes

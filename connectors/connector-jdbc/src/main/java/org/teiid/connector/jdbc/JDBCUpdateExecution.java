@@ -29,17 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.DataNotAvailableException;
+import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.IBatchedUpdates;
+import org.teiid.connector.language.IBulkInsert;
+import org.teiid.connector.language.ICommand;
 
-import com.metamatrix.connector.api.ConnectorException;
-import com.metamatrix.connector.api.ConnectorLogger;
-import com.metamatrix.connector.api.DataNotAvailableException;
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.api.UpdateExecution;
-import com.metamatrix.connector.language.IBatchedUpdates;
-import com.metamatrix.connector.language.IBulkInsert;
-import com.metamatrix.connector.language.ICommand;
 
 /**
  */
@@ -84,7 +84,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
     }
 
     /**
-     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(com.metamatrix.connector.language.ICommand[])
+     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(org.teiid.connector.language.ICommand[])
      * @since 4.2
      */
     public int[] execute(IBatchedUpdates batchedCommand) throws ConnectorException {

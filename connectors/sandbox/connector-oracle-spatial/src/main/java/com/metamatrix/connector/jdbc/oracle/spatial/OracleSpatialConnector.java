@@ -28,11 +28,11 @@
  */
 package com.metamatrix.connector.jdbc.oracle.spatial;
 
+import org.teiid.connector.api.ConnectorCapabilities;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.JDBCConnector;
 
-import com.metamatrix.connector.api.ConnectorCapabilities;
-import com.metamatrix.connector.api.ConnectorEnvironment;
-import com.metamatrix.connector.api.ConnectorException;
 
 public class OracleSpatialConnector extends JDBCConnector {
     

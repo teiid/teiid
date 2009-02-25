@@ -27,13 +27,13 @@ package org.teiid.connector.jdbc.access;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IQueryCommand;
 
-import com.metamatrix.connector.api.ExecutionContext;
-import com.metamatrix.connector.language.ICommand;
-import com.metamatrix.connector.language.ILimit;
-import com.metamatrix.connector.language.IOrderBy;
-import com.metamatrix.connector.language.IQueryCommand;
 
 public class AccessSQLTranslator extends Translator {
 	
