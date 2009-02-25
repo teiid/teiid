@@ -81,7 +81,6 @@ public class TestTranslationUtility extends TestCase {
 
     public void testGetRMD() throws Exception {
         TranslationUtility util = new TranslationUtility(getTestVDB());
-        RuntimeMetadata rmd = util.createRuntimeMetadata();
         
         // Translate command to get some ids
         IQuery query = (IQuery) util.parseCommand("select * from partssupplier.parts"); //$NON-NLS-1$

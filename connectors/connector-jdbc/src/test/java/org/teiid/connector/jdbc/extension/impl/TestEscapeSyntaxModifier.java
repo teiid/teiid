@@ -22,6 +22,7 @@
 
 package org.teiid.connector.jdbc.extension.impl;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +33,8 @@ import junit.framework.TestCase;
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILiteral;
+import com.metamatrix.connector.visitor.util.SQLReservedWords;
+import com.metamatrix.query.unittest.TimestampUtil;
 
 /**
  */
@@ -46,17 +49,32 @@ public class TestEscapeSyntaxModifier extends TestCase {
     }
 
     public void testEscape() {
-        EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
-    
         ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral("arg1", String.class); //$NON-NLS-1$
         ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral("arg2", String.class);//$NON-NLS-1$
         IFunction func = CommandBuilder.getLanuageFactory().createFunction("concat", Arrays.asList( arg1, arg2), Integer.class); //$NON-NLS-1$
                 
-        func = (IFunction) mod.modify(func);
-        List parts = mod.translate(func);
-        
-        List expected = Arrays.asList(new Object[] { "{fn ", "concat", "(", arg1, ", ", arg2, ")", "}"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-        assertEquals(expected, parts);
+        helpTest(func, "{fn concat('arg1', 'arg2')}");
     }
+    
+    public void testTimestampAdd() {
+        ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); //$NON-NLS-1$
+        ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);//$NON-NLS-1$
+        ILiteral arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);//$NON-NLS-1$
+        IFunction func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
+                
+        helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts'1899-12-31 00:00:00.0'})}");
+    }
+
+	private void helpTest(IFunction func, String expected) {
+        EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
+
+		func = (IFunction) mod.modify(func);
+        List parts = mod.translate(func);
+        StringBuffer sb = new StringBuffer();
+        for (Object object : parts) {
+			sb.append(object);
+		}
+        assertEquals(expected, sb.toString());
+	}
     
 }

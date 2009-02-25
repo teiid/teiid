@@ -102,7 +102,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
         
-        capabilities = createCapabilities(environment, Thread.currentThread().getContextClassLoader());
+        capabilities = createCapabilities(environment.getProperties(), Thread.currentThread().getContextClassLoader());
 
         Properties connectionProps = environment.getProperties();
 
@@ -128,6 +128,8 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
             throw new ConnectorException(e);
         }
         sqlTranslator.initialize(environment);
+        
+        createDataSources(dataSourceClassName, connectionProps);
         
         if (areAdminConnectionsAllowed()) {
         	testConnection();
@@ -232,14 +234,14 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 		return capabilities;
 	}
 
-	static ConnectorCapabilities createCapabilities(ConnectorEnvironment environment, ClassLoader loader)
+	static ConnectorCapabilities createCapabilities(Properties p, ClassLoader loader)
 		throws ConnectorException {
 		//create Capabilities
-		String className = environment.getProperties().getProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, JDBCCapabilities.class.getName());  
+		String className = p.getProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, JDBCCapabilities.class.getName());  
 		try {
 		    ConnectorCapabilities result = (ConnectorCapabilities)ReflectionHelper.create(className, null, loader);
 		    if(result instanceof JDBCCapabilities) {
-		        String setCriteriaBatchSize = environment.getProperties().getProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE);
+		        String setCriteriaBatchSize = p.getProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE);
 		        if(setCriteriaBatchSize != null) {
 		            int maxInCriteriaSize = Integer.parseInt(setCriteriaBatchSize);
 		            if(maxInCriteriaSize > 0) {
@@ -277,12 +279,20 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     					Object[] args) throws Throwable {
     				if (method.getName().equals("getConnection")) {
     					Properties p = new Properties();
-    					if (args.length == 2) {
-    						p.put("user", args[0]);
-    						p.put("password", args[1]);
+    					String user = null;
+    					String password = null;
+    					if (args != null && args.length == 2) {
+    						user = (String)args[0];
+    						password = (String)args[1];
     					} else {
-    						p.put("user", connectionProps.getProperty(JDBCPropertyNames.USERNAME));
-    						p.put("password", connectionProps.getProperty(JDBCPropertyNames.PASSWORD));
+    						user = connectionProps.getProperty(JDBCPropertyNames.USERNAME);
+    						password = connectionProps.getProperty(JDBCPropertyNames.PASSWORD);
+    					}
+    					if (user != null) {
+    						p.put("user", user);
+    					}
+    					if (password != null) {
+    						p.put("password", password);
     					}
     					return driver.connect(url, p);
     				} 

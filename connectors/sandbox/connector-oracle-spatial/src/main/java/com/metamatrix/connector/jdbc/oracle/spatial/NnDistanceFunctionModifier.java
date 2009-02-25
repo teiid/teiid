@@ -38,7 +38,4 @@ public class NnDistanceFunctionModifier extends OracleSpatialFunctionModifier {
         return function;
     }
 
-    public List translate(IFunction function) {
-        return super.translate(function);
-    }
 }

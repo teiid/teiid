@@ -29,7 +29,6 @@ import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
 
 import com.metamatrix.connector.language.ICompareCriteria;
-import com.metamatrix.connector.language.ICriteria;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILanguageFactory;
@@ -48,10 +47,6 @@ class MySQLConvertModifier extends BasicFunctionModifier {
     
     MySQLConvertModifier(ILanguageFactory langFactory) {
         this.langFactory = langFactory;
-    }
-
-    public List translate(IFunction function) {
-        return null;
     }
 
     public IExpression modify(IFunction function) {

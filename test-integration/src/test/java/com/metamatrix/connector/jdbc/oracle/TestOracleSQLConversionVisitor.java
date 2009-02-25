@@ -22,17 +22,13 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
-import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.jdbc.JDBCPropertyNames;
-import org.teiid.connector.jdbc.oracle.ExtractFunctionModifier;
-import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
-import org.teiid.connector.jdbc.translator.FunctionReplacementVisitor;
-import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.jdbc.translator.TranslatedCommand;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
+import org.teiid.connector.jdbc.translator.TranslatedCommand;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -43,7 +39,6 @@ import com.metamatrix.connector.api.ExecutionContext;
 import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
 import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
@@ -56,24 +51,8 @@ import com.metamatrix.query.unittest.FakeMetadataStore;
 /**
  */
 public class TestOracleSQLConversionVisitor extends TestCase {
-    private static Map MODIFIERS;
     private static ExecutionContext EMPTY_CONTEXT = new FakeExecutionContextImpl();
     
-    static {
-        OracleSQLTranslator trans = new OracleSQLTranslator();
-        
-        try {
-            trans.initialize(new ConnectorEnvironmentImpl(new Properties(), null, null));
-        } catch(ConnectorException e) {
-            e.printStackTrace();
-        }
-        
-        MODIFIERS = trans.getFunctionModifiers();
-        
-        ExtractFunctionModifier extractMod = new ExtractFunctionModifier ("month"); //$NON-NLS-1$
-        MODIFIERS.put("extract", extractMod);  //$NON-NLS-1$
-    }
-
     /**
      * Constructor for TestOracleSQLConversionVisitor.
      * @param name
@@ -86,37 +65,36 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplierOracle.vdb"; //$NON-NLS-1$
     }
     
-    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
-        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, false);
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+        helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, false);
     }
 
-    private void helpTestVisitor(String vdb, String input, Map modifiers, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
-        helpTestVisitor(vdb, input, modifiers, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, correctNaming);
+    private void helpTestVisitor(String vdb, String input, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+        helpTestVisitor(vdb, input, EMPTY_CONTEXT, dbmsTimeZone, expectedOutput, correctNaming);
     }
 
-    private void helpTestVisitor(String vdb, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
+    private void helpTestVisitor(String vdb, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput, boolean correctNaming) throws ConnectorException {
         // Convert from sql to objects
         TranslationUtility util = new TranslationUtility(vdb);
         ICommand obj =  util.parseCommand(input, correctNaming, true);        
-		this.helpTestVisitor(obj, util.createRuntimeMetadata(), modifiers, context, dbmsTimeZone, expectedOutput);
+		this.helpTestVisitor(obj, util.createRuntimeMetadata(), context, dbmsTimeZone, expectedOutput);
     }
 
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
      * @throws ConnectorException 
      */
-    private void helpTestVisitor(QueryMetadataInterface metadata, String input, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         ICommand obj = commandBuilder.getCommand(input);
         RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(metadata);
-		this.helpTestVisitor(obj, runtimeMetadata, modifiers, context, dbmsTimeZone, expectedOutput);
+		this.helpTestVisitor(obj, runtimeMetadata, context, dbmsTimeZone, expectedOutput);
     }
     
-    private void helpTestVisitor(ICommand obj, RuntimeMetadata metadata, Map modifiers, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(ICommand obj, RuntimeMetadata metadata, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
 
         
         // Apply function replacement
-        FunctionReplacementVisitor funcVisitor = new FunctionReplacementVisitor(modifiers);
         OracleSQLTranslator translator = new OracleSQLTranslator();
         Properties p = new Properties();
         if (dbmsTimeZone != null) {
@@ -124,9 +102,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         }
         translator.initialize(EnvironmentUtility.createEnvironment(p, false));
         // Convert back to SQL
-        SQLConversionVisitor sqlVisitor = translator.getSQLConversionVisitor();      
-        sqlVisitor.setExecutionContext(context);
-        TranslatedCommand tc = new TranslatedCommand(context, translator, sqlVisitor, funcVisitor);
+        TranslatedCommand tc = new TranslatedCommand(context, translator);
         tc.translateCommand(obj);
         
         // Check stuff
@@ -144,8 +120,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
                         input, 
-                        MODIFIERS, null,
-                        output);
+                        null, output);
     }
     
     /** defect 21775 */
@@ -155,8 +130,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                         input, 
-                        MODIFIERS, EMPTY_CONTEXT, null,
-                        output);
+                        EMPTY_CONTEXT, null, output);
     }
     
     /**
@@ -171,8 +145,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);
+                EMPTY_CONTEXT, null, output);
     }
     
     public void testCharFunction() throws Exception {
@@ -181,7 +154,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }    
@@ -192,7 +164,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -203,7 +174,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -214,7 +184,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -225,7 +194,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -236,7 +204,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -248,7 +215,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -259,7 +225,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -271,7 +236,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -282,7 +246,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         String output = "SELECT to_date(PARTS.PART_ID, 'YYYY-MM-DD') FROM PARTS";  //$NON-NLS-1$
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -294,7 +257,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -306,7 +268,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -317,14 +278,12 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);
+                EMPTY_CONTEXT, null, output);
     }
 
     public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$
-            MODIFIERS,
             null,
             "SELECT y.PART_NAME FROM PARTS y"); //$NON-NLS-1$
     }
@@ -332,7 +291,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     public void testDateLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {d'2002-12-31'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
             null,
             "SELECT {d'2002-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
@@ -340,7 +298,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     public void testTimeLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
             null,
             "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
@@ -348,7 +305,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     public void testTimestampLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {ts'2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
-            MODIFIERS,
             null,
             "SELECT {ts'2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
     }
@@ -356,23 +312,22 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     public void testUnionOrderByWithThreeBranches() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id", //$NON-NLS-1$
-                        MODIFIERS,
                         null,
-                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0", true); //$NON-NLS-1$
+                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0",
+                        true); //$NON-NLS-1$
     }
     
     public void testUnionOrderBy() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id FROM parts UNION ALL select part_name FROM parts ORDER BY part_id", //$NON-NLS-1$
-                        MODIFIERS,
                         null,
-                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0", true); //$NON-NLS-1$
+                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0",
+                        true); //$NON-NLS-1$
     }
 
     public void testUnionOrderBy2() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id as p FROM parts UNION ALL select part_name FROM parts ORDER BY p", //$NON-NLS-1$
-                        MODIFIERS,
                         null,
                         "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p"); //$NON-NLS-1$
     }
@@ -383,8 +338,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);
+                EMPTY_CONTEXT, null, output);
     }
     
 
@@ -403,7 +357,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);
     }
@@ -422,7 +375,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);        
     }
@@ -440,7 +392,6 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             null,
             output);        
     }    
@@ -460,10 +411,10 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         
         helpTestVisitor(getTestVDB(),
             input, 
-            MODIFIERS,
             context,
             null,
-            output, false);        
+            output,
+            false);        
     }
     
     /**
@@ -477,7 +428,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
 
         FakeMetadataFacade metadata = exampleCase3845();
 
-        helpTestVisitor(metadata, input, MODIFIERS, EMPTY_CONTEXT, null, output);
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
     }
     
     /** create fake BQT metadata to test this case, name in source is important */
@@ -496,7 +447,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     }
 
 	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws ConnectorException {
-		helpTestVisitor(vdb, input, MODIFIERS, null, expectedOutput);
+		helpTestVisitor(vdb, input, null, expectedOutput);
 	}
 
     public void testRowLimit2() throws Exception {
@@ -505,18 +456,16 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);        
+                EMPTY_CONTEXT, null, output);        
     }
     
     public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
-        String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 100) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);        
+                EMPTY_CONTEXT, null, output);        
     }
             
     public void testLimitWithNestedInlineView() throws Exception {
@@ -525,8 +474,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);        
+                EMPTY_CONTEXT, null, output);        
     }
     
     public void testExceptAsMinus() throws Exception {
@@ -535,8 +483,31 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
-                MODIFIERS, EMPTY_CONTEXT, null,
-                output);        
+                EMPTY_CONTEXT, null, output);        
+    }
+    
+    public void testConcat2_useLiteral() throws Exception {
+        String sql = "select concat2(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT concat(nvl(SmallA.StringNum, ''), '_xx') FROM SmallA"; //$NON-NLS-1$
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+
+    public void testConcat2() throws Exception {
+        String sql = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringNum, '')) END FROM SmallA";
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    public void testConcat() throws Exception {
+        String sql = "select concat(stringnum, stringkey) from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT CASE WHEN (SmallA.StringNum IS NULL) OR (SmallA.StringKey IS NULL) THEN NULL ELSE concat(SmallA.StringNum, SmallA.StringKey) END FROM SmallA";
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    public void testConcat_withLiteral() throws Exception {
+        String sql = "select stringnum || '1' from BQT1.Smalla"; //$NON-NLS-1$       
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA";
+        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
 
 }

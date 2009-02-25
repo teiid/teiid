@@ -27,18 +27,9 @@ import java.util.List;
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 
 import com.metamatrix.connector.language.IExpression;
-import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.ILiteral;
 
 public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
-
-    public IExpression modify(IFunction function) {
-        return super.modify(function);
-    }
-
-    public List translate(IFunction function) {
-        return super.translate(function);
-    }
 
     protected void addParamWithConversion(List objs,
                                           IExpression expression) {

@@ -437,12 +437,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
                 buffer.append(((ILiteral)args.get(0)).getValue());
 
                 for(int i=1; i<args.size(); i++) {
-                    append(args.get(i));
-                    if(i < (args.size()-1)) {
-                        buffer.append(SPACE);
-                        buffer.append(name);
-                        buffer.append(SPACE);
-                    }
+                	buffer.append(COMMA); 
+                    buffer.append(SPACE);
+                	append(args.get(i));
                 }
             }
             buffer.append(RPAREN);

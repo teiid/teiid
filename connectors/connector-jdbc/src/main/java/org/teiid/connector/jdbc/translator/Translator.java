@@ -635,25 +635,13 @@ public class Translator {
                     return new Float(value);
                 }
                 case TIME_CODE: {
-                    try {
-                        return results.getTime(parameterIndex, getDatabaseCalendar());
-                    } catch (SQLException e) {
-                        //ignore
-                    }
+                    return results.getTime(parameterIndex, getDatabaseCalendar());
                 }
                 case DATE_CODE: {
-                    try {
-                        return results.getDate(parameterIndex, getDatabaseCalendar());
-                    } catch (SQLException e) {
-                        //ignore
-                    }
+                    return results.getDate(parameterIndex, getDatabaseCalendar());
                 }
                 case TIMESTAMP_CODE: {
-                    try {
-                        return results.getTimestamp(parameterIndex, getDatabaseCalendar());
-                    } catch (SQLException e) {
-                        //ignore
-                    }
+                    return results.getTimestamp(parameterIndex, getDatabaseCalendar());
                 }
     			case BLOB_CODE: {
     				try {

@@ -46,25 +46,6 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         this.langFactory = langFactory;
     }
 
-    /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
-     * @since 5.0
-     */
-    public List translate(IFunction function) {
-        // For anything that doesn't get modified to some other function, translate the convert(expr, type)
-        // to cast(expr as type).
-        
-        List parts = new ArrayList();
-        parts.add("cast("); //$NON-NLS-1$
-        parts.add(function.getParameters().get(0));
-        parts.add(" as ");         //$NON-NLS-1$
-        ILiteral type = (ILiteral) function.getParameters().get(1);        
-        parts.add(type.getValue());
-        parts.add(")"); //$NON-NLS-1$
-        
-        return parts;
-    }
-    
     public IExpression modify(IFunction function) {
         List<IExpression> args = function.getParameters();
         Class sourceType = args.get(0).getType();
@@ -252,11 +233,11 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
 
             // BEFORE: convert(string_expr, float)
             // AFTER:  cast(cast(string_expr as decimal) as float)
-            IFunction inner = langFactory.createFunction("convert",  //$NON-NLS-1$
+            IFunction inner = langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
 
-            IFunction outer = langFactory.createFunction("convert",  //$NON-NLS-1$
+            IFunction outer = langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( inner, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.FLOAT);
 
@@ -267,7 +248,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         
             // BEFORE: convert(num_expr, float)
             // AFTER:  cast(num_expr as float)
-            return langFactory.createFunction("convert",  //$NON-NLS-1$
+            return langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( expression, langFactory.createLiteral("float", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.FLOAT);
         }
@@ -281,11 +262,11 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING)){
             // BEFORE: convert(string_expr, double)
             // AFTER:  cast(cast(string_expr as decimal) as double)
-            IFunction inner = langFactory.createFunction("convert",  //$NON-NLS-1$
+            IFunction inner = langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
 
-            return langFactory.createFunction("convert",  //$NON-NLS-1$
+            return langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( inner, langFactory.createLiteral("double", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.DOUBLE);
         }
@@ -299,7 +280,7 @@ public class DerbyConvertModifier extends BasicFunctionModifier implements Funct
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING)){
             // BEFORE: convert(string_expr, bigdecimal)
             // AFTER:  cast(string_expr as decimal)
-            return langFactory.createFunction("convert",  //$NON-NLS-1$
+            return langFactory.createFunction("cast",  //$NON-NLS-1$
                 Arrays.asList( expression, langFactory.createLiteral("decimal", TypeFacility.RUNTIME_TYPES.STRING) ),  //$NON-NLS-1$
                 TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
         }

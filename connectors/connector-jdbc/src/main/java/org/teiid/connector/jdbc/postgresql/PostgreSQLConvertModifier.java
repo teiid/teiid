@@ -47,10 +47,6 @@ class PostgreSQLConvertModifier extends BasicFunctionModifier implements Functio
         this.langFactory = langFactory;
     }
 
-    public List translate(IFunction function) {
-        return null;
-    }    
-    
     public IExpression modify(IFunction function) {
         List<IExpression> args = function.getParameters();
 

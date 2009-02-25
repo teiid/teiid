@@ -24,10 +24,9 @@
  */
 package org.teiid.connector.jdbc.translator;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import com.metamatrix.connector.api.TypeFacility;
 import com.metamatrix.connector.language.IExpression;
@@ -95,22 +94,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
      * @see org.teiid.connector.jdbc.translator.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
      */
     public List translate(IFunction function) {
-        List objs = new ArrayList();
-        objs.add(function.getName());
-        objs.add("("); //$NON-NLS-1$
-        List<IExpression> params = function.getParameters();
-        if(params.size() > 0) { 
-            objs.add(params.get(0));
-            if(params.size() > 1) {
-                for(int i=1; i<params.size(); i++) {
-                    objs.add(", "); //$NON-NLS-1$
-                    objs.add(params.get(i));
-                }
-            }
-        }
-        objs.add(")"); //$NON-NLS-1$
-
-        return objs;
+        return null;
     }
 
 }

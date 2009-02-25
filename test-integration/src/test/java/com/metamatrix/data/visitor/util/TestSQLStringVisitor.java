@@ -30,13 +30,16 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.connector.language.ICommand;
 import com.metamatrix.connector.language.IElement;
 import com.metamatrix.connector.language.IExpression;
 import com.metamatrix.connector.language.IFunction;
 import com.metamatrix.connector.language.IGroup;
 import com.metamatrix.connector.language.ILanguageObject;
 import com.metamatrix.connector.metadata.runtime.RuntimeMetadata;
+import com.metamatrix.connector.visitor.util.SQLReservedWords;
 import com.metamatrix.connector.visitor.util.SQLStringVisitor;
 import com.metamatrix.dqp.internal.datamgr.language.AggregateImpl;
 import com.metamatrix.dqp.internal.datamgr.language.ElementImpl;
@@ -444,5 +447,12 @@ public class TestSQLStringVisitor extends TestCase {
     public void testVisitProcedure() throws Exception {
         String expected = "EXEC sq3(, x, 1)"; //$NON-NLS-1$
         assertEquals(expected, getString(TestProcedureImpl.example()));
+    }
+    
+    public void testTimestampAddFunction() throws Exception {
+    	String sql = "select timestampadd(" +SQLReservedWords.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+    	
+    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
+    	assertEquals("SELECT timestampadd(SQL_TSI_DAY, 2, SmallA.TimestampValue) FROM SmallA", command.toString()); //$NON-NLS-1$
     }
 }

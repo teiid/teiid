@@ -61,9 +61,4 @@ public class ModFunctionModifier extends AliasModifier {
 		return langFactory.createFunction("-", minusArgs, minusArgs.get(0).getType()); //$NON-NLS-1$
 	}
 	
-	@Override
-	public List translate(IFunction function) {
-		return null;
-	}
-
 }

@@ -45,15 +45,6 @@ public class OracleConvertModifier extends BasicFunctionModifier implements Func
         this.langFactory = langFactory;
     }
 
-    /**
-     * Intentionally return null, rely on the SQLStringVisitor being used by caller
-     * (Oracle or Oracle8 SQLConversionVisitor (SQLConversionVisitor))
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#translate(com.metamatrix.connector.language.IFunction)
-     */
-    public List translate(IFunction function) {
-        return null;
-    }    
-    
     public IExpression modify(IFunction function) {
         List<IExpression> args = function.getParameters();
         IExpression modified = null;

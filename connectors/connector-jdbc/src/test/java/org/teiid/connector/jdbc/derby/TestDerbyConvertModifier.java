@@ -111,11 +111,11 @@ public class TestDerbyConvertModifier extends TestCase {
     }
 
     public void testStringToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "float", "cast(cast('5' as decimal) as float)");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "float", "cast(cast('5' AS decimal) AS float)");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "double", "cast(cast('5' as decimal) as double)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "double", "cast(cast('5' AS decimal) AS double)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToDate() throws Exception {
@@ -131,7 +131,7 @@ public class TestDerbyConvertModifier extends TestCase {
     }
 
     public void testStringToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "bigdecimal", "cast('5' as decimal)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "bigdecimal", "cast('5' AS decimal)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // Source = CHAR
@@ -437,7 +437,7 @@ public class TestDerbyConvertModifier extends TestCase {
     }
 
     public void testDoubleToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "float", "cast(1.2 as float)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "float", "cast(1.2 AS float)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDoubleToBigDecimal() throws Exception {
@@ -475,7 +475,7 @@ public class TestDerbyConvertModifier extends TestCase {
     }
 
     public void testBigDecimalToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "float", "cast(1.0 as float)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "float", "cast(1.0 AS float)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigDecimalToDoublel() throws Exception {

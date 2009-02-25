@@ -20,34 +20,38 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.translator;
+package org.teiid.connector.jdbc;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Properties;
 
-import com.metamatrix.connector.language.IFunction;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * Wrap a function in standard JDBC escape syntax.  In some cases, the 
- * driver can then convert to the correct database syntax for us. 
- * @since 5.0
- */
-public class EscapeSyntaxModifier extends BasicFunctionModifier {
+import com.metamatrix.connector.api.ConnectorCapabilities;
 
-    public EscapeSyntaxModifier() {
-        super();
-    }
-    
-    /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
-     * @since 5.0
-     */
-    public List translate(IFunction function) {
-    	List objs = new ArrayList();
-        objs.add("{fn "); //$NON-NLS-1$
-        objs.add(function);
-        objs.add("}"); //$NON-NLS-1$
-        return objs;
+public class TestJDBCConnector {
+
+    public void helpTestMaxIn(int setting, int expected) throws Exception {
+        Properties connProps = new Properties();
+        connProps.setProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE, String.valueOf(setting)); 
+        connProps.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, SimpleCapabilities.class.getName()); 
+        ConnectorCapabilities caps = JDBCConnector.createCapabilities(connProps, this.getClass().getClassLoader());
+        int maxIn = caps.getMaxInCriteriaSize();
+        Assert.assertEquals(expected, maxIn);
     }
 
+    @Test
+    public void test1() throws Exception {
+        helpTestMaxIn(-1, 250);
+    }
+
+    @Test
+    public void test2() throws Exception {
+        helpTestMaxIn(0, 250);
+    }
+
+    @Test
+    public void test3() throws Exception {
+        helpTestMaxIn(1, 1);
+    }	
 }

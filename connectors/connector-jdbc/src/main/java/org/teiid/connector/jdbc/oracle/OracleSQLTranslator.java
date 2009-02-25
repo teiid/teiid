@@ -156,7 +156,7 @@ public class OracleSQLTranslator extends Translator {
 		limitQuery.append(queryCommand);
 		if (limit.getRowOffset() > 0) {
 			limitQuery.append(") VIEW_FOR_LIMIT WHERE ROWNUM <= ").append(
-					limit.getRowLimit()).append(") WHERE ROWNUM_ > ").append(
+					limit.getRowLimit() + limit.getRowOffset()).append(") WHERE ROWNUM_ > ").append(
 					limit.getRowOffset());
 		} else {
 			limitQuery.append(") WHERE ROWNUM <= ").append(

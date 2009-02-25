@@ -98,7 +98,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     	if (expr instanceof IFunction) {
     		IFunction function = (IFunction)expr;
     		if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase(SourceSystemFunctions.IFNULL)) { //$NON-NLS-1$
-    			return isNotNull(function.getParameters().get(0));
+    			return isNotNull(function.getParameters().get(1));
     		}
     	}
     	return false;
@@ -112,10 +112,4 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     	return false;
     }
         
-    /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(com.metamatrix.connector.language.IFunction)
-     */
-    public List translate(IFunction function) {
-        return null; //allow default translation
-    }
 }
