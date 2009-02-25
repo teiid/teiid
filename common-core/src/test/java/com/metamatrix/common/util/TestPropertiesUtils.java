@@ -24,6 +24,7 @@ package com.metamatrix.common.util;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -668,6 +669,63 @@ public class TestPropertiesUtils extends TestCase {
     		fail("expected exception");
     	} catch (InvalidPropertyException e) {
     		assertEquals("Property 'x' with value 'y' is not a valid Integer.", e.getMessage());
+    	}
+    }
+    
+    static class Bean {
+    	private int prop;
+    	private String prop1;
+    	private double prop2;
+    	private List<String> prop3;
+    	
+		public int getProp() {
+			return prop;
+		}
+		public void setProp(int prop) {
+			this.prop = prop;
+		}
+		public String getProp1() {
+			return prop1;
+		}
+		public void setProp1(String prop1) {
+			this.prop1 = prop1;
+		}
+		public double getProp2() {
+			return prop2;
+		}
+		public void setProp2(double prop2) {
+			this.prop2 = prop2;
+		}
+		public List<String> getProp3() {
+			return prop3;
+		}
+		public void setProp3(List<String> prop3) {
+			this.prop3 = prop3;
+		}
+    }
+    
+    public void testSetBeanProperties() {
+    	Bean bean = new Bean();
+    	Properties p = new Properties();
+    	p.setProperty("prop", "0");
+    	p.setProperty("prop1", "1");
+    	p.setProperty("prop2", "2");
+    	p.setProperty("prop3", "3");
+    	
+    	PropertiesUtils.setBeanProperties(bean, p, null);
+    	
+    	assertEquals(0, bean.getProp());
+    	assertEquals("1", bean.getProp1());
+    	assertEquals(2d, bean.getProp2());
+    	assertEquals(Arrays.asList("3"), bean.getProp3());
+    	
+    	p.setProperty("prop", "?");
+    	
+    	try {
+    		PropertiesUtils.setBeanProperties(bean, p, null);
+    		fail("expected exception");
+    	} catch (InvalidPropertyException e) {
+    		
     	}
     }
 }

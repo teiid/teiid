@@ -24,10 +24,12 @@ package org.teiid.connector.jdbc;
 
 import java.util.Properties;
 
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Test;
+import org.teiid.connector.jdbc.xa.XAJDBCPropertyNames;
 
 import com.metamatrix.connector.api.ConnectorCapabilities;
+import com.metamatrix.connector.api.ConnectorException;
 
 public class TestJDBCConnector {
 
@@ -37,7 +39,7 @@ public class TestJDBCConnector {
         connProps.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, SimpleCapabilities.class.getName()); 
         ConnectorCapabilities caps = JDBCConnector.createCapabilities(connProps, this.getClass().getClassLoader());
         int maxIn = caps.getMaxInCriteriaSize();
-        Assert.assertEquals(expected, maxIn);
+        assertEquals(expected, maxIn);
     }
 
     @Test
@@ -54,4 +56,18 @@ public class TestJDBCConnector {
     public void test3() throws Exception {
         helpTestMaxIn(1, 1);
     }	
+    
+    @Test
+    public void testParseUrl() throws ConnectorException {
+    	String urlWithEmptyProp = "jdbc:mmx:db2://aHost:aPort;DatabaseName=DB2_DataBase;CollectionID=aCollectionID;PackageName=aPackageName;BogusProp=aBogusProp;UnEmptyProp=;"; //$NON-NLS-1$
+    	Properties props = new Properties();
+    	JDBCConnector.parseURL(urlWithEmptyProp, props);
+    	
+    	assertEquals("aPort", props.getProperty(XAJDBCPropertyNames.PORT_NUMBER));
+    	assertEquals("aHost", props.getProperty(XAJDBCPropertyNames.SERVER_NAME));
+    	assertEquals("XADS_aHost_null", props.getProperty(XAJDBCPropertyNames.DATASOURCE_NAME));
+    	assertEquals("aBogusProp", props.getProperty("bogusprop"));
+    	assertNull(props.getProperty("unemptyprop"));
+    }
+    
 }

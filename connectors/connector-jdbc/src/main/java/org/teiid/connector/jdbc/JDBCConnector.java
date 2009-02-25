@@ -200,8 +200,13 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 		} catch (SQLException e) {
 			throw new ConnectorException(e);
 		}
-		return new JDBCSourceConnection(conn, this.environment, sqlTranslator);
+		return createJDBCSourceConnection(conn, this.environment, this.sqlTranslator);
     }
+
+	public Connection createJDBCSourceConnection(java.sql.Connection conn, ConnectorEnvironment env, Translator trans)
+			throws ConnectorException {
+		return new JDBCSourceConnection(conn, env, trans);
+	}
 	
 	@Override
 	public XAConnection getXAConnection(
@@ -221,10 +226,16 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 			}
 			java.sql.Connection c = conn.getConnection();
 			setDefaultTransactionIsolationLevel(c);
-			return new JDBCSourceXAConnection(c, conn, this.environment, sqlTranslator);
+			return createJDBCSourceXAConnection(conn, c, this.environment, this.sqlTranslator);
 		} catch (SQLException e) {
 			throw new ConnectorException(e);
 		}
+	}
+
+	public XAConnection createJDBCSourceXAConnection(
+			javax.sql.XAConnection conn, java.sql.Connection c, ConnectorEnvironment env, Translator trans)
+			throws ConnectorException, SQLException {
+		return new JDBCSourceXAConnection(c, conn, env, trans);
 	}
 
     @Override
