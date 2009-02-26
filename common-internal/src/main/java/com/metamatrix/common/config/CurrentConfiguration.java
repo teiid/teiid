@@ -216,14 +216,14 @@ public final class CurrentConfiguration {
      */
     public Host getDefaultHost() throws ConfigurationException {
     	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME);
-    	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), new ComponentTypeID(name));
+    	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), Host.HOST_COMPONENT_TYPE_ID);
         
     	Properties props = new Properties();
-    	props.setProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR));
-    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY));
-    	props.setProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY));
-    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS));
-    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS));
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS, "")); //$NON-NLS-1$
     	
     	host.setProperties(props);
         return host;

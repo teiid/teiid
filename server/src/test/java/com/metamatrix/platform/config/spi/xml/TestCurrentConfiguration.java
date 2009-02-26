@@ -113,8 +113,8 @@ public class TestCurrentConfiguration extends BaseTest {
         printMsg("Starting testCurrentHost");       //$NON-NLS-1$
 
         try {
+        	System.setProperty(CurrentConfiguration.CONFIGURATION_NAME, "DummyHost"); //$NON-NLS-1$ //$NON-NLS-2$
             System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
-            VMNaming.setup("DummyHost", null, null); //$NON-NLS-1$
 
             init(CONFIG_FILE);
                                                                 
