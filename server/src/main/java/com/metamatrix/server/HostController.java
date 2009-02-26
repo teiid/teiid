@@ -94,7 +94,7 @@ public class HostController implements HostManagement {
         
 		Runtime.getRuntime().addShutdownHook(new ShutdownThread());        
 		
-		this.monitor.hostAdded(new HostControllerRegistryBinding(this.host.getFullName(), this, this.messageBus));
+		this.monitor.hostAdded(new HostControllerRegistryBinding(this.host.getFullName(), this.host.getProperties(), this, this.messageBus));
 		
         if (startProcesses ) {
             try {

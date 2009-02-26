@@ -24,6 +24,7 @@ package com.metamatrix.platform.registry;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Properties;
 
 import org.jboss.cache.notifications.annotation.CacheListener;
 import org.mockito.Mockito;
@@ -134,7 +135,7 @@ public class FakeRegistryUtil {
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {
-		return new HostControllerRegistryBinding(name, null, new NoOpMessageBus());
+		return new HostControllerRegistryBinding(name, new Properties(), null, new NoOpMessageBus());
 	}	
 }
 

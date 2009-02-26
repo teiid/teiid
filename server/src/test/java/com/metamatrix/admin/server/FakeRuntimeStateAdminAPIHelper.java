@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -240,14 +241,14 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         VMControllerID vmControllerID1 = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
         ProcessData process2 = new ProcessData(vmControllerID1, null, "2.2.2.2", new ArrayList(), "process2", "31000", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes2.add(process2);        
-        HostData host2 = new HostData("2.2.2.2", processes2, true, true); //$NON-NLS-1$
+        HostData host2 = new HostData("2.2.2.2", processes2, true, true, new Properties()); //$NON-NLS-1$
         hosts.add(host2);
 
         List processes3 = new ArrayList();        
         VMControllerID vmControllerID3 = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
         ProcessData process3 = new ProcessData(vmControllerID3, null, "3.3.3.3", new ArrayList(), "process3", "31001", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes3.add(process3);        
-        HostData host3 = new HostData("3.3.3.3", processes3, true, true); //$NON-NLS-1$
+        HostData host3 = new HostData("3.3.3.3", processes3, true, true, new Properties()); //$NON-NLS-1$
         hosts.add(host3);
         
         

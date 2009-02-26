@@ -152,7 +152,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         String hostIdentifier = BOGUS_HOST; 
         Properties hostProperties = new Properties();
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
+        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
         hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);
@@ -162,7 +162,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         String hostIdentifier = BOGUS_HOST_IP; 
         Properties hostProperties = new Properties();
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
+        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
         hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);
@@ -172,7 +172,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         String hostIdentifier = BOGUS_HOST_FULLY_QUALIFIED; 
         Properties hostProperties = new Properties();
         hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.DATA_DIRECTORY, "D:\\MetaMatrix\\s43401\\data"); //$NON-NLS-1$
+        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
         hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
         hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);

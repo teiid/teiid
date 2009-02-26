@@ -503,13 +503,13 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        host.setRunning(hostData.isRegistered());
 			        host.setRegistered(hostData.isRegistered());
 			        host.setDeployed(false);
+			        host.setProperties(hostData.getProperties());
 
 			        runtimeMap.put(hostName.toUpperCase(), host);
 			        results.add(host);
 			    }
 			}
 			
-
 			
 			//get config data from ConfigurationServiceProxy
 			Collection hosts = getConfigurationServiceProxy().getHosts();

@@ -34,8 +34,6 @@ public interface HostType extends ServiceComponentType {
     
     public static final String LOG_DIRECTORY = com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY;
     
-    public static final String DATA_DIRECTORY = com.metamatrix.admin.api.objects.Host.DATA_DIRECTORY;
-    
     public static final String HOST_DIRECTORY = com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY;
     
     public static final String HOST_ENABLED = com.metamatrix.admin.api.objects.Host.HOST_ENABLED;

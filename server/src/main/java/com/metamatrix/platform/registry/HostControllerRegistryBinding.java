@@ -1,10 +1,11 @@
 package com.metamatrix.platform.registry;
 
 import java.io.Serializable;
+import java.util.Properties;
 
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.HostManagement;
+import com.metamatrix.server.ResourceFinder;
 
 public class HostControllerRegistryBinding implements Serializable {
 
@@ -16,10 +17,13 @@ public class HostControllerRegistryBinding implements Serializable {
     
     private String hostName;
     
+    private Properties hostProperties;
     
-    public HostControllerRegistryBinding(String hostName, HostManagement controller, MessageBus bus) {
+    
+    public HostControllerRegistryBinding(String hostName, Properties properties, HostManagement controller, MessageBus bus) {
     	this.messageBus = bus;	
     	this.hostName = hostName;
+    	this.hostProperties = properties;
     	setHostController(controller);
     }
     
@@ -53,4 +57,8 @@ public class HostControllerRegistryBinding implements Serializable {
     	this.hostController = (HostManagement)bus.getRPCProxy(this.hostControllerStub);
     	return this.hostController;
     }	
+    
+    public Properties getProperties() {
+    	return new Properties(this.hostProperties);
+    }
 }

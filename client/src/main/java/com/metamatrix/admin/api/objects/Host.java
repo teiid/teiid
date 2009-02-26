@@ -28,7 +28,7 @@ package com.metamatrix.admin.api.objects;
  * Represents a host in the MetaMatrix system.
  *
  * <p>The identifier pattern for a host is <code>"hostName"</code>.
- * A hostName is concidered to be unique across the system.</p>
+ * A hostName is considered to be unique across the system.</p>
  * @since 4.3
  */
 public interface Host extends AdminObject {
@@ -42,11 +42,6 @@ public interface Host extends AdminObject {
      * Log Directory Property
      */
     public static final String LOG_DIRECTORY = "metamatrix.log.dir"; //$NON-NLS-1$ 
-    
-    /**
-     * Data Directory Property
-     */
-    public static final String DATA_DIRECTORY = "metamatrix.data.dir"; //$NON-NLS-1$
     
     /**
      * Host Directory Property

@@ -23,6 +23,7 @@
 package com.metamatrix.platform.admin.api.runtime;
 
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * This class contains information about a host that is running or deployed for this system
@@ -31,6 +32,7 @@ public class HostData extends ComponentData {
 
     // Collection of ProcessData objects
     private Collection processes;
+    private Properties properties;
 
 
     /**
@@ -38,9 +40,10 @@ public class HostData extends ComponentData {
      *
      * @param hostName Name of host
      */
-    public HostData(String hostName, Collection processes, boolean deployed, boolean registered) {
+    public HostData(String hostName, Collection processes, boolean deployed, boolean registered, Properties props) {
         super(hostName, deployed, registered);
         this.processes = processes;
+        this.properties = props;
         computeHashCode();
     }
 
@@ -55,6 +58,10 @@ public class HostData extends ComponentData {
      */
     public Collection getProcesses() {
         return processes;
+    }
+    
+    public Properties getProperties() {
+    	return this.properties;
     }
 }
 

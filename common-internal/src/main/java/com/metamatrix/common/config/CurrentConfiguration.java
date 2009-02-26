@@ -217,7 +217,15 @@ public final class CurrentConfiguration {
     public Host getDefaultHost() throws ConfigurationException {
     	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME);
     	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), new ComponentTypeID(name));
-        host.setProperties(getBootStrapProperties());
+        
+    	Properties props = new Properties();
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.INSTALL_DIR));
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_DIRECTORY));
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.LOG_DIRECTORY));
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_BIND_ADDRESS));
+    	props.setProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.objects.Host.HOST_PHYSICAL_ADDRESS));
+    	
+    	host.setProperties(props);
         return host;
     }  
 

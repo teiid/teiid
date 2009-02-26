@@ -24,6 +24,7 @@ package com.metamatrix.platform.registry;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -308,6 +309,6 @@ public class TestClusteredRegistryState extends TestCase {
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {
-		return new HostControllerRegistryBinding(name, null, new NoOpMessageBus());
+		return new HostControllerRegistryBinding(name, new Properties(), null, new NoOpMessageBus());
 	}
 }

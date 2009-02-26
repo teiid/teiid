@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefnID;
@@ -82,7 +83,7 @@ public class SystemStateBuilder {
 
         // Create a new HostData object for each running host.
         for (HostControllerRegistryBinding host:allHosts) {
-            hosts.add(createHostData(host.getHostName()));
+            hosts.add(createHostData(host));
             hostIDs.add(new HostID(host.getHostName()));
         }
 
@@ -103,8 +104,10 @@ public class SystemStateBuilder {
     /**
      * Create a HostData object from the hostBinding.
      */
-    private HostData createHostData(String hostName) throws Exception {
+    private HostData createHostData(HostControllerRegistryBinding host) throws Exception {
 
+    	String hostName = host.getHostName();
+    	
         List vmBindings = this.registry.getVMs(hostName);
         List processes = new ArrayList();
         Collection deployedVMs = null;
@@ -134,8 +137,7 @@ public class SystemStateBuilder {
         boolean deployed = config.getHostIDs().contains(hostID);
 
         boolean running = this.hostManagement.ping(hostName);
-        return new HostData(hostName, processes, deployed, running);
-
+        return new HostData(hostName, processes, deployed, running, host.getProperties());
     }
 
     /**
@@ -160,7 +162,7 @@ public class SystemStateBuilder {
         }
 
         boolean running = this.hostManagement.ping(hostID.getFullName());
-        return new HostData(hostID.getFullName(), processes, true, running);
+        return new HostData(hostID.getFullName(), processes, true, running, new Properties());
     }
 
 
