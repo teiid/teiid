@@ -92,7 +92,7 @@ public final class CurrentConfiguration {
     
     public String getClusterName() throws ConfigurationException {
         Properties props = getResourceProperties(ResourceNames.JGROUPS);
-        return props.getProperty(CLUSTER_NAME, "Federate-Cluster"); //$NON-NLS-1$
+        return props.getProperty(CLUSTER_NAME, "Teiid-Cluster"); //$NON-NLS-1$
     }
 
     /**

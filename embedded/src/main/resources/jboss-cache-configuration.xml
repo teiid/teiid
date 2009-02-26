@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <server>
-	<mbean code="org.jboss.cache.pojo.jmx.CacheJmxWrapper" name="jboss.cache:service=FederateCache">
+	<mbean code="org.jboss.cache.pojo.jmx.CacheJmxWrapper" name="jboss.cache:service=TeiidCache">
       <attribute name="TransactionManagerLookupClass">org.jboss.cache.transaction.GenericTransactionManagerLookup</attribute>
       <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 	    <attribute name="LockParentForChildInsertRemove">true</attribute>

@@ -45,7 +45,7 @@ public class ChannelProvider {
 		Channel c = this.channelMap.get(id);
 		if (c == null) {
 			try {
-				c = this.mux.createMuxChannel(id.toString(), "Federate"); //$NON-NLS-1$
+				c = this.mux.createMuxChannel(id.toString(), "teiid"); //$NON-NLS-1$
 				this.channelMap.put(id, c);
 			} catch (Exception e) {
 				throw new MetaMatrixRuntimeException("Failed to create a Channel"); //$NON-NLS-1$

@@ -123,7 +123,7 @@ public final class VMNaming {
 			try {
 				nvalue = InetAddress.getLocalHost().getHostName();
 			} catch (UnknownHostException e) {
-				nvalue = "federate-system"; //$NON-NLS-1$
+				nvalue = "teiid-system"; //$NON-NLS-1$
 			}
 		}
 		return nvalue;

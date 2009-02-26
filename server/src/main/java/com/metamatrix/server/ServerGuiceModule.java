@@ -75,7 +75,7 @@ class ServerGuiceModule extends AbstractModule {
 		try {
 		    systemName = CurrentConfiguration.getInstance().getClusterName();
 		} catch (ConfigurationException err) {
-		    systemName = "Federate-Cluster"; //$NON-NLS-1$
+		    systemName = "Teiid-Cluster"; //$NON-NLS-1$
 		}
 		
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());

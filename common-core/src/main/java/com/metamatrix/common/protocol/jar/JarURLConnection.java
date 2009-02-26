@@ -45,10 +45,10 @@ import com.metamatrix.common.protocol.mmfile.MMFileURLConnection;
 
 /** 
  * Jar protocol connection class. The class extends the JDK provided JarURLConnection factory.
- * However Jar protocol can not understand the federate specific protocols like mmfile, mmrofile etc.
+ * However Jar protocol can not understand the teiid specific protocols like mmfile, mmrofile etc.
  * The issue is if you can register application specific protocols during start-up 
  * using system properties the bulit in JAR protocol understands those protocols. 
- * However in the Federate model this need to work by just dropping in in any 
+ * However in the Teiid model this need to work by just dropping in in any 
  * container. This handler will be called for any class loaders registered 
  * with {@link MetaMatrixURLStreamHandlerFactory}, so that they understand the application specific protocols.   
  */

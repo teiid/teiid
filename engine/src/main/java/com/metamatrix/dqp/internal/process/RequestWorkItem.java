@@ -271,7 +271,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			if (this.transactionState == TransactionState.ACTIVE) {
 				boolean end = true;
 				/*
-				 * FEDERATE-111 if we are done producing batches, then proactively close transactional 
+				 * TEIID-14 if we are done producing batches, then proactively close transactional 
 				 * executions even ones that were intentionally kept alive. this may 
 				 * break the read of a lob from a transactional source under a transaction 
 				 * if the source does not support holding the clob open after commit

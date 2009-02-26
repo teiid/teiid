@@ -239,7 +239,7 @@ public class VDBArchive {
 	
 	private void open() {
 		if (!open) {
-			this.tempDirectory = new TempDirectory(FileUtils.TEMP_DIRECTORY+File.separator+"federate", System.currentTimeMillis(), RANDOM.nextLong()); //$NON-NLS-1$
+			this.tempDirectory = new TempDirectory(FileUtils.TEMP_DIRECTORY+File.separator+"teiid", System.currentTimeMillis(), RANDOM.nextLong()); //$NON-NLS-1$
 			this.tempDirectory.create();
 			open = true;
 		}

@@ -104,7 +104,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 			// register the channel with the JMX server
 			try {
 				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-				ObjectName on = new ObjectName("Federate:service=JChannel,name=JGroups"); //$NON-NLS-1$
+				ObjectName on = new ObjectName("Teiid:service=JChannel,name=JGroups"); //$NON-NLS-1$
 				mbs.registerMBean(new org.jgroups.jmx.JChannel(channel), on);
 			} catch (MalformedObjectNameException e) {
 				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, "Failed to register JChannel to JMX"); //$NON-NLS-1$

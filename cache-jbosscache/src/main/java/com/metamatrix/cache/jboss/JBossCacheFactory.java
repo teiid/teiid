@@ -61,7 +61,7 @@ public class JBossCacheFactory implements CacheFactory {
 		try {
 			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cacheStore);			
 			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			this.jmxName = new ObjectName("Federate:service=JBossCache,name=cache"); //$NON-NLS-1$
+			this.jmxName = new ObjectName("Teiid:service=JBossCache,name=cache"); //$NON-NLS-1$
 			mbs.registerMBean(wrapper, this.jmxName);
 			wrapper.create();
 			wrapper.start();
@@ -78,7 +78,7 @@ public class JBossCacheFactory implements CacheFactory {
 	 */
 	public Cache get(Type type, CacheConfiguration config) {
 		if (!destroyed) {
-			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Federate")); //$NON-NLS-1$
+			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
 			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
 			
 			
