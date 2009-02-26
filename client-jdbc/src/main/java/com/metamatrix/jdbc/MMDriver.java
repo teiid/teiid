@@ -22,9 +22,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -33,6 +30,7 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +41,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
@@ -58,7 +55,8 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  */
 
 public final class MMDriver extends BaseDriver {
-
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+	
     static final String JDBC = BaseDataSource.JDBC;
     static final String URL_PREFIX = JDBC + BaseDataSource.METAMATRIX_PROTOCOL; 
     static final int MAJOR_VERSION = 5;
@@ -135,7 +133,7 @@ public final class MMDriver extends BaseDriver {
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDriver.Connection_sucess"); //$NON-NLS-1$
-        myConnection.getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(logMsg);
 
         return myConnection;
     }
@@ -185,42 +183,8 @@ public final class MMDriver extends BaseDriver {
                 info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
             }
 
-            if(optionalParams.containsKey(BaseDataSource.LOG_FILE)) {
-                String value = optionalParams.getProperty(BaseDataSource.LOG_FILE);
-                if(value != null) {
-                    try {
-                        File f = new File(value);
-                        boolean exists = f.exists(); 
-                        FileWriter fw = new FileWriter(f, true);
-                        fw.close();
-                        if (!exists) {
-                            f.delete();
-                        }
-                    } catch(IOException ioe) {
-                        String msg = JDBCPlugin.Util.getString("MMDriver.Invalid_log_name", value); //$NON-NLS-1$
-                        throw MMSQLException.create(ioe, msg);
-                        //throw new MMSQLException(msg, ioe);
-                    }
-                }
-            }
-            if(optionalParams.containsKey(BaseDataSource.LOG_LEVEL)) {
-                try {
-                    int loglevel = Integer.parseInt(optionalParams.getProperty(BaseDataSource.LOG_LEVEL));
-                    if(loglevel < BaseDataSource.LOG_NONE || loglevel > BaseDataSource.LOG_TRACE) {
-                        Object[] params = new Object[] {new Integer(BaseDataSource.LOG_NONE), new Integer(BaseDataSource.LOG_ERROR), new Integer(BaseDataSource.LOG_INFO), new Integer(BaseDataSource.LOG_TRACE)};
-                        String msg = JDBCPlugin.Util.getString("MMDriver.Log_level_invalid", params);  //$NON-NLS-1$
-                        throw new MMSQLException(msg);
-                    }
-                } catch(NumberFormatException nfe) {
-                    Object[] params = new Object[] {new Integer(BaseDataSource.LOG_NONE), new Integer(BaseDataSource.LOG_ERROR), new Integer(BaseDataSource.LOG_INFO), new Integer(BaseDataSource.LOG_TRACE)};
-                    String msg = JDBCPlugin.Util.getString("MMDriver.Log_level_invalid", params);  //$NON-NLS-1$
-                    throw MMSQLException.create(nfe, msg);
-                    //throw new MMSQLException(msg, nfe);
-                }
-            }
         } catch(IllegalArgumentException iae) {
-            String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
-            throw new MMSQLException(msg);
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
         }  
     }
     

@@ -45,20 +45,8 @@ public class MMURL {
 	    public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
 	    // constant for vdb version part of serverURL
 	    public static final String VERSION = "version"; //$NON-NLS-1$
-	    // string constant that the url contains
-	    public static final String LOG_FILE = "logFile"; //$NON-NLS-1$
-	    // string constant that the url contains
-	    public static final String LOG_LEVEL = "logLevel"; //$NON-NLS-1$
-	    
-	    // logging level that would log messages
-	    public static final int LOG_NONE = 0;
-	    // logging level that would log error messages
-	    public static final int LOG_ERROR = 1;
-	    // logging level that would log all info level messages
-	    public static final int LOG_INFO = 2;
-	    // logging level that would traces method calls
-	    public static final int LOG_TRACE = 3;
-		public static final String CREDENTIALS = "credentials"; //$NON-NLS-1$
+
+	    public static final String CREDENTIALS = "credentials"; //$NON-NLS-1$
 	}
 
 	public static interface CONNECTION {

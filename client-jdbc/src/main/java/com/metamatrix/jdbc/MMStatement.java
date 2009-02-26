@@ -45,6 +45,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -52,8 +54,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.SqlUtil;
-import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -75,6 +75,7 @@ import com.metamatrix.jdbc.api.Statement;
  */
 
 public class MMStatement extends WrapperImpl implements Statement {
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
     // State constants
     protected static final int TIMED_OUT = 4;
@@ -159,9 +160,6 @@ public class MMStatement extends WrapperImpl implements Statement {
     
     //Map<out/inout/return param index --> index in results>
     protected Map outParamIndexMap = new HashMap();
-     
-    // JDBC Logger
-    Logger logger = null;
     
     /**
      * Factory Constructor 
@@ -194,18 +192,8 @@ public class MMStatement extends WrapperImpl implements Statement {
                 // silently failover to default
             }
         }        
-        
-        this.logger = new RequestIdAwareLogger(this.driverConnection.getLogger());
     }
 
-    /**
-     * JDBC Logger 
-     * @return logger
-     */
-    public Logger getLogger() {
-        return logger;        
-    }
-    
     protected ClientSideDQP getDQP() {
     	return this.driverConnection.getDQP();
     }
@@ -326,9 +314,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Remove link from connection to statement
         this.driverConnection.closeStatement(this);
 
-        //logging
-        String logMsg = JDBCPlugin.Util.getString("MMStatement.Close_stmt_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
         driverConnection = null;
     }
 
@@ -340,12 +326,7 @@ public class MMStatement extends WrapperImpl implements Statement {
     protected void checkStatement() throws SQLException {
         //Check to see the connection is closed and proceed if it is not
         if ( isClosed ) {
-            //logging
-            String logMsg = JDBCPlugin.Util.getString("MMStatement.Stmt_closed"); //$NON-NLS-1$
-            if (driverConnection != null) {
-                getLogger().log(MessageLevel.INFO, logMsg);
-            }
-            throw new MMSQLException(logMsg);
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Stmt_closed")); //$NON-NLS-1$
         }
     }
 
@@ -359,7 +340,7 @@ public class MMStatement extends WrapperImpl implements Statement {
             return;
         }
         serverException = MMSQLException.create(exception);
-        getLogger().log(MessageLevel.ERROR, exception, serverException.getMessage());
+        logger.log(Level.SEVERE, serverException.getMessage(), exception);
     }
 
     protected MMSQLException getException() {
@@ -420,10 +401,9 @@ public class MMStatement extends WrapperImpl implements Statement {
                     rowsAffected = resultSet.getInt(1);
                 }
                 String logMsg = JDBCPlugin.Util.getString("MMStatement.Success_update", commands[0]); //$NON-NLS-1$
-                getLogger().log(MessageLevel.INFO, logMsg);
+                logger.info(logMsg);
             } catch (SQLException se) {
-                String msg = JDBCPlugin.Util.getString("MMStatement.Err_getting_update_row"); //$NON-NLS-1$
-                setException(MMSQLException.create(se, msg));
+                setException(MMSQLException.create(se, JDBCPlugin.Util.getString("MMStatement.Err_getting_update_row"))); //$NON-NLS-1$
             }
         }
     }
@@ -510,9 +490,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 
     public int executeUpdate(String sql) throws SQLException {
         if (driverConnection.isReadOnly()) {
-            String logMsg = JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", sql);//$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, logMsg);
-            throw new MMSQLException(logMsg);
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", sql)); //$NON-NLS-1$
         }
         String[] commands = new String[] {sql};
         executeSql(commands, false);
@@ -548,9 +526,7 @@ public class MMStatement extends WrapperImpl implements Statement {
             throw this.serverException;
         }
 
-        // logging for getting query result
-        String logMsg = JDBCPlugin.Util.getString("MMStatement.Success_query", Arrays.asList(commands)); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMStatement.Success_query", Arrays.asList(commands))); //$NON-NLS-1$
     }
 
     /**
@@ -867,7 +843,7 @@ public class MMStatement extends WrapperImpl implements Statement {
             // logging
             String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", isBatchedCommand ? "" : commands[0]); //$NON-NLS-1$ //$NON-NLS-2$
             if(driverConnection != null) {
-                getLogger().log(MessageLevel.ERROR, ex, msg);
+                logger.log(Level.SEVERE, msg, ex);
             }
             throw MMSQLException.create(ex);
         }
@@ -925,8 +901,7 @@ public class MMStatement extends WrapperImpl implements Statement {
      * Ends the command and sets the status to TIMED_OUT.
      */
     protected void timeoutOccurred() {
-        String logMsg = JDBCPlugin.Util.getString("MMStatement.Timeout_ocurred_in_Statement."); //$NON-NLS-1$
-        getLogger().log(MessageLevel.WARNING, logMsg);
+        logger.warning(JDBCPlugin.Util.getString("MMStatement.Timeout_ocurred_in_Statement.")); //$NON-NLS-1$
         try {
         	cancel();        
             commandStatus = TIMED_OUT;
@@ -936,8 +911,7 @@ public class MMStatement extends WrapperImpl implements Statement {
                 this.resultSet.close();
             }
         } catch (SQLException se) {
-            logMsg = JDBCPlugin.Util.getString("MMStatement.Error_timing_out."); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, se, logMsg);
+            logger.log(Level.SEVERE, JDBCPlugin.Util.getString("MMStatement.Error_timing_out."), se); //$NON-NLS-1$
         }
     }
 
@@ -1157,10 +1131,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         try {
             return SqlUtil.isUpdateSql(sql);
         } catch(IllegalArgumentException e) {
-            // Bad sql string
-            String logMsg = JDBCPlugin.Util.getString("MMStatement.Invalid_query_type", sql); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, logMsg);
-            throw new MMSQLException(logMsg);
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_query_type", sql)); //$NON-NLS-1$
         }
     }
 
@@ -1191,26 +1162,6 @@ public class MMStatement extends WrapperImpl implements Statement {
         this.defaultCalendar = cal;
     }
             
-    /**
-     * A simple wrapper to grab the request id from the 
-     * statement.
-     */
-    class RequestIdAwareLogger implements Logger {        
-        Logger delegate = null;
-        RequestIdAwareLogger(Logger sourcelogger){
-            this.delegate = sourcelogger;
-        }
-        public void log(int severity, String message) {
-            this.delegate.log(severity, convert(message));
-        }
-        public void log(int severity, Throwable t, String message) {
-            this.delegate.log(severity, t, convert(message));
-        }
-        String convert(String msg){
-            return "<Req="+currentRequestID+"> "+msg;//$NON-NLS-1$ //$NON-NLS-2$
-        }        
-    }
-
 	public boolean isPoolable() throws SQLException {
 		checkStatement();
 		return false;

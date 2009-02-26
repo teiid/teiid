@@ -69,8 +69,6 @@ public class TestMMDataSource extends TestCase {
         dataSource.setDatabaseVersion(STD_DATABASE_VERSION);
         dataSource.setDatabaseName(STD_DATABASE_NAME);
         dataSource.setPortNumber(STD_PORT_NUMBER);
-        dataSource.setLogFile(STD_LOG_FILE);
-        dataSource.setLogLevel(STD_LOG_LEVEL);
         dataSource.setDataSourceName(STD_DATA_SOURCE_NAME);
         dataSource.setTransactionAutoWrap(STD_TXN_AUTO_WRAP);
         dataSource.setPartialResultsMode(STD_PARTIAL_MODE);
@@ -91,8 +89,6 @@ public class TestMMDataSource extends TestCase {
             return MMDataSource.reasonWhyInvalidDataSourceName(value);
         } else if ( propertyName.equals("Description") ) { //$NON-NLS-1$
             return MMDataSource.reasonWhyInvalidDescription(value);
-        } else if ( propertyName.equals("LogFile") ) { //$NON-NLS-1$
-            return MMDataSource.reasonWhyInvalidLogFile(value);
         } else if ( propertyName.equals("ServerName") ) { //$NON-NLS-1$
             return MMDataSource.reasonWhyInvalidServerName(value);
         } else if ( propertyName.equals("TransactionAutoWrap") ) { //$NON-NLS-1$
@@ -112,9 +108,7 @@ public class TestMMDataSource extends TestCase {
     }
 
     protected String getReasonWhyInvalid( final String propertyName, final int value ) {
-        if ( propertyName.equals("LogLevel") ) { //$NON-NLS-1$
-            return MMDataSource.reasonWhyInvalidLogLevel(value);
-        } else if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
+    	if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
             return MMDataSource.reasonWhyInvalidPortNumber(value);
         }
         fail("Unknown property name \"" + propertyName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -144,7 +138,6 @@ public class TestMMDataSource extends TestCase {
     public void helpTestBuildingURL( final String vdbName, final String vdbVersion,
                                      final String serverName, final int portNumber,
                                      final String alternateServers,
-                                     final String logfile, final int loglevel,
                                      final String txnAutoWrap, final String partialMode,
                                      final int fetchSize, final boolean showPlan,
                                      final boolean secure, final String expectedURL) {
@@ -154,8 +147,6 @@ public class TestMMDataSource extends TestCase {
         ds.setDatabaseVersion(vdbVersion);
         ds.setDatabaseName(vdbName);
         ds.setPortNumber(portNumber);
-        ds.setLogFile(logfile);
-        ds.setLogLevel(loglevel);
         ds.setFetchSize(fetchSize);
         ds.setTransactionAutoWrap(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
@@ -172,7 +163,6 @@ public class TestMMDataSource extends TestCase {
     public Connection helpTestConnection( final String vdbName, final String vdbVersion,
                                     final String serverName, final int portNumber, final String alternateServers, 
                                     final String user, final String password,
-                                    final String logfile, final int loglevel,
                                     final String dataSourceName,
                                     final String txnAutoWrap, final String partialMode,
                                     final String configFile )
@@ -186,8 +176,6 @@ public class TestMMDataSource extends TestCase {
         ds.setPortNumber(portNumber);
         ds.setUser(user);
         ds.setPassword(password);
-        ds.setLogFile(logfile);
-        ds.setLogLevel(loglevel);
         ds.setDataSourceName(dataSourceName);
         ds.setTransactionAutoWrap(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
@@ -250,16 +238,6 @@ public class TestMMDataSource extends TestCase {
     public void testGetPortNumber() {
         final int result = dataSource.getPortNumber();
         assertEquals(result,STD_PORT_NUMBER);
-    }
-
-    public void testGetLogFile() {
-        final String result = dataSource.getLogFile();
-        assertEquals(result,STD_LOG_FILE);
-    }
-
-    public void testGetLogLevel() {
-        final int result = dataSource.getLogLevel();
-        assertEquals(result,STD_LOG_LEVEL);
     }
 
     public void testGetDataSourceName() {
@@ -373,43 +351,6 @@ public class TestMMDataSource extends TestCase {
     }
     public void testReasonWhyInvalidDescription3() {
         helpTestReasonWhyInvalid("Description", null, VALID); //$NON-NLS-1$
-    }
-
-
-    public void testReasonWhyInvalidLogFile1() {
-        helpTestReasonWhyInvalid("LogFile", "Valid Log File", VALID); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    public void testReasonWhyInvalidLogFile2() {
-        helpTestReasonWhyInvalid("LogFile", "", VALID); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    public void testReasonWhyInvalidLogFile3() {
-        helpTestReasonWhyInvalid("LogFile", null, VALID); //$NON-NLS-1$
-    }
-
-
-    public void testReasonWhyInvalidLogLevel1() {
-        helpTestReasonWhyInvalid("LogLevel", 0, VALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel2() {
-        helpTestReasonWhyInvalid("LogLevel", 1, VALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel3() {
-        helpTestReasonWhyInvalid("LogLevel", 2, VALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel4() {
-        helpTestReasonWhyInvalid("LogLevel", 3, VALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel5() {
-        helpTestReasonWhyInvalid("LogLevel", 4, INVALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel6() {
-        helpTestReasonWhyInvalid("LogLevel", -1, INVALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel7() {
-        helpTestReasonWhyInvalid("LogLevel", 300, INVALID); //$NON-NLS-1$
-    }
-    public void testReasonWhyInvalidLogLevel8() {
-        helpTestReasonWhyInvalid("LogLevel", -300, INVALID); //$NON-NLS-1$
     }
 
     public void testReasonWhyInvalidPortNumber1() {
@@ -559,13 +500,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = "1.2.3"; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String logfile = null;
-        final int loglevel = 1;
         final String transactionAutoWrap = null;
         final String partialMode = "true"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,logfile,loglevel,transactionAutoWrap, partialMode, 500, false, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;fetchSize=500;logLevel=1;serverURL=mm://hostname:7001;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;fetchSize=500;serverURL=mm://hostname:7001;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     public void testBuildingURL2() {
@@ -573,13 +512,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,logfile,loglevel,transactionAutoWrap, partialMode, -1, false, secure, 
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;logLevel=1;serverURL=mm://hostname:7001;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure, 
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL3() {
@@ -587,13 +524,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;logLevel=1;serverURL=mm://hostname:7001;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     // Test secure protocol
@@ -602,13 +537,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mms://hostname:7001;logLevel=1;serverURL=mms://hostname:7001;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
+                            "jdbc:metamatrix:vdbName@mms://hostname:7001;serverURL=mms://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -622,13 +555,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2:7001,hostName2:7002"; //$NON-NLS-1$
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logLevel=1;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
+                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -642,13 +573,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2:7001,hostName2:7002"; //$NON-NLS-1$
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logLevel=1;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
+                            "jdbc:metamatrix:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -663,20 +592,18 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 7001;
         final String alternateServers = "hostName:7002,hostName2,hostName2:7002"; //$NON-NLS-1$
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String transactionAutoWrap = MMDataSource.TXN_AUTO_WRAP_PESSIMISTIC;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,logfile,loglevel,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logLevel=1;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;logFile=myLogFile;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
+                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL_AdditionalProperties() {
     	final MMDataSource ds = new MMDataSource();
-    	ds.setAdditionalProperties("foo=bar;a=b");
-    	ds.setServerName("hostName");
-    	ds.setDatabaseName("vdbName");
+    	ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
+    	ds.setServerName("hostName"); //$NON-NLS-1$
+    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setPortNumber(1);
     	assertEquals("jdbc:metamatrix:vdbName@mm://hostname:1;fetchSize=2000;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
     }
@@ -686,13 +613,11 @@ public class TestMMDataSource extends TestCase {
         final String vdbName = "vdbName"; //$NON-NLS-1$
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = -1;              // this is what is invalid
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String dataSourceName = null;
         final String transactionAutoWrap = null;
         final String configFile = UnitTestUtil.getTestDataPath() + "/config.txt"; //$NON-NLS-1$
         try {
-            helpTestConnection(vdbName,vdbVersion,serverName,portNumber, null, null, null, logfile,loglevel,dataSourceName,transactionAutoWrap,
+            helpTestConnection(vdbName,vdbVersion,serverName,portNumber, null, null, null, dataSourceName,transactionAutoWrap,
                 "false", configFile);       // TRUE TO OVERRIDE USERNAME & PASSWORD //$NON-NLS-1$
             fail("Unexpectedly able to connect"); //$NON-NLS-1$
         } catch ( SQLException e) {
@@ -711,29 +636,15 @@ public class TestMMDataSource extends TestCase {
         final String vdbVersion = ""; //$NON-NLS-1$
         final int portNumber = 31000;
         final String alternateServers = "hostName:-1"; // this is what is invalid //$NON-NLS-1$
-        final String logfile = "myLogFile"; //$NON-NLS-1$
-        final int loglevel = 1;
         final String dataSourceName = null;
         final String transactionAutoWrap = null;
         final String configFile = UnitTestUtil.getTestDataPath() + "/config.txt"; //$NON-NLS-1$
         try {
             helpTestConnection(vdbName, vdbVersion, serverName, portNumber, 
-            		alternateServers, null, null, logfile, loglevel,
-            		dataSourceName, transactionAutoWrap, "false", configFile);       // TRUE TO OVERRIDE USERNAME & PASSWORD
+            		alternateServers, null, null, dataSourceName, transactionAutoWrap, "false", configFile);     //$NON-NLS-1$  // TRUE TO OVERRIDE USERNAME & PASSWORD
             fail("Unexpectedly able to connect"); //$NON-NLS-1$
         } catch ( SQLException e) {
             // this is expected!
         }
     }
-    
-    public void testSerialization() throws Exception {
-    	MMDataSource dataSource = new MMDataSource();
-    	
-    	assertNotNull(dataSource.getLogger());
-    	
-    	dataSource = UnitTestUtil.helpSerialize(dataSource);
-    	
-    	assertNotNull(dataSource.getLogger());
-    }
-
 }

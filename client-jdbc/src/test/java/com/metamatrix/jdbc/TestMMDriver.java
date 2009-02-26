@@ -113,15 +113,14 @@ public class TestMMDriver extends TestCase {
     
     public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        MMDriver.getInstance().parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;txnAutoWrap=ON;partialResultsMode=YES;logFile=jdbcLogFile.log", p); //$NON-NLS-1$
+        MMDriver.getInstance().parseURL("jdbc:metamatrix:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;txnAutoWrap=ON;partialResultsMode=YES", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));         //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
-        assertTrue(p.getProperty(BaseDataSource.LOG_FILE).equals("jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(p.getProperty(MMURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
-        assertEquals(7, p.size());        
+        assertEquals(6, p.size());        
     }    
     
     public void testGetPropertyInfo1() throws Exception {        

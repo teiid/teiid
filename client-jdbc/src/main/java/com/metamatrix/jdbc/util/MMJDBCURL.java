@@ -49,8 +49,6 @@ public class MMJDBCURL {
         BaseDataSource.VDB_VERSION,
         BaseDataSource.USER_NAME,
         BaseDataSource.PASSWORD,
-        BaseDataSource.LOG_FILE,
-        BaseDataSource.LOG_LEVEL,
         ExecutionProperties.PROP_TXN_AUTO_WRAP,
         ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
         ExecutionProperties.RESULT_SET_CACHE_MODE,
@@ -228,15 +226,7 @@ public class MMJDBCURL {
         }
         return properties.getProperty(BaseDataSource.VERSION);
     }
-    
-    public String getLogFile() {
-        return properties.getProperty(BaseDataSource.LOG_FILE);
-    }
-    
-    public String getLogLevel() {
-        return properties.getProperty(BaseDataSource.LOG_LEVEL);
-    }
-    
+        
     public String getTransactionAutowrapMode() {
         return properties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
     }

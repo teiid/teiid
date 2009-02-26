@@ -113,19 +113,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public static final String USER_NAME = MMURL.CONNECTION.USER_NAME; 
     // constant for password part of url
     public static final String PASSWORD = MMURL.CONNECTION.PASSWORD; 
-    // string constant that the url contains
-    public static final String LOG_FILE = MMURL.JDBC.LOG_FILE; 
-    // string constant that the url contains
-    public static final String LOG_LEVEL = MMURL.JDBC.LOG_LEVEL; 
-    // logging level that would log messages
-    public static final int LOG_NONE = MMURL.JDBC.LOG_NONE;
-    // logging level that would log exception stack traces
-    public static final int LOG_ERROR = MMURL.JDBC.LOG_ERROR;    
-    // logging level that would log messages
-    public static final int LOG_INFO = MMURL.JDBC.LOG_INFO;
-    // logging level that would traces method calls
-    public static final int LOG_TRACE = MMURL.JDBC.LOG_TRACE;
-
     
     protected static final int DEFAULT_TIMEOUT = 0;
     protected static final int DEFAULT_LOG_LEVEL = 0;
@@ -193,25 +180,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This property is <i>optional</i>.
      */
     private String applicationName;
-
-    /**
-     * The path and file name to which JDBC Log Statements will be written.
-     * This property is <i>optional</i>; if none is specified, then no Log Statements will be written.
-     */
-    private String logFile;
-
-    /**
-     * The level of Log Statements.  This property is only used if the <code>logFile</code> property
-     * is specified, and must be either
-     * <ul>
-     *   <li>"<code>0</code>" - no JDBC log messages will be written to the file</li>
-     *   <li>"<code>1</code>" - all JDBC log messages will be written to the file</li>
-     *   <li>"<code>2</code>" - all JDBC log messages as well as stack traces of any exceptions thrown from
-     * this driver will be written to the file</li>
-     * </ul>
-     * This property is <i>optional</i> and defaults to "<code>0</code>".
-     */
-    private int logLevel;    
 
     /** Support partial results mode or not.*/
     private String partialResultsMode;
@@ -322,7 +290,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     public BaseDataSource() {
         this.loginTimeout = DEFAULT_TIMEOUT;
-        this.logLevel = DEFAULT_LOG_LEVEL;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -357,14 +324,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         if ( token != null ) {
             // Special case: token is a Serializable, not necessarily a String
             props.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, token);
-        }
-
-        if ( this.getLogFile() != null && this.getLogFile().trim().length() != 0 ) {
-            props.setProperty(BaseDataSource.LOG_FILE,this.getLogFile().trim());
-        }
-
-        if ( this.getLogLevel() != 0 ) {
-            props.setProperty(BaseDataSource.LOG_LEVEL,Integer.toString(this.getLogLevel()));
         }
 
         if (this.getPartialResultsMode() != null && this.getPartialResultsMode().trim().length() != 0) {
@@ -425,16 +384,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
 
         reason = reasonWhyInvalidDescription(this.description);
-        if ( reason != null ) {
-            throw new SQLException(reason);
-        }
-
-        reason = reasonWhyInvalidLogFile(this.logFile);
-        if ( reason != null ) {
-            throw new SQLException(reason);
-        }
-
-        reason = reasonWhyInvalidLogLevel(this.logLevel);
         if ( reason != null ) {
             throw new SQLException(reason);
         }
@@ -666,29 +615,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-     * Returns the path and file name to which JDBC Log Statements will be written.
-     * @return the name of the log file for this data source; may be null
-     */
-    public String getLogFile() {
-        return logFile;
-    }
-
-    /**
-     * Returns the level of logging.  This property is only used if the <code>logFile</code> property
-     * is specified, and must be either
-     * <ul>
-     *   <li>"<code>0</code>" - no JDBC log messages will be written to the file</li>
-     *   <li>"<code>1</code>" - all JDBC log messages will be written to the file</li>
-     *   <li>"<code>2</code>" - all JDBC log messages as well as stack traces of any exceptions thrown from
-     * this driver will be written to the file<li>
-     * </ul>
-     * @return The logging level for this data source
-     */
-    public int getLogLevel() {
-        return logLevel;
-    }
-
-    /**
      * Sets the name of the application.  Supplying this property may allow an administrator of a
      * MetaMatrix Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
@@ -762,29 +688,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     public void setDescription(final String description) {
         this.description = description;
-    }
-
-    /**
-     * Sets the path and file name to which JDBC Log Statements will be written.
-     * @param logFile The log file for this data source
-     */
-    public void setLogFile(final String logFile) {
-        this.logFile = logFile;
-    }
-
-    /**
-     * Sets the level of logging.  This property is only used if the <code>logFile</code> property
-     * is specified, and must be either
-     * <ul>
-     *   <li>"<code>0</code>" - no JDBC log messages will be written to the file</li>
-     *   <li>"<code>1</code>" - all JDBC log messages will be written to the file</li>
-     *   <li>"<code>2</code>" - all JDBC log messages as well as stack traces of any exceptions thrown from
-     * this driver will be written to the file<li>
-     * </ul>
-     * @param logLevel The logging level for this data source
-     */
-    public void setLogLevel(final int logLevel) {
-        this.logLevel = logLevel;
     }
 
     public void setPartialResultsMode(String partialResultsMode) {
@@ -1009,31 +912,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      */
     public static String reasonWhyInvalidDescription( final String description ) {
         return null;        // anything is valid
-    }
-
-    /**
-     * Return the reason why the supplied log file may be invalid, or null
-     * if it is considered valid.
-     * @param logFile a possible value for the property
-     * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setLogFile(String)
-     */
-    public static String reasonWhyInvalidLogFile( final String logFile ) {
-        return null;
-    }
-
-    /**
-     * Return the reason why the supplied log level may be invalid, or null     * if it is considered valid.
-     * @param logLevel a possible value for the property
-     * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setLogLevel(int)
-     */
-    public static String reasonWhyInvalidLogLevel( final int logLevel ) {
-        if ( logLevel < BaseDataSource.LOG_NONE || logLevel > BaseDataSource.LOG_TRACE ) {
-            Object[] params = new Object[] {new Integer(BaseDataSource.LOG_NONE), new Integer(BaseDataSource.LOG_ERROR), new Integer(BaseDataSource.LOG_INFO), new Integer(BaseDataSource.LOG_TRACE)};
-            return getResourceMessage("MMDataSource.Log_level_invalid", params);  //$NON-NLS-1$
-        }
-        return null;
     }
 
     /**

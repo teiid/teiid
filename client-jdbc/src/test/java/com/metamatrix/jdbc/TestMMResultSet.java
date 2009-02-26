@@ -700,7 +700,6 @@ public class TestMMResultSet extends TestCase {
 
 	static MMStatement createMockStatement() throws SQLException {
 		MMStatement statement = mock(MMStatement.class);
-		stub(statement.getLogger()).toReturn(mock(Logger.class));
 		stub(statement.getDQP()).toReturn(mock(ClientSideDQP.class));
 		stub(statement.getResultSetType()).toReturn(
 				ResultSet.TYPE_SCROLL_INSENSITIVE);

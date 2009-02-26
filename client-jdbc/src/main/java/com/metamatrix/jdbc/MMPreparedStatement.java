@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -57,7 +58,6 @@ import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -75,7 +75,8 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  */
 
 public class MMPreparedStatement extends MMStatement implements PreparedStatement {
-
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+	
     // sql, which this prepared statement is operating on
     protected String prepareSql;
 
@@ -241,9 +242,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
             throw ex;
         }
 
-        // logging for getting result set.
-        String logMsg = JDBCPlugin.Util.getString("MMStatement.Success_query", prepareSql); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMStatement.Success_query", prepareSql)); //$NON-NLS-1$
 	}
     
     private void processUpdateMessage(ResultsMessage resultsMsg) throws SQLException {
@@ -280,9 +279,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         //Check to see the statement is closed and throw an exception
         checkStatement();
         if (getMMConnection().isReadOnly()) {
-            String logMsg = JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", prepareSql);//$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, logMsg);
-            throw new MMSQLException(logMsg);
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", prepareSql)); //$NON-NLS-1$
         }
         
         // See NOTE1
@@ -315,11 +312,9 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
                 	}else{
                 		rowsAffected = resultSet.getInt(1);
                 	}
-                	String logMsg = JDBCPlugin.Util.getString("MMStatement.Success_update", prepareSql); //$NON-NLS-1$
-                	getLogger().log(MessageLevel.INFO, logMsg);
+                	logger.info(JDBCPlugin.Util.getString("MMStatement.Success_update", prepareSql)); //$NON-NLS-1$
 	            } catch (SQLException se) {
-    	            String msg = JDBCPlugin.Util.getString("MMStatement.Err_getting_update_row"); //$NON-NLS-1$
-        	        setException(MMSQLException.create(se, msg));
+        	        setException(MMSQLException.create(se, JDBCPlugin.Util.getString("MMStatement.Err_getting_update_row"))); //$NON-NLS-1$
             	} finally {
                 	resultSet.close();
                 	resultSet = null;
@@ -329,10 +324,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 
         ex = getException();
         if(ex != null) {
-            //logging
-            String logMsg = JDBCPlugin.Util.getString("MMStatement.Err_update", prepareSql, ex.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, ex, logMsg);
-            throw MMSQLException.create(ex, ex.getMessage());
+            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Err_update", prepareSql, ex.getMessage())); //$NON-NLS-1$
         }
     }
 
@@ -366,8 +358,8 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 				} catch (MetaMatrixProcessingException e) {
 					throw MMSQLException.create(e);
 				}
-                StaticMetadataProvider provider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount(), getLogger());
-                metadata = ResultsMetadataWithProvider.newInstance(provider, getLogger());
+                StaticMetadataProvider provider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount());
+                metadata = ResultsMetadataWithProvider.newInstance(provider);
             }
         }
 
@@ -768,10 +760,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         try {
         	return sendRequestMessageAndWait(commands, true, false, isPreparedBatchUpdate? getParameterValuesList(): getParameterValues(), false, isPreparedBatchUpdate);
         } catch ( Throwable ex ) {
-            // logging
-            String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0]); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, ex, msg);
-            throw MMSQLException.create(ex, msg);
+            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0])); //$NON-NLS-1$
         }
     }
 

@@ -37,8 +37,6 @@ import javax.sql.StatementEventListener;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
-import com.metamatrix.core.log.Logger;
-
 /**
  * Implementation of XAConnection.
  */
@@ -116,14 +114,7 @@ public class MMXAConnection implements XAConnection{
         
         return connection;
 	}
-	
-    public Logger getLogger() {
-        if (connection == null) {
-            return null;
-        }
-        return connection.getLogger();
-    }
-    
+	    
 	public synchronized void addConnectionEventListener(ConnectionEventListener listener){
 		if(listeners == null){
 			listeners = new HashSet();

@@ -25,7 +25,6 @@ package com.metamatrix.jdbc;
 import java.sql.SQLException;
 import java.util.Map;
 
-import com.metamatrix.core.log.Logger;
 
 /**
  */
@@ -38,11 +37,10 @@ public class StaticMetadataProvider extends AbstractMetadataProvider {
     StaticMetadataProvider() {
     }
     
-    public static StaticMetadataProvider createWithData(Map[] columnMetadata, int paramCount, Logger logger) {
+    public static StaticMetadataProvider createWithData(Map[] columnMetadata, int paramCount) {
         StaticMetadataProvider provider = null;
         
         provider = new StaticMetadataProvider();    
-        provider.setLogger(logger);
         provider.setData(columnMetadata);
         provider.setParameterCount(paramCount);        
         return provider;

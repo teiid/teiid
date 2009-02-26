@@ -78,13 +78,12 @@ public class TestMMJDBCURL extends TestCase {
     
     public void testCaseConversion() {
         // Different case ------------------------------------HERE -v  ----------------and HERE  -v
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;VERSION=1;user=xyz;password=***;loglevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi"; //$NON-NLS-1$
+        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;VERSION=1;user=xyz;password=***;configFile=testdata/bqt/dqp_stmt_e2e.xmi"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("user", "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("password", "***"); //$NON-NLS-1$ //$NON-NLS-2$
-        expectedProperties.setProperty("logLevel", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi"); //$NON-NLS-1$ //$NON-NLS-2$
         MMJDBCURL url = new MMJDBCURL(URL); 
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$

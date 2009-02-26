@@ -28,7 +28,6 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.log.Logger;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
@@ -46,7 +45,7 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
     DeferredMetadataProvider() {        
     }
     
-    public static DeferredMetadataProvider createWithInitialData(String[] columnNames, String[] columnTypes, MMStatement statement, long requestID, Logger logger) {
+    public static DeferredMetadataProvider createWithInitialData(String[] columnNames, String[] columnTypes, MMStatement statement, long requestID) {
         if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
             Object[] params = new Object[] { 
                 StringUtil.toString(columnNames), StringUtil.toString(columnTypes)
@@ -56,7 +55,6 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
         
         DeferredMetadataProvider provider = null;
         provider = new DeferredMetadataProvider();    
-        provider.setLogger(logger);
         provider.setDeferredLookupAttributes(statement, requestID);
         provider.loadPartialMetadata(columnNames, columnTypes);        
         return provider;    
@@ -75,7 +73,7 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
             columnMetadata[i].put(ResultsMetadataConstants.DATA_TYPE, columnTypes[i]);
         }
         
-        this.staticProvider = StaticMetadataProvider.createWithData(columnMetadata, -1, getLogger());    
+        this.staticProvider = StaticMetadataProvider.createWithData(columnMetadata, -1);    
     }
 
     private void loadFullMetadata() throws SQLException {
@@ -87,7 +85,7 @@ public class DeferredMetadataProvider extends AbstractMetadataProvider {
 		} catch (MetaMatrixProcessingException e) {
 			throw MMSQLException.create(e);
 		}
-        this.staticProvider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount(), getLogger());
+        this.staticProvider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount());
     }
 
     public int getColumnCount() throws SQLException {

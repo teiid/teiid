@@ -24,7 +24,6 @@ package com.metamatrix.jdbc;
 
 import java.sql.SQLException;
 
-import com.metamatrix.core.log.Logger;
 import com.metamatrix.jdbc.api.ResultSetMetaData;
 
 /**
@@ -33,16 +32,14 @@ public class FilteredResultsMetadata extends WrapperImpl implements ResultSetMet
 
     private ResultSetMetaData delegate; 
     private int actualColumnCount;
-    Logger logger;
     
-    static FilteredResultsMetadata newInstance (ResultSetMetaData rsmd, int actualColumnCount, Logger logger) {
-        return new FilteredResultsMetadata(rsmd, actualColumnCount, logger);
+    static FilteredResultsMetadata newInstance (ResultSetMetaData rsmd, int actualColumnCount) {
+        return new FilteredResultsMetadata(rsmd, actualColumnCount);
     }    
     
-    FilteredResultsMetadata(ResultSetMetaData rsmd, int actualColumnCount, Logger logger) {
+    FilteredResultsMetadata(ResultSetMetaData rsmd, int actualColumnCount) {
         this.delegate = rsmd;
         this.actualColumnCount = actualColumnCount;
-        this.logger = logger;
     }
     
     public int getColumnCount() throws SQLException {

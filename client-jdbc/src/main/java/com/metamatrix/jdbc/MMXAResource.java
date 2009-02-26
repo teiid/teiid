@@ -23,6 +23,8 @@
 package com.metamatrix.jdbc;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -31,13 +33,13 @@ import javax.transaction.xa.Xid;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
 
 /**
  * Implementation of XAResource.
  */
 public class MMXAResource implements XAResource{
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+
 	private MMXAConnection mmConnection;
 	private int timeOut;
     
@@ -48,11 +50,7 @@ public class MMXAResource implements XAResource{
 	public MMXAResource(MMXAConnection mmConnection){
 		this.mmConnection = mmConnection;
 	}	
-	
-    public Logger getLogger() {
-        return this.mmConnection.getLogger();
-    }
-    
+	    
 	/**
      * @see javax.transaction.xa.XAResource#commit(javax.transaction.xa.Xid, boolean)
      */
@@ -66,9 +64,9 @@ public class MMXAResource implements XAResource{
 		}
     }
 
-    private XAException handleError(Exception e,
-                             String logMsg) {
-        getLogger().log(MessageLevel.ERROR, e, logMsg);
+    private XAException handleError(Exception e,String logMsg) {
+        logger.log(Level.SEVERE, logMsg, e);
+
         if(e instanceof MMSQLException){
             Throwable ex = ((MMSQLException)e).getCause();
             if(ex instanceof XAException){

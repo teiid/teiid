@@ -22,16 +22,11 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.log.NullLogger;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -101,8 +96,6 @@ public class MMDataSource extends BaseDataSource {
     
     private String discoveryStrategy;
     
-    private transient Logger logger;
-
     /**
      * Constructor for MMDataSource.
      */
@@ -223,7 +216,6 @@ public class MMDataSource extends BaseDataSource {
             final MMDriver driver = new MMDriver();
             return driver.createMMConnection(buildURL(), props);
         } catch (MetaMatrixCoreException e) {
-            getLogger().log(MessageLevel.CRITICAL, e, e.getMessage());
             throw MMSQLException.create(e, e.getMessage());
         }
     }
@@ -469,30 +461,6 @@ public class MMDataSource extends BaseDataSource {
     	return JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", new String[] { "" + reasonCount, reason }); //$NON-NLS-1$ //$NON-NLS-2$
     }
  
- 
-    /**
-     * JDBC Logger; we create a logger once we create a connection, but if we
-     * fail to make connection we need a default logger based on the set paramters
-     * wish we have one place to do this. 
-     * @return
-     */
-    public Logger getLogger() {
-        if (this.logger == null) {
-            try {
-                if (getLogFile() != null) {
-                    this.logger = new DriverManagerLogger(getLogLevel(), new PrintWriter(new FileWriter(getLogFile())));
-                }
-                else {
-                    this.logger = new DriverManagerLogger(getLogLevel(), getLogWriter());
-                }
-            } catch (Exception e) {
-                this.logger = new NullLogger();
-            }
-        }
-        return this.logger;
-    }
-
-    
     /** 
      * @return Returns the transparentFailover.
      */

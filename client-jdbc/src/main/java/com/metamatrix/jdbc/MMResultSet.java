@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -54,8 +55,6 @@ import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
 import com.metamatrix.dqp.message.ResultsMessage;
@@ -71,7 +70,8 @@ import com.metamatrix.jdbc.BatchResults.Batch;
  */
 
 public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.ResultSet, BatchFetcher {
-	
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+
 	private static final int BEFORE_FIRST_ROW = 0;
 
 	// the object which was last read from Results
@@ -126,12 +126,10 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
         this.serverTimeZone = statement.getServerTimeZone();
 
 		if (metadata == null) {
-			ResultsMetadataProvider provider = DeferredMetadataProvider
-					.createWithInitialData(resultsMsg.getColumnNames(),
+			ResultsMetadataProvider provider = DeferredMetadataProvider.createWithInitialData(resultsMsg.getColumnNames(),
 							resultsMsg.getDataTypes(), statement,
-							statement.getCurrentRequestID(), getLogger());
-			rmetadata = ResultsMetadataWithProvider.newInstance(provider,
-					getLogger());
+							statement.getCurrentRequestID());
+			rmetadata = ResultsMetadataWithProvider.newInstance(provider);
 		} else {
 			rmetadata = metadata;
 		}
@@ -140,7 +138,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		
 		this.resultColumns = columnCount - parameters;
 		if (this.parameters > 0) {
-			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns, getLogger());
+			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns);
 		}
 	}
 	
@@ -337,7 +335,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
     }
     
     public Batch requestBatch(int beginRow, int endRow) throws SQLException{
-    	getLogger().log(MessageLevel.DETAIL, "CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow + " endinRow: " + endRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow + " endinRow: " + endRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     	checkClosed();
         try {
         	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, endRow);
@@ -1086,15 +1084,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	protected void setResultsData(ResultsMessage resultsMsg) {
 		this.completedTimestamp = resultsMsg.getCompletedTimestamp();
 		this.statement.accumulateWarnings(resultsMsg.getWarnings());
-	}
-
-	/**
-	 * JDBC Logger
-	 * 
-	 * @return logger
-	 */
-	public Logger getLogger() {
-		return this.statement.getLogger();
 	}
 
 	/**

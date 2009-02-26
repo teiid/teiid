@@ -25,7 +25,6 @@ package com.metamatrix.jdbc;
 import java.sql.SQLException;
 
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
-import com.metamatrix.core.log.Logger;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 
 /**
@@ -33,20 +32,18 @@ import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 public class ResultsMetadataWithProvider extends WrapperImpl implements com.metamatrix.jdbc.api.ResultSetMetaData {
 
     private ResultsMetadataProvider provider;
-    Logger logger;
     
     /**
      * Factory Constructor 
      * @param statement
      * @param valueID
      */
-    public static ResultsMetadataWithProvider newInstance(ResultsMetadataProvider provider, Logger logger) {
-        return new ResultsMetadataWithProvider(provider, logger);        
+    public static ResultsMetadataWithProvider newInstance(ResultsMetadataProvider provider) {
+        return new ResultsMetadataWithProvider(provider);        
     }
     
-    public ResultsMetadataWithProvider(ResultsMetadataProvider provider, Logger logger) {
+    public ResultsMetadataWithProvider(ResultsMetadataProvider provider) {
         setMetadataProvider(provider);
-        this.logger = logger;
     }
     
     void setMetadataProvider(ResultsMetadataProvider provider) {

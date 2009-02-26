@@ -43,7 +43,6 @@ import java.util.Calendar;
 import java.util.Map;
 
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.message.ResultsMessage;
 
 /**
@@ -392,10 +391,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
         try {
             return sendRequestMessageAndWait(commands, false, true, getParameterValues(), false, isBatchedCommand);
         } catch ( Throwable ex ) {
-            // logging
-            String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0]); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, ex, msg);
-            throw MMSQLException.create(ex, msg);
+            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0])); //$NON-NLS-1$
         }
     }
     

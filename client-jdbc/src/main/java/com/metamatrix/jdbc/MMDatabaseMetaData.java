@@ -37,14 +37,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.Logger;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
 import com.metamatrix.dqp.metadata.ResultsMetadataDefaults;
@@ -61,7 +60,7 @@ import com.metamatrix.dqp.metadata.ResultsMetadataDefaults;
  */
 
 public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jdbc.api.DatabaseMetaData {
-
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
         
     /** CONSTANTS */
     private static final String PERCENT = "%"; //$NON-NLS-1$    
@@ -360,14 +359,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     }
 
     /**
-     * JDBC Logger 
-     * @return logger
-     */
-    public Logger getLogger() {
-        return this.driverConnection.getLogger();
-    }
-    
-    /**
      * <p>Checks whether the current user has the required security rights to call
      * all the procedures returned by the method getProcedures.</p>
      * @return true if the precedures are selectable else return false
@@ -487,7 +478,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.Best_row_sucess", table); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
@@ -515,14 +506,14 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.Catalog_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
     }
 
     private ResultSet createResultSet(List records, Map[] columnMetadata) throws SQLException {
-        ResultSetMetaData rsmd = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(columnMetadata, 0, this.getLogger()), getLogger());
+        ResultSetMetaData rsmd = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(columnMetadata, 0));
 
         return createResultSet(records, rsmd);
     }
@@ -546,7 +537,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         for (int i = 0; i < columnNames.length; i++) {
             metadata[i] = getColumnMetadata(null, columnNames[i], dataTypes[i], ResultsMetadataConstants.NULL_TYPES.UNKNOWN);
         }
-        return new MMResultSet(resultsMsg, stmt, ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadata, 0, getLogger()), getLogger()), 0);
+        return new MMResultSet(resultsMsg, stmt, ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadata, 0)), 0);
     }
 
     private ResultsMessage createDummyResultsMessage(String[] columnNames, String[] dataTypes, List records) {
@@ -699,17 +690,12 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_error", columnNamePattern, tableNamePattern, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
             throw MMSQLException.create(e, logMsg);
         }
 
-        // close the resultset and driver connection
-//        results.close();
-//        prepareQuery.close();
-
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_success", columnNamePattern, tableNamePattern); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -820,7 +806,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_error", primaryTable, foreignTable, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
             throw MMSQLException.create(e, logMsg);
         }
 
@@ -828,7 +813,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_success", primaryTable, foreignTable); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(logMsg);
 
         return resultSet;
     }
@@ -1007,15 +992,12 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         } catch(Exception e) {
             // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_error", table, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
             throw MMSQLException.create(e, logMsg);
         }
 
         ResultSet resultSet = getReferenceKeys(results);
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
 
         return resultSet;
     }
@@ -1083,17 +1065,13 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
         } catch(Exception e) {
-            // logging
             String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_error", table, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
             throw MMSQLException.create(e, logMsg);
         }
 
         ResultSet resultSet = getReferenceKeys(results);
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table)); //$NON-NLS-1$
 
         return resultSet;
     }
@@ -1162,19 +1140,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             rmetadata = results.getMetaData();
 
         } catch (Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_error", table, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_error", table, e.getMessage())); //$NON-NLS-1$
         }
 
-        // close the results and driver connection
-//        results.close();
-//        prepareQuery.close();
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1467,19 +1436,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             rmetadata = results.getMetaData();
 
         } catch (Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_error", table, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_error", table, e.getMessage())); //$NON-NLS-1$
         }
 
-        // close the results and driver connection
-        //results.close();
-        //prepareQuery.close();
-
-        // loging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1570,19 +1530,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             rmetadata = results.getMetaData();
 
         } catch (Exception e) {
-           // logging
-           String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_error", columnNamePattern, e.getMessage()); //$NON-NLS-1$
-           getLogger().log(MessageLevel.ERROR, e, logMsg);
-           throw MMSQLException.create(e, logMsg);
+           throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_error", columnNamePattern, e.getMessage())); //$NON-NLS-1$
         }
 
-        // close the results and driver connection
-        //results.close();
-        //prepareQuery.close();
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1686,19 +1637,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             rmetadata = results.getMetaData();
 
         } catch (Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_error", procedureNamePattern, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_error", procedureNamePattern, e.getMessage())); //$NON-NLS-1$
         }
 
-        // close the results
-        //results.close();
-        //prepareQuery.close();
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1776,19 +1718,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             rmetadata = results.getMetaData();
 
         } catch(Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage())); //$NON-NLS-1$
         }
 
-        // close the results (need to close case results exceed cursor size)
-//        results.close();
-//        prepareQuery.close();
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2070,10 +2003,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         } catch (SQLException e) {
             throw e;
         } catch (Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_error", tableNamePattern, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_error", tableNamePattern, e.getMessage())); //$NON-NLS-1$
         }
 
         // close the results (need to close case results exceed cursor size)
@@ -2083,9 +2013,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // manually send out a close request is very necessary for PreparedStatement.
         //prepareQuery.close();
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2152,9 +2080,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         metadataList[0] = getColumnMetadata(null, JDBCColumnNames.TABLE_TYPES.TABLE_TYPE, 
                             MMJDBCSQLTypeInfo.STRING, ResultsMetadataConstants.NULL_TYPES.NOT_NULL);
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getTableType_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTableType_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
@@ -2219,11 +2145,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         metadataList[16] = getColumnMetadata("System.DataTypes", JDBCColumnNames.TYPE_INFO.SQL_DATETIME_SUB, MMJDBCSQLTypeInfo.INTEGER,  ResultsMetadataConstants.NULL_TYPES.NULLABLE, ResultsMetadataConstants.SEARCH_TYPES.SEARCHABLE, Boolean.TRUE, Boolean.TRUE, Boolean.FALSE);//$NON-NLS-1$ 
         metadataList[17] = getColumnMetadata("System.DataTypes", JDBCColumnNames.TYPE_INFO.NUM_PREC_RADIX, MMJDBCSQLTypeInfo.INTEGER,  ResultsMetadataConstants.NULL_TYPES.NULLABLE, ResultsMetadataConstants.SEARCH_TYPES.SEARCHABLE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);//$NON-NLS-1$ 
 
-        ResultSetMetaData rmetadata = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadataList, 0, getLogger()), getLogger());
+        ResultSetMetaData rmetadata = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadataList, 0));
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getTypes_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTypes_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2308,9 +2232,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // Method not supported, retuning empty ResultSet
         ResultSet resultSet = getBestRowIdentifier(catalog, schema, table, 0, true);
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getVersionCols_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getVersionCols_success")); //$NON-NLS-1$
 
        return resultSet;
     }
@@ -3289,9 +3211,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // close the resultset and driver connection
         //results.close();
 
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getRefKey_success"); //$NON-NLS-1$
-        getLogger().log(MessageLevel.INFO, logMsg);
+        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getRefKey_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -3385,10 +3305,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
             return results;
         } catch (Exception e) {
-            // logging
-            String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getModels_error", modelNamePattern, e.getMessage()); //$NON-NLS-1$
-            getLogger().log(MessageLevel.ERROR, e, logMsg);
-            throw MMSQLException.create(e, logMsg);
+            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getModels_error", modelNamePattern, e.getMessage())); //$NON-NLS-1$
         }
     }
 

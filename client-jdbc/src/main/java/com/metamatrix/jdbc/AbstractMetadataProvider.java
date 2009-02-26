@@ -24,13 +24,9 @@ package com.metamatrix.jdbc;
 
 import java.sql.SQLException;
 
-import com.metamatrix.core.log.Logger;
-
 /**
  */
 public abstract class AbstractMetadataProvider implements ResultsMetadataProvider {
-    Logger logger;
-    
     public String getStringValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
         return (String) getValue(columnIndex, metadataPropertyKey);
     }
@@ -41,21 +37,5 @@ public abstract class AbstractMetadataProvider implements ResultsMetadataProvide
 
     public boolean getBooleanValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
         return ((Boolean) getValue(columnIndex, metadataPropertyKey)).booleanValue();
-    }
-
-    /**
-     * JDBC Logger 
-     * @param logger
-     */
-    void setLogger(Logger logger) {
-        this.logger = logger;
-    }
-
-    /**
-     * JDBC Logger 
-     * @return logger
-     */
-    public Logger getLogger() {
-        return this.logger;
     }
 }
