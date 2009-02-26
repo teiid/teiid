@@ -38,8 +38,6 @@ import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.Handshake;
-import com.metamatrix.common.comm.platform.socket.PrintStreamSocketLog;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.SocketUtil.SSLEngineFactory;
 import com.metamatrix.common.util.NetUtils;
@@ -74,7 +72,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	private static SocketServerConnectionFactory INSTANCE;
 	
-    private SocketLog log; 
     private ObjectChannelFactory channelFactory;
 	private Timer pingTimer;
 	private Properties props;
@@ -84,7 +81,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		if (INSTANCE == null) {
 			INSTANCE = new SocketServerConnectionFactory();
 			Properties props = System.getProperties();
-			InputStream is = SocketServerConnectionFactory.class.getResourceAsStream("/federate-settings.properties"); //$NON-NLS-1$
+			InputStream is = SocketServerConnectionFactory.class.getResourceAsStream("/teiid-client-settings.properties"); //$NON-NLS-1$
 			if (is != null) {
 				props = new Properties(props);
 				try {
@@ -109,7 +106,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	public void init(Properties props, boolean usePing) {
 		this.props = props;
-		this.log = getLog(SocketServerConnectionFactory.class.getSimpleName());
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
 		this.channelFactory = new NioObjectChannelFactory(
 				getConserveBandwidth(), getInputBufferSize(),
@@ -133,7 +129,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				sslEngine = this.sslEngineFactory.getSSLEngine();
 			}
 		}
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, sslEngine, this.log, getSynchronousTTL());
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, sslEngine, getSynchronousTTL());
 		ssii.connect(this.channelFactory, Handshake.HANDSHAKE_TIMEOUT);
 		return ssii;
 	}
@@ -163,7 +159,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 		discovery.init(url, connectionProperties);
 		
-		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties, pingTimer, this.log);
+		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties, pingTimer);
 	}
 
 	/*
@@ -194,21 +190,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	 */
 	public int getMaxThreads() {
 	    return PropertiesUtils.getIntProperty(props, SOCKET_MAX_THREADS, DEFAULT_MAX_THREADS);
-	}
-
-	public SocketLog getLog(String contextName) {
-	    SocketLog result = new PrintStreamSocketLog(System.out, contextName, getLogLevel());
-	    return result;
-	}
-
-	/**
-	 * Get the logLevel that SocketLog will use. 
-	 * @return
-	 * @since 4.3
-	 */
-	public int getLogLevel() {
-	    String logLevelString = props.getProperty(SOCKET_LOG_LEVEL, DEFAULT_SOCKET_LOG_LEVEL);
-	    return PrintStreamSocketLog.getLogLevelInt(logLevelString);
 	}
 
 	public int getInputBufferSize() {

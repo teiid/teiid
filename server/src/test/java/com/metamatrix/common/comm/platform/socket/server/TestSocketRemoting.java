@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -44,7 +43,6 @@ import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.MessageListener;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstance;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceFactory;
@@ -215,7 +213,7 @@ public class TestSocketRemoting extends TestCase {
 				return serverInstance;
 			}
 			
-		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null, Mockito.mock(SocketLog.class)); //$NON-NLS-1$
+		}, false, new UrlServerDiscovery(new MMURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
 		return connection;
 	}
 	

@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLEngine;
 
@@ -52,7 +54,6 @@ import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -75,7 +76,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	private HostInfo hostInfo;
 	private SSLEngine engine;
     private ObjectChannel socketChannel;
-    private SocketLog log;
+    private Logger log = Logger.getLogger("org.teiid.client.sockets");
     private long synchTimeout;
 
     private Cryptor cryptor;
@@ -89,9 +90,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     	
     }
 
-    public SocketServerInstanceImpl(final HostInfo host, SSLEngine engine, SocketLog log, long synchTimeout) {
+    public SocketServerInstanceImpl(final HostInfo host, SSLEngine engine, long synchTimeout) {
         this.hostInfo = host;
-        this.log = log;
         this.engine = engine;
         this.synchTimeout = synchTimeout;
     }
@@ -213,14 +213,14 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	public void exceptionOccurred(Throwable e) {
     	if (e instanceof CommunicationException) {
 	        if (e.getCause() instanceof InvalidClassException) {
-	            log.logError("SocketServerInstance.read", e, "Unknown class or incorrect class version:"); //$NON-NLS-1$ //$NON-NLS-2$
+	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$ //$NON-NLS-2$
 	        } else {
-	            log.logDetail("SocketServerInstance.read", e, "Unable to read: socket was already closed."); //$NON-NLS-1$ //$NON-NLS-2$
+	            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
     	} else if (e instanceof EOFException) {
-    		log.logDetail("SocketServerInstance.read", e, "Unable to read: socket was already closed."); //$NON-NLS-1$ //$NON-NLS-2$
+            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ //$NON-NLS-2$
     	} else {
-    		log.logDetail("SocketServerInstance.read", e, "Unable to read: unexpected exception"); //$NON-NLS-1$ //$NON-NLS-2$
+            log.log(Level.WARNING, "Unable to read: unexpected exception", e); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
 		synchronized (this) {
@@ -242,32 +242,24 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
     }
 
 	public void receivedMessage(Object packet) {
-        log.logDetail("SocketServerInstance.read", "reading"); //$NON-NLS-1$ //$NON-NLS-2$
-        if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
-            log.logDetail("SocketServerInstance.read", "read:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$ //$NON-NLS-2$
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
             processAsynchronousPacket(messagePacket);
         } else if (packet instanceof Handshake) {
         	receivedHahdshake((Handshake)packet);
         } else {
-            if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
-                log.logDetail("SocketServerInstance.read", "packet ignored:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+        	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 
     private void processAsynchronousPacket(Message message) {
         Serializable messageKey = message.getMessageKey();
-        if (log.isLogged("SocketServerInstance.read", SocketLog.DETAIL)) { //$NON-NLS-1$
-            log.logDetail("SocketServerInstance.read", "read asynch message:" + message); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
     	MessageListener listener = asynchronousListeners.remove(messageKey);
         if (listener != null) {
             listener.deliverMessage(message, messageKey);
         }
-        log.logDetail("SocketServerInstanceImpl.deliverMessage", "message delivered"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void shutdown() {

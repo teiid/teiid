@@ -40,7 +40,6 @@ import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
@@ -130,7 +129,7 @@ public class TestSocketServerConnection extends TestCase {
 		};
 		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("mm://host1:1,host2:2"));
 		try {
-			new SocketServerConnection(instanceFactory, false, discovery, p, null, Mockito.mock(SocketLog.class));
+			new SocketServerConnection(instanceFactory, false, discovery, p, null);
 			fail("exception expected");
 		} catch (CommunicationException e) {
 			assertEquals("No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage());
@@ -184,7 +183,7 @@ public class TestSocketServerConnection extends TestCase {
 				return instance;
 			}
 		};
-		SocketServerConnection connection = new SocketServerConnection(instanceFactory, false, discovery, p, null, Mockito.mock(SocketLog.class));
+		SocketServerConnection connection = new SocketServerConnection(instanceFactory, false, discovery, p, null);
 		return connection;
 	}
 	

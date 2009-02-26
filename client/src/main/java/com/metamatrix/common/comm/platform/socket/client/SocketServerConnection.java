@@ -40,6 +40,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -52,7 +54,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -68,7 +69,7 @@ public class SocketServerConnection implements ServerConnection {
 	private Map<HostInfo, SocketServerInstance> existingConnections = new HashMap<HostInfo, SocketServerInstance>();
 	private SocketServerInstanceFactory connectionFactory;
     private ServerDiscovery serverDiscovery;
-    private SocketLog log;
+    private static Logger log = Logger.getLogger("org.teiid.client.sockets");
 
 	private boolean secure;
     private Properties connProps;
@@ -82,13 +83,12 @@ public class SocketServerConnection implements ServerConnection {
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
 			ServerDiscovery serverDiscovery, Properties connProps,
-			Timer pingTimer, SocketLog log) throws CommunicationException, ConnectionException {
+			Timer pingTimer) throws CommunicationException, ConnectionException {
 		this.connectionFactory = connectionFactory;
 		this.serverDiscovery = serverDiscovery;
 		this.connProps = connProps;
 		this.secure = secure;
 		this.logon = this.getService(ILogon.class);
-		this.log = log;
 		
         authenticate(); 
         
@@ -157,7 +157,7 @@ public class SocketServerConnection implements ServerConnection {
 				}
 				throw new SingleInstanceCommunicationException(ex,CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
 			}
-			log.logDetail("SocketServerConnection.selectServerInstance", ex, "Unable to connect to host"); //$NON-NLS-1$ //$NON-NLS-2$
+			log.log(Level.FINE, "Unable to connect to host", ex); //$NON-NLS-1$
 		}
 		throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
 	}

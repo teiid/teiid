@@ -49,46 +49,6 @@ import com.metamatrix.core.util.Assertion;
  * This class provides some utility methods to create ssl sockets using the
  * keystores and trust stores. these are the properties required for the making the 
  * ssl connection
- * <p>
- * The search for the key stores is follows the path
- * MM defined properties ---> javax defined properties
- * <p/>
- * <ul>
- * <b>2-way SSL (MetaMatrix based)</b>
- * <li>-Dcom.metamatrix.ssl.keyStore (required)
- * <li>-Dcom.metamatrix.ssl.keyStorePassword (required)
- * <li>-Dcom.metamatrix.ssl.trustStore (required)
- * <li>-Dcom.metamatrix.ssl.trustStorePassword (required)
- * <li>-Dcom.metamatrix.ssl.protocol (optional;default=SSLv3)
- * <li>-Dcom.metamatrix.ssl.algorithm (optional;default=SunX509)
- * <li>-Dcom.metamatrix.ssl.keyStoreType (optional;default=JKS)
- * </ul>
- * <p/>
- * <ul>
- * <b>2-way SSL (javax based; can used where there are no conflicts in JVM)</b>
- * <li>-Djavax.net.ssl.keyStore (required)
- * <li>-Djavax.net.ssl.keyStorePassword (required)
- * <li>-Djavax.net.ssl.trustStore (required)
- * <li>-Djavax.net.ssl.trustStorePassword (required)
- * <li>-Djavax.net.ssl.keyStoreType (optional)
- * </ul>
- * <p/>
- * <ul>
- * <b>1-way SSL (metamatrix Based)</b>
- * <li>-Dcom.metamatrix.ssl.trustStore (required)
- * <li>-Dcom.metamatrix.ssl.trustStorePassword (required)
- * <li>-Dcom.metamatrix.ssl.protocol (optional;default=SSLv3)
- * <li>-Dcom.metamatrix.ssl.algorithm (optional;default=SunX509)
- * <li>-Dcom.metamatrix.ssl.keyStoreType (optional;default=JKS)
- * </ul>
- * <p/>
- * <ul>
- * <b>1-way SSL (javax based; can used where there are no conflicts in JVM)</b>
- * <li>-Djavax.net.ssl.trustStore (required)
- * <li>-Djavax.net.ssl.trustStorePassword (required)
- * <li>-Djavax.net.ssl.keyStoreType (optional)
- * </ul>
- * 
  */
 public class SocketUtil {
     
@@ -100,7 +60,6 @@ public class SocketUtil {
     static final String KEYSTORE_PASSWORD = "com.metamatrix.ssl.keyStorePassword"; //$NON-NLS-1$
     static final String KEYSTORE_FILENAME = "com.metamatrix.ssl.keyStore"; //$NON-NLS-1$
     
-    static final String DEFAULT_ALGORITHM = "SunX509"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
@@ -138,7 +97,7 @@ public class SocketUtil {
         // -Dcom.metamatrix.ssl.protocol (default SSLv3)
         String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_KEYSTORE_PROTOCOL); 
         // -Dcom.metamatrix.ssl.algorithm (default SunX509)
-        String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM, DEFAULT_ALGORITHM); 
+        String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM); 
         // -Dcom.metamatrix.ssl.trustStore (if null; keystore filename used)
         String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
         // -Dcom.metamatrix.ssl.trustStorePassword (if null; keystore password used)
@@ -206,6 +165,9 @@ public class SocketUtil {
                                             String protocol) throws IOException {
         
         try {
+        	if (algorithm == null) {
+        		algorithm = KeyManagerFactory.getDefaultAlgorithm();
+        	}
             // Configure the Keystore Manager
             KeyManager[] keyManagers = null;
             if (keystore != null) {

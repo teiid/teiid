@@ -30,7 +30,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.log.LogManager;
@@ -135,7 +134,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 	}
 
 	private void processMessagePacket(Message packet) {
-		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, SocketLog.DETAIL)) { 
+		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) { 
 			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "processing message:" + packet); //$NON-NLS-1$
         }
 		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server, this.sessionService));

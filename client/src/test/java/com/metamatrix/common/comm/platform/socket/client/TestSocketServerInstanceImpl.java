@@ -39,7 +39,6 @@ import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
-import com.metamatrix.common.comm.platform.socket.SocketLog;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 import com.metamatrix.dqp.client.ResultsFuture;
@@ -81,7 +80,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 
 	private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
 			throws CommunicationException, IOException {
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(new HostInfo("foo", 1), null, Mockito.mock(SocketLog.class), 1); //$NON-NLS-1$
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(new HostInfo("foo", 1), null, 1); //$NON-NLS-1$
 		ssii.connect(channelFactory, 1);
 		return ssii;
 	}
