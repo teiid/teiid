@@ -45,7 +45,7 @@ INSERT INTO MyModel.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
           </para>
         </listitem>
         <listitem>
-          <para>The "INTO" clause will project the dynamic SQL into the specified temp table. At runtime with the "INTO" clause specified, the dynamic command will actually execute a statement that behaves like a SELECT INTO. If the dynamic SQL command creates a temporary table with the "INTO" clause, then the "AS" clause is required to define the table’s metadata.
+          <para>The "INTO" clause will project the dynamic SQL into the specified temp table. With the "INTO" clause specified, the dynamic command will actually execute a statement that behaves like an INSERT with a QUERY EXPRESSION. If the dynamic SQL command creates a temporary table with the "INTO" clause, then the "AS" clause is required to define the table’s metadata.
           </para>
         </listitem>
         <listitem>

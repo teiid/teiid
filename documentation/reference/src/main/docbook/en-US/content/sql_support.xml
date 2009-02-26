@@ -824,6 +824,9 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
     </sect2>
     <sect2 id="into_clause">
       <title>INTO Clause</title>
+      <warning>
+      	<para>Usage of the INTO Clause for inserting into a table has been been deprecated.  An <link linkend="insert_command">INSERT</link> with a query command should be used instead.</para>
+      </warning>
       <para>
       When the into clause is specified with a SELECT, the results of the query are inserted into the specified table. This is often used to insert records into a temporary table. The INTO clause immediately precedes the FROM clause.   
       </para>
