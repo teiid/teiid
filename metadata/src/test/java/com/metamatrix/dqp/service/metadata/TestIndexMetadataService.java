@@ -37,7 +37,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.metadata.SupportConstants;
 
 public class TestIndexMetadataService extends TestCase {
     private QueryMetadataInterface metadata;

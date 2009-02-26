@@ -28,7 +28,6 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.CurrentConfigHelper;
 

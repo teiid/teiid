@@ -34,7 +34,6 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.core.util.ArgCheck;

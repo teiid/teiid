@@ -41,6 +41,7 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -2094,11 +2095,11 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteFromUnixTime() throws Exception {
-    	TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00"));
     	try {
     		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
     	} finally {
-    		TimeZone.setDefault(null);
+    		TimestampWithTimezone.resetCalendar(null);
     	}
     }
     

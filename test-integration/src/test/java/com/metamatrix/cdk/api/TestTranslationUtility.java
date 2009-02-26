@@ -22,13 +22,12 @@
 
 package com.metamatrix.cdk.api;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.MetadataObject;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
 

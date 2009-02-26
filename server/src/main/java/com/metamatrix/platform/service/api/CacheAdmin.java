@@ -22,7 +22,6 @@
 
 package com.metamatrix.platform.service.api;
 
-import java.rmi.Remote;
 import java.util.Map;
 import java.util.Properties;
 

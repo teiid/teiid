@@ -47,7 +47,6 @@ import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingEx
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
 import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.CoreConstants;
 
 
 public class TestExtensionModuleManager extends TestCase {

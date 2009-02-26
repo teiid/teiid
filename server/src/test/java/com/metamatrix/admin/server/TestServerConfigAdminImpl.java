@@ -29,10 +29,6 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.CacheFactory;
-import org.jboss.cache.DefaultCacheFactory;
-
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.Host;
 import com.metamatrix.core.util.ObjectConverterUtil;

@@ -46,7 +46,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.api.MMURL.CONNECTION;
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.log.FileLogWriter;

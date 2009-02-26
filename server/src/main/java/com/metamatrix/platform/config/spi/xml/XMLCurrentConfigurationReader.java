@@ -22,14 +22,11 @@
 
 package com.metamatrix.platform.config.spi.xml;
 
-import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
-import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;

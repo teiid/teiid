@@ -35,7 +35,6 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.comm.ClientServiceRegistry;

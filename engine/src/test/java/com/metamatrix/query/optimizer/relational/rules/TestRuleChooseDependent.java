@@ -40,7 +40,6 @@ import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
-import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.rewriter.QueryRewriter;
