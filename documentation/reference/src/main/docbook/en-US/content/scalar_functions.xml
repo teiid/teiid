@@ -448,6 +448,50 @@
               <para>x in {double}, return type is double</para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>BITAND(x, y)</para>
+            </entry>
+            <entry>
+              <para>Bitwise AND of x and y</para>
+            </entry>
+            <entry>
+              <para>x, y in {integer}, return type is integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>BITOR(x, y)</para>
+            </entry>
+            <entry>
+              <para>Bitwise OR of x and y</para>
+            </entry>
+            <entry>
+              <para>x, y in {integer}, return type is integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>BITXOR(x, y)</para>
+            </entry>
+            <entry>
+              <para>Bitwise XOR of x and y</para>
+            </entry>
+            <entry>
+              <para>x, y in {integer}, return type is integer</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>BITNOT(x)</para>
+            </entry>
+            <entry>
+              <para>Bitwise NOT of x</para>
+            </entry>
+            <entry>
+              <para>x in {integer}, return type is integer</para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </informaltable>
@@ -1164,6 +1208,17 @@
             </entry>
             <entry>
               <para>x in {date, timestamp}, returns string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>QUARTER(x)</para>
+            </entry>
+            <entry>
+              <para>Return quarter</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
             </entry>
           </row>
           <row>
