@@ -22,8 +22,6 @@
 
 package com.metamatrix.connector.jdbc.oracle.spatial;
 
-import java.util.List;
-
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 

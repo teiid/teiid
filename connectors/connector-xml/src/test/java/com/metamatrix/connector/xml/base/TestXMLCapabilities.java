@@ -22,10 +22,6 @@
 
 package com.metamatrix.connector.xml.base;
 
-import java.util.List;
-
-import org.teiid.connector.api.ConnectorCapabilities;
-
 import junit.framework.TestCase;
 
 
@@ -83,7 +79,7 @@ public class TestXMLCapabilities extends TestCase {
      * Class under test for List getSupportedFunctions()
      */
     public void testGetSupportedFunctions() {
-       List funcs = m_caps.getSupportedFunctions();
+       assertNotNull(m_caps.getSupportedFunctions());
     }
 
     public void testSupportsSelectDistinct() {

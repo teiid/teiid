@@ -23,7 +23,6 @@
 //#############################################################################
 package com.metamatrix.console.ui.views.deploy.util;
 
-import com.metamatrix.common.config.api.HostType;
 
 /**
  * @version 1.0

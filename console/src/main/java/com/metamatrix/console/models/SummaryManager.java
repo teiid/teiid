@@ -33,10 +33,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.ReleaseInfo;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.MetaMatrixProductNames;

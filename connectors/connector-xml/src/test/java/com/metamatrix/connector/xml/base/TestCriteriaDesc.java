@@ -27,23 +27,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IBaseInCriteria;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IFrom;
-import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
 import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.LanguageUtil;
 import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.connector.metadata.runtime.Group;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
-import junit.framework.TestCase;
 
 
 /**

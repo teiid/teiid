@@ -24,6 +24,8 @@ package com.metamatrix.core.commandshell;
 
 import java.util.TimeZone;
 import junit.framework.TestCase;
+
+import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestCommand extends TestCase {
@@ -33,11 +35,11 @@ public class TestCommand extends TestCase {
     }
 
 	public void setUp() {
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
 	}
 
 	public void tearDown() {
-		TimeZone.setDefault(null);
+		TimestampWithTimezone.resetCalendar(null);
 	}
 
     public void test() throws Exception {

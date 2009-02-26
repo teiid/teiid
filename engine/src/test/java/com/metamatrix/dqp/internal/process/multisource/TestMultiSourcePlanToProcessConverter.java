@@ -54,7 +54,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.util.CommandContext;
 
 

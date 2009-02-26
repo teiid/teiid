@@ -27,7 +27,6 @@ import org.teiid.connector.metadata.runtime.Group;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.metadata.runtime.api.MetadataID;
 
 public class GroupImpl extends BaseLanguageObject implements IGroup {
 

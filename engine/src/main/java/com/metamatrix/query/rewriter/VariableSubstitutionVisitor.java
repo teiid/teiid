@@ -49,8 +49,6 @@ import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.sql.visitor.VariableCollectorVisitor;

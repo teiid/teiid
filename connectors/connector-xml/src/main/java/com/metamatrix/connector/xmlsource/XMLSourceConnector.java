@@ -23,7 +23,6 @@
 package com.metamatrix.connector.xmlsource;
 
 import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
@@ -32,8 +31,7 @@ import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.basic.BasicConnector;
 
 /**
- * XML Source connector, will give provide a XML document as source to
- * Metamatrix engine.
+ * XML Source connector
  */
 @ConnectionPooling
 public class XMLSourceConnector extends BasicConnector {

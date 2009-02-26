@@ -37,7 +37,6 @@ import org.teiid.connector.api.ConnectorLogger;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.Messages;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
-import com.metamatrix.connector.xmlsource.soap.SecurityToken;
 
 /**
  * Contains the data needed to create the SOAP Envelope around an XML Document.

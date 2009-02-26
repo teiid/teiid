@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.Collections;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -37,7 +35,6 @@ import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
 
 

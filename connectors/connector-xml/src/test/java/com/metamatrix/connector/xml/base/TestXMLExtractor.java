@@ -29,7 +29,6 @@ import junit.framework.TestCase;
 
 import org.jdom.Document;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ConnectorLogger;
 
 import com.metamatrix.cdk.api.SysLogger;
 

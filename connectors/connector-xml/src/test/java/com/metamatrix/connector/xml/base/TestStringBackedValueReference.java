@@ -22,8 +22,6 @@
 
 package com.metamatrix.connector.xml.base;
 
-import org.teiid.connector.api.ConnectorException;
-
 import junit.framework.TestCase;
 
 
