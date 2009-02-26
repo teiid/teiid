@@ -44,11 +44,13 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableColumn;
 
+import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
+import com.metamatrix.common.config.model.BasicHost;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertiedObjectEditor;
@@ -497,18 +499,19 @@ public final class DeployedHostPanel
         try {
             if (theDomainObject == null) {
                 // this shouldn't happen since new hosts are created elsewhere
-                host = getConfigurationManager().createHost(getString(
-                		"dhp.newhost")); //$NON-NLS-1$
+                host = getConfigurationManager().createHost(getString("dhp.newhost")); //$NON-NLS-1$
             }
             else {
                 if (theDomainObject instanceof Host) {
                     host = (Host)theDomainObject;
+                    ServerAdmin admin = getConnectionInfo().getServerAdmin();
+                    Collection<com.metamatrix.admin.api.objects.Host> adminHosts = admin.getHosts(host.getFullName());
+                    for (com.metamatrix.admin.api.objects.Host adminHost:adminHosts) {
+                    	((BasicHost)host).setProperties(adminHost.getProperties());
+                    }
                 }
                 else {
-                    throw new IllegalArgumentException(
-                        getString("msg.invalidclass", //$NON-NLS-1$
-                                  new Object[] {"Host", //$NON-NLS-1$
-                                                theDomainObject.getClass()}));
+                    throw new IllegalArgumentException(getString("msg.invalidclass", new Object[] {"Host", theDomainObject.getClass()})); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             }
 

@@ -540,8 +540,12 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        host.setEnabled(hostObject.isEnabled());
 			        
 			        Properties properties = hostObject.getProperties();
-
-			        host.setProperties(properties);
+			        if (host.getProperties() != null) {
+			        	host.getProperties().putAll(properties);
+			        }
+			        else {
+			        	host.setProperties(properties);
+			        }
 			        host.setDeployed(true);
 			        
 			        results.add(host);

@@ -59,6 +59,8 @@ public class HostControllerRegistryBinding implements Serializable {
     }	
     
     public Properties getProperties() {
-    	return new Properties(this.hostProperties);
+    	Properties p =  new Properties();
+    	p.putAll(this.hostProperties);
+    	return p;
     }
 }
