@@ -186,4 +186,8 @@ public class TimestampWithTimezone {
         }                
     }
     
+    public static void resetCalendar(TimeZone tz) {
+    	TimeZone.setDefault(tz);
+    }
+    
 }
