@@ -1204,7 +1204,7 @@ public class ServiceManager {
     }
 
     public void doShutdownServer() {
-	    System.out.println("All the servers in Cluster is being shutdown"); //$NON-NLS-1$
+	    System.out.println("All the servers in Cluster are being shutdown"); //$NON-NLS-1$
     	this.hostManager.killAllServersInCluster();
     }
 
