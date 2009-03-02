@@ -78,7 +78,7 @@ public class WorkerPoolFactory {
 			if (super.offer(arg0)) {
 		        return true;
 			}
-		    throw new IllegalStateException("Queue full");
+		    throw new IllegalStateException("Queue full"); //$NON-NLS-1$
 		}
 	}
 
@@ -105,7 +105,7 @@ public class WorkerPoolFactory {
 		@Override
 		protected void afterExecute(Runnable r, Throwable t) {
 			if (t != null) {
-				LogManager.logError(LogCommonConstants.CTX_POOLING, t, CommonPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
+				LogManager.logError(LogCommonConstants.CTX_POOLING, t, t.getMessage()); 
 			}
 			activeCount.getAndDecrement();
 			completedCount.getAndIncrement();
