@@ -102,4 +102,10 @@ public class ConnectorPropertyNames {
     
     public static final String ADMIN_CONNECTIONS_ALLOWED = "AdminConnectionsAllowed"; //$NON-NLS-1$
 
+    /**
+     * This property can be used to bypass the normal logic that throws an exception when a command
+     * is about to be executed by a non-XA compatible connector, but there is a global transaction.
+     */
+    public static final String IS_IMMUTABLE = "Immutable"; //$NON-NLS-1$
+
 }
