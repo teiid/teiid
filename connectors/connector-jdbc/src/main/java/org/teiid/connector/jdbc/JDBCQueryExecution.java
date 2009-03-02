@@ -41,8 +41,6 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
-import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.api.ValueTranslator;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -59,13 +57,10 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // ===========================================================================================================================
 
     protected ResultSet results;
-    protected Class[] columnDataTypes;
     protected ConnectorEnvironment env;
     protected ICommand command;
-	private boolean[] transformKnown;
-	private ValueTranslator[] transforms;
+    protected Class<?>[] columnDataTypes;
 	private boolean[] trimColumn;
-	private int[] nativeTypes;
 
     // ===========================================================================================================================
     // Constructors
@@ -111,56 +106,27 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
 	protected void initResultSetInfo() throws SQLException {
 		trimColumn = new boolean[columnDataTypes.length];
-		nativeTypes = new int[columnDataTypes.length];
 		ResultSetMetaData rsmd = results.getMetaData();
 		for(int i=0; i<columnDataTypes.length; i++) {
 			
-			nativeTypes[i] = rsmd.getColumnType(i+1);
-			if ((nativeTypes[i] == Types.BLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.BLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))
-					|| (nativeTypes[i] == Types.CLOB && (columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.CLOB || columnDataTypes[i] == TypeFacility.RUNTIME_TYPES.OBJECT))) {
-				context.keepExecutionAlive(true);
-			}
-			
 		    if(columnDataTypes[i].equals(String.class)) {
-		        if(trimString || nativeTypes[i] == Types.CHAR) {
-		            trimColumn[i] = true;
-		        } 
+		    	trimColumn[i] = trimString || rsmd.getColumnType(i+1) == Types.CHAR;
 		    }
 		}
-
-		transformKnown = new boolean[columnDataTypes.length];
-		transforms = new ValueTranslator[columnDataTypes.length];
 	}
     
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws ConnectorException, DataNotAvailableException {
         try {
             if (results.next()) {
                 // New row for result set
-                List vals = new ArrayList(columnDataTypes.length);
+                List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
 
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
                     Object value = sqlTranslator.retrieveValue(results, i+1, columnDataTypes[i]);
-                    if(value != null) {
-                        // Determine transformation if unknown
-                        if(! transformKnown[i]) {
-                            Class valueType = value.getClass();
-                            if(!columnDataTypes[i].isAssignableFrom(valueType)) {
-                                transforms[i] = JDBCExecutionHelper.determineTransformation(valueType, columnDataTypes[i], sqlTranslator.getValueTranslators(), sqlTranslator.getTypeFacility());
-                            }
-                            transformKnown[i] = true;
-                        }
-
-                        // Transform value if necessary
-                        if(transforms[i] != null) {
-                            value = transforms[i].translate(value, context);
-                        }
-                                                    
-                        // Trim string column if necessary
-                        if(trimColumn[i]) {
-                            value = JDBCExecutionHelper.trimString((String) value);
-                        }
+                    if (trimColumn[i] && value instanceof String) {
+                    	value = trimString((String)value);
                     }
                     vals.add(value); 
                 }
@@ -173,6 +139,24 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
         }
         
         return null;
+    }
+    
+    /**
+     * Expects string to never be null 
+     * @param value Incoming value
+     * @return Right trimmed value  
+     * @since 4.2
+     */
+    public static String trimString(String value) {
+        for(int i=value.length()-1; i>=0; i--) {
+            if(value.charAt(i) != ' ') {
+                // end of trim, return what's left
+                return value.substring(0, i+1);
+            }
+        }
+
+        // All spaces, so trim it all
+        return ""; //$NON-NLS-1$        
     }
     
     /**

@@ -30,6 +30,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
@@ -279,7 +280,7 @@ public abstract class Command implements LanguageObject {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public abstract List getProjectedSymbols();
+	public abstract List<SingleElementSymbol> getProjectedSymbols();
 
 	/**
 	 * Whether the results are cachable.

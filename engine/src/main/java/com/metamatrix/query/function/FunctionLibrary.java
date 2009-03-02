@@ -30,6 +30,7 @@ import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
@@ -342,19 +343,16 @@ public class FunctionLibrary {
         // Invoke the method and return the result
         try {
             Object result = method.invoke(null, values);
-            if (result instanceof String) {
-            	String str = (String)result;
-    			if (str.length() > DataTypeManager.MAX_STRING_LENGTH) {
-    				return str.substring(0, DataTypeManager.MAX_STRING_LENGTH);
-    			}
-    			return result;
-            } 
-            return DataTypeManager.convertToRuntimeType(result);
+            result = DataTypeManager.convertToRuntimeType(result);
+            result = DataTypeManager.transformValue(result, fd.getReturnType());
+            return result;
         } catch(InvocationTargetException e) {
             throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, fd.getName()));
         } catch(IllegalAccessException e) {
             throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0004, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0004, method.toString()));
-        }
+        } catch (TransformationException e) {
+        	throw new FunctionExecutionException(e, e.getMessage());
+		}
 	}
 
 	/**

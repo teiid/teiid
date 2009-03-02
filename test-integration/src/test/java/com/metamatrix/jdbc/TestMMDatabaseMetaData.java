@@ -22,6 +22,12 @@
 
 package com.metamatrix.jdbc;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,17 +46,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.util.ResultSetUtil;
 
 /**
  */
-public class TestMMDatabaseMetaData extends TestCase {
+public class TestMMDatabaseMetaData {
 
-    private static final int TESTS = 56;
-    private static int tests = -1;
     private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties"; //$NON-NLS-1$
 
     static Connection conn = null;
@@ -75,35 +82,26 @@ public class TestMMDatabaseMetaData extends TestCase {
     private static final int ResultSet_HOLD_CURSORS_OVER_COMMIT = 1; // ResultSet.HOLD_CURSORS_OVER_COMMIT == 1
     private static final int ResultSet_CLOSE_CURSORS_AT_COMMIT = 2; // ResultSet.CLOSE_CURSORS_AT_COMMIT  == 2
 
-    public TestMMDatabaseMetaData(String name) {
-        super(name);
-    }
-
+    @Before
     public void setUp() throws Exception {
-        oneTimeSetUp(TESTS);
         dbmd = new MMDatabaseMetaData((BaseDriver)DriverManager.getDriver(serverUrl), (MMConnection) conn);
     }
 
-    public void tearDown() throws Exception {
-    	tests--;
-        if (tests == 0) {
-        	if (conn != null) {
-                conn.close();
-            }
+    @AfterClass
+    public static void oneTimeTearDown() throws Exception {
+    	if (conn != null) {
+            conn.close();
         }
     }    
     
-    protected synchronized static void oneTimeSetUp(int numtests) throws Exception {
-        if (tests == -1) {
-            tests = numtests;
-            if (conn == null) {
-                Class.forName("com.metamatrix.jdbc.EmbeddedDriver"); //$NON-NLS-1$
-                conn = DriverManager.getConnection(serverUrl);
-            }
-        }
+    @BeforeClass
+    public static void oneTimeSetUp() throws Exception {
+        Class.forName(EmbeddedDriver.class.getName());
+        conn = DriverManager.getConnection(serverUrl);
     }
     
     /** Test all the non-query methods */
+    @Test
     public void testMethodsWithoutParams() throws Exception {
         Class dbmdClass = dbmd.getClass();
         // non-query Methods return String, boolean or int
@@ -140,6 +138,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** Test all the methods that throw exception */ 
+    @Test
     public void testMethodsWithExceptions() throws Exception {
         Class dbmdClass = dbmd.getClass();
         Method[] methods = dbmdClass.getDeclaredMethods();
@@ -154,6 +153,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test supportResultSetConcurrency() with params and test them with different input values */
+    @Test
     public void testSupportResultSetConcurrency() throws Exception {
         boolean returned = true;
         String functionName = "supportResultSetConcurrency"; //$NON-NLS-1$
@@ -180,6 +180,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test supportResultSetHoldability() with params and test them with different input values */
+    @Test
     public void testSupportResultSetHoldability() throws Exception {
         boolean returned = false;
         String functionName = "supportResultSetHoldability"; //$NON-NLS-1$
@@ -194,6 +195,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test supportResultSetType() with params and test them with different input values */
+    @Test
     public void testSupportResultSetType()  throws Exception {
         boolean returned = true;
         String functionName = "supportResultSetType"; //$NON-NLS-1$
@@ -213,6 +215,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test supportsTransactionIsolationLevel() with params and test them with different input values */
+    @Test
     public void testSupportsTransactionIsolationLevel()  throws Exception {
         boolean returned = false;
         String functionName = "supportsTransactionIsolationLevel"; //$NON-NLS-1$
@@ -224,6 +227,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test deletesAreDetected() with params and test them with different input values */
+    @Test
     public void testDeletesAreDetected() throws Exception {
         boolean returned = false;
         String functionName = "deletesAreDetected"; //$NON-NLS-1$
@@ -242,6 +246,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test insertsAreDetected() with params and test them with different input values */
+    @Test
     public void testInsertsAreDetected() throws Exception {
         boolean returned = false;
         String functionName = "insertsAreDetected"; //$NON-NLS-1$
@@ -260,6 +265,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test updatesAreDetected() with params and test them with different input values */
+    @Test
     public void testUpdatesAreDetected() throws Exception {
         boolean returned = false;
         String functionName = "updatesAreDetected"; //$NON-NLS-1$
@@ -278,6 +284,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test ownUpdatesAreVisible() with params and test them with different input values */
+    @Test
     public void testOwnUpdatesAreVisible() throws Exception {
         boolean returned = false;
         String functionName = "ownUpdatesAreVisible"; //$NON-NLS-1$
@@ -296,6 +303,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test ownInsertsAreVisible() with params and test them with different input values */
+    @Test
     public void testOwnInsertsAreVisible() throws Exception {
         boolean returned = false;
         String functionName = "ownInsertsAreVisible"; //$NON-NLS-1$
@@ -314,6 +322,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test othersUpdatesAreVisible() with params and test them with different input values */
+    @Test
     public void testOthersUpdatesAreVisible() throws Exception {
         boolean returned = false;
         String functionName = "othersUpdatesAreVisible"; //$NON-NLS-1$
@@ -332,6 +341,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test othersInsertsAreVisible() with params and test them with different input values */
+    @Test
     public void testOthersInsertsAreVisible() throws Exception {
         boolean returned = false;
         String functionName = "othersInsertsAreVisible"; //$NON-NLS-1$
@@ -350,6 +360,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test othersInsertsAreVisible() with params and test them with different input values */
+    @Test
     public void testOthersDeletesAreVisible() throws Exception {
         boolean returned = false;
         String functionName = "othersDeletesAreVisible"; //$NON-NLS-1$
@@ -368,12 +379,14 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test overloaded method supportsConvert() with params and test them with different input values */
+    @Test
     public void testSupportsConvert1() throws Exception {
         assertEquals("Expected doesn't match with actual for method - supportsConvert()", //$NON-NLS-1$
         true, dbmd.supportsConvert());
     }
 
     /** test overloaded method supportsConvert() without params */
+    @Test
     public void testSupportsConvert2() throws Exception {
         // should succeed
         helpTestSupportsConverts(Types.CHAR, Types.CHAR, true);
@@ -477,6 +490,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         );
     }
 
+    @Test
     public void testUcaseMatchReturnsNoRows() throws Exception {
         initResultSetStreams("testGetColumnsSingleMatchQuery"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -506,6 +520,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetColumnsSingleMatch() throws Exception {
         initResultSetStreams("testGetColumnsSingleMatch"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -525,6 +540,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetCatalogs() throws Exception {
         initResultSetStreams("testGetCatalogs"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -543,6 +559,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetCrossReference() throws Exception {
         initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -574,6 +591,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
         
+    @Test
     public void testGetImportedKeys() throws Exception {
         initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -603,6 +621,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
 
+    @Test
     public void testGetExportedKeys() throws Exception {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -629,6 +648,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
        
+    @Test
     public void testGetIndexInfo() throws Exception {
         initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -656,6 +676,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
         
+    @Test
     public void testGetPrimaryKeys() throws Exception {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -688,6 +709,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetProcedureColumns() throws Exception {
         initResultSetStreams("testGetProcedureColumns"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -714,6 +736,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetProcedures() throws Exception {
         initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -740,6 +763,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetSchemas() throws Exception {
         initResultSetStreams("testGetSchemas"); //$NON-NLS-1$
         ResultSet rs = null;    
@@ -758,6 +782,7 @@ public class TestMMDatabaseMetaData extends TestCase {
             closeResultSetTestStreams();
         }
     }
+    @Test
     public void testGetColumns() throws Exception {
         initResultSetStreams("testGetColumns"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -771,6 +796,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetColumns2() throws Exception {
         initResultSetStreams("testGetColumns2"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -786,6 +812,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetColumns3() throws Exception {
         initResultSetStreams("testGetColumns3"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -801,6 +828,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetColumns4() throws Exception {
         initResultSetStreams("testGetColumns4"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -817,6 +845,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }    
     
 
+    @Test
     public void testGetColumnPrivileges() throws Exception {
         initResultSetStreams("testGetColumnPrivileges"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -835,6 +864,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetColumnPrivilegesResultSetMetaData() throws Exception {
         initResultSetStreams("testGetColumnPrivilegesResultSetMetaData"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -847,6 +877,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetTablePrivileges() throws Exception {
         initResultSetStreams("testGetTablePrivileges"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -861,6 +892,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     
     
 
+    @Test
     public void testGetTablePrivilegesResultSetMetaData() throws Exception {
         initResultSetStreams("testGetTablePrivilegesResultSetMetaData"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -873,6 +905,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
 
+    @Test
     public void testGetTables_specificTable() throws Exception {
         initResultSetStreams("testGetTables_specificTable"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -892,6 +925,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetTables_specificTableTypes() throws Exception {
         initResultSetStreams("testGetTables_specificTableTypes"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -913,6 +947,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetTables_specificTableMultipleTypes() throws Exception {
         initResultSetStreams("testGetTables_specificTableMultipleTypes"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -934,6 +969,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
     
+    @Test
     public void testGetTables() throws Exception{
         initResultSetStreams("testGetTables"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -954,6 +990,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetTables_allTables() throws Exception {
         initResultSetStreams("testGetTables_allTables"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -973,6 +1010,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
+    @Test
     public void testGetTableTypes() throws Exception {
         initResultSetStreams("testGetTableTypes"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -991,29 +1029,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
 
-//    public void testDefect1659() throws Exception {
-//        ResultSet rs = null;
-//        try {
-//            Statement stmt = conn.createStatement();
-//            rs = stmt.executeQuery(
-//                "SELECT DISTINCT NAME, IS_BUILTIN AS IsStandard, IS_BUILTIN AS IsPhysical, NAME AS TypeName, JAVA_CLASS_NAME AS JavaClass, SCALE, LENGTH AS TypeLength, lookup('SystemPhysical.NULL_TYPE_ENUM', 'NAME', 'CODE', NULL_TYPE) AS NullType, IS_SIGNED AS IsSigned, IS_AUTO_INCREMENTED AS IsAutoIncremented, IS_CASE_SENSITIVE AS IsCaseSensitive, PRECISION, RADIX, lookup('SystemPhysical.SEARCH_TYPE_ENUM', 'NAME', 'CODE', SEARCH_TYPE) AS SearchType, UUID AS UID, RUNTIME_TYPE_NAME AS RuntimeType, BASETYPE_NAME AS BaseType, DESCRIPTION " + //$NON-NLS-1$
-//                "FROM SystemPhysical.DATATYPES AS DATATYPES LEFT OUTER JOIN SystemPhysical.ANNOTATIONS AS ann ON ANNOTATED_UUID = UUID "); //$NON-NLS-1$
-//
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while(rs.next()) {
-//                for(int i=1; i<=rsmd.getColumnCount(); i++) {
-//                    //System.out.print(rs.getObject(i) + " ");
-//                }
-//                //System.out.println();
-//            }
-//
-//        } finally {
-//            if (rs != null) {
-//                rs.close();
-//            }
-//        }
-//    }    
-
+    @Test
     public void testGetTypeInfo_TotalNumber() throws Exception {
         initResultSetStreams("testGetTypeInfo_TotalNumber"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1033,6 +1049,7 @@ public class TestMMDatabaseMetaData extends TestCase {
     }
 
     /** test with integer type */
+    @Test
     public void testGetTypeInfo_specificType_Integer() throws Exception {
         initResultSetStreams("testGetTypeInfo_specificType_Integer"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1051,6 +1068,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
     
+    @Test
     public void testGetUDTs() throws Exception{
         initResultSetStreams("testGetUDTs"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -1071,6 +1089,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetUDTs_specificTypeName() throws Exception {
         initResultSetStreams("testGetUDTs_specificTypeName"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1089,6 +1108,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         }
     }
         
+    @Test
     public void testGetVersionColumns() throws Exception {
         initResultSetStreams("testGetVersionColumns"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -1107,6 +1127,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
 
+    @Test
     public void testGetBestRowIdentifier() throws Exception {
         initResultSetStreams("testGetBestRowIdentifier"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1134,6 +1155,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetSuperTables() throws Exception {
         initResultSetStreams("testSuperTables"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -1146,6 +1168,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetSuperTypes() throws Exception {
         initResultSetStreams("testGetSuperTypes"); //$NON-NLS-1$
         DatabaseMetaData dbmd = conn.getMetaData();
@@ -1158,6 +1181,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetColumnsWithEscape() throws Exception {
         DatabaseMetaData dbmd = conn.getMetaData();
         ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1166,6 +1190,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         assertFalse(columns.next());
     }
         
+    @Test
     public void testGetCrossReferenceWithEscape() throws Exception {
         initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1197,6 +1222,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetExportedKeysWithEscape() throws Exception {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1223,6 +1249,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetImportedKeysWithEscape() throws Exception {
         initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1252,6 +1279,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetIndexInfoWithEscape() throws Exception {
         initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1279,6 +1307,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
         
+    @Test
     public void testGetPrimaryKeysWithEscape() throws Exception {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
@@ -1311,6 +1340,7 @@ public class TestMMDatabaseMetaData extends TestCase {
         closeResultSetTestStreams();
     }
     
+    @Test
     public void testGetProceduresWithEscape() throws Exception {
         initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
         ResultSet rs = null;

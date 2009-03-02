@@ -33,7 +33,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,15 +44,14 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.api.ValueTranslator;
 import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.language.IParameter.Direction;
@@ -99,19 +97,21 @@ public class Translator {
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
     }
 	
-    private static final MessageFormat COMMENT = new MessageFormat("/*teiid sessionid:{0}, requestid:{1}.{2}*/ "); //$NON-NLS-1$
+    private static final ThreadLocal<MessageFormat> COMMENT = new ThreadLocal<MessageFormat>() {
+    	protected MessageFormat initialValue() {
+    		return new MessageFormat("/*teiid sessionid:{0}, requestid:{1}.{2}*/ "); //$NON-NLS-1$
+    	}
+    };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
     private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>();
 
 	private Map<String, FunctionModifier> functionModifiers = new HashMap<String, FunctionModifier>();
-    private TimeZone databaseTimeZone;
     private ConnectorEnvironment environment;
     
     private boolean useComments;
     private boolean usePreparedStatements;
     
-    private List<ValueTranslator<?, ?>> valueTranslators = new ArrayList<ValueTranslator<?, ?>>();
     private int maxResultRows = 0;
     private TypeFacility typeFacility;
 
@@ -132,10 +132,11 @@ public class Translator {
         String timeZone = env.getProperties().getProperty(JDBCPropertyNames.DATABASE_TIME_ZONE);
         if(timeZone != null && timeZone.trim().length() > 0) {
         	TimeZone tz = TimeZone.getTimeZone(timeZone);
-            // Check that the dbms time zone is really different than the local time zone
             if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
-                this.databaseTimeZone = tz;                
-            }               
+        		CALENDAR.set(Calendar.getInstance(tz));
+            } else {
+            	CALENDAR.set(Calendar.getInstance());
+            }
         }   
         
         this.useComments = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, false);
@@ -160,26 +161,27 @@ public class Translator {
         }
     }
     
-    public TimeZone getDatabaseTimeZone() {
-		return databaseTimeZone;
-	}
-    
+    /**
+     * Gets the database calendar.  This will be set to the time zone
+     * specified by the property {@link JDBCPropertyNames#DATABASE_TIME_ZONE}, or
+     * the local time zone if none is specified. 
+     * @return
+     */
     public Calendar getDatabaseCalendar() {
-    	if (this.databaseTimeZone == null) {
-    		return null;
-    	}
-    	Calendar cal = CALENDAR.get();
-    	if (cal == null) {
-    		cal = Calendar.getInstance(this.databaseTimeZone);
-    		CALENDAR.set(cal);
-    	}
-    	return cal;
+    	return CALENDAR.get();
     }
     
+    /**
+     * Gets the {@link ConnectorEnvironment} used to initialize this 
+     * {@link Translator}
+     */
     public final ConnectorEnvironment getEnvironment() {
 		return environment;
 	}
     
+    /**
+     * Gets the {@link ILanguageFactory}
+     */
     public final ILanguageFactory getLanguageFactory() {
     	return environment.getLanguageFactory();
     }
@@ -194,10 +196,24 @@ public class Translator {
     	return command;
     }
     
+    /**
+     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * if to rely on the default translation. 
+     * @param command
+     * @param context
+     * @return
+     */
     public List<?> translateCommand(ICommand command, ExecutionContext context) {
     	return null;
     }
 
+    /**
+     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * if to rely on the default translation. 
+     * @param limit
+     * @param context
+     * @return
+     */
     public List<?> translateLimit(ILimit limit, ExecutionContext context) {
     	return null;
     }
@@ -210,12 +226,13 @@ public class Translator {
     	return functionModifiers;
     }
     
+    /**
+     * Add the {@link FunctionModifier} to the set of known modifiers.
+     * @param name
+     * @param modifier
+     */
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
     	this.functionModifiers.put(name, modifier);
-    }
-    
-    public void registerValueTranslator(ValueTranslator<?, ?> translator) {
-    	this.valueTranslators.add(translator);
     }
     
     /**
@@ -247,6 +264,9 @@ public class Translator {
      * Subclasses should override this method to provide a different sql translation
      * of the literal time value.  By default, a time literal is represented as:
      * <code>{t'23:59:59'}</code>
+     * 
+     * See {@link Translator#hasTimeType()} to represent literal times as timestamps.
+     * 
      * @param timeValue Time value, never null
      * @return Translated string
      */
@@ -261,6 +281,10 @@ public class Translator {
      * Subclasses should override this method to provide a different sql translation
      * of the literal timestamp value.  By default, a timestamp literal is
      * represented as: <code>{ts'2002-12-31 23:59:59'}</code>.
+     * 
+     * See {@link Translator#getTimestampNanoPrecision()} to control the literal 
+     * precision. 
+     * 
      * @param timestampValue Timestamp value, never null
      * @return Translated string
      */
@@ -284,15 +308,14 @@ public class Translator {
         	}
         	dateObject = newTs;
         }
-    	Calendar cal = getDatabaseCalendar();
-    	if(cal == null) {
-            return dateObject.toString();
-        }
-        
         return getEnvironment().getTypeFacility().convertDate(dateObject,
-				DEFAULT_TIME_ZONE, cal, dateObject.getClass()).toString();        
+				DEFAULT_TIME_ZONE, getDatabaseCalendar(), dateObject.getClass()).toString();        
     }    
     
+    /**
+     * Returns true to indicate that SQL should include a comment
+     * indicating the session and request ids.
+     */
     public boolean addSourceComment() {
         return useComments;
     }   
@@ -308,35 +331,70 @@ public class Translator {
         return true;
     }
     
+    /**
+     * Use PreparedStatements (or CallableStatements) as
+     * appropriate for all commands.  Bind values will be 
+     * determined by the {@link BindValueVisitor}.  {@link ILiteral#setBindValue(boolean)}
+     * can be used to force a literal to be a bind value.  
+     */
     public boolean usePreparedStatements() {
     	return this.usePreparedStatements;
     }
     
+    /**
+     * Set to true to indicate that every branch of a set query
+     * should have parenthesis, i.e. (query) union (query)
+     * @return
+     */
     public boolean useParensForSetQueries() {
     	return false;
     }
     
+    /**
+     * Return false to indicate that time support should be emulated 
+     * with timestamps.
+     * @return
+     */
     public boolean hasTimeType() {
     	return true;
     }
     
+    /**
+     * Returns the name for a given {@link ISetQuery.Operation}
+     * @param operation
+     * @return
+     */
     public String getSetOperationString(ISetQuery.Operation operation) {
     	return operation.toString();
     }
     
+    /**
+     * Returns the source comment for 
+     * @param context
+     * @param command
+     * @return
+     */
     public String getSourceComment(ExecutionContext context, ICommand command) {
 	    if (addSourceComment() && context != null) {
-	    	synchronized (COMMENT) {
-	            return COMMENT.format(new Object[] {context.getConnectionIdentifier(), context.getRequestIdentifier(), context.getPartIdentifier()});
-			}
+            return COMMENT.get().format(new Object[] {context.getConnectionIdentifier(), context.getRequestIdentifier(), context.getPartIdentifier()});
 	    }
 	    return ""; //$NON-NLS-1$ 
     }
     
+    /**
+     * Override to return a name other than the default [group.]element
+     * @param group
+     * @param element
+     * @return
+     */
     public String replaceElementName(String group, String element) {
     	return null;
     }
     
+    /**
+     * Return the precision of timestamp literals.  Defaults to 9
+     * @return
+     */
     public int getTimestampNanoPrecision() {
     	return 9;
     }
@@ -398,13 +456,6 @@ public class Translator {
     }
 
     /**
-     * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#getValueTranslators()
-     */
-    public List getValueTranslators() {
-        return valueTranslators;
-    }
-    
-    /**
      * For registering specific output parameter types we need to translate these into the appropriate
      * java.sql.Types output parameters
      * We will need to match these up with the appropriate standard sql types
@@ -435,7 +486,6 @@ public class Translator {
     }
 
     private void setPreparedStatementValues(PreparedStatement stmt, List paramValues, List paramTypes) throws SQLException {
-        Calendar cal = getDatabaseCalendar();
     	for (int i = 0; i< paramValues.size(); i++) {
             Object parmvalue = paramValues.get(i);
             Class paramType = (Class)paramTypes.get(i);
@@ -490,7 +540,6 @@ public class Translator {
     
     public int executeStatementForBulkInsert(Connection conn, PreparedStatement stmt, TranslatedCommand command) throws SQLException {
         List rows = command.getPreparedValues();
-        Calendar cal = getDatabaseCalendar();
         int updateCount = 0;
         
         for (int i = 0; i< rows.size(); i++) {
@@ -521,7 +570,7 @@ public class Translator {
      * @see com.metamatrix.connector.jdbc.extension.ValueRetriever#retrieveValue(java.sql.ResultSet, int, java.lang.Class, java.util.Calendar)
      */
     public Object retrieveValue(ResultSet results, int columnIndex, Class expectedType) throws SQLException {
-        Integer code = (Integer) TYPE_CODE_MAP.get(expectedType);
+        Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
             // Calling the specific methods here is more likely to get uniform (and fast) results from different
             // data sources as the driver likely knows the best and fastest way to convert from the underlying
@@ -568,29 +617,17 @@ public class Translator {
                     return new Float(value);
                 }
                 case TIME_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getTime(columnIndex, cal);
-                	}
-                	return results.getTime(columnIndex);
+            		return results.getTime(columnIndex, getDatabaseCalendar());
                 }
                 case DATE_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getDate(columnIndex, cal);
-                	}
-                	return results.getDate(columnIndex);
+            		return results.getDate(columnIndex, getDatabaseCalendar());
                 }
                 case TIMESTAMP_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getTimestamp(columnIndex, cal);
-                	}
-                	return results.getTimestamp(columnIndex);
+            		return results.getTimestamp(columnIndex, getDatabaseCalendar());
                 }
     			case BLOB_CODE: {
     				try {
-    					return typeFacility.convertToRuntimeType(results.getBlob(columnIndex));
+    					return results.getBlob(columnIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
@@ -598,20 +635,20 @@ public class Translator {
     			}
     			case CLOB_CODE: {
     				try {
-    					return typeFacility.convertToRuntimeType(results.getClob(columnIndex));
+    					return results.getClob(columnIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
     				break;
-    			}                
+    			}    
             }
         }
 
-        return typeFacility.convertToRuntimeType(results.getObject(columnIndex));
+        return results.getObject(columnIndex);
     }
 
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class expectedType) throws SQLException{
-        Integer code = (Integer) TYPE_CODE_MAP.get(expectedType);
+        Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
             switch(code.intValue()) {
                 case INTEGER_CODE:  {
@@ -653,36 +690,24 @@ public class Translator {
                     return new Float(value);
                 }
                 case TIME_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getTime(parameterIndex, cal);
-                	}
-                	return results.getTime(parameterIndex);
+            		return results.getTime(parameterIndex, getDatabaseCalendar());
                 }
                 case DATE_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getDate(parameterIndex, cal);
-                	}
-                	return results.getDate(parameterIndex);
+            		return results.getDate(parameterIndex, getDatabaseCalendar());
                 }
                 case TIMESTAMP_CODE: {
-                	Calendar cal = getDatabaseCalendar();
-                	if (cal != null) {
-                		return results.getTimestamp(parameterIndex, cal);
-                	}
-                	return results.getTimestamp(parameterIndex);
+            		return results.getTimestamp(parameterIndex, getDatabaseCalendar());
                 }
     			case BLOB_CODE: {
     				try {
-    					return typeFacility.convertToRuntimeType(results.getBlob(parameterIndex));
+    					return results.getBlob(parameterIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
     			}
     			case CLOB_CODE: {
     				try {
-    					return typeFacility.convertToRuntimeType(results.getClob(parameterIndex));
+    					return results.getClob(parameterIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
@@ -692,7 +717,7 @@ public class Translator {
 
         // otherwise fall through and call getObject() and rely on the normal
 		// translation routines
-		return typeFacility.convertToRuntimeType(results.getObject(parameterIndex));
+		return results.getObject(parameterIndex);
     }
         
     protected void afterInitialConnectionCreation(Connection connection) {

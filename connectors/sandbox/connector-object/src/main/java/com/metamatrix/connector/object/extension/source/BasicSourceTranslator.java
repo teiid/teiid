@@ -24,14 +24,11 @@
  */
 package com.metamatrix.connector.object.extension.source;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.api.ValueTranslator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
@@ -42,7 +39,6 @@ import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.connector.object.extension.IValueRetriever;
 import com.metamatrix.connector.object.extension.command.ProcedureCommand;
 import com.metamatrix.connector.object.extension.value.BasicValueRetriever;
-import com.metamatrix.connector.object.extension.value.JavaUtilDateValueTranslator;
 
 /**
  */
@@ -50,7 +46,6 @@ public class BasicSourceTranslator implements ISourceTranslator {
 
     private static final TimeZone LOCAL_TIME_ZONE = TimeZone.getDefault();
 
-    private List valueTranslators = new ArrayList();
     private IValueRetriever valueRetriever = new BasicValueRetriever();
     private TimeZone dbmsTimeZone = null;
     private TypeFacility typeFacility;
@@ -59,14 +54,10 @@ public class BasicSourceTranslator implements ISourceTranslator {
      * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#initialize(com.metamatrix.data.ConnectorEnvironment)
      */
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
-        ValueTranslator valueTranslator;
 
         this.typeFacility = env.getTypeFacility();
         
         
-        valueTranslator = new JavaUtilDateValueTranslator();
-        addValueTranslator(valueTranslator);
-                       
         String timeZone = env.getProperties().getProperty(ObjectPropertyNames.DATABASE_TIME_ZONE);
         if(timeZone != null && timeZone.trim().length() > 0) {
             this.dbmsTimeZone = TimeZone.getTimeZone(timeZone);
@@ -78,20 +69,8 @@ public class BasicSourceTranslator implements ISourceTranslator {
         }               
     }
     
- 
-    /**
-     * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#getValueTranslators()
-     */
-    public List getValueTranslators() {
-        return valueTranslators;
-    }
-    
     public IValueRetriever getValueRetriever() {
         return valueRetriever;
-    }
-    
-    protected void addValueTranslator(ValueTranslator valueTranslator) {
-        valueTranslators.add(valueTranslator);
     }
     
     public TimeZone getDatabaseTimezone() {

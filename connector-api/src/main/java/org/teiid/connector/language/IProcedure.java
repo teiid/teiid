@@ -24,6 +24,7 @@ package org.teiid.connector.language;
 
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.Procedure;
 
 
@@ -50,5 +51,13 @@ public interface IProcedure extends ICommand, IMetadataReference<Procedure> {
      * @param name The name of the procedure
      */
     void setProcedureName(String name);
+    
+    /**
+     * Get the procedure result set column types
+     * @return an array containing the types or an empty array if there is no 
+     * result set parameter
+     * @throws ConnectorException
+     */
+    Class<?>[] getResultSetColumnTypes() throws ConnectorException;
 
 }

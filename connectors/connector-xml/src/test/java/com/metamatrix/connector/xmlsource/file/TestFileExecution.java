@@ -34,9 +34,7 @@ import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IParameter.Direction;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
@@ -69,9 +67,8 @@ public class TestFileExecution extends TestCase {
             List result = exec.next();
             assertNotNull(result);
             assertNull(exec.next());
-            IParameter returnParam = fact.createParameter(0, Direction.RETURN, null, null, null);
             try {
-                exec.getOutputValue(returnParam);
+                exec.getOutputParameterValues();
                 fail("should have thrown error in returning a return"); //$NON-NLS-1$
             }catch(Exception e) {                
             }

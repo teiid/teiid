@@ -80,31 +80,13 @@ class ProcedureBatchHandler {
         return result;
 	}
 	
-	List getOutputRow() throws ConnectorException {
-		if (this.paramCols == 0) {
+	List getParameterRow() throws ConnectorException {
+		if (paramCols == 0) {
 			return null;
 		}
-		List params = proc.getParameters();
-		List outParamValues = Arrays.asList(new Object[this.resultSetCols + this.paramCols]);
-		Iterator iter = params.iterator();
-		int index = this.resultSetCols;
-        //return
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == Direction.RETURN){
-                outParamValues.set(index++, procExec.getOutputValue(param));
-            }
-        }
-        //out, inout
-        iter = params.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
-                outParamValues.set(index++, procExec.getOutputValue(param));
-            }
-        }
-
-        return outParamValues;
+        List<Object> result = new ArrayList<Object>(Arrays.asList(new Object[resultSetCols]));
+        result.addAll(procExec.getOutputParameterValues());
+        return result;
 	}
 	
 }

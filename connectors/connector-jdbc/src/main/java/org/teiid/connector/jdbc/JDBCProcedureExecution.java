@@ -24,12 +24,11 @@ package org.teiid.connector.jdbc;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ParameterMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -38,23 +37,21 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
 
 /**
  */
 public class JDBCProcedureExecution extends JDBCQueryExecution implements ProcedureExecution {
 
-    private Map parameterIndexMap;
-    private RuntimeMetadata metadata;
-    
+	private ParameterMetaData parameterMetaData;
+	
     /**
      * @param connection
      * @param sqlTranslator
@@ -70,13 +67,12 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         RuntimeMetadata metadata, ExecutionContext context,
         ConnectorEnvironment env) {
         super(command, connection, sqlTranslator, logger, props, context, env);
-        this.metadata = metadata;
     }
 
     @Override
     public void execute() throws ConnectorException {
     	IProcedure procedure = (IProcedure)command;
-        columnDataTypes = getColumnDataTypes(procedure.getParameters(), metadata);
+        columnDataTypes = procedure.getResultSetColumnTypes();
 
         //translate command
         TranslatedCommand translatedComm = translateCommand(procedure);
@@ -85,113 +81,64 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         String sql = translatedComm.getSql();
         try{
             //create parameter index map
-            parameterIndexMap = createParameterIndexMap(procedure.getParameters(), sql);
             CallableStatement cstmt = getCallableStatement(sql);
-            results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm);
+            this.parameterMetaData = cstmt.getParameterMetaData();
+            this.results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm);
             if (results != null) {
             	initResultSetInfo();
             }
             addStatementWarnings();
         }catch(SQLException e){
-            throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql));
+            throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
         }           
         
     }
     
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws ConnectorException, DataNotAvailableException {
     	if (results == null) {
     		return null;
     	}
     	return super.next();
     }
-    
-    /**
-     * @param results
-     * @return
-     */
-    public static Class[] getColumnDataTypes(List params, RuntimeMetadata metadata) throws ConnectorException {
-        if (params != null) { 
-            IParameter resultSet = null;
-            Iterator iter = params.iterator();
-            while(iter.hasNext()){
-                IParameter param = (IParameter)iter.next();
-                if(param.getDirection() == Direction.RESULT_SET){
-                    resultSet = param;
-                    break;
-                }
-            }
-
-            if(resultSet != null){
-                List<Element> columnMetadata = resultSet.getMetadataObject().getChildren();
-
-                int size = columnMetadata.size();
-                Class[] coulmnDTs = new Class[size];
-                for(int i =0; i<size; i++ ){
-                    coulmnDTs[i] = columnMetadata.get(i).getJavaType();
-                }
-                return coulmnDTs;
-            }
-
-        }
-        return new Class[0];
-    }
-    
-    /**
-     * @param parameters List of IParameter
-     * @param sql
-     * @return Map of IParameter to index in sql.
-     */
-    public static Map createParameterIndexMap(List parameters, String sql) {
-        if(parameters == null || parameters.isEmpty()){
-            return Collections.EMPTY_MAP;
-        }
-        Map paramsIndexes = new HashMap();
-        int index  = 1;
         
-        //return parameter, if there is any,  is the first parameter
-        Iterator iter = parameters.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() == Direction.RETURN){
-                paramsIndexes.put(param, new Integer(index++));
-                break;
-            }
-        }
-                      
-        iter = parameters.iterator();
-        while(iter.hasNext()){
-            IParameter param = (IParameter)iter.next();
-            if(param.getDirection() != Direction.RESULT_SET && param.getDirection() != Direction.RETURN){
-                paramsIndexes.put(param, new Integer(index++));
-            }
-        }
-        return paramsIndexes;
-    }
-        
-    /* 
-     * @see com.metamatrix.data.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
-     */
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        if(parameter.getDirection() != Direction.OUT && parameter.getDirection() != Direction.INOUT &&  parameter.getDirection() != Direction.RETURN){
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCProcedureExecution.The_parameter_direction_must_be_out_or_inout_1")); //$NON-NLS-1$
-        }
-        
-        Integer index = (Integer)this.parameterIndexMap.get(parameter);
-        if(index == null){
-            //should not come here
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCProcedureExecution.Unexpected_exception_1")); //$NON-NLS-1$
-        }
+    @Override
+    public List<?> getOutputParameterValues() throws ConnectorException {
         try {
-        	Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, index.intValue(), parameter.getType());
-            if(value == null){
-                return null;
-            }
-            Object result = JDBCExecutionHelper.convertValue(value, parameter.getType(), this.sqlTranslator.getValueTranslators(), this.sqlTranslator.getTypeFacility(), trimString, context);
-            return result;
+        	IProcedure proc = (IProcedure)this.command;
+        	List<Object> result = new ArrayList<Object>();
+        	int paramIndex = 1;
+        	for (IParameter parameter : proc.getParameters()) {
+        		if (parameter.getDirection() == Direction.RETURN) {
+                	addParameterValue(result, paramIndex, parameter);
+                	break;
+        		}
+			}
+        	for (IParameter parameter : proc.getParameters()) {
+        		if (parameter.getDirection() == Direction.RETURN || parameter.getDirection() == Direction.RESULT_SET) {
+        			continue;
+        		}
+        		paramIndex++;
+        		if (parameter.getDirection() == Direction.INOUT || parameter.getDirection() == Direction.OUT) {
+        			addParameterValue(result, paramIndex, parameter);
+        		}
+			}
+        	return result;
         } catch (SQLException e) {
             throw new ConnectorException(e);
         }
     }
+
+	private void addParameterValue(List<Object> result, int paramIndex,
+			IParameter parameter) throws SQLException {
+		Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, paramIndex, parameter.getType());
+		if (value != null
+				&& TypeFacility.RUNTIME_TYPES.STRING.equals(value.getClass())
+				&& (trimString || (parameterMetaData != null && parameterMetaData
+						.getParameterType(paramIndex) == Types.CHAR))) {
+			value = trimString((String)value);
+		}
+		result.add(value);
+	}
     
 }

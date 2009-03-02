@@ -24,21 +24,16 @@
  */
 package com.metamatrix.connector.jdbc.util;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.jdbc.JDBCExecutionHelper;
+import junit.framework.TestCase;
+
+import org.teiid.connector.jdbc.JDBCQueryExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ISelect;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.impl.TypeFacilityImpl;
 import com.metamatrix.dqp.internal.datamgr.language.LiteralImpl;
 import com.metamatrix.dqp.internal.datamgr.language.QueryImpl;
 import com.metamatrix.dqp.internal.datamgr.language.SelectImpl;
@@ -65,36 +60,8 @@ public class TestJDBCExecutionHelper extends TestCase{
         assertEquals( results[1], expectedResults[1]);     
     }
     
-    public void testConvertValue1(){
-        Object value = new Integer(5);
-        Class expectedType = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
-        Object result = null;
-        try {
-            ExecutionContext context = new FakeExecutionContextImpl();
-            result = JDBCExecutionHelper.convertValue(value, expectedType, new ArrayList(), new TypeFacilityImpl(), false, context);
-        } catch (ConnectorException e) {
-            e.printStackTrace();
-            fail("Failed converting Integer to BigDecimal"); //$NON-NLS-1$
-        }
-        assertEquals(result, new BigDecimal("5"));
-    }    
-    
-    public void testConvertValue2(){
-        Object value = new Integer(5);
-        Class expectedType = DataTypeManager.DefaultDataClasses.STRING;
-        Object result = null;
-        try {
-            ExecutionContext context = new FakeExecutionContextImpl();
-            result = JDBCExecutionHelper.convertValue(value, expectedType, new ArrayList(), new TypeFacilityImpl(), true, context);
-        } catch (ConnectorException e) {
-            e.printStackTrace();
-            fail("Failed converting Integer to String"); //$NON-NLS-1$
-        }
-        assertEquals(result, "5"); //$NON-NLS-1$
-    }
-    
     public void helpTestTrimString(String value, String expected) {
-        String actual = JDBCExecutionHelper.trimString(value);
+        String actual = JDBCQueryExecution.trimString(value);
         assertEquals("Did not get a match, expected=[" + expected + "', actual=[" + actual + "]", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     

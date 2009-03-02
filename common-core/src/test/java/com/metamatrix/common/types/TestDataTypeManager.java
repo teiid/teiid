@@ -133,13 +133,8 @@ public class TestDataTypeManager extends TestCase {
     }
     	
     /** Test determine data type for an unknown object type - should be typed as an OBJECT. */
-    public void testDetermineDataType3() {
-        java.net.URL url = null;
-        try {
-            url = new java.net.URL("http://fake"); //$NON-NLS-1$
-        } catch(Throwable e) {
-            fail("Failed to create valid test url"); //$NON-NLS-1$
-        }        
+    public void testDetermineDataType3() throws Exception {
+        java.net.URL url = new java.net.URL("http://fake"); //$NON-NLS-1$
         helpDetermineDataType(url, DataTypeManager.DefaultDataClasses.OBJECT);
     }
     

@@ -20,36 +20,18 @@
  * 02110-1301 USA.
  */
 
-/*
- */
-package com.metamatrix.connector.object.extension.value;
+package com.metamatrix.common.types;
 
-import java.sql.Timestamp;
-import java.util.Date;
-
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.ValueTranslator;
-
-
-/**
- */
-public class JavaUtilDateValueTranslator implements ValueTranslator {
-        
-    public Class getSourceType() {
-        return Date.class;
-    }
-
-    public Class getTargetType() {
-        return Timestamp.class;
-    }
-
-    public Object translate(Object value, ExecutionContext context) throws ConnectorException {
-        Date d = (Date) value;
-        long dt = d.getTime();
-        
-        Timestamp ts = new Timestamp(dt);
-        return ts;
-    }    
+public interface SourceTransform<S, T> {
+	
+	/**
+	 * This method transforms a value of the source type into a value
+	 * of the target type.
+	 * @param value Incoming value of source type
+	 * @return Outgoing value of target type
+	 * @throws TransformationException if value is an incorrect input type or
+	 * the transformation fails
+	 */
+	public T transform(S value);
 
 }

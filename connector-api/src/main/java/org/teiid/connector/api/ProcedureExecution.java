@@ -22,7 +22,7 @@
 
 package org.teiid.connector.api;
 
-import org.teiid.connector.language.IParameter;
+import java.util.List;
 
 /**
  * The procedure execution represents the case where a connector can 
@@ -34,11 +34,11 @@ import org.teiid.connector.language.IParameter;
 public interface ProcedureExecution extends ResultSetExecution {
 
     /**
-     * Get the output parameter value for the given parameter.
-     * @param parameter The parameter (either OUT or INOUT direction)
-     * @return The value or null if null
+     * Get the output parameter values.  Results should place the return parameter
+     * first if it is present, then the IN/OUT and OUT parameters should follow in
+     * the order they appeared in the command.
      * @throws ConnectorException If an error occurs while retrieving the output value
      */
-    Object getOutputValue(IParameter parameter) throws ConnectorException;
+    List<?> getOutputParameterValues() throws ConnectorException;
     
 }

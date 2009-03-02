@@ -24,24 +24,11 @@
  */
 package org.teiid.connector.jdbc.access;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
 
 
-public class AccessSQLTranslator extends Translator {
+public class AccessSQLTranslator extends SybaseSQLTranslator {
 	
-	@Override
-	public boolean hasTimeType() {
-		return false;
-	}
-
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
@@ -50,31 +37,6 @@ public class AccessSQLTranslator extends Translator {
         return "0"; //$NON-NLS-1$
     }
     
-    @Override
-    public List<?> translateCommand(ICommand command, ExecutionContext context) {
-    	if (!(command instanceof IQueryCommand)) {
-    		return null;
-    	}
-		IQueryCommand queryCommand = (IQueryCommand)command;
-		if (queryCommand.getLimit() == null) {
-			return null;
-    	}
-		ILimit limit = queryCommand.getLimit();
-		IOrderBy orderBy = queryCommand.getOrderBy();
-		queryCommand.setLimit(null);
-		queryCommand.setOrderBy(null);
-		List<Object> parts = new ArrayList<Object>(6);
-		parts.add("SELECT TOP ");
-		parts.add(limit.getRowLimit());
-		parts.add(" * FROM (");
-		parts.add(queryCommand);
-		parts.add(") AS X");
-		if (orderBy != null) {
-			parts.add(orderBy);
-		}
-		return parts;
-    }
-                
     @Override
     public boolean addSourceComment() {
     	return false;

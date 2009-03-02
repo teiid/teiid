@@ -2095,7 +2095,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteFromUnixTime() throws Exception {
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00"));
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
     	try {
     		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
     	} finally {

@@ -45,11 +45,11 @@ public class TestTimestampWithTimezone extends TestCase {
     }
     
 	public void setUp() { 
-		TimeZone.setDefault(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$ 
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$ 
 	}
 	
 	public void tearDown() { 
-		TimeZone.setDefault(null);
+		TimestampWithTimezone.resetCalendar(null);
 	}
 
     /**

@@ -26,10 +26,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.TypeFacility;
 
-import com.metamatrix.common.types.*;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.util.TimestampWithTimezone;
 
 /**
@@ -37,18 +36,6 @@ import com.metamatrix.common.util.TimestampWithTimezone;
 public class TypeFacilityImpl extends TypeFacility {
 
     public TypeFacilityImpl() {
-    }
-
-    public boolean hasTransformation(Class sourceClass, Class targetClass) {
-        return DataTypeManager.isTransformable(sourceClass, targetClass);
-    }
-
-    public Object transformValue(Object value, Class sourceClass, Class targetClass) throws ConnectorException {
-        try {
-            return DataTypeManager.transformValue(value, sourceClass, targetClass);
-        } catch(TransformationException e) {
-            throw new ConnectorException(e);
-        }
     }
 
 	@Override

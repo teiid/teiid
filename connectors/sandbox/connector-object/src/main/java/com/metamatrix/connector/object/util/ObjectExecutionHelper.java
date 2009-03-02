@@ -38,11 +38,8 @@ import java.util.TimeZone;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.api.ValueTranslator;
-import org.teiid.connector.basic.BasicValueTranslator;
 import org.teiid.connector.visitor.util.SQLReservedWords;
 
-import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.connector.object.ObjectPlugin;
 import com.metamatrix.connector.object.extension.IObjectCommand;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
@@ -167,7 +164,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
         Class[] columnTypes = command.getResultColumnTypes();
 
         List batch = new ArrayList(spResults.size());
-        ValueTranslator transform = null;
         
         // Move the result data to the query results
         TimeZone dbmsTimeZone = resultsTranslator.getDatabaseTimezone();  
@@ -186,14 +182,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
 
                 int javaType = TypeFacility.getSQLTypeFromRuntimeType(valueType.getClass());
                 if (javaType == Types.JAVA_OBJECT) {
-                    
-                    if (value instanceof Collection || value instanceof List) {
-                        // bypass transformation
-                    } else {
-                        transform = determineTransformation(valueType, valueType, resultsTranslator);
-                    
-                        value = transform.translate(value, context);
-                    }
                     
                     if (value != null) {
                         if (value instanceof List ) {
@@ -227,20 +215,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
                     }
                 } 
                 else {
-                    
-                    // if the result is a primitive, non-java
-                    // object, then there should only be
-					// one column type
-					transform = determineTransformation(valueType,columnTypes[0], resultsTranslator);
-
-					// Transform value if necessary
-					if (transform != null) {
-						value = transform.translate(value, context);
-					} else {
-						// Convert time zone if necessary
-						value = modifyTimeZone(value, dbmsTimeZone, cal);
-					}
-
 					// Trim string column if necessary
 					if (trimStrings && (value instanceof String)) {
 						// if(trimColumn[i]) {
@@ -272,10 +246,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
             }
         }
 
-        // Reusable list of transformations for the types, lazily loaded
-        boolean[] transformKnown = new boolean[columnTypes.length];
-        ValueTranslator[] transforms = new ValueTranslator[columnTypes.length];
-
         // Move the result data to the query results
         List vals = null;
         int numCols = columnTypes.length;
@@ -294,26 +264,6 @@ public class ObjectExecutionHelper implements SQLReservedWords {
                     for (int i = 0; i < numCols; i++) {
                         Object value = valueList.get(i);
                         if(value != null) {
-                            // Determine transformation if unknown
-                            if(! transformKnown[i]) {
-                                Class valueType = value.getClass();
-                                if(valueType != columnTypes[i]) {                                    
-                                    transforms[i] = determineTransformation(valueType, columnTypes[i], resultsTranslator);
-                                }
-                                transformKnown[i] = true;
-                            }
-
-// System.out.println("\nRead value = " + value + " of type " + (value != null ? value.getClass().getName() : ""));
-
-                            // Transform value if necessary
-                            if(transforms[i] != null) {
-                                value = transforms[i].translate(value, context);
-                            }
-
-                            // Convert time zone if necessary
-                            value = modifyTimeZone(value, dbmsTimeZone, cal);                      
-// System.out.println("After modify time zone: value = " + value + " of type " + (value != null ? value.getClass().getName() : ""));
-
                             // Trim string column if necessary
                             if(trimColumn[i]) {
                                 value = trimString((String) value);
@@ -326,78 +276,11 @@ public class ObjectExecutionHelper implements SQLReservedWords {
                     batch.add(vals);
                     rowCnt++;
                 } 
-
-
-        } catch (ConnectorException e) {
-            throw e;
         } catch (Throwable e) {
             throw new ConnectorException(e,ObjectPlugin.Util.getString("ObjectExecutionHelper.Unknown_error_translating_results___9", e.getMessage())); //$NON-NLS-1$
         }
     }  
     
-    
-    /**
-     * Modify the time zone of the object if a databaseTimeZone is defined
-     * and this value is a Date, Time, or Timestamp.
-     * @param value The value, never null
-     * @return New value
-     */
-    private static Object modifyTimeZone(Object value, TimeZone dbmsTimeZone, Calendar target) {       
-        if(value instanceof TimestampWithTimezone) {
-            return value;
-            
-        } else if(dbmsTimeZone != null && value instanceof java.util.Date) {
-            if(value instanceof Timestamp) {
-                return TimestampWithTimezone.createTimestamp((Timestamp)value, LOCAL_TIME_ZONE, target);               
-                
-            } else if(value instanceof java.sql.Date) {
-                return TimestampWithTimezone.createDate((java.sql.Date)value, LOCAL_TIME_ZONE, target);                      
-
-    
-            } else if(value instanceof Time) {
-                return TimestampWithTimezone.createTime((Time)value, LOCAL_TIME_ZONE, target);                      
-            }
-            return TimestampWithTimezone.createDate((java.util.Date)value, LOCAL_TIME_ZONE, target);
-            
-        }                                        
-
-        return value;
-    }
-    
-    /**
-     * @param actualType
-     * @param expectedType
-     * @return Transformation between actual and expected type
-     */
-    protected static ValueTranslator determineTransformation(Class actualType, Class expectedType, ISourceTranslator sourceTranslator) throws ConnectorException {
-        ValueTranslator valueTranslator = null;
-
-        List<ValueTranslator> valueTranslators = sourceTranslator.getValueTranslators();
-        
-        // Now check to see if there is an override to the translator
-        //check valueTranslators first
-        if(valueTranslators != null && !valueTranslators.isEmpty()){
-        	for(ValueTranslator translator:valueTranslators) {
-                //Evaluate expressions in this order for performance.
-                if(expectedType.equals(translator.getTargetType()) || translator.getSourceType().isAssignableFrom(actualType)){
-                    valueTranslator = translator;
-                    break;
-                }
-        	}        	
-        }
-        
-        if(valueTranslator == null){
-        	TypeFacility typeFacility = sourceTranslator.getTypeFacility();
-        	if (typeFacility.hasTransformation(actualType, expectedType)) {
-        		valueTranslator = new BasicValueTranslator(actualType, expectedType, typeFacility);
-            } else {
-                throw new ConnectorException(ObjectPlugin.Util.getString("ObjectExecutionHelper.Unable_to_translate_data_value__1", actualType.getName(), expectedType.getName())); //$NON-NLS-1$
-            }
-        }
-        return valueTranslator;
-    }
-
-        
     /**
      * Expects string to never be null 
      * @param value Incoming value

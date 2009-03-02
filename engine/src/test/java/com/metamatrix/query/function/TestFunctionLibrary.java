@@ -37,6 +37,7 @@ import junit.framework.TestCase;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
 import com.metamatrix.api.exception.query.InvalidFunctionException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.unittest.TimestampUtil;
@@ -59,21 +60,18 @@ public class TestFunctionLibrary extends TestCase {
 	
 	private FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
 
-	TimestampUtil tsUtil;
-
     // ################################## FRAMEWORK ################################
 	
 	public TestFunctionLibrary(String name) { 
 		super(name);
-        tsUtil = new TimestampUtil();
 	}	
 	
 	public void setUp() { 
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 
 	}
 	
 	public void tearDown() { 
-		TimeZone.setDefault(null);
+		TimestampWithTimezone.resetCalendar(null);
 	}
 	
 	// ################################## TEST HELPERS ################################
@@ -782,33 +780,33 @@ public class TestFunctionLibrary extends TestCase {
     }
 
 	public void testInvokeFormatTime1() {
-		helpInvokeMethod("formatTime", new Object[] {tsUtil.createTime(3,5,12), new String("h:mm a") }, "3:05 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(3,5,12), new String("h:mm a") }, "3:05 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTime2() {
-		helpInvokeMethod("formatTime", new Object[] {tsUtil.createTime(13, 5,12), new String("K:mm a, z") }, "1:05 PM, GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("K:mm a, z") }, "1:05 PM, GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTime3() {
-		helpInvokeMethod("formatTime", new Object[] {tsUtil.createTime(13, 5,12), new String("HH:mm:ss z") }, "13:05:12 GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("HH:mm:ss z") }, "13:05:12 GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTime4() {
-	    TimeZone.setDefault(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$
-		helpInvokeMethod("formatTime", new Object[] {tsUtil.createTime(13, 5,12), new String("hh a, zzzz") }, "01 PM, Central Standard Time");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$
+		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("hh a, zzzz") }, "01 PM, Central Standard Time");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTimeFail() {
-		helpInvokeMethodFail("formatTime", new Object[] {tsUtil.createTime(13, 5,12), new String("hh i, www") },  //$NON-NLS-1$ //$NON-NLS-2$
+		helpInvokeMethodFail("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("hh i, www") },  //$NON-NLS-1$ //$NON-NLS-2$
 			new FunctionExecutionException("")); //$NON-NLS-1$
 	}
 		
 	public void testInvokeFormatDate1() {
-		helpInvokeMethod("formatDate", new Object[] {tsUtil.createDate(103, 2, 5), new String("yyyy.MM.dd G") }, "2003.03.05 AD");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatDate", new Object[] {TimestampUtil.createDate(103, 2, 5), new String("yyyy.MM.dd G") }, "2003.03.05 AD");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatDate2() {
-		helpInvokeMethod("formatDate", new Object[] {tsUtil.createDate(103, 2, 5), new String("EEE, MMM d, '' yy") }, "Wed, Mar 5, ' 03");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatDate", new Object[] {TimestampUtil.createDate(103, 2, 5), new String("EEE, MMM d, '' yy") }, "Wed, Mar 5, ' 03");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatDate3() {
@@ -816,49 +814,49 @@ public class TestFunctionLibrary extends TestCase {
 	}
 	
 	public void testInvokeFormatDateFail() {
-		helpInvokeMethodFail("formatTime", new Object[] {tsUtil.createTime(103, 2, 5), new String("yyyy.i.www") },  //$NON-NLS-1$ //$NON-NLS-2$
+		helpInvokeMethodFail("formatTime", new Object[] {TimestampUtil.createTime(103, 2, 5), new String("yyyy.i.www") },  //$NON-NLS-1$ //$NON-NLS-2$
 			new FunctionExecutionException("")); //$NON-NLS-1$
 	}
 	
 	public void testInvokeFormatTimestamp1() {
-		helpInvokeMethod("formatTimestamp", new Object[] {tsUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/yy h:mm a") }, "04/05/03 3:04 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/yy h:mm a") }, "04/05/03 3:04 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTimestamp2() {
-		helpInvokeMethod("formatTimestamp", new Object[] {tsUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("yyyy-mm-dd k:mm a z") }, "2003-04-05 3:04 AM GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("yyyy-mm-dd k:mm a z") }, "2003-04-05 3:04 AM GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeFormatTimestamp3() {
-			helpInvokeMethod("formatTimestamp", new Object[] {tsUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("yyyy-mm-dd hh:mm:ss.SSSS") }, "2003-04-05 03:04:12.0000");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			helpInvokeMethod("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("yyyy-mm-dd hh:mm:ss.SSSS") }, "2003-04-05 03:04:12.0000");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 		
 	public void testInvokeFormatTimestampFail() {
-		helpInvokeMethodFail("formatTimestamp", new Object[] {tsUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/nn h:mm a") },  //$NON-NLS-1$ //$NON-NLS-2$
+		helpInvokeMethodFail("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/nn h:mm a") },  //$NON-NLS-1$ //$NON-NLS-2$
 			new FunctionExecutionException("")); //$NON-NLS-1$
 	}
 	
 	public void testInvokeParseTime1() {
-		helpInvokeMethod("parseTime", new Object[] {new String("3:12 PM"), new String("h:mm a") }, tsUtil.createTime(15, 12, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseTime", new Object[] {new String("3:12 PM"), new String("h:mm a") }, TimestampUtil.createTime(15, 12, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeParseTime2() {
-		helpInvokeMethod("parseTime", new Object[] {new String("03:12:23 CST"), new String("hh:mm:ss z") }, tsUtil.createTime(3, 12, 23));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseTime", new Object[] {new String("03:12:23 CST"), new String("hh:mm:ss z") }, TimestampUtil.createTime(3, 12, 23));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 		
 	public void testInvokeParseDate1() {
-		helpInvokeMethod("parseDate", new Object[] {new String("03/05/03"), new String("MM/dd/yy") }, tsUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseDate", new Object[] {new String("03/05/03"), new String("MM/dd/yy") }, TimestampUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeParseDate2() {
-		helpInvokeMethod("parseDate", new Object[] {new String("05-Mar-03"), new String("dd-MMM-yy") }, tsUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseDate", new Object[] {new String("05-Mar-03"), new String("dd-MMM-yy") }, TimestampUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	public void testInvokeParseTimestamp1() {
-		helpInvokeMethod("parseTimestamp", new Object[] {new String("05 Mar 2003 03:12:23 CST"), new String("dd MMM yyyy HH:mm:ss z") }, tsUtil.createTimestamp(103, 2, 5, 3, 12, 23, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseTimestamp", new Object[] {new String("05 Mar 2003 03:12:23 CST"), new String("dd MMM yyyy HH:mm:ss z") }, TimestampUtil.createTimestamp(103, 2, 5, 3, 12, 23, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	public void testInvokeParseTimestamp2() {
-		helpInvokeMethod("parseTimestamp", new Object[] {new String("05 Mar 2003 03:12:23.333"), new String("dd MMM yyyy HH:mm:ss.SSS") }, tsUtil.createTimestamp(103, 2, 5, 3, 12, 23, 333*1000000));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		helpInvokeMethod("parseTimestamp", new Object[] {new String("05 Mar 2003 03:12:23.333"), new String("dd MMM yyyy HH:mm:ss.SSS") }, TimestampUtil.createTimestamp(103, 2, 5, 3, 12, 23, 333*1000000));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	public void testFindFormatInteger() { 
@@ -970,32 +968,32 @@ public class TestFunctionLibrary extends TestCase {
 
 	public void testInvokeQuarter1() {
 		//		2003-5-15
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 4, 15)}, new Integer(2));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 4, 15)}, new Integer(2));	 //$NON-NLS-1$
 	}
 	
 	public void testInvokeQuarter2() {
 		//		2003-5-1
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 3, 31)}, new Integer(2));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 3, 31)}, new Integer(2));	 //$NON-NLS-1$
 	}
 	
 	public void testInvokeQuarter3() {
 		//		2003-1-31
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 0, 31)}, new Integer(1));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 0, 31)}, new Integer(1));	 //$NON-NLS-1$
 	}
 	
 	public void testInvokeQuarter4() {
 	//		2003-9-30
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 8, 30)}, new Integer(3));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 8, 30)}, new Integer(3));	 //$NON-NLS-1$
 	}
 	
 	public void testInvokeQuarter5() {
 	//		2003-12-31
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 11, 31)}, new Integer(4));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 11, 31)}, new Integer(4));	 //$NON-NLS-1$
 	}		
 	
 	public void testInvokeQuarter6() {
 		//bad date such as 2003-13-45
-		helpInvokeMethod("quarter", new Object[] {tsUtil.createDate(103, 12, 45)}, new Integer(1));	 //$NON-NLS-1$
+		helpInvokeMethod("quarter", new Object[] {TimestampUtil.createDate(103, 12, 45)}, new Integer(1));	 //$NON-NLS-1$
 	}
 	
 	public void testInvokeIfNull() {
@@ -1057,86 +1055,86 @@ public class TestFunctionLibrary extends TestCase {
 	/** date + day --> count=28, inteval=day, result should be 2003-6-12 */
 	public void testInvokeTimestampAddDate1() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_DAY,  //$NON-NLS-1$
-			new Integer(28), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(103, 5, 12));	
+			new Integer(28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 5, 12));	
 	}	
 
     public void testInvokeTimestampAddDate_ignore_case() {
         helpInvokeMethod("timestampAdd", new Object[] {"sql_TSI_day",  //$NON-NLS-1$ //$NON-NLS-2$
-            new Integer(28), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(103, 5, 12));    
+            new Integer(28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 5, 12));    
     }   
     
 	/** date + day --> count=-28, inteval=day, result should be 2003-4-17 */
 	public void testInvokeTimestampAddDate1a() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_DAY,  //$NON-NLS-1$
-			new Integer(-28), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(103, 3, 17));	
+			new Integer(-28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 3, 17));	
 	}	
 	
 	/** date + month --> count=18, inteval=month, result should be 2004-11-15 */
 	public void testInvokeTimestampAddDate2() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
-			new Integer(18), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(104, 10, 15));	
+			new Integer(18), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(104, 10, 15));	
 	}
 
 	/** date + month --> count=-18, inteval=month, result should be 2001-11-15 */
 	public void testInvokeTimestampAddDate2a() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
-			new Integer(-18), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(101, 10, 15));	
+			new Integer(-18), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(101, 10, 15));	
 	}
 	
 	/** date + week --> count=6, inteval=week, result should be 2003-04-03 */
 	public void testInvokeTimestampAddDate3() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
-			new Integer(-6), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(103, 3, 3));	
+			new Integer(-6), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 3, 3));	
 	}
 
 	/** date + quarter --> count=3, inteval=quarter, result should be 2004-2-15 */
 	public void testInvokeTimestampAddDate4() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_QUARTER,  //$NON-NLS-1$
-			new Integer(3), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(104, 1, 15));	
+			new Integer(3), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(104, 1, 15));	
 	}
 
 	/** date + year --> count=-1, inteval=year, result should be 2002-5-15 */
 	public void testInvokeTimestampAddDate5() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_YEAR,  //$NON-NLS-1$
-			new Integer(-1), tsUtil.createDate(103, 4, 15)}, tsUtil.createDate(102, 4, 15));	
+			new Integer(-1), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(102, 4, 15));	
 	}
 			
 	/** time + minute --> count=23, inteval=3, result should be 03:32:12 */
 	public void testInvokeTimestampAddTime1() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MINUTE,  //$NON-NLS-1$
-			new Integer(23), tsUtil.createTime(3, 9, 12)}, tsUtil.createTime(3, 32, 12));	
+			new Integer(23), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(3, 32, 12));	
 	}
 
 	/** time + hour --> count=21, inteval=4, result should be 00:09:12 and overflow */
 	public void testInvokeTimestampAddTime2() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			new Integer(21), tsUtil.createTime(3, 9, 12)}, tsUtil.createTime(0, 9, 12));	
+			new Integer(21), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(0, 9, 12));	
 	}
 
 	/** time + hour --> count=2, inteval=4, result should be 01:12:12*/
 	public void testInvokeTimestampAddTime3() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			new Integer(2), tsUtil.createTime(23, 12, 12)}, tsUtil.createTime(1, 12, 12));	
+			new Integer(2), TimestampUtil.createTime(23, 12, 12)}, TimestampUtil.createTime(1, 12, 12));	
 	}
 	
 	/** time + second --> count=23, inteval=2, result should be 03:10:01 */
 	public void testInvokeTimestampAddTime4() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
-			new Integer(49), tsUtil.createTime(3, 9, 12)}, tsUtil.createTime(3, 10, 1));	
+			new Integer(49), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(3, 10, 1));	
 	}
 
 	/** timestamp + second --> count=23, inteval=2, result should be 2003-05-15 03:09:35.100  */
 	public void testInvokeTimestampAddTimestamp1() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
-			new Integer(23), tsUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
-			tsUtil.createTimestamp(103, 4, 15, 3, 9, 35, 100));	
+			new Integer(23), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
+			TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 35, 100));	
 	}
 
 	/** timestamp + nanos --> count=1, inteval=1, result should be 2003-05-15 03:09:12.000000101  */
 	public void testInvokeTimestampAddTimestamp2() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
-			new Integer(1), tsUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
-			tsUtil.createTimestamp(103, 4, 15, 3, 9, 12, 101));	
+			new Integer(1), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 100)}, 
+			TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 12, 101));	
 	}
 
 	/** timestamp + nanos --> count=2100000000, inteval=1, result should be 2003-05-15 03:10:01.100000003
@@ -1144,20 +1142,20 @@ public class TestFunctionLibrary extends TestCase {
 	 */
 	public void testInvokeTimestampAddTimestamp3() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
-			new Integer(2100000000), tsUtil.createTimestamp(103, 4, 15, 3, 9, 59, 1)}, 
-			tsUtil.createTimestamp(103, 4, 15, 3, 10, 1, 100000003));	
+			new Integer(2100000000), TimestampUtil.createTimestamp(103, 4, 15, 3, 9, 59, 1)}, 
+			TimestampUtil.createTimestamp(103, 4, 15, 3, 10, 1, 100000003));	
 	}
 			
 	/** time --> interval=hour, time1 = 03:04:45, time2= 05:05:36 return = 2  */
 	public void testInvokeTimestampDiffTime1() {
 		helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			tsUtil.createTime(3, 4, 45), tsUtil.createTime(5, 5, 36) }, 
+			TimestampUtil.createTime(3, 4, 45), TimestampUtil.createTime(5, 5, 36) }, 
 			new Long(2));	
 	}
 	
     public void testInvokeTimestampDiffTime1_ignorecase() {
         helpInvokeMethod("timestampDiff", new Object[] {"SQL_tsi_HOUR",  //$NON-NLS-1$ //$NON-NLS-2$
-            tsUtil.createTime(3, 4, 45), tsUtil.createTime(5, 5, 36) }, 
+            TimestampUtil.createTime(3, 4, 45), TimestampUtil.createTime(5, 5, 36) }, 
             new Long(2));   
     }
     
@@ -1167,7 +1165,7 @@ public class TestFunctionLibrary extends TestCase {
 	 */
 	public void testInvokeTimestampDiffTimestamp1() {
 		helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
-			tsUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100), tsUtil.createTimestamp(103, 4, 2, 5, 19, 35, 500) }, 
+			TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100), TimestampUtil.createTimestamp(103, 4, 2, 5, 19, 35, 500) }, 
 			new Long(45));	
 	}
 
@@ -1177,7 +1175,7 @@ public class TestFunctionLibrary extends TestCase {
      */
     public void testInvokeTimestampDiffTimestamp2() {
         helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
-            tsUtil.createTimestamp(102, 5, 21, 3, 9, 35, 1), tsUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100000000) }, 
+            TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 1), TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 100000000) }, 
             new Long(99999999));  
     }
 
@@ -1187,14 +1185,14 @@ public class TestFunctionLibrary extends TestCase {
      */
     public void testInvokeTimestampDiffTimestamp3() {
         helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_FRAC_SECOND,  //$NON-NLS-1$
-            tsUtil.createTimestamp(102, 5, 21, 3, 9, 35, 2), tsUtil.createTimestamp(102, 5, 22, 3, 9, 35, 1) }, 
+            TimestampUtil.createTimestamp(102, 5, 21, 3, 9, 35, 2), TimestampUtil.createTimestamp(102, 5, 22, 3, 9, 35, 1) }, 
             new Long(86399999999999L));  
     }
 
     public void testInvokeTimestampCreate1() {
-        helpInvokeMethod("timestampCreate", new Object[] {tsUtil.createDate(103, 4, 15), //$NON-NLS-1$
-                                                          tsUtil.createTime(23, 59, 59)},
-                                                          tsUtil.createTimestamp(103, 4, 15, 23, 59, 59, 0));    
+        helpInvokeMethod("timestampCreate", new Object[] {TimestampUtil.createDate(103, 4, 15), //$NON-NLS-1$
+                                                          TimestampUtil.createTime(23, 59, 59)},
+                                                          TimestampUtil.createTimestamp(103, 4, 15, 23, 59, 59, 0));    
     }   
     
     public void testInvokeBitand() {
@@ -1228,7 +1226,7 @@ public class TestFunctionLibrary extends TestCase {
 
     /** defect 10941 */
     public void testInvokeConvertTime() {
-        helpInvokeMethod("convert", new Object[] {"05:00:00", "time"}, tsUtil.createTime(5, 0, 0)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                    
+        helpInvokeMethod("convert", new Object[] {"05:00:00", "time"}, TimestampUtil.createTime(5, 0, 0)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                    
     }
 
     public void testInvokeXpath1() {

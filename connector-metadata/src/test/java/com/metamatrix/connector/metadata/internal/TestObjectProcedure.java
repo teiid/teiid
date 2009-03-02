@@ -76,21 +76,6 @@ public class TestObjectProcedure extends TestCase {
         assertEquals("proc", proc.getProcedureNameInSource()); //$NON-NLS-1$
     }
 
-    public void testTypeCheckingMatch() throws Exception {
-        ObjectProcedure proc = getProcedure("exec proc (\"x\", \"y\", 1)"); //$NON-NLS-1$
-        proc.checkType(0, "String"); //$NON-NLS-1$
-    }
-
-    public void testTypeCheckingDoesNotMatch() throws Exception {
-        ObjectProcedure proc = getProcedure("exec proc (\"x\", \"y\", 1)"); //$NON-NLS-1$
-        try {
-            proc.checkType(0, new Integer(0));
-            fail();
-        } catch (MetaMatrixRuntimeException e) {
-            assertEquals("Types do not match for: col1 expected: java.lang.String but was: java.lang.Integer.", e.getMessage()); //$NON-NLS-1$
-        }
-    }
-
     public void testGetColumnNames() throws Exception {
         ObjectProcedure proc = getProcedure("exec proc (\"x\", \"y\", 1)"); //$NON-NLS-1$
         assertEquals("col1", proc.getColumnNames()[0]); //$NON-NLS-1$

@@ -29,9 +29,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
-import org.teiid.connector.language.IParameter.Direction;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.metadata.internal.IObjectSource;
@@ -86,16 +84,9 @@ public class MetadataProcedureExecution extends BasicExecution implements Proced
     	return null;
     }
 
-    /** 
-     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
-     * @since 4.2
-     */
-    public Object getOutputValue(final IParameter parameter) throws ConnectorException {
-        if(parameter.getDirection() != Direction.OUT && parameter.getDirection() != Direction.INOUT &&  parameter.getDirection() != Direction.RETURN){
-            throw new ConnectorException(MetadataConnectorPlugin.Util.getString("ObjectProcedureExecution.0")); //$NON-NLS-1$
-        }
-        //TODO: Output parameters are not currently handled
-        return null;
+    @Override
+    public List<?> getOutputParameterValues() throws ConnectorException {
+    	throw new UnsupportedOperationException();
     }
 
     /** 

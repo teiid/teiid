@@ -24,7 +24,6 @@
 
 package com.metamatrix.connector.xml.base;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -53,21 +52,7 @@ public class ValueConvertor {
 		if (type != java.lang.Character.class) {
 			newValue = newValue.replaceAll(",", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return attemptTransformation(newValue, type, env);
-	}
-
-	private static Object attemptTransformation(String value, Class type, ConnectorEnvironment env) throws ConnectorException {
-		TypeFacility typeFacility = env.getTypeFacility();
-		
-		String newValue = value;
-		if (typeFacility.hasTransformation(String.class, type)) {
-			return typeFacility.transformValue(newValue, String.class, type);
-		} 
-		else {
-			String msgRaw = Messages.getString("XMLExecutionImpl.type.conversion.failure"); //$NON-NLS-1$
-			String msg = MessageFormat.format(msgRaw, new Object[] { newValue,type });
-			throw new ConnectorException(msg);
-		}
+		return newValue;
 	}
 
 	public static boolean compareData(LargeOrSmallString dataStr,

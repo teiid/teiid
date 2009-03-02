@@ -49,11 +49,11 @@ public class TestLoopbackExecution extends TestCase {
     }
     
     public void helpTestQuery(String sql, TranslationUtility metadata, Object[][] expectedResults) throws ConnectorException {
-        helpTestQuery(sql, metadata, 100, 0, 1, expectedResults);
+        helpTestQuery(sql, metadata, 0, 1, expectedResults);
     }
 
-    public void helpTestQuery(String sql, TranslationUtility metadata, int maxBatchSize, int waitTime, int rowCount, Object[][] expectedResults) throws ConnectorException {
-    	ConnectorHost host = new ConnectorHost(new LoopbackConnector(), exampleProperties(waitTime, rowCount), metadata);
+    public void helpTestQuery(String sql, TranslationUtility metadata, int waitTime, int rowCount, Object[][] expectedResults) throws ConnectorException {
+    	ConnectorHost host = new ConnectorHost(new LoopbackConnector(), exampleProperties(waitTime, rowCount), metadata, false);
                               
     	List actualResults = host.executeCommand(sql);
        
@@ -132,9 +132,15 @@ public class TestLoopbackExecution extends TestCase {
 
     public void testExec() throws Exception {
         Object[][] results = new Object[][] {
-            new Object[] { new Integer(0) }  
+            new Object[] { "ABCDEFGHIJ" } //$NON-NLS-1$  
         };
         helpTestQuery("EXEC mmspTest1.MMSP1()", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), results);     //$NON-NLS-1$
+    }
+    
+    public void testExecWithoutResultSet() throws Exception {
+    	Object[][] results = new Object[][] {  
+        };
+    	helpTestQuery("exec pm4.spTest9(1)", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), results); //$NON-NLS-1$
     }
     
     /**
@@ -155,38 +161,11 @@ public class TestLoopbackExecution extends TestCase {
         }            
     }
     
-    public void helpTestBatching(int rowCount, int batchSize) throws Exception {
-        Object[][] results = new Object[rowCount][];
-        for(int i=0; i<rowCount; i++) {
-            results[i] = new Object[] { new Integer(0) }; 
-        }
-        helpTestQuery("SELECT intkey FROM BQT1.SmallA", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), batchSize, 0, rowCount, results);     //$NON-NLS-1$        
-    }
-    
-    public void testBatch1() throws Exception {
-        helpTestBatching(50, 100);
-    }
-
-    public void testBatch2() throws Exception {
-        helpTestBatching(100, 100);
-    }
-
-    public void testBatch3() throws Exception {
-        helpTestBatching(150, 100);
-    }
-    
-    public void testBatch4() throws Exception {
-        helpTestBatching(200, 100);
-    }
-
-    public void testBatch5() throws Exception {
-        helpTestBatching(0, 100);
-    }
-
     public void testQueryWithLimit() throws Exception {
         Object[][] expected = {{new Integer(0)},
                                 {new Integer(0)},
                                 {new Integer(0)}};
-        helpTestQuery("SELECT intkey FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 10, 0, 100, expected); //$NON-NLS-1$
+        helpTestQuery("SELECT intkey FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
     }
+    
 }

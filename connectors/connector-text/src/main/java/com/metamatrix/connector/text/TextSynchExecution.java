@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -871,38 +873,34 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
             return value;
         }
 
-        TypeFacility typeFacility = txtConn.env.getTypeFacility();
-        if (typeFacility.hasTransformation(TypeFacility.RUNTIME_TYPES.STRING, type)) {
+        if (java.util.Date.class.isAssignableFrom(type)) {
+        	//check defaults first
         	try {
-				return typeFacility.transformValue(value, TypeFacility.RUNTIME_TYPES.STRING, type);
-			} catch (ConnectorException e) {
-				Object result = convertToDate(typeFacility, type, value);
-				if (result != null) {
-					return result;
-				}
-				throw e;
-			}
+        		return Timestamp.valueOf(value);
+        	} catch (IllegalArgumentException e) {
+        		
+        	}
+        	try {
+        		return Date.valueOf(value);
+        	} catch (IllegalArgumentException e) {
+        		
+        	}
+        	try {
+        		return Time.valueOf(value);
+        	} catch (IllegalArgumentException e) {
+        		
+        	}
+        	//check for overrides
+        	if (stringToDateTranslator!=null && stringToDateTranslator.hasFormatters()) {
+	            try {
+	                 return new Timestamp(stringToDateTranslator.translateStringToDate(value).getTime());
+	            }catch(ParseException ex) {
+	                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_translate_String_to_Date", new Object[] { ex.getMessage() })); //$NON-NLS-1$
+	            }
+        	}
         }
-        else {
-            throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_get_Tranform", new Object[] { type.getName() })); //$NON-NLS-1$
-        }
+        return value;
     }
 
-    private Object convertToDate(TypeFacility typeFacility, Class type, String value) throws ConnectorException {
-        if (java.util.Date.class.isAssignableFrom(type) && stringToDateTranslator!=null && stringToDateTranslator.hasFormatters()) {
-            try {
-                 Timestamp result = new Timestamp(stringToDateTranslator.translateStringToDate(value).getTime());
-                 if (typeFacility.hasTransformation(TypeFacility.RUNTIME_TYPES.TIMESTAMP, type)) {
-                	 return typeFacility.transformValue(result, TypeFacility.RUNTIME_TYPES.TIMESTAMP, type);
-                 }
-                 else {
-                	 throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_get_Tranform", new Object[] { type.getName() })); //$NON-NLS-1$
-                 }
-            }catch(ParseException ex) {
-                throw new ConnectorException(TextPlugin.Util.getString("TextSynchExecution.Unable_translate_String_to_Date", new Object[] { ex.getMessage() })); //$NON-NLS-1$
-            }
-        }
-        return null;
-    }
 }
 

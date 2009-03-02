@@ -40,8 +40,6 @@ import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ILimit;
-import org.teiid.connector.language.IOrderBy;
-import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.visitor.framework.HierarchyVisitor;
 import org.teiid.connector.visitor.util.SQLReservedWords;
 
@@ -55,32 +53,32 @@ public class PostgreSQLTranslator extends Translator {
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         
         super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$ 
         
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ModifiedDatePartFunctionModifier(getLanguageFactory(), "dow", "+", new Integer(1)));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new DatePartFunctionModifier(getLanguageFactory(), "day"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DatePartFunctionModifier(getLanguageFactory(), "doy"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new DatePartFunctionModifier(getLanguageFactory(), "hour"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DatePartFunctionModifier(getLanguageFactory(), "minute"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new DatePartFunctionModifier(getLanguageFactory(), "month"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DatePartFunctionModifier(getLanguageFactory(), "quarter"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new DatePartFunctionModifier(getLanguageFactory(), "second"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DatePartFunctionModifier(getLanguageFactory(), "week"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new DatePartFunctionModifier(getLanguageFactory(), "year"));//$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ModifiedDatePartFunctionModifier(getLanguageFactory(), "dow", "+", new Integer(1)));//$NON-NLS-1$ //$NON-NLS-2$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new DatePartFunctionModifier(getLanguageFactory(), "day"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DatePartFunctionModifier(getLanguageFactory(), "doy"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new DatePartFunctionModifier(getLanguageFactory(), "hour"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DatePartFunctionModifier(getLanguageFactory(), "minute"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new DatePartFunctionModifier(getLanguageFactory(), "month"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DatePartFunctionModifier(getLanguageFactory(), "quarter"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new DatePartFunctionModifier(getLanguageFactory(), "second"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DatePartFunctionModifier(getLanguageFactory(), "week"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new DatePartFunctionModifier(getLanguageFactory(), "year"));//$NON-NLS-1$ 
         
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); 
     }    
     
     @Override
@@ -103,7 +101,7 @@ public class PostgreSQLTranslator extends Translator {
     
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "to_timestamp('" + formatDateValue(timestampValue) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        return "to_timestamp('" + formatDateValue(timestampValue) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ 
     }
     
     @Override

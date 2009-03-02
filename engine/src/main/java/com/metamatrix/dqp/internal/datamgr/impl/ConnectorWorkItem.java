@@ -46,6 +46,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
@@ -80,6 +81,9 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     protected volatile ResultSetExecution execution;
     protected ProcedureBatchHandler procedureBatchHandler;
     private ICommand translatedCommand;
+    private Class<?>[] schema;
+    private List<Integer> convertToRuntimeType;
+    private List<Integer> convertToDesiredRuntimeType;
         
     /* End state information */    
     private boolean lastBatch;
@@ -288,6 +292,17 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 
         // Translate the command
         Command command = this.requestMsg.getCommand();
+		List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();
+		this.schema = new Class[symbols.size()];
+		this.convertToDesiredRuntimeType = new ArrayList<Integer>(symbols.size());
+		this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
+		for (int i = 0; i < schema.length; i++) {
+			SingleElementSymbol symbol = symbols.get(i);
+			this.schema[i] = symbol.getType();
+			this.convertToDesiredRuntimeType.add(i);
+			this.convertToRuntimeType.add(i);
+		}
+
         LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
         this.translatedCommand = factory.translate(command);
 
@@ -343,25 +358,27 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 	}
     
     protected void handleBatch() 
-        throws ConnectorException, CommunicationException {
+        throws ConnectorException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Sending results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
-        List<List> rows = new ArrayList<List>();
+        List<List> rows = new ArrayList<List>(batchSize/4);
         boolean sendResults = true;
     	try {
 	        while (batchSize < this.requestMsg.getFetchSize()) {
-        		List<?> row = this.execution.next();
+        		List row = this.execution.next();
             	if (row == null) {
             		this.lastBatch = true;
             		break;
             	}
+            	
             	this.rowCount += 1;
             	batchSize++;
             	if (this.procedureBatchHandler != null) {
             		row = this.procedureBatchHandler.padRow(row);
             	}
-            	//datatype manipulation
+            	
+            	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
 	            if(manager.getMaxResultRows() != 0 && this.rowCount >= manager.getMaxResultRows()){
@@ -383,8 +400,9 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
                 
         if (lastBatch) {
         	if (this.procedureBatchHandler != null) {
-        		List row = this.procedureBatchHandler.getOutputRow();
+        		List row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
+        			correctTypes(row);
         			rows.add(row);
         		}
         	}
@@ -413,11 +431,46 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
             this.resultsReceiver.receiveResults(response);
         }
     }
+
+	private void correctTypes(List row) throws ConnectorException {
+		//TODO: add a proper source schema
+		for (int i = convertToRuntimeType.size() - 1; i >= 0; i--) {
+			int index = convertToRuntimeType.get(i);
+			Object value = row.get(index);
+			if (value != null) {
+				Object result = DataTypeManager.convertToRuntimeType(value);
+				if (DataTypeManager.isLOB(result.getClass())) {
+					this.securityContext.keepExecutionAlive(true);
+				}
+				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[index])) {
+					convertToRuntimeType.remove(i);
+				}
+				row.set(index, result);
+			}
+		}
+		//TODO: add a proper intermediate schema
+		for (int i = convertToDesiredRuntimeType.size() - 1; i >= 0; i--) {
+			int index = convertToDesiredRuntimeType.get(i);
+			Object value = row.get(index);
+			if (value != null) {
+				Object result;
+				try {
+					result = DataTypeManager.transformValue(value, value.getClass(), this.schema[index]);
+				} catch (TransformationException e) {
+					throw new ConnectorException(e);
+				}
+				if (value == result) {
+					convertToDesiredRuntimeType.remove(i);
+				}
+				row.set(index, result);
+			}
+		}
+	}
     
     protected abstract boolean dataNotAvailable(long delay);
     
-    private void processMoreRequest() throws ConnectorException, CommunicationException {
-    	Assertion.assertTrue(this.moreRequested, "More was not requested");
+    private void processMoreRequest() throws ConnectorException {
+    	Assertion.assertTrue(this.moreRequested, "More was not requested"); //$NON-NLS-1$
     	this.moreRequested = false;
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
 
@@ -425,16 +478,14 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }
             
     public static AtomicResultsMessage createResultsMessage(AtomicRequestMessage message, List[] batch, List columnSymbols) {
-        String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
         for(int i=0; i<columnSymbols.size(); i++) {
             SingleElementSymbol symbol = (SingleElementSymbol) columnSymbols.get(i);
-            columnNames[i] = symbol.getShortName();
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
         }
         
-        return new AtomicResultsMessage(message, batch, columnNames, dataTypes);
+        return new AtomicResultsMessage(message, batch, dataTypes);
     }    
             
     void asynchCancel() throws ConnectorException {

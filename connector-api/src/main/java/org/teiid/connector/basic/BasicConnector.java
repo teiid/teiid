@@ -37,13 +37,21 @@ public abstract class BasicConnector implements Connector {
 		String user = credMap.getUser(connectorName);
 		String password = credMap.getPassword(connectorName);
 		if (user == null || password == null) {
-			throw new ConnectorException("Payload missing credentials for " + connectorName); //$NON-NLS-1$
+			throw new ConnectorException(DataPlugin.Util.getString("UserIdentityFactory.missing_credentials", connectorName)); //$NON-NLS-1$
 		}
 		return new MappedUserIdentity(context.getUser(), user, password);
 	}
 	
+	public String getConnectorName() {
+		return connectorName;
+	}
+	
 	public void setConnectorName(String connectorName) {
 		this.connectorName = connectorName;
+	}
+	
+	public boolean useCredentialMap() {
+		return useCredentialMap;
 	}
 	
 	public void setUseCredentialMap(boolean useCredentialMap) {

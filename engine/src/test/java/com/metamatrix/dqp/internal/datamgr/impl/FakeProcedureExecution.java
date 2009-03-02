@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.internal.datamgr.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,16 +30,17 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.IParameter;
 
 
 final class FakeProcedureExecution extends BasicExecution implements ProcedureExecution {
 
     int resultSetSize;
     int rowNum;
+    int paramSize;
 
-    public FakeProcedureExecution(int resultSetSize) {
+    public FakeProcedureExecution(int resultSetSize, int paramSize) {
         this.resultSetSize = resultSetSize;
+        this.paramSize = paramSize;
     }
     
     @Override
@@ -46,10 +48,15 @@ final class FakeProcedureExecution extends BasicExecution implements ProcedureEx
     	
     }
     
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        return new Integer(parameter.getIndex());
+    @Override
+    public List<?> getOutputParameterValues() throws ConnectorException {
+    	List<Object> result = new ArrayList<Object>(paramSize);
+    	for (int i = 0; i < paramSize; i++) {
+    		result.add(i);
+    	}
+    	return result;
     }
-
+    
     public void close() throws ConnectorException {
     }
 

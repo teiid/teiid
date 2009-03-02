@@ -93,7 +93,7 @@ public class TestConnectorWorkItem extends TestCase {
 	}
 
 	public void testProcedureBatching() throws Exception {
-		ProcedureExecution exec = new FakeProcedureExecution(2);
+		ProcedureExecution exec = new FakeProcedureExecution(2, 1);
 
 		// this has two result set columns and 1 out parameter
 		int total_columns = 3;
@@ -105,10 +105,11 @@ public class TestConnectorWorkItem extends TestCase {
 
 		assertEquals(total_columns, pbh.padRow(Arrays.asList(null, null)).size());
 
-		List params = pbh.getOutputRow();
+		List params = pbh.getParameterRow();
 		
+		assertEquals(total_columns, params.size());
 		// check the parameter value
-		assertEquals(new Integer(3), params.get(2));
+		assertEquals(Integer.valueOf(0), params.get(2));
 
 		try {
 			pbh.padRow(Arrays.asList(1));

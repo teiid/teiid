@@ -34,7 +34,6 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.basic.BasicExecution;
-import org.teiid.connector.language.IParameter;
 
 
 
@@ -62,7 +61,7 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     	}
     	Object result = env.getTypeFacility().convertToRuntimeType(value);
     	if (!(result instanceof SQLXML)) {
-    		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml"));
+    		throw new ConnectorException(DataPlugin.Util.getString("unknown_object_type_to_tranfrom_xml")); //$NON-NLS-1$
     	}
     	return (SQLXML)result;
     }
@@ -70,7 +69,7 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     protected abstract Source getReturnValue();
 
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws ConnectorException, DataNotAvailableException {
     	if (!returnedResult) {
     		returnedResult = true;
     		return Arrays.asList(convertToXMLType(getReturnValue()));
@@ -78,10 +77,8 @@ public abstract class XMLSourceExecution extends BasicExecution implements Proce
     	return null;
     }  
     
-    /** 
-     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
-     */
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
+    @Override
+    public List<?> getOutputParameterValues() throws ConnectorException {
         throw new ConnectorException(XMLSourcePlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
     }
 

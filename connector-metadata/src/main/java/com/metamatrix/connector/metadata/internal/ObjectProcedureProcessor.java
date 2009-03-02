@@ -33,10 +33,8 @@ import java.util.Map;
 
 import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.vdb.api.VDBFile;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.ResultsIterator;
@@ -174,12 +172,6 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
                         throw new RuntimeException(e);
                     }
                 }
-               
-                value = DataTypeManager.convertToRuntimeType(value);
-            } else if(type.equals(BlobType.class)) {
-            	value = DataTypeManager.convertToRuntimeType(value);
-            } else {
-                this.procedure.checkType(i, value);
             }
             newRow.add(value);
         }

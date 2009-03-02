@@ -92,29 +92,6 @@ public abstract class TypeFacility {
     }    
     
     /**
-     * Checks if the given transformation exists.
-     * @param <S>
-     * @param <T>
-     * @param sourceClass
-     * @param targetClass
-     * @return
-     */
-    public abstract <S, T> boolean hasTransformation(Class<S> sourceClass, Class<T> targetClass);
-    
-    /**
-     * Transform the given value into the target type, or throw an exception if this is not
-     * possible.
-     * @param <S>
-     * @param <T>
-     * @param value
-     * @param sourceClass
-     * @param targetClass
-     * @return
-     * @throws ConnectorException
-     */
-    public abstract <S, T> T transformValue(S value, Class<S> sourceClass, Class<T> targetClass) throws ConnectorException;
-    
-    /**
      * Convert the given value to the closest runtime type see {@link RUNTIME_TYPES}
      * @param value
      * @return

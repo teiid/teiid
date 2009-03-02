@@ -35,6 +35,7 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
+import org.teiid.connector.basic.BasicConnection;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IProcedure;
@@ -45,7 +46,7 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 /**
  * 
  */
-public class JDBCSourceConnection extends org.teiid.connector.basic.BasicConnection {
+public class JDBCSourceConnection extends BasicConnection {
     protected java.sql.Connection physicalConnection;
     protected ConnectorEnvironment environment;
     private ConnectorLogger logger;
@@ -121,11 +122,6 @@ public class JDBCSourceConnection extends org.teiid.connector.basic.BasicConnect
             }
         }
         return true;
-    }
-    
-    @Override
-    public void closeCalled() {
-    	
     }
     
 }

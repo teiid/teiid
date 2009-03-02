@@ -24,7 +24,6 @@
  */
 package com.metamatrix.connector.object.extension;
 
-import java.util.List;
 import java.util.TimeZone;
 
 import org.teiid.connector.api.ConnectorEnvironment;
@@ -54,14 +53,6 @@ public interface ISourceTranslator {
      */
     TimeZone getDatabaseTimezone();
     
-    /**
-     * Get a list of ValueTranslator objects that specify database-specific value
-     * translation logic.  By default, the JDBC connector has a large set of available
-     * translator.
-     * @return List of ValueTranslator
-     */
-    List getValueTranslators();
-
     /**
      * Used to specify a special value retriever.  By default, the BasicValueRetriever
      * will be used to retrieve objects via the getObject() method. 

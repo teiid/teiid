@@ -79,7 +79,6 @@ public class ObjectSynchExecution extends BasicExecution implements ResultSetExe
     	if(this.queryResults == null) {
         	return null;
         }
-    	int count = 0;
     	if (queryResults.hasNext()) {
     		return (List)queryResults.next();
     	}

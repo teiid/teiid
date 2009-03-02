@@ -561,9 +561,8 @@ public class TestSoapExecution extends TestCase {
         List result = exec.next();
         assertNotNull(result);
         assertNull(exec.next());
-        IParameter returnParam = fact.createParameter(0, Direction.RETURN, null, null, null);
         try {
-            exec.getOutputValue(returnParam);
+            exec.getOutputParameterValues();
             fail("should have thrown error in returning a return"); //$NON-NLS-1$            
         }catch(Exception e) {            
         }

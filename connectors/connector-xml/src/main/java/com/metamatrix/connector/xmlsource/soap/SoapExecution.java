@@ -111,7 +111,6 @@ public class SoapExecution extends XMLSourceExecution {
             
             this.outputValues = new HashMap();
             this.returnValue = operation.execute(args, outputValues);
-            this.context.keepExecutionAlive(this.returnValue != null);
             XMLSourcePlugin.logDetail(this.env.getLogger(), "xml_contents", new Object[] {this.returnValue}); //$NON-NLS-1$
         } catch (OperationNotFoundException e) {
             XMLSourcePlugin.logError(this.env.getLogger(), "soap_procedure_not_found", new Object[] {sourceProcedureName}, e); //$NON-NLS-1$            

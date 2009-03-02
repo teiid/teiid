@@ -103,15 +103,11 @@ public class ObjectProcedureExecution extends BasicExecution implements Procedur
         return (List)results.get(index++);
     }    
     
-   
-    /** 
-     * @see org.teiid.connector.api.ProcedureExecution#getOutputValue(org.teiid.connector.language.IParameter)
-     * @since 4.2
-     */
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        return null;
+    @Override
+    public List<?> getOutputParameterValues() throws ConnectorException {
+    	throw new UnsupportedOperationException();
     }
-    
+   
     public void cancel() {
         //needs to be implemented
     }

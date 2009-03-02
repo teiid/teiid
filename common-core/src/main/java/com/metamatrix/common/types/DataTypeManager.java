@@ -25,8 +25,10 @@ package com.metamatrix.common.types;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLXML;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,13 +151,15 @@ public class DataTypeManager {
 	 * Map of a type to the list of types that type may be converted to
 	 * implicitly
 	 */
-	private static Map implicitConversions = new HashMap();
+	private static Map<String, List<String>> implicitConversions = new HashMap<String, List<String>>();
 
 	/**
 	 * Map of a type to the list of types that type may be converted to
 	 * implicitly OR explicitly
 	 */
-	private static Map explicitConversions = new HashMap();
+	private static Map<String, List<String>> explicitConversions = new HashMap<String, List<String>>();
+	
+	private static Map<Class<?>, SourceTransform> sourceConverters = new HashMap<Class<?>, SourceTransform>();
 
 	// Static initializer - loads basic transforms types
 	static {
@@ -170,6 +174,8 @@ public class DataTypeManager {
 
 		// Load allowed conversions
 		loadExplicitConversions();
+		
+		loadSourceConversions();
 	}
 
 	/**
@@ -443,7 +449,7 @@ public class DataTypeManager {
 	 * @param transform
 	 * 		New transform to add
 	 */
-	public static void addTransform(Transform transform) {
+	static void addTransform(Transform transform) {
 		ArgCheck.isNotNull(transform);
 		String sourceName = transform.getSourceTypeName();
 		String targetName = transform.getTargetTypeName();
@@ -456,32 +462,32 @@ public class DataTypeManager {
 		innerMap.put(targetName, transform);
 	}
 
-	public static void setImplicitConversions(String type, List conversions) {
+	static void setImplicitConversions(String type, List<String> conversions) {
 		implicitConversions.put(type, conversions);
 	}
 
-	public static List getImplicitConversions(String type) {
-		return (List) implicitConversions.get(type);
+	public static List<String> getImplicitConversions(String type) {
+		return implicitConversions.get(type);
 	}
 
 	public static boolean isImplicitConversion(String srcType, String tgtType) {
-		List conversions = (List) implicitConversions.get(srcType);
+		List<String> conversions = implicitConversions.get(srcType);
 		if (conversions != null) {
 			return conversions.contains(tgtType);
 		}
 		return false;
 	}
 
-	public static void setExplicitConversions(String type, List conversions) {
+	static void setExplicitConversions(String type, List<String> conversions) {
 		explicitConversions.put(type, conversions);
 	}
 
-	public static List getExplicitConversions(String type) {
-		return (List) explicitConversions.get(type);
+	public static List<String> getExplicitConversions(String type) {
+		return explicitConversions.get(type);
 	}
 
 	public static boolean isExplicitConversion(String srcType, String tgtType) {
-		List conversions = (List) explicitConversions.get(srcType);
+		List<String> conversions = explicitConversions.get(srcType);
 		if (conversions != null) {
 			return conversions.contains(tgtType);
 		}
@@ -964,42 +970,85 @@ public class DataTypeManager {
 		DataTypeManager.setExplicitConversions(DefaultDataTypes.XML, Arrays
 				.asList(new String[] { DefaultDataTypes.STRING }));
 	}
-
+	
+	static void loadSourceConversions() {
+		sourceConverters.put(Clob.class, new SourceTransform<Clob, ClobType>() {
+			@Override
+			public ClobType transform(Clob value) {
+				return new ClobType(value);
+			}
+		});
+		sourceConverters.put(char[].class, new SourceTransform<char[], ClobType>() {
+			@Override
+			public ClobType transform(char[] value) {
+				return new ClobType(new ClobImpl(value));
+			}
+		});
+		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {
+			@Override
+			public BlobType transform(Blob value) {
+				return new BlobType(value);
+			}
+		});
+		sourceConverters.put(byte[].class, new SourceTransform<byte[], BlobType>() {
+			@Override
+			public BlobType transform(byte[] value) {
+				return new BlobType(new BlobImpl(value));
+			}
+		});
+		sourceConverters.put(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
+			@Override
+			public XMLType transform(SQLXML value) {
+				return new XMLType(value);
+			}
+		});
+		sourceConverters.put(DOMSource.class, new SourceTransform<DOMSource, XMLType>() {
+			@Override
+			public XMLType transform(DOMSource value) {
+				return new XMLType(new SQLXMLImpl(value));
+			}
+		});
+		sourceConverters.put(SAXSource.class, new SourceTransform<SAXSource, XMLType>() {
+			@Override
+			public XMLType transform(SAXSource value) {
+				return new XMLType(new SQLXMLImpl(value));
+			}
+		});
+		sourceConverters.put(StreamSource.class, new SourceTransform<StreamSource, XMLType>() {
+			@Override
+			public XMLType transform(StreamSource value) {
+				return new XMLType(new SQLXMLImpl(value));
+			}
+		});
+		sourceConverters.put(Date.class, new SourceTransform<Date, Timestamp>() {
+			@Override
+			public Timestamp transform(Date value) {
+				return new Timestamp(value.getTime());
+			}
+		});
+	}
+	
 	public static Object convertToRuntimeType(Object value) {
 		if (value == null) {
 			return null;
 		}
-		if (getAllDataTypeClasses().contains(value.getClass())) {
+		Class<?> c = value.getClass();
+		if (getAllDataTypeClasses().contains(c)) {
 			return value;
 		}
-		if (value instanceof Clob) {
-			return new ClobType((Clob) value);
+		SourceTransform t = sourceConverters.get(c);
+		if (t != null) {
+			return t.transform(value);
 		}
-		if (value instanceof char[]) {
-			return new ClobType(new ClobImpl((char[]) value));
-		}
-		if (value instanceof Blob) {
-			return new BlobType((Blob) value);
-		}
-		if (value instanceof byte[]) {
-			return new BlobType(new BlobImpl((byte[]) value));
-		}
-		if (value instanceof SQLXML) {
-			SQLXML xml = (SQLXML) value;
-			return new XMLType(xml);
-		}
-		if (value instanceof DOMSource) {
-			return new XMLType(new SQLXMLImpl((DOMSource) value));
-		}
-		if (value instanceof StreamSource) {
-			return new XMLType(new SQLXMLImpl((StreamSource) value));
-		}
-		if (value instanceof SAXSource) {
-			return new XMLType(new SQLXMLImpl((SAXSource) value));
+		for (Map.Entry<Class<?>, SourceTransform> entry : sourceConverters.entrySet()) {
+			if (entry.getKey().isAssignableFrom(c)) {
+				return entry.getValue().transform(value);
+			}
 		}
 		return value; // "object type"
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T transformValue(Object value, Class<T> targetClass)
 			throws TransformationException {
 		if (value == null) {
@@ -1008,6 +1057,7 @@ public class DataTypeManager {
 		return transformValue(value, value.getClass(), targetClass);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T transformValue(Object value, Class sourceType,
 			Class<T> targetClass) throws TransformationException {
 		if (value == null || sourceType == targetClass) {

@@ -43,7 +43,9 @@ import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.IParameter.Direction;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
@@ -103,7 +105,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
             }
         }
                 
-        if(rowsReturned < rowsNeeded) {
+        if(rowsReturned < rowsNeeded && row.size() > 0) {
             rowsReturned++;            
             return row;
         }
@@ -170,15 +172,19 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     		ConnectorException {
     	return new int [] {0};
     }
-
-    /* 
-     * @see com.metamatrix.data.ProcedureExecution#getOutputValue(com.metamatrix.data.language.IParameter)
-     */
+    
     @Override
-    public Object getOutputValue(IParameter parameter) throws ConnectorException {
-        return null;
+    public List<?> getOutputParameterValues() throws ConnectorException {
+    	IProcedure proc = (IProcedure)this.command;
+    	int count = 0;
+    	for (IParameter param : proc.getParameters()) {
+			if (param.getDirection() == Direction.INOUT || param.getDirection() == Direction.OUT || param.getDirection() == Direction.RETURN) {
+				count++;
+			}
+		}
+    	return Arrays.asList(new Object[count]);
     }
-        
+
     /* 
      * @see com.metamatrix.data.Execution#close()
      */
@@ -200,6 +206,9 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
         if(command instanceof IQueryCommand) {
             IQueryCommand query = (IQueryCommand) command;
             return Arrays.asList(query.getColumnTypes());
+        }
+        if (command instanceof IProcedure) {
+        	return Arrays.asList(((IProcedure)command).getResultSetColumnTypes());
         }
         List types = new ArrayList();
         types.add(Integer.class);

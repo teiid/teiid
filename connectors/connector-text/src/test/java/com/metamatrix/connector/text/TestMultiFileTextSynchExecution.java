@@ -73,22 +73,22 @@ public class TestMultiFileTextSynchExecution extends TestCase {
         // expected values
         Set expected = new HashSet();
         List value1 = new ArrayList();
-        value1.add(new Integer(1));
+        value1.add(String.valueOf(1));
         value1.add(TimestampUtil.createDate(103, 2, 25));
         value1.add("Blind"); //$NON-NLS-1$
         expected.add(value1);
         List value2 = new ArrayList();
-        value2.add(new Integer(2));
+        value2.add(String.valueOf(2));
         value2.add(TimestampUtil.createDate(98, 3, 29));
         value2.add("Antipop"); //$NON-NLS-1$
         expected.add(value2);
         List value3 = new ArrayList();
-        value3.add(new Integer(3));
+        value3.add(String.valueOf(3));
         value3.add(TimestampUtil.createDate(103, 2, 25));
         value3.add("Terroist"); //$NON-NLS-1$
         expected.add(value3);
         List value4 = new ArrayList();
-        value4.add(new Integer(4));
+        value4.add(String.valueOf(4));
         value4.add(TimestampUtil.createDate(98, 3, 29));
         value4.add("Fanatic"); //$NON-NLS-1$            
         expected.add(value4);

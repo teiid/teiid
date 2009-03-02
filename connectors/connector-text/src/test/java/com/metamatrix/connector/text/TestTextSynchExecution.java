@@ -39,8 +39,6 @@ public class TestTextSynchExecution extends TestCase {
 	
     public TestTextSynchExecution(String name) {
         super(name);
-    	System.setProperty("metamatrix.config.none", "true");
-
     }
 
     public void testNextBatch2() throws Exception {
@@ -53,12 +51,12 @@ public class TestTextSynchExecution extends TestCase {
         // expected values
         List[] expected = new List[2];
         List value1 = new ArrayList();
-        value1.add(new Integer(1));
+        value1.add(String.valueOf(1));
         value1.add(TimestampUtil.createDate(103, 2, 25));
         value1.add("Blind"); //$NON-NLS-1$
 
         List value2 = new ArrayList();
-        value2.add(new Integer(2));
+        value2.add(String.valueOf(2));
         value2.add(TimestampUtil.createDate(98, 3, 29));
         value2.add("Antipop"); //$NON-NLS-1$
         expected[0] = value1;
@@ -76,7 +74,7 @@ public class TestTextSynchExecution extends TestCase {
      */
     public void testDefect13066() throws Exception {
         String sql = "SELECT TRADEID FROM SummitData.SUMMITDATA"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 500, 4139); //$NON-NLS-1$
+        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 500, 4139); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -86,7 +84,7 @@ public class TestTextSynchExecution extends TestCase {
      */
     public void testDefect13368() throws Exception {
         String sql = "SELECT RATE, DESK FROM SummitData.SUMMITDATA"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 5, 4139); //$NON-NLS-1$
+        Util.helpTestExecution("summitData/TextFileTest_1.vdb", "SummitData_Descriptor.txt", sql, 5, 4139); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -96,18 +94,18 @@ public class TestTextSynchExecution extends TestCase {
      */
     public void testDefect13371() throws Exception {
         String sql = "  SELECT SUMMITEXTRACTCDM.START, SUMMITEXTRACTCDM.SUMMIT_ID, SUMMITEXTRACTCDM.CURRENCY, SUMMITEXTRACTCDM.AMOUNT, SUMMITEXTRACTCDM.MATURITY, SUMMITEXTRACTCDM.RATE, SUMMITEXTRACTCDM.DESK, SUMMITEXTRACTCDM.CDM_ID FROM SUMMITEXTRACTCDM"; //$NON-NLS-1$
-        Util.helpTestExecution("summitData/TextFiles.vdb", "SummitExtractCDM_Descriptor.txt", sql, 500, 52); //$NON-NLS-1$
+        Util.helpTestExecution("summitData/TextFiles.vdb", "SummitExtractCDM_Descriptor.txt", sql, 500, 52); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDefect11402() throws Exception {
         String sql = "SELECT Part_ID, Part_Name, Part_Color, Part_Weight from PARTS.PARTS";  //$NON-NLS-1$
-        Util.helpTestExecution("TextParts/TextParts.vdb", "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$
+        Util.helpTestExecution("TextParts/TextParts.vdb", "/TextParts/PartsDescriptor.txt", sql, 15000, 21); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     /** test case 4151 */
     public void testCase4151() throws Exception {
         String sql = "SELECT COLA, COLB, COLC FROM ThreeColString_Text.testfile"; //$NON-NLS-1$
-        Util.helpTestExecution("case4151/MM_00004151.vdb", "testfile-descriptor.txt", sql, 15000, 5); //$NON-NLS-1$
+        Util.helpTestExecution("case4151/MM_00004151.vdb", "testfile-descriptor.txt", sql, 15000, 5); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

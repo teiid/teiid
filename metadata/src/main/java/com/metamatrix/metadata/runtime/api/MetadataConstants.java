@@ -52,10 +52,10 @@ final public class MetadataConstants {
 	 */
     public static final short NOT_DEFINED_SHORT = Short.MIN_VALUE;
 
-    public final static String BLANK = "";
+    public final static String BLANK = ""; //$NON-NLS-1$
     
     //properties
-    public static final String VERSION_DATE = "versionDate";
+    public static final String VERSION_DATE = "versionDate"; //$NON-NLS-1$
    
 
 	/**
@@ -68,7 +68,7 @@ final public class MetadataConstants {
         public final static short NA = 4;
     }
 
-    final static String[] MATCH_TYPE_NAMES = {"Full", "Partial",  "Neither", "N/A"};
+    final static String[] MATCH_TYPE_NAMES = {"Full", "Partial",  "Neither", "N/A"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
     public final static String getMatchTypeName(short type) {
         return  MATCH_TYPE_NAMES[type - 1];
@@ -87,7 +87,7 @@ final public class MetadataConstants {
         public final static short INDEX          = 6;
     }
 
-    final static String[] KEY_TYPE_NAMES = {"Primary", "Foreign",  "Unique", "NonUnique", "AccessPattern", "Index"};
+    final static String[] KEY_TYPE_NAMES = {"Primary", "Foreign",  "Unique", "NonUnique", "AccessPattern", "Index"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
     public final static String getKeyTypeName(short type) {
         return  KEY_TYPE_NAMES[type - 1];
@@ -103,18 +103,18 @@ final public class MetadataConstants {
         public final static short STORED_QUERY = 3;
     }
 
-    final static String[] PROCEDURE_TYPE_NAMES = {"Function", "StoredProc", "StoredQuery"};
+    final static String[] PROCEDURE_TYPE_NAMES = {"Function", "StoredProc", "StoredQuery"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     public final static String getProcedureTypeName(short type) {
         return PROCEDURE_TYPE_NAMES[type - 1];
     }
 
     public static short getProcType(String typeName){
-        if("Function".equalsIgnoreCase(typeName))
+        if("Function".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PROCEDURE_TYPES.FUNCTION;
-        else if("StoredProc".equalsIgnoreCase(typeName) || "StoredProcedure".equalsIgnoreCase(typeName))
+        else if("StoredProc".equalsIgnoreCase(typeName) || "StoredProcedure".equalsIgnoreCase(typeName)) //$NON-NLS-1$ //$NON-NLS-2$
             return PROCEDURE_TYPES.STORED_PROCEDURE;
-        else if("StoredQuery".equalsIgnoreCase(typeName))
+        else if("StoredQuery".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PROCEDURE_TYPES.STORED_QUERY;
 
         return NOT_DEFINED_SHORT;
@@ -126,7 +126,7 @@ final public class MetadataConstants {
         public static final int INSERT_QUERY = 2;
         public static final int DELETE_QUERY = 3;
         public static final int[] TYPES = new int[]{SELECT_QUERY, UPDATE_QUERY, INSERT_QUERY, DELETE_QUERY};
-        public static final String[] TYPE_NAMES = new String[]{"SelectQuery","UpdateQuery","InsertQuery","DeleteQuery"};
+        public static final String[] TYPE_NAMES = new String[]{"SelectQuery","UpdateQuery","InsertQuery","DeleteQuery"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
     /**
@@ -141,23 +141,23 @@ final public class MetadataConstants {
         public final static short QUERY_PLAN_DELETE_QUERY = 5;
     }
 
-    final static String[] QUERY_PLAN_TYPE_NAMES = {"MappingDefn", 
-                                                    "QueryPlanGroup", 
-                                                    "QueryPlanStoredQuery",
-                                                    "QueryPlanInsertQuery",
-                                                    "QueryPlanUpdateQuery",
-                                                    "QueryPlanDeleteQuery"};
+    final static String[] QUERY_PLAN_TYPE_NAMES = {"MappingDefn",  //$NON-NLS-1$
+                                                    "QueryPlanGroup",  //$NON-NLS-1$
+                                                    "QueryPlanStoredQuery", //$NON-NLS-1$
+                                                    "QueryPlanInsertQuery", //$NON-NLS-1$
+                                                    "QueryPlanUpdateQuery", //$NON-NLS-1$
+                                                    "QueryPlanDeleteQuery"}; //$NON-NLS-1$
 
     public final static String getQueryPlanTypeName(short type) {
         return QUERY_PLAN_TYPE_NAMES[type];
     }
 
     public static short getQueryPlanType(String typeName){
-        if("MappingDefn".equalsIgnoreCase(typeName))
+        if("MappingDefn".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return QUERY_PLAN_TYPES.MAPPING_DEFN;
-        else if("QueryPlanGroup".equalsIgnoreCase(typeName))
+        else if("QueryPlanGroup".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return QUERY_PLAN_TYPES.QUERY_PLAN_GROUP;
-        else if("QueryPlanStoredQuery".equalsIgnoreCase(typeName))
+        else if("QueryPlanStoredQuery".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return QUERY_PLAN_TYPES.QUERY_PLAN_STORED_QUERY;
 
         return NOT_DEFINED_SHORT;
@@ -174,22 +174,22 @@ final public class MetadataConstants {
         public final static short RESULT_SET = 5;
     }
 
-    final static String[] PARAMETER_TYPE_NAMES = {"In", "Out",  "InOut", "ReturnValue", "ResultSet"};
+    final static String[] PARAMETER_TYPE_NAMES = {"In", "Out",  "InOut", "ReturnValue", "ResultSet"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
     public final static String getParameterTypeName(short type) {
         return PARAMETER_TYPE_NAMES[type - 1];
     }
 
     public static short getParameterType(String typeName){
-        if("In".equalsIgnoreCase(typeName))
+        if("In".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PARAMETER_TYPES.IN_PARM;
-        else if("Out".equalsIgnoreCase(typeName))
+        else if("Out".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PARAMETER_TYPES.OUT_PARM;
-        else if("InOut".equalsIgnoreCase(typeName))
+        else if("InOut".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PARAMETER_TYPES.INOUT_PARM;
-        else if("ReturnValue".equalsIgnoreCase(typeName) || "Return".equalsIgnoreCase(typeName))
+        else if("ReturnValue".equalsIgnoreCase(typeName) || "Return".equalsIgnoreCase(typeName)) //$NON-NLS-1$ //$NON-NLS-2$
             return PARAMETER_TYPES.RETURN_VALUE;
-        else if("ResultSet".equalsIgnoreCase(typeName))
+        else if("ResultSet".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return PARAMETER_TYPES.RESULT_SET;
 
         return NOT_DEFINED_SHORT;
@@ -205,20 +205,20 @@ final public class MetadataConstants {
         public final static short UNSEARCHABLE = 4;
     }
 
-    final static String[] SEARCH_TYPE_NAMES = {"Searchable", "All Except Like",  "Like Only", "Unsearchable"};
+    final static String[] SEARCH_TYPE_NAMES = {"Searchable", "All Except Like",  "Like Only", "Unsearchable"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
     public final static String getSearchTypeName(short type) {
         return SEARCH_TYPE_NAMES[type - 1];
     }
 
     public final static short getSearchType(String typeName) {
-        if("Searchable".equalsIgnoreCase(typeName))
+        if("Searchable".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return SEARCH_TYPES.SEARCHABLE;
-        else if("All Except Like".equalsIgnoreCase(typeName))
+        else if("All Except Like".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return SEARCH_TYPES.ALLEXCEPTLIKE;
-        else if("Like Only".equalsIgnoreCase(typeName))
+        else if("Like Only".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return SEARCH_TYPES.LIKE_ONLY;
-        else if("Unsearchable".equalsIgnoreCase(typeName))
+        else if("Unsearchable".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return SEARCH_TYPES.UNSEARCHABLE;
 
         return NOT_DEFINED_SHORT;
@@ -233,18 +233,18 @@ final public class MetadataConstants {
         public final static short RESULT_SET = 3;
     }
 
-    final static String[] DATATYPE_TYPE_NAMES = {"Basic", "UserDefined",  "ResultSet"};
+    final static String[] DATATYPE_TYPE_NAMES = {"Basic", "UserDefined",  "ResultSet"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     public final static String getDataTypeTypeName(short type) {
         return DATATYPE_TYPE_NAMES[type - 1];
     }
 
     public static short getDataTypeType(String typeName){
-        if("Basic".equalsIgnoreCase(typeName))
+        if("Basic".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return DATATYPE_TYPES.BASIC;
-        else if("UserDefined".equalsIgnoreCase(typeName))
+        else if("UserDefined".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return DATATYPE_TYPES.USER_DEFINED;
-        else if("ResultSet".equalsIgnoreCase(typeName))
+        else if("ResultSet".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return DATATYPE_TYPES.RESULT_SET;
 
         return NOT_DEFINED_SHORT;
@@ -263,7 +263,7 @@ final public class MetadataConstants {
         public static final short SYSTEM_DOCUMENT_TYPE = 7;
     }
 
-    final static String[] TABLE_TYPE_NAMES = {"Table", "SystemTable", "View", "Document", "MappingClass", "XmlTempTable"};
+    final static String[] TABLE_TYPE_NAMES = {"Table", "SystemTable", "View", "Document", "MappingClass", "XmlTempTable"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
     public final static String getTableTypeName(short type) {
         return TABLE_TYPE_NAMES[type - 1];
@@ -278,18 +278,18 @@ final public class MetadataConstants {
         public static final short UNKNOWN = 3;
     }
 
-    final static String[] NULL_TYPE_NAMES = {"Not Nullable", "Nullable",  "Unknown"};
+    final static String[] NULL_TYPE_NAMES = {"Not Nullable", "Nullable",  "Unknown"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     public final static String getNullTypeName(short type) {
         return NULL_TYPE_NAMES[type - 1];
     }
 
     public static short getNullType(String typeName){
-        if("Not Nullable".equalsIgnoreCase(typeName))
+        if("Not Nullable".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return NULL_TYPES.NOT_NULL;
-        else if("Nullable".equalsIgnoreCase(typeName))
+        else if("Nullable".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return NULL_TYPES.NULLABLE;
-        else if("Unknown".equalsIgnoreCase(typeName))
+        else if("Unknown".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return NULL_TYPES.UNKNOWN;
 
         return NOT_DEFINED_SHORT;
@@ -321,7 +321,7 @@ final public class MetadataConstants {
 		public static final short PRIVATE_VISIBILITY = ModelInfo.PRIVATE;
     }
 
-	public final static String[] VISIBILITY_TYPE_NAMES = {"Public", "Private"};
+	public final static String[] VISIBILITY_TYPE_NAMES = {"Public", "Private"}; //$NON-NLS-1$ //$NON-NLS-2$
 
 	public final static String getVisibilityTypeName(short type){
         if(type == VISIBILITY_TYPES.PUBLIC_VISIBILITY)
@@ -332,9 +332,9 @@ final public class MetadataConstants {
     }
 
 	public final static short getVisibilityType(String typeName){
-        if("Public".equalsIgnoreCase(typeName))
+        if("Public".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return VISIBILITY_TYPES.PUBLIC_VISIBILITY;
-        else if("Private".equalsIgnoreCase(typeName))
+        else if("Private".equalsIgnoreCase(typeName)) //$NON-NLS-1$
             return VISIBILITY_TYPES.PRIVATE_VISIBILITY;
         return NOT_DEFINED_SHORT;
     }
@@ -372,10 +372,10 @@ final public class MetadataConstants {
 			}
 	    }
 	    
-	    public final static String[] DATA_TYPE_FACETS_NAMES = {"equal", "ordered", "bounded",
-	    	"cardinality", "numeric", "length", "minLength", "maxLength", "pattern", "enumeration",
-	    	"whiteSpace", "maxInclusive", "minInclusive", "maxExclusive", "minExclusive",
-	    	"totalDigits", "fractionDigits"};
+	    public final static String[] DATA_TYPE_FACETS_NAMES = {"equal", "ordered", "bounded", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	    	"cardinality", "numeric", "length", "minLength", "maxLength", "pattern", "enumeration", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+	    	"whiteSpace", "maxInclusive", "minInclusive", "maxExclusive", "minExclusive", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	    	"totalDigits", "fractionDigits"}; //$NON-NLS-1$ //$NON-NLS-2$
 	    	
 	    public final static String getDataTypeFacetName(short facetType){
 	    	if(facetType < 1 || facetType > DATA_TYPE_FACETS_NAMES.length){
@@ -435,7 +435,7 @@ final public class MetadataConstants {
 			public static final short COLLAPSE = 3;
 	    }
 	
-		public final static String[] WHITE_SPACE_TYPE_NAMES = {"preserve", "replace", "collapse"};
+		public final static String[] WHITE_SPACE_TYPE_NAMES = {"preserve", "replace", "collapse"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	
 		public final static String getWhiteSapceTypeName(short type){	
 			if(type < 1 || type > WHITE_SPACE_TYPE_NAMES.length){
@@ -446,11 +446,11 @@ final public class MetadataConstants {
 	    }
 	
 		public final static short getWhiteSapceType(String typeName){
-	        if("preserve".equalsIgnoreCase(typeName)){
+	        if("preserve".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return WHITE_SPACE_TYPES.PRESERVE;
-	        }else if("replace".equalsIgnoreCase(typeName)){
+	        }else if("replace".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return WHITE_SPACE_TYPES.REPLACE;
-	        }else if("collapse".equalsIgnoreCase(typeName)){
+	        }else if("collapse".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return WHITE_SPACE_TYPES.COLLAPSE;
 	        }
 	        return NOT_DEFINED_SHORT;
@@ -465,7 +465,7 @@ final public class MetadataConstants {
 	    	public static final short UNION = 3;
 	    }
 	    
-	    public final static String[] VARIETY_TYPE_NAMES = {"atomic", "list", "union"};
+	    public final static String[] VARIETY_TYPE_NAMES = {"atomic", "list", "union"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    
 	    public final static String getVarietyTypeName(short type){	
 			if(type < 1 || type > VARIETY_TYPE_NAMES.length){
@@ -476,11 +476,11 @@ final public class MetadataConstants {
 	    }
 	    
 	    public final static short getVarietyType(String typeName){
-	        if("atomic".equalsIgnoreCase(typeName)){
+	        if("atomic".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return VARIETY_TYPES.ATOMIC;
-	        }else if("list".equalsIgnoreCase(typeName)){
+	        }else if("list".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return VARIETY_TYPES.LIST;
-	        }else if("union".equalsIgnoreCase(typeName)){
+	        }else if("union".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 	            return VARIETY_TYPES.UNION;
 	        }
 	        return NOT_DEFINED_SHORT;
@@ -500,7 +500,7 @@ final public class MetadataConstants {
 	    	public static final short RESTRICTION_AND_LISTAND_UNION = 7;
 	    }
 	
-	    public final static String[] FINAL_TYPE_NAMES = {"restriction", "list", "union"};
+	    public final static String[] FINAL_TYPE_NAMES = {"restriction", "list", "union"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
     	public final static Collection getFinalTypeNames(short type){	
 			if(type < 1 || type > 7){
@@ -529,11 +529,11 @@ final public class MetadataConstants {
 	    	while(iter.hasNext()){
 	    		String typeName = (String)iter.next();
 	    
-		        if("restriction".equalsIgnoreCase(typeName)){
+		        if("restriction".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 		            result = (short) (result | FINAL_TYPES.RESTRICTION);
-		        }else if("list".equalsIgnoreCase(typeName)){
+		        }else if("list".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 		            result = (short) (result | FINAL_TYPES.LIST);
-		        }else if("union".equalsIgnoreCase(typeName)){
+		        }else if("union".equalsIgnoreCase(typeName)){ //$NON-NLS-1$
 		            result = (short) (result | FINAL_TYPES.UNION);
 		        }
 	    	}
@@ -548,9 +548,9 @@ final public class MetadataConstants {
      * properties to a model, which is actually what we do for testing. 
      */
     final public static class CAPABILITY_PROPERTY_NAMES {
-        public static final String PROP_BLACK_BOX = "supportsBlackBoxJoin";
-        public static final String PROP_SINGLE_GROUP_SELECT = "requiresSingleGroupSelect";
-        public static final String PROP_LEAF_JOIN_SELECT = "requiresLeafJoinSelect";
+        public static final String PROP_BLACK_BOX = "supportsBlackBoxJoin"; //$NON-NLS-1$
+        public static final String PROP_SINGLE_GROUP_SELECT = "requiresSingleGroupSelect"; //$NON-NLS-1$
+        public static final String PROP_LEAF_JOIN_SELECT = "requiresLeafJoinSelect"; //$NON-NLS-1$
     }
     
 }

@@ -232,24 +232,6 @@ public class ObjectProcedure {
     }
 
     /**
-     * Check the value at the given index on a row in the resultSet
-     * has the same type as the column type 
-     * @since 4.2
-     */
-    public void checkType(final int columnIndex, final Object value) {
-        if (value != null) {
-            if (columnTypes != null && !columnTypes[columnIndex].isAssignableFrom(value.getClass())) {
-                throw new MetaMatrixRuntimeException(
-                    MetadataConnectorPlugin.Util.getString(
-                        "ObjectQuery.Type_mismatch", //$NON-NLS-1$
-                        new Object[] {columnNames[columnIndex],
-                            columnTypes[columnIndex].getName(),
-                            value.getClass().getName()}));
-            }
-        }
-    }
-
-    /**
      * Get the type of the column on the resultSet of the procedure at
      * the given index.
      * @param  columnIndex The type of the column at the given index.

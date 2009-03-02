@@ -57,7 +57,11 @@ public abstract class AnyToStringTransform extends AbstractTransform {
 			return null;
 		}
 
-		return value.toString();
+		String result = value.toString();
+		if (result != null && result.length() > DataTypeManager.MAX_STRING_LENGTH) {
+			return result.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+		}
+		return result;
 	}
 	
 }

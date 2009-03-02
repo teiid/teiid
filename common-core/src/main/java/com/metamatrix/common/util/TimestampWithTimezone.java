@@ -44,6 +44,21 @@ import com.metamatrix.common.types.DataTypeManager;
  *  
  */
 public class TimestampWithTimezone {
+	
+	private static ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
+		protected Calendar initialValue() {
+			return Calendar.getInstance();
+		}
+	};
+	
+	public static Calendar getCalendar() {
+		return CALENDAR.get();
+	}
+	
+	public static void resetCalendar(TimeZone tz) {
+		TimeZone.setDefault(tz);
+		CALENDAR.set(Calendar.getInstance());
+	}
 
     public static Object create(java.util.Date date, TimeZone initial, Calendar target, Class type) {
         if (type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
@@ -57,7 +72,7 @@ public class TimestampWithTimezone {
         
     public static Timestamp createTimestamp(java.util.Date date, TimeZone initial, Calendar target) {
         if (target == null) {
-            target = Calendar.getInstance();
+            target = getCalendar();
         }
 
         long time = target.getTimeInMillis(); 
@@ -78,7 +93,7 @@ public class TimestampWithTimezone {
     
     public static Time createTime(java.util.Date date, TimeZone initial, Calendar target) {
         if (target == null) {
-            target = Calendar.getInstance();
+            target = getCalendar();
         }
 
         long time = target.getTimeInMillis(); 
@@ -93,7 +108,7 @@ public class TimestampWithTimezone {
     
     public static Date createDate(java.util.Date date, TimeZone initial, Calendar target) {
         if (target == null) {
-            target = Calendar.getInstance();
+            target = getCalendar();
         }
 
         long time = target.getTimeInMillis(); 
@@ -116,7 +131,7 @@ public class TimestampWithTimezone {
         if (date instanceof Time) {
             return (Time)date;
         }
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = getCalendar();
         cal.setTime(date);
         return normalizeTime(date, cal);
     }
@@ -131,7 +146,7 @@ public class TimestampWithTimezone {
         if (date instanceof Date) {
             return (Date)date;
         }
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = getCalendar();
         cal.setTime(date);
         return normalizeDate(date, cal);
     }
@@ -185,9 +200,4 @@ public class TimestampWithTimezone {
             target.set(i, cal.get(i));
         }                
     }
-    
-    public static void resetCalendar(TimeZone tz) {
-    	TimeZone.setDefault(tz);
-    }
-    
 }

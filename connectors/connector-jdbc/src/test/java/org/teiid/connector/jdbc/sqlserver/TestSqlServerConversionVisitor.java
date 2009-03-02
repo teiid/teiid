@@ -104,4 +104,14 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
+    @Test
+    public void testUnionLimitWithOrderBy() throws Exception {
+        String input = "select intkey from bqt1.smalla union select intnum from bqt1.smalla order by intkey limit 100"; //$NON-NLS-1$
+        String output = "SELECT TOP 100 * FROM (SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallA.IntNum FROM SmallA) AS X ORDER BY intkey"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+       
 }

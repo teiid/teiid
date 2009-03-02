@@ -155,7 +155,7 @@ public class TestDataTierManager extends TestCase {
         
         request.setCommand(command);
 
-        AtomicResultsMessage results = new AtomicResultsMessage(request, new List[0], new String[0], new String[0]);
+        AtomicResultsMessage results = new AtomicResultsMessage(request, new List[0], new String[0]);
         
         if (isLast) {
             results.setFinalRow(10);

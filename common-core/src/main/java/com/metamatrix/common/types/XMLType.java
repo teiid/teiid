@@ -39,7 +39,7 @@ import com.metamatrix.core.CorePlugin;
  * class used everywhere in the MetaMatrix framework, but clients are restricted to use
  * only SQLXML interface on top of this.
  */
-public class XMLType implements Streamable, SQLXML {
+public final class XMLType implements Streamable, SQLXML {
 
     private transient SQLXML srcXML;
     private String referenceStreamId;

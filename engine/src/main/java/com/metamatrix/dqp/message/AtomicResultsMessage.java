@@ -53,7 +53,7 @@ public class AtomicResultsMessage implements Externalizable {
 	public AtomicResultsMessage() {
 	}
 	
-	public AtomicResultsMessage(AtomicRequestMessage msg, List[] results, String[] columnNames, String[] dataTypes) {
+	public AtomicResultsMessage(AtomicRequestMessage msg, List[] results, String[] dataTypes) {
 		this(msg);
 		this.dataTypes = dataTypes;
         this.results = results;

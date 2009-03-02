@@ -93,6 +93,7 @@ public class SybaseSQLTranslator extends Translator {
 		parts.add(queryCommand);
 		parts.add(") AS X");
 		if (orderBy != null) {
+			parts.add(" ");
 			parts.add(orderBy);
 		}
 		return parts;

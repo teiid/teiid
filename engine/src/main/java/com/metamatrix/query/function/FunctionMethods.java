@@ -466,7 +466,7 @@ public final class FunctionMethods {
 	// ================== Helper for a bunch of date functions =====================
 
 	private static int getField(java.util.Date date, int field) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = TimestampWithTimezone.getCalendar();
 		cal.setTime(date);
 
 		return cal.get(field);
@@ -501,9 +501,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.DATE));
+			return Integer.valueOf(getField((Date)x, Calendar.DATE));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.DATE));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.DATE));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfMonth", x.getClass().getName())); //$NON-NLS-1$
@@ -517,9 +517,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.DAY_OF_WEEK));
+			return Integer.valueOf(getField((Date)x, Calendar.DAY_OF_WEEK));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.DAY_OF_WEEK));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.DAY_OF_WEEK));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfWeek", x.getClass().getName())); //$NON-NLS-1$
@@ -533,9 +533,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.DAY_OF_YEAR));
+			return Integer.valueOf(getField((Date)x, Calendar.DAY_OF_YEAR));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.DAY_OF_YEAR));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.DAY_OF_YEAR));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfYear", x.getClass().getName())); //$NON-NLS-1$
@@ -549,9 +549,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Time) {
-			return new Integer(getField((Time)x, Calendar.HOUR_OF_DAY));
+			return Integer.valueOf(getField((Time)x, Calendar.HOUR_OF_DAY));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.HOUR_OF_DAY));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.HOUR_OF_DAY));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "hour", x.getClass().getName())); //$NON-NLS-1$
@@ -565,9 +565,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Time) {
-			return new Integer(getField((Time)x, Calendar.MINUTE));
+			return Integer.valueOf(getField((Time)x, Calendar.MINUTE));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.MINUTE));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.MINUTE));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "minute", x.getClass().getName())); //$NON-NLS-1$
@@ -581,9 +581,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.MONTH)+1);
+			return Integer.valueOf(getField((Date)x, Calendar.MONTH)+1);
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.MONTH)+1);
+			return Integer.valueOf(getField((Timestamp)x, Calendar.MONTH)+1);
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "month", x.getClass().getName())); //$NON-NLS-1$
@@ -617,9 +617,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Time) {
-			return new Integer(getField((Time)x, Calendar.SECOND));
+			return Integer.valueOf(getField((Time)x, Calendar.SECOND));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.SECOND));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.SECOND));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "second", x.getClass().getName())); //$NON-NLS-1$
@@ -633,9 +633,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.WEEK_OF_YEAR));
+			return Integer.valueOf(getField((Date)x, Calendar.WEEK_OF_YEAR));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.WEEK_OF_YEAR));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.WEEK_OF_YEAR));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "week", x.getClass().getName())); //$NON-NLS-1$
@@ -649,9 +649,9 @@ public final class FunctionMethods {
 		if(x == null) {
 			return null;
 		} else if(x instanceof Date) {
-			return new Integer(getField((Date)x, Calendar.YEAR));
+			return Integer.valueOf(getField((Date)x, Calendar.YEAR));
 		} else if(x instanceof Timestamp) {
-			return new Integer(getField((Timestamp)x, Calendar.YEAR));
+			return Integer.valueOf(getField((Timestamp)x, Calendar.YEAR));
 		}
 
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "year", x.getClass().getName())); //$NON-NLS-1$
@@ -661,35 +661,27 @@ public final class FunctionMethods {
 
 	public static Object quarter(Object date)
 		throws FunctionExecutionException {
-		String month = null;
+		int month = 12;
 
 		if(date == null) {
 			return null;
 		} else if(date instanceof Date) {
-			month = monthNames[getField((Date)date, Calendar.MONTH)];
+			month = getField((Date)date, Calendar.MONTH);
 		} else if(date instanceof Timestamp) {
-			month = monthNames[getField((Timestamp)date, Calendar.MONTH)];
+			month = getField((Timestamp)date, Calendar.MONTH);
+		} 
+		if (month > 11) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0066, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0066,
+					new Object[] {"quarter", date.getClass().getName()})); //$NON-NLS-1$
 		}
-
-		if (month.equals("January") || month.equals("February") || month.equals("March")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			return new Integer(1);
-		} else if (month.equals("April") || month.equals("May") || month.equals("June")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			return new Integer(2);
-		} else if (month.equals("July") || month.equals("August") || month.equals("September")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			return new Integer(3);
-		} else if (month.equals("October") || month.equals("November") || month.equals("December")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			return new Integer(4);
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0066, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0066,
-			new Object[] {"quarter", date.getClass().getName()})); //$NON-NLS-1$
+		return Integer.valueOf(month/3 + 1);
 	}
 
 	//	================== Function = timestampadd =====================
 
 	public static Object timestampAdd(Object interval, Object count, Object timestamp)
 		throws FunctionExecutionException {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = TimestampWithTimezone.getCalendar();
 
 		if (interval == null || count == null || timestamp == null) {
 			return null;
@@ -855,17 +847,17 @@ public final class FunctionMethods {
             return null;
         }
 
-        // Get calendar for time
-        Calendar timeCal = Calendar.getInstance();
-        timeCal.setTime((java.sql.Time)time);
-
-        // Build calendar for output timestamp based on the date
-        Calendar tsCal = Calendar.getInstance();
+        Calendar tsCal = TimestampWithTimezone.getCalendar();
+        tsCal.setTime((java.sql.Time)time);
+        int hour = tsCal.get(Calendar.HOUR_OF_DAY);
+        int minute = tsCal.get(Calendar.MINUTE);
+        int second = tsCal.get(Calendar.SECOND);
+        
         tsCal.setTime((java.sql.Date)date);
         
-        tsCal.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY));
-        tsCal.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE));
-        tsCal.set(Calendar.SECOND, timeCal.get(Calendar.SECOND));
+        tsCal.set(Calendar.HOUR_OF_DAY, hour);
+        tsCal.set(Calendar.MINUTE, minute);
+        tsCal.set(Calendar.SECOND, second);
 
         return new Timestamp(tsCal.getTime().getTime());
     }
@@ -1393,6 +1385,7 @@ public final class FunctionMethods {
 
 	// ================== Function = convert =====================
 
+	@SuppressWarnings("unchecked")
 	public static Object convert(Object src, Object type)
 		throws FunctionExecutionException {
 

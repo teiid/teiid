@@ -22,10 +22,14 @@
 
 package com.metamatrix.dqp.internal.datamgr.language;
 
+import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.Procedure;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
@@ -97,6 +101,22 @@ public class ProcedureImpl extends BaseLanguageObject implements IProcedure {
         
         IProcedure proc = (IProcedure) obj;
         return getProcedureName().equalsIgnoreCase(proc.getProcedureName());
+    }
+    
+    public Class<?>[] getResultSetColumnTypes() throws ConnectorException {
+        for (IParameter param : parameters) {
+            if(param.getDirection() == Direction.RESULT_SET){
+                List<Element> columnMetadata = param.getMetadataObject().getChildren();
+
+                int size = columnMetadata.size();
+                Class<?>[] coulmnDTs = new Class[size];
+                for(int i =0; i<size; i++ ){
+                    coulmnDTs[i] = columnMetadata.get(i).getJavaType();
+                }
+                return coulmnDTs;
+            }
+        }
+        return new Class[0];
     }
 
 }
