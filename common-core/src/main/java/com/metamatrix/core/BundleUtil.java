@@ -170,120 +170,6 @@ public class BundleUtil {
     }
 
     /**
-     * Convenience method that wraps the specified parameter in a Boolean object before calling
-     * {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final boolean parameter) {
-        return getString(key, new Boolean(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Byte object before calling {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final byte parameter) {
-        return getString(key, new Byte(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Character object before calling
-     * {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final char parameter) {
-        return getString(key, new Character(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Double object before calling {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final double parameter) {
-        return getString(key, new Double(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Float object before calling {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final float parameter) {
-        return getString(key, new Float(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Integer object before calling
-     * {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final int parameter) {
-        return getString(key, new Integer(parameter));
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Long object before calling {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final long parameter) {
-        return getString(key, new Long(parameter));
-    }
-
-    /**
-     * Convenience method that adds the specified parameter to a list before calling {@link #getString(String, List)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final Object parameter) {
-        if (parameter != null) {
-            if (parameter.getClass().isArray()) {
-                return getString(key, (Object[])parameter);
-            }
-            if (parameter instanceof List) {
-                return getString(key, (List)parameter);
-            }
-        }
-        return getString(key, new Object[] {parameter});
-    }
-
-    /**
-     * Convenience method that adds the specified parameters to a list before calling {@link #getString(String, List)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final Object parameter1,
-                            final Object parameter2) {
-        return getString(key, new Object[] {parameter1, parameter2});
-    }
-
-    /**
-     * Convenience method that adds the specified parameters to a list before calling {@link #getString(String, List)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final Object parameter1,
-                            final Object parameter2,
-                            final Object parameter3) {
-        return getString(key, new Object[] {parameter1, parameter2, parameter3});
-    }
-
-    /**
      * Get the string identified by the given key and localized to the current locale, and replace placeholders in the localized
      * string with the string form of the parameters.
      *
@@ -299,7 +185,7 @@ public class BundleUtil {
      * </code> if the <code>key</code> is null.
      */
     public String getString(final String key,
-                            final Object[] parameters) {
+                            final Object... parameters) {
         String text = getProductValue(key);
 
         if (text == null) {
@@ -315,16 +201,6 @@ public class BundleUtil {
         }
 
         return MessageFormat.format(text, parameters);
-    }
-
-    /**
-     * Convenience method that wraps the specified parameter in a Short object before calling {@link #getString(String, Object)}.
-     *
-     * @since 2.1
-     */
-    public String getString(final String key,
-                            final short parameter) {
-        return getString(key, new Short(parameter));
     }
 
     /**
