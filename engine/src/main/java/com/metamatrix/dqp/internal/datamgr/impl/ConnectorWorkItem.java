@@ -101,12 +101,11 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
-        this.isTransactional = manager.isXa() && message.isTransactional();
         this.manager = manager;
         this.resultsReceiver = resultsReceiver;
     }
 
-    private void createConnection(Connector connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
+    protected void createConnection(Connector connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating connection for atomic-request"});  //$NON-NLS-1$
         AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
         this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
@@ -123,15 +122,19 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
                                                        && (requestMsg.getCommand()).areResultsCachable()
                                                        ); 
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
-        if (isTransactional){
-    		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
-    		this.securityContext.setTransactional(true);
-    	} else {
-    	    if (requestMsg.isTransactional() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
+
+        if (requestMsg.isTransactional()){
+        	if (manager.isXa()) {
+	    		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
+	    		this.securityContext.setTransactional(true);
+	    		this.isTransactional = true;
+	    		return;
+        	} 
+    	    if (!manager.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
     	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
     	    }
-    	    connection = connector.getConnection(this.securityContext);
     	}
+    	connection = connector.getConnection(this.securityContext);
     }
             
     protected void process() {

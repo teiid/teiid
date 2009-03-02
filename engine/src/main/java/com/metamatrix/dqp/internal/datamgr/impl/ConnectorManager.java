@@ -129,6 +129,13 @@ public class ConnectorManager implements ApplicationService {
     	this.props = props;
     }
     
+    public boolean isImmutable() {
+    	if ( this.props == null ) {
+    		this.props = new Properties();
+    	}
+        return PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.IS_IMMUTABLE, false);
+    }
+
     public ClassLoader getClassloader() {
 		return classloader;
 	}

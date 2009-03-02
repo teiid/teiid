@@ -24,16 +24,22 @@ package com.metamatrix.dqp.internal.datamgr.impl;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.language.IProcedure;
+import javax.transaction.Transaction;
 
 import junit.framework.TestCase;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ProcedureExecution;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.xa.api.TransactionContext;
+
 import com.metamatrix.common.comm.api.ResultsReceiver;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
@@ -43,6 +49,7 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.FakeMetadataService;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -329,6 +336,132 @@ public class TestConnectorWorkItem extends TestCase {
 		AtomicResultsMessage results = receiver.getResults().remove();
 		assertEquals(1, results.getWarnings().size());
 	}
+
+    
+    public void testIsImmutablePropertySucceeds() throws Exception {
+    	/*
+    	 * Setup:
+    	 *  1. requestMsg.isTransactional() must be TRUE 
+    	 *  2. manager.isXa() must be FALSE  ()
+    	 *  3. command must NOT be a SELECT
+    	 *  4. Then, set isImmutable to TRUE, we should SUCCEED
+    	 */
+		ConnectorManager cm = getConnectorManager();
+        Properties props = new Properties();
+
+        // to create an XA ConnectorManager
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
+
+        // to set IS_IMMUTABLE to true
+        props.setProperty(ConnectorPropertyNames.IS_IMMUTABLE, "true"); //$NON-NLS-1$ //$NON-NLS-2$
+		cm.initialize(props);
+        
+		// command must not be a SELECT
+		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
+		requestMsg.setCommand(command);
+		
+		// To make the AtomicRequestMessage transactional, construct your own
+		requestMsg.setTransactionContext( new TransactionContext(){
+
+			@Override
+			public Transaction getTransaction() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public Scope getTransactionType() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getTxnID() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public boolean isInTransaction() {
+				// TODO Auto-generated method stub
+				return true;
+			}} );
+		
+		QueueResultsReceiver receiver = new QueueResultsReceiver();
+		
+		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(requestMsg, cm, receiver);
+	
+		// This is the test
+		try {
+			synchConnectorWorkItem.run();
+			assertNotNull("Connection should not be null when IsImmutable is true", synchConnectorWorkItem.connection);   //$NON-NLS-1$ 
+		} catch ( Exception e ) {
+			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());			
+		}
+    }
+    
+    public void testIsImmutablePropertyFails() throws Exception {
+    	/*
+    	 * Setup:
+    	 *  1. requestMsg.isTransactional() must be TRUE 
+    	 *  2. manager.isXa() must be FALSE  ()
+    	 *  3. command must NOT be a SELECT
+    	 *  4. Then, set isImmutable to FALSE, and we should FAIL
+    	 */
+		ConnectorManager cm = getConnectorManager();
+        Properties props = new Properties();
+
+        // to create an XA ConnectorManager
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
+
+        // to set IS_IMMUTABLE to false
+        props.setProperty(ConnectorPropertyNames.IS_IMMUTABLE, "false"); //$NON-NLS-1$ //$NON-NLS-2$
+		cm.initialize(props);
+        
+		// command must not be a SELECT
+		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
+		requestMsg.setCommand(command);
+		
+		// To make the AtomicRequestMessage transactional, construct your own
+		requestMsg.setTransactionContext( new TransactionContext(){
+
+			@Override
+			public Transaction getTransaction() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public Scope getTransactionType() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getTxnID() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public boolean isInTransaction() {
+				// TODO Auto-generated method stub
+				return true;
+			}} );
+		
+		QueueResultsReceiver receiver = new QueueResultsReceiver();
+		SynchConnectorWorkItem synchConnectorWorkItem = new SynchConnectorWorkItem(requestMsg, cm, receiver);
+	
+		// This is the test
+		try {
+			synchConnectorWorkItem.run();
+			this.assertNull("Connection should be null when IsImmutable is false", synchConnectorWorkItem.connection);  //$NON-NLS-1$ 
+		} catch ( Exception e ) {
+			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());			
+		}
+    }
 
 	private static class FakeQueuingAsynchConnectorWorkItem extends
 			AsynchConnectorWorkItem {
