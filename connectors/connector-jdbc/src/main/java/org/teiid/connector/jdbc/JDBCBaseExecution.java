@@ -28,7 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
