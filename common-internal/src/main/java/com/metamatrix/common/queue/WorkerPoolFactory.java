@@ -105,7 +105,7 @@ public class WorkerPoolFactory {
 		@Override
 		protected void afterExecute(Runnable r, Throwable t) {
 			if (t != null) {
-				LogManager.logError(LogCommonConstants.CTX_POOLING, t, t.getMessage()); 
+				LogManager.logError(LogCommonConstants.CTX_POOLING, t, CommonPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
 			}
 			activeCount.getAndDecrement();
 			completedCount.getAndIncrement();
