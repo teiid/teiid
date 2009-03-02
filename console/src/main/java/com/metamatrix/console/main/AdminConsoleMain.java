@@ -59,7 +59,7 @@ public final class AdminConsoleMain {
     //# Static variables
     //############################################################################################################################
     public final static String DEFAULT_LOG_FILE =
-    		"..\\log\\console_%VM_NAME%.log"; //$NON-NLS-1$
+    		"../log/console_%VM_NAME%.log"; //$NON-NLS-1$
     public final static String VM_STRING = "%VM_NAME%"; //$NON-NLS-1$
     public final static int VM_STRING_LEN = VM_STRING.length();
     public final static String DEFAULT_ICON = "console.ico"; //$NON-NLS-1$
