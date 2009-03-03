@@ -417,11 +417,7 @@ public class AbstractAdminImpl {
         
         try {
 			VMControllerInterface vmController = getVMControllerInterface(serviceID.getVMControllerID());
-			if (stopNow) {
-			    vmController.shutdownServiceNow(serviceID);
-			} else {
-			    vmController.shutdownService(serviceID);
-			}
+		    vmController.stopService(serviceID, stopNow, true);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}

@@ -81,8 +81,9 @@ public class SocketVMController extends VMController {
         super(host, vmName, vmId, registry, serverEvents, bus, hostManagement);
     }
 
-	public void startVM() {
-		super.startVM();
+    @Override
+	public void start() {
+		super.start();
 		
 		waitForServices();
         
@@ -92,7 +93,8 @@ public class SocketVMController extends VMController {
     
     // extend the VMController method to close the socket at the start of the stop process
     // so that the port can be made available sooner on bounces.
-    protected void doStopVM(boolean now, boolean shutdown) {
+    @Override
+    public void shutdown(boolean now) {
         if (workerPool != null) {
             try {
                 workerPool.shutdownNow();                
@@ -113,9 +115,9 @@ public class SocketVMController extends VMController {
                 listener = null;
             }
         }
-        
-        super.doStopVM(now, shutdown);
 
+        // call the base class.
+        super.shutdown(now);
     }        
     
     /** 

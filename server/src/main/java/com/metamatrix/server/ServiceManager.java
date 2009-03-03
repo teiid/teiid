@@ -32,9 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -89,15 +86,11 @@ public class ServiceManager {
     private final static int COMMAND_LIST_VM_PROPERTIES      = 12;
     private final static int COMMAND_LIST_SERVICE_PROPERTIES = 13;
     private final static int COMMAND_SHUTDOWN_SERVER         = 14;
-    private final static int COMMAND_SHUTDOWN_SERVICE        = 15;
-    private final static int COMMAND_SHUTDOWN_SERVICE_NOW    = 16;
     private final static int COMMAND_SHUTDOWN_VM             = 17;
-    private final static int COMMAND_SHUTDOWN_VM_NOW         = 18;
     private final static int COMMAND_START_SERVICE           = 19;
     private final static int COMMAND_EXPERT_MODE_ON          = 20;
     private final static int COMMAND_EXPERT_MODE_OFF         = 21;
     private final static int COMMAND_GET_SERVICE_QUEUES      = 22;
-    private final static int COMMAND_RUN_GC                  = 23;
     private final static int COMMAND_GET_VM_STATS            = 24;
     private final static int COMMAND_DUMP_THREADS            = 25;
     private final static int COMMAND_SYNCH_SERVER            = 26;
@@ -106,7 +99,6 @@ public class ServiceManager {
     private final static int COMMAND_BOUNCE_SERVICE          = 29;
     private final static int COMMAND_CLEAR_CODE_TABLE_CACHES = 30;
     private final static int COMMAND_CLEAR_PREPARED_STMT_CACHES = 31;
-    private final static int COMMAND_DUMP_JNDI				 = 32;
     private final static int COMMAND_EXIT                    = 33;
     private final static int COMMAND_HELP                    = 34;
     private final static int COMMAND_INVALID                 = 35;
@@ -127,15 +119,11 @@ public class ServiceManager {
                                               "ListProcessProps", //$NON-NLS-1$
                                               "ListServiceProps", //$NON-NLS-1$
                                               "ShutdownServer", //$NON-NLS-1$
-                                              "ShutdownService", //$NON-NLS-1$
-                                              "ShutdownServiceNow", //$NON-NLS-1$
                                               "ShutdownProcess", //$NON-NLS-1$
-                                              "ShutdownProcessNow", //$NON-NLS-1$
                                               "RestartService", //$NON-NLS-1$
                                               "ExpertModeOn", //$NON-NLS-1$
                                               "ExpertModeOff", //$NON-NLS-1$
                                               "GetServiceQueues", //$NON-NLS-1$
-                                              "RunGC", //$NON-NLS-1$
                                               "GetProcessStats", //$NON-NLS-1$
                                               "DumpThreads", //$NON-NLS-1$
                                               "Synch", //$NON-NLS-1$
@@ -144,7 +132,6 @@ public class ServiceManager {
 											  "BounceService", //$NON-NLS-1$
 											  "ClearCodeTableCaches", //$NON-NLS-1$
 											  "ClearPreparedStatementCaches", //$NON-NLS-1$
-											  "DumpJNDI", //$NON-NLS-1$
                                               "Exit", //$NON-NLS-1$
                                               "Help" }; //$NON-NLS-1$
 
@@ -163,15 +150,11 @@ public class ServiceManager {
                                                    "ListProcessProps", //$NON-NLS-1$
                                                    "ListServiceProps", //$NON-NLS-1$
                                                    "ShutdownServer", //$NON-NLS-1$
-                                                   "ShutdownService", //$NON-NLS-1$
-                                                   "ShutdownServiceNow", //$NON-NLS-1$
                                                    "ShutdownProcess", //$NON-NLS-1$
-                                                   "ShutdownProcessNow", //$NON-NLS-1$
                                                    "RestartService", //$NON-NLS-1$
                                                    "ExpertModeOn", //$NON-NLS-1$
                                                    "ExpertModeOff", //$NON-NLS-1$
                                                    "GetServiceQueues", //$NON-NLS-1$
-                                                   "RunGC", //$NON-NLS-1$
                                                    "GetProcessStats", //$NON-NLS-1$
                                                    "DumpThreads", //$NON-NLS-1$
                                                    "Synch", //$NON-NLS-1$
@@ -180,7 +163,6 @@ public class ServiceManager {
 												   "BounceService", //$NON-NLS-1$
 											  	   "ClearCodeTableCaches", //$NON-NLS-1$
 											       "ClearPreparedStatementCaches", //$NON-NLS-1$
- 												   "DumpJNDI", //$NON-NLS-1$
                                                    "Exit", //$NON-NLS-1$
                                                    "Help" }; //$NON-NLS-1$
 
@@ -433,31 +415,6 @@ public class ServiceManager {
                 }
                 break;
 
-            case COMMAND_SHUTDOWN_VM_NOW:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
-                } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doShutdownVM(vmName, true);
-                }
-                break;
-
-            case COMMAND_SHUTDOWN_SERVICE:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doShutdownService(new ServiceID(value, null), false);
-                }
-                break;
-
             case COMMAND_BOUNCE_SERVICE:
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0031));
@@ -471,22 +428,6 @@ public class ServiceManager {
                 doShutdownServer();
                 break;
 
-            case COMMAND_SHUTDOWN_SERVICE_NOW:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doShutdownService(new ServiceID(value, null), true);
-                }
-                break;
-
             case COMMAND_EXPERT_MODE_ON:
                 this.expertMode = true;
                 printUsage();
@@ -495,15 +436,6 @@ public class ServiceManager {
             case COMMAND_EXPERT_MODE_OFF:
                 this.expertMode = false;
                 printUsage();
-                break;
-
-            case COMMAND_RUN_GC:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
-                } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doRunGC(vmName);
-                }
                 break;
 
             case COMMAND_GET_VM_STATS:
@@ -569,10 +501,6 @@ public class ServiceManager {
 				doClearPreparedStatementCaches();
                 break;
 
-            case COMMAND_DUMP_JNDI:
-				doDumpJNDI();
-                break;
-
             case COMMAND_START_SERVICE:
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
@@ -591,15 +519,6 @@ public class ServiceManager {
         }
     }
 
-	private void doDumpJNDI() {
-		try {
-			Context ctx = new InitialContext();
-			System.out.println("JDNI:"); //$NON-NLS-1$
-			System.out.println(ctx.list("")); //$NON-NLS-1$
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	public void doBounceService(String name) {
 
@@ -788,20 +707,6 @@ public class ServiceManager {
 		}
     }
 
-    private void doRunGC(String vmName) {
-        VMControllerInterface vm = getVMController(vmName);
-        if (vm != null) {
-            try {
-                vm.runGC();
-            } catch (Exception e) {
-                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0029, vmName));
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0030, vmName));
-        }
-    }
-
     private void doGetVMStats(String vmName) {
         VMControllerInterface vm = getVMController(vmName);
         if (vm != null) {
@@ -844,7 +749,7 @@ public class ServiceManager {
             Iterator vmIter = registry.getVMs(null).iterator();
             while (vmIter.hasNext()) {
                 VMRegistryBinding vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMController().getName().equalsIgnoreCase(vmName)) {
+                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
                     return vmBinding.getVMController();
                 }
             }
@@ -976,8 +881,7 @@ public class ServiceManager {
             VMRegistryBinding vmBinding = null;
             while (vmIter.hasNext()) {
                 vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMController().getName().equalsIgnoreCase(vmName)) {
-                    vmBinding.getVMController().stopVM();
+                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
                     this.hostManager.killServer(vmBinding.getHostName(),vmBinding.getVMName(), false);
                     break;
                 }
@@ -1019,19 +923,12 @@ public class ServiceManager {
     }
 
     public void doShutdownVM(String vmName, boolean now) {
-
-        // find vm
         try {
             Iterator vmIter = registry.getVMs(null).iterator();
             while (vmIter.hasNext()) {
                 VMRegistryBinding vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMController().getName().equalsIgnoreCase(vmName)) {
-                    if (now) {
-                        vmBinding.getVMController().shutdownNow();
-                    } else {
-                        vmBinding.getVMController().shutdown();
-                    }
-                    this.hostManager.killServer(vmBinding.getHostName(), vmName, false);
+                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
+                    this.hostManager.killServer(vmBinding.getHostName(), vmName, now);
                     return;
                 }
             }
@@ -1145,38 +1042,11 @@ public class ServiceManager {
             }
             VMRegistryBinding vmBinding = registry.getVM(id.getHostName(), id.getVMControllerID().toString());
             if (vmBinding != null) {
-            	vmBinding.getVMController().stopService(id);
+            	vmBinding.getVMController().stopService(id, false, false);
             }
             else {
             	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString()); //$NON-NLS-1$ //$NON-NLS-2$
             }
-        } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0015, id));
-            e.printStackTrace();
-        }
-    }
-
-    public void doShutdownService(ServiceID serviceID, boolean now) {
-
-        ServiceID id = null;
-        try {
-            id = getServiceID(serviceID);
-            if (id == null) {
-                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
-                return;
-            }
-            VMRegistryBinding vmBinding = registry.getVM(id.getHostName(), id.getVMControllerID().toString());
-            if (vmBinding != null) {
-                if (now) {
-                	vmBinding.getVMController().shutdownServiceNow(id);
-                } else {
-                	vmBinding.getVMController().shutdownService(id);
-                }
-            }
-            else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());//$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0015, id));
             e.printStackTrace();

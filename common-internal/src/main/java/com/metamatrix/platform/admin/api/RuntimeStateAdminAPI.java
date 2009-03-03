@@ -182,41 +182,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
                                                  InvalidSessionException,
                                                  MetaMatrixComponentException;
 
-    /**
-     * Stop all services, in a process, once work is complete.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @param serviceID
-     *            ID of service instance.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void stopAllServicesInAProcess(VMControllerID processID) throws AuthorizationException,
-                                                            InvalidSessionException,
-                                                            MetaMatrixComponentException;
-
-    /**
-     * Stop all services, in a process, now.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @param serviceID
-     *            ID of service instance.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void stopAllServicesInAProcessNow(VMControllerID processID) throws AuthorizationException,
-                                                               InvalidSessionException,
-                                                               MetaMatrixComponentException;
 
     /**
      * Gracefully shutdown server waiting for work to complete.
@@ -547,22 +512,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
     VMStatistics getVMStatistics(VMControllerID vmID) throws AuthorizationException,
                                                      InvalidSessionException,
                                                      MetaMatrixComponentException;
-
-    /**
-     * Run Garbage collection on process.
-     * 
-     * @param VMControllerID
-     *            ID of the process.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void runGC(VMControllerID vmID) throws AuthorizationException,
-                                   InvalidSessionException,
-                                   MetaMatrixComponentException;
 
     /**
      * Return the PscID by Name

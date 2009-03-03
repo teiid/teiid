@@ -401,7 +401,7 @@ public class RuntimeStateAdminAPIHelper {
                             // if not deployed but running then kill, kill, kill
                             if (!sData.isDeployed() && sData.isRegistered()) {
                                 try {
-                                    vmController.shutdownService(sData.getServiceID());
+                                    vmController.stopService(sData.getServiceID(), false, true);
                                 } catch (Exception e) {
                                     exceptions.add(e);
                                 }
@@ -487,7 +487,7 @@ public class RuntimeStateAdminAPIHelper {
         
         VMControllerInterface vmController = vmBinding.getVMController();
         try {
-        	vmController.stopService(serviceID);
+        	vmController.stopService(serviceID, false, false);
         } catch (ServiceException se) {
         	LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, se, "Service exception stopping service during restart"); //$NON-NLS-1$
         }
@@ -573,11 +573,7 @@ public class RuntimeStateAdminAPIHelper {
         VMRegistryBinding binding = registry.getVM(vmID.getHostName(), vmID.toString());
         VMControllerInterface vmController = binding.getVMController();
         try {
-            if (stopNow) {
-                vmController.stopServiceNow(serviceID);
-            } else {
-                vmController.stopService(serviceID);
-            }
+        	vmController.stopService(serviceID, stopNow, false);
         } catch (ServiceException se) {
             throw new MetaMatrixComponentException(se);
         }

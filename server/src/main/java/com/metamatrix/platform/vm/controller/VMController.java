@@ -263,7 +263,7 @@ public abstract class VMController implements VMControllerInterface {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
             	try {
-					shutdown();
+					shutdown(false);
 				} catch (Exception e) {
 					// ignore
 				}
@@ -333,7 +333,7 @@ public abstract class VMController implements VMControllerInterface {
         return id;
     }
 
-	public void startVM() {
+	public void start() {
     			
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0013));
         VMComponentDefnID vmComponentDefnID = (VMComponentDefnID)this.vmComponentDefn.getID();
@@ -497,26 +497,31 @@ public abstract class VMController implements VMControllerInterface {
         }
 
     }
+	
+    /**
+     * Shut down all services waiting for work to complete.
+     * Essential services will also be shutdown.
+     */
+	public synchronized void shutdown(boolean now) {
+		logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0041));
+		
+		try {
+            stopServices(now, true);
+        } catch (MultipleException e) {
+        	logException(e, e.getMessage());
+        } catch (ServiceException e) {
+            logException(e, e.getMessage());
+        } 
 
-	/**
-	 * Kill all services (waiting for work to complete) and then kill the vm.
-	 */
-	public void stopVM() {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0029));
-        doStopVM(false, false);
-    }
+		JDBCConnectionPoolHelper.getInstance().shutDown();
 
-
-	protected void doStopVM(boolean now, boolean shutdown) {
-
-	    stop(now, shutdown);
+        // unregister VMController
+        events.vmRemoved(id);
         
-		// If running inside an app server then get a defaul context.
-		String propVal = System.getProperty(CommonPropertyNames.APP_SERVER_VM);
-		if (propVal != null && propVal.equalsIgnoreCase("true")) { //$NON-NLS-1$
-			return;
-		}
+        this.shuttingDown = true;
 
+        notifyAll();        
+        
 		this.startServicePool.execute(new Runnable() {
             public void run() {
                 // Wait before killing the VM.
@@ -529,132 +534,19 @@ public abstract class VMController implements VMControllerInterface {
         });
     }
 
-	private synchronized void stop(boolean now, boolean shutdown) {
-		try {
-            stopServices(now, shutdown);
-        } catch (MultipleException e) {
-        	logException(e, e.getMessage());
-        } catch (ServiceException e) {
-            logException(e, e.getMessage());
-        } 
-
-		JDBCConnectionPoolHelper.getInstance().shutDown();
-
-        // unregister VMController
-        events.vmRemoved(id);
-	}
-
-	/**
-	 * Kill all services now, do not wait for work to complete, do not collect $200
-	 */
-	public void stopVMNow() {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0034));
-        doStopVM(true, false);
-    }
 
 	/**
 	 * Kill service once work is complete
 	 */
-	public void stopService(ServiceID id) {
+	public void stopService(ServiceID id, boolean now, boolean shutdown) {
         try {
 			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0035, id));
 			validateServiceID(id);
 			ServiceRegistryBinding binding = this.registry.getServiceBinding(id.getHostName(), id.getVMControllerID().toString(), id);
-			stopService(binding, false, false);
+			stopService(binding, now, shutdown);
 		} catch (ResourceNotBoundException e) {
 			throw new ServiceException(e);
 		}
-    }
-
-	/**
-	 * Kill service now!!!
-	 */
-	public void stopServiceNow(ServiceID id) {
-        try {
-			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0036, id));
-			validateServiceID(id);
-			ServiceRegistryBinding binding = this.registry.getServiceBinding(id.getHostName(), id.getVMControllerID().toString(), id);        
-			stopService(binding, true, false);
-		} catch (ResourceNotBoundException e) {
-			throw new ServiceException(e);			
-		}
-    }
-
-	/**
-	 * Kill services now!!!
-	 */
-	public void stopAllServicesNow() throws MultipleException {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0037));
-        stopServices(true, false);
-    }
-
-	/**
-	 * Kill services
-	 */
-	public void stopAllServices() throws MultipleException {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0038));
-        stopServices(false, false);
-    }
-
-    
-    /**
-     * Shut down all services waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    public void shutdown(){
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0040));
-        doStopVM(false, true);
-    }
-
-    /**
-     * Shut down all services without waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    public synchronized void shutdownNow() {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0041));
-        doStopVM(true, true);
-        this.shuttingDown = true;
-        notifyAll();
-    }
-
-    public void shutdownService(ServiceID serviceID) {
-    	shutdownService(serviceID, false);
-    }    
-
-    /**
-     * Shut down service without waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    public void shutdownServiceNow(ServiceID serviceID) {
-    	shutdownService(serviceID, true);    	
-    }
-    
-    /**
-     * Shut down service waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    private void shutdownService(ServiceID serviceID, boolean now) {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0042, serviceID));
-
-        ServiceRegistryBinding serviceBinding = null;
-        try {
-			serviceBinding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getVMControllerID().toString(), serviceID);
-        } catch (ResourceNotBoundException e) {
-            throw new ServiceException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0043, serviceID));
-        }
-
-        validateServiceID(serviceID);
-
-        // if service is not running then don't try to stop.
-        if (serviceBinding.getService() != null && serviceBinding.getCurrentState() != ServiceState.STATE_INIT_FAILED) {
-            stopService(serviceBinding, now, true);
-        }
-
-        try {
-            events.serviceRemoved(serviceID);
-        } catch (Exception e) {
-            throw new ServiceException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0044, serviceID));
-        }
     }
 
     /**
@@ -757,14 +649,6 @@ public abstract class VMController implements VMControllerInterface {
         for (int i = 0; i < cnt; i++) {
             listThreads(groups[i], indent);
         }
-    }
-
-    /**
-     * Run GC on vm.
-     */
-    public void runGC() {
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0005));
-        System.gc();
     }
 
     /**
@@ -958,6 +842,9 @@ public abstract class VMController implements VMControllerInterface {
         // Leave binding in registry but remove service instance.
         if (shutdown) {
         	events.serviceRemoved(binding.getServiceID());
+        }
+        else {
+        	events.serviceUpdated(binding);
         }
     }
     

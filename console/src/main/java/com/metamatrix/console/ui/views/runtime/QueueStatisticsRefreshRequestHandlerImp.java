@@ -92,13 +92,7 @@ public class QueueStatisticsRefreshRequestHandlerImp
 	}
 
     public void runGarbageCollection(ProcessData pd) {
-        try {
-            //api = getAdminAPI();
-            VMControllerID cntrlrID = pd.getProcessID();
-            getAdminAPI().runGC(cntrlrID);
-        } catch (Exception theException) {
-            displayException(theException, "QueueStatisticsRefreshRequestHandlerImp.runGarbageCollection"); //$NON-NLS-1$
-        }
+    	// we no longer support this.
     }
 
     private RuntimeStateAdminAPI getAdminAPI() {

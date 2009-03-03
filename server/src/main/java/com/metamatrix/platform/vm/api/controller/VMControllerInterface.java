@@ -26,7 +26,6 @@ import java.net.InetAddress;
 import java.util.Date;
 
 import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -38,8 +37,15 @@ public interface VMControllerInterface {
 	/**
 	 * Starts the VM by invoking all the deployed services
 	 */
-	public void startVM();
+	public void start();
 	
+	
+    /**
+     * Shut down all services waiting for work to complete.
+     * Essential services will also be shutdown.
+     */
+    void shutdown(boolean now);
+    
 	/**
 	 *  Start the service identified by the ServiceComponentID
 	 *  If synch is true then wait for service to start before returning.
@@ -53,36 +59,12 @@ public interface VMControllerInterface {
 	 */
 	void startService(ServiceID serviceID);
 
-	/**
-	 * Kill all services (waiting for work to complete) and then kill the vm.
-	 */
-	void stopVM();
-
-	/**
-	 * Kill all services now, do not wait for work to complete
-	 */
-	void stopVMNow();
 
 	/**
 	 * Kill service once work is complete
 	 */
-	void stopService(ServiceID id);
+	void stopService(ServiceID id, boolean now, boolean shutdown);
 
-	/**
-	 * Kill service now!!!
-	 */
-	void stopServiceNow(ServiceID id);
-
-    /**
-     * Kill all services once work is complete
-     */
-    void stopAllServices() throws MultipleException;
-
-    /**
-     * Kill all services now
-     */
-    void stopAllServicesNow() throws MultipleException;
-    
     /**
      * Check the state of a service
      */
@@ -119,30 +101,6 @@ public interface VMControllerInterface {
 	void ping();
 
     /**
-     * Shut down all services waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    void shutdown();
-
-    /**
-     * Shut down all services without waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    void shutdownNow();
-
-    /**
-     * Shut down service waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    void shutdownService(ServiceID serviceID) ;
-
-    /**
-     * Shut down all services without waiting for work to complete.
-     * Essential services will also be shutdown.
-     */
-    void shutdownServiceNow(ServiceID serviceID);
-
-    /**
      * Returns true if system is being shutdown.
      */
     boolean isShuttingDown();
@@ -158,12 +116,6 @@ public interface VMControllerInterface {
      */
     void dumpThreads();
 
-    /**
-     * Run GC on vm.
-     */
-    void runGC() ;
-
-    
     /**
      * Export the server logs to a byte[].  The bytes contain the contents of a .zip file containing the logs. 
      * This will export all logs on the host that contains this VMController.

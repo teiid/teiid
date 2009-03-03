@@ -363,10 +363,7 @@ public class HostController implements HostManagement {
 	            if (vm.getHostName().equalsIgnoreCase(this.host.getFullName())) {
 	                if (vm.getVMName().equalsIgnoreCase(vmName)) {
 	                    try {
-	                    	if (stopNow)
-	                    		vm.getVMController().shutdownNow();
-	                    	else
-	                    		vm.getVMController().shutdown();
+                    		vm.getVMController().shutdown(stopNow);
 	                    } catch (Exception e) {
 	                        // ignore
 	                    }

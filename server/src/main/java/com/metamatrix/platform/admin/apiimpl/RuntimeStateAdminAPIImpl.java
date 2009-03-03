@@ -364,76 +364,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
   
     /**
-     * Stop all services, in a process, once work is complete.
-     * 
-     * @param serviceID
-     *            ID of service instance.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void stopAllServicesInAProcess(VMControllerID processID) throws AuthorizationException,
-                                                                                InvalidSessionException,
-                                                                                MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0013, new Object[] {
-            processID, token.getUsername()
-        });
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopAllServicesInAProcess(" + processID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        VMControllerInterface vmController = helper.getVMControllerInterface(processID);
-        try {
-            vmController.stopAllServices();
-        } catch (ServiceException se) {
-            throw new MetaMatrixComponentException(se);
-        } catch (MultipleException se) {
-            throw new MetaMatrixComponentException(se);
-        }
-    }
-
-    /**
-     * Stop all services, in a process, now.
-     * 
-     * @param serviceID
-     *            ID of service instance.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void stopAllServicesInAProcessNow(VMControllerID processID) throws AuthorizationException,
-                                                                                   InvalidSessionException,
-                                                                                   MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0014, new Object[] {
-            processID, token.getUsername()
-        });
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopAllServicesInAProcessNow(" + processID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        VMControllerInterface vmController = helper.getVMControllerInterface(processID);
-        try {
-            vmController.stopAllServicesNow();
-        } catch (ServiceException se) {
-            throw new MetaMatrixComponentException(se);
-        } catch (MultipleException me) {
-            throw new MetaMatrixComponentException(me);
-        }
-    }
-
-    /**
      * Gracefully shutdown server waiting for work to complete.
      * 
      * @throws AuthorizationException
@@ -807,11 +737,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
             try {
                 ServiceID serviceID = serviceData.getServiceID();
                 if (serviceID != null) {
-                    if (now) {
-                        vm.stopServiceNow(serviceID);
-                    } else {
-                        vm.stopService(serviceID);
-                    }
+                    vm.stopService(serviceID, now, false);
                 }
             } catch (ServiceException se) {
                 exceptions.add(se);
@@ -1034,31 +960,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         
         return helper.getVMStatistics(vmID);
-    }
-
-    /**
-     * Run Garbage Collection on Process.
-     * 
-     * @param VMControllerID
-     *            ID of the process.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void runGC(VMControllerID vmID) throws AuthorizationException,
-                                                       InvalidSessionException,
-                                                       MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "Running GarbageCollector on " + vmID + " user = " + token.getUsername()); //$NON-NLS-1$ //$NON-NLS-2$
-
-        // Any administrator may call this read-only method - no need to validate role
-        VMControllerInterface vm = helper.getVMControllerInterface(vmID);
-        vm.runGC();
     }
 
     /**

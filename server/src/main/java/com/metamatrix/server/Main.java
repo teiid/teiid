@@ -114,7 +114,7 @@ public class Main {
             Runtime.getRuntime().addShutdownHook(new ShutdownWork());
             
             // start the VM
-            this.vmController.startVM();
+            this.vmController.start();
             
             synchronized (this.vmController) {
                 while(!this.vmController.isShuttingDown()) {
