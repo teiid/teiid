@@ -31,7 +31,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.PscID;
@@ -245,25 +244,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
     void restartService(ServiceID serviceID) throws AuthorizationException,
                                             InvalidSessionException,
                                             MetaMatrixComponentException;
-
-    /**
-     * Start a deployed service.
-     * 
-     * @param id
-     *            ServiceComponentDefnID of service instance.
-     * @param vmID
-     *            Identifies VMController to start service in.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void startDeployedService(ServiceComponentDefnID id,
-                              VMControllerID vmID) throws AuthorizationException,
-                                                  InvalidSessionException,
-                                                  MetaMatrixComponentException;
 
     /**
      * Start up all processes and services for the host.

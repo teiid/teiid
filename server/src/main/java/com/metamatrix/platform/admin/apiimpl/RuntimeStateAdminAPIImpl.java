@@ -446,37 +446,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
     }
 
     /**
-     * Start a deployed service.
-     * 
-     * @param id
-     *            ServiceComponentDefnID of service instance.
-     * @param vmID
-     *            Identifies VMController to start service in.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void startDeployedService(ServiceComponentDefnID serviceID,
-                                                  VMControllerID vmID) throws AuthorizationException,
-                                                                      InvalidSessionException,
-                                                                      MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0019, new Object[] {
-            serviceID
-        });
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.startDeployedService(" + serviceID + ", " + vmID + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        helper.startDeployedService(serviceID, vmID);
-    }
-
-    /**
      * Start Host and all processes/services for host.
      * 
      * @param host
