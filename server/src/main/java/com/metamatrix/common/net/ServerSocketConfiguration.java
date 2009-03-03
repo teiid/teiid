@@ -23,9 +23,11 @@
 package com.metamatrix.common.net;
 
 import java.io.IOException;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Properties;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
@@ -60,7 +62,6 @@ public class ServerSocketConfiguration {
     public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
 
     public static final String DEFAULT_SSL_PROTOCOL = "SSLv3"; //$NON-NLS-1$
-    public static final String DEFAULT_KEY_MANAGER_ALGORITHM = "SunX509"; //$NON-NLS-1$
     public static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
     public static final String UNENCRYPTED_CIPHER_SUITE = "SSL_RSA_WITH_NULL_SHA"; //$NON-NLS-1$
@@ -70,7 +71,7 @@ public class ServerSocketConfiguration {
      */
     private boolean ssl_enabled;
     private String sslProtocol = DEFAULT_SSL_PROTOCOL;
-    private String keyManagerFactoryAlgorithm = DEFAULT_KEY_MANAGER_ALGORITHM;
+    private String keyManagerFactoryAlgorithm;
     private String keyStoreType = DEFAULT_KEYSTORE_TYPE;
     private String keyStoreFileName;
     private String keyStorePassword = ""; //$NON-NLS-1$
@@ -106,7 +107,8 @@ public class ServerSocketConfiguration {
         }
 
         keyStoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE);
-        keyManagerFactoryAlgorithm = props.getProperty(KEY_MANAGER_ALGORITHM, DEFAULT_KEY_MANAGER_ALGORITHM);
+                 
+        keyManagerFactoryAlgorithm = props.getProperty(KEY_MANAGER_ALGORITHM, KeyManagerFactory.getDefaultAlgorithm());
     
         authenticationMode = props.getProperty(AUTHENTICATION_MODE);
 
