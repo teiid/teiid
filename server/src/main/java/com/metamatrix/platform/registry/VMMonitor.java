@@ -91,14 +91,22 @@ public class VMMonitor implements ServerEvents {
     		@Override
     		public void run() {
     			List<VMRegistryBinding> vmBindings = VMMonitor.this.registry.getVMs(null);
+
     			for (VMRegistryBinding binding: vmBindings) {
-	                try {
-	                    VMControllerInterface vm = binding.getVMController();
+                    VMControllerInterface vm = binding.getVMController();
+                    boolean alive = binding.isAlive();
+	                
+                    try {
 	                    vm.ping();
 	                    binding.setAlive(true);
 	                } catch (ServiceException e) {
 	                	// mark as not alive, then no services will be pinged from this vm
 	                	binding.setAlive(false);
+	                }
+	                
+	                // if the vmstate changed then, update the registry.
+	                if (alive != binding.isAlive()) {
+	                	vmUpdated(binding);
 	                }
 	            }
     		}
@@ -111,15 +119,22 @@ public class VMMonitor implements ServerEvents {
         	public void run() {
         		List<ServiceRegistryBinding> bindings = registry.getServiceBindings(hostName, vmId.toString());
                 for (ServiceRegistryBinding binding:bindings) {
-            		try {
+
+                	ServiceInterface si = binding.getService();
+                	try {
             			// when service in stopped state; this will be null
             			// if shut down there will not be a binding for it.
-            			ServiceInterface si = binding.getService();
             			if(si != null) {
             				binding.getService().checkState();
             			}
     				} catch (ServiceStateException e) {
     					// OK to throw up, service will capture the error to logs.
+    				}
+    				
+    				// the state of the service changed, then update the cache.
+    				if (binding.isDirty()) {
+    					serviceUpdated(binding);
+    					binding.setDirty(false);
     				}
                 }
         	}
@@ -157,5 +172,30 @@ public class VMMonitor implements ServerEvents {
 	public void vmRemoved(VMControllerID id) {
 		this.registry.removeVM(hostName, vmId.toString());		
 		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Removed:"+id); //$NON-NLS-1$
+	}
+
+	@Override
+	public void serviceUpdated(ServiceRegistryBinding binding) {
+		try {
+			this.registry.updateServiceBinding(binding.getHostName(), binding.getServiceID().getVMControllerID().toString(), binding);
+			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Service updated:"+binding.getServiceID()); //$NON-NLS-1$
+		} catch(CacheNodeNotFoundException e) {
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add service:"+binding.getServiceID()); //$NON-NLS-1$
+		} catch (ResourceNotBoundException e) {
+			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "Service not exist:"+binding.getServiceID()); //$NON-NLS-1$
+		}
+	}
+
+	@Override
+	public void vmUpdated(VMRegistryBinding binding) {
+		try {
+			this.registry.updateVM(binding.getHostName(), binding.getVMControllerID().toString(), binding);
+			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding.getVMControllerID()); //$NON-NLS-1$
+		} catch (CacheNodeNotFoundException e) {
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException("Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+		} catch(ResourceNotBoundException e) {
+			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "VM does not exist:"+binding.getVMControllerID()); //$NON-NLS-1$
+		}
 	}
 }

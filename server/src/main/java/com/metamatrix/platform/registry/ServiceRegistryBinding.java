@@ -63,8 +63,8 @@ public class ServiceRegistryBinding implements Serializable {
 		        throw err.getTargetException();
 		    }
 		    
-		    ServiceRegistryBinding.this.updateState(proxiedService.getCurrentState());
 		    ServiceRegistryBinding.this.setInitException(proxiedService.getInitException());
+		    ServiceRegistryBinding.this.updateState(proxiedService.getCurrentState());
 		    return returnObj;
 		}
 	}
@@ -118,6 +118,8 @@ public class ServiceRegistryBinding implements Serializable {
     private Throwable initException;
     
     private transient MessageBus messageBus;
+    
+    private transient boolean dirty;
     
     /**
      * Create new ServiceRegistryInstance
@@ -246,8 +248,11 @@ public class ServiceRegistryBinding implements Serializable {
     }
     
     public void updateState(int state) {
-        this.currentState = state;
-        this.stateChangeTime = new Date();
+    	if (this.currentState != state) {
+	        this.currentState = state;
+	        this.stateChangeTime = new Date();
+	        this.dirty = true;
+    	}
     }
    
     private Collection buildQueueNames(ServiceInterface si) {
@@ -305,8 +310,16 @@ public class ServiceRegistryBinding implements Serializable {
 	}
 	
 	public void markServiceAsBad() {
-		this.currentState = ServiceState.STATE_FAILED;
 		setService(null);
+		updateState(ServiceState.STATE_FAILED);
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
+
+	public boolean isDirty() {
+		return dirty;
 	}
 }
 

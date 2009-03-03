@@ -83,7 +83,7 @@ class ServerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.VMID)).to(vmID);
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
-		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+this.vmName+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_"+this.vmName+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
 				
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());

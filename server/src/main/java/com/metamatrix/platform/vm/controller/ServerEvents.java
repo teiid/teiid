@@ -32,8 +32,11 @@ public interface ServerEvents {
 	
 	void vmRemoved(VMControllerID id);
 	
+	void vmUpdated(VMRegistryBinding binding);
+	
 	void serviceAdded(ServiceRegistryBinding binding);
 	
 	void serviceRemoved(ServiceID id);
 	
+	void serviceUpdated(ServiceRegistryBinding binding);
 }
