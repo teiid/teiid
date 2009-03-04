@@ -42,8 +42,7 @@ import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 
 public class QueueStatisticsRefreshRequestHandlerImp 
 		implements QueueStatisticsRefreshRequestHandler, ServiceStateConstants{
@@ -83,7 +82,7 @@ public class QueueStatisticsRefreshRequestHandlerImp
 	public void refreshProcessRequested(ProcessData pd) {
         try {
 			if (getProcessStatistics(pd) != null) {
-                VMStatistics vmstats = getProcessStatistics(pd);
+                ProcessStatistics vmstats = getProcessStatistics(pd);
                 vmsdh.refreshDisplayForProcess(pd.getName(), pd, vmstats);
             }
         } catch (Exception theException) {
@@ -185,9 +184,9 @@ public class QueueStatisticsRefreshRequestHandlerImp
         return sqs;
     }
 
-	public VMStatistics getProcessStatistics(ProcessData pd) {
+	public ProcessStatistics getProcessStatistics(ProcessData pd) {
         try {
-            return getAdminAPI().getVMStatistics(pd.getProcessID());
+            return getAdminAPI().getProcessStatistics(pd.getHostName(), pd.getName());
         } catch (Exception theException) {
             displayException(theException, "QueueStatisticsRefreshRequestHandlerImp.getVMStatistics"); //$NON-NLS-1$
             return null;

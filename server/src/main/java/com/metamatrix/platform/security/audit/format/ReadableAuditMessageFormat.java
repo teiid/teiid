@@ -50,7 +50,7 @@ public class ReadableAuditMessageFormat implements AuditMessageFormat {
         msg.append(" ["); //$NON-NLS-1$
         msg.append( message.getHostName() );
         msg.append( '|' );
-        msg.append( message.getVMName() );
+        msg.append( message.getProcessName() );
         msg.append( '|' );
         msg.append( message.getPrincipal() );
         msg.append("] <"); //$NON-NLS-1$

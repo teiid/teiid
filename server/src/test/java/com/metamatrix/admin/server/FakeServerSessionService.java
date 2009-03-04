@@ -45,7 +45,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.util.ProductInfoConstants;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public class FakeServerSessionService implements SessionServiceInterface {
 
@@ -186,7 +185,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID() {
+    public String getProcessName() {
         return null;
     }
 

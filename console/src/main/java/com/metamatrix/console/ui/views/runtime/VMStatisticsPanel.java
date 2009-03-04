@@ -35,7 +35,7 @@ import javax.swing.JPanel;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
 import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
@@ -44,14 +44,14 @@ import com.metamatrix.toolbox.ui.widget.TitledBorder;
 public class VMStatisticsPanel extends JPanel{
     private ProcessData processData;
     private QueueStatisticsRefreshRequestHandler controller;
-    private VMStatistics vmStatistics;
+    private ProcessStatistics vmStatistics;
     private ProcessVMStatisticsPanel processPanel;
     private QueueVMStatisticsPanel queuePanel;
     private SocketVMStatisticsPanel socketPanel;
     private AbstractButton closeButton;
     
     public VMStatisticsPanel(QueueStatisticsRefreshRequestHandler ctrlr,
-            ProcessData pd, VMStatistics vmStats) {
+            ProcessData pd, ProcessStatistics vmStats) {
         super();
         controller = ctrlr;
         processData = pd;
@@ -124,7 +124,7 @@ public class VMStatisticsPanel extends JPanel{
                 new Insets(4, 4, 4, 4), 0, 0));
     }
 
-    public void repopulate(VMStatistics vmStat) {
+    public void repopulate(ProcessStatistics vmStat) {
         vmStatistics = vmStat;
         processPanel.populate(vmStatistics);
         queuePanel.populate(vmStatistics);
@@ -150,7 +150,7 @@ abstract class AbstractVMStatisticsPanel extends JPanel {
     public abstract String[] getLabelStrings();
 
     /**Populate the displayed fields from the specified VMStatistics.*/    
-    public abstract void populate(VMStatistics vmStats);
+    public abstract void populate(ProcessStatistics vmStats);
     
     
     public AbstractVMStatisticsPanel() {
@@ -225,7 +225,7 @@ class ProcessVMStatisticsPanel extends AbstractVMStatisticsPanel {
     }
 
     /**Populate the displayed fields from the specified VMStatistics.*/    
-    public void populate(VMStatistics vmStats) {
+    public void populate(ProcessStatistics vmStats) {
         textFieldWidgets[0].setText(Long.toString(vmStats.totalMemory));
         textFieldWidgets[1].setText(Long.toString(vmStats.freeMemory));        
         textFieldWidgets[2].setText(Integer.toString(vmStats.threadCount));
@@ -261,7 +261,7 @@ class QueueVMStatisticsPanel extends AbstractVMStatisticsPanel {
     }
 
     /**Populate the displayed fields from the specified VMStatistics.*/    
-        public void populate(VMStatistics vmStats) {
+        public void populate(ProcessStatistics vmStats) {
         WorkerPoolStats poolStats = vmStats.processPoolStats;
         textFieldWidgets[0].setText(Integer.toString(poolStats.queued));        
         textFieldWidgets[1].setText(Integer.toString(0));
@@ -299,7 +299,7 @@ class SocketVMStatisticsPanel extends AbstractVMStatisticsPanel {
         return labelStrings;
     }
 
-    public void populate(VMStatistics vmStats) {        
+    public void populate(ProcessStatistics vmStats) {        
         SocketListenerStats listenerStats = vmStats.socketListenerStats;
         textFieldWidgets[0].setText(Long.toString(listenerStats.objectsRead));
         textFieldWidgets[1].setText(Long.toString(listenerStats.objectsWritten));

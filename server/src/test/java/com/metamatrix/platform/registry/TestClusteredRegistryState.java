@@ -43,8 +43,7 @@ import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.platform.registry.ClusteredRegistryState.CacheNodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 
 public class TestClusteredRegistryState extends TestCase {
 	CacheFactory factory = new FakeCacheFactory();
@@ -62,13 +61,13 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertEquals(rootNode.getChildren().size(), 2);
 		assertNotNull(rootNode.getChild(key("host-1"))); //$NON-NLS-1$
@@ -88,17 +87,17 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertEquals(rootNode.getChildren().size(), 2);
 		
-		state.removeVM("host-1", "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$
+		state.removeProcess("host-1", "vm-1"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertNull(rootNode.getChild(key("host-1")).getChild(key("vm-1"))); //$NON-NLS-1$ //$NON-NLS-2$
 		assertNotNull(rootNode.getChild(key("host-1")).getChild(key("vm-2"))); //$NON-NLS-1$ //$NON-NLS-2$
@@ -113,20 +112,20 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertEquals(0, state.getVMs("unknown").size()); //$NON-NLS-1$
 		assertEquals(2, state.getVMs("host-1").size()); //$NON-NLS-1$
 		assertEquals(1, state.getVMs("host-2").size()); //$NON-NLS-1$
 		assertEquals(3, state.getVMs(null).size());
 				
-		assertEquals(vm2, state.getVM("host-1", "vm-2")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(vm2, state.getProcessBinding("host-1", "vm-2")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testHosts() throws Exception {
@@ -137,13 +136,13 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 
 		assertEquals(2, state.getHosts().size());
 		
@@ -168,20 +167,20 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		ServiceRegistryBinding s1 = buildServiceRegistryBinding(1, vm1.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s2 = buildServiceRegistryBinding(2, vm2.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s3 = buildServiceRegistryBinding(3, vm1.getVMControllerID(), "Index"); //$NON-NLS-1$
-		ServiceRegistryBinding s4 = buildServiceRegistryBinding(4, vm3.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s5 = buildServiceRegistryBinding(5, vm3.getVMControllerID(), "Session"); //$NON-NLS-1$
-		ServiceRegistryBinding s6 = buildServiceRegistryBinding(6, vm3.getVMControllerID(), "Auth"); //$NON-NLS-1$
+		ServiceRegistryBinding s1 = buildServiceRegistryBinding(1, vm1, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s2 = buildServiceRegistryBinding(2, vm2, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s3 = buildServiceRegistryBinding(3, vm1, "Index"); //$NON-NLS-1$
+		ServiceRegistryBinding s4 = buildServiceRegistryBinding(4, vm3, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s5 = buildServiceRegistryBinding(5, vm3, "Session"); //$NON-NLS-1$
+		ServiceRegistryBinding s6 = buildServiceRegistryBinding(6, vm3, "Auth"); //$NON-NLS-1$
 		
 		state.addServiceBinding("host-1", "vm-1", s1); //$NON-NLS-1$ //$NON-NLS-2$
 		state.addServiceBinding("host-1", "vm-1", s3); //$NON-NLS-1$ //$NON-NLS-2$
@@ -225,20 +224,20 @@ public class TestClusteredRegistryState extends TestCase {
 		state.addHost(host1);
 		state.addHost(host2);
 		
-		VMRegistryBinding vm1 = buildVMRegistryBinding("host-1", 1); //$NON-NLS-1$
-		VMRegistryBinding vm2 = buildVMRegistryBinding("host-1", 2); //$NON-NLS-1$
-		VMRegistryBinding vm3 = buildVMRegistryBinding("host-1", 3); //$NON-NLS-1$
+		ProcessRegistryBinding vm1 = buildVMRegistryBinding("host-1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm2 = buildVMRegistryBinding("host-1", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vm3 = buildVMRegistryBinding("host-1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		state.addVM("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
-		state.addVM("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-1", vm1); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-1", "vm-2", vm2); //$NON-NLS-1$ //$NON-NLS-2$
+		state.addProcess("host-2", "vm-1", vm3); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		ServiceRegistryBinding s1 = buildServiceRegistryBinding(1, vm1.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s2 = buildServiceRegistryBinding(2, vm2.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s3 = buildServiceRegistryBinding(3, vm1.getVMControllerID(), "Index"); //$NON-NLS-1$
-		ServiceRegistryBinding s4 = buildServiceRegistryBinding(4, vm3.getVMControllerID(), "Query"); //$NON-NLS-1$
-		ServiceRegistryBinding s5 = buildServiceRegistryBinding(5, vm3.getVMControllerID(), "Session"); //$NON-NLS-1$
-		ServiceRegistryBinding s6 = buildServiceRegistryBinding(6, vm3.getVMControllerID(), "Auth"); //$NON-NLS-1$
+		ServiceRegistryBinding s1 = buildServiceRegistryBinding(1, vm1, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s2 = buildServiceRegistryBinding(2, vm2, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s3 = buildServiceRegistryBinding(3, vm1, "Index"); //$NON-NLS-1$
+		ServiceRegistryBinding s4 = buildServiceRegistryBinding(4, vm3, "Query"); //$NON-NLS-1$
+		ServiceRegistryBinding s5 = buildServiceRegistryBinding(5, vm3, "Session"); //$NON-NLS-1$
+		ServiceRegistryBinding s6 = buildServiceRegistryBinding(6, vm3, "Auth"); //$NON-NLS-1$
 		
 		state.addServiceBinding("host-1", "vm-1", s1); //$NON-NLS-1$ //$NON-NLS-2$
 		state.addServiceBinding("host-1", "vm-1", s3); //$NON-NLS-1$ //$NON-NLS-2$
@@ -291,21 +290,20 @@ public class TestClusteredRegistryState extends TestCase {
 	}
 	
 	
-	static VMRegistryBinding buildVMRegistryBinding(String hostName, int vmID) {
-	    VMControllerID vmID1 = new VMControllerID(vmID, hostName);             
+	static ProcessRegistryBinding buildVMRegistryBinding(String hostName, String vmID) {
 	    HostID hostID1 = new HostID(hostName); 
 	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, "process1");  //$NON-NLS-1$
 	    VMComponentDefn defn1 = new BasicVMComponentDefn(Configuration.NEXT_STARTUP_ID, hostID1, defnID1, new ComponentTypeID(VMComponentDefnType.COMPONENT_TYPE_NAME)); 
-	    VMControllerInterface vmInterface1 = SimpleMock.createSimpleMock(VMControllerInterface.class);
-	    VMRegistryBinding binding =  new VMRegistryBinding(hostName, vmID1, defn1,vmInterface1, new NoOpMessageBus());
+	    ProcessManagement vmInterface1 = SimpleMock.createSimpleMock(ProcessManagement.class);
+	    ProcessRegistryBinding binding =  new ProcessRegistryBinding(hostName, vmID, defn1,vmInterface1, new NoOpMessageBus());
 	    binding.setAlive(true);
 	    return binding;
 	}
 
-	static ServiceRegistryBinding buildServiceRegistryBinding(int id, VMControllerID vmId, String type) {
-		ServiceID sid = new ServiceID(id, vmId);
+	static ServiceRegistryBinding buildServiceRegistryBinding(int id, ProcessRegistryBinding process, String type) {
+		ServiceID sid = new ServiceID(id, process.getHostName(), process.getProcessName());
 		//ServiceInterface si = SimpleMock.createSimpleMock(ServiceInterface.class);
-	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, vmId.getHostName(), null, null, ServiceState.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
+	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, process.getHostName(), null, null, ServiceState.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

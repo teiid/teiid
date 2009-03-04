@@ -76,7 +76,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public class FakeConfigurationService implements ConfigurationServiceInterface {
 
@@ -713,7 +712,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID()  {
+    public String getProcessName()  {
         return null;
     }
 

@@ -76,8 +76,8 @@ public class TestServiceRegistryBinding extends TestCase {
 		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
 		FakeServiceImpl service = new FakeServiceImpl();
 		
-    	VMRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", 2, "process2");             //$NON-NLS-1$ //$NON-NLS-2$
-    	ServiceID sid1 = new ServiceID(5, vmBinding2.getVMControllerID());
+    	ProcessRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 
+    	ServiceID sid1 = new ServiceID(5, vmBinding2.getHostName(), vmBinding2.getProcessName());
     	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, service, QueryService.SERVICE_NAME,
                                                                     "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                     "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 

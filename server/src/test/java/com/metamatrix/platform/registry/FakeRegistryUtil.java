@@ -49,8 +49,7 @@ import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.server.query.service.QueryService;
 
 @CacheListener
@@ -71,31 +70,31 @@ public class FakeRegistryUtil {
 		registry.addHost(host1);
 		registry.addHost(host2);
 		
-		VMRegistryBinding vmBinding2  = buildVMRegistryBinding("2.2.2.2", 2, "process2");             //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vmBinding2  = buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 
         ServiceRegistryBinding serviceBinding2 = buildServiceRegistryBinding("connectorBinding2", 2, vmBinding2, "Cache","psc2");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
-        registry.addVM(vmBinding2.getHostName(), vmBinding2.getVMControllerID().toString(), vmBinding2);
-        registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getVMControllerID().toString(), serviceBinding2);
+        registry.addProcess(vmBinding2.getHostName(), vmBinding2.getProcessName(), vmBinding2);
+        registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getProcessName(), serviceBinding2);
 		
 		
-		VMRegistryBinding vmBinding3  = buildVMRegistryBinding("3.3.3.3", 3, "process3");             //$NON-NLS-1$ //$NON-NLS-2$
+		ProcessRegistryBinding vmBinding3  = buildVMRegistryBinding("3.3.3.3", "process3");             //$NON-NLS-1$ //$NON-NLS-2$ 
         ServiceRegistryBinding serviceBinding3 = buildServiceRegistryBinding("connectorBinding3", 3, vmBinding3, "Cache", "psc3");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
-        registry.addVM(vmBinding3.getHostName(), vmBinding3.getVMControllerID().toString(), vmBinding3);
-        registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getVMControllerID().toString(), serviceBinding3);
+        registry.addProcess(vmBinding3.getHostName(), vmBinding3.getProcessName(), vmBinding3);
+        registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getProcessName(), serviceBinding3);
 		
 		
 		// dqps
-		ServiceID sid1 = new ServiceID(5, vmBinding2.getVMControllerID());
-		registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getVMControllerID().toString(), new ServiceRegistryBinding(sid1, new FakeQueryService(sid1), QueryService.SERVICE_NAME,
+		ServiceID sid1 = new ServiceID(5, vmBinding2.getHostName(),vmBinding2.getProcessName());
+		registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getProcessName(), new ServiceRegistryBinding(sid1, new FakeQueryService(sid1), QueryService.SERVICE_NAME,
                                                                     "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                     "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                     ServiceState.STATE_CLOSED,
                                                                     new Date(),  
                                                                     false, new NoOpMessageBus()));
 
-		ServiceID sid2 = new ServiceID(6, vmBinding3.getVMControllerID());	
-		registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getVMControllerID().toString(), new ServiceRegistryBinding(sid2, new FakeQueryService(sid2), QueryService.SERVICE_NAME,
+		ServiceID sid2 = new ServiceID(6, vmBinding3.getHostName(),vmBinding3.getProcessName());	
+		registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getProcessName(), new ServiceRegistryBinding(sid2, new FakeQueryService(sid2), QueryService.SERVICE_NAME,
                 "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                 "dqp3", "3.3.3.3", (DeployedComponent)new FakeConfiguration().deployedComponents.get(5), null, //$NON-NLS-1$ //$NON-NLS-2$ 
                 ServiceState.STATE_CLOSED,
@@ -107,22 +106,21 @@ public class FakeRegistryUtil {
 	}
 	
 	
-	public static VMRegistryBinding buildVMRegistryBinding(String hostName, int vmID, String process) throws Exception {
-	    VMControllerID vmID1 = new VMControllerID(vmID, hostName);             
+	public static ProcessRegistryBinding buildVMRegistryBinding(String hostName, String processName) throws Exception {
 	    HostID hostID1 = new HostID(hostName); 
-	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, process);  
+	    VMComponentDefnID defnID1 = new VMComponentDefnID(Configuration.NEXT_STARTUP_ID, hostID1, processName);  
 	    VMComponentDefn defn1 = new BasicVMComponentDefn(Configuration.NEXT_STARTUP_ID, hostID1, defnID1, new ComponentTypeID(VMComponentDefnType.COMPONENT_TYPE_NAME)); 
-	    VMControllerInterface vmInterface1 = Mockito.mock(VMControllerInterface.class);
+	    ProcessManagement vmInterface1 = Mockito.mock(ProcessManagement.class);
 		Mockito.stub(vmInterface1.getAddress()).toReturn(InetAddress.getLocalHost());
 
 	    
-	    VMRegistryBinding binding = new VMRegistryBinding(hostName, vmID1, defn1, vmInterface1, new NoOpMessageBus());
+	    ProcessRegistryBinding binding = new ProcessRegistryBinding(hostName, processName, defn1, vmInterface1, new NoOpMessageBus());
 	    binding.setAlive(true);
 	    return binding;
 	}
 
-	public static ServiceRegistryBinding buildServiceRegistryBinding(String name, int id, VMRegistryBinding vm, String type, String psc) {
-		ServiceID sid = new ServiceID(id, vm.getVMControllerID());	
+	public static ServiceRegistryBinding buildServiceRegistryBinding(String name, int id, ProcessRegistryBinding vm, String type, String psc) {
+		ServiceID sid = new ServiceID(id, vm.getHostName(), vm.getProcessName());	
 		
         DeployedComponentID deployedComponentID1 = new DeployedComponentID(name, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID());
 		ConnectorBindingID connectorBindingID1 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, name); 

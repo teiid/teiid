@@ -59,9 +59,9 @@ public class PlatformConfigSource implements DQPConfigSource {
     private Properties dqpProps;
     
     private Host host;
-    private String vmName;
+    private String processName;
     
-    public PlatformConfigSource(Properties queryServiceProps, Properties currentConfiguration, Object clientId, Host host, String vmName) {
+    public PlatformConfigSource(Properties queryServiceProps, Properties currentConfiguration, Object clientId, Host host, String processName) {
         dqpProps = PropertiesUtils.clone(queryServiceProps, currentConfiguration, true);
         dqpProps.setProperty(DQPConfigSource.PROCESS_POOL_MAX_THREADS, queryServiceProps.getProperty(QueryServicePropertyNames.PROCESS_POOL_MAX_THREADS));
         dqpProps.setProperty(DQPConfigSource.PROCESS_POOL_THREAD_TTL, queryServiceProps.getProperty(QueryServicePropertyNames.PROCESS_POOL_THREAD_TTL));
@@ -93,7 +93,7 @@ public class PlatformConfigSource implements DQPConfigSource {
         }
         
         this.host = host;
-        this.vmName = vmName;
+        this.processName = processName;
     }
 
     /*
@@ -125,7 +125,7 @@ public class PlatformConfigSource implements DQPConfigSource {
 		} catch (VirtualDatabaseException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
-		binder.bindConstant().annotatedWith(Names.named(Configuration.VMNAME)).to(vmName);
+		binder.bindConstant().annotatedWith(Names.named(Configuration.PROCESSNAME)).to(processName);
 		binder.bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 	}
     

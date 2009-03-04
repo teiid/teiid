@@ -258,13 +258,13 @@ public class VDBCreation  {
             // still needs to stay the same
             boolean beenCreated = false;
             for (Iterator vmit=vmsToDeployTo.iterator(); vmit.hasNext();) {
-                String vmname = (String) vmit.next();
-                VMComponentDefn depVM = getDeployedVM(vmname, cmc);
+                String processName = (String) vmit.next();
+                VMComponentDefn depVM = getDeployedVM(processName, cmc);
                 // the VM has to be deployed (which is to have 1 or more pscs deployed to it) in order
                 // for the VM to be started
                 // *** Currently this process will not try to start a VM ***
                 if (depVM == null) {
-                	LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.0", vmname)); //$NON-NLS-1$
+                	LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.0", processName)); //$NON-NLS-1$
                      continue;
                 }
                 
@@ -276,7 +276,7 @@ public class VDBCreation  {
                         continue;
                     }
                 }
-                LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.5", new Object[] {binding.getName(), vmname} )); //$NON-NLS-1$
+                LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.5", new Object[] {binding.getName(), processName} )); //$NON-NLS-1$
 
                 processDeployment(depVM, cmc, (beenCreated?beenCreated:bindingExist), binding, type, createdPSC, editor);
 
@@ -413,11 +413,11 @@ public class VDBCreation  {
         }
     }
     
-    private VMComponentDefn getDeployedVM(String vmName,ConfigurationModelContainer cmc) throws Exception {
+    private VMComponentDefn getDeployedVM(String processName,ConfigurationModelContainer cmc) throws Exception {
         Collection vms = cmc.getConfiguration().getVMComponentDefns();
         for (Iterator it=vms.iterator(); it.hasNext();) {
             VMComponentDefn vm = (VMComponentDefn) it.next();
-            if (vm.getName().equalsIgnoreCase(vmName)) {
+            if (vm.getName().equalsIgnoreCase(processName)) {
                 return vm;
             }
         }

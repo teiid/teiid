@@ -32,7 +32,6 @@ import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public class FakeService implements FakeServiceInterface {
 
@@ -71,7 +70,7 @@ public class FakeService implements FakeServiceInterface {
     public Date getStateChangeTime() {
         return null;
     }
-    public VMControllerID getVMID() {
+    public String getProcessName() {
         return null;
     }
     public boolean isAlive() {

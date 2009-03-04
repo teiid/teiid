@@ -243,10 +243,10 @@ public class ConnectorService extends AbstractService implements ConnectorServic
             
             // Create a stringified connector ID from the serviceID
             ServiceID id = this.getID();
-            String connID = id.getVMControllerID().getID() + "|" + id.getID();         //$NON-NLS-1$
+            String connID = id.getHostName()+"|"+ id.getProcessName() + "|" + id.getID();   //$NON-NLS-1$ //$NON-NLS-2$
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
             deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
-            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getVMName());
+            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getProcessName());
             connectorManager.setClassloader(loader);
             connectorManager.initialize(deMaskedProps);
             return connectorManager;

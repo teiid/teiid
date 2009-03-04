@@ -119,11 +119,11 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
         int index = fileName.indexOf(VM_NAME_TOKEN);
         if ( index != -1 ) {
             StringBuffer tempFileName = new StringBuffer(fileName);
-            String vmName = VMNaming.getVMName();
-            if ( vmName == null || vmName.trim().length() == 0 ) {
-                vmName = VMNaming.getConfigName();
+            String processName = VMNaming.getProcessName();
+            if ( processName == null || processName.trim().length() == 0 ) {
+                processName = VMNaming.getConfigName();
             }
-            tempFileName.replace(index,index+VM_NAME_TOKEN.length(),vmName);
+            tempFileName.replace(index,index+VM_NAME_TOKEN.length(),processName);
             fileName = tempFileName.toString();
         }
 

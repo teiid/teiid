@@ -48,17 +48,17 @@ public final class VMNaming {
     private static String BIND_ADDRESS = "";//$NON-NLS-1$
     
     /*
-     * VMNAME refers to the name of the process that is currently running.
+     * Process Name refers to the name of the process that is currently running.
      */
-    private static String VMNAME = "";//$NON-NLS-1$
+    private static String PROCESS_NAME = "";//$NON-NLS-1$
 
     
-    public static String getVMName() {
-        return VMNAME;
+    public static String getProcessName() {
+        return PROCESS_NAME;
     }
     
-    public static void setVMName(String vmname) {
-    	VMNAME = vmname;
+    public static void setProcessName(String processName) {
+    	PROCESS_NAME = processName;
     }
     
     public static String getConfigName() {
@@ -106,7 +106,7 @@ public final class VMNaming {
     public static String getHostInfo() {
         StringBuffer sb = new StringBuffer("Host Information"); //$NON-NLS-1$ 
         sb.append('\n');
-        sb.append(" VM Name:               " + VMNAME ); //$NON-NLS-1$
+        sb.append(" VM Name:               " + PROCESS_NAME ); //$NON-NLS-1$
         sb.append('\n');
         sb.append(" Hostname:              " + HOST_ADDRESS.getCanonicalHostName() ); //$NON-NLS-1$
         sb.append('\n');

@@ -47,13 +47,13 @@ public class PlatformBufferService implements BufferService {
     private BufferManager bufferMgr;
     private Properties props;
     
-    private String vmName;
+    private String processName;
     private Host host;
     
     @Inject
-    public PlatformBufferService(@Named(Configuration.HOST) Host host, @Named(Configuration.VMNAME) String vmName) {
+    public PlatformBufferService(@Named(Configuration.HOST) Host host, @Named(Configuration.PROCESSNAME) String processName) {
     	this.host = host;
-    	this.vmName = vmName;
+    	this.processName = processName;
 	}
 
     /* 
@@ -83,7 +83,7 @@ public class PlatformBufferService implements BufferService {
 		props.setProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, dir);
 
 		try {
-			bufferMgr = BufferManagerFactory.getServerBufferManager(host.getFullName()+"-"+vmName, props); //$NON-NLS-1$
+			bufferMgr = BufferManagerFactory.getServerBufferManager(host.getFullName()+"-"+processName, props); //$NON-NLS-1$
 		} catch (MetaMatrixComponentException e) {
 			throw new ApplicationLifecycleException(e);
 		} 

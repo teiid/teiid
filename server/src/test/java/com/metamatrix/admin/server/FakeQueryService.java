@@ -42,7 +42,6 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -71,32 +70,32 @@ public class FakeQueryService implements QueryServiceInterface {
     public Collection getAllQueries() {
         List results = new ArrayList();
         
-        RequestInfo info1 = new RequestInfo(new RequestID("1", 1L), "sql1", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token1 = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ //$NON-NLS-2$
+        RequestInfo info1 = new RequestInfo(new RequestID("1", 1L), "sql1", new Date(), new Date()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token1 = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ 
         info1.setSessionToken(token1);
         results.add(info1);
         
         
-        RequestInfo info2 = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token2 = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ //$NON-NLS-2$
+        RequestInfo info2 = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token2 = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ 
         info2.setSessionToken(token2);
         results.add(info2);
 
         
         
         //SourceRequests
-        RequestInfo info1A = new RequestInfo(new RequestID("1", 1), "sql1", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token1A = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ //$NON-NLS-2$
+        RequestInfo info1A = new RequestInfo(new RequestID("1", 1), "sql1", new Date(), new Date()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token1A = new SessionToken(new MetaMatrixSessionID(1), "user1"); //$NON-NLS-1$ 
         info1A.setSessionToken(token1A);
-        info1A.setConnectorBindingUUID("connectorBinding1");
+        info1A.setConnectorBindingUUID("connectorBinding1");//$NON-NLS-1$ 
         info1A.setNodeID(1);
         results.add(info1A);
         
 
-        RequestInfo info2A = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$
-        SessionToken token2A = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ //$NON-NLS-2$
+        RequestInfo info2A = new RequestInfo(new RequestID("2", 2), "sql2", new Date(), new Date()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token2A = new SessionToken(new MetaMatrixSessionID(2), "user2"); //$NON-NLS-1$ 
         info2A.setSessionToken(token2A);
-        info2A.setConnectorBindingUUID("connectorBinding2");
+        info2A.setConnectorBindingUUID("connectorBinding2");//$NON-NLS-1$ 
         info2A.setNodeID(2);
         
         results.add(info2A);
@@ -181,7 +180,7 @@ public class FakeQueryService implements QueryServiceInterface {
     /** 
      * @see com.metamatrix.platform.service.api.ServiceInterface#getVMID()
      */
-    public VMControllerID getVMID(){
+    public String getProcessName(){
         return null;
     }
 

@@ -30,7 +30,7 @@ import java.io.ObjectOutput;
 import com.metamatrix.common.util.VMNaming;
 
 public class AuditMessage implements Externalizable {
-    public static final String VM_NAME = VMNaming.getVMName();
+    public static final String PROCESS_NAME = VMNaming.getProcessName();
     public static final String HOST_NAME = VMNaming.getConfigName();
 
     private static final String RESOURCE_DELIMITER = ", "; //$NON-NLS-1$
@@ -43,7 +43,7 @@ public class AuditMessage implements Externalizable {
 	private long timestamp;
     //private String threadName;
     private String hostName;
-    private String vmName;
+    private String processName;
 
 	public AuditMessage() {
 	}
@@ -57,7 +57,7 @@ public class AuditMessage implements Externalizable {
 	    this.timestamp = System.currentTimeMillis();
         //this.threadName = Thread.currentThread().getName();
         this.hostName = HOST_NAME;
-        this.vmName = VM_NAME;
+        this.processName = PROCESS_NAME;
 	}
 
     public String getContext() {
@@ -72,20 +72,8 @@ public class AuditMessage implements Externalizable {
         return this.principal;
     }
 
-    //public int getLevel() {
-    //    return this.level;
-    //}
-
-    //public String getLabel() {
-    //    return AuditLevel.getLabelForLevel(level);
-    //}
-	
-    //public String getThreadName() {
-    //    return this.threadName;
-    //}
-
-    public String getVMName() {
-        return this.vmName;
+    public String getProcessName() {
+        return this.processName;
     }
 
     public String getHostName() {
@@ -161,7 +149,7 @@ public class AuditMessage implements Externalizable {
 		out.writeObject(resources);
 		out.writeLong(timestamp);
 //		out.writeObject(threadName);
-		out.writeObject(vmName);
+		out.writeObject(processName);
 	}
 
 	// implements Externalizable
@@ -173,7 +161,7 @@ public class AuditMessage implements Externalizable {
 		this.resources = (Object[]) in.readObject();
 		this.timestamp = in.readLong();
 //		this.threadName = (String) in.readObject();
-		this.vmName = (String) in.readObject();
+		this.processName = (String) in.readObject();
 	}
 
 }

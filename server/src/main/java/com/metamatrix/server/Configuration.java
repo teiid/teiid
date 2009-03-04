@@ -25,8 +25,7 @@ package com.metamatrix.server;
 public interface Configuration {
 	final String HOST = "Host"; //$NON-NLS-1$
 	final String HOSTNAME = "HostName"; //$NON-NLS-1$
-	final String VMNAME = "VMName"; //$NON-NLS-1$
-	final String VMID = "VMId"; //$NON-NLS-1$
+	final String PROCESSNAME = "ProcessName"; //$NON-NLS-1$
 	final String CLUSTERNAME = "ClusterName"; //$NON-NLS-1$
 	final String LOGFILE = "LogFile"; //$NON-NLS-1$
 	final String LOGDIR = "LogDir"; //$NON-NLS-1$

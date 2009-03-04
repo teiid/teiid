@@ -272,7 +272,7 @@ public class FakeConfiguration implements Configuration {
     }
 
     public VMComponentDefn getVMForHost(String hostname,
-                                        String vmname) {
+                                        String processName) {
         return null;
     }
 

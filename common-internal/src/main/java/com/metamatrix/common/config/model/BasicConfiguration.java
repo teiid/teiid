@@ -674,13 +674,9 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
         for (Iterator it = dcs.iterator(); it.hasNext(); ) {
             dc = (VMComponentDefn) it.next();
-            // is the component from the same host
+            // 	is the component from the same host
                 if (dc.getID().equals(vmID)) {
-//                ComponentDefn comp = dc.getDeployedComponentDefn(this);
-//                if (comp instanceof VMComponentDefn) {
-//                    if (dc.getName().equalsIgnoreCase(vmname)) {
-                        return dc;
-//                    }
+                	return dc;
                 }
         }
       
@@ -723,7 +719,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 	    return getVMsForHost(id);
     }
     
-    public VMComponentDefn getVMForHost(String hostname, String vmname)  {
+    public VMComponentDefn getVMForHost(String hostname, String processName)  {
 
         Collection dcs = getVMsForHost(hostname);
 
@@ -732,7 +728,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
         for (Iterator it = dcs.iterator(); it.hasNext(); ) {
             dc = (VMComponentDefn) it.next();
             // is the component from the same host
-                if (dc.getID().getName().equalsIgnoreCase(vmname)) {
+                if (dc.getID().getName().equalsIgnoreCase(processName)) {
                         return dc;
                 }
         }

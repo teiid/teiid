@@ -62,22 +62,22 @@ public class ClusteredRegistryState implements CacheListener {
 		return node;
 	}
 	
-	private Cache addVMNode(String hostName, String vmName) throws CacheNodeNotFoundException {
+	private Cache addProcessNode(String hostName, String processName) throws CacheNodeNotFoundException {
 		Cache hostNode = getHostNode(hostName);
-		Cache n =  hostNode.addChild(vmName.toUpperCase());
-		n.put(NAME, vmName);
+		Cache n =  hostNode.addChild(processName.toUpperCase());
+		n.put(NAME, processName);
 		return n;
 	}
 	
-	private Cache getVMNode(String hostName, String vmName) throws CacheNodeNotFoundException {
+	private Cache getProcessNode(String hostName, String processName) throws CacheNodeNotFoundException {
 		Cache hostNode = getHostNode(hostName);
-		Cache vmNode = hostNode.getChild(vmName.toUpperCase());
+		Cache vmNode = hostNode.getChild(processName.toUpperCase());
 		if (vmNode == null) {
-			throw new CacheNodeNotFoundException("VM Node not found="+vmName); //$NON-NLS-1$
+			throw new CacheNodeNotFoundException("VM Node not found="+processName); //$NON-NLS-1$
 		}
 		
 		// only return the active vms
-		VMRegistryBinding binding = (VMRegistryBinding)vmNode.get(VM_CONTROLLER);
+		ProcessRegistryBinding binding = (ProcessRegistryBinding)vmNode.get(VM_CONTROLLER);
 		if (binding == null || !binding.isAlive()) {
 			throw new CacheNodeNotFoundException("VM Node's binding not found or not active"); //$NON-NLS-1$
 		}
@@ -95,23 +95,23 @@ public class ClusteredRegistryState implements CacheListener {
 		this.cache.removeChild(hostName.toUpperCase());
 	}
 	
-	protected synchronized void addVM(String hostName, String vmName, VMRegistryBinding vmBinding) throws CacheNodeNotFoundException {
-		Cache vmNode = addVMNode(hostName, vmName);
+	protected synchronized void addProcess(String hostName, String processName, ProcessRegistryBinding vmBinding) throws CacheNodeNotFoundException {
+		Cache vmNode = addProcessNode(hostName, processName);
 		vmNode.put(VM_CONTROLLER, vmBinding);
 	}
 	
-	protected void updateVM(String hostName, String vmName, VMRegistryBinding binding) throws ResourceNotBoundException, CacheNodeNotFoundException {
-		Cache vmNode = getVMNode(hostName, vmName);
+	protected void updateProcess(String hostName, String processName, ProcessRegistryBinding binding) throws ResourceNotBoundException, CacheNodeNotFoundException {
+		Cache vmNode = getProcessNode(hostName, processName);
 		if (vmNode.get(VM_CONTROLLER) == null) {
-			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+vmName )); //$NON-NLS-1$
+			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+processName )); //$NON-NLS-1$
 		}
 		vmNode.put(VM_CONTROLLER, binding);		
 	} 	
 	
-	protected void removeVM(String hostName, String vmName) {
+	protected void removeProcess(String hostName, String processName) {
 		try {
 			Cache hostNode = getHostNode(hostName);
-			hostNode.removeChild(vmName.toUpperCase());
+			hostNode.removeChild(processName.toUpperCase());
 		} catch (CacheNodeNotFoundException e) {
 			// this is OK, this is already gone.
 		}
@@ -146,11 +146,11 @@ public class ClusteredRegistryState implements CacheListener {
 	 * @param hostName
 	 * @return
 	 */
-	public List<VMRegistryBinding> getVMs(String hostName){
+	public List<ProcessRegistryBinding> getVMs(String hostName){
 		return getVMs(hostName, new ArrayList());
 	}
 	
-	private List<VMRegistryBinding> getVMs(String hostName, ArrayList list){
+	private List<ProcessRegistryBinding> getVMs(String hostName, ArrayList list){
 		
 		if (hostName == null) {
 			Collection<Cache> hostNodes = this.cache.getChildren();
@@ -172,22 +172,22 @@ public class ClusteredRegistryState implements CacheListener {
 		return list;
 	}
 	
-	public VMRegistryBinding getVM(String hostName, String vmName) throws ResourceNotBoundException {
+	public ProcessRegistryBinding getProcessBinding(String hostName, String processName) throws ResourceNotBoundException {
 		try {
-			Cache vmNode = getVMNode(hostName, vmName);
-			VMRegistryBinding binding = (VMRegistryBinding)vmNode.get(VM_CONTROLLER);
+			Cache vmNode = getProcessNode(hostName, processName);
+			ProcessRegistryBinding binding = (ProcessRegistryBinding)vmNode.get(VM_CONTROLLER);
 			if (binding == null) {
-				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+vmName )); //$NON-NLS-1$				
+				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+processName )); //$NON-NLS-1$				
 			}
 			return binding;
 		} catch (CacheNodeNotFoundException e) {
-			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+vmName )); //$NON-NLS-1$
+			throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0012, hostName+"/"+processName )); //$NON-NLS-1$
 		} 
 	}
 	
 	
-	protected synchronized void addServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
-		Cache services = getServices(hostName, vmName);
+	protected synchronized void addServiceBinding(String hostName, String processName, ServiceRegistryBinding binding) throws ResourceAlreadyBoundException, CacheNodeNotFoundException {
+		Cache services = getServices(hostName, processName);
 
 		// check if this service already exists
 		ServiceRegistryBinding existing = (ServiceRegistryBinding)services.get(binding.getServiceID());
@@ -198,8 +198,8 @@ public class ClusteredRegistryState implements CacheListener {
         services.put(binding.getServiceID(), binding);
 	}
 	
-	protected void updateServiceBinding(String hostName, String vmName, ServiceRegistryBinding binding) throws ResourceNotBoundException, CacheNodeNotFoundException {
-		Cache services = getServices(hostName, vmName);
+	protected void updateServiceBinding(String hostName, String processName, ServiceRegistryBinding binding) throws ResourceNotBoundException, CacheNodeNotFoundException {
+		Cache services = getServices(hostName, processName);
 
 		// check if this service already exists
 		ServiceRegistryBinding existing = (ServiceRegistryBinding)services.get(binding.getServiceID());
@@ -210,10 +210,10 @@ public class ClusteredRegistryState implements CacheListener {
         services.put(binding.getServiceID(), binding);	
    }	
 	
-	public ServiceRegistryBinding getServiceBinding(String hostName, String vmName, ServiceID serviceId ) throws ResourceNotBoundException {
+	public ServiceRegistryBinding getServiceBinding(String hostName, String processName, ServiceID serviceId ) throws ResourceNotBoundException {
 		ServiceRegistryBinding binding;
 		try {
-	        Cache services = getServices(hostName, vmName);
+	        Cache services = getServices(hostName, processName);
 			binding = (ServiceRegistryBinding)services.get(serviceId);
 			if (binding == null) {
 				throw new ResourceNotBoundException(ServicePlugin.Util.getString(ServiceMessages.REGISTRY_0011, serviceId ));
@@ -225,21 +225,21 @@ public class ClusteredRegistryState implements CacheListener {
 	}
 
 
-	public List<ServiceRegistryBinding> getActiveServiceBindings(String hostName, String vmName, String serviceType) {
-		return getServiceBindings(hostName, vmName, serviceType);
+	public List<ServiceRegistryBinding> getActiveServiceBindings(String hostName, String processName, String serviceType) {
+		return getServiceBindings(hostName, processName, serviceType);
 	}
 	
 	public List<ServiceRegistryBinding> getServiceBindings(String serviceType) {
 		return getServiceBindings(null, null, serviceType);
 	}
 
-	public List<ServiceRegistryBinding> getServiceBindings(String hostName, String vmName, String serviceType) {
-		return getServiceBindings(hostName, vmName, serviceType, false);
+	public List<ServiceRegistryBinding> getServiceBindings(String hostName, String processName, String serviceType) {
+		return getServiceBindings(hostName, processName, serviceType, false);
 	}
 	
-	private List<ServiceRegistryBinding> getServiceBindings(String hostName, String vmName, String serviceType, boolean active) {
+	private List<ServiceRegistryBinding> getServiceBindings(String hostName, String processName, String serviceType, boolean active) {
 		List services = new ArrayList();
-		List<ServiceRegistryBinding> bindings = getServiceBindings(hostName, vmName);
+		List<ServiceRegistryBinding> bindings = getServiceBindings(hostName, processName);
 		for (ServiceRegistryBinding binding:bindings) {
             if (binding.getServiceType().equals(serviceType)) {
             	if (!active || (active && binding.isActive())) {
@@ -250,27 +250,27 @@ public class ClusteredRegistryState implements CacheListener {
 		return services;
     }
     
-	public List<ServiceRegistryBinding> getServiceBindings(String hostName, String vmName) {
-		return getServiceBindings(hostName, vmName, new ArrayList());
+	public List<ServiceRegistryBinding> getServiceBindings(String hostName, String processName) {
+		return getServiceBindings(hostName, processName, new ArrayList());
 	}	
 	
-	private List<ServiceRegistryBinding> getServiceBindings(String hostName, String vmName, ArrayList list) {
+	private List<ServiceRegistryBinding> getServiceBindings(String hostName, String processName, ArrayList list) {
 		
 		try {
-			if (hostName == null && vmName == null) {
+			if (hostName == null && processName == null) {
 				Collection<Cache> hostNodes = this.cache.getChildren();
 				for(Cache host:hostNodes) {
 					getServiceBindings((String)host.get(NAME), null, list);
 				}
 			}
-			else if (hostName != null && vmName == null) {
+			else if (hostName != null && processName == null) {
 				Collection<Cache> vmNodes = getHostNode(hostName).getChildren();
 				for(Cache vm:vmNodes) {
 					getServiceBindings(hostName, (String)vm.get(NAME), list);
 				}
 			}
-			else if (hostName != null && vmName != null) {
-				Cache services = getServices(hostName, vmName);
+			else if (hostName != null && processName != null) {
+				Cache services = getServices(hostName, processName);
 				list.addAll(services.values());
 			}
 		} catch (CacheNodeNotFoundException e) {
@@ -279,8 +279,8 @@ public class ClusteredRegistryState implements CacheListener {
 		return list;
 	}	
 	
-	private Cache getServices(String hostName, String vmName) throws CacheNodeNotFoundException {
-		Cache vmNode = getVMNode(hostName, vmName);
+	private Cache getServices(String hostName, String processName) throws CacheNodeNotFoundException {
+		Cache vmNode = getProcessNode(hostName, processName);
         Cache services = vmNode.getChild(SERVICES);
         if (services == null) {
         	services = vmNode.addChild(SERVICES);
@@ -288,9 +288,9 @@ public class ClusteredRegistryState implements CacheListener {
         return services;
 	}
 	
-	protected void removeServiceBinding(String hostName, String vmName, ServiceID serviceId) {
+	protected void removeServiceBinding(String hostName, String processName, ServiceID serviceId) {
 		try {
-			Cache services = getServices(hostName, vmName);
+			Cache services = getServices(hostName, processName);
 			services.remove(serviceId);
 		} catch (CacheNodeNotFoundException e) {
 			// OK, this already gone.

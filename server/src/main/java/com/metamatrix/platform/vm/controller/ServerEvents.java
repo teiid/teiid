@@ -23,16 +23,16 @@
 package com.metamatrix.platform.vm.controller;
 
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 
 public interface ServerEvents {
 
-	void vmAdded(VMRegistryBinding binding);
+	void processAdded(ProcessRegistryBinding binding);
 	
-	void vmRemoved(VMControllerID id);
+	void processRemoved(String hostName, String processName);
 	
-	void vmUpdated(VMRegistryBinding binding);
+	void processUpdated(ProcessRegistryBinding binding);
 	
 	void serviceAdded(ServiceRegistryBinding binding);
 	

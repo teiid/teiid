@@ -67,7 +67,6 @@ import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
@@ -93,7 +92,7 @@ import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
@@ -107,7 +106,7 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.admin.api.QueryAdminAPI;
@@ -118,23 +117,10 @@ import com.metamatrix.server.admin.apiimpl.RuntimeMetadataAdminAPIImpl;
 import com.metamatrix.server.admin.apiimpl.TransactionAdminAPIImpl;
 
 /**
- * This class is used to start up and bind VM's to the naming server.
- *
- * The following command will startup a standalone vm with no services.
- * <p><blockquote><pre>
- *   java com.metamatrix.framework.vm.controller.VMController <VM_Name> false log.txt
- * </pre></blockquote>
- *
- * The following command will startup a vm and start services as defined in the deployment model.
- * The vmName must exist in the property service.
- *
- * <p><blockquote><pre>
- *   java com.metamatrix.framework.vm.controller.VMController vmName true log.txt
- * </pre></blockquote>
- *
- *
+ * This class is used to start up a server process and start all services that are 
+ * configured under this server
  */
-public abstract class VMController implements VMControllerInterface {
+public abstract class ProcessController implements ProcessManagement {
 
     public static final String STARTER_MAX_THREADS = "vm.starter.maxThreads"; //$NON-NLS-1$
     /**Time-to-live for threads used to start services (ms)*/    
@@ -150,8 +136,7 @@ public abstract class VMController implements VMControllerInterface {
     public static final int DEFAULT_STARTER_TIMETOLIVE = 15000;
     
     protected Host host;
-    protected String vmName;
-    protected VMControllerID id;
+    protected String processName;
     
 	private Date startTime;
 	private Properties vmProps;
@@ -178,14 +163,14 @@ public abstract class VMController implements VMControllerInterface {
     /**
      * Create a new instance of VMController.
      *
-     * @param vmName Name of VM
+     * @param processName Name of Process
      * @param startDeployedServices If true all services that are deployed to this vm are started.
      * @param standalone If true indicates that VMController is running in its own vm.
      * @throws Exception if an error occurs initializing vmController
      */
-    public VMController(Host host, String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
+    public ProcessController(Host host, String processname, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
     	this.host = host;
-    	this.vmName = vmName;
+    	this.processName = processname;
     	
     	this.registry = registry;
     	this.events = serverEvents;
@@ -197,14 +182,9 @@ public abstract class VMController implements VMControllerInterface {
     	
         this.startServicePool = WorkerPoolFactory.newWorkerPool("StartServiceQueue", maxThreads, timeToLive); //$NON-NLS-1$
         
-        this.id = vmId;
-		
-		initVMProperties(host.getFullName(), vmName);
+		initVMProperties(host.getFullName(), processname);
 		
         this.startTime = new Date();
-
-        //Register with registry
-        logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0006, id));
 
         this.clientServices = new ClientServiceRegistry();
 
@@ -286,10 +266,10 @@ public abstract class VMController implements VMControllerInterface {
      *  - vmComponentDefnID
      *  - vmProps
      */
-	private void initVMProperties(String hostname, String vmName) throws Exception {
+	private void initVMProperties(String hostname, String processName) throws Exception {
         ConfigurationModelContainer config = getConfigurationModel();
         
-        VMComponentDefn deployedVM = config.getConfiguration().getVMForHost(hostname, vmName);
+        VMComponentDefn deployedVM = config.getConfiguration().getVMForHost(hostname, processName);
 
         if (deployedVM != null) {
         	this.vmComponentDefn = deployedVM;
@@ -315,22 +295,13 @@ public abstract class VMController implements VMControllerInterface {
            logMessage(PlatformPlugin.Util.getString("VMController.VM_Force_Shutdown_Time", force_shutdown_time)); //$NON-NLS-1$
            
            // add the vm to registry
-           VMRegistryBinding binding = new VMRegistryBinding(host.getFullName(), id, deployedVM, this, this.messageBus);        
-           this.events.vmAdded(binding);
+           ProcessRegistryBinding binding = new ProcessRegistryBinding(host.getFullName(), this.processName, deployedVM, this, this.messageBus);        
+           this.events.processAdded(binding);
         }
 	}
 
     protected void logMessage(String s) {
         LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, s);
-    }
-
-    protected static void doUsage() {
-        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.VM_0010));
-        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.VM_0011));
-    }
-
-    public VMControllerID getID() {
-        return id;
     }
 
 	public void start() {
@@ -404,7 +375,7 @@ public abstract class VMController implements VMControllerInterface {
         ServiceRegistryBinding binding = null;
 
         try {
-            binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getVMControllerID().toString(), serviceID);
+            binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getProcessName(), serviceID);
         } catch (ResourceNotBoundException e) {
             String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0019, serviceID);
             throw new ServiceException(e, msg);
@@ -475,7 +446,7 @@ public abstract class VMController implements VMControllerInterface {
         String serviceClassName = serviceProps.getProperty( ServicePropertyNames.SERVICE_CLASS_NAME );
 
         if (serviceClassName != null && serviceClassName.length() > 0) {
-            logMessage( PlatformPlugin.Util.getString(LogMessageKeys.VM_0025, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()));
+            logMessage( PlatformPlugin.Util.getString(LogMessageKeys.VM_0025, deployedService.getServiceComponentDefnID().getName(), processName, host.getID().getName()));
 
             serviceProps.put(ServicePropertyNames.INSTANCE_NAME, deployedService.getName());
             serviceProps.put(ServicePropertyNames.SERVICE_NAME, deployedService.getServiceComponentDefnID().getName());
@@ -492,7 +463,7 @@ public abstract class VMController implements VMControllerInterface {
             startService(this.clientServices, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
 
         } else {
-            String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), vmName, host.getID().getName()});
+            String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), processName, host.getID().getName()});
             throw new ServiceException(msg);
         }
 
@@ -516,7 +487,7 @@ public abstract class VMController implements VMControllerInterface {
 		JDBCConnectionPoolHelper.getInstance().shutDown();
 
         // unregister VMController
-        events.vmRemoved(id);
+        events.processRemoved(host.getFullName(), this.processName);
         
         this.shuttingDown = true;
 
@@ -542,7 +513,7 @@ public abstract class VMController implements VMControllerInterface {
         try {
 			logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0035, id));
 			validateServiceID(id);
-			ServiceRegistryBinding binding = this.registry.getServiceBinding(id.getHostName(), id.getVMControllerID().toString(), id);
+			ServiceRegistryBinding binding = this.registry.getServiceBinding(id.getHostName(), id.getProcessName(), id);
 			stopService(binding, now, shutdown);
 		} catch (ResourceNotBoundException e) {
 			throw new ServiceException(e);
@@ -582,8 +553,8 @@ public abstract class VMController implements VMControllerInterface {
     /**
 	 * Return information about VM. totalMemory, freeMemory, threadCount
 	 */
-    public VMStatistics getVMStatistics() {
-        VMStatistics vmStats = new VMStatistics();
+    public ProcessStatistics getVMStatistics() {
+        ProcessStatistics vmStats = new ProcessStatistics();
         Runtime rt = Runtime.getRuntime();
         vmStats.freeMemory = rt.freeMemory();
         vmStats.totalMemory = rt.totalMemory();
@@ -595,7 +566,7 @@ public abstract class VMController implements VMControllerInterface {
             root = tg;
         }
         vmStats.threadCount = root.activeCount();
-        vmStats.name = vmName;
+        vmStats.name = processName;
         
         
         vmStats.processPoolStats = getProcessPoolStats(); 
@@ -655,13 +626,13 @@ public abstract class VMController implements VMControllerInterface {
      * Private helper method that verifies service belongs to this vm
      */
     private void validateServiceID(ServiceID serviceID) {
-        if (!serviceID.getVMControllerID().equals(getID())) {
-            throw new ServiceException(PlatformPlugin.Util.getString(LogMessageKeys.VM_0047, serviceID, this.id));
+        if (!(serviceID.getHostName().equalsIgnoreCase(this.host.getFullName()) && serviceID.getProcessName().equalsIgnoreCase(this.processName))) {
+            throw new ServiceException(PlatformPlugin.Util.getString(LogMessageKeys.VM_0047, serviceID, this.host.getFullName(), this.processName));
         }
     }
         
     /** 
-     * @see com.metamatrix.platform.vm.api.controller.VMControllerInterface#exportLogs()
+     * @see com.metamatrix.platform.vm.api.controller.ProcessManagement#exportLogs()
      * @since 4.3
      */
     public byte[] exportLogs() {
@@ -691,8 +662,8 @@ public abstract class VMController implements VMControllerInterface {
         }
     }
     
-    public abstract SocketListenerStats getSocketListenerStats();
-    public abstract WorkerPoolStats getProcessPoolStats();
+    protected abstract SocketListenerStats getSocketListenerStats();
+    protected abstract WorkerPoolStats getProcessPoolStats();
 
     
     /**
@@ -782,7 +753,7 @@ public abstract class VMController implements VMControllerInterface {
 
         MultipleException multipleException = new MultipleException();
 
-        List<ServiceRegistryBinding> bindings = this.registry.getServiceBindings(host.getFullName(), id.toString());
+        List<ServiceRegistryBinding> bindings = this.registry.getServiceBindings(host.getFullName(), this.processName);
         
         for (ServiceRegistryBinding binding:bindings) {
             try {
@@ -862,7 +833,7 @@ public abstract class VMController implements VMControllerInterface {
         int currentState = 0;
 
         try {
-            ServiceRegistryBinding binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getVMControllerID().toString(), serviceID);
+            ServiceRegistryBinding binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getProcessName(), serviceID);
             service = binding.getService();
             // check for null service in case the service was stopped.  When service is stopped,
             // the binding service reference is nulled out.
@@ -927,7 +898,7 @@ public abstract class VMController implements VMControllerInterface {
      */
     private ServiceID createServiceID() {
         try {
-            return new ServiceID(DBIDGenerator.getInstance().getID(DBIDGenerator.SERVICE_ID), id);
+            return new ServiceID(DBIDGenerator.getInstance().getID(DBIDGenerator.SERVICE_ID), host.getFullName(), this.processName);
         } catch (DBIDGeneratorException e) {
             throw new ServiceException(e, ErrorMessageKeys.SERVICE_0025, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0025));
         }
@@ -967,7 +938,7 @@ public abstract class VMController implements VMControllerInterface {
 
 
 	public String getName() {
-		return vmName;
+		return processName;
 	}
 	
 }

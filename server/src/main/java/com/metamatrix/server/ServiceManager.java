@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -57,14 +58,14 @@ import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 
 /**
  *  Utility class that allows users to view the state of the services.
@@ -305,8 +306,8 @@ public class ServiceManager {
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doStartVM(vmName);
+                    String processName = (String) parsedCommand.get(1);
+                    doStartVM(processName);
                 }
                 break;
 
@@ -314,8 +315,8 @@ public class ServiceManager {
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doStopVM(vmName);
+                    String processName = (String) parsedCommand.get(1);
+                    doStopVM(processName);
                 }
                 break;
 
@@ -341,59 +342,34 @@ public class ServiceManager {
                 break;
 
             case COMMAND_STOP_SERVICE:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doStopService(new ServiceID(value, null));
-                }
+            	ServiceID id = parseServiceID(parsedCommand);
+            	if (id != null) {
+            		doStopService(id);
+            	} 
                 break;
 
             case COMMAND_GET_SERVICE_STATUS:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doGetServiceStatus(new ServiceID(value, null));
-                }
+            {
+            	ServiceID service = parseServiceID(parsedCommand);
+            	if (service != null) {
+            		doGetServiceStatus(service);
+            	}            	
                 break;
-
+            }
             case COMMAND_MARK_SERVICE_AS_BAD:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doMarkServiceAsBad(new ServiceID(value, null));
-                }
+            {
+            	ServiceID service = parseServiceID(parsedCommand);
+            	if (service != null) {
+                    doMarkServiceAsBad(service);
+            	}
                 break;
-
+            }
             case COMMAND_LIST_VM_PROPERTIES:
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doListVMProps(vmName);
+                    String processName = (String) parsedCommand.get(1);
+                    doListVMProps(processName);
                 }
                 break;
 
@@ -410,8 +386,8 @@ public class ServiceManager {
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doShutdownVM(vmName, false);
+                    String processName = (String) parsedCommand.get(1);
+                    doShutdownVM(processName, false);
                 }
                 break;
 
@@ -442,8 +418,8 @@ public class ServiceManager {
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doGetVMStats(vmName);
+                    String processName = (String) parsedCommand.get(1);
+                    doGetVMStats(processName);
                 }
                 break;
 
@@ -451,31 +427,23 @@ public class ServiceManager {
                 if (numTokens < 2) {
                     System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0013));
                 } else {
-                    String vmName = (String) parsedCommand.get(1);
-                    doDumpThreads(vmName);
+                    String processName = (String) parsedCommand.get(1);
+                    doDumpThreads(processName);
                 }
                 break;
 
             case COMMAND_GET_SERVICE_QUEUES:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
+            {
+            	ServiceID id1 = parseServiceID(parsedCommand);
+            	if (id1 != null) {
                     String queueName = null;
                     if (numTokens > 2) {
                         queueName = (String) parsedCommand.get(2);
                     }
-                    doGetServiceQueues(new ServiceID(value, null), queueName);
-                }
+            		doGetServiceQueues(id1, queueName);
+            	}
                 break;
-
+            }
             case COMMAND_SYNCH_SERVER:
                 this.doSynchronize();
                 break;
@@ -502,23 +470,38 @@ public class ServiceManager {
                 break;
 
             case COMMAND_START_SERVICE:
-                if (numTokens < 2) {
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
-                } else {
-                    String id = (String) parsedCommand.get(1);
-                    long value;
-                    try {
-                        value = Long.parseLong(id);
-                    } catch (Exception e) {
-                        System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
-                        break;
-                    }
-                    doStartService(new ServiceID(value, null));
-                }
+            {
+            	ServiceID id1 = parseServiceID(parsedCommand);
+            	if (id1 != null) {
+            		doStartService(id1);
+            	}
                 break;
+            }
         }
     }
 
+    private ServiceID parseServiceID(List parsedCommand) {
+        if (parsedCommand.size() < 2) {
+            System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0015));
+            return null;
+        } else {
+            String id = (String) parsedCommand.get(1);
+            StringTokenizer st = new StringTokenizer(id, "|"); //$NON-NLS-1$
+            if (st.countTokens() != 3) {
+            	System.out.println("Service id must be in the format <id|hostname|processname>"); //$NON-NLS-1$
+            	return null;
+            }
+            long value;
+            try {
+                value = Long.parseLong(st.nextToken());
+            } catch (Exception e) {
+                System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0016));
+                return null;
+            }
+            return new ServiceID(value, st.nextToken(), st.nextToken());
+        }    	
+    }
+    
 
 	public void doBounceService(String name) {
 
@@ -542,9 +525,9 @@ public class ServiceManager {
 	            	se.printStackTrace();
 				}
 				try {
-		            VMRegistryBinding vmBinding = registry.getVM(binding.getHostName(), binding.getServiceID().getVMControllerID().toString());
+		            ProcessRegistryBinding vmBinding = registry.getProcessBinding(binding.getHostName(), binding.getServiceID().getProcessName());
 		            if (vmBinding != null) {
-		            	vmBinding.getVMController().startService(binding.getServiceID());
+		            	vmBinding.getProcessController().startService(binding.getServiceID());
 		            	System.out.println("Starting " + binding.getServiceID()); //$NON-NLS-1$
 		            }
 		            else {
@@ -707,50 +690,50 @@ public class ServiceManager {
 		}
     }
 
-    private void doGetVMStats(String vmName) {
-        VMControllerInterface vm = getVMController(vmName);
+    private void doGetVMStats(String processName) {
+        ProcessManagement vm = getVMController(processName);
         if (vm != null) {
             try {
-                VMStatistics stats = vm.getVMStatistics();
+                ProcessStatistics stats = vm.getVMStatistics();
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0019, stats.name));
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0020, stats.totalMemory));
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0021, stats.freeMemory));
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0022, stats.threadCount));
             } catch (Exception e) {
-                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0031, vmName));
+                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0031, processName));
                 e.printStackTrace();
             }
 
         } else {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0030, vmName));
+            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0030, processName));
         }
     }
 
-    private void doDumpThreads(String vmName) {
-        VMControllerInterface vm = getVMController(vmName);
+    private void doDumpThreads(String processName) {
+        ProcessManagement vm = getVMController(processName);
         if (vm != null) {
             try {
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0023));
                 vm.dumpThreads();
-                System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0024, vmName));
+                System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0024, processName));
             } catch (Exception e) {
-                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0031, vmName));
+                System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0031, processName));
                 e.printStackTrace();
             }
         } else {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0030, vmName));
+            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0030, processName));
         }
     }
 
-    private VMControllerInterface getVMController(String vmName) {
+    private ProcessManagement getVMController(String processName) {
 
         // find vm
         try {
             Iterator vmIter = registry.getVMs(null).iterator();
             while (vmIter.hasNext()) {
-                VMRegistryBinding vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
-                    return vmBinding.getVMController();
+                ProcessRegistryBinding vmBinding = (ProcessRegistryBinding) vmIter.next();
+                if (vmBinding.getProcessName().equalsIgnoreCase(processName)) {
+                    return vmBinding.getProcessController();
                 }
             }
             return null;
@@ -778,7 +761,7 @@ public class ServiceManager {
         }
     }
 
-    private void doStartVM(String vmName) {
+    private void doStartVM(String processName) {
 
         String host = null;
         // get host to connect to.
@@ -786,7 +769,7 @@ public class ServiceManager {
             Iterator vmIter = getDeployedVMs().iterator();
             while (vmIter.hasNext()) {
                 VMComponentDefn vmDefn = (VMComponentDefn) vmIter.next();
-                if (vmDefn.getName().equalsIgnoreCase(vmName)) {
+                if (vmDefn.getName().equalsIgnoreCase(processName)) {
                     host = vmDefn.getHostID().getName();
                     break;
                 }
@@ -801,14 +784,14 @@ public class ServiceManager {
         }
 
         try {
-        	this.hostManager.startServer(host, vmName);
+        	this.hostManager.startServer(host, processName);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    public void doListVMProps(String vmName) {
+    public void doListVMProps(String processName) {
 
         String host = null;
         // get host to connect to.
@@ -816,10 +799,10 @@ public class ServiceManager {
             Iterator vmIter = getDeployedVMs().iterator();
             while (vmIter.hasNext()) {
                 VMComponentDefn vmDefn = (VMComponentDefn) vmIter.next();
-                if (vmDefn.getName().equalsIgnoreCase(vmName)) {
+                if (vmDefn.getName().equalsIgnoreCase(processName)) {
                     host = vmDefn.getHostID().getName();
                     Properties vmPropsAndConfigProps = currentConfig.getAllPropertiesForComponent(vmDefn.getID());
-                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0025, vmName));
+                    System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0025, processName));
                     Iterator iter = vmPropsAndConfigProps.keySet().iterator();
                     while (iter.hasNext()) {
                         String key = (String) iter.next();
@@ -873,27 +856,27 @@ public class ServiceManager {
         }
     }
 
-    public void doStopVM(String vmName) {
+    public void doStopVM(String processName) {
 
         // find vm
         try {
             Iterator vmIter = registry.getVMs(null).iterator();
-            VMRegistryBinding vmBinding = null;
+            ProcessRegistryBinding vmBinding = null;
             while (vmIter.hasNext()) {
-                vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
-                    this.hostManager.killServer(vmBinding.getHostName(),vmBinding.getVMName(), false);
+                vmBinding = (ProcessRegistryBinding) vmIter.next();
+                if (vmBinding.getProcessName().equalsIgnoreCase(processName)) {
+                    this.hostManager.killServer(vmBinding.getHostName(),vmBinding.getProcessName(), false);
                     break;
                 }
             }
         } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0034, vmName));
+            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0034, processName));
             System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0028));
-            killVM(vmName);
+            killVM(processName);
         }
     }
 
-    private void killVM(String vmName) {
+    private void killVM(String processName) {
 
         String host = null;
         // get host to connect to.
@@ -901,7 +884,7 @@ public class ServiceManager {
             Iterator vmIter = getDeployedVMs().iterator();
             while (vmIter.hasNext()) {
                 VMComponentDefn vmDefn = (VMComponentDefn) vmIter.next();
-                if (vmDefn.getName().equalsIgnoreCase(vmName)) {
+                if (vmDefn.getName().equalsIgnoreCase(processName)) {
                     host = vmDefn.getHostID().getName();
                     break;
                 }
@@ -916,24 +899,24 @@ public class ServiceManager {
         }
 
         try {
-        	this.hostManager.killServer(host, vmName, false);
+        	this.hostManager.killServer(host, processName, false);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void doShutdownVM(String vmName, boolean now) {
+    public void doShutdownVM(String processName, boolean now) {
         try {
             Iterator vmIter = registry.getVMs(null).iterator();
             while (vmIter.hasNext()) {
-                VMRegistryBinding vmBinding = (VMRegistryBinding) vmIter.next();
-                if (vmBinding.getVMName().equalsIgnoreCase(vmName)) {
-                    this.hostManager.killServer(vmBinding.getHostName(), vmName, now);
+                ProcessRegistryBinding vmBinding = (ProcessRegistryBinding) vmIter.next();
+                if (vmBinding.getProcessName().equalsIgnoreCase(processName)) {
+                    this.hostManager.killServer(vmBinding.getHostName(), processName, now);
                     return;
                 }
             }
         } catch (Exception e) {
-            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0034, vmName));
+            System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0034, processName));
             e.printStackTrace();
         }
     }
@@ -1040,12 +1023,12 @@ public class ServiceManager {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
                 return;
             }
-            VMRegistryBinding vmBinding = registry.getVM(id.getHostName(), id.getVMControllerID().toString());
+            ProcessRegistryBinding vmBinding = registry.getProcessBinding(id.getHostName(), id.getProcessName());
             if (vmBinding != null) {
-            	vmBinding.getVMController().stopService(id, false, false);
+            	vmBinding.getProcessController().stopService(id, false, false);
             }
             else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString()); //$NON-NLS-1$ //$NON-NLS-2$
+            	System.out.println("No VM found on host="+id.getHostName()+" with process name ="+id.getProcessName()); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0015, id));
@@ -1086,7 +1069,7 @@ public class ServiceManager {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
                 return;
             }
-            System.out.println(registry.getServiceBinding(id.getHostName(), id.getVMControllerID().toString(), id));
+            System.out.println(registry.getServiceBinding(id.getHostName(), id.getProcessName(), id));
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0043));
             e.printStackTrace();
@@ -1102,7 +1085,7 @@ public class ServiceManager {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
                 return;
             }
-            ServiceRegistryBinding serviceBinding = this.registry.getServiceBinding(id.getHostName(), id.getVMControllerID().toString(), id);
+            ServiceRegistryBinding serviceBinding = this.registry.getServiceBinding(id.getHostName(), id.getProcessName(), id);
             
             ServiceInterface service = null;
             if (serviceBinding != null) {
@@ -1154,12 +1137,12 @@ public class ServiceManager {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
                 return;
             }
-            VMRegistryBinding vmBinding = registry.getVM(id.getHostName(), id.getVMControllerID().toString());
+            ProcessRegistryBinding vmBinding = registry.getProcessBinding(id.getHostName(), id.getProcessName());
             if (vmBinding != null) {
-            	vmBinding.getVMController().startService(id);
+            	vmBinding.getProcessController().startService(id);
             }
             else {
-            	System.out.println("No VM found on host="+id.getHostName()+" with id="+id.getVMControllerID().toString());   //$NON-NLS-1$ //$NON-NLS-2$         	
+            	System.out.println("No VM found on host="+id.getHostName()+" with process name ="+id.getProcessName());   //$NON-NLS-1$ //$NON-NLS-2$         	
             }            
         } catch (Exception e) {
             System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0047));
@@ -1175,7 +1158,7 @@ public class ServiceManager {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0039));
                 return;
             }
-            ServiceRegistryBinding binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getVMControllerID().toString(), serviceID);
+            ServiceRegistryBinding binding = this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getProcessName(), serviceID);
             if (binding != null) {
             	binding.markServiceAsBad();
             }

@@ -27,8 +27,6 @@ import java.util.Collection;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.core.util.HashCodeUtil;
 
-import com.metamatrix.platform.vm.controller.VMControllerID;
-
 /**
  * This class is a container for ServiceRegistryBinding objects for
  * all the services running in this VM
@@ -37,9 +35,6 @@ public class ProcessData extends ComponentData {
 
     /** Map of ServiceID to ServiceRegistryBindings */
     private Collection pscs;
-
-    /** ID of VMControllerID */
-    private VMControllerID processID;
 
     /** defines vm in configuration */
     private ComponentDefnID defnID;
@@ -56,10 +51,9 @@ public class ProcessData extends ComponentData {
      * @param vmController VMController implementation
      * @param hostName Name of host VM is running on
      */
-    public ProcessData(VMControllerID processID, ComponentDefnID defnID, String hostName, Collection pscs, String processName, String port, boolean deployed, boolean registered) {
+    public ProcessData(String hostName, String processName, String port, ComponentDefnID defnID,  Collection pscs,  boolean deployed, boolean registered) {
         super(processName, deployed, registered);
         this.hostName = hostName;
-        this.processID = processID;
         this.defnID = defnID;
         this.pscs = pscs;
         this.port = port;
@@ -73,15 +67,6 @@ public class ProcessData extends ComponentData {
         return pscs;
     }
 
-
-    /**
-     * Return VMControllerID that this binding represents.
-     *
-     * @return VMControllerID
-     */
-    public VMControllerID getProcessID() {
-        return processID;
-    }
 
     /**
      * Return ComponentDefnID for VMController.
@@ -106,7 +91,9 @@ public class ProcessData extends ComponentData {
     private void computeHashCode() {
         hashCode = 0;
         hashCode = HashCodeUtil.hashCode(hashCode, defnID);
-        hashCode = HashCodeUtil.hashCode(hashCode, processID);
+        hashCode = HashCodeUtil.hashCode(hashCode, getName());
+        hashCode = HashCodeUtil.hashCode(hashCode, hostName);
+        
     }
 
     /**
@@ -132,9 +119,7 @@ public class ProcessData extends ComponentData {
             if (this.defnID == null && that.getComponentDefnID() != null) return false;
             if (that.getComponentDefnID() == null && this.defnID != null) return false;
             if (this.defnID == null && that.getComponentDefnID() == null) {
-                if (this.processID == null && that.getProcessID() != null) return false;
-                if (that.getProcessID() == null && this.processID != null) return false;
-                return processID.equals(that.getProcessID());
+                return this.hostName.equals(that.hostName) && this.getName().equals(that.getName());
             }
             return defnID.equals(that.getComponentDefnID());
         }

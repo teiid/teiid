@@ -42,9 +42,6 @@ public class MMDQP extends MMAdminObject implements DQP {
     private int currentState;
     private Date stateChangedTime;
     private long serviceID = -1;
-    private long processID = -1;
-
-    
   
     
     /**
@@ -187,21 +184,9 @@ public class MMDQP extends MMAdminObject implements DQP {
      * @return Returns the processID.
      * @since 4.3
      */
-    public long getProcessID() {
-        return this.processID;
+    public String getProcessName() {
+        return this.identifierParts[1];
     }
-
-
-    
-    /** 
-     * @param processID The processID to set.
-     * @since 4.3
-     */
-    public void setProcessID(long processID) {
-        this.processID = processID;
-    }
-
-
     
     /** 
      * @return Returns the hostName.

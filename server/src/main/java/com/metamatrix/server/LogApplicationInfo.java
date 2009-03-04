@@ -54,13 +54,13 @@ class LogApplicationInfo extends Thread {
 	String applFileName = null;
     String logPath = null;
     String hostName;
-    String vmName;
+    String processName;
     
-    public LogApplicationInfo(String hostName, String vmName, String path, String fileName) {
+    public LogApplicationInfo(String hostName, String processName, String path, String fileName) {
 		applFileName = fileName;
         logPath = path;
         this.hostName = hostName;
-        this.vmName = vmName;
+        this.processName = processName;
     }
     
     public void run() {
@@ -68,7 +68,7 @@ class LogApplicationInfo extends Thread {
         try {
                            
             ConfigurationModelContainer configmodel = CurrentConfiguration.getInstance().getConfigurationModel();
-            VMComponentDefn deployedVM = configmodel.getConfiguration().getVMForHost(this.hostName, this.vmName);
+            VMComponentDefn deployedVM = configmodel.getConfiguration().getVMForHost(this.hostName, this.processName);
 
             Properties configprops = null;
             

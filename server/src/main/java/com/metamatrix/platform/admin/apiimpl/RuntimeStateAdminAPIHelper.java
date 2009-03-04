@@ -57,7 +57,7 @@ import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
@@ -69,9 +69,8 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.HostManagement;
 
 
@@ -119,8 +118,7 @@ public class RuntimeStateAdminAPIHelper {
             SystemStateBuilder ssm = new SystemStateBuilder(this.registry, this.hostManagement);
             return ssm.getSystemState();
         } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0051,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0051));
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0051, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0051));
         }
     }
 
@@ -167,24 +165,6 @@ public class RuntimeStateAdminAPIHelper {
         return list;
     }
 
-    /**
-     * Return all processes running in mm system.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @return List of VMControllerIDs.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public List<VMControllerID> getProcesses() throws MetaMatrixComponentException {
-        List processes = new ArrayList();
-
-        List<VMRegistryBinding> bindings = this.registry.getVMs(null);
-        for (VMRegistryBinding vmBinding:bindings) {
-            processes.add(vmBinding.getVMControllerID());
-        }
-        return processes;
-    }
 
     /**
      * Return VMStatistics object for Process.
@@ -197,15 +177,15 @@ public class RuntimeStateAdminAPIHelper {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public VMStatistics getVMStatistics(VMControllerID vmID) throws MetaMatrixComponentException {
-		VMRegistryBinding vm = registry.getVM(vmID.getHostName(), vmID.toString());
-		return vm.getVMController().getVMStatistics();
+    public ProcessStatistics getVMStatistics(String hostName, String processName) throws MetaMatrixComponentException {
+		ProcessRegistryBinding vm = registry.getProcessBinding(hostName, processName);
+		return vm.getProcessController().getVMStatistics();
     }   
     
 
-    public InetAddress getVMHostName(VMControllerID vmID) throws MetaMatrixComponentException  {
-		VMRegistryBinding vm = registry.getVM(vmID.getHostName(), vmID.toString());
-		return vm.getVMController().getAddress();    	
+    public InetAddress getVMHostName(String hostName, String processName) throws MetaMatrixComponentException  {
+		ProcessRegistryBinding vm = registry.getProcessBinding(hostName, processName);
+		return vm.getProcessController().getAddress();    	
     }
     
     /**
@@ -239,7 +219,7 @@ public class RuntimeStateAdminAPIHelper {
      * @return ServiceRegistryBinding
      */
     public ServiceRegistryBinding getServiceBinding(ServiceID serviceID) throws ResourceNotBoundException {
-        return this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getVMControllerID().toString(), serviceID);
+        return this.registry.getServiceBinding(serviceID.getHostName(), serviceID.getProcessName(), serviceID);
     }
 
     /**
@@ -363,12 +343,12 @@ public class RuntimeStateAdminAPIHelper {
 
             while (procIter.hasNext()) {
                 ProcessData pData = (ProcessData)procIter.next();
-                VMControllerInterface vmController = null;
+                ProcessManagement vmController = null;
                 // if registered then get the VMController
                 if (pData.isRegistered()) {
                     try {
-                    	VMRegistryBinding vmBinding = this.registry.getVM(pData.getProcessID().getHostName(), pData.getProcessID().toString());
-                        vmController = vmBinding.getVMController();
+                    	ProcessRegistryBinding vmBinding = this.registry.getProcessBinding(pData.getHostName(), pData.getName());
+                        vmController = vmBinding.getProcessController();
                     } catch (Exception e) {
                         exceptions.add(e); // if we can't get the vmController then go to next process
                         // errorMsg.append(e.getMessage());
@@ -444,31 +424,10 @@ public class RuntimeStateAdminAPIHelper {
         }
     }
 
-    public VMControllerInterface getVMControllerInterface(VMControllerID id) throws ResourceNotBoundException {
-    	return this.registry.getVM(id.getHostName(), id.toString()).getVMController();
+    public ProcessManagement getVMControllerInterface(String hostName, String processName) throws ResourceNotBoundException {
+    	return this.registry.getProcessBinding(hostName, processName).getProcessController();
     } 
     
-    /**
-     * Start a deployed service.
-     * 
-     * @param registry
-     *            The Registry.
-     * @param id
-     *            ServiceComponentDefnID of service instance.
-     * @param vmID
-     *            Identifies VMController to start service in.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public void startDeployedService(ServiceComponentDefnID serviceID, VMControllerID vmID) throws MetaMatrixComponentException {
-
-        VMControllerInterface vmController = getVMControllerInterface(vmID);
-        try {
-            vmController.startDeployedService(serviceID);
-        } catch (ServiceException se) {
-            throw new MetaMatrixComponentException(se);
-        }
-    }
 
     /**
      * Restart a failed or stopped service.
@@ -482,10 +441,9 @@ public class RuntimeStateAdminAPIHelper {
      */
     public void restartService(ServiceID serviceID) throws MetaMatrixComponentException {
 
-        VMControllerID vmID = serviceID.getVMControllerID();
-        VMRegistryBinding vmBinding = this.registry.getVM(vmID.getHostName(), vmID.toString());
+        ProcessRegistryBinding vmBinding = this.registry.getProcessBinding(serviceID.getHostName(), serviceID.getProcessName());
         
-        VMControllerInterface vmController = vmBinding.getVMController();
+        ProcessManagement vmController = vmBinding.getProcessController();
         try {
         	vmController.stopService(serviceID, false, false);
         } catch (ServiceException se) {
@@ -499,7 +457,7 @@ public class RuntimeStateAdminAPIHelper {
     } 
 
     /**
-     * Set the Log Configuration in the database and propergate changes to other VM
+     * Set the Log Configuration in the database and propagate changes to other VM
      * 
      * @param registry
      * @param config
@@ -527,8 +485,7 @@ public class RuntimeStateAdminAPIHelper {
         try {
             configAdmin.executeTransaction(actions, principalName);
         } catch (ModificationException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID());
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, msg);
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID()));
         }
 
         // Then, if the operational (current) config is effected, set logging config for
@@ -545,8 +502,8 @@ public class RuntimeStateAdminAPIHelper {
 
             Iterator vmItr = registry.getVMs(null).iterator();
             while (vmItr.hasNext()) {
-                VMRegistryBinding vmBinding = (VMRegistryBinding)vmItr.next();
-                VMControllerInterface vm = vmBinding.getVMController();
+                ProcessRegistryBinding vmBinding = (ProcessRegistryBinding)vmItr.next();
+                ProcessManagement vm = vmBinding.getProcessController();
                     vm.setCurrentLogConfiguration(logConfig);
             }
             if (msgs != null && msgs.length() > 0) {
@@ -569,9 +526,8 @@ public class RuntimeStateAdminAPIHelper {
      */
     public void stopService(ServiceID serviceID, boolean stopNow) throws MetaMatrixComponentException {
 
-        VMControllerID vmID = serviceID.getVMControllerID();
-        VMRegistryBinding binding = registry.getVM(vmID.getHostName(), vmID.toString());
-        VMControllerInterface vmController = binding.getVMController();
+        ProcessRegistryBinding binding = registry.getProcessBinding(serviceID.getHostName(), serviceID.getProcessName());
+        ProcessManagement vmController = binding.getProcessController();
         try {
         	vmController.stopService(serviceID, stopNow, false);
         } catch (ServiceException se) {
@@ -679,9 +635,9 @@ public class RuntimeStateAdminAPIHelper {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-   public void stopProcess(VMControllerID vmID, boolean stopNow)
+   public void stopProcess(String hostName, String processName, boolean stopNow)
 			throws AuthorizationException, MetaMatrixComponentException {
-		this.hostManagement.killServer(vmID.getHostName(), vmID.toString(), stopNow);
+		this.hostManagement.killServer(hostName, processName, stopNow);
 	} 
     
     
@@ -694,9 +650,9 @@ public class RuntimeStateAdminAPIHelper {
      * @throws AdminException
      * @since 4.3
      */
-   public byte[] exportLogs(VMControllerID processID) throws MetaMatrixComponentException {
-       	VMRegistryBinding vmBinding = this.registry.getVM(processID.getHostName(), processID.toString());
-       VMControllerInterface vmController = vmBinding.getVMController();
+   public byte[] exportLogs(String hostName, String processName) throws MetaMatrixComponentException {
+	   ProcessRegistryBinding processBinding = this.registry.getProcessBinding(hostName, processName);
+       ProcessManagement vmController = processBinding.getProcessController();
        return vmController.exportLogs();
    }
 

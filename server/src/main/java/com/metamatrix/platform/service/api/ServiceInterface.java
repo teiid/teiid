@@ -29,7 +29,6 @@ import java.util.Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 public interface ServiceInterface {
 
@@ -77,17 +76,18 @@ public interface ServiceInterface {
      */
     Date getStartTime();
 
-    /*
+    /**
      * Determine which host the service instance is running on.
      * @return Host the service is running on
      */
     String getHostname();
 
     /**
-     * Get the id of the VM that the service is running in.
+     * Get process name on which this service is running on
+     * @return
      */
-    VMControllerID getVMID();
-
+    String getProcessName();
+    
     /**
      * Determine if the service is alive and well.
      */

@@ -36,8 +36,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 
 public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
 
@@ -74,23 +73,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
     List getServices() throws AuthorizationException,
                       InvalidSessionException,
                       MetaMatrixComponentException;
-
-    /**
-     * Return all processes running in mm system.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @return List of VMControllerIDs.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    List getProcesses() throws AuthorizationException,
-                       InvalidSessionException,
-                       MetaMatrixComponentException;
 
     /**
      * Return all hosts running in mm system.
@@ -159,28 +141,9 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    void stopProcess(VMControllerID processID) throws AuthorizationException,
+    void stopProcess(String hostname, String processName, boolean now) throws AuthorizationException,
                                               InvalidSessionException,
                                               MetaMatrixComponentException;
-
-    /**
-     * Stop process now.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @param processID
-     *            <code>VMControllerID</code>.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void stopProcessNow(VMControllerID processID) throws AuthorizationException,
-                                                 InvalidSessionException,
-                                                 MetaMatrixComponentException;
-
 
     /**
      * Gracefully shutdown server waiting for work to complete.
@@ -433,8 +396,7 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    void setLoggingConfiguration(LogConfiguration logConfig,
-                                 VMControllerID vmID) throws AuthorizationException,
+    void setLoggingConfiguration(LogConfiguration logConfig, String hostName, String processName) throws AuthorizationException,
                                                      InvalidSessionException,
                                                      MetaMatrixComponentException;
 
@@ -489,7 +451,7 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    VMStatistics getVMStatistics(VMControllerID vmID) throws AuthorizationException,
+    ProcessStatistics getProcessStatistics(String hostName, String processName) throws AuthorizationException,
                                                      InvalidSessionException,
                                                      MetaMatrixComponentException;
 
@@ -554,36 +516,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
                                   AuthorizationException,
                                   MetaMatrixComponentException;
 
-    /**
-     * Retrieve the VMControllerID by name
-     * 
-     * @param hostName
-     *            name of the host of the VM
-     * @param processName
-     *            name of the process of the VM
-     * @return <code>VMControllerID</code>
-     * @since 4.2.1
-     */
-    VMControllerID getVMControllerIDByName(String hostName,
-                                           String processName) throws AuthorizationException,
-                                                              InvalidSessionException,
-                                                              MetaMatrixComponentException;
-
-    /**
-     * Get the Process name of the VM by ID and HostName
-     * 
-     * @param id
-     *            VMID of the VM Process
-     * @param hostName
-     *            host name of the VM Process
-     * @return String name of the VM Process
-     * @since 4.2.1
-     */
-    String getVMName(long id,
-                     String hostName) throws AuthorizationException,
-                                     InvalidSessionException,
-                                     MetaMatrixComponentException;
-    
     /**
      * Get the log entries that match the specified criteria. 
      * @param startTime

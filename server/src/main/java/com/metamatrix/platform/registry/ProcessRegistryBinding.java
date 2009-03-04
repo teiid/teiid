@@ -26,24 +26,20 @@ import java.io.Serializable;
 
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.messaging.MessageBus;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.server.ResourceFinder;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 /**
  * This class is a container for ServiceRegistryBinding objects for
  * all the services running in this VM
  */
-public class VMRegistryBinding implements Serializable {
-
-    /** ID of VMControllerID */
-    private VMControllerID vmID;
+public class ProcessRegistryBinding implements Serializable {
 
     /** Host that this VM belongs to. */
     private String hostName;
 
     /** Name of vm */
-    private String vmName;
+    private String processName;
     
     private boolean alive;
 
@@ -51,7 +47,7 @@ public class VMRegistryBinding implements Serializable {
      * Local reference to VMController, this is transient to prevent it from
      * being sent to other vm's. Remote vm's must use the stub to access vmController
      */
-    private transient VMControllerInterface vmController;
+    private transient ProcessManagement processController;
 
     /** Remote reference to VMController */
     private Object vmControllerStub;
@@ -62,39 +58,21 @@ public class VMRegistryBinding implements Serializable {
 
     private transient MessageBus messageBus;
     
-    public VMRegistryBinding(String hostName, VMControllerID vmID, VMComponentDefn deployedComponent, VMControllerInterface vmController, MessageBus bus) {
+    public ProcessRegistryBinding(String hostName, String processName, VMComponentDefn deployedComponent, ProcessManagement vmController, MessageBus bus) {
     	this.hostName = hostName;
-        this.vmID = vmID;
+    	this.processName = processName;
         this.vmComponent = deployedComponent;
-        this.vmController = vmController;
+        this.processController = vmController;
         this.messageBus = bus;
-        try {
-            this.vmName = vmController.getName();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         this.vmControllerStub = getStub(vmController);
-        
     }
 
-    private Object getStub(VMControllerInterface controller) {
+    private Object getStub(ProcessManagement controller) {
         if (controller == null) {
             return null;
         }
-        return this.messageBus.export(controller, new Class[] {VMControllerInterface.class});
+        return this.messageBus.export(controller, new Class[] {ProcessManagement.class});
     }
-
-
-    /**
-     * Return VMControllerID that this binding represents.
-     *
-     * @return VMControllerID
-     */
-    public VMControllerID getVMControllerID() {
-        return vmID;
-    }
-
 
     /**
      * Return reference for VMController.
@@ -103,11 +81,11 @@ public class VMRegistryBinding implements Serializable {
      *
      * @return VMController reference
      */
-    public synchronized VMControllerInterface getVMController() {
+    public synchronized ProcessManagement getProcessController() {
 
         // if vmController is null then this must be a remote vm so return the stub.
-        if (this.vmController != null) {
-            return vmController;
+        if (this.processController != null) {
+            return processController;
         }
         if (this.vmControllerStub == null) {
         	return null;
@@ -117,8 +95,8 @@ public class VMRegistryBinding implements Serializable {
     	if(bus == null) {
     		bus = ResourceFinder.getMessageBus();
     	}        
-        vmController = (VMControllerInterface)bus.getRPCProxy(this.vmControllerStub);
-        return vmController;
+        processController = (ProcessManagement)bus.getRPCProxy(this.vmControllerStub);
+        return processController;
     }
 
     public VMComponentDefn getDeployedComponent() {
@@ -129,8 +107,8 @@ public class VMRegistryBinding implements Serializable {
     	return hostName;
     }
 
-    public String getVMName() {
-    	return vmName;
+    public String getProcessName() {
+    	return processName;
     }
     
     public String getPort() {
@@ -146,7 +124,7 @@ public class VMRegistryBinding implements Serializable {
     }
 
     public String toString() {
-        return "VMRegistryBinding: " + this.vmName + " <" + this.vmID + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return "Process<" +this.hostName+"|"+ this.processName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 }
 

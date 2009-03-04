@@ -45,8 +45,7 @@ import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
-import com.metamatrix.platform.vm.controller.VMController;
-import com.metamatrix.platform.vm.controller.VMControllerID;
+import com.metamatrix.platform.vm.controller.ProcessController;
 import com.metamatrix.server.Configuration;
 import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.Main;
@@ -55,7 +54,7 @@ import com.metamatrix.server.Main;
  * Main class for a server process.
  */
 @Singleton
-public class SocketVMController extends VMController {
+public class SocketVMController extends ProcessController {
 	
 	public static final String SOCKET_CONTEXT = "ServerSocket"; //$NON-NLS-1$
 	
@@ -77,8 +76,8 @@ public class SocketVMController extends VMController {
     private WorkerPool workerPool;
         
     @Inject
-    public SocketVMController(@Named(Configuration.HOST) Host host, @Named(Configuration.VMNAME) String vmName, VMControllerID vmId, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
-        super(host, vmName, vmId, registry, serverEvents, bus, hostManagement);
+    public SocketVMController(@Named(Configuration.HOST) Host host, @Named(Configuration.PROCESSNAME) String processName, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
+        super(host, processName, registry, serverEvents, bus, hostManagement);
     }
 
     @Override
@@ -135,7 +134,7 @@ public class SocketVMController extends VMController {
         String bindaddress =  VMNaming.getBindAddress();
         
         final Object[] param = new Object[] {
-            this.vmName, bindaddress, String.valueOf(socketPort)
+            this.processName, bindaddress, String.valueOf(socketPort)
         };
         
         logMessage(PlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
@@ -175,14 +174,14 @@ public class SocketVMController extends VMController {
         return buffer.toString();
     }
 
-    public SocketListenerStats getSocketListenerStats() {
+    protected SocketListenerStats getSocketListenerStats() {
         if (listener == null) {
             return null;
         }
         return listener.getStats();
     }    
 
-    public WorkerPoolStats getProcessPoolStats() {
+    protected WorkerPoolStats getProcessPoolStats() {
         if (workerPool == null) {
             return null;
         }

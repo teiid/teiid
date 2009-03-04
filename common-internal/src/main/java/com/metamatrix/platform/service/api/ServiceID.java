@@ -22,29 +22,26 @@
 
 package com.metamatrix.platform.service.api;
 
-import com.metamatrix.platform.vm.controller.VMControllerID;
 import java.io.Serializable;
 
 public class ServiceID implements Serializable {
 
     private long id;
-    private VMControllerID vmControllerID;
+    private String hostName;
+    private String processName;
 
-    public ServiceID(long id, VMControllerID vmControllerID) {
+    public ServiceID(long id, String hostName, String processName) {
         this.id = id;
-        this.vmControllerID = vmControllerID;
-    }
-
-    public VMControllerID getVMControllerID() {
-        return this.vmControllerID;
+        this.hostName = hostName;
+        this.processName = processName;
     }
 
     public String getHostName() {
-        return vmControllerID.getHostName();
+        return this.hostName;
     }
 
-    public String toString() {
-        return "ServiceID<"+id+"> " + vmControllerID; //$NON-NLS-1$ //$NON-NLS-2$
+    public String getProcessName() {
+    	return this.processName;
     }
 
     public long getID() {
@@ -80,5 +77,8 @@ public class ServiceID implements Serializable {
         return (int) this.id;
     }
 
+    public String toString() {
+        return "Service<"+id+"|"+this.hostName+"|"+processName+">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
 }
 

@@ -42,7 +42,7 @@ import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
@@ -120,7 +120,7 @@ public class SystemStateBuilder {
 
         // loop thru all vm's for the host and create a ProcessData object for each.
         while (iter.hasNext()) {
-            VMRegistryBinding vmBinding = (VMRegistryBinding) iter.next();
+            ProcessRegistryBinding vmBinding = (ProcessRegistryBinding) iter.next();
             processes.add(createProcessData(vmBinding));
             deployedVMs.remove(vmBinding.getDeployedComponent());
         }
@@ -169,23 +169,22 @@ public class SystemStateBuilder {
     /**
      * Create a ProcessData object for the vmBinding.
      */
-    private ProcessData createProcessData(VMRegistryBinding vmBinding) {
+    private ProcessData createProcessData(ProcessRegistryBinding vmBinding) {
 
         // if this vm is not deployed (appServer VM) then
         // create an empty ProcessData and return.
         if (vmBinding.getDeployedComponent() == null) {
-            return new ProcessData(vmBinding.getVMControllerID(),
-                                   null,    // deployed component id
-                                   vmBinding.getHostName(),
-                                   new ArrayList(),
-                                   vmBinding.getVMName(),
-                                   String.valueOf(vmBinding.getPort()),
-                                   false, // not deployed
-                                   true); // registered
+            return new ProcessData(	vmBinding.getHostName(),
+            						vmBinding.getProcessName(),
+            						String.valueOf(vmBinding.getPort()),
+            						null,    // deployed component id
+            						new ArrayList(),
+            						false, // not deployed
+            						true); // registered
         }
 
         // ServiceBindings for vm
-        List bindings = this.registry.getServiceBindings(vmBinding.getHostName(), vmBinding.getVMControllerID().toString()); 
+        List bindings = this.registry.getServiceBindings(vmBinding.getHostName(), vmBinding.getProcessName()); 
 
         // Map of pscIDs -> List of services
         Map pscMap = new HashMap();
@@ -255,7 +254,7 @@ public class SystemStateBuilder {
         // create a list of psc's
         List pscList = new ArrayList();
         Iterator pscIter = pscMap.keySet().iterator();
-        String processName = vmBinding.getVMName();
+        String processName = vmBinding.getProcessName();
 
         while (pscIter.hasNext()) {
             ProductServiceConfigID pId = (ProductServiceConfigID) pscIter.next();
@@ -271,12 +270,12 @@ public class SystemStateBuilder {
             deployedComponents.remove(dc);
         }
 
-        return new ProcessData(vmBinding.getVMControllerID(),
-                               (VMComponentDefnID) vmBinding.getDeployedComponent().getID(),
-                               vmBinding.getHostName(), 
-                               pscList, vmBinding.getVMName(), vmBinding.getPort(), 
-                               deployed, true);
-
+        return new ProcessData(	vmBinding.getHostName(),
+        						vmBinding.getProcessName(), 
+        						vmBinding.getPort(),
+        						(VMComponentDefnID) vmBinding.getDeployedComponent().getID(),
+        						pscList,  
+        						deployed, true);
     }
 
 
@@ -336,12 +335,11 @@ public class SystemStateBuilder {
 
         String hostName = deployedVM.getHostID().getName();
 
-        return new ProcessData(null,
+        return new ProcessData(	hostName,
+        						deployedVM.getName(), deployedVM.getPort(),
                                (VMComponentDefnID)deployedVM.getID(),
-                               hostName,                                
-                               pscList, deployedVM.getName(), deployedVM.getPort(), 
+                               pscList,  
                                true, false); // deployed, not registered
-
     }
 
     /**

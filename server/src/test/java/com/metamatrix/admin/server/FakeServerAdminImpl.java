@@ -37,7 +37,6 @@ import com.metamatrix.platform.security.api.service.AuthorizationServiceInterfac
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
 
@@ -61,7 +60,7 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
     public FakeServerAdminImpl(ClusteredRegistryState registry) {
     	super(registry,null);
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
-    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "fakeadminuser"));
+    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "fakeadminuser")); //$NON-NLS-1$
     }
     
     public void close() {        
@@ -90,7 +89,7 @@ public class FakeServerAdminImpl extends ServerAdminImpl {
     
     protected synchronized QueryServiceInterface getQueryServiceProxy() throws ServiceException {
         if (fqs == null) {
-            fqs = new FakeQueryService(new ServiceID(1, new VMControllerID(2, "dummy"))); //$NON-NLS-1$
+            fqs = new FakeQueryService(new ServiceID(1, "dummy", "2")); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return fqs; 
     }

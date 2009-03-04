@@ -42,8 +42,6 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
 	private int threadCount = 0;
 	private long totalMemory = 0;
     
-    private long processID = -1;
-    
     private int sockets = 0;
     private int maxSockets = 0;
     private int virtualSockets = 0;
@@ -331,20 +329,9 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
      * @return Returns the processID.
      * @since 4.3
      */
-    public long getProcessID() {
-        return this.processID;
+    public String getProcessName() {
+        return identifierParts[1];
     }
-
-
-    
-    /** 
-     * @param processID The processID to set.
-     * @since 4.3
-     */
-    public void setProcessID(long processID) {
-        this.processID = processID;
-    }
-
     
     /** 
      * @return Returns the hostName.

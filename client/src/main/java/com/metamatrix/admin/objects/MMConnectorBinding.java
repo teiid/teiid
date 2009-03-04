@@ -42,8 +42,6 @@ public class MMConnectorBinding extends MMAdminObject implements ConnectorBindin
     private int currentState;
     private Date stateChangedTime;
     private long serviceID = -1;
-    private long processID = -1;
-    
     
 	
     /**
@@ -200,18 +198,8 @@ public class MMConnectorBinding extends MMAdminObject implements ConnectorBindin
      * @return Returns the processID.
      * @since 4.3
      */
-    public long getProcessID() {
-        return this.processID;
-    }
-
-
-    
-    /** 
-     * @param processID The processID to set.
-     * @since 4.3
-     */
-    public void setProcessID(long processID) {
-        this.processID = processID;
+    public String getProcessName() {
+        return identifierParts[1];
     }
 
     

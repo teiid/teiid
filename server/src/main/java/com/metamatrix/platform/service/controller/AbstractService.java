@@ -39,7 +39,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PasswordMaskUtil;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.platform.service.ServiceMessages;
@@ -52,7 +51,6 @@ import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceNotInitializedException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.api.exception.ServiceSuspendedException;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 /**
  * Base class for all services.
@@ -270,23 +268,21 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     }
 
     /**
-     * Return VMControllerID for vm service is running in.
-     *
-     * @return VMControllerID
-     */
-    public VMControllerID getVMID() {
-        return id.getVMControllerID();
-    }
-
-    /**
      * Return name of the host service is running on.
      *
      * @return String Host name
      */
     public final String getHostname() {
-        return VMNaming.getConfigName();
+        return this.id.getHostName();
     }
 
+    /**
+     * @see com.metamatrix.platform.service.api.ServiceInterface#getProcessName()
+     */
+	public final String getProcessName(){
+		return this.id.getProcessName();
+	}
+	
     /**
      * Return instance name of this service.
      *

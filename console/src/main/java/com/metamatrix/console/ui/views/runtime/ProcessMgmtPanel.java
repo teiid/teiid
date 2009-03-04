@@ -163,9 +163,8 @@ public final class ProcessMgmtPanel
                 Vector row = new Vector(HDRS.length);
                 row.setSize(HDRS.length);
                 row.setElementAt(process, PROC_COL);
-                row.setElementAt(process.getProcessID(), ID_COL);
-                row.setElementAt(
-                    new Boolean(process.isRegistered()), REGISTERED_COL);
+                row.setElementAt(process.getName(), ID_COL);
+                row.setElementAt(new Boolean(process.isRegistered()), REGISTERED_COL);
                 Integer[] counts = manager.getPscCounts(process);
                 row.setElementAt(counts[0], NUM_REG_PSC_COL);
                 row.setElementAt(counts[1], NUM_NOT_REG_PSC_COL);

@@ -36,7 +36,7 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceNotFoundException;
@@ -76,8 +76,6 @@ public class TestProxies extends TestCase {
 		@Override
 		public void updateServices(List<ServiceRegistryBinding> localServices,
 				List<ServiceRegistryBinding> remoteServices) {
-			// rameshTODO Auto-generated method stub
-			
 		}
     }
 
@@ -92,8 +90,8 @@ public class TestProxies extends TestCase {
         final List serviceBindings = new ArrayList();
         
         for (int i = 0; i < fakeServices.length; i++) {
-        	VMRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", 2, "process2");             //$NON-NLS-1$ //$NON-NLS-2$
-        	ServiceID sid1 = new ServiceID(i, vmBinding2.getVMControllerID());
+        	ProcessRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 
+        	ServiceID sid1 = new ServiceID(i, vmBinding2.getHostName(), vmBinding2.getProcessName());
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -146,8 +144,8 @@ public class TestProxies extends TestCase {
         
         for (int i = 0; i < fakeServices.length; i++) {
         	
-        	VMRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", 2, "process2");             //$NON-NLS-1$ //$NON-NLS-2$
-        	ServiceID sid1 = new ServiceID(i, vmBinding2.getVMControllerID());
+        	ProcessRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 
+        	ServiceID sid1 = new ServiceID(i, vmBinding2.getHostName(), vmBinding2.getProcessName());
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
                                                                         "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 

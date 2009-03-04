@@ -37,9 +37,8 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ServerEvents;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.Configuration;
 
 /**
@@ -47,7 +46,7 @@ import com.metamatrix.server.Configuration;
  *
  */
 @Singleton
-public class VMMonitor implements ServerEvents {
+public class ProcessMonitor implements ServerEvents {
 
 	private static final int POLLING_INTERVAL_DEFAULT = 1000*15;
 
@@ -56,19 +55,17 @@ public class VMMonitor implements ServerEvents {
 	
 	ClusteredRegistryState registry;
 	String hostName;
-	String vmName;
-	VMControllerID vmId;
+	String processName;
 	
     // Monitors remote vm's to detect when they go down.
     private Timer vmPollingThread = new Timer("VMPollingThread", true); //$NON-NLS-1$
     private Timer servicePollingThread = new Timer("ServiceMonitoringThread", true); //$NON-NLS-1$
     
 	@Inject
-	public VMMonitor (@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.VMNAME)String vmName, VMControllerID vmId, ClusteredRegistryState registry) {
+	public ProcessMonitor (@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.PROCESSNAME)String processname, ClusteredRegistryState registry) {
 		
 		this.hostName = hostName;
-		this.vmName = vmName;
-		this.vmId = vmId;
+		this.processName = processname;
 		this.registry = registry;
 		
 		// check the health of the other VMS
@@ -82,7 +79,7 @@ public class VMMonitor implements ServerEvents {
 	 * Should be called when the local VM is going down.
 	 */
 	public void shutdown() {
-		this.registry.removeVM(this.hostName, this.vmId.toString());
+		this.registry.removeProcess(this.hostName, this.processName);
 	}
 	
     private void startVMPollingThread() {
@@ -90,10 +87,10 @@ public class VMMonitor implements ServerEvents {
     	vmPollingThread.schedule(new TimerTask() {
     		@Override
     		public void run() {
-    			List<VMRegistryBinding> vmBindings = VMMonitor.this.registry.getVMs(null);
+    			List<ProcessRegistryBinding> vmBindings = ProcessMonitor.this.registry.getVMs(null);
 
-    			for (VMRegistryBinding binding: vmBindings) {
-                    VMControllerInterface vm = binding.getVMController();
+    			for (ProcessRegistryBinding binding: vmBindings) {
+                    ProcessManagement vm = binding.getProcessController();
                     boolean alive = binding.isAlive();
 	                
                     try {
@@ -106,7 +103,7 @@ public class VMMonitor implements ServerEvents {
 	                
 	                // if the vmstate changed then, update the registry.
 	                if (alive != binding.isAlive()) {
-	                	vmUpdated(binding);
+	                	processUpdated(binding);
 	                }
 	            }
     		}
@@ -117,7 +114,7 @@ public class VMMonitor implements ServerEvents {
         servicePollingThread.schedule(new TimerTask() {
         	@Override
         	public void run() {
-        		List<ServiceRegistryBinding> bindings = registry.getServiceBindings(hostName, vmId.toString());
+        		List<ServiceRegistryBinding> bindings = registry.getServiceBindings(hostName, processName);
                 for (ServiceRegistryBinding binding:bindings) {
 
                 	ServiceInterface si = binding.getService();
@@ -143,7 +140,7 @@ public class VMMonitor implements ServerEvents {
 
 	public void serviceAdded(ServiceRegistryBinding binding) {
 		try {
-			this.registry.addServiceBinding(hostName, vmId.toString(), binding);
+			this.registry.addServiceBinding(hostName, processName, binding);
 			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Service Added:"+binding.getServiceID()); //$NON-NLS-1$
 		} catch (ResourceAlreadyBoundException e) {
 			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "Service already exists:"+binding.getServiceID()); //$NON-NLS-1$
@@ -153,31 +150,31 @@ public class VMMonitor implements ServerEvents {
 	}
 
 	public void serviceRemoved(ServiceID id) {
-		this.registry.removeServiceBinding(hostName, vmId.toString(), id);		
+		this.registry.removeServiceBinding(hostName, processName, id);		
 		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Service removed:"+id); //$NON-NLS-1$
 	}
 
-	public void vmAdded(VMRegistryBinding binding) {
+	public void processAdded(ProcessRegistryBinding binding) {
 		binding.setAlive(true);
 		try {
-			this.registry.addVM(hostName, vmId.toString(), binding);
-			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding.getVMControllerID()); //$NON-NLS-1$
+			this.registry.addProcess(binding.getHostName(), binding.getProcessName(), binding);
+			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding); //$NON-NLS-1$
 		} catch (CacheNodeNotFoundException e) {
-			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
-			throw new MetaMatrixRuntimeException("Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+binding); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException("Failed to add VM:"+binding); //$NON-NLS-1$
 		}
 		
 	}
 
-	public void vmRemoved(VMControllerID id) {
-		this.registry.removeVM(hostName, vmId.toString());		
-		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Removed:"+id); //$NON-NLS-1$
+	public void processRemoved(String hostName, String processName) {
+		this.registry.removeProcess(hostName, processName);		
+		LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Removed:<"+hostName+"."+processName+">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	@Override
 	public void serviceUpdated(ServiceRegistryBinding binding) {
 		try {
-			this.registry.updateServiceBinding(binding.getHostName(), binding.getServiceID().getVMControllerID().toString(), binding);
+			this.registry.updateServiceBinding(binding.getHostName(), binding.getServiceID().getProcessName(), binding);
 			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "Service updated:"+binding.getServiceID()); //$NON-NLS-1$
 		} catch(CacheNodeNotFoundException e) {
 			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add service:"+binding.getServiceID()); //$NON-NLS-1$
@@ -187,15 +184,15 @@ public class VMMonitor implements ServerEvents {
 	}
 
 	@Override
-	public void vmUpdated(VMRegistryBinding binding) {
+	public void processUpdated(ProcessRegistryBinding binding) {
 		try {
-			this.registry.updateVM(binding.getHostName(), binding.getVMControllerID().toString(), binding);
-			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:"+binding.getVMControllerID()); //$NON-NLS-1$
+			this.registry.updateProcess(binding.getHostName(), binding.getProcessName(), binding);
+			LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, "VM Added:" + binding); //$NON-NLS-1$
 		} catch (CacheNodeNotFoundException e) {
-			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
-			throw new MetaMatrixRuntimeException("Failed to add VM:"+binding.getVMControllerID()); //$NON-NLS-1$
+			LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Failed to add VM:"+ binding); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException("Failed to add VM:" + binding); //$NON-NLS-1$
 		} catch(ResourceNotBoundException e) {
-			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "VM does not exist:"+binding.getVMControllerID()); //$NON-NLS-1$
+			LogManager.logWarning(LogCommonConstants.CTX_CONTROLLER, "VM does not exist:"+binding); //$NON-NLS-1$
 		}
 	}
 }

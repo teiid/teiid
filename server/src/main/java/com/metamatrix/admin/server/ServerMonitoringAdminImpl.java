@@ -94,8 +94,7 @@ import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 /**
@@ -190,8 +189,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        String name = serviceBinding.getDeployedName();
 			        
 			        MMConnectorBinding binding;
-			        String[] identifierParts = 
-			            new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
+			        String[] identifierParts = new String[] {serviceBinding.getHostName(), serviceBinding.getProcessName(), name};
 			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 			        if (runtimeMap.containsKey(key)) {
 			            //reuse MMConnectorBinding from config
@@ -210,8 +208,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            binding.setStateChangedTime(serviceBinding.getStateChangeTime());
 			            binding.setRegistered(true);
 			            binding.setServiceID(serviceBinding.getServiceID().getID());
-			            binding.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
-
 			            
 			            results.add(binding);
 			        }
@@ -378,7 +374,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        
 			        MMDQP dqp;
 			        String[] identifierParts = 
-			            new String[] {serviceBinding.getHostName(), deployedComponent.getVMComponentDefnID().getName(), name};
+			            new String[] {serviceBinding.getHostName(), serviceBinding.getProcessName(), name};
 			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 			        if (runtimeMap.containsKey(key)) {
 			            //reuse MMDQP from config
@@ -401,7 +397,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            dqp.setStateChangedTime(serviceBinding.getStateChangeTime());
 			            dqp.setRegistered(true);
 			            dqp.setServiceID(serviceBinding.getServiceID().getID());
-			            dqp.setProcessID(serviceBinding.getServiceID().getVMControllerID().getID());
 			            
 			            results.add(dqp);
 			        }
@@ -595,14 +590,12 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		           String[] identifierParts = new String[] {hostName, processName};                
 		           if (identifierMatches(identifier, identifierParts)) {
 		               MMProcess process = new MMProcess(identifierParts);
-		               VMControllerID processID = processData.getProcessID();
 		               process.setRunning(processData.isRegistered());
 
 		               if (processData.isRegistered()) {
-		                   process.setProcessID(processID.getID());
 
 		                   try {
-		                       VMStatistics statistics = getRuntimeStateAdminAPIHelper().getVMStatistics(processID);
+		                       ProcessStatistics statistics = getRuntimeStateAdminAPIHelper().getVMStatistics(hostName, processName);
 		                       if (statistics != null) {
 		                           process.setFreeMemory(statistics.freeMemory);
 		                           process.setTotalMemory(statistics.totalMemory);
@@ -632,7 +625,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		                               process.setQueueWorkerPool(workerPool);
 		                           }
 		                       }
-			            	   process.setInetAddress(getRuntimeStateAdminAPIHelper().getVMHostName(processID));
+			            	   process.setInetAddress(getRuntimeStateAdminAPIHelper().getVMHostName(hostName, processName));
 		                   } catch (MetaMatrixComponentException e) {
 		                       //do nothing: sometimes when the process is just starting the RMI stub
 		                       //for SocketVMController is not initialized yet
@@ -1137,10 +1130,8 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
                 if (iter2.hasNext()) {
                     ProcessData processData = (ProcessData) iter2.next();
                     
-                    VMControllerID processID = processData.getProcessID();
-                    
                     try {
-                        byte[] logBytes = getRuntimeStateAdminAPIHelper().exportLogs(processID);
+                        byte[] logBytes = getRuntimeStateAdminAPIHelper().exportLogs(processData.getHostName(), processData.getName());
                         FileUtils.convertByteArrayToFile(logBytes, tempDirName, hostName+".zip");//$NON-NLS-1$
                     } catch (MetaMatrixComponentException e) {
                         //do nothing: sometimes when the process is just starting the RMI stub

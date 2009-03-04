@@ -54,7 +54,7 @@ public class DelimitedAuditMessageFormat implements AuditMessageFormat {
         msg.append( DELIMITER_CHAR );
         msg.append( message.getHostName() );
         msg.append( DELIMITER_CHAR );
-        msg.append( message.getVMName() );
+        msg.append( message.getProcessName() );
         msg.append( DELIMITER_CHAR );
         msg.append( message.getPrincipal() );
         msg.append( DELIMITER_CHAR );

@@ -40,7 +40,6 @@ import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 import com.metamatrix.server.Configuration;
 
 /**
@@ -62,16 +61,13 @@ public class ProxyManager implements RegistryListener{
 	
 	String hostName;
 		
-	String vmName;
+	String processName;
 	
-	VMControllerID vmID;
-
     @Inject
-    public ProxyManager(@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.VMNAME)String vmName, VMControllerID vmID, ClusteredRegistryState registry) {
+    public ProxyManager(@Named(Configuration.HOSTNAME)String hostName, @Named(Configuration.PROCESSNAME)String processName, ClusteredRegistryState registry) {
     	this.hostName = hostName;
-    	this.vmName = vmName;
+    	this.processName = processName;
     	this.registry = registry;
-    	this.vmID = vmID;
     	this.registry.addListener(this);
     }
     
@@ -218,7 +214,7 @@ public class ProxyManager implements RegistryListener{
      * @param serviceType The type of the service of interest.
      */
     private void setServiceInstances(ServiceSelectionPolicy policy, String serviceType) {
-        List localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.vmID.toString(), serviceType);
+        List localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.processName, serviceType);
         List serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
         serviceBindings.removeAll(localServiceBindings);
         policy.updateServices(localServiceBindings, serviceBindings);

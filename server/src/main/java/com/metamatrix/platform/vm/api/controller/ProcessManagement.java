@@ -29,10 +29,9 @@ import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 
-public interface VMControllerInterface {
+public interface ProcessManagement {
     
 	/**
 	 * Starts the VM by invoking all the deployed services
@@ -86,11 +85,6 @@ public interface VMControllerInterface {
     InetAddress getAddress();
 
 	/**
-	 * Get the ID for this controller.
-	 */
-    VMControllerID getID() ;
-
-	/**
 	 * Get the name for this controller.
 	 */
     String getName();
@@ -109,7 +103,7 @@ public interface VMControllerInterface {
      * Return information about VM.
      * totalMemory, freeMemory, threadCount
      */
-    VMStatistics getVMStatistics();
+    ProcessStatistics getVMStatistics();
 
     /**
      * dumps stack trace to log file.

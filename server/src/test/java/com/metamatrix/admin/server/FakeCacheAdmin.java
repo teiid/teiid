@@ -40,7 +40,6 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 
 public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
@@ -126,7 +125,7 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
         return null;
     }
 
-    public VMControllerID getVMID(){
+    public String getProcessName(){
         return null;
     }
 

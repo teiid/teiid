@@ -40,7 +40,7 @@ import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.StaticUtilities;
 
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 
 public class VMStatisticsDisplayHandler {
     public  QueueStatisticsRefreshRequestHandler caller;
@@ -67,7 +67,7 @@ public class VMStatisticsDisplayHandler {
      * The caller must subsequently call VMStatisticsFrame.show() to display the frame.
      */
     public VMStatisticsFrame startDisplayForProcess(String processDisplayName, ProcessData pd,
-            VMStatistics vmstatistics) {
+            ProcessStatistics vmstatistics) {
         VMStatisticsPanel panel = new VMStatisticsPanel(caller, pd, vmstatistics);
         statisticsFrame = new VMStatisticsFrame(this, processDisplayName, pd, 
         		panel);
@@ -80,7 +80,7 @@ public class VMStatisticsDisplayHandler {
     }
 
     public void refreshDisplayForProcess(String processDisplayName, ProcessData pd,
-            VMStatistics vmstatistics) {
+            ProcessStatistics vmstatistics) {
         VMStatisticsFrame statisticsFrame =
                 (VMStatisticsFrame) currentlyShowing.get(pd);
         VMStatisticsPanel panel = statisticsFrame.getPanel();

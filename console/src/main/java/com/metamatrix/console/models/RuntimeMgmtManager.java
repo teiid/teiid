@@ -349,7 +349,7 @@ public final class RuntimeMgmtManager
         throws ExternalException {
         refreshImpl();
         try {
-        	getAPI().stopProcess(theProcess.getProcessID());
+        	getAPI().stopProcess(theProcess.getHostName(), theProcess.getName(), true);
         }
         catch (Exception theException) {
             theException.printStackTrace();
@@ -361,7 +361,7 @@ public final class RuntimeMgmtManager
         throws ExternalException {
         refreshImpl();
         try {
-        	getAPI().stopProcessNow(theProcess.getProcessID());
+        	getAPI().stopProcess(theProcess.getHostName(), theProcess.getName(), true);
         }
         catch (Exception theException) {
             theException.printStackTrace();

@@ -35,7 +35,6 @@ import com.metamatrix.platform.registry.FakeRegistryUtil;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 
 /** 
@@ -189,15 +188,17 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.isEmpty());
         
-        VMControllerID vmId = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
+        String host = "2.2.2.2"; //$NON-NLS-1$
+        String process = "process2"; //$NON-NLS-1$
+        
         try {
-			ServiceRegistryBinding binding = admin.registry.getServiceBinding(vmId.getHostName(), vmId.toString(), new ServiceID(2,vmId));
+			ServiceRegistryBinding binding = admin.registry.getServiceBinding(host, process, new ServiceID(2,host,process));
 			binding.updateState(ConnectorBinding.STATE_CLOSED);
 		} catch (ResourceNotBoundException e1) {
 		}
         
         admin.startConnectorBinding(AdminObject.WILDCARD + "connectorBinding2"); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.contains("ServiceID<2> VMControllerID<2>:2.2.2.2")); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.contains("Service<2|2.2.2.2|process2>")); //$NON-NLS-1$
         
         
         //failure case: unknown connectorBinding
@@ -281,7 +282,7 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.isEmpty());
         
         admin.stopConnectorBinding(AdminObject.WILDCARD + "connectorBinding2", true); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.contains("ServiceID<2> VMControllerID<2>:2.2.2.2")); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.contains("Service<2|2.2.2.2|process2>")); //$NON-NLS-1$
         
 
         //failure case: unknown connectorBinding
@@ -336,7 +337,7 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.isEmpty());
         
         admin.stopProcess(AdminObject.WILDCARD + "process2", true, false); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.contains("VMControllerID<2>:2.2.2.2")); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.contains("2.2.2.2|process2")); //$NON-NLS-1$
         
 
         //failure case: unknown process

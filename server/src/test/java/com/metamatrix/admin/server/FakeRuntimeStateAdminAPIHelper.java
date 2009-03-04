@@ -37,7 +37,6 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.LogConfiguration;
@@ -53,8 +52,7 @@ import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.connector.service.ConnectorService;
 import com.metamatrix.server.query.service.QueryService;
 
@@ -207,19 +205,17 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     public List getServices() throws MetaMatrixComponentException {
         List results = new ArrayList();
         
-        VMControllerID vmControllerID2 = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
-        ServiceID serviceID2 = new ServiceID(2, vmControllerID2);
+        ServiceID serviceID2 = new ServiceID(2, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
         results.add(serviceID2);
         
-        VMControllerID vmControllerID3 = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
-        ServiceID serviceID3 = new ServiceID(3, vmControllerID3);
+        ServiceID serviceID3 = new ServiceID(3, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
         results.add(serviceID3);
         
         
-        ServiceID serviceID2A = new ServiceID(5, vmControllerID2);
+        ServiceID serviceID2A = new ServiceID(5, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
         results.add(serviceID2A);
         
-        ServiceID serviceID3A = new ServiceID(6, vmControllerID3);
+        ServiceID serviceID3A = new ServiceID(6, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
         results.add(serviceID3A);
 
         
@@ -238,15 +234,13 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         List hosts = new ArrayList();
         
         List processes2 = new ArrayList();   
-        VMControllerID vmControllerID1 = new VMControllerID(2, "2.2.2.2"); //$NON-NLS-1$
-        ProcessData process2 = new ProcessData(vmControllerID1, null, "2.2.2.2", new ArrayList(), "process2", "31000", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessData process2 = new ProcessData("2.2.2.2", "process2", "31000", null,  new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes2.add(process2);        
         HostData host2 = new HostData("2.2.2.2", processes2, true, true, new Properties()); //$NON-NLS-1$
         hosts.add(host2);
 
         List processes3 = new ArrayList();        
-        VMControllerID vmControllerID3 = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
-        ProcessData process3 = new ProcessData(vmControllerID3, null, "3.3.3.3", new ArrayList(), "process3", "31001", true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessData process3 = new ProcessData("3.3.3.3", "process3", "31001", null, new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         processes3.add(process3);        
         HostData host3 = new HostData("3.3.3.3", processes3, true, true, new Properties()); //$NON-NLS-1$
         hosts.add(host3);
@@ -263,10 +257,10 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
      * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper#getSystemState()
      * @since 4.3
      */
-    public VMStatistics getVMStatistics(VMControllerID vmID) throws MetaMatrixComponentException {
+    public ProcessStatistics getVMStatistics(String hostName, String processName) throws MetaMatrixComponentException {
     
-        if (vmID.getID() == 2) {
-            VMStatistics statistics = new VMStatistics();    
+        if (processName.equals("process2")) { //$NON-NLS-1$
+            ProcessStatistics statistics = new ProcessStatistics();    
             statistics.freeMemory = 2;
             statistics.threadCount = 2;
             statistics.socketListenerStats.sockets = 2;
@@ -274,8 +268,8 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             statistics.processPoolStats.queued = 2;
             
             return statistics;
-        } else if (vmID.getID() == 3) {
-            VMStatistics statistics = new VMStatistics();
+        } else if (processName.equals("process3")) { //$NON-NLS-1$
+            ProcessStatistics statistics = new ProcessStatistics();
             statistics.freeMemory = 3;
             statistics.threadCount = 3;
             statistics.socketListenerStats.sockets = 3;
@@ -313,10 +307,6 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         shutdownSystem = true;
     }
 
-    public void startDeployedService(ServiceComponentDefnID serviceID,
-                                     VMControllerID vmID) throws MetaMatrixComponentException {
-    }
-
     public void startHost(String host) throws MetaMatrixComponentException {
         startedHosts.add(host);
     }
@@ -332,10 +322,10 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
         stoppedHosts.add(host);
     }
 
-    public void stopProcess(VMControllerID processID,
+    public void stopProcess(String hostName, String processName,
                             boolean stopNow) throws AuthorizationException,
                                             MetaMatrixComponentException {
-        stoppedProcesses.add(processID.toString());
+        stoppedProcesses.add(hostName+"|"+processName); //$NON-NLS-1$
     }
 
     public void stopService(ServiceID serviceID,

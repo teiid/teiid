@@ -207,7 +207,7 @@ public interface Configuration extends ComponentObject {
      *  @param hostID is the host the VM was deployed to.
      *  @return DeployedComponent
      */
-    VMComponentDefn getVMForHost(String hostname, String vmname) ;
+    VMComponentDefn getVMForHost(String hostname, String processName) ;
 
 
     /**

@@ -83,8 +83,7 @@ import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.server.admin.apiimpl.RuntimeMetadataHelper;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 
@@ -412,19 +411,18 @@ public class AbstractAdminImpl {
     
     protected void shutDownConnectorBinding(MMConnectorBinding binding, boolean stopNow) throws AdminException {
             
-        VMControllerID vmControllerID = new VMControllerID(binding.getProcessID(), binding.getHostName()); 
-        ServiceID serviceID = new ServiceID(binding.getServiceID(), vmControllerID);
+        ServiceID serviceID = new ServiceID(binding.getServiceID(), binding.getHostName(), binding.getProcessName());
         
         try {
-			VMControllerInterface vmController = getVMControllerInterface(serviceID.getVMControllerID());
+			ProcessManagement vmController = getProcessController(serviceID.getHostName(), serviceID.getProcessName());
 		    vmController.stopService(serviceID, stopNow, true);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}
     }
 
-    private VMControllerInterface getVMControllerInterface(VMControllerID id) throws MetaMatrixComponentException {
-    	return this.registry.getVM(id.getHostName(), id.toString()).getVMController();
+    private ProcessManagement getProcessController(String hostName, String processName) throws MetaMatrixComponentException {
+    	return this.registry.getProcessBinding(hostName, processName).getProcessController();
     } 
 
     /**

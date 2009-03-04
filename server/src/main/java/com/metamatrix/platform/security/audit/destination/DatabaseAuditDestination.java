@@ -229,7 +229,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 					maxGeneralLength));
 
 			// Message VM ID column
-			stmt.setString(7, StringUtil.truncString(message.getVMName(),
+			stmt.setString(7, StringUtil.truncString(message.getProcessName(),
 					maxGeneralLength));
 
 			// Insert the row into the table

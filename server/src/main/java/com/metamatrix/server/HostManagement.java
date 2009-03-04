@@ -64,26 +64,26 @@ public interface HostManagement {
 	void bounceServers(String hostName) throws MetaMatrixComponentException;
 	
 	/**
-	 * Start a server process on this host with specified vmName
+	 * Start a server process on this host with specified processName
 	 * @param hostName - name of the host; can not be null
-	 * @param vmName - virtual machine name
+	 * @param processName - virtual machine name
 	 */
-	void startServer(String hostName, String vmName) throws MetaMatrixComponentException ;
+	void startServer(String hostName, String processName) throws MetaMatrixComponentException ;
 	
 	/**
-	 * Kill the server process on this host with specified vmName
+	 * Kill the server process on this host with specified processName
 	 * @param hostName - name of the host; can not be null
-	 * @param vmName
+	 * @param processName
 	 */
-	void killServer(String hostName, String vmName, boolean stopNow) throws MetaMatrixComponentException;
+	void killServer(String hostName, String processName, boolean stopNow) throws MetaMatrixComponentException;
 	
 	/**
-	 * Ping the server process on this host with given vmName.
+	 * Ping the server process on this host with given processName.
 	 * @param hostName - name of the host; can not be null
-	 * @param vmName
+	 * @param processName
 	 * @return true if available; false otherwise
 	 */
-	boolean pingServer(String hostName, String vmName);
+	boolean pingServer(String hostName, String processName);
 	
 	/**
 	 * Ping the local host controller 

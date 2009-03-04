@@ -205,6 +205,10 @@ public class ServiceRegistryBinding implements Serializable {
     public String getHostName() {
         return this.hostName;
     }
+    
+    public String getProcessName() {
+        return this.serviceID.getProcessName();
+    }
 
     public int getCurrentState() {
         return this.currentState;

@@ -312,7 +312,7 @@ public class DbLogWriter {
 			stmt.setString(6, StringUtil.truncString(VMNaming.getConfigName(), maxGeneralLength)); 
 
 			// Message VM ID column
-			stmt.setString(7, StringUtil.truncString(VMNaming.getVMName(), maxGeneralLength));
+			stmt.setString(7, StringUtil.truncString(VMNaming.getProcessName(), maxGeneralLength));
 
 			// Message thread name column
 			stmt.setString(8, StringUtil.truncString(message.getThreadName(), maxGeneralLength));

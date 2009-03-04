@@ -34,42 +34,31 @@ import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.id.dbid.DBIDGenerator;
-import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.VMMessageBus;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
-import com.metamatrix.platform.registry.VMMonitor;
+import com.metamatrix.platform.registry.ProcessMonitor;
 import com.metamatrix.platform.service.proxy.ProxyManager;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ServerEvents;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 class ServerGuiceModule extends AbstractModule {
 
 	Host host;
-	String vmName;
+	String processName;
 
-	public ServerGuiceModule(Host host, String vmName) {
+	public ServerGuiceModule(Host host, String processName) {
 		this.host = host;
-		this.vmName = vmName;
+		this.processName = processName;
 	}
 	
 	@Override
 	protected void configure() {
-
-		long vmID = 1;
-		try {
-			vmID = DBIDGenerator.getInstance().getID(DBIDGenerator.VM_ID);
-		} catch (DBIDGeneratorException e1) {
-			throw new MetaMatrixRuntimeException(e1);
-		}
 		
 		String systemName = null;
 		try {
@@ -79,16 +68,14 @@ class ServerGuiceModule extends AbstractModule {
 		}
 		
 		bindConstant().annotatedWith(Names.named(Configuration.HOSTNAME)).to(host.getFullName());
-		bindConstant().annotatedWith(Names.named(Configuration.VMNAME)).to(vmName);
-		bindConstant().annotatedWith(Names.named(Configuration.VMID)).to(vmID);
+		bindConstant().annotatedWith(Names.named(Configuration.PROCESSNAME)).to(processName);
 		bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
-		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_"+this.vmName+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_"+this.processName+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
 				
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
-		bind(VMControllerID.class).toInstance(new VMControllerID(vmID, host.getFullName()));
 		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
 		bind(ChannelProvider.class).in(Scopes.SINGLETON);
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
@@ -96,8 +83,8 @@ class ServerGuiceModule extends AbstractModule {
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
 		bind(ProxyManager.class).in(Scopes.SINGLETON);
 		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
-		bind(VMControllerInterface.class).to(SocketVMController.class).in(Scopes.SINGLETON);
-		bind(ServerEvents.class).to(VMMonitor.class).in(Scopes.SINGLETON);
+		bind(ProcessManagement.class).to(SocketVMController.class).in(Scopes.SINGLETON);
+		bind(ServerEvents.class).to(ProcessMonitor.class).in(Scopes.SINGLETON);
 		bind(HostManagement.class).toProvider(HostManagementProvider.class).in(Scopes.SINGLETON);
 		
 		// this needs to be removed.

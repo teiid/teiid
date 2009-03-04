@@ -53,7 +53,7 @@ import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
 import com.metamatrix.platform.registry.HostMonitor;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 
@@ -178,23 +178,23 @@ public class HostController implements HostManagement {
         vmPropsAndConfigProps.putAll(props);
         vmPropsAndConfigProps.putAll(this.host.getProperties());                    
         vmPropsAndConfigProps.putAll(vmProps);
-		String vmName = deployedVM.getID().getName();
+		String processName = deployedVM.getID().getName();
 
         // pass the instance name and its properties
-        String name = vmName.toUpperCase();
+        String name = processName.toUpperCase();
 		if (processMap.containsKey(name)) {
-			LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString(LogMessageKeys.HOST_0011,vmName));
+			LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString(LogMessageKeys.HOST_0011,processName));
 		    try {
-				killServer(hostname, vmName, true);
+				killServer(hostname, processName, true);
 			} catch (MetaMatrixComponentException e) {
 				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, e.getMessage());
 			}
 		}
 		
 		if (deployedVM.isEnabled()) {
-		    processMap.put(name, startDeployVM(vmName, hostname, vmPropsAndConfigProps));
+		    processMap.put(name, startDeployVM(processName, hostname, vmPropsAndConfigProps));
 		} else {
-			LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", vmName));//$NON-NLS-1$
+			LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, PlatformPlugin.Util.getString("HostController.VM_is_not_enabled_to_start", processName));//$NON-NLS-1$
 		}
     }
 
@@ -290,13 +290,13 @@ public class HostController implements HostManagement {
 		return injector.getInstance(HostController.class);
 	}    
     
-   private Process startDeployVM( String vmName, String hostName, Properties vmprops) {
-	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM = " + vmName + " on host = "+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
-       String command = buildVMCommand(vmName, vmprops);
+   private Process startDeployVM( String processName, String hostName, Properties vmprops) {
+	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM = " + processName + " on host = "+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
+       String command = buildVMCommand(processName, vmprops);
        return execCommand(command);
    }
 
-   private String buildVMCommand(String vmName, Properties vmprops) {
+   private String buildVMCommand(String processName, Properties vmprops) {
 	   String java = null;
 	   String java_home = System.getProperty("java.home"); //$NON-NLS-1$
 	   if (java_home != null) {
@@ -310,7 +310,7 @@ public class HostController implements HostManagement {
 	   java = replaceToken(java, vmprops);
 	   java_opts = replaceToken(java_opts, vmprops);
    
-	   String cmd = java + " " +java_opts+ " " + DEFAULT_JAVA_MAIN + " " + vmName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	   String cmd = java + " " +java_opts+ " " + DEFAULT_JAVA_MAIN + " " + processName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
        return cmd;
    }
    
@@ -352,18 +352,18 @@ public class HostController implements HostManagement {
    }
 
 	@Override
-	public void killServer(String hostName, String vmName, boolean stopNow) throws MetaMatrixComponentException {
+	public void killServer(String hostName, String processName, boolean stopNow) throws MetaMatrixComponentException {
 		
 		if (isRootHost(hostName)) {
-	    	LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "KillVM " + vmName); //$NON-NLS-1$
+	    	LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "KillVM " + processName); //$NON-NLS-1$
 	        
 	        // find the vm and shut it down.
-	        List<VMRegistryBinding> vms = HostController.this.registry.getVMs(null);
-	        for (VMRegistryBinding vm:vms) {
+	        List<ProcessRegistryBinding> vms = HostController.this.registry.getVMs(null);
+	        for (ProcessRegistryBinding vm:vms) {
 	            if (vm.getHostName().equalsIgnoreCase(this.host.getFullName())) {
-	                if (vm.getVMName().equalsIgnoreCase(vmName)) {
+	                if (vm.getProcessName().equalsIgnoreCase(processName)) {
 	                    try {
-                    		vm.getVMController().shutdown(stopNow);
+                    		vm.getProcessController().shutdown(stopNow);
 	                    } catch (Exception e) {
 	                        // ignore
 	                    }
@@ -372,16 +372,16 @@ public class HostController implements HostManagement {
 	            }
 	        }
 	        
-	        Process process = (Process) processMap.get(vmName.toUpperCase());
+	        Process process = (Process) processMap.get(processName.toUpperCase());
 	        if (process != null) {
-	            processMap.remove(vmName.toUpperCase());
+	            processMap.remove(processName.toUpperCase());
 	            process.destroy();
 	        }
 		}
 		else {
 			HostManagement remoteHost = getRemoteHost(hostName);
 			if (remoteHost != null) {
-				remoteHost.killServer(hostName, vmName, stopNow);
+				remoteHost.killServer(hostName, processName, stopNow);
 			}
 			else {
 				throw new MetaMatrixComponentException("HostController for host = " + hostName + " can not be reached"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -403,8 +403,8 @@ public class HostController implements HostManagement {
 	
 	        Iterator processes = copyMap.keySet().iterator();
 	        while (processes.hasNext()) {
-	            String vmName = (String) processes.next();
-	            killServer(hostName, vmName, stopNow);
+	            String processName = (String) processes.next();
+	            killServer(hostName, processName, stopNow);
 	        }
 	        processMap.clear();
 		}
@@ -448,7 +448,7 @@ public class HostController implements HostManagement {
 
 	
 	@Override
-	public boolean pingServer(String hostName, String vmName) {
+	public boolean pingServer(String hostName, String processName) {
 		return true;
 	}
 	
@@ -487,26 +487,26 @@ public class HostController implements HostManagement {
 	}
 	
 	@Override
-	public void startServer(String hostName, String vmName) throws MetaMatrixComponentException {
+	public void startServer(String hostName, String processName) throws MetaMatrixComponentException {
 		if (isRootHost(hostName)) {
 	    	try {
-				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "StartVM " + vmName); //$NON-NLS-1$
+				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "StartVM " + processName); //$NON-NLS-1$
 				CurrentConfiguration.getInstance().verifyBootstrapProperties();
 				ConfigurationModelContainer currentConfig = CurrentConfiguration.getInstance().getConfigurationModel();
 	
-				VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(this.host.getFullName(), vmName);
+				VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(this.host.getFullName(), processName);
 	
 				if (deployedVM != null) {
 					startVM(deployedVM, this.host.getFullName(), currentConfig);
 				}
 			} catch (ConfigurationException e) {
-				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Error starting the vm = "+vmName); //$NON-NLS-1$
+				LogManager.logError(LogCommonConstants.CTX_CONTROLLER, e, "Error starting the vm = "+processName); //$NON-NLS-1$
 			} 
 		}
 		else {
 			HostManagement remoteHost = getRemoteHost(hostName);
 			if (remoteHost != null) {
-				remoteHost.startServer(hostName, vmName);
+				remoteHost.startServer(hostName, processName);
 			}
 			else {
 				throw new MetaMatrixComponentException("HostController for host = " + hostName + " can not be reached"); //$NON-NLS-1$ //$NON-NLS-2$

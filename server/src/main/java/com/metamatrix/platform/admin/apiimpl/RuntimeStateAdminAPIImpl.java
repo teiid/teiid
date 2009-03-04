@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.log.reader.DBLogReader;
@@ -57,8 +56,9 @@ import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.VMRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.ServiceState;
@@ -67,9 +67,8 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
 import com.metamatrix.platform.util.PlatformProxyHelper;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
-import com.metamatrix.platform.vm.controller.VMControllerID;
-import com.metamatrix.platform.vm.controller.VMStatistics;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.HostManagement;
 
 public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements RuntimeStateAdminAPI {
@@ -149,26 +148,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
     }
 
-    /**
-     * Return all processes running in mm system.
-     * 
-     * @return List of VMControllerIDs.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized List<VMControllerID> getProcesses() throws AuthorizationException,
-                                                                              InvalidSessionException,
-                                                                              MetaMatrixComponentException {
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        
-        return helper.getProcesses();
-    }
 
     /**
      * Return all hosts running in mm system.
@@ -209,9 +188,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0003, new Object[] {
-            serviceID, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0003, new Object[] {serviceID, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopService(" + serviceID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -237,9 +214,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0004, new Object[] {
-            serviceID, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0004, new Object[] {serviceID, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopServiceNow(" + serviceID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -266,9 +241,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0005, new Object[] {
-            host, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0005, new Object[] {host, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopHost(" + host + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -295,9 +268,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0006, new Object[] {
-            host, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0006, new Object[] {host, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopHostNow(" + host + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -318,48 +289,17 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void stopProcess(VMControllerID processID) throws AuthorizationException,
-                                                                  InvalidSessionException,
-                                                                  MetaMatrixComponentException {
+    public synchronized void stopProcess(String hostName, String processName, boolean now) 
+    	throws AuthorizationException,InvalidSessionException, MetaMatrixComponentException {
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0009, new Object[] {
-            processID, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0009, new Object[] {hostName+"."+processName, token.getUsername()})); //$NON-NLS-1$
 
         // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopProcess(" + processID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopProcess(" + hostName+","+ processName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        helper.stopProcess(processID, false);
-    }
-
-    /**
-     * Stop process now.
-     * 
-     * @param processID
-     *            <code>VMControllerID</code>.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void stopProcessNow(VMControllerID processID) throws AuthorizationException,
-                                                                     InvalidSessionException,
-                                                                     MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0010, new Object[] {
-            processID, token.getUsername()
-        });
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopProcessNow(" + processID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        helper.stopProcess(processID, true);
+        helper.stopProcess(hostName, processName, now);
     }
 
   
@@ -379,9 +319,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0015, new Object[] {
-            token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0015, new Object[] {token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.shutdownServer()"); //$NON-NLS-1$
@@ -400,9 +338,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void bounceServer() throws AuthorizationException,
-                                                                              InvalidSessionException,
-                                                                              MetaMatrixComponentException {
+    public synchronized void bounceServer() throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
@@ -432,9 +368,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                                                                 InvalidSessionException,
                                                                 MetaMatrixComponentException {
 
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0019, new Object[] {
-            serviceID
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0019, new Object[] {serviceID}));
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
@@ -463,9 +397,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0020, new Object[] {
-            host, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0020, new Object[] {host, token.getUsername()}));
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.startHost(" + host + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -486,16 +418,13 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void startProcess(String host,
-                                          String process) throws AuthorizationException,
+    public synchronized void startProcess(String host, String process) throws AuthorizationException,
                                                          InvalidSessionException,
                                                          MetaMatrixComponentException {
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0021, new Object[] {
-            process, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0021, new Object[] {process, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.startProcess(" + host + ", " + process + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -522,9 +451,8 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0022, new Object[] {
-            pscID, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0022, new Object[] {pscID, token.getUsername()}));
+        
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.startPSC(" + pscID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -548,31 +476,19 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
     }
 
     // Helper method to start all services that are in a PSC
-    private void startPSCServices(ProcessData processData,
-                                  PSCData pscData) throws MetaMatrixComponentException,
-                                                  MultipleException {
-
-        // check if already running
-        //if (pscData.isRegistered()) {
-        //    throw new MetaMatrixComponentException("PSC " + pscData.getName() + " is already running.");
-        //}
+    private void startPSCServices(ProcessData processData, PSCData pscData) 
+    	throws MetaMatrixComponentException,MultipleException {
 
         // check that process is running
         if (!processData.isRegistered()) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0069,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0069,
-                                                                                 pscData.getName(),
-                                                                                 processData.getName()));
+            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0069,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0069,pscData.getName(),processData.getName()));
         }
 
-        VMControllerInterface vm = null;
+        ProcessManagement vm = null;
         try {
-            vm = helper.getVMControllerInterface(processData.getProcessID());
+            vm = helper.getVMControllerInterface(processData.getHostName(), processData.getName());
         } catch (ResourceNotBoundException e) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0070,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0070,
-                                                                                 pscData.getName(),
-                                                                                 processData.getName()));
+            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0070,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0070,pscData.getName(),processData.getName()));
         }
 
         List exceptions = new ArrayList();
@@ -649,9 +565,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0023, new Object[] {
-            pscID, token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0023, new Object[] {pscID, token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.stopPSC(" + pscID + ", " + now + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -687,9 +601,9 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                                                    PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0056, pscData.getName()));
         }
 
-        VMControllerInterface vm = null;
+        ProcessManagement vm = null;
         try {
-            vm = helper.getVMControllerInterface(processData.getProcessID());
+            vm = helper.getVMControllerInterface(processData.getHostName(), processData.getName());
         } catch (ResourceNotBoundException e) {
             throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0074,
                                                    PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0074,
@@ -741,9 +655,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        I18nLogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, LogMessageKeys.ADMIN_0026, new Object[] {
-            token.getUsername()
-        });
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0026, new Object[] {token.getUsername()}));
 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.synchronizeServer()"); //$NON-NLS-1$
@@ -806,7 +718,9 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         
     }
 
-
+    private static String buildProcessId(String host, String process) {
+    	return host+"."+process; //$NON-NLS-1$
+    }
 
     /**
      * Sets the <code>LogConfiguration</code> on the <code>LogManager</code> running in the given VM. If
@@ -820,30 +734,19 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
-    public synchronized void setLoggingConfiguration(LogConfiguration logConfig,
-                                                     VMControllerID vmID) throws AuthorizationException,
-                                                                         InvalidSessionException,
-                                                                         MetaMatrixComponentException {
-        String theVMID = "App Server VM"; //$NON-NLS-1$
-        if (vmID != null) {
-            theVMID = vmID.toString();
-        }
-        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0029, new Object[] {theVMID}));
+    public synchronized void setLoggingConfiguration(LogConfiguration logConfig, String hostName, String processName) 
+    	throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
+    	
+        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0029, new Object[] {buildProcessId(hostName, processName)}));
 
         // Validate caller's session
         SessionToken token = AdminAPIHelper.validateSession(getSessionID());
+        
         // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.setLoggingConfiguration(" + logConfig + ", " + vmID + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        // Set App Server VM's log config if vmID == null.
-        if (vmID == null) {
-            LogManager.setLogConfiguration(logConfig);
-            return;
-        }
+        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.setLoggingConfiguration(" + logConfig + ", " + buildProcessId(hostName, processName) + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Set logging config for given VM
-        // VMControllerNotBoundException gets propagated (ancester is MetaMatrixComponentException)
-        VMControllerInterface vm = helper.getVMControllerInterface(vmID);
+        ProcessManagement vm = helper.getVMControllerInterface(hostName, processName);
         vm.setCurrentLogConfiguration(logConfig);
     }
 
@@ -893,8 +796,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
                                                                                    InvalidSessionException,
                                                                                    MetaMatrixComponentException {
 
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN,
-                             "Getting queue statistics for " + queueName + " for service: " + serviceID); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "Getting queue statistics for " + queueName + " for service: " + serviceID); //$NON-NLS-1$ //$NON-NLS-2$
 
         // Validate caller's session
         AdminAPIHelper.validateSession(getSessionID());
@@ -917,18 +819,16 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized VMStatistics getVMStatistics(VMControllerID vmID) throws AuthorizationException,
-                                                                         InvalidSessionException,
-                                                                         MetaMatrixComponentException {
+    public synchronized ProcessStatistics getProcessStatistics(String hostName, String processName) 
+    	throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
 
-        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "Getting vm statistics for " + vmID); //$NON-NLS-1$
+        LogManager.logDetail(LogPlatformConstants.CTX_RUNTIME_ADMIN, "Getting vm statistics for " + buildProcessId(hostName, processName)); //$NON-NLS-1$
 
         // Validate caller's session
         AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
 
-        
-        return helper.getVMStatistics(vmID);
+        // Any administrator may call this read-only method - no need to validate role
+        return helper.getVMStatistics(hostName, processName);
     }
 
     /**
@@ -951,10 +851,10 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         }
 
         while (result == null && vmIter.hasNext()) {
-            VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
-            if (vmBinding.getHostName().equalsIgnoreCase(hostName) && vmBinding.getVMName().equalsIgnoreCase(processName)) {
+            ProcessRegistryBinding processBinding = (ProcessRegistryBinding)vmIter.next();
+            if (processBinding.getHostName().equalsIgnoreCase(hostName) && processBinding.getProcessName().equalsIgnoreCase(processName)) {
 
-                Iterator serviceIter = this.registry.getServiceBindings(hostName, vmBinding.getVMControllerID().toString()).iterator();
+                Iterator serviceIter = this.registry.getServiceBindings(hostName, processBinding.getProcessName()).iterator();
                 while (result == null && serviceIter.hasNext()) {
                     ServiceRegistryBinding binding = (ServiceRegistryBinding)serviceIter.next();
                     if (binding.getHostName().equalsIgnoreCase(hostName) &&
@@ -989,10 +889,10 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
         }
 
         while (result == null && vmIter.hasNext()) {
-            VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
-            if (vmBinding.getHostName().equalsIgnoreCase(hostName) && vmBinding.getVMName().equalsIgnoreCase(processName)) {
+            ProcessRegistryBinding processBinding = (ProcessRegistryBinding)vmIter.next();
+            if (processBinding.getHostName().equalsIgnoreCase(hostName) && processBinding.getProcessName().equalsIgnoreCase(processName)) {
 
-                Iterator serviceIter = this.registry.getServiceBindings(hostName, vmBinding.getVMControllerID().toString()).iterator();
+                Iterator serviceIter = this.registry.getServiceBindings(hostName, processBinding.getProcessName()).iterator();
                 while (result == null && serviceIter.hasNext()) {
                     ServiceRegistryBinding binding = (ServiceRegistryBinding)serviceIter.next();
                     if (binding.getHostName().equalsIgnoreCase(hostName) &&
@@ -1010,62 +910,13 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPI#getVMControllerBindings()
      * @since 4.2.1
      */
-    public List<VMRegistryBinding> getVMControllerBindings() throws InvalidSessionException,
+    public List<ProcessRegistryBinding> getVMControllerBindings() throws InvalidSessionException,
                                                                             AuthorizationException,
                                                                             MetaMatrixComponentException {
         AdminAPIHelper.validateSession(getSessionID());
         return registry.getVMs(null);
     }
 
-    /**
-     * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPI#getVMControllerIDByName(
-     *      java.lang.String, java.lang.String)
-     * @since 4.2.1
-     */
-    public VMControllerID getVMControllerIDByName(String hostName,
-                                                  String processName) throws AuthorizationException,
-                                                                     InvalidSessionException,
-                                                                     ResourceNotBoundException,
-                                                                     MetaMatrixComponentException {
-        AdminAPIHelper.validateSession(getSessionID());
-        VMControllerID result = null;
-        Iterator vmIter = getVMControllerBindings().iterator();
-        if (!vmIter.hasNext()) {
-            return result;
-        }
-
-        while (vmIter.hasNext()) {
-            VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
-            if (vmBinding.getHostName().equalsIgnoreCase(hostName) && vmBinding.getVMName().equalsIgnoreCase(processName)) {
-                result = vmBinding.getVMControllerID();
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPI#getVMName(
-     *      long, java.lang.String)
-     * @since 4.2.1
-     */
-    public String getVMName(long id, String hostName) 
-        throws AuthorizationException,InvalidSessionException, MetaMatrixComponentException {
-        
-        AdminAPIHelper.validateSession(getSessionID());
-        VMControllerID vmID = new VMControllerID(id, hostName);
-        String result = null;
-        Iterator vmIter = getVMControllerBindings().iterator();
-        while (vmIter.hasNext()) {
-            VMRegistryBinding vmBinding = (VMRegistryBinding)vmIter.next();
-            VMControllerID vmIDtemp = vmBinding.getVMController().getID();
-            if (vmIDtemp.equals(vmID)) {
-                result = vmBinding.getVMName();
-                break;
-            }
-
-        }
-        return result;
-    }
 
     /** 
      * @see com.metamatrix.platform.admin.api.RuntimeStateAdminAPI#getLogEntries(java.util.Date, java.util.Date, java.util.List, java.util.List, int)

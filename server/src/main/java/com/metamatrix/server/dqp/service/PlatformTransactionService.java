@@ -80,7 +80,7 @@ public class PlatformTransactionService implements TransactionService{
             props.putAll(env);
             props.setProperty(TransactionService.TXN_MGR_LOG_DIR, logDir);
             props.setProperty(TransactionService.HOSTNAME, host.getFullName());
-            props.setProperty(TransactionService.VMNAME, VMNaming.getVMName());
+            props.setProperty(TransactionService.VMNAME, VMNaming.getProcessName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 
 
             arjunaTs.init(ArjunaTransactionProvider.getInstance(props));

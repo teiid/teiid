@@ -51,7 +51,6 @@ import com.metamatrix.platform.registry.FakeRegistryUtil;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.vm.controller.VMControllerID;
 
 
 /** 
@@ -100,9 +99,8 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      */
     public void testGetConnectorBindings() throws AdminException {
     	
-        VMControllerID vmId = new VMControllerID(3, "3.3.3.3"); //$NON-NLS-1$
         try {
-			ServiceRegistryBinding binding = admin.registry.getServiceBinding(vmId.getHostName(), vmId.toString(), new ServiceID(3,vmId));
+			ServiceRegistryBinding binding = admin.registry.getServiceBinding("3.3.3.3","3", new ServiceID(3, "3.3.3.3", "3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			binding.updateState(ConnectorBinding.STATE_CLOSED);
 		} catch (ResourceNotBoundException e1) {
 		}

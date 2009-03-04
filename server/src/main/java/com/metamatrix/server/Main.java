@@ -39,7 +39,7 @@ import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.vm.api.controller.VMControllerInterface;
+import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 
 /**
  * This is main server starter class.
@@ -50,7 +50,7 @@ public class Main {
 	MessageBus messageBus;
 	
 	@Inject
-	VMControllerInterface vmController;
+	ProcessManagement vmController;
 	
 	@Inject
 	LogListener logListener;
@@ -63,7 +63,7 @@ public class Main {
 			    System.exit(1);        	
 			}
 
-			String vmName = args[0];
+			String processName = args[0];
 
 			Host host = null;
 			try {
@@ -76,19 +76,19 @@ public class Main {
 			    System.exit(-1);
 			}
 			
-			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(host.getName(), vmName);
+			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(host.getName(), processName);
 			String bindAddress = deployedVM.getBindAddress();
 			
-			VMNaming.setVMName(vmName);
+			VMNaming.setProcessName(processName);
 			VMNaming.setup(host.getFullName(), host.getHostAddress(), bindAddress);
 			
 			// write info log
-			writeInfoLog(host, vmName);
+			writeInfoLog(host, processName);
 			        
 			createTempDirectory();                    
 			
 			// wire up guice modules
-			Main main = loadMain(host, vmName);
+			Main main = loadMain(host, processName);
 			
 			// launch the server
 			
@@ -100,8 +100,8 @@ public class Main {
 	}
 	
 	
-	private static Main loadMain(Host host, String vmName) {
-		Injector injector = Guice.createInjector(new ServerGuiceModule(host, vmName));
+	private static Main loadMain(Host host, String processName) {
+		Injector injector = Guice.createInjector(new ServerGuiceModule(host, processName));
 		// Until we get the all the DI working we have to resort to this kind of stuff..
 		ResourceFinder.setInjector(injector); 
 		return injector.getInstance(Main.class);
@@ -144,15 +144,15 @@ public class Main {
 		}
 	}		
 
-	private static String buildPrefix(String hostName, String vmName){
+	private static String buildPrefix(String hostName, String processName){
 	    String hostFileName = StringUtil.replaceAll(hostName, ".", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-	    return hostFileName + "_" + vmName; //$NON-NLS-1$
+	    return hostFileName + "_" + processName; //$NON-NLS-1$
 	}   
 
 
-    private static void writeInfoLog(Host host, String vmName) {
+    private static void writeInfoLog(Host host, String processName) {
         // trigger the logging of the current application info to a log file for debugging        
-        LogApplicationInfo logApplInfo = new LogApplicationInfo(host.getFullName(), vmName, host.getLogDirectory(), buildPrefix(host.getFullName(), vmName) + "_info.log"); //$NON-NLS-1$
+        LogApplicationInfo logApplInfo = new LogApplicationInfo(host.getFullName(), processName, host.getLogDirectory(), buildPrefix(host.getFullName(), processName) + "_info.log"); //$NON-NLS-1$
         logApplInfo.start();        	
     }
     
