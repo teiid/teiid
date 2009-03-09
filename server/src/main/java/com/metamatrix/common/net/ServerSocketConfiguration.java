@@ -23,7 +23,6 @@
 package com.metamatrix.common.net;
 
 import java.io.IOException;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -84,7 +83,7 @@ public class ServerSocketConfiguration {
      */
     boolean client_encryption_enabled = false;
     
-    public static boolean isSSLEnabled() throws ConfigurationException {
+    public static boolean isSSLEnabled() {
     	return CryptoUtil.isEncryptionEnabled() && PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), SSL_ENABLED, false);
     }
     
