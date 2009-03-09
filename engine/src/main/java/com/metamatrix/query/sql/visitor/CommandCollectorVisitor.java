@@ -164,17 +164,18 @@ public class CommandCollectorVisitor extends LanguageVisitor {
         }
     }
     
-    public void visit(SetQuery obj) {
-        if (!nonEmbeddedOnly) {
-            
-            for (QueryCommand command : obj.getQueryCommands()) {
-                if (command instanceof SetQuery) {
-                    visit((SetQuery)command);
-                } else {
-                    this.commands.addAll(command.getSubCommands());
-                }
+    public void visit(SetQuery obj) {  
+        for (QueryCommand command : obj.getQueryCommands()) {
+            if (command instanceof SetQuery) {
+                visit((SetQuery)command);
+            } else {
+            	if(embeddedOnly){
+            		this.commands.add(command);
+            	}else if(!nonEmbeddedOnly){
+            		this.commands.addAll(CommandCollectorVisitor.getCommands(command, false, false));
+            	}
             }
-        }
+        } 
     }
     
     public void visit(BatchedUpdateCommand obj) {
