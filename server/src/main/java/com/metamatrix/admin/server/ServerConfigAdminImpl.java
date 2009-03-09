@@ -790,12 +790,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         ProcessObject hostProcess = (ProcessObject) hostProcesses.iterator().next();
         mmPort = hostProcess.getPropertyValue(ProcessObject.SERVER_PORT);
         
-        boolean useSSL;
-		try {
-			useSSL = ServerSocketConfiguration.isSSLEnabled();
-		} catch (ConfigurationException e) {
-			throw new AdminComponentException(e);
-		}
+        boolean useSSL = ServerSocketConfiguration.isSSLEnabled();
             
         String mmDriver = "com.metamatrix.jdbc.MMDriver"; //$NON-NLS-1$
         
