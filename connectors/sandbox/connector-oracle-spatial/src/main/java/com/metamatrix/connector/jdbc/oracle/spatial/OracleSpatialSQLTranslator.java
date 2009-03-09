@@ -30,7 +30,7 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IFunction;
@@ -40,7 +40,7 @@ import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.visitor.util.CollectorVisitor;
 
 
-public class OracleSpatialSQLTranslator extends Translator {
+public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
@@ -132,7 +132,7 @@ public class OracleSpatialSQLTranslator extends Translator {
 	                return comment + " /* + ORDERED */"; //$NON-NLS-1$
 	        }
 		}
-        return comment; //$NON-NLS-1$
+        return comment;
     }
 
 }
