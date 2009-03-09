@@ -805,10 +805,12 @@ Collection getSourceRequests(String identifier) {
  * @param identifier
  *            The unique identifier for for an {@link AdminObject}.
  * @param className
- *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
- *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
- *            You may specify either the fully-qualified or unqualified classname. 
- *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ *            The class name of the sub-interface of {@link AdminObject} you are setting the property for. These are all the
+ *            supported class names. {@link SystemObject}, {@link Host}, {@link ProcessObject}, {@link ConnectorBinding}, 
+ *            {@link ConnectorType},{@link DQP}, {@link Resource}
+ *            
+ *            Note that in Embedded mode only supported classes are {@link ConnectorBinding}, {@link ConnectorType}, 
+ *            {@link SystemObject}
  * @return Collection of PropertyDefinition objects.
  * @throws AdminException if there's a system error.     
  * @since 4.3
