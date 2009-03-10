@@ -65,7 +65,7 @@ public class SimplePooledConnectionSource implements DataSource {
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 			try {
-				if (method.getName().equals("close")) {
+				if (method.getName().equals("close")) { //$NON-NLS-1$
 					boolean isShutdown = shutdown;
 					if (!isShutdown) {
 						connections.add((Connection)proxy);
@@ -74,13 +74,19 @@ public class SimplePooledConnectionSource implements DataSource {
 					if (!isShutdown) {
 						return null;
 					}
-				} else if (method.getName().equals("isValid")) {
+				} else if (method.getName().equals("isValid")) { //$NON-NLS-1$
 					long now = System.currentTimeMillis();
 					if (lastTest + testInterval > now) {
 						return valid;
 					} 
 					lastTest = now;
-					valid = (Boolean)method.invoke(c, args);
+					try {
+						valid = c.isValid((Integer)args[0]);
+					} catch (AbstractMethodError e) {
+						valid = !c.isClosed();
+					} catch (SQLFeatureNotSupportedException e) {
+						valid = !c.isClosed();
+					}
 					return valid;
 				}
 				return method.invoke(c, args);
@@ -133,7 +139,7 @@ public class SimplePooledConnectionSource implements DataSource {
 			}
 			if (c == null) {
 				if (shutdown) {
-					throw new SQLException("pool shutdown");
+					throw new SQLException("pool shutdown"); //$NON-NLS-1$
 				}
 				try {
 					c = createConnection();
