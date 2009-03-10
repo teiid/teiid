@@ -50,6 +50,7 @@ import com.metamatrix.admin.api.objects.AdminStatus;
 import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.ProcessObject;
 import com.metamatrix.admin.api.objects.ScriptsContainer;
+import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerConfigAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
@@ -1457,6 +1458,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
 
     /**
+     * Supported classes are  {@link com.metamatrix.admin.api.objects.Host}, {@link com.metamatrix.admin.api.objects.ConnectorBinding}, 
+     * {@link SystemObject}, {@link ProcessObject}
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
@@ -1474,6 +1477,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
+     * Supported classes are {@link com.metamatrix.admin.api.objects.Host}, {@link com.metamatrix.admin.api.objects.ConnectorBinding}, 
+     * {@link SystemObject}, {@link ProcessObject}
      * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
      */
