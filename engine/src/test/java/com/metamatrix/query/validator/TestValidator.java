@@ -1699,7 +1699,7 @@ public class TestValidator extends TestCase {
         QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
         
         // Validate
-        return Validator.validate(command, metadata, false);         
+        return Validator.validate(command, metadata);         
     }
 
     public void testValidateDynamicCommandWithNonTempGroup_InModeler() throws Exception{

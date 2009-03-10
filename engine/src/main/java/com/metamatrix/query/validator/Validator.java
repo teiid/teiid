@@ -37,12 +37,6 @@ import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 public class Validator {
 
     public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        return validate(object, metadata, true);
-    }
-    
-    public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata, boolean validateCriteria)
-        throws MetaMatrixComponentException {
-
         ValidatorReport report1 = Validator.validate(object, metadata, new ValidationVisitor(), false);
         return report1;
     }
