@@ -206,7 +206,13 @@ public class JoinNode extends RelationalNode {
         }
         props.put(PROP_JOIN_STRATEGY, this.joinStrategy.toString());
         props.put(PROP_JOIN_TYPE, this.joinType.toString());
-        List critList = new ArrayList();
+        List critList = getCriteriaList();
+        props.put(PROP_JOIN_CRITERIA, critList);
+        return props;
+    }
+
+	private List getCriteriaList() {
+		List critList = new ArrayList();
         if (leftExpressions != null) {
             for(int i=0; i < this.leftExpressions.size(); i++) {
                 critList.add(this.leftExpressions.get(i).toString() + "=" + this.rightExpressions.get(i).toString());  //$NON-NLS-1$
@@ -217,9 +223,8 @@ public class JoinNode extends RelationalNode {
                 critList.add(crit.toString());
             }
         }
-        props.put(PROP_JOIN_CRITERIA, critList);
-        return props;
-    }
+		return critList;
+	}
 
     /** 
      * @see com.metamatrix.query.processor.relational.RelationalNode#getNodeString(java.lang.StringBuffer)
@@ -236,12 +241,12 @@ public class JoinNode extends RelationalNode {
         str.append(this.joinStrategy.toString());
         str.append("] [");//$NON-NLS-1$
         str.append(this.joinType.toString());
-        str.append("] output="); //$NON-NLS-1$
-        str.append(getElements());
-        str.append(" "); //$NON-NLS-1$
-        if (this.joinCriteria != null) {
-            str.append(" criteria=[").append(this.joinCriteria).append("] "); //$NON-NLS-1$ //$NON-NLS-2$
+        str.append("]"); //$NON-NLS-1$
+        if (getJoinType() != JoinType.JOIN_CROSS) {
+        	str.append(" criteria=").append(getCriteriaList()); //$NON-NLS-1$
         }
+        str.append(" output="); //$NON-NLS-1$
+        str.append(getElements());
     }
 
     /** 
