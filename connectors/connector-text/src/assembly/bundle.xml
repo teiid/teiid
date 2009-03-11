@@ -9,6 +9,15 @@
   
   <includeBaseDirectory>false</includeBaseDirectory>
     
+  <fileSets>
+    <fileSet>
+      <directory>src/main/resources</directory>
+      <includes><include>${project.artifactId}.xml</include></includes>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  
+      
   <dependencySets>
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>      

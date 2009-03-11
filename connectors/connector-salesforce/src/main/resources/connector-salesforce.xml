@@ -1,0 +1,11 @@
+        <ComponentType Name="Salesforce Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedDate="2008-10-31T10:26:19.916-06:00" CreationDate="2008-10-31T10:26:19.916-06:00">
+            <PropertyDefinition Name="ConnectorClassPath" DisplayName="ClassPath" ShortDescription="" DefaultValue="extensionjar:connector_patch.jar;extensionjar:commons-codec-1.2.jar;extensionjar:commons-httpclient-3.0.1.jar;extensionjar:axis.jar;extensionjar:salesforce.jar;extensionjar:salesforceconn.jar" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="username" DisplayName="User Name" ShortDescription="Name value for Salesforce authentication" DefaultValue="" Multiplicity="1" IsPreferred="true" />
+            <PropertyDefinition Name="ConnectorStateClass" DisplayName="Connector State Class" ShortDescription="" DefaultValue="com.metamatrix.connector.salesforce.ConnectorState" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="Standard" DisplayName="Standard Type" ShortDescription="Standard Built-in Connector Type" DefaultValue="true" PropertyType="Boolean" IsExpert="true" IsModifiable="false" />
+            <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.salesforce.Connector" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="InLimit" DisplayName="IN Criteria Limit" ShortDescription="The maximum number of values that can be supplied in an IN criteria" DefaultValue="-1" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="password" DisplayName="Password" ShortDescription="Password value for Salesforce authentication" DefaultValue="" Multiplicity="1" IsMasked="true" IsPreferred="true" />
+            <PropertyDefinition Name="URL" DisplayName="Salesforce URL" ShortDescription="URL for connecting to Salesforce" DefaultValue="" IsExpert="true" />
+            <PropertyDefinition Name="ConnectorCapabilities" DisplayName="Connector Capabilities Class" ShortDescription="The class to use to provide the Connector Capabilities" DefaultValue="com.metamatrix.connector.salesforce.SalesforceCapabilities" IsConstrainedToAllowedValues="false" IsExpert="true" />
+        </ComponentType>

@@ -1,0 +1,22 @@
+        <ComponentType Name="LDAP Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.946-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.946-06:00">
+            <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" DefaultValue="extensionjar:connector_patch.jar;extensionjar:ldapconn.jar" Multiplicity="1" />
+            <PropertyDefinition Name="SearchDefaultBaseDN" DisplayName="Default Search Base DN" ShortDescription="Default Base DN for LDAP Searches" IsExpert="true" />
+            <PropertyDefinition Name="com.metamatrix.data.pool.cleaning_interval" DisplayName="Pool cleaning Interval (seconds)" ShortDescription="Set the interval to cleaning the pool" DefaultValue="300" PropertyType="Integer" IsExpert="true" />
+            <PropertyDefinition Name="LdapAdminUserDN" DisplayName="Ldap Admin User DN" ShortDescription="User DN for the LDAP admin account." DefaultValue="cn=&lt;&gt;,ou=&lt;&gt;,dc=&lt;&gt;" Multiplicity="1" IsPreferred="true" />
+            <PropertyDefinition Name="Standard" DisplayName="Standard Type" ShortDescription="Standard Built-in Connector Type" DefaultValue="true" PropertyType="Boolean" IsExpert="true" IsModifiable="false" />
+            <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.ldap.LDAPConnector" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="LdapMaxCriteria" DisplayName="Ldap Max Criteria" ShortDescription="Maximum number of criteria supported in an LDAP search filter." DefaultValue="1000" Multiplicity="1" />
+            <PropertyDefinition Name="LdapAdminUserPassword" DisplayName="Ldap Admin Password" ShortDescription="Password of the LDAP admin user account." Multiplicity="1" IsMasked="true" IsPreferred="true" />
+            <PropertyDefinition Name="SearchDefaultScope" DisplayName="Default Search Scope" ShortDescription="Default Scope for LDAP Searches" DefaultValue="SUBTREE_SCOPE" Multiplicity="1">
+                <AllowedValue>OBJECT_SCOPE</AllowedValue>
+                <AllowedValue>ONELEVEL_SCOPE</AllowedValue>
+                <AllowedValue>SUBTREE_SCOPE</AllowedValue>
+            </PropertyDefinition>
+            <PropertyDefinition Name="RestrictToObjectClass" DisplayName="Restrict Searches To Named Object Class" ShortDescription="Restrict Searches to objectClass named in the Name field for a table" DefaultValue="false" PropertyType="Boolean" IsExpert="true" />
+            <PropertyDefinition Name="com.metamatrix.data.pool.max_connections" DisplayName="Pool Maximum Connections" ShortDescription="Set the maximum number of connections for the connection pool" DefaultValue="100" Multiplicity="1" PropertyType="Integer" IsExpert="true" />
+            <PropertyDefinition Name="LdapTxnTimeoutInMillis" DisplayName="Ldap Transaction Timeout (ms)" ShortDescription="Timeout value for LDAP searches. Defaults to TCP timeout value." />
+            <PropertyDefinition Name="com.metamatrix.data.pool.wait_for_source_time" DisplayName="Pool Connection Waiting Time (milliseconds)" ShortDescription="Set the time to wait if the connection is not available" DefaultValue="60000" PropertyType="Integer" IsExpert="true" />
+            <PropertyDefinition Name="LdapUrl" DisplayName="Ldap URL" ShortDescription="Ldap URL of the server, including port number." DefaultValue="ldap://&lt;ldapServer&gt;:&lt;389&gt;" Multiplicity="1" IsPreferred="true" />
+            <PropertyDefinition Name="com.metamatrix.data.pool.live_and_unused_time" DisplayName="Pool Connection Idle Time (seconds)" ShortDescription="Set the idle time of the connection before it should be closed if pool shrinking is enabled" DefaultValue="300" PropertyType="Integer" IsExpert="true" />
+            <PropertyDefinition Name="com.metamatrix.data.pool.enable_shrinking" DisplayName="Pool Shrinking Enabled" ShortDescription="Set whether to enable the pool shrinking" DefaultValue="true" PropertyType="Boolean" IsExpert="true" />
+        </ComponentType>
