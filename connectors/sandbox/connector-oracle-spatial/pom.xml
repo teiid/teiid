@@ -11,6 +11,17 @@
   <description>Oracle Spatial Connector</description>
   <dependencies>
     <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-common-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+  
+    <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>connector-jdbc</artifactId>
       <version>${project.version}</version>

@@ -10,6 +10,16 @@
   <name>Exec Connector</name>
   <description>This connector executes Admin API calls and System.exec calls through the connector using SQL representation</description>
   <dependencies>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-common-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
 	<dependency>
 	  <groupId>ant</groupId>
 	  <artifactId>ant</artifactId>

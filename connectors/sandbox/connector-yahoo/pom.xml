@@ -9,4 +9,17 @@
   <artifactId>connector-yahoo</artifactId>
   <name>Yahoo Connector</name>
   <description>Test connector used to query ticker symbols from Yahoo website</description>
+  
+  <dependencies>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-common-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+  </dependencies>  
 </project>

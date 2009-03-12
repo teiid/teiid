@@ -13,6 +13,17 @@
     any JAVA API, and turn it into connector</description>
   <dependencies>
     <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-connector-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-common-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>ant</groupId>
       <artifactId>ant</artifactId>
       <version>1.6.5</version>
