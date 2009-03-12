@@ -137,13 +137,22 @@ public final class TestConnectorManagerImpl extends TestCase {
     	ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
+        props.setProperty(ConnectorPropertyNames.IS_XA, Boolean.TRUE.toString());
         startConnectorManager(cm, props);
         assertTrue(cm.isXa());
         cm.stop();
-        cm = new ConnectorManager();
+    }
+    
+    public void testIsXA_Failure() throws Exception {
+        ConnectorManager cm = new ConnectorManager();
+        Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeSourceConnectionFactory.class.getName());
-        startConnectorManager(cm, props);
-        assertFalse(cm.isXa());
+        props.setProperty(ConnectorPropertyNames.IS_XA, Boolean.TRUE.toString());
+        try {
+        	startConnectorManager(cm, props);
+        } catch (ApplicationLifecycleException e) {
+        	assertEquals("Connector \"Unknown_Binding_Name<null>\" was configured to support XA transactions, but the connector is not an XAConnector", e.getMessage()); //$NON-NLS-1$
+        }
         cm.stop();
     }
     
@@ -151,7 +160,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         final String connectorName = FakeConnector.class.getName();
-        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);//$NON-NLS-1$
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);
         URLClassLoader cl = new URLClassLoader(new URL[0]);
         startConnectorManager(cm, props);
         ((FakeConnector)cm.getConnector().getActualConnector()).setClassloader(cl);

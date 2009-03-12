@@ -2,18 +2,30 @@ package org.teiid.connector.basic;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.CredentialMap;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.MappedUserIdentity;
 import org.teiid.connector.api.SingleIdentity;
+import org.teiid.connector.internal.ConnectorPropertyNames;
+
+import com.metamatrix.common.util.PropertiesUtils;
 
 public abstract class BasicConnector implements Connector {
 
 	private boolean useCredentialMap;
 	private boolean adminConnectionsAllowed = true;
 	private String connectorName;
+	
+	@Override
+	public void start(ConnectorEnvironment environment)
+			throws ConnectorException {
+		this.connectorName = environment.getConnectorName();
+		this.adminConnectionsAllowed = PropertiesUtils.getBooleanProperty(environment.getProperties(), ConnectorPropertyNames.ADMIN_CONNECTIONS_ALLOWED, true);
+		this.useCredentialMap = PropertiesUtils.getBooleanProperty(environment.getProperties(), ConnectorPropertyNames.USE_CREDENTIALS_MAP, false);
+	}
 		
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.api.Connector#createIdentity(com.metamatrix.connector.api.ExecutionContext)

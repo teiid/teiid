@@ -46,8 +46,6 @@ import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.basic.BasicConnector;
 import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.jdbc.xa.JDBCSourceXAConnection;
-import org.teiid.connector.jdbc.xa.XAJDBCPropertyNames;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
@@ -95,13 +93,12 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     @Override
     public void start(ConnectorEnvironment environment)
     		throws ConnectorException {
+    	super.start(environment);
     	logger = environment.getLogger();
         this.environment = environment;
         
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_initialized._1")); //$NON-NLS-1$
         
-        capabilities = createCapabilities(environment.getProperties(), Thread.currentThread().getContextClassLoader());
-
         Properties connectionProps = environment.getProperties();
 
         // Get the JDBC properties ...
@@ -126,6 +123,8 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
             throw new ConnectorException(e);
         }
         sqlTranslator.initialize(environment);
+        
+        capabilities = sqlTranslator.getConnectorCapabilities();
         
         createDataSources(dataSourceClassName, connectionProps);
         
@@ -214,7 +213,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 			TransactionContext transactionContext) throws ConnectorException {
 		XADataSource xaDataSource = getXADataSource();
 		if (xaDataSource == null) {
-			throw new UnsupportedOperationException("Connector is not XA capable");
+			throw new UnsupportedOperationException(JDBCPlugin.Util.getString("JDBCConnector.non_xa_connection_source")); //$NON-NLS-1$
 		}
 		javax.sql.XAConnection conn = null;
 		try {
@@ -223,6 +222,8 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 			} else if (context.getConnectorIdentity() instanceof MappedUserIdentity) {
 				MappedUserIdentity id = (MappedUserIdentity)context.getConnectorIdentity();
 				conn = xaDataSource.getXAConnection(id.getMappedUser(), id.getPassword());
+			} else {
+				throw new ConnectorException(JDBCPlugin.Util.getString("JDBCConnector.unsupported_identity_type")); //$NON-NLS-1$
 			}
 			java.sql.Connection c = conn.getConnection();
 			setDefaultTransactionIsolationLevel(c);
@@ -241,27 +242,6 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     @Override
 	public ConnectorCapabilities getCapabilities() {
 		return capabilities;
-	}
-
-	static ConnectorCapabilities createCapabilities(Properties p, ClassLoader loader)
-		throws ConnectorException {
-		//create Capabilities
-		String className = p.getProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, JDBCCapabilities.class.getName());  
-		try {
-		    ConnectorCapabilities result = (ConnectorCapabilities)ReflectionHelper.create(className, null, loader);
-		    if(result instanceof JDBCCapabilities) {
-		        String setCriteriaBatchSize = p.getProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE);
-		        if(setCriteriaBatchSize != null) {
-		            int maxInCriteriaSize = Integer.parseInt(setCriteriaBatchSize);
-		            if(maxInCriteriaSize > 0) {
-		                ((JDBCCapabilities)result).setMaxInCriteriaSize(maxInCriteriaSize);
-		            }
-		        } 
-		    }
-		    return result;
-		} catch (Exception e) {
-			throw new ConnectorException(e);
-		}
 	}
 	
     protected void createDataSources(String dataSourceClassName, final Properties connectionProps) throws ConnectorException {
@@ -286,7 +266,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     			@Override
     			public Object invoke(Object proxy, Method method,
     					Object[] args) throws Throwable {
-    				if (method.getName().equals("getConnection")) {
+    				if (method.getName().equals("getConnection")) { //$NON-NLS-1$
     					Properties p = new Properties();
     					String user = null;
     					String password = null;
@@ -298,14 +278,14 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     						password = connectionProps.getProperty(JDBCPropertyNames.PASSWORD);
     					}
     					if (user != null) {
-    						p.put("user", user);
+    						p.put("user", user); //$NON-NLS-1$
     					}
     					if (password != null) {
-    						p.put("password", password);
+    						p.put("password", password); //$NON-NLS-1$
     					}
     					return driver.connect(url, p);
     				} 
-    				throw new UnsupportedOperationException("Driver DataSource proxy only provides Connections");
+    				throw new UnsupportedOperationException("Driver DataSource proxy only provides Connections"); //$NON-NLS-1$
     			}
     		});
     	} else {
@@ -317,7 +297,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     			this.xaDs = (XADataSource)temp;
     	        PropertiesUtils.setBeanProperties(this.xaDs, connectionProps, null);
     		} else {
-    			throw new ConnectorException("Specified class is not a XADataSource, DataSource, or Driver " + dataSourceClassName);
+    			throw new ConnectorException(JDBCPlugin.Util.getString("JDBCConnector.invalid_source", dataSourceClassName)); //$NON-NLS-1$
     		}
     	} 
     	if (this.ds instanceof XADataSource) {
@@ -360,13 +340,13 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 
         // Will be: [aHost], [aPort]
         final String[] hostPort = protoHost[1].split(":"); //$NON-NLS-1$
-        connectionProps.setProperty(XAJDBCPropertyNames.SERVER_NAME, (String)hostPort[0]);
-        connectionProps.setProperty(XAJDBCPropertyNames.PORT_NUMBER, (String)hostPort[1]);
+        connectionProps.setProperty(XAJDBCPropertyNames.SERVER_NAME, hostPort[0]);
+        connectionProps.setProperty(XAJDBCPropertyNames.PORT_NUMBER, hostPort[1]);
 
         // For "databaseName", "SID", and all optional props
         // (<propName1>=<propValue1>;<propName2>=<propValue2>;...)
         for ( int i = 1; i < urlParts.length; i++ ) {
-            final String nameVal = (String) urlParts[i];
+            final String nameVal = urlParts[i];
             // Will be: [propName], [propVal]
             final String[] aProp = nameVal.split("="); //$NON-NLS-1$
             if ( aProp.length > 1) {

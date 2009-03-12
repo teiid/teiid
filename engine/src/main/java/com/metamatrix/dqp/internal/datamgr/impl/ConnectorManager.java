@@ -336,7 +336,7 @@ public class ConnectorManager implements ApplicationService {
     	this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
 
         // Initialize and start the connector
-        initStartConnector(connectorName, connectorEnv);
+        initStartConnector(connectorEnv);
 
         this.started = true;
     }
@@ -346,7 +346,7 @@ public class ConnectorManager implements ApplicationService {
      * @param env
      * @throws ApplicationLifecycleException
      */
-    private void initStartConnector(String connectorName, ConnectorEnvironment env) throws ApplicationLifecycleException {
+    private void initStartConnector(ConnectorEnvironment env) throws ApplicationLifecycleException {
         String connectorClassName = env.getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
         if(classloader == null){
             classloader = getClass().getClassLoader();
@@ -363,12 +363,15 @@ public class ConnectorManager implements ApplicationService {
 			} catch (MetaMatrixCoreException e) {
 	            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
 			}
-            if(c instanceof XAConnector){
-            	this.isXa = true;
+			this.isXa = PropertiesUtils.getBooleanProperty(env.getProperties(), ConnectorPropertyNames.IS_XA, false);
+			if (this.isXa) {
+	            if(!(c instanceof XAConnector)){
+	            	throw new ApplicationLifecycleException(DQPPlugin.Util.getString("non_xa_connector", connectorName)); //$NON-NLS-1$
+	            }
                 if (this.getTransactionService() == null) {                    
                     throw new ApplicationLifecycleException(DQPPlugin.Util.getString("no_txn_manager", connectorName)); //$NON-NLS-1$
                 }
-            }
+			}
             if (this.synchWorkers) {
                 SynchronousWorkers synchWorkerAnnotation = (SynchronousWorkers) c.getClass().getAnnotation(SynchronousWorkers.class);
             	if (synchWorkerAnnotation != null) {

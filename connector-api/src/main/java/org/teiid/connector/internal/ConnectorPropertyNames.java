@@ -98,7 +98,7 @@ public class ConnectorPropertyNames {
     
     public static final String IS_XA = "IsXA"; //$NON-NLS-1$
     
-    public static final String USE_CREDENTIALS_MAPS = "UseCredentialMaps"; //$NON-NLS-1$
+    public static final String USE_CREDENTIALS_MAP = "UseCredentialMap"; //$NON-NLS-1$
     
     public static final String ADMIN_CONNECTIONS_ALLOWED = "AdminConnectionsAllowed"; //$NON-NLS-1$
 

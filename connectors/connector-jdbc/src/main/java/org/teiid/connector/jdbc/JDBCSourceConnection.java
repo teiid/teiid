@@ -90,7 +90,7 @@ public class JDBCSourceConnection extends BasicConnection {
 		try {
             this.physicalConnection.close();
         } catch(SQLException e) {
-        	logger.logDetail("Exception during close: " + e.getMessage());
+        	logger.logDetail("Exception during close: " + e.getMessage()); //$NON-NLS-1$
         }
 	}
 

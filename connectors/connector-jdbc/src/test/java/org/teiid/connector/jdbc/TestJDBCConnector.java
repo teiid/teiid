@@ -28,7 +28,9 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.jdbc.xa.XAJDBCPropertyNames;
+import org.teiid.connector.jdbc.translator.Translator;
+
+import com.metamatrix.cdk.api.EnvironmentUtility;
 
 
 public class TestJDBCConnector {
@@ -36,8 +38,10 @@ public class TestJDBCConnector {
     public void helpTestMaxIn(int setting, int expected) throws Exception {
         Properties connProps = new Properties();
         connProps.setProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE, String.valueOf(setting)); 
-        connProps.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, SimpleCapabilities.class.getName()); 
-        ConnectorCapabilities caps = JDBCConnector.createCapabilities(connProps, this.getClass().getClassLoader());
+        connProps.setProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS, SimpleCapabilities.class.getName());
+        Translator t = new Translator();
+        t.initialize(EnvironmentUtility.createEnvironment(connProps));
+        ConnectorCapabilities caps = t.getConnectorCapabilities();
         int maxIn = caps.getMaxInCriteriaSize();
         assertEquals(expected, maxIn);
     }
@@ -63,11 +67,11 @@ public class TestJDBCConnector {
     	Properties props = new Properties();
     	JDBCConnector.parseURL(urlWithEmptyProp, props);
     	
-    	assertEquals("aPort", props.getProperty(XAJDBCPropertyNames.PORT_NUMBER));
-    	assertEquals("aHost", props.getProperty(XAJDBCPropertyNames.SERVER_NAME));
-    	assertEquals("XADS_aHost_null", props.getProperty(XAJDBCPropertyNames.DATASOURCE_NAME));
-    	assertEquals("aBogusProp", props.getProperty("bogusprop"));
-    	assertNull(props.getProperty("unemptyprop"));
+    	assertEquals("aPort", props.getProperty(XAJDBCPropertyNames.PORT_NUMBER)); //$NON-NLS-1$
+    	assertEquals("aHost", props.getProperty(XAJDBCPropertyNames.SERVER_NAME)); //$NON-NLS-1$
+    	assertEquals("XADS_aHost_null", props.getProperty(XAJDBCPropertyNames.DATASOURCE_NAME)); //$NON-NLS-1$
+    	assertEquals("aBogusProp", props.getProperty("bogusprop")); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertNull(props.getProperty("unemptyprop")); //$NON-NLS-1$
     }
     
 }

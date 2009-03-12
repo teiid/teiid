@@ -354,21 +354,10 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
         return false;
     }       
     
-    public boolean supportsOrderByInInlineViews() {
-        return false;
-    }
-
     /** 
      * @see org.teiid.connector.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
-        return true;
-    }
-    
-    /** 
-     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
-     */
-    public boolean supportsUnionOrderBy() {
         return true;
     }
     

@@ -33,6 +33,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -62,31 +63,31 @@ public class OracleSQLTranslator extends Translator {
 	
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new OracleConvertModifier(getLanguageFactory(), getEnvironment().getLogger())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new OracleConvertModifier(getLanguageFactory(), getEnvironment().getLogger())); 
         registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier("HOUR"));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier("YEAR"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier("MINUTE"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier("SECOND"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier("MONTH"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier("DAY"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "WW"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "Q"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "D"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "DDD"));//$NON-NLS-1$ //$NON-NLS-2$      
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));//$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier("YEAR"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier("MINUTE"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier("SECOND"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier("MONTH"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier("DAY"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "WW"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "Q"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "D"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "DDD"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
     }
     
     @Override
@@ -159,18 +160,18 @@ public class OracleSQLTranslator extends Translator {
 		queryCommand.setLimit(null);
     	List<Object> parts = new ArrayList<Object>();
 		if (limit.getRowOffset() > 0) {
-			parts.add("SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (");
+			parts.add("SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
 		} else {
-			parts.add("SELECT * FROM (");
+			parts.add("SELECT * FROM ("); //$NON-NLS-1$ 
 		}
 		parts.add(queryCommand);
 		if (limit.getRowOffset() > 0) {
-			parts.add(") VIEW_FOR_LIMIT WHERE ROWNUM <= ");
+			parts.add(") VIEW_FOR_LIMIT WHERE ROWNUM <= "); //$NON-NLS-1$
 			parts.add(limit.getRowLimit() + limit.getRowOffset());
-			parts.add(") WHERE ROWNUM_ > ");
+			parts.add(") WHERE ROWNUM_ > "); //$NON-NLS-1$
 			parts.add(limit.getRowOffset());
 		} else {
-			parts.add(") WHERE ROWNUM <= ");
+			parts.add(") WHERE ROWNUM <= "); //$NON-NLS-1$
 			parts.add(limit.getRowLimit());
 		}
 		return parts;
@@ -261,7 +262,7 @@ public class OracleSQLTranslator extends Translator {
         Statement stmt = null;
         try {                
             stmt = connection.createStatement();
-            rs = stmt.executeQuery("select * from v$instance"); 
+            rs = stmt.executeQuery("select * from v$instance"); //$NON-NLS-1$ 
             
             int columnCount = rs.getMetaData().getColumnCount();
             while (rs.next()) {
@@ -287,5 +288,10 @@ public class OracleSQLTranslator extends Translator {
                 getEnvironment().getLogger().logInfo(errorStr);
             }
         }
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return OracleCapabilities.class;
     }
 }

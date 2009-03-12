@@ -35,6 +35,7 @@ import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -59,6 +60,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // Derived from properties
     protected boolean trimString;
     protected int fetchSize;
+    protected int maxResultRows;
 
     // Set during execution
     protected Statement statement;
@@ -77,15 +79,15 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         this.logger = logger;
         this.context = context;
 
-        String propStr = props.getProperty(JDBCPropertyNames.TRIM_STRINGS);
-        if (propStr != null) {
-            trimString = Boolean.valueOf(propStr).booleanValue();
-        }
-        
+        trimString = PropertiesUtils.getBooleanProperty(props, JDBCPropertyNames.TRIM_STRINGS, false);
         fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, context.getBatchSize());
-        int max = sqlTranslator.getMaxResultRows();
-        if (max > 0) {
-        	fetchSize = Math.min(fetchSize, max);
+        maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, -1);
+        //if the connector work needs to throw an excpetion, set the size plus 1
+        if (maxResultRows > 0 && PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false)) {
+        	maxResultRows++;
+        }
+        if (maxResultRows > 0) {
+        	fetchSize = Math.min(fetchSize, maxResultRows);
         }
     }
 
@@ -134,8 +136,8 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     }
 
     protected void setSizeContraints(Statement statement) throws SQLException {
-        if (sqlTranslator.getMaxResultRows() > 0) {
-            statement.setMaxRows(sqlTranslator.getMaxResultRows());
+        if (maxResultRows > 0) {
+            statement.setMaxRows(maxResultRows);
         }
     	statement.setFetchSize(fetchSize);
     }

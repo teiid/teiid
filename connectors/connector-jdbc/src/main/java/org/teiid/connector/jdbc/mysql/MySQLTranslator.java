@@ -29,9 +29,11 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.jdbc.derby.DerbyCapabilities;
 import org.teiid.connector.jdbc.translator.Translator;
 
 
@@ -44,7 +46,7 @@ public class MySQLTranslator extends Translator {
 	@Override
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new MySQLConvertModifier(getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new MySQLConvertModifier(getLanguageFactory()));
     }  
 	
 	@Override
@@ -91,6 +93,11 @@ public class MySQLTranslator extends Translator {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+		return DerbyCapabilities.class;
 	}
 	
 }

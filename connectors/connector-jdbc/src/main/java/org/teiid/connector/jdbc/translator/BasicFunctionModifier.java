@@ -94,7 +94,7 @@ public abstract class BasicFunctionModifier implements FunctionModifier {
      * Subclass should override this method as needed.
      * @see org.teiid.connector.jdbc.translator.FunctionModifier#translate(org.teiid.connector.language.IFunction)
      */
-    public List translate(IFunction function) {
+    public List<?> translate(IFunction function) {
         return null;
     }
 

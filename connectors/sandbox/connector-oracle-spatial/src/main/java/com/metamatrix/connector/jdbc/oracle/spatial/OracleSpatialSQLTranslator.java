@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -134,5 +135,10 @@ public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
 		}
         return comment;
     }
+	
+	@Override
+	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+		return OracleSpatialCapabilities.class;
+	}
 
 }

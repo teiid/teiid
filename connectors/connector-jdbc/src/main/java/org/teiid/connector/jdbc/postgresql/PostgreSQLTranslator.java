@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -142,6 +143,11 @@ public class PostgreSQLTranslator extends Translator {
     	
     	command.acceptVisitor(visitor);
     	return command;
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return PostgreSQLCapabilities.class;
     }
 
 }

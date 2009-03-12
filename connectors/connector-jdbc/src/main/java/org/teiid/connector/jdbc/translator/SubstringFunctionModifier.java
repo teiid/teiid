@@ -38,7 +38,7 @@ public class SubstringFunctionModifier extends BasicFunctionModifier {
     private ILanguageFactory languageFactory;
     private String length_function;
     
-    public SubstringFunctionModifier(ILanguageFactory languageFactory, String substring_function, String length_function) {
+    public SubstringFunctionModifier(ILanguageFactory languageFactory, String length_function) {
     	this.languageFactory = languageFactory; 
         this.length_function = length_function;
     }

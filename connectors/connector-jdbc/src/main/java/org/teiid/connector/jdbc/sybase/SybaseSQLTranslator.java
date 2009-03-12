@@ -27,6 +27,7 @@ package org.teiid.connector.jdbc.sybase;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -49,14 +50,14 @@ public class SybaseSQLTranslator extends Translator {
      */
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory())); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier(getLengthFunctionName())); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier(getLanguageFactory(), "substring", getLengthFunctionName())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new SybaseConvertModifier(getLanguageFactory()));      //$NON-NLS-1$   
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier(getLengthFunctionName())); 
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier(getLanguageFactory(), getLengthFunctionName())); 
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new SybaseConvertModifier(getLanguageFactory()));      
     }
     
     public String getLengthFunctionName() {
@@ -87,16 +88,21 @@ public class SybaseSQLTranslator extends Translator {
 		queryCommand.setLimit(null);
 		queryCommand.setOrderBy(null);
 		List<Object> parts = new ArrayList<Object>(6);
-		parts.add("SELECT TOP ");
+		parts.add("SELECT TOP "); //$NON-NLS-1$
 		parts.add(limit.getRowLimit());
-		parts.add(" * FROM (");
+		parts.add(" * FROM ("); //$NON-NLS-1$
 		parts.add(queryCommand);
-		parts.add(") AS X");
+		parts.add(") AS X"); //$NON-NLS-1$
 		if (orderBy != null) {
-			parts.add(" ");
+			parts.add(" "); //$NON-NLS-1$
 			parts.add(orderBy);
 		}
 		return parts;
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return SybaseCapabilities.class;
     }
     
 }

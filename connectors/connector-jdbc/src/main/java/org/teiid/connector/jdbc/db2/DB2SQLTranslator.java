@@ -25,6 +25,7 @@ package org.teiid.connector.jdbc.db2;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -49,11 +50,11 @@ public class DB2SQLTranslator extends Translator {
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
 		super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DB2ConvertModifier(getLanguageFactory())); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$        
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DB2ConvertModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
     }
 		
 	@SuppressWarnings("unchecked")
@@ -85,6 +86,11 @@ public class DB2SQLTranslator extends Translator {
 	@Override
 	public String getDefaultConnectionTestQuery() {
 		return "Select 'x' from sysibm.systables where 1 = 2"; //$NON-NLS-1$
+	}
+	
+	@Override
+	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+		return DB2Capabilities.class;
 	}
     
 }

@@ -23,7 +23,7 @@
 package org.teiid.connector.jdbc;
 
 public class JDBCPropertyNames {
-    public static final String CONNECTION_SOURCE_CLASS = "Driver"; //$NON-NLS-1$
+    public static final String CONNECTION_SOURCE_CLASS = "ConnectionSource"; //$NON-NLS-1$
     public static final String URL = "URL"; //$NON-NLS-1$
     public static final String USERNAME = "User"; //$NON-NLS-1$
     public static final String PASSWORD = "Password"; //$NON-NLS-1$

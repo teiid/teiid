@@ -24,6 +24,7 @@
  */
 package org.teiid.connector.jdbc.access;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
 
 
@@ -40,6 +41,11 @@ public class AccessSQLTranslator extends SybaseSQLTranslator {
     @Override
     public boolean addSourceComment() {
     	return false;
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return AccessCapabilities.class;
     }
     
 }

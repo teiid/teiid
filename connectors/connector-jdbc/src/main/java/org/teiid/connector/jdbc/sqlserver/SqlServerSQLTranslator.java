@@ -24,6 +24,7 @@
  */
 package org.teiid.connector.jdbc.sqlserver;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
@@ -38,13 +39,18 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         super.initialize(env);
         //TEIID-31 remove mod modifier for SQL Server 2008
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$
     }
     
     @Override
     public String getLengthFunctionName() {
     	return "len"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return SqlServerCapabilities.class;
     }
     
 }

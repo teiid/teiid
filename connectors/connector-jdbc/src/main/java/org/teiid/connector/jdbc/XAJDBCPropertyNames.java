@@ -21,35 +21,23 @@
  */
 
 /*
+ * Date: Jan 23, 2003
+ * Time: 5:38:40 PM
  */
-package org.teiid.connector.jdbc.informix;
-
-import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.jdbc.translator.DropFunctionModifier;
-import org.teiid.connector.jdbc.translator.Translator;
-
+package org.teiid.connector.jdbc;
 
 /**
+ * XAJDBCPropertyNames.
  */
-public class InformixSQLTranslator extends Translator {
+public class XAJDBCPropertyNames {
 
-	@Override
-	public void initialize(ConnectorEnvironment env) throws ConnectorException {
-		super.initialize(env);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, new DropFunctionModifier());
-    }
-	
-	@Override
-	public String getDefaultConnectionTestQuery() {
-		return "select 'x' from informix.sysusers where 1=0"; //$NON-NLS-1$
-	}
-	
-	@Override
-	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-		return InformixCapabilities.class;
-	}
-    
+    /** An XA Transaction-related property. The <code>XADataSource</code>'s unique
+     * resource name for the underlying <code>ConnectionPoolDataSource</code> object.
+     */
+    public static final String DATASOURCE_NAME = "dataSourceName"; //$NON-NLS-1$
+
+    public static final String PORT_NUMBER = "portNumber";//$NON-NLS-1$
+
+    public static final String SERVER_NAME = "serverName";//$NON-NLS-1$
+
 }

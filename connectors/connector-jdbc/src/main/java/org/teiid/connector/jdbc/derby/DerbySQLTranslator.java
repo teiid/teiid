@@ -22,6 +22,7 @@
 
 package org.teiid.connector.jdbc.derby;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
@@ -39,14 +40,14 @@ public class DerbySQLTranslator extends Translator {
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
 		super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DerbyConvertModifier(getLanguageFactory())); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("coalesce")); //$NON-NLS-1$ //$NON-NLS-2$        
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DerbyConvertModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("coalesce")); //$NON-NLS-1$ 
     }  
  
     @Override
@@ -57,6 +58,11 @@ public class DerbySQLTranslator extends Translator {
     @Override
     public String getDefaultConnectionTestQuery() {
     	return "Select 0 from sys.systables where 1 = 2"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return DerbyCapabilities.class;
     }
 
 }

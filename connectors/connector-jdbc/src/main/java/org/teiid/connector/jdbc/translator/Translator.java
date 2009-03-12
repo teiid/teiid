@@ -40,11 +40,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.jdbc.JDBCCapabilities;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.language.ICommand;
@@ -57,6 +58,7 @@ import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.language.IParameter.Direction;
 
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * Base class for creating source SQL queries and retrieving results.
@@ -112,7 +114,6 @@ public class Translator {
     private boolean useComments;
     private boolean usePreparedStatements;
     
-    private int maxResultRows = 0;
     private TypeFacility typeFacility;
 
     private volatile boolean initialConnection;
@@ -142,23 +143,7 @@ public class Translator {
         this.useComments = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, false);
         this.usePreparedStatements = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_BIND_VARIABLES, false);
     	this.connectionTestQuery = env.getProperties().getProperty(JDBCPropertyNames.CONNECTION_TEST_QUERY, getDefaultConnectionTestQuery());
-    	this.isValidTimeout = PropertiesUtils.getIntProperty(env.getProperties(), JDBCPropertyNames.IS_VALID_TIMEOUT, -1);
-    		
-    	String maxResultRowsString = env.getProperties().getProperty(ConnectorPropertyNames.MAX_RESULT_ROWS);
-        if ( maxResultRowsString != null && maxResultRowsString.trim().length() > 0 ) {
-            try {
-                maxResultRows = Integer.parseInt(maxResultRowsString);
-                String exceptionOnMaxRowsString = env.getProperties().getProperty(
-                        ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS);
-                maxResultRows = Math.max(0, maxResultRows);
-                //if the connector work needs to throw an excpetion, set the size plus 1
-                if (maxResultRows > 0 && Boolean.valueOf(exceptionOnMaxRowsString).booleanValue()) {
-                	maxResultRows++;
-                }
-            } catch (NumberFormatException e) {
-                //this will already be logged by the connector worker
-            }
-        }
+    	this.isValidTimeout = PropertiesUtils.getIntProperty(env.getProperties(), JDBCPropertyNames.IS_VALID_TIMEOUT, -1);    		
     }
     
     /**
@@ -538,6 +523,14 @@ public class Translator {
         stmt.setObject(i, param, type);
     }
     
+    /**
+     * Execute a bulk insert on the given preparedstatement.
+     * @param conn
+     * @param stmt
+     * @param command
+     * @return
+     * @throws SQLException
+     */
     public int executeStatementForBulkInsert(Connection conn, PreparedStatement stmt, TranslatedCommand command) throws SQLException {
         List rows = command.getPreparedValues();
         int updateCount = 0;
@@ -558,17 +551,14 @@ public class Translator {
         return updateCount;
     } 
 
-    public List modifyRow(List batch, ExecutionContext context, ICommand command) {
-    	return batch;
-    }
-    
-	public int getMaxResultRows() {
-		return maxResultRows;
-	}
-    
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.ValueRetriever#retrieveValue(java.sql.ResultSet, int, java.lang.Class, java.util.Calendar)
-     */
+	/**
+	 * Retrieve the value on the current resultset row for the given column index.
+	 * @param results
+	 * @param columnIndex
+	 * @param expectedType
+	 * @return
+	 * @throws SQLException
+	 */
     public Object retrieveValue(ResultSet results, int columnIndex, Class expectedType) throws SQLException {
         Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
@@ -647,6 +637,14 @@ public class Translator {
         return results.getObject(columnIndex);
     }
 
+    /**
+     * Retrieve the value for the given parameter index
+     * @param results
+     * @param parameterIndex
+     * @param expectedType
+     * @return
+     * @throws SQLException
+     */
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class expectedType) throws SQLException{
         Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
@@ -719,7 +717,11 @@ public class Translator {
 		// translation routines
 		return results.getObject(parameterIndex);
     }
-        
+       
+    /**
+     * Called exactly once for this source.
+     * @param connection
+     */
     protected void afterInitialConnectionCreation(Connection connection) {
         // now dig some details about this driver/database for log.
         try {
@@ -742,21 +744,82 @@ public class Translator {
     }
     
     /**
+     * Provides a hook to call source specific logic when 
+     * a connection is created.
+     * 
      * defect request 13979 & 13978
      */
     public void afterConnectionCreation(Connection connection) {
         if (initialConnection) {
-            initialConnection = false;
-            afterInitialConnectionCreation(connection);
+        	synchronized (this) {
+        		if (!initialConnection) {
+        			return;
+        		}
+	            initialConnection = false;
+	            afterInitialConnectionCreation(connection);
+        	}
         }
     }
     
+    /**
+     * Returns a positive number if query testing should use the JDBC 4.0 isValid check.
+     * Can be set via the {@link JDBCPropertyNames#IS_VALID_TIMEOUT} property
+     * @return
+     */
     public int getIsValidTimeout() {
 		return isValidTimeout;
 	}
     
+    /**
+     * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
+     * JDBC connectors will not need to create custom conversion visitors, rather implementors 
+     * should override existing {@link Translator} methods.
+     * @return
+     */
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this);
     }
+    
+    /**
+     * Get the default capabilities class.  Will be used by {@link #getConnectorCapabilities()} to
+     * return a capabilities instance.
+     * @return
+     */
+    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
+    	return JDBCCapabilities.class;
+    }
+    
+    /**
+     * Get the capabilties for the source.
+     * @return
+     * @throws ConnectorException
+     */
+    public ConnectorCapabilities getConnectorCapabilities() throws ConnectorException {
+		// create Capabilities
+		String className = this.environment.getProperties().getProperty(JDBCPropertyNames.EXT_CAPABILITY_CLASS);
+		try {
+			ConnectorCapabilities result = null;
+			if (className != null && className.length() > 0) {
+				result = (ConnectorCapabilities) ReflectionHelper.create(
+						className, null, Thread.currentThread().getContextClassLoader());
+			} else {
+				result = getDefaultCapabilities().newInstance();
+			}
+
+			if (result instanceof JDBCCapabilities) {
+				String setCriteriaBatchSize = this.environment.getProperties().getProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE);
+				if (setCriteriaBatchSize != null) {
+					int maxInCriteriaSize = Integer
+							.parseInt(setCriteriaBatchSize);
+					if (maxInCriteriaSize > 0) {
+						((JDBCCapabilities) result).setMaxInCriteriaSize(maxInCriteriaSize);
+					}
+				}
+			}
+			return result;
+		} catch (Exception e) {
+			throw new ConnectorException(e);
+		}
+	}
     
 }

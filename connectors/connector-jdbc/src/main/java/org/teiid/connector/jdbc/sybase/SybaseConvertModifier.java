@@ -37,7 +37,7 @@ import org.teiid.connector.language.ILiteral;
 
 /**
  */
-public class SybaseConvertModifier extends BasicFunctionModifier implements FunctionModifier {
+public class SybaseConvertModifier extends BasicFunctionModifier {
 
     private static DropFunctionModifier DROP_MODIFIER = new DropFunctionModifier();
     static {
