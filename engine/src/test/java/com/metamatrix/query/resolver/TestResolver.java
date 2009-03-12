@@ -4257,48 +4257,7 @@ public class TestResolver extends TestCase {
         
         helpResolveException(sql);
     }
-    
-    public void testResolvesClosestType() throws Exception {
-        ElementSymbol e1 = new ElementSymbol("pm1.g1.e1"); //$NON-NLS-1$
-        e1.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        Function function = new Function("abs", new Expression[] {e1}); //$NON-NLS-1$
-        
-        ResolverVisitorUtil.resolveFunction(function, metadata);
-        
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, function.getType());
-    }
-    
-    public void testResolveConvertReference() throws Exception {
-        Function function = new Function("convert", new Expression[] {new Reference(0), new Constant(DataTypeManager.DefaultDataTypes.BOOLEAN)}); //$NON-NLS-1$
-        
-        ResolverVisitorUtil.resolveFunction(function, metadata);
-        
-        assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getType());
-        assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getArgs()[0].getType());
-    }
-    
-    public void testResolveAmbiguousFunction() throws Exception {
-        Function function = new Function("LCASE", new Expression[] {new Reference(0)}); //$NON-NLS-1$
-        
-        try {
-            ResolverVisitorUtil.resolveFunction(function, metadata);
-            fail("excpetion expected"); //$NON-NLS-1$
-        } catch (QueryResolverException err) {
-            assertEquals("The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
-        } 
-    }
-    
-    public void testResolvBadConvert() throws Exception {
-        Function function = new Function("convert", new Expression[] {new Constant(new Character('a')), new Constant(DataTypeManager.DefaultDataTypes.DATE)}); //$NON-NLS-1$
-        
-        try {
-            ResolverVisitorUtil.resolveFunction(function, metadata);
-            fail("excpetion expected"); //$NON-NLS-1$
-        } catch (QueryResolverException err) {
-            assertEquals("The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
-        } 
-    }
-    
+            
     public void testCreateAfterImplicitTempTable() {
         StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$

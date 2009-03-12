@@ -165,12 +165,12 @@ public class QueryRewriter {
     private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
     
     static {
-    	ALIASED_FUNCTIONS.put("lower", SourceSystemFunctions.LCASE);
-    	ALIASED_FUNCTIONS.put("upper", SourceSystemFunctions.UCASE);
-    	ALIASED_FUNCTIONS.put("cast", SourceSystemFunctions.CONVERT);
-    	ALIASED_FUNCTIONS.put("nvl", SourceSystemFunctions.IFNULL);
-    	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT);
-    	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR);
+    	ALIASED_FUNCTIONS.put("lower", SourceSystemFunctions.LCASE); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("upper", SourceSystemFunctions.UCASE); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("cast", SourceSystemFunctions.CONVERT); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("nvl", SourceSystemFunctions.IFNULL); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
     }
 
 	private QueryRewriter() { }
@@ -2016,7 +2016,7 @@ public class QueryRewriter {
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.SPACE)) {
 			//change the function into timestampadd
 			Function result = new Function(SourceSystemFunctions.REPEAT,
-					new Expression[] {new Constant(" "), function.getArg(0)});
+					new Expression[] {new Constant(" "), function.getArg(0)}); //$NON-NLS-1$
 			//resolve the function
 			FunctionDescriptor descriptor = 
 	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
@@ -2049,7 +2049,6 @@ public class QueryRewriter {
 			return rewriteExpression(caseExpr, procCommand, context, metadata);
 		}
 		
-		//TODO: add proper support for COALESCE
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
 			Expression[] args = function.getArgs();
 			if (args.length == 2) {
@@ -2062,22 +2061,6 @@ public class QueryRewriter {
 				result.setType(function.getType());
 				return rewriteFunction(result, procCommand, context, metadata);
 			}
-			
-			//rewrite coalesce(a, b) => case when (a is not null) then a when (b is not null) b else null
-			List<Criteria> when = new ArrayList<Criteria>(args.length);
-			List<Expression> then = new ArrayList<Expression>(args.length);
-			for (int i = 0; i < args.length; i++) {
-				IsNullCriteria inc = new IsNullCriteria(args[i]);
-				inc.setNegated(true);
-				when.add(inc);
-				then.add(args[i]);
-			}
-			
-			Constant nullConstant = new Constant(null, function.getType());
-			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
-			caseExpr.setElseExpression(nullConstant);
-			caseExpr.setType(function.getType());
-			return rewriteExpression(caseExpr, procCommand, context, metadata);
 		}
 		
 		//rewrite concat2 - CONCAT2(a, b) ==> CASE WHEN (a is NULL AND b is NULL) THEN NULL ELSE CONCAT( NVL(a, ''), NVL(b, '') )

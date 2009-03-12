@@ -58,5 +58,10 @@ public class IntegerToFloatTransform extends AbstractTransform {
 	public Class getTargetType() {
 		return Float.class;
 	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
+	}
 
 }

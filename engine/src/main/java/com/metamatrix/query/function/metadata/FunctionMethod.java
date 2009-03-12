@@ -473,5 +473,12 @@ public class FunctionMethod implements Serializable {
     public void setDeterministic(int deterministic) {
         this.deterministic = deterministic;
     }
+    
+    public boolean isVarArgs() {
+    	if (this.inputParameters != null && this.inputParameters.length > 0) {
+    		return inputParameters[inputParameters.length - 1].isVarArg();
+    	}
+    	return false;
+    }
      
 }

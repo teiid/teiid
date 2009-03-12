@@ -38,6 +38,7 @@ public class FunctionParameter implements Serializable {
     private String name;  
     private String type;
     private String description;
+    private boolean isVarArg;
 
     /**
      * Construct a function parameter with no attributes.
@@ -51,8 +52,7 @@ public class FunctionParameter implements Serializable {
      * @param type Type from standard set of types
      */
     public FunctionParameter(String name, String type) {
-        setName(name);
-        setType(type);
+        this(name, type, null);
     }
     
     /**
@@ -62,10 +62,15 @@ public class FunctionParameter implements Serializable {
      * @param description Description
      */
     public FunctionParameter(String name, String type, String description) { 
+        this(name, type, description, false);
+    }
+    
+    public FunctionParameter(String name, String type, String description, boolean vararg) { 
         setName(name);
         setType(type);
         setDescription(description);
-    }        
+        this.isVarArg = vararg;
+    }
     
     /**
      * Return name of parameter.
@@ -143,17 +148,15 @@ public class FunctionParameter implements Serializable {
     public boolean equals(Object obj) {
         if(obj == this) { 
             return true;
-        } else if(obj == null) { 
-            return false;
-        } else if(obj instanceof FunctionParameter) { 
-            FunctionParameter other = (FunctionParameter) obj;
-            if(other.getType() == null) { 
-                return (this.getType() == null);
-            }
-            return other.getType().equals(this.getType());
-        } else {
-            return false;
-        }    
+        } 
+        if(!(obj instanceof FunctionParameter)) {
+        	return false;
+        }
+        FunctionParameter other = (FunctionParameter) obj;
+        if(other.getType() == null) { 
+            return (this.getType() == null);
+        }
+        return other.getType().equals(this.getType()) && this.isVarArg == other.isVarArg;
     }
        
     /**
@@ -161,7 +164,15 @@ public class FunctionParameter implements Serializable {
      * @return String representation of function parameter
      */ 
     public String toString() { 
-        return type + " " + name; //$NON-NLS-1$
+        return type + (isVarArg?"... ":" ") + name; //$NON-NLS-1$ //$NON-NLS-2$
     }
+
+	public void setVarArg(boolean isVarArg) {
+		this.isVarArg = isVarArg;
+	}
+
+	public boolean isVarArg() {
+		return isVarArg;
+	}
         
 }

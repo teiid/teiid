@@ -48,12 +48,12 @@ public class TestFunction extends TestCase {
 
     // ################################## TEST HELPERS ################################
 
-    private void helpConcat(Object s1, Object s2, Object expected) throws FunctionExecutionException {
+    private void helpConcat(String s1, String s2, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.concat(s1, s2);
         assertEquals("concat(" + s1 + ", " + s2 + ") failed.", expected, actual);	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public static void helpTrim(Object str, boolean left, Object expected) throws FunctionExecutionException {
+    public static void helpTrim(String str, boolean left, Object expected) {
         Object actual = null;
         if (left) {
             actual = FunctionMethods.leftTrim(str);
@@ -64,27 +64,27 @@ public class TestFunction extends TestCase {
         }
     }
 
-    public static void helpLeft(Object str, int count, Object expected) throws FunctionExecutionException {
+    public static void helpLeft(String str, int count, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.left(str, new Integer(count));
         assertEquals("left(" + str + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public static void helpRight(Object str, int count, Object expected) throws FunctionExecutionException {
+    public static void helpRight(String str, int count, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.right(str, new Integer(count));
         assertEquals("right(" + str + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public static void helpReplace(Object str, Object sub, Object replace, Object expected) throws FunctionExecutionException {
+    public static void helpReplace(String str, String sub, String replace, Object expected) {
         Object actual = FunctionMethods.replace(str, sub, replace);
         assertEquals("replace(" + str + "," + sub + "," + replace + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
-    public static void helpSubstring(Object str, Object start, Object length, Object expected) throws FunctionExecutionException {
+    public static void helpSubstring(String str, Integer start, Integer length, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.substring(str, start, length);
         assertEquals("substring(" + str + "," + start + "," + length + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
-    public static void helpSubstring(Object str, Object start, Object expected) throws FunctionExecutionException {
+    public static void helpSubstring(String str, Integer start, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.substring(str, start);
         assertEquals("substring(" + str + "," + start + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -102,7 +102,7 @@ public class TestFunction extends TestCase {
         } 
     }
 
-    public static void helpTestInitCap(String input, String expected) throws FunctionExecutionException {
+    public static void helpTestInitCap(String input, String expected) {
         String actual = (String) FunctionMethods.initCap(input);
         assertEquals("Didn't get expected result from initCap", expected, actual); //$NON-NLS-1$
     }
@@ -138,8 +138,8 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
 
-    public static void helpTestLocate(String locateString, String input, int start, int expectedLocation) throws FunctionExecutionException {
-        Integer location = (Integer) FunctionMethods.locate(locateString, input, new Integer(start));
+    public static void helpTestLocate(String locateString, String input, Integer start, int expectedLocation) {
+        Integer location = (Integer) FunctionMethods.locate(locateString, input, start);
         int actualLocation = location.intValue();
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
@@ -175,13 +175,19 @@ public class TestFunction extends TestCase {
                      expected, actual.toString()); 
     }
 
-    public static void helpTestTimestampAdd(String intervalType, int intervalCount, Object datetime, String expected) throws FunctionExecutionException {
-        Object actual = FunctionMethods.timestampAdd(intervalType, new Integer(intervalCount), datetime);
-        assertEquals("timestampadd(" + intervalType + ", " + intervalCount + ", " + datetime + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                     expected, new Constant(actual).toString()); 
-    }
+    public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) throws FunctionExecutionException {
+        Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
+        assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                     expected, actual); 
 
-    public static void helpTestTimestampDiff(String intervalType, Object timeStamp1, Object timeStamp2, Long expected) throws FunctionExecutionException {
+        // test reverse - should be 
+        Long expected2 = new Long(0 - expected.longValue());
+        Object actual2 = FunctionMethods.timestampDiff(intervalType, timeStamp2, timeStamp1);
+        assertEquals("timestampDiff(" + intervalType + ", " + timeStamp2 + ", " + timeStamp1 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                     expected2, actual2); 
+    }
+    
+    public static void helpTestTimestampDiff(String intervalType, Time timeStamp1, Time timeStamp2, Long expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
         assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                      expected, actual); 
@@ -207,31 +213,11 @@ public class TestFunction extends TestCase {
         helpConcat("x", "y", "xy"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testConcat2() throws FunctionExecutionException {
-        helpConcat(null, "x", null); //$NON-NLS-1$
-    }
-
-    public void testConcat3() throws FunctionExecutionException {
-        helpConcat("x", null, null); //$NON-NLS-1$
-    }
-
-    public void testConcat4() throws FunctionExecutionException {
-        helpConcat(null, null, null);
-    }
-
     public void testConcat5() throws FunctionExecutionException {
         helpConcat("", "", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // ------------------------------ TRIM ------------------------------
-
-    public void testTrim1() throws FunctionExecutionException {
-        helpTrim(null, true, null);
-    }
-
-    public void testTrim2() throws FunctionExecutionException {
-        helpTrim(null, false, null);
-    }
 
     public void testTrim3() throws FunctionExecutionException {
         helpTrim("", true, ""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -283,10 +269,6 @@ public class TestFunction extends TestCase {
         helpLeft("abcd", 3, "abc"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testLeft3() throws FunctionExecutionException {
-        helpLeft(null, 2, null);
-    }
-
     public void testLeft4() throws FunctionExecutionException {
         helpLeft("", 0, ""); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -311,10 +293,6 @@ public class TestFunction extends TestCase {
 
     public void testRight2() throws FunctionExecutionException {
         helpRight("abcd", 3, "bcd"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testRight3() throws FunctionExecutionException {
-        helpRight(null, 2, null);
     }
 
     public void testRight4() throws FunctionExecutionException {
@@ -349,10 +327,6 @@ public class TestFunction extends TestCase {
 
     public void testSubstring4() throws FunctionExecutionException {
         helpSubstring("abc", new Integer(3), new Integer(0), ""); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testSubstring5() throws FunctionExecutionException {
-        helpSubstring(null, new Integer(3), new Integer(3), null);
     }
 
     public void testSubstring6() throws FunctionExecutionException {
@@ -529,11 +503,6 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected code", 32, code.intValue()); //$NON-NLS-1$
     }
 
-    public void testAscii3() throws FunctionExecutionException {
-        Integer code = (Integer) FunctionMethods.ascii(null);
-        assertEquals("Didn't get expected code", null, code); //$NON-NLS-1$
-    }
-
     public void testAscii4() {
         try {
             FunctionMethods.ascii(""); //$NON-NLS-1$
@@ -552,11 +521,6 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected character", ' ', chr.charValue()); //$NON-NLS-1$
     }
 
-    public void testChr2() {
-        Character chr = (Character) FunctionMethods.chr(null);
-        assertEquals("Didn't get expected character", null, chr); //$NON-NLS-1$
-    }
-
     public void testNvl1() {
         String ret = (String) FunctionMethods.ifnull("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Didn't get expected value", "x", ret); //$NON-NLS-1$ //$NON-NLS-2$
@@ -572,11 +536,7 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected value", null, ret); //$NON-NLS-1$
     }
 
-    public void testInitCap1() throws FunctionExecutionException {
-        helpTestInitCap(null, null);
-    }
-
-    public void testInitCap2() throws FunctionExecutionException {
+    public void testInitCap2() throws Exception {
         helpTestInitCap("abc", "Abc"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -596,10 +556,6 @@ public class TestFunction extends TestCase {
         helpTestLpad("x", 4, "   x");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testLpad2() throws FunctionExecutionException {
-        helpTestLpad(null, 4, null);
-    }
-
     public void testLpad3() throws FunctionExecutionException {
         helpTestLpad("x", 1, "x"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -609,23 +565,19 @@ public class TestFunction extends TestCase {
     }
 
     public void testLpad5() throws FunctionExecutionException {
-        helpTestLpad("", 4, "x", "xxxx");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLpad("", 4, "x", "xxxx");     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testLpad6() throws FunctionExecutionException {
-        helpTestLpad("10", 6, "0", "000010"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLpad("10", 6, "0", "000010"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     public void testLpad7() throws FunctionExecutionException {
-    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
     }
 
     public void testRpad1() throws FunctionExecutionException {
         helpTestRpad("x", 4, "x   "); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testRpad2() throws FunctionExecutionException {
-        helpTestRpad(null, 4, null);
     }
 
     public void testRpad3() throws FunctionExecutionException {
@@ -637,11 +589,11 @@ public class TestFunction extends TestCase {
     }
 
     public void testRpad5() throws FunctionExecutionException {
-        helpTestRpad("", 4, "x", "xxxx"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRpad("", 4, "x", "xxxx"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testRpad6() throws FunctionExecutionException {
-        helpTestRpad("10", 6, "0", "100000"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRpad("10", 6, "0", "100000"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testTranslate1() throws FunctionExecutionException {
@@ -680,82 +632,48 @@ public class TestFunction extends TestCase {
         helpTestLocate("y", "xx", 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testLocate5() throws FunctionExecutionException {
+    public void testLocate5() throws Exception {
         helpTestLocate("b", "abab", 3, 4); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testLocate6() throws FunctionExecutionException {
+    public void testLocate6() throws Exception {
         helpTestLocate("z", "abab", 0, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    public void testLocate7() throws Exception {
+        helpTestLocate("z", "abab", null, 0); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void testLocate8() throws Exception {
+        helpTestLocate("z", "abab", -1, 0); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-    public void testBitand() throws FunctionExecutionException {
+    public void testBitand() throws Exception {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitand(new Integer(0xFFF), new Integer(0x0F0));
         assertNotNull("Result should not be null", result); //$NON-NLS-1$
         assertEquals("result should be 0x0F0", 0x0F0, result.intValue()); //$NON-NLS-1$
-        // first value is not an integer, but second is
-        try {
-            FunctionMethods.bitand(new String("0xFFF"), new Integer(0x0F0)); //$NON-NLS-1$
-            fail("bitand function should expect integer as first param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
-        // first value is an integer, but second is not
-        try {
-            FunctionMethods.bitand(new Integer(0xFFF), new Long(0x0F0L));
-            fail("bitand function should expect integer as second param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
     }
 
-    public void testBitor() throws FunctionExecutionException {
+    public void testBitor() throws Exception {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitor(new Integer(0xFFF), new Integer(0x0F0));
         assertNotNull("Result should not be null", result); //$NON-NLS-1$
         assertEquals("result should be 0xFFF", 0xFFF, result.intValue()); //$NON-NLS-1$
-        // first value is not an integer, but second is
-        try {
-            FunctionMethods.bitor(new String("0xFFF"), new Integer(0x0F0)); //$NON-NLS-1$
-            fail("bitor function should expect integer as first param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
-        // first value is an integer, but second is not
-        try {
-            FunctionMethods.bitor(new Integer(0xFFF), new Long(0x0F0L));
-            fail("bitor function should expect integer as second param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
     }
 
-    public void testBitxor() throws FunctionExecutionException {
+    public void testBitxor() throws Exception {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitxor(new Integer(0xFFF), new Integer(0x0F0));
         assertNotNull("Result should not be null", result); //$NON-NLS-1$
         assertEquals("result should be 0xF0F", 0xF0F, result.intValue()); //$NON-NLS-1$
-        // first value is not an integer, but second is
-        try {
-            FunctionMethods.bitxor(new String("0xFFF"), new Integer(0x0F0)); //$NON-NLS-1$
-            fail("bitxor function should expect integer as first param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
-        // first value is an integer, but second is not
-        try {
-            FunctionMethods.bitxor(new Integer(0xFFF), new Long(0x0F0L));
-            fail("bitxor function should expect integer as second param"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
     }
 
-    public void testBitnot() throws FunctionExecutionException {
+    public void testBitnot() {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitnot(new Integer(0xF0F));
         assertNotNull("Result should not be null", result); //$NON-NLS-1$
         assertEquals("result should be 0xFFFFF0F0", 0xFFFFF0F0, result.intValue()); //$NON-NLS-1$
-        // first value is not an integer, but second is
-        try {
-            FunctionMethods.bitnot(new String("0xFFF")); //$NON-NLS-1$
-            fail("bitnot function should expect an integer"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        }
     }
 
     public void testRoundInteger1() throws FunctionExecutionException {
@@ -950,17 +868,16 @@ public class TestFunction extends TestCase {
         helpTestTimestampCreate(TimestampUtil.createDate(103, 11, 1), TimestampUtil.createTime(23, 59, 59), "2003-12-01 23:59:59.0"); //$NON-NLS-1$
     }
 
-    public void testTimestampAdd1() throws FunctionExecutionException {
-        helpTestTimestampAdd(ReservedWords.SQL_TSI_DAY, 3, TimestampUtil.createDate(103, 11, 1), "{d'2003-12-04'}"); //$NON-NLS-1$
+    public void testTimestampAdd1() throws Exception {
+        assertEquals(TimestampUtil.createDate(103, 11, 4), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_DAY, 3, TimestampUtil.createDate(103, 11, 1))); 
     }
 
-    public void testTimestampAdd2() throws FunctionExecutionException {
-        helpTestTimestampAdd(ReservedWords.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0),
-                             "{ts'2003-12-01 18:20:30.0'}"); //$NON-NLS-1$
+    public void testTimestampAdd2() throws Exception {
+    	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
 
-    public void testTimestampAdd3() throws FunctionExecutionException {
-        helpTestTimestampAdd(ReservedWords.SQL_TSI_MINUTE, 90, TimestampUtil.createTime(10, 20, 30), "{t'11:50:30'}"); //$NON-NLS-1$
+    public void testTimestampAdd3() throws Exception {
+    	assertEquals(TimestampUtil.createTime(11, 50, 30), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_MINUTE, 90, TimestampUtil.createTime(10, 20, 30)));
     }
 
     public void testTimestampDiffTimeStamp_FracSec_1() throws FunctionExecutionException {
@@ -1170,10 +1087,6 @@ public class TestFunction extends TestCase {
      * against the system default timezone (not the startTz shown below).  The fianl date value is also being read
      * against the default timezone and not the endTz shown. 
      */
-    public void testModifyTimeZoneNull() throws Exception {
-        helpTestModifyTimeZone(null, "GMT+00:00", "GMT-01:00", null); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
     public void testModifyTimeZoneGMT() throws Exception {
         helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "GMT+00:00", "GMT-01:00", "2004-10-03 16:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }

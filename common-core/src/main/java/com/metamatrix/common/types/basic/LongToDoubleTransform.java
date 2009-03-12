@@ -58,5 +58,10 @@ public class LongToDoubleTransform extends AbstractTransform {
 	public Class getTargetType() {
 		return Double.class;
 	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
+	}
 
 }

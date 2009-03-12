@@ -22,14 +22,15 @@
 
 package com.metamatrix.query.function;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,10 +39,12 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.metadata.FunctionCategoryConstants;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
+import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
 
@@ -247,21 +250,11 @@ class FunctionTree {
      * @return Corresponding form or null if not found
      */
     FunctionForm findFunctionForm(String name, int args) {
-        List methods = (List) functionsByName.get(name.toUpperCase());
-        if(methods == null || methods.size() == 0) {
-            return null;
-        }
-
-        Iterator iter = methods.iterator();
-        while(iter.hasNext()) {
-            FunctionMethod method = (FunctionMethod) iter.next();
-            if(method.getInputParameterCount() == args) {
-                return new FunctionForm(method);
-            }
-        }
-
-        // Didn't find it
-        return null;
+    	List<FunctionMethod> results = findFunctionMethods(name, args);
+    	if (results.size() > 0) {
+    		return new FunctionForm(results.get(0));
+    	}
+    	return null;
     }
     
     /**
@@ -270,18 +263,16 @@ class FunctionTree {
      * @param args Number of arguments
      * @return Corresponding form or null if not found
      */
-    Collection findFunctionMethods(String name, int args) {
-        final Collection allMatches = new ArrayList();
-        List methods = (List) functionsByName.get(name.toUpperCase());
+    List<FunctionMethod> findFunctionMethods(String name, int args) {
+        final List<FunctionMethod> allMatches = new ArrayList<FunctionMethod>();
+        List<FunctionMethod> methods = (List<FunctionMethod>) functionsByName.get(name.toUpperCase());
         if(methods == null || methods.size() == 0) {
             return allMatches;
         }
 
-        Iterator iter = methods.iterator();
-        while(iter.hasNext()) {
-            FunctionMethod method = (FunctionMethod) iter.next();
-            if(method.getInputParameterCount() == args) {
-                allMatches.add(method);
+        for (FunctionMethod functionMethod : methods) {
+            if(functionMethod.getInputParameterCount() == args || functionMethod.isVarArgs() && args >= functionMethod.getInputParameterCount() - 1) {
+                allMatches.add(functionMethod);
             }
         }
 
@@ -301,16 +292,20 @@ class FunctionTree {
 
         // Get input types for path
         FunctionParameter[] inputParams = method.getInputParameters();
-        Class[] inputTypes = null;
-        if(inputParams == null) {
-            inputTypes = new Class[0];
-        } else {
-            inputTypes = new Class[inputParams.length];
+        List<Class> inputTypes = new LinkedList<Class>();
+        if(inputParams != null) {
             for(int i=0; i<inputParams.length; i++) {
                 String typeName = inputParams[i].getType();
-                inputTypes[i] = DataTypeManager.getDataTypeClass(typeName);
+                inputTypes.add(DataTypeManager.getDataTypeClass(typeName));
             }
         }
+        Class[] types = inputTypes.toArray(new Class[inputTypes.size()]);
+
+        if (method.isVarArgs()) {
+        	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
+        }
+
+        inputTypes.add(0, CommandContext.class);
 
         // Get return type
         FunctionParameter outputParam = method.getOutputParameter();
@@ -319,14 +314,37 @@ class FunctionTree {
             outputType = DataTypeManager.getDataTypeClass(outputParam.getType());
         }
 
-        // Build path
-        Object[] path = buildPath(methodName, inputTypes);
+        Method invocationMethod = null;
+        boolean requiresContext = false;
+        // Defect 20007 - Ignore the invocation method if pushdown is not required.
+        if (method.getPushdown() == FunctionMethod.CAN_PUSHDOWN || method.getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
+            try {
+                Class methodClass = source.getInvocationClass(method.getInvocationClass());
+                ReflectionHelper helper = new ReflectionHelper(methodClass);
+                try {
+                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
+                	requiresContext = true;
+                } catch (NoSuchMethodException e) {
+		            inputTypes = inputTypes.subList(1, inputTypes.size());
+                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
+                }
+            } catch (ClassNotFoundException e) {
+              // Failed to load class, so can't load method - this will fail at invocation time.
+              // We don't fail here because this situation can occur in the modeler, which does
+              // not have the function jar files.  The modeler never invokes, so this isn't a
+              // problem.
+            } catch (Exception e) {                
+                throw new MetaMatrixRuntimeException(e, ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, inputTypes}));
+            } 
+            if(invocationMethod != null && !FunctionTree.isValidMethod(invocationMethod)) {
+            	throw new MetaMatrixRuntimeException(ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, inputTypes}));
+            }
+        }
 
-        // Create function descriptor
-        FunctionDescriptor descriptor = createFunctionDescriptor(source, method, inputTypes, outputType);
-
+        FunctionDescriptor descriptor = new FunctionDescriptor(method.getName(), method.getPushdown(), types, outputType, invocationMethod, requiresContext, method.isNullDependent(), method.getDeterministic());
         // Store this path in the function tree
         Map node = treeRoot;
+        Object[] path = buildPath(methodName, types);
         for(int pathIndex = 0; pathIndex < path.length; pathIndex++) {
             Object pathPart = path[pathIndex];
             Map children = (Map) node.get(pathPart);
@@ -334,84 +352,18 @@ class FunctionTree {
                 children = new HashMap();
                 node.put(pathPart, children);
             }
+            if (method.isVarArgs() && pathIndex == path.length - 1) {
+        		node.put(DESCRIPTOR_KEY, descriptor);
+            }
             node = children;
         }
 
+        if (method.isVarArgs()) {
+        	node.put(types[types.length - 1], node);
+        }
         // Store the leaf descriptor in the tree
         node.put(DESCRIPTOR_KEY, descriptor);
     }
-
-    /** 
-     * @param method
-     * @param inputTypes
-     * @param outputType
-     * @return
-     */
-    private FunctionDescriptor createFunctionDescriptor(FunctionMetadataSource source, FunctionMethod method, Class[] inputTypes, Class outputType) {
-        Method invocationMethod = null;
-        boolean requiresContext = false;
-        if (method.getPushdown() == FunctionMethod.CAN_PUSHDOWN || method.getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
-            // Defect 20007 - Ignore the invocation method if pushdown is required.
-            Class[] methodSignature = null;
-            try {
-                try {
-                    methodSignature = methodSignatureWithContext(inputTypes.length);
-                    invocationMethod = lookupMethod(source, method.getInvocationClass(), method.getInvocationMethod(), methodSignature);
-                    requiresContext = true;
-                }catch(NoSuchMethodException e) {
-                    methodSignature = methodSignature(inputTypes.length);
-                    invocationMethod = lookupMethod(source, method.getInvocationClass(), method.getInvocationMethod(), methodSignature);    
-                }                
-            } catch (ClassNotFoundException e) {
-              // Failed to load class, so can't load method - this will fail at invocation time.
-              // We don't fail here because this situation can occur in the modeler, which does
-              // not have the function jar files.  The modeler never invokes, so this isn't a
-              // problem.
-            } catch (Exception e) {                
-                throw new MetaMatrixRuntimeException(e, ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, Arrays.asList(methodSignature)}));
-            } 
-        }
-        return new FunctionDescriptor(method.getName(), method.getPushdown(), inputTypes, outputType, invocationMethod, requiresContext, method.isNullDependent(), method.getDeterministic());
-    }
-
-    /**
-     * Find the invocation method for a function.
-     * @param source The function metadata source, which knows how to obtain the invocation class
-     * @param invocationClass The class to invoke for this function
-     * @param invocationMethod The method to invoke for this function
-     * @param numArgs Number of arguments in method
-     */
-    private Method lookupMethod(FunctionMetadataSource source, String invocationClass, String invocationMethod, Class[] methodSignature) 
-        throws NoSuchMethodException, ClassNotFoundException {
-
-		Class methodClass = source.getInvocationClass(invocationClass);
-        Method method = methodClass.getMethod(invocationMethod, methodSignature);
-
-        // Validate method
-        if(! FunctionTree.isValidMethod(method)) {
-            return null;
-        }
-        return method;
-    }
-    
-    private Class[] methodSignatureWithContext(int numArgs) {
-        // Build parameter signature
-        Class[] objectSignature = new Class[numArgs+1];
-        objectSignature[0] = com.metamatrix.query.util.CommandContext.class;
-        for(int i=1; i<numArgs+1; i++) {
-            objectSignature[i] = java.lang.Object.class;
-        }
-        return objectSignature;
-    }    
-    
-    private Class[] methodSignature(int numArgs) {
-        // Build parameter signature
-        Class[] objectSignature = new Class[numArgs];       
-        for(int i=0; i<numArgs; i++) {
-            objectSignature[i] = java.lang.Object.class;
-        }
-        return objectSignature;
-    }     
     
 	/**
 	 * Validate a method looked up by reflection.  The method should have a non-void return type
@@ -454,12 +406,9 @@ class FunctionTree {
         // Walk path in tree
         Map node = treeRoot;
         for(int i=0; i<path.length; i++) {
-            if(node.containsKey(path[i])) {
-                // Walk path
-                node = (Map) node.get(path[i]);
-            } else {
-                // No known path for this part - no match
-                return null;
+        	node = (Map)node.get(path[i]);
+        	if (node == null) {
+        		return null;
             }
         }
 

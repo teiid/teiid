@@ -50,9 +50,7 @@ public final class FunctionMethods {
 	// ================== Function = plus =====================
 
 	public static Object plus(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Integer) {
+		if(x instanceof Integer) {
 			if(y instanceof Integer) {
 				return new Integer(((Integer)x).intValue() + ((Integer)y).intValue());
 			}
@@ -84,9 +82,7 @@ public final class FunctionMethods {
 	// ================== Function = minus =====================
 
 	public static Object minus(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Integer) {
+		if(x instanceof Integer) {
 			if(y instanceof Integer) {
 				return new Integer(((Integer)x).intValue() - ((Integer)y).intValue());
 			}
@@ -118,9 +114,7 @@ public final class FunctionMethods {
 	// ================== Function = multiply =====================
 
 	public static Object multiply(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Integer) {
+		if(x instanceof Integer) {
 			if(y instanceof Integer) {
 				return new Integer(((Integer)x).intValue() * ((Integer)y).intValue());
 			}
@@ -152,9 +146,7 @@ public final class FunctionMethods {
 	// ================== Function = divide =====================
 
 	public static Object divide(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Integer) {
+		if(x instanceof Integer) {
 			if(y instanceof Integer) {
 				return new Integer(((Integer)x).intValue() / ((Integer)y).intValue());
 			}
@@ -186,9 +178,7 @@ public final class FunctionMethods {
 	// ================== Function = abs =====================
 
 	public static Object abs(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Integer) {
+		if(x instanceof Integer) {
 			return new Integer(Math.abs(((Integer)x).intValue()));
 		} else if(x instanceof Long) {
 			return new Long(Math.abs(((Long)x).longValue()));
@@ -207,64 +197,34 @@ public final class FunctionMethods {
 
 	// ================== Function = ceiling =====================
 
-	public static Object ceiling(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Double) {
-			return new Double(Math.ceil(((Double)x).doubleValue()));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "ceiling", x.getClass().getName())); //$NON-NLS-1$
+	public static Object ceiling(Double x) {
+		return new Double(Math.ceil(x));
 	}
 
 	// ================== Function = exp =====================
 
-	public static Object exp(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Double) {
-			return new Double(Math.exp(((Double)x).doubleValue()));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "exp", x.getClass().getName())); //$NON-NLS-1$
+	public static Object exp(Double x) {
+		return new Double(Math.exp(x));
 	}
 
 	// ================== Function = floor =====================
 
-	public static  Object floor(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Double) {
-			return new Double(Math.floor(((Double)x).doubleValue()));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "floor", x.getClass().getName())); //$NON-NLS-1$
+	public static  Object floor(Double x) {
+		return new Double(Math.floor(x.doubleValue()));
 	}
 
 	// ================== Function = log =====================
 
-	public static  Object log(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Double) {
-			return new Double(Math.log(((Double)x).doubleValue()));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "log", x.getClass().getName())); //$NON-NLS-1$
+	public static  Object log(Double x) {
+		return new Double(Math.log(x));
 	}
 
 	// ================== Function = log10 =====================
 
 	private static final double log10baseE = Math.log(10);
 
-	public static Object log10(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Double) {
-			return new Double( Math.log(((Double)x).doubleValue()) / log10baseE);
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "log10", x.getClass().getName())); //$NON-NLS-1$
+	public static Object log10(Double x) {
+		return new Double( Math.log(x) / log10baseE);
 	}
     
     // ================== Function = rand=====================
@@ -429,20 +389,8 @@ public final class FunctionMethods {
 	// ================== Function = sqrt =====================
 
 
-	public static  Object sqrt(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Integer) {
-			return new Double( Math.sqrt(((Integer)x).intValue()));
-		} else if(x instanceof Long) {
-			return new Double( Math.sqrt(((Long)x).longValue()));
-		} else if(x instanceof Float) {
-			return new Double( Math.sqrt(((Float)x).floatValue()));
-		} else if(x instanceof Double) {
-			return new Double( Math.sqrt(((Double)x).doubleValue()));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "sqrt", x.getClass().getName())); //$NON-NLS-1$
+	public static  Object sqrt(Number x) {
+		return new Double( Math.sqrt(x.doubleValue()));
 	}
 
 	// ================== Function = currentDate =====================
@@ -477,116 +425,44 @@ public final class FunctionMethods {
 	static final String[] dayNames = new String[] {
 		"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
-	public static Object dayName(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-            // Day of week is 1-based - convert to 0-based for lookup
-			return dayNames[getField((Date)x, Calendar.DAY_OF_WEEK) - 1];
-		} else if(x instanceof Timestamp) {
-            // Day of week is 1-based - convert to 0-based for lookup
-			return dayNames[getField((Timestamp)x, Calendar.DAY_OF_WEEK) - 1];
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayName", x.getClass().getName())); //$NON-NLS-1$
+	public static Object dayName(Date x) {
+		return dayNames[getField(x, Calendar.DAY_OF_WEEK) - 1];
 	}
 
 	// ================== Function = dayofmonth =====================
 
-	public static  Object dayOfMonth(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.DATE));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.DATE));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfMonth", x.getClass().getName())); //$NON-NLS-1$
+	public static  Object dayOfMonth(Date x) {
+		return Integer.valueOf(getField(x, Calendar.DATE));
 	}
 
 	// ================== Function = dayofweek =====================
 
-	public static Object dayOfWeek(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.DAY_OF_WEEK));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.DAY_OF_WEEK));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfWeek", x.getClass().getName())); //$NON-NLS-1$
+	public static Object dayOfWeek(Date x) {
+		return Integer.valueOf(getField(x, Calendar.DAY_OF_WEEK));
 	}
 
 	// ================== Function = dayofyear =====================
 
-	public static Object dayOfYear(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.DAY_OF_YEAR));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.DAY_OF_YEAR));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "dayOfYear", x.getClass().getName())); //$NON-NLS-1$
+	public static Object dayOfYear(Date x) {
+		return Integer.valueOf(getField(x, Calendar.DAY_OF_YEAR));
 	}
 
 	// ================== Function = hour =====================
 
-	public static Object hour(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Time) {
-			return Integer.valueOf(getField((Time)x, Calendar.HOUR_OF_DAY));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.HOUR_OF_DAY));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "hour", x.getClass().getName())); //$NON-NLS-1$
+	public static Object hour(Date x) {
+		return Integer.valueOf(getField(x, Calendar.HOUR_OF_DAY));
 	}
 
 	// ================== Function = minute =====================
 
-	public static Object minute(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Time) {
-			return Integer.valueOf(getField((Time)x, Calendar.MINUTE));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.MINUTE));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "minute", x.getClass().getName())); //$NON-NLS-1$
+	public static Object minute(Date x) {
+		return Integer.valueOf(getField(x, Calendar.MINUTE));
 	}
 
 	// ================== Function = month =====================
 
-	public static Object month(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.MONTH)+1);
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.MONTH)+1);
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "month", x.getClass().getName())); //$NON-NLS-1$
+	public static Object month(Date x) {
+		return Integer.valueOf(getField(x, Calendar.MONTH)+1);
 	}
 
 	// ================== Function = monthname =====================
@@ -595,81 +471,34 @@ public final class FunctionMethods {
 		"January", "February", "March", "April", "May", "June", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		"July", "August", "September", "October", "November", "December" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
-	public static Object monthName(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return monthNames[getField((Date)x, Calendar.MONTH)];
-		} else if(x instanceof Timestamp) {
-			return monthNames[getField((Timestamp)x, Calendar.MONTH)];
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "monthName", x.getClass().getName())); //$NON-NLS-1$
+	public static Object monthName(Date x) {
+		return monthNames[getField(x, Calendar.MONTH)];
 	}
 
 	// ================== Function = second =====================
 
-	public static Object second(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Time) {
-			return Integer.valueOf(getField((Time)x, Calendar.SECOND));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.SECOND));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "second", x.getClass().getName())); //$NON-NLS-1$
+	public static Object second(Date x) {
+		return Integer.valueOf(getField(x, Calendar.SECOND));
 	}
 
 	// ================== Function = week =====================
 
-	public static Object week(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.WEEK_OF_YEAR));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.WEEK_OF_YEAR));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "week", x.getClass().getName())); //$NON-NLS-1$
+	public static Object week(Date x) {
+		return Integer.valueOf(getField(x, Calendar.WEEK_OF_YEAR));
 	}
 
 	// ================== Function = year =====================
 
-	public static Object year(Object x)
-		throws FunctionExecutionException {
-
-		if(x == null) {
-			return null;
-		} else if(x instanceof Date) {
-			return Integer.valueOf(getField((Date)x, Calendar.YEAR));
-		} else if(x instanceof Timestamp) {
-			return Integer.valueOf(getField((Timestamp)x, Calendar.YEAR));
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "year", x.getClass().getName())); //$NON-NLS-1$
+	public static Object year(Date x) {
+		return Integer.valueOf(getField(x, Calendar.YEAR));
 	}
 
 	// ================== Function = quarter =====================
 
-	public static Object quarter(Object date)
+	public static Object quarter(Date date)
 		throws FunctionExecutionException {
-		int month = 12;
-
-		if(date == null) {
-			return null;
-		} else if(date instanceof Date) {
-			month = getField((Date)date, Calendar.MONTH);
-		} else if(date instanceof Timestamp) {
-			month = getField((Timestamp)date, Calendar.MONTH);
-		} 
+		int month = getField(date, Calendar.MONTH);
+		
 		if (month > 11) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0066, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0066,
 					new Object[] {"quarter", date.getClass().getName()})); //$NON-NLS-1$
@@ -679,63 +508,59 @@ public final class FunctionMethods {
 
 	//	================== Function = timestampadd =====================
 
-	public static Object timestampAdd(Object interval, Object count, Object timestamp)
-		throws FunctionExecutionException {
+	public static Object timestampAdd(String intervalType, Integer count, Timestamp timestamp) {
 		Calendar cal = TimestampWithTimezone.getCalendar();
 
-		if (interval == null || count == null || timestamp == null) {
-			return null;
-		} else if (interval instanceof String && count instanceof Integer) {
-            String intervalType = (String) interval;
-			if (timestamp instanceof Timestamp) {
-				int nanos = ((Timestamp) timestamp).getNanos();
-				cal.setTime((Timestamp) timestamp);
+		int nanos = timestamp.getNanos();
+		cal.setTime(timestamp);
 
-				// case of interval = 1, fractional seconds (nanos), don't go to branches of addField()
-				if (intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
-					int countValue = ((Integer) count).intValue();
-					nanos += countValue;
+		// case of interval = 1, fractional seconds (nanos), don't go to branches of addField()
+		if (intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
+			int countValue = count.intValue();
+			nanos += countValue;
 
-					// Handle the case of nanos > 999,999,999 and increase the second.
-					// Since the count number is an interger, so the maximum is definite,
-					// and nanos/999,999,999 can at most be added to second
-					if ( nanos > 999999999) {
-						int addSecond = nanos / 999999999;
-						int leftNanos = nanos % 999999999;
-						cal.add(Calendar.SECOND, addSecond);
+			// Handle the case of nanos > 999,999,999 and increase the second.
+			// Since the count number is an interger, so the maximum is definite,
+			// and nanos/999,999,999 can at most be added to second
+			if ( nanos > 999999999) {
+				int addSecond = nanos / 999999999;
+				int leftNanos = nanos % 999999999;
+				cal.add(Calendar.SECOND, addSecond);
 
-						Timestamp ts = new Timestamp(cal.getTime().getTime());
-						ts.setNanos(leftNanos);
-						return ts;
-					} 
-                    // nanos <= 999,999,999
-					Timestamp ts = new Timestamp(cal.getTime().getTime());
-					ts.setNanos(nanos);
-					return ts;
-				}
-                // for interval from 2 to 9
-				addField(intervalType, (Integer)count, cal);
 				Timestamp ts = new Timestamp(cal.getTime().getTime());
-
-				//rectify returned timestamp with original nanos
-				ts.setNanos(nanos);
+				ts.setNanos(leftNanos);
 				return ts;
-			} else if (timestamp instanceof Time) {
-				// Note: if dates are different, for example, days are different, the times
-				// are still different even they may have the same hours, minutes and seconds.
-				cal.setTime((Time) timestamp);
-				addField(intervalType, (Integer)count, cal);
-				return TimestampWithTimezone.createTime(cal.getTime());
-			} else if (timestamp instanceof Date) {
-				cal.setTime((Date) timestamp);
-				addField(intervalType, (Integer)count, cal);
-                return TimestampWithTimezone.createDate(cal.getTime());
-			}
+			} 
+            // nanos <= 999,999,999
+			Timestamp ts = new Timestamp(cal.getTime().getTime());
+			ts.setNanos(nanos);
+			return ts;
 		}
+        // for interval from 2 to 9
+		addField(intervalType, count, cal);
+		Timestamp ts = new Timestamp(cal.getTime().getTime());
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0067, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0067,
-			new Object[] {"timestampAdd", interval.getClass().getName(), count.getClass().getName(), timestamp.getClass().getName() })); //$NON-NLS-1$
+		//rectify returned timestamp with original nanos
+		ts.setNanos(nanos);
+		return ts;
 	}
+	
+	public static Object timestampAdd(String intervalType, Integer count, java.sql.Date timestamp) {
+		Calendar cal = TimestampWithTimezone.getCalendar();
+		// Note: if dates are different, for example, days are different, the times
+		// are still different even they may have the same hours, minutes and seconds.
+		cal.setTime(timestamp);
+		addField(intervalType, count, cal);
+		return TimestampWithTimezone.createDate(cal.getTime());
+	}
+	
+	public static Object timestampAdd(String intervalType, Integer count, Time timestamp) {
+		Calendar cal = TimestampWithTimezone.getCalendar();
+		cal.setTime(timestamp);
+		addField(intervalType, count, cal);
+	    return TimestampWithTimezone.createTime(cal.getTime());
+	}
+
 
 	/** Helper method for timestampAdd method
 	 * @param interval Integer
@@ -768,6 +593,10 @@ public final class FunctionMethods {
 
 	//	================== Function = timestampdiff =====================
 
+    public static Object timestampDiff(String intervalType, Time timestamp1, Time timestamp2) {
+    	return timestampDiff(intervalType, new Timestamp(timestamp1.getTime()), new Timestamp(timestamp2.getTime()));
+    }
+	
 	/**
      * This method truncates (ignores) figures
      * @param interval
@@ -776,59 +605,36 @@ public final class FunctionMethods {
      * @return
      * @throws FunctionExecutionException
      */
-    public static Object timestampDiff(Object interval, Object timestamp1, Object timestamp2) 
-        throws FunctionExecutionException {
-
-		if (interval == null || timestamp1 == null || timestamp2 == null) {
-			return null;
-        } else if (interval instanceof String) {
-            String intervalType = (String) interval;
-            // Incoming can be time or timestamp  - convert to timestamp
-            if(timestamp1 instanceof Time) {
-            	Time t1 = (Time)timestamp1;
-            	timestamp1 = new Timestamp(t1.getTime());
-            }
-            if(timestamp2 instanceof Time) {
-            	Time t2 = (Time)timestamp2;
-            	timestamp2 = new Timestamp(t2.getTime());
-            }
-            // In nanos
-            Timestamp ts1Obj = (Timestamp)timestamp1;
-            Timestamp ts2Obj = (Timestamp)timestamp2;
-            
-            long ts1 = ts1Obj.getTime() / 1000 * 1000000000 + ts1Obj.getNanos();
-            long ts2 = ts2Obj.getTime() / 1000 * 1000000000 + ts2Obj.getNanos();
-            
-            long tsDiff = ts2 - ts1;
-    
-            long count = 0;
-            if(interval.equals(ReservedWords.SQL_TSI_FRAC_SECOND)) {
-                count = tsDiff;
-            } else { 
-            	tsDiff = tsDiff / 1000000; //convert to milliseconds
-	            if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_SECOND)) {
-	                count = tsDiff / 1000;
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MINUTE)) {
-	                count = (tsDiff / 1000) / 60;
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_HOUR)) {
-	                count = (tsDiff / 1000) / (60*60);
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_DAY)) {
-	                count = (tsDiff / 1000) / (60*60*24);
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_WEEK)) {
-	                count = (tsDiff / 1000) / (60*60*24*7);
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MONTH)) {
-	                count = (tsDiff / 1000) / (60*60*24*30);
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_QUARTER)) {
-	                count = (tsDiff / 1000) / (60*60*24*91);
-	            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_YEAR)) {
-	                count = (tsDiff / 1000) / (60*60*24*365);
-	            }    
-            }
-            return new Long(count);
-        }
+    public static Object timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj)  {
+        long ts1 = ts1Obj.getTime() / 1000 * 1000000000 + ts1Obj.getNanos();
+        long ts2 = ts2Obj.getTime() / 1000 * 1000000000 + ts2Obj.getNanos();
         
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0067, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0067,
-                  new Object[] {"timestampDiff", interval.getClass().getName(),timestamp1.getClass().getName(),timestamp2.getClass().getName() })); //$NON-NLS-1$        
+        long tsDiff = ts2 - ts1;
+
+        long count = 0;
+        if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_FRAC_SECOND)) {
+            count = tsDiff;
+        } else { 
+        	tsDiff = tsDiff / 1000000; //convert to milliseconds
+            if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_SECOND)) {
+                count = tsDiff / 1000;
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MINUTE)) {
+                count = (tsDiff / 1000) / 60;
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_HOUR)) {
+                count = (tsDiff / 1000) / (60*60);
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_DAY)) {
+                count = (tsDiff / 1000) / (60*60*24);
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_WEEK)) {
+                count = (tsDiff / 1000) / (60*60*24*7);
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_MONTH)) {
+                count = (tsDiff / 1000) / (60*60*24*30);
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_QUARTER)) {
+                count = (tsDiff / 1000) / (60*60*24*91);
+            } else if(intervalType.equalsIgnoreCase(ReservedWords.SQL_TSI_YEAR)) {
+                count = (tsDiff / 1000) / (60*60*24*365);
+            }    
+        }
+        return new Long(count);
 	}
 
     //  ================== Function = timestampcreate =====================
@@ -841,19 +647,14 @@ public final class FunctionMethods {
      * @return
      * @throws FunctionExecutionException
      */
-    public static Object timestampCreate(Object date, Object time) {
-
-        if (date == null || time == null) {
-            return null;
-        }
-
+    public static Object timestampCreate(java.sql.Date date, Time time) {
         Calendar tsCal = TimestampWithTimezone.getCalendar();
-        tsCal.setTime((java.sql.Time)time);
+        tsCal.setTime(time);
         int hour = tsCal.get(Calendar.HOUR_OF_DAY);
         int minute = tsCal.get(Calendar.MINUTE);
         int second = tsCal.get(Calendar.SECOND);
         
-        tsCal.setTime((java.sql.Date)date);
+        tsCal.setTime(date);
         
         tsCal.set(Calendar.HOUR_OF_DAY, hour);
         tsCal.set(Calendar.MINUTE, minute);
@@ -864,51 +665,19 @@ public final class FunctionMethods {
 
 	// ================== Function = length =====================
 
-	public static Object length(Object str)
-		throws FunctionExecutionException {
-
-		if(str == null) {
-			return null;
-		} else if(str instanceof String) {
-			return new Integer(((String)str).length());
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "length", str.getClass().getName())); //$NON-NLS-1$
+	public static Object length(String str) {
+		return new Integer(str.length());
 	}
 
 	// ================== Function = concat =====================
 
-	public static Object concat(Object str1, Object str2)
-		throws FunctionExecutionException {
-
-		if(str1 == null || str2 == null) {
-			return null;
-		} else if(str1 instanceof String && str2 instanceof String) {
-			return (String) str1 + (String) str2;
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"concat", str1.getClass().getName(), str2.getClass().getName()})); //$NON-NLS-1$
+	public static Object concat(String str1, String str2) {
+		return str1 + str2;
 	}
 
 	// ================== Function = substring =====================
 
-	public static Object substring(Object str, Object start, Object length)
-		throws FunctionExecutionException {
-
-		if(str == null || start == null || length == null) {
-			return null;
-		} 
-		if(str instanceof String && start instanceof Integer && length instanceof Integer) {
-			String string = (String) str;
-			int startVal = ((Integer)start).intValue();
-			int lengthVal = ((Integer)length).intValue();
-            return substring(string, startVal, lengthVal);
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0013, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0013, new Object[]{"substring", str.getClass().getName(), start.getClass().getName(), length.getClass().getName()} )); //$NON-NLS-1$
-	}
-
-	private static Object substring(String string, int startVal, int lengthVal) {
+	public static Object substring(String string, Integer startVal, Integer lengthVal) {
 		if (startVal < 0) {
         	startVal = string.length() + startVal;
         } else if (startVal > 0){
@@ -928,290 +697,184 @@ public final class FunctionMethods {
 		return string.substring(startVal, endVal);
 	}
 
-    public static Object substring(Object str, Object start)
-        throws FunctionExecutionException {
-
-        if(str == null || start == null) {
-            return null;
-        } else if(str instanceof String && start instanceof Integer) {
-            String string = (String) str;
-            int startVal = ((Integer)start).intValue();
-            return substring(string, startVal, string.length());
-        }
-
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"substring",  str.getClass().getName(), start.getClass().getName()})); //$NON-NLS-1$
+    public static Object substring(String string, Integer start) {
+        int startVal = start.intValue();
+        return substring(string, startVal, string.length());
     }
 
 	// ================== Function = left =====================
 
-	public static Object left(Object str, Object count)
+	public static Object left(String string, Integer count)
 		throws FunctionExecutionException {
-
-		if(str == null || count == null) {
-			return null;
-		} else if(str instanceof String && count instanceof Integer) {
-
-			String string = (String) str;
-			int countValue = ((Integer)count).intValue();
-            if(countValue < 0) {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
-            } else if(string.length() < countValue) {
-                return string;
-			} else {
-    			return string.substring(0, countValue);
-            }
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"left", str.getClass().getName(), count.getClass().getName()})); //$NON-NLS-1$
+		int countValue = count.intValue();
+        if(countValue < 0) {
+            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
+        } 
+        if(string.length() < countValue) {
+            return string;
+        }
+        return string.substring(0, countValue);
 	}
 
 	// ================== Function = right =====================
 
-	public static Object right(Object str, Object count)
+	public static Object right(String string, Integer count) 
 		throws FunctionExecutionException {
-
-		if(str == null || count == null) {
-			return null;
-		} else if(str instanceof String && count instanceof Integer) {
-
-			String string = (String) str;
-			int countValue = ((Integer)count).intValue();
-            if(countValue < 0) {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
-            } else if(string.length() < countValue) {
-                return string;
-			} else {
-    			return string.substring(string.length() - countValue);
-            }
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"right", str.getClass().getName(), count.getClass().getName()})); //$NON-NLS-1$
+		int countValue = count.intValue();
+        if(countValue < 0) {
+            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
+        } else if(string.length() < countValue) {
+            return string;
+		} else {
+			return string.substring(string.length() - countValue);
+        }
 	}
 
 	// ================== Function = lowercase =====================
 
-	public static Object lowerCase(Object str)
-		throws FunctionExecutionException {
-
-		if(str == null) {
-			return null;
-		} else if(str instanceof String) {
-			return ((String)str).toLowerCase();
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "lowerCase", str.getClass().getName())); //$NON-NLS-1$
+	public static Object lowerCase(String str) {
+		return str.toLowerCase();
 	}
 
 	// ================== Function = uppercase =====================
 
-	public static Object upperCase(Object str)
-		throws FunctionExecutionException {
-
-		if(str == null) {
-			return null;
-		} else if(str instanceof String) {
-			return ((String)str).toUpperCase();
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "upperCase", str.getClass().getName())); //$NON-NLS-1$
+	public static Object upperCase(String str) {
+		return str.toUpperCase();
 	}
 
 	// ================== Function = locate =====================
 
-	public static Object locate(Object sub, Object str)
-		throws FunctionExecutionException {
-
-		if(str == null || sub == null) {
-			return null;
-		} else if(sub instanceof String && str instanceof String) {
-    		return new Integer(((String)str).indexOf((String)sub) + 1);
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"locate", sub.getClass().getName(), str.getClass().getName()})); //$NON-NLS-1$
+	public static Object locate(String sub, String str) {
+		return locate(sub, str, 1);
 	}
 
-	public static Object locate(Object sub, Object str, Object start)
-		throws FunctionExecutionException {
-
+	/**
+	 * TODO: The treatment of negative start indexes is inconsistent here.
+	 * We're treating the null value like Derby, but not throwing an
+	 * exception if the value is less than 1 (less than 0 in DB2).
+	 */
+	public static Object locate(String sub, String str, Integer start) {
 		if(str == null || sub == null) {
 			return null;
-		} else if(sub instanceof String && str instanceof String) {
-			if(start == null) {
-				return new Integer(((String)str).indexOf((String)sub) + 1);
-			} else if(start instanceof Integer) {
-				return new Integer(((String)str).indexOf((String)sub, ((Integer)start).intValue() - 1) + 1);
-			}
+		} 
+		if (start == null) {
+			start = 1;
 		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0013, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0013, new Object[]{"locate",  sub.getClass().getName() ,str.getClass().getName(), start.getClass().getName()})); //$NON-NLS-1$
+		return new Integer(str.indexOf(sub, start.intValue() - 1) + 1);
 	}
 
 	// ================== Function = lefttrim =====================
 
 	private static final char SPACE = ' ';
 
-	public static Object leftTrim(Object str)
-		throws FunctionExecutionException {
-
-		if(str == null) {
-			return null;
-		} else if(str instanceof String) {
-			String string = (String) str;
-			for(int i=0; i<string.length(); i++) {
-				if(string.charAt(i) != SPACE) {
-					// end of trim, return what's left
-					return string.substring(i);
-				}
+	public static Object leftTrim(String string) {
+		for(int i=0; i<string.length(); i++) {
+			if(string.charAt(i) != SPACE) {
+				// end of trim, return what's left
+				return string.substring(i);
 			}
-
-			// All spaces, so trim it all
-			return ""; //$NON-NLS-1$
 		}
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "leftTrim", str.getClass().getName())); //$NON-NLS-1$
+		// All spaces, so trim it all
+		return ""; //$NON-NLS-1$
 	}
 
 	// ================== Function = righttrim =====================
 
-	public static Object rightTrim(Object str)
-		throws FunctionExecutionException {
-
-		if(str == null) {
-			return null;
-		} else if(str instanceof String) {
-			String string = (String) str;
-
-			for(int i=string.length()-1; i>=0; i--) {
-				if(string.charAt(i) != SPACE) {
-					// end of trim, return what's left
-					return string.substring(0, i+1);
-				}
+	public static Object rightTrim(String string) {
+		for(int i=string.length()-1; i>=0; i--) {
+			if(string.charAt(i) != SPACE) {
+				// end of trim, return what's left
+				return string.substring(0, i+1);
 			}
-
-			// All spaces, so trim it all
-			return ""; //$NON-NLS-1$
 		}
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "rightTrim", str.getClass().getName())); //$NON-NLS-1$
+		// All spaces, so trim it all
+		return ""; //$NON-NLS-1$
 	}
 
 	// ================== Function = replace =====================
 
-	public static Object replace(Object str, Object sub, Object replace)
-		throws FunctionExecutionException {
-
-		if(str == null || sub == null || replace == null) {
-			return null;
-		} else if(str instanceof String && sub instanceof String && replace instanceof String) {
-			String string = (String) str;
-			String subString = (String) sub;
-			String replaceString = (String) replace;
-
-			// Check some simple cases that require no work
-			if(subString.length() > string.length() || string.length() == 0 || subString.length() == 0) {
-				return string;
-			}
-
-			StringBuffer result = new StringBuffer();
-			int index = 0;
-
-			while(true) {
-				int newIndex = string.indexOf(subString, index);
-				if(newIndex < 0) {
-					// No more replacement sections, grab from old index to end of string
-					result.append( string.substring(index) );
-
-					// Break out of loop
-					break;
-
-				}
-				// Matched the substring at newIndex
-
-				// First append section from old index to new
-				result.append( string.substring( index, newIndex) );
-
-				// Then append replacement section for sub
-				result.append( replaceString );
-
-				// Then move the index counter forward
-				index = newIndex + subString.length();
-			}
-
-			return result.toString();
+	public static Object replace(String string, String subString, String replaceString) {
+		// Check some simple cases that require no work
+		if(subString.length() > string.length() || string.length() == 0 || subString.length() == 0) {
+			return string;
 		}
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0013, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0013, new Object[]{"replace",  str.getClass().getName(), sub.getClass().getName(), replace.getClass().getName()})); //$NON-NLS-1$
+		StringBuffer result = new StringBuffer();
+		int index = 0;
+
+		while(true) {
+			int newIndex = string.indexOf(subString, index);
+			if(newIndex < 0) {
+				// No more replacement sections, grab from old index to end of string
+				result.append( string.substring(index) );
+
+				// Break out of loop
+				break;
+
+			}
+			// Matched the substring at newIndex
+
+			// First append section from old index to new
+			result.append( string.substring( index, newIndex) );
+
+			// Then append replacement section for sub
+			result.append( replaceString );
+
+			// Then move the index counter forward
+			index = newIndex + subString.length();
+		}
+
+		return result.toString();
 	}
 
 	// ================== Function = insert =====================
 
-	public static Object insert(Object str1, Object start, Object length, Object str2)
+	public static Object insert(String string1, Integer start, Integer length, String str2)
 		throws FunctionExecutionException {
+		int startValue = start.intValue();
+		int len = length.intValue();
 
-		if(str1 == null || start == null || length == null || str2 == null) {
-			return null;
-		} else if(str1 instanceof String && str2 instanceof String
-			&& start instanceof Integer && length instanceof Integer) {
-
-			String string1 = (String) str1;
-			int startValue = ((Integer) start).intValue();
-			int len = ((Integer) length).intValue();
-
-			// Check some invalid cases
-			if(startValue < 1 || (startValue-1) > ((String)str1).length()) {
-				throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0061, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0061, start, str1));
-			} else if (len < 0) {
-				throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0062, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0062, len));
-			} else if (((String) str1).length() == 0 && (startValue > 1 || len >0) ) {
-				throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0063, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0063));
-			}
-
-			StringBuffer result = new StringBuffer();
-			result.append(string1.substring(0, startValue-1));
-			int endValue = startValue + len - 1;
-
-			// str2.length() = 0 is a valid case
-			if (endValue > ((String)str1).length()) {
-				result.append((String) str2);
-			} else {
-				result.append((String) str2);
-				result.append(string1.substring( endValue ));
-			}
-
-			return result.toString();
+		// Check some invalid cases
+		if(startValue < 1 || (startValue-1) > string1.length()) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0061, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0061, start, string1));
+		} else if (len < 0) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0062, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0062, len));
+		} else if (string1.length() == 0 && (startValue > 1 || len >0) ) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0063, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0063));
 		}
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0064, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0064,
-			new Object[] {"insert", str1.getClass().getName(), start.getClass().getName(), length.getClass().getName() , str2.getClass().getName()})); //$NON-NLS-1$
+		StringBuffer result = new StringBuffer();
+		result.append(string1.substring(0, startValue-1));
+		int endValue = startValue + len - 1;
+
+		// str2.length() = 0 is a valid case
+		if (endValue > string1.length()) {
+			result.append(str2);
+		} else {
+			result.append(str2);
+			result.append(string1.substring( endValue ));
+		}
+
+		return result.toString();
 	}
 
 	// ================== Function = repeat =====================
-	public static Object repeat(Object str, Object count)
-		throws FunctionExecutionException {
-		if (str == null || count == null) {
-			return null;
-		} else if (str instanceof String && count instanceof Integer) {
-			int repeatCount = ((Integer) count).intValue();
-			StringBuffer result = new StringBuffer();
+	public static Object repeat(String str, Integer count) {
+		int repeatCount = count.intValue();
+		StringBuffer result = new StringBuffer();
 
-			for (int i = 0; i < repeatCount && result.length() <= DataTypeManager.MAX_STRING_LENGTH; i++) {
-				result.append((String)str);
-			}
-			return result.toString();
+		for (int i = 0; i < repeatCount && result.length() <= DataTypeManager.MAX_STRING_LENGTH; i++) {
+			result.append(str);
 		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0065, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0065,
-			new Object[] {"repeat", str.getClass().getName(), count.getClass().getName()})); //$NON-NLS-1$
+		return result.toString();
 	}
 
     // ================== Function = ascii =====================
 
     public static Object ascii(Object ch)
         throws FunctionExecutionException {
-
-        if(ch == null) {
-            return null;
-        }
 
         char c = 0;
         if(ch instanceof Character) {
@@ -1232,65 +895,43 @@ public final class FunctionMethods {
 
     // ================== Function = chr =====================
 
-    public static Object chr(Object intValue) {
-
-        if(intValue == null) {
-            return null;
-        }
-
-        Integer theInt = (Integer) intValue;
-
-        return new Character((char) theInt.intValue());
+    public static Object chr(int intValue) {
+        return new Character((char) intValue);
     }
 
     // ================== Function = initCap =====================
 
-    public static Object initCap(Object str)
-        throws FunctionExecutionException {
+    public static Object initCap(String s) {
+        StringBuffer cap = new StringBuffer();
 
-        if(str == null) {
-            return null;
-        } else if(str instanceof String) {
-            String s = (String) str;
-            StringBuffer cap = new StringBuffer();
+        boolean checkCap = true;
+        for(int i=0; i<s.length(); i++) {
+            char c = s.charAt(i);
 
-            boolean checkCap = true;
-            for(int i=0; i<s.length(); i++) {
-                char c = s.charAt(i);
-
-                // Decide whether to upper case
-                if(checkCap) {
-                    cap.append(Character.toUpperCase(c));
-                } else {
-                    cap.append(Character.toLowerCase(c));
-                }
-
-                // Reset flag for next character
-                checkCap = Character.isWhitespace(c);
+            // Decide whether to upper case
+            if(checkCap) {
+                cap.append(Character.toUpperCase(c));
+            } else {
+                cap.append(Character.toLowerCase(c));
             }
-            return cap.toString();
-        }
 
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "initCap", str.getClass().getName())); //$NON-NLS-1$
+            // Reset flag for next character
+            checkCap = Character.isWhitespace(c);
+        }
+        return cap.toString();
     }
 
     // ================== Function = lpad =====================
 
-    public static Object lpad(Object inputString, Object padLength, Object padStr)
+    public static Object lpad(String inputString, Integer padLength, String padStr)
         throws FunctionExecutionException {
 
     	return pad(inputString, padLength, padStr, true);
     }
 
-    public static Object pad(Object inputString, Object padLength, Object padStr, boolean left)
+    public static Object pad(String str, Integer padLength, String padStr, boolean left)
     throws FunctionExecutionException {
-
-	    if(inputString == null || padLength == null || padStr == null) {
-	        return null;
-	    }
-	
-	    String str = (String) inputString;
-	    int length = ((Integer)padLength).intValue();
+	    int length = padLength.intValue();
 	    if(length < 1) {
 	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0025, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0025));
 	    }
@@ -1301,17 +942,16 @@ public final class FunctionMethods {
 	    	length = DataTypeManager.MAX_STRING_LENGTH;
 	    }
 	    // Get pad character
-	    String pad = (String) padStr;
-	    if(pad.length() == 0) {
+	    if(padStr.length() == 0) {
 	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0027, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0027));
 	    }
 	    // Pad string
 	    StringBuffer outStr = new StringBuffer(str);
 	    while(outStr.length() < length) {
 	    	if (left) {
-	    		outStr.insert(0, pad);
+	    		outStr.insert(0, padStr);
 	    	} else {
-	    		outStr.append(pad);
+	    		outStr.append(padStr);
 	    	}
 	    }
 	    if (left) {
@@ -1323,7 +963,7 @@ public final class FunctionMethods {
     
     public static final String SPACE_CHAR = " "; //$NON-NLS-1$
 
-    public static Object lpad(Object inputString, Object padLength)
+    public static Object lpad(String inputString, Integer padLength)
         throws FunctionExecutionException {
 
         return lpad(inputString, padLength, SPACE_CHAR);
@@ -1331,13 +971,13 @@ public final class FunctionMethods {
 
     // ================== Function = rpad =====================
 
-    public static Object rpad(Object inputString, Object padLength, Object padStr)
+    public static Object rpad(String inputString, Integer padLength, String padStr)
         throws FunctionExecutionException {
 
     	return pad(inputString, padLength, padStr, false);
     }
 
-    public static Object rpad(Object inputString, Object padLength)
+    public static Object rpad(String inputString, Integer padLength)
         throws FunctionExecutionException {
 
         return rpad(inputString, padLength, SPACE_CHAR);
@@ -1345,23 +985,14 @@ public final class FunctionMethods {
 
     // ================== Function = translate =====================
 
-    public static Object translate(Object inputString, Object srcChars, Object destChars)
+    public static Object translate(String str, String in, String out)
         throws FunctionExecutionException {
-
-        if(inputString == null || srcChars == null || destChars == null) {
-            return null;
-        }
-
-        String str = (String) inputString;
-        String in = (String) srcChars;
-        String out = (String) destChars;
-
         if(in.length() != out.length()) {
             throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0031, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0031));
         }
 
         if(in.length() == 0 || str.length() == 0) {
-            return inputString;
+            return str;
         }
 
         StringBuffer translated = new StringBuffer(str.length());
@@ -1386,22 +1017,13 @@ public final class FunctionMethods {
 	// ================== Function = convert =====================
 
 	@SuppressWarnings("unchecked")
-	public static Object convert(Object src, Object type)
+	public static Object convert(Object src, String type)
 		throws FunctionExecutionException {
-
-		if(src == null) {
-			return null;
-		} else if(type instanceof String) {
-			String typeStr = (String) type;
-
-			try {
-				return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(typeStr));
-			} catch(TransformationException e) {
-				throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0033, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0033, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), typeStr}));
-			}
+		try {
+			return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
+		} catch(TransformationException e) {
+			throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0033, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0033, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
 		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0034, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0034, type));
 	}
 
     // ================== Function = context and rowlimit =====================
@@ -1462,24 +1084,31 @@ public final class FunctionMethods {
 
         throw new UnsupportedOperationException("This method should never be called."); //$NON-NLS-1$
     }
-
+	
     // ================== Function = nvl =====================
-
-    public static Object ifnull(Object value, Object valueIfNull) {
-
-        if(value == null) {
-            return valueIfNull;
-        }
-        return value;
+    
+    public static Object ifnull(Object value, Object ifNullValue) {
+    	return coalesce(value, ifNullValue);
+    }
+    
+    public static Object coalesce(Object value, Object value1, Object... other) {
+    	if (value != null) {
+    		return value;
+    	}
+    	if (value1 != null) {
+    		return value1;
+    	}
+        for (Object object : other) {
+			if (object != null) {
+				return object;
+			}
+		}
+        return null;
     }
 
 	// ================== Format date/time/timestamp TO String ==================
 	public static Object formatDate(Object date, Object format)
 		throws FunctionExecutionException {
-		if (date == null || format == null) {
-			return null;
-		}
-
 		try {
             SimpleDateFormat sdf = new SimpleDateFormat((String)format);
             return sdf.format((Date)date);
@@ -1491,10 +1120,6 @@ public final class FunctionMethods {
 
 	public static Object formatTime(Object time, Object format)
 		throws FunctionExecutionException {
-		if (time == null || format == null) {
-			return null;
-		}
-
 		try {
             SimpleDateFormat sdf = new SimpleDateFormat((String)format);
             return sdf.format((Time)time);
@@ -1506,10 +1131,6 @@ public final class FunctionMethods {
 
 	public static Object formatTimestamp(Object timestamp, Object format)
 		throws FunctionExecutionException {
-		if (timestamp == null || format == null) {
-			return null;
-		}
-
 		try {
             SimpleDateFormat sdf = new SimpleDateFormat((String)format);
             return sdf.format((Timestamp) timestamp);
@@ -1520,17 +1141,11 @@ public final class FunctionMethods {
 	}
 
 	//	================== Parse String TO date/time/timestamp  ==================
-	public static Object parseDate(Object date, Object format)
+	public static Object parseDate(String date, String format)
 		throws FunctionExecutionException {
-		java.util.Date parsedDate = null;
-
-		if (date == null || format == null) {
-			return null;
-		}
-
 		try {
-			DateFormat df= new SimpleDateFormat((String) format);
-			parsedDate = df.parse((String) date);
+			DateFormat df= new SimpleDateFormat(format);
+			Date parsedDate = df.parse(date);
             return TimestampWithTimezone.createDate(parsedDate);
 		} catch (java.text.ParseException pe) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
@@ -1538,17 +1153,12 @@ public final class FunctionMethods {
 		}
 	}
 
-	public static Object parseTime(Object time, Object format)
+	public static Object parseTime(String time, String format)
 		throws FunctionExecutionException {
-		java.util.Date date = null;
-
-		if (time == null || format == null) {
-			return null;
-		}
 
 		try {
-			DateFormat df= new SimpleDateFormat((String) format);
-			date = df.parse((String) time);
+			DateFormat df= new SimpleDateFormat(format);
+			Date date = df.parse(time);
             return TimestampWithTimezone.createTime(date);
 		} catch (java.text.ParseException pe) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
@@ -1556,17 +1166,12 @@ public final class FunctionMethods {
 		}
 	}
 
-	public static Object parseTimestamp(Object timestamp, Object format)
+	public static Object parseTimestamp(String timestamp, String format)
 		throws FunctionExecutionException {
-		java.util.Date date = null;
-
-		if (timestamp == null || format == null) {
-			return null;
-		}
 
 		try {
-			DateFormat df= new SimpleDateFormat((String) format);
-			date = df.parse((String) timestamp);
+			DateFormat df= new SimpleDateFormat(format);
+			Date date = df.parse(timestamp);
             return new Timestamp(date.getTime());
 		} catch (java.text.ParseException pe) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
@@ -1679,82 +1284,38 @@ public final class FunctionMethods {
 	}
 
 	// ================== Function - ACOS =====================
-	public static Object acos(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.acos(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "acos", number.getClass().getName())); //$NON-NLS-1$
+	public static Object acos(Double number) {
+		return new Double(Math.acos(number.doubleValue()));
 	}
 
 	// ================== Function - ASIN =====================
-	public static Object asin(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.asin(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "asin", number.getClass().getName())); //$NON-NLS-1$
+	public static Object asin(Double number) {
+		return new Double(Math.asin(number.doubleValue()));
 	}
 
-
 	// ================== Function - ATAN =====================
-	public static Object atan(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.atan(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "atan", number.getClass().getName())); //$NON-NLS-1$
+	public static Object atan(Double number) {
+		return new Double(Math.atan(number.doubleValue()));
 	}
 
 	// ================== Function - ATAN2 =====================
-	public static Object atan2(Object number1, Object number2) throws FunctionExecutionException {
-		if(number1 == null || number2 == null){
-			return null;
-		}
-		if(number1 instanceof Double && number2 instanceof Double ){
-			return new Double(Math.atan2(((Double)number1).doubleValue(), ((Double)number2).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, "atan2", number1.getClass().getName(), number2.getClass().getName())); //$NON-NLS-1$
+	public static Object atan2(Double number1, Double number2) {
+		return new Double(Math.atan2(number1.doubleValue(), number2.doubleValue()));
 	}
 
 	// ================== Function - COS =====================
-	public static Object cos(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.cos(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "cos", number.getClass().getName())); //$NON-NLS-1$
+	public static Object cos(Double number) {
+		return new Double(Math.cos(number.doubleValue()));
 	}
 
 	// ================== Function - COT =====================
-	public static Object cot(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(1/Math.tan(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "cot", number.getClass().getName())); //$NON-NLS-1$
+	public static Object cot(Double number) {
+		return new Double(1/Math.tan(number.doubleValue()));
 	}
 
-
 	// ================== Function - DEGREES =====================
-	public static Object degrees(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.toDegrees(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "degrees", number.getClass().getName())); //$NON-NLS-1$
+	public static Object degrees(Double number) {
+		return new Double(Math.toDegrees(number.doubleValue()));
 	}
 
 	// ================== Function - PI =====================
@@ -1763,89 +1324,38 @@ public final class FunctionMethods {
 	}
 
 	// ================== Function - RADIANS =====================
-	public static Object radians(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.toRadians(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "redians", number.getClass().getName())); //$NON-NLS-1$
+	public static Object radians(Double number) {
+		return new Double(Math.toRadians(number.doubleValue()));
 	}
 
 	// ================== Function - SIN =====================
-	public static Object sin(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.sin(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "sin", number.getClass().getName())); //$NON-NLS-1$
+	public static Object sin(Double number) {
+		return new Double(Math.sin(number.doubleValue()));
 	}
 
 	// ================== Function - TAN =====================
-	public static Object tan(Object number) throws FunctionExecutionException {
-		if(number == null){
-			return null;
-		}
-		if(number instanceof Double){
-			return new Double(Math.tan(((Double)number).doubleValue()));
-		}
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "tan", number.getClass().getName())); //$NON-NLS-1$
+	public static Object tan(Double number) {
+		return new Double(Math.tan(number.doubleValue()));
 	}
 
     // ================== Function - BITAND =====================
-	public static Object bitand(Object x, Object y) throws FunctionExecutionException {
-        if (x == null || y == null) {
-            return null;
-        }
-        if (!(x instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitand", x.getClass().getName())); //$NON-NLS-1$
-        }
-        if (!(y instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitand", y.getClass().getName())); //$NON-NLS-1$
-        }
-        return new Integer(((Integer)x).intValue() & ((Integer)y).intValue());
+	public static Object bitand(int x, int y) {
+        return x & y;
 	}
 
     // ================== Function - BITOR =====================
-    public static Object bitor(Object x, Object y) throws FunctionExecutionException {
-        if (x == null || y == null) {
-            return null;
-        }
-        if (!(x instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitor", x.getClass().getName())); //$NON-NLS-1$
-        }
-        if (!(y instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitor", y.getClass().getName())); //$NON-NLS-1$
-        }
-        return new Integer(((Integer)x).intValue() | ((Integer)y).intValue());
+    public static Object bitor(int x, int y) {
+        return x | y;
     }
 
     // ================== Function - BITXOR =====================
-    public static Object bitxor(Object x, Object y) throws FunctionExecutionException {
-        if (x == null || y == null) {
-            return null;
-        }
-        if (!(x instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitxor", x.getClass().getName())); //$NON-NLS-1$
-        }
-        if (!(y instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitxor", y.getClass().getName())); //$NON-NLS-1$
-        }
-        return new Integer(((Integer)x).intValue() ^ ((Integer)y).intValue());
+    public static Object bitxor(int x, int y) {
+        return x ^ y;
     }
 
     // ================== Function - BITNOT =====================
-    public static Object bitnot(Object x) throws FunctionExecutionException {
-        if (x == null) {
-            return null;
-        }
-        if (!(x instanceof Integer)) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "bitxor", x.getClass().getName())); //$NON-NLS-1$
-        }
-        return new Integer(((Integer)x).intValue() ^ 0xFFFFFFFF);
+    public static int bitnot(int x) {
+        return x ^ 0xFFFFFFFF;
     }
 
     // ================= Function - USER ========================
@@ -1863,56 +1373,41 @@ public final class FunctionMethods {
         return payload.toString();
     }
 
-    public static Object commandPayload(CommandContext context, Object param) 
+    public static Object commandPayload(CommandContext context, String param) 
         throws ExpressionEvaluationException, FunctionExecutionException{
         Serializable payload = context.getCommandPayload();
-        if(payload == null || param == null) {
+        if(payload == null) {
             return null;
         }
         
-        if (param instanceof String) {
-            // 1-arg form - assume payload is a Properties object
-            if(payload instanceof Properties) {
-                String property = (String)param;                
-                return ((Properties)payload).getProperty(property);
-            }            
-            // Payload was bad
-            throw new ExpressionEvaluationException(QueryPlugin.Util.getString("ExpressionEvaluator.Expected_props_for_payload_function", "commandPayload", payload.getClass().getName())); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0071, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0070, "commandPayload", param.getClass().getName())); //$NON-NLS-1$
+        // 1-arg form - assume payload is a Properties object
+        if(payload instanceof Properties) {
+            return ((Properties)payload).getProperty(param);
+        }            
+        // Payload was bad
+        throw new ExpressionEvaluationException(QueryPlugin.Util.getString("ExpressionEvaluator.Expected_props_for_payload_function", "commandPayload", payload.getClass().getName())); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // ================= Function - ENV ========================
-    public static Object env(CommandContext context, Object param) throws FunctionExecutionException {
-        if (param == null) {
-            return null;
-        }      
-        if (param instanceof String) {
-            // All context property keys must be lowercase - we lowercase the incoming key here to match regardless of case
-            String propertyName = ((String)param);
-            String propertyNameNocase = propertyName.toLowerCase();
-            Properties envProps = context.getEnvironmentProperties();
-            if(envProps != null && envProps.containsKey(propertyNameNocase)) {
-                return envProps.getProperty(propertyNameNocase);
-            }
-            String value = System.getProperty(propertyName);
-            if (value == null) {
-                value = System.getProperty(propertyNameNocase);
-            }
-            return value;            
+    public static Object env(CommandContext context, String propertyName) {
+        // All context property keys must be lowercase - we lowercase the incoming key here to match regardless of case
+        String propertyNameNocase = propertyName.toLowerCase();
+        Properties envProps = context.getEnvironmentProperties();
+        if(envProps != null && envProps.containsKey(propertyNameNocase)) {
+            return envProps.getProperty(propertyNameNocase);
         }
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0070, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0070, "env", param.getClass().getName())); //$NON-NLS-1$
+        String value = System.getProperty(propertyName);
+        if (value == null) {
+            value = System.getProperty(propertyNameNocase);
+        }
+        return value;            
     }
     
     // ================= Function - MODIFYTIMEZONE ========================
     
-    public static Object modifyTimeZone(Object value, Object originalTimezoneString, Object targetTimezoneString) {
-        if (value == null || originalTimezoneString == null || targetTimezoneString == null) {
-            return null;
-        }
-
-        TimeZone originalTimeZone = TimeZone.getTimeZone((String)originalTimezoneString);
-        TimeZone dbmsTimeZone = TimeZone.getTimeZone((String)targetTimezoneString);
+    public static Object modifyTimeZone(Timestamp value, String originalTimezoneString, String targetTimezoneString) {
+        TimeZone originalTimeZone = TimeZone.getTimeZone(originalTimezoneString);
+        TimeZone dbmsTimeZone = TimeZone.getTimeZone(targetTimezoneString);
 
         // Check that the dbms time zone is really different than the local time zone
         if (originalTimeZone.equals(dbmsTimeZone)) {
@@ -1921,24 +1416,15 @@ public final class FunctionMethods {
 
         Calendar cal = Calendar.getInstance(dbmsTimeZone);
         
-        Timestamp in = (Timestamp)value;
-        
-        return TimestampWithTimezone.createTimestamp(in, originalTimeZone, cal);
+        return TimestampWithTimezone.createTimestamp(value, originalTimeZone, cal);
     }
 
-    public static Object modifyTimeZone(CommandContext context, Object value, Object targetTimezoneString) {
-        if (value == null || targetTimezoneString == null) {
-            return null;
-        }
-
-        TimeZone dbmsTimeZone = TimeZone.getTimeZone((String)targetTimezoneString);
+    public static Object modifyTimeZone(CommandContext context, Timestamp value, String targetTimezoneString) {
+        TimeZone dbmsTimeZone = TimeZone.getTimeZone(targetTimezoneString);
 
         Calendar cal = Calendar.getInstance(dbmsTimeZone);
         
-        Timestamp in = (Timestamp)value;
-        
-        return TimestampWithTimezone.createTimestamp(in, context.getServerTimeZone(), cal);
+        return TimestampWithTimezone.createTimestamp(value, context.getServerTimeZone(), cal);
     } 
     
 }
-

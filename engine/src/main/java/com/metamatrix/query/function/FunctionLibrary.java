@@ -239,7 +239,8 @@ public class FunctionLibrary {
             //no implicit conversion is possible
             int i = 0;
             for(; i < types.length; i++) {
-                final String tmpTypeName = methodTypes[i].getType();
+            	//treat all varags as the same type
+                final String tmpTypeName = methodTypes[Math.min(i, methodTypes.length - 1)].getType();
                 Class targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
                 Class sourceType = types[i];
@@ -323,6 +324,14 @@ public class FunctionLibrary {
         if(fd == null) {
             throw new InvalidFunctionException(ErrorMessageKeys.FUNCTION_0001, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0001, fd));
         }
+        
+        if (!fd.isNullDependent()) {
+        	for (int i = 0; i < values.length; i++) {
+				if (values[i] == null) {
+					return null;
+				}
+			}
+        }
 
         // If descriptor is missing invokable method, find this VM's descriptor
         // give name and types from fd
@@ -339,9 +348,15 @@ public class FunctionLibrary {
                 throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, localDescriptor.getName()));
             }
         }
-
+        
         // Invoke the method and return the result
         try {
+        	if (method.isVarArgs()) {
+        		int i = method.getParameterTypes().length;
+        		Object[] newValues = Arrays.copyOf(values, i);
+        		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
+        		values = newValues;
+        	}
             Object result = method.invoke(null, values);
             result = DataTypeManager.convertToRuntimeType(result);
             result = DataTypeManager.transformValue(result, fd.getReturnType());

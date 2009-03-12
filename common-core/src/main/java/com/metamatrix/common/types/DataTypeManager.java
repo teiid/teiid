@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,10 +137,10 @@ public class DataTypeManager {
 	}
 
 	/** Base data type names and classes, Type name --> Type class */
-	private static Map<String, Class> dataTypeNames = new HashMap<String, Class>();
+	private static Map<String, Class> dataTypeNames = new LinkedHashMap<String, Class>();
 
 	/** Base data type names and classes, Type class --> Type name */
-	private static Map<Class, String> dataTypeClasses = new HashMap<Class, String>();
+	private static Map<Class, String> dataTypeClasses = new LinkedHashMap<Class, String>();
 
 	private static Set<String> DATA_TYPE_NAMES = Collections
 			.unmodifiableSet(dataTypeNames.keySet());
@@ -516,8 +517,6 @@ public class DataTypeManager {
 	 * Load default data types.
 	 */
 	static void loadDataTypes() {
-		DataTypeManager.addDataType(DefaultDataTypes.STRING,
-				DefaultDataClasses.STRING);
 		DataTypeManager.addDataType(DefaultDataTypes.BOOLEAN,
 				DefaultDataClasses.BOOLEAN);
 		DataTypeManager.addDataType(DefaultDataTypes.BYTE,
@@ -544,16 +543,18 @@ public class DataTypeManager {
 				DefaultDataClasses.TIME);
 		DataTypeManager.addDataType(DefaultDataTypes.TIMESTAMP,
 				DefaultDataClasses.TIMESTAMP);
+		DataTypeManager.addDataType(DefaultDataTypes.STRING,
+				DefaultDataClasses.STRING);
+		DataTypeManager.addDataType(DefaultDataTypes.CLOB,
+				DefaultDataClasses.CLOB);
+		DataTypeManager.addDataType(DefaultDataTypes.XML,
+				DefaultDataClasses.XML);
 		DataTypeManager.addDataType(DefaultDataTypes.OBJECT,
 				DefaultDataClasses.OBJECT);
 		DataTypeManager.addDataType(DefaultDataTypes.NULL,
 				DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB,
 				DefaultDataClasses.BLOB);
-		DataTypeManager.addDataType(DefaultDataTypes.CLOB,
-				DefaultDataClasses.CLOB);
-		DataTypeManager.addDataType(DefaultDataTypes.XML,
-				DefaultDataClasses.XML);
 	}
 
 	/**

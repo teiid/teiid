@@ -1591,13 +1591,13 @@
           </row>
           <row>
             <entry>
-              <para>COALESCE(x,y)</para>
+              <para>COALESCE(x,y+)</para>
             </entry>
             <entry>
               <para>Returns the first non-null parameter</para>
             </entry>
             <entry>
-              <para>x, y can be any type</para>
+              <para>x and all y's can be any compatible types</para>
             </entry>
           </row>
         </tbody>
@@ -2125,12 +2125,6 @@
             </para>
           </listitem>
           <listitem>
-            <para>All input arguments defined on function must be java.lang.Object.</para>
-          </listitem>
-          <listitem>
-            <para>Returned value must be declared as java.lang.Object.</para>
-          </listitem>
-          <listitem>
             <para>Any exception can be thrown, but Teiid will rethrow the exception as a <classname>FunctionExecutionException</classname>.</para>
           </listitem>          
         </itemizedlist>
@@ -2146,10 +2140,11 @@ public class TempConv {
      * @param doubleCelsiusTemp 
      * @return Fahrenheit 
      */
-    public static Object celsiusToFahrenheit(Object doubleCelsiusTemp){
-        double celsiusTemp = ((Double)doubleCelsiusTemp).doubleValue();
-        double fahrenheitTemp = (celsiusTemp)*9/5 + 32;
-        return new Double(fahrenheitTemp);
+    public static Double celsiusToFahrenheit(Double doubleCelsiusTemp){
+        if (doubleCelsiusTemp == null) {
+        	return null;
+        }
+        return (doubleCelsiusTemp)*9/5 + 32;
     }
 }]]></programlisting>
         </example>
