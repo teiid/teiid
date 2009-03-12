@@ -1032,8 +1032,9 @@ public class BufferManagerImpl implements BufferManager {
                     // a streming id or not; if one is not assigned create one and assign it
                     // to the lob; if one is already assigned just return; 
                     // this will prohibit calling lob on itself into this routine.
-                    Streamable lob = (Streamable)anObj;                        
-                    if (lob.getReferenceStreamId() == null) {                        
+                    Streamable lob = (Streamable)anObj;                  
+                    
+                    if (lob.getReferenceStreamId() == null || lobIsNotKnownInTupleSourceMap( lob, parentId) ) {                        
                         List schema = new ArrayList();
                         schema.add(parentSchema.get(col));
                         
@@ -1077,6 +1078,31 @@ public class BufferManagerImpl implements BufferManager {
             }
         }
     }
+    
+    private boolean lobIsNotKnownInTupleSourceMap( Streamable lob, TupleSourceID parentId) throws TupleSourceNotFoundException {
+        /*
+         * The need for this defensive feature arises because there are multiple uses of the TupleSourceMap which
+         * are somewhat inconsistent with one another.  In the case of LOBs we use the parent/child group feature
+         * of tuplesources to associate a parent tuplesource containing metadata about the LOB with a second
+         * tuplesource that contains the LOB.  When such a group is no longer needed  (for example, see SubqueryProcessorUtility.close()),
+         * removing the child tupleSources has the unfortunate side effect of leaving the actual LOBs with references to
+         * tuplesources that no longer exist, and are therefore no longer in the tupleSourceMap.
+         * 
+         * This test ensures that such orphaned LOBs will be treated correctly (TEIID-54).
+         * 
+         */
+        if (!lob.getReferenceStreamId().equals(parentId.getStringID())) {
+            TupleSourceID id = new TupleSourceID(lob.getReferenceStreamId());
+            TupleSourceInfo lobInfo = getTupleSourceInfo(id, false);
+
+            if ( lobInfo == null ) {
+                return true; // is not known
+            }
+            return false;   // is known
+        }        
+        return false;   // don't care if known
+    }
+    
 
     /**  
      * @see com.metamatrix.common.buffer.BufferManager#addStreamablePart(com.metamatrix.common.buffer.TupleSourceID, com.metamatrix.common.lob.LobChunk, int)
