@@ -1,7 +1,7 @@
         <ComponentType Name="XML Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedDate="2008-10-31T10:26:19.917-06:00" CreationDate="2008-10-31T10:26:19.917-06:00">
-            <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" DefaultValue="extensionjar:connector_patch.jar;extensionjar:${project.artifactId}.${project.version}.jar;${classpath}" Multiplicity="1" />
+            <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" Multiplicity="0..1" IsPreferred="true"/>        
+            <PropertyDefinition Name="ConnectorTypeClassPath" DisplayName="Connector Type Class Path" ShortDescription="Connector Type classpath (defined by system, do not modify)" DefaultValue="extensionjar:connector_patch.jar;extensionjar:${project.artifactId}.${project.version}.jar;${classpath}" Multiplicity="0..1" isExpert="true"/>
         </ComponentType>
-
 
         <ComponentType Name="XML File Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="XML Connector" ParentComponentType="Connectors" LastChangedDate="2008-10-31T10:26:19.917-06:00" CreationDate="2008-10-31T10:26:19.917-06:00">
             <PropertyDefinition Name="CharacterEncodingScheme" DisplayName="File Encoding Used" ShortDescription="A character-encoding scheme is a mapping between a coded character set and a set of octet (eight-bit byte) sequences. Some samples are UTF-8,ISO-8859-1,UTF-16)" DefaultValue="ISO-8859-1" />
