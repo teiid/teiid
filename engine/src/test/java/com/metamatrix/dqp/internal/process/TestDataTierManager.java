@@ -116,7 +116,6 @@ public class TestDataTierManager extends TestCase {
         command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();
-        original.setCommand(command);
         original.setExecutionId(1);
         
         DQPWorkContext workContext = new DQPWorkContext();

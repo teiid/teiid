@@ -30,7 +30,6 @@ import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.language.TestQueryImpl;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public class TestRequestMessage extends TestCase {
@@ -46,7 +45,6 @@ public class TestRequestMessage extends TestCase {
     public static RequestMessage example() {
         RequestMessage message = new RequestMessage();
         message.setCallableStatement(true);
-        message.setCommand(TestQueryImpl.helpExample());
         message.setFetchSize(100);
         List params = new ArrayList();
         params.add(new Integer(100));
@@ -78,7 +76,6 @@ public class TestRequestMessage extends TestCase {
         RequestMessage copy = UnitTestUtil.helpSerialize(example());
 
         assertTrue(copy.isCallableStatement());
-        assertEquals(TestQueryImpl.helpExample(), copy.getCommand());
         assertEquals(100, copy.getFetchSize());
         assertNotNull(copy.getParameterValues());
         assertEquals(4, copy.getParameterValues().size());

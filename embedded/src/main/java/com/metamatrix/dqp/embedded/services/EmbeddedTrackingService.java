@@ -30,7 +30,6 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.dqp.service.TrackingService;
-import com.metamatrix.query.sql.lang.Command;
 
 public class EmbeddedTrackingService extends EmbeddedBaseDQPService implements TrackingService {
     //public static HashMap traceData = new HashMap();
@@ -48,7 +47,7 @@ public class EmbeddedTrackingService extends EmbeddedBaseDQPService implements T
         short cmdPoint,
         String sessionUid,
         String principal,
-        Command sql,
+        String sql,
         int rowCount,
         ExecutionContext context) {
 
@@ -81,7 +80,7 @@ public class EmbeddedTrackingService extends EmbeddedBaseDQPService implements T
         String principal,
         String vdbName,
         String vdbVersion,
-        Command sql,
+        String sql,
         int rowCount) {
 
     }

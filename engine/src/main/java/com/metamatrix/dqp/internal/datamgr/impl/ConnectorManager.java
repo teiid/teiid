@@ -547,9 +547,10 @@ public class ConnectorManager implements ApplicationService {
         if(tracker == null || !tracker.willRecordSrcCmd()){
             return;
         }
-        Command sqlCmd = null;
+        String sqlStr = null;
         if(cmdStatus == TrackerLogConstants.CMD_STATUS.NEW){
-            sqlCmd = qr.getCommand();
+        	Command cmd = qr.getCommand();
+            sqlStr = cmd != null ? cmd.toString() : null;
         }
         String userName = qr.getWorkContext().getUserName();
         String transactionID = null;
@@ -563,7 +564,7 @@ public class ConnectorManager implements ApplicationService {
         tracker.log(qr.getRequestID().toString(), id.getNodeID(), transactionID,
                 cmdStatus, modelName == null ? "null" : modelName, connectorName, //$NON-NLS-1$
                 cmdStatus == TrackerLogConstants.CMD_STATUS.NEW ? TrackerLogConstants.CMD_POINT.BEGIN : TrackerLogConstants.CMD_POINT.END,
-                qr.getWorkContext().getConnectionID(), userName == null ? "unknown" : userName, sqlCmd, finalRowCnt, context); //$NON-NLS-1$
+                qr.getWorkContext().getConnectionID(), userName == null ? "unknown" : userName, sqlStr, finalRowCnt, context); //$NON-NLS-1$
     }
     
     /**

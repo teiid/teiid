@@ -975,11 +975,8 @@ public class MMStatement extends WrapperImpl implements Statement {
         this.currentRequestID = this.driverConnection.nextRequestID();
         RequestMessage reqMsg = new RequestMessage();        
         // Create a request message
-        if (isBatchedCommand) {
-        	reqMsg.setBatchedCommands(commands);
-        } else {
-        	reqMsg.setCommandStr(commands[0]);
-        }
+    	reqMsg.setCommands(commands);
+    	reqMsg.setBatchedUpdate(isBatchedCommand);
         reqMsg.markSubmissionStart();        
         reqMsg.setExecutionPayload(this.payload);        
         reqMsg.setDoubleQuotedVariableAllowed(Boolean.valueOf(

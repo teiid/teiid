@@ -183,8 +183,7 @@ public class TestPreparedStatement extends TestCase{
 			QueryPlannerException {
         
         //Create Request
-        RequestMessage request = new RequestMessage();
-        request.setCommand(preparedSql);
+        RequestMessage request = new RequestMessage(preparedSql);
         request.setPreparedStatement(true);
         request.setCallableStatement(callableStatement);
         request.setParameterValues(values);

@@ -145,6 +145,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected TransactionContext transactionContext;
     
     private int chunkSize;
+    
+    protected Command command;
 
     void initialize(RequestMessage requestMsg,
                               ApplicationEnvironment env,
@@ -327,7 +329,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             }
         }
         
-        requestMsg.setCommand(preRewrite);
+        this.command = preRewrite;
         return command;
     }
     
@@ -371,15 +373,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
     private Command getCommand() throws QueryParserException {
-        String command = requestMsg.getCommandStr();
+        String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = new ParseInfo();
         if (requestMsg.isDoubleQuotedVariableAllowed()) {
         	parseInfo.allowDoubleQuotedVariable = true;
         }
-        if (command != null) {
-            return QueryParser.getQueryParser().parseCommand(command, parseInfo);
-        }
-        String[] commands = requestMsg.getBatchedCommands();
+        if (!requestMsg.isBatchedUpdate()) {
+        	String commandStr = commands[0];
+            return QueryParser.getQueryParser().parseCommand(commandStr, parseInfo);
+        } 
         List parsedCommands = new ArrayList(commands.length);
         for (int i = 0; i < commands.length; i++) {
         	String updateCommand = commands[i];
@@ -422,7 +424,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             
             if(ExecutionProperties.AUTO_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
-            } else if ( ((Command)requestMsg.getCommand()).updatingModelCount(metadata) > 1) { 
+            } else if ( command.updatingModelCount(metadata) > 1) { 
                 if (ExecutionProperties.AUTO_WRAP_OPTIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){ 
                     String msg = DQPPlugin.Util.getString("Request.txn_needed_wrong_mode", requestId); //$NON-NLS-1$
                     throw new MetaMatrixComponentException(msg);
@@ -596,8 +598,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         generatePlan();
         
-        Command command = (Command)requestMsg.getCommand();
-        
         validateEntitlement(command);
         
         setSchemasForXMLPlan(command, metadata);
@@ -606,25 +606,25 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
-		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && this.requestMsg.getCommand() instanceof XQuery;
+		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && command instanceof XQuery;
 		
 		ParseInfo parseInfo = new ParseInfo();
 		if (isRootXQuery && requestMsg.isDoubleQuotedVariableAllowed()) {
 			parseInfo.allowDoubleQuotedVariable = true;
 		}
-		Command command = QueryParser.getQueryParser().parseCommand(query, parseInfo);
-        QueryResolver.resolveCommand(command, metadata);            
+		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
+        QueryResolver.resolveCommand(newCommand, metadata);            
         
-        List references = ReferenceCollectorVisitor.getReferences(command);
+        List references = ReferenceCollectorVisitor.getReferences(newCommand);
         
         referenceCheck(references);
         
-        validateQuery(command, isRootXQuery);
+        validateQuery(newCommand, isRootXQuery);
         
-        validateQueryValues(command);
+        validateQueryValues(newCommand);
         
         if (isRootXQuery) {
-        	validateEntitlement(command);
+        	validateEntitlement(newCommand);
         }
         
         CommandContext copy = (CommandContext) commandContext.clone();
@@ -632,10 +632,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	copy.pushCall(recursionGroup);
         }
         
-        QueryRewriter.rewrite(command, null, metadata, copy);
-        ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
+        QueryRewriter.rewrite(newCommand, null, metadata, copy);
+        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
 
-        TupleSourceID resultsId = bufferManager.createTupleSource(command.getProjectedSymbols(), TypeRetrievalUtil.getTypeNames(command.getProjectedSymbols()), copy.getConnectionID(), TupleSourceType.PROCESSOR);
+        TupleSourceID resultsId = bufferManager.createTupleSource(newCommand.getProjectedSymbols(), TypeRetrievalUtil.getTypeNames(newCommand.getProjectedSymbols()), copy.getConnectionID(), TupleSourceType.PROCESSOR);
         copy.setTupleSourceID(resultsId);
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}

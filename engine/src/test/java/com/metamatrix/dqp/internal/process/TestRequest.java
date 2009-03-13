@@ -83,12 +83,11 @@ public class TestRequest extends TestCase {
     
     public void testGetSchemasForValidation() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
-        FakeMetadataObject doc1 = metadata.getStore().findObject("xmltest.doc1", FakeMetadataObject.GROUP);
+        FakeMetadataObject doc1 = metadata.getStore().findObject("xmltest.doc1", FakeMetadataObject.GROUP); //$NON-NLS-1$
         List<String> schemas = Arrays.asList("a.xsd", "b.xsd"); //$NON-NLS-1$ //$NON-NLS-2$
         doc1.putProperty(FakeMetadataObject.Props.XML_SCHEMAS, schemas);
-        RequestMessage message = new RequestMessage();
+        RequestMessage message = new RequestMessage("select * from xmltest.doc1"); //$NON-NLS-1$
         message.setValidationMode(true);
-        message.setCommandStr("select * from xmltest.doc1"); //$NON-NLS-1$
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
@@ -116,7 +115,6 @@ public class TestRequest extends TestCase {
         QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, true, metadata, AnalysisRecord.createNonRecordingRecord());
         
         RequestMessage message = new RequestMessage();
-        message.setCommand(command);
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 

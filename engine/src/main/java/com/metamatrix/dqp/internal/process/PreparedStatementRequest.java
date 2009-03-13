@@ -123,7 +123,7 @@ public class PreparedStatementRequest extends Request {
         List values = requestMsg.getParameterValues();
         if(requestMsg.isPreparedBatchUpdate()){
         	if(values.size() > 1){
-        		((PreparedBatchUpdate)requestMsg.getCommand()).setUpdatingModelCount(2);
+        		((PreparedBatchUpdate)command).setUpdatingModelCount(2);
         	}
         	for(int i=0; i<values.size(); i++){
         	   if (params.size() != ((List)values.get(i)).size()) {
@@ -152,7 +152,7 @@ public class PreparedStatementRequest extends Request {
      */
     protected void generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
     	
-    	String sqlQuery = (String)requestMsg.getCommand();
+    	String sqlQuery = requestMsg.getCommands()[0];
         prepPlan = prepPlanCache.getPreparedPlan(this.workContext.getConnectionID(), sqlQuery, requestMsg.isPreparedBatchUpdate());
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
@@ -178,7 +178,7 @@ public class PreparedStatementRequest extends Request {
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
             
-            requestMsg.setCommand(command);
+            this.command = command;
             createCommandContext(command);
         }
         

@@ -95,8 +95,7 @@ public class TestDQPCore extends TestCase {
     }
 
     public RequestMessage exampleRequestMessage(String sql) {
-        RequestMessage msg = new RequestMessage();
-        msg.setCommand(sql);
+        RequestMessage msg = new RequestMessage(sql);
         msg.setCallableStatement(false);
         msg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
         msg.setFetchSize(10);

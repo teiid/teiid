@@ -37,7 +37,7 @@ public class ResultSetCacheUtil {
 		}else{
 			scopeID = workContext.getConnectionID();
 		}
-		return new CacheID(scopeID, request.getCacheCommand(), request.getParameterValues());
+		return new CacheID(scopeID, request.getCommandString(), request.getParameterValues());
 	}
 	
 //	public static boolean isQuery(String sql){

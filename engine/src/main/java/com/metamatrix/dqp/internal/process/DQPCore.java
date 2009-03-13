@@ -191,7 +191,7 @@ public class DQPCore extends Application implements ClientSideDQP {
             RequestWorkItem holder = requests.get(requestID);
             
             if(holder != null && !holder.isCanceled()) {
-            	RequestInfo req = new RequestInfo(holder.requestID, holder.requestMsg.getCommand().toString(), holder.requestMsg.getSubmittedTimestamp(), holder.requestMsg.getProcessingTimestamp());
+            	RequestInfo req = new RequestInfo(holder.requestID, holder.requestMsg.getCommandString(), holder.requestMsg.getSubmittedTimestamp(), holder.requestMsg.getProcessingTimestamp());
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().isInTransaction()) {
             		req.setTransactionId(holder.getTransactionContext().getTxnID());
             	}
@@ -497,10 +497,10 @@ public class DQPCore extends Application implements ClientSideDQP {
         }
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
-        Command command = null;
+        String command = null;
         String txnID = null;
     	if(isBegin && !isCancel){
-    		command = (Command)msg.getCommand();
+    		command = msg.getCommandString();
     	}
     	String appName = workContext.getAppName();
         // Log to request log

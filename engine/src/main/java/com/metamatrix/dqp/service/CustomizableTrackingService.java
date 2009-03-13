@@ -43,7 +43,6 @@ import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
 import com.metamatrix.dqp.spi.TrackerLogConstants;
-import com.metamatrix.query.sql.lang.Command;
 
 
 /** 
@@ -100,13 +99,13 @@ public class CustomizableTrackingService implements TrackingService {
                     String principal,
                     String vdbName,
                     String vdbVersion,
-                    Command sql,
+                    String sql,
                     int rowCount) {
 
         if (this.willRecordMMCmd()) {
             CustomizableTrackingMessage message = null;
             if (cmdPoint == TrackerLogConstants.CMD_POINT.BEGIN) {
-                message = new CustomizableTrackingMessage(System.currentTimeMillis(), requestId, txnUid, sessionUid, applicationName, principal, vdbName, vdbVersion, (sql!=null)?sql.toString():null);
+                message = new CustomizableTrackingMessage(System.currentTimeMillis(), requestId, txnUid, sessionUid, applicationName, principal, vdbName, vdbVersion, sql);
             } else {
                 boolean isCancelled = false;
                 boolean errorOccurred = false;
@@ -134,14 +133,14 @@ public class CustomizableTrackingService implements TrackingService {
                     short cmdPoint,
                     String sessionUid,
                     String principal,
-                    Command sql,
+                    String sql,
                     int rowCount,
                     ExecutionContext context) {
         
         if (this.willRecordSrcCmd()) {
             CustomizableTrackingMessage message = null;
             if (cmdPoint == TrackerLogConstants.CMD_POINT.BEGIN) {
-                message = new CustomizableTrackingMessage(System.currentTimeMillis(), requestId, nodeID, subTxnUid, modelName, cbName, sessionUid, principal, (sql!=null)?sql.toString():null, context);
+                message = new CustomizableTrackingMessage(System.currentTimeMillis(), requestId, nodeID, subTxnUid, modelName, cbName, sessionUid, principal, sql, context);
 
             } else {
                 boolean isCancelled = false;

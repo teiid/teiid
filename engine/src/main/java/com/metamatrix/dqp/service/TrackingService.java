@@ -27,7 +27,6 @@ package com.metamatrix.dqp.service;
 import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.query.sql.lang.Command;
 
 /**
  * This service is used to log transactions and commands,
@@ -35,12 +34,14 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public interface TrackingService extends ApplicationService {
     /**
-     * Log the command into database if the vaule of the property
+     * Log the command if the value of the property
      * "metamatrix.transaction.log.storeMMCMD" is "true".
+     * 
      * @param requestId Unique command ID.
      * @param txnUid Unique transaction ID.
      * @param cmdPoint Point in command being logged - 
-     * TransactionLogConstants.POINT.BEGIN, or TransactionLogConstants.POINT.END.
+     *                 TransactionLogConstants.POINT.BEGIN, 
+     *                 or TransactionLogConstants.POINT.END.
      * @param sessionUid Session ID.
      * @param applicationName name of the user application
      * @param principal User name.
@@ -50,21 +51,22 @@ public interface TrackingService extends ApplicationService {
      * @param rowCount Final row count.
      */
     public void log(String requestId, String txnUid, short cmdPoint, short status,
-            String sessionUid, String applicationName, String principal, String vdbName, String vdbVersion, Command sql, int rowCount);
+            String sessionUid, String applicationName, String principal, String vdbName, String vdbVersion, String sql, int rowCount);
 
     /**
-     * Log the command into database if the vaule of the property
+     * Log the command if the value of the property 
      * "metamatrix.transaction.log.storeSRCCMD" is "true".
+     * 
      * @param requestId Unique command ID.
      * @param nodeID Subcommand ID
      * @param subTxnUid Unique subtransaction ID.
-     * @param status Type of request -
-     * TransactionLogConstants.SRCCMD_STATUS.NEW, or TransactionLogConstants.SRCCMD_STATUS.CANCEL, 
-     * TransactionLogConstants.SRCCMD_STATUS.END, or TransactionLogConstants.SRCCMD_STATUS.ERROR.
+     * @param status Type of request - TransactionLogConstants.SRCCMD_STATUS.NEW, 
+     *               or TransactionLogConstants.SRCCMD_STATUS.CANCEL, or TransactionLogConstants.SRCCMD_STATUS.END, 
+     *               or TransactionLogConstants.SRCCMD_STATUS.ERROR.
      * @param modelName Name of model.
      * @param cbName Connector binding name.
-     * @param cmdPoint Point in command being logged - 
-     * TransactionLogConstants.POINT.BEGIN, or TransactionLogConstants.POINT.END.
+     * @param cmdPoint Point in command being logged - TransactionLogConstants.POINT.BEGIN, 
+     *                 or TransactionLogConstants.POINT.END.
      * @param sessionUid Session ID.
      * @param principal User name.
      * @param sql SQL for the command.
@@ -72,7 +74,7 @@ public interface TrackingService extends ApplicationService {
      */
     public void log(String requestId, long nodeID, String subTxnUid, 
             short status, String modelName, String cbName, short cmdPoint, 
-            String sessionUid, String principal, Command sql, int rowCount, 
+            String sessionUid, String principal, String sql, int rowCount, 
             ExecutionContext context);
 
     /**

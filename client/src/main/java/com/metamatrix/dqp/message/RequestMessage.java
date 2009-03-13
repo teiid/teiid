@@ -23,6 +23,7 @@
 package com.metamatrix.dqp.message;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -40,9 +41,8 @@ public class RequestMessage implements Serializable {
     
     public static final int DEFAULT_FETCH_SIZE = 2000;
 
-    private String commandStr;
-    private String[] batchedCommands;
-    private Serializable command;
+    private String[] commands;
+    private boolean isBatchedUpdate;
     private int fetchSize = DEFAULT_FETCH_SIZE;
     private int cursorType;
     private boolean partialResultsFlag;
@@ -83,35 +83,7 @@ public class RequestMessage implements Serializable {
 
 	public RequestMessage(String command) {
 		this();
-		
-		this.commandStr = command;
-	}
-	
-	/**
-	 * @return Command
-	 */
-	public Serializable getCommand() {
-		if (command != null) {
-			return command;
-		}
-		if (commandStr != null) {
-			return commandStr;
-		}
-		return batchedCommands;
-	}
-
-	/**
-	 * Sets the command.
-	 * @param command The command to set
-	 */
-	public void setCommand(Serializable command) {
-		if (command instanceof String) {
-			this.commandStr = (String)command;
-		} else if (command instanceof String[]) {
-			this.batchedCommands = (String[])command;
-		} else {
-			this.command = command;
-		}
+		setCommands(command);
 	}
 
     public int getFetchSize() {
@@ -327,8 +299,11 @@ public class RequestMessage implements Serializable {
 		this.useResultSetCache = useResultSetCacse;
 	}
 
-	public String getCacheCommand() {
-		return commandStr;
+	public String getCommandString() {
+		if (commands.length == 1) {
+			return commands[0];
+		}
+		return Arrays.deepToString(commands);
 	}
            
     public void setDoubleQuotedVariableAllowed(boolean allowed) {
@@ -382,20 +357,12 @@ public class RequestMessage implements Serializable {
         this.rowLimit = rowLimit;
     }
 
-	public String getCommandStr() {
-		return commandStr;
+	public String[] getCommands() {
+		return commands;
 	}
 
-	public void setCommandStr(String commandStr) {
-		this.commandStr = commandStr;
-	}
-
-	public String[] getBatchedCommands() {
-		return batchedCommands;
-	}
-
-	public void setBatchedCommands(String[] batchedCommands) {
-		this.batchedCommands = batchedCommands;
+	public void setCommands(String... batchedCommands) {
+		this.commands = batchedCommands;
 	}
 
 	public boolean isPreparedBatchUpdate() {
@@ -420,6 +387,14 @@ public class RequestMessage implements Serializable {
 
 	public void setExecutionId(long executionId) {
 		this.executionId = executionId;
+	}
+
+	public void setBatchedUpdate(boolean isBatchedUpdate) {
+		this.isBatchedUpdate = isBatchedUpdate;
+	}
+
+	public boolean isBatchedUpdate() {
+		return isBatchedUpdate;
 	}
 
 }

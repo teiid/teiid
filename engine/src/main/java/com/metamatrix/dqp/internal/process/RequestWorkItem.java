@@ -370,7 +370,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 	protected void processNew() throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		request.processRequest();
-		originalCommand = (Command)requestMsg.getCommand();
+		originalCommand = request.command;
 		processor = request.processor;
 		processor.setBatchHandler(new BatchHandler() {
 			public void batchProduced(TupleBatch batch)
@@ -468,9 +468,8 @@ public class RequestWorkItem extends AbstractWorkItem {
             response.setWarnings(responseWarnings);
             
             // If it is stored procedure, set parameters
-            Command command = (Command)requestMsg.getCommand();
-            if (command instanceof StoredProcedure) {
-            	StoredProcedure proc = (StoredProcedure)command;
+            if (originalCommand instanceof StoredProcedure) {
+            	StoredProcedure proc = (StoredProcedure)originalCommand;
             	if (proc.returnParameters()) {
             		response.setParameters(getParameterInfo(proc));
             	}
@@ -691,7 +690,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                     dqpWorkContext.getUserName(),
                     dqpWorkContext.getVdbName(),
                     dqpWorkContext.getVdbVersion(),
-                    originalCommand,
+                    (originalCommand != null ? originalCommand.toString() : null ),
                     -1);
     }
 
