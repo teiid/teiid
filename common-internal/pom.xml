@@ -53,15 +53,11 @@
 			<groupId>net.sf.saxon</groupId>
 			<artifactId>saxon-dom</artifactId>
 		</dependency>
-		
-		<dependency>
-			<groupId>antlr</groupId>
-			<artifactId>antlr</artifactId>
-		</dependency>
-		
+				
 		<dependency>
 			<groupId>antlr</groupId>
 			<artifactId>stringtemplate</artifactId>
+            <scope>optional</scope>
 		</dependency>
 		
         <dependency>
