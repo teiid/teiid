@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -122,6 +123,7 @@ import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.server.admin.apiimpl.MaterializationLoadScriptsImpl;
 import com.metamatrix.server.admin.apiimpl.RuntimeMetadataHelper;
+import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * @since 4.3
@@ -677,7 +679,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         Collection existingBindings = parent.getConnectorBindingsInVDB(vdb.getName());
 
         // AdminOptions checking here.
-        Collection totalBindings = getBindingNamesToUpdate(existingBindings, newBindingNames, options);
+        getBindingNamesToUpdate(existingBindings, newBindingNames, options);
         
         // Update connector bindings only if OVERWRITE option given.  VDBDefnImport will take
         // care of adding any bindings that are new to the VDB.
@@ -2238,6 +2240,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addUDF(byte[], java.lang.String)
      */
     public void addUDF(byte[] modelFileContents, String classpath) throws AdminException {
+    	classpath = classpath.trim();
         try {
             deleteExtensionModule(FUNCTION_DEFINITIONS_MODEL);
         } catch (AdminException e) {
@@ -2245,8 +2248,20 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         }
         
         // add the function definitions as extension modules
-        addExtensionModule(ExtensionModule.FUNCTION_DEFINITION_TYPE, FUNCTION_DEFINITIONS_MODEL, modelFileContents, "User Defined Functions File"); //$NON-NLS-1$ 
-        setSystemProperty("metamatrix.server.UDFClasspath", classpath); //$NON-NLS-1$
+        addExtensionModule(ExtensionModule.FUNCTION_DEFINITION_TYPE, FUNCTION_DEFINITIONS_MODEL, modelFileContents, "User Defined Functions File"); //$NON-NLS-1$
+        String commonpath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
+        
+        StringBuilder sb = new StringBuilder();
+        if (classpath != null && classpath.length() > 0 ) {
+        	StringTokenizer st = new StringTokenizer(classpath, ";"); //$NON-NLS-1$
+        	while (st.hasMoreTokens()) {
+        		String partpath = st.nextToken();
+        		if (commonpath.indexOf(partpath) == -1) {
+        			sb.append(partpath).append(";"); //$NON-NLS-1$
+        		}
+        	}
+        }
+        setSystemProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH, sb.toString()+commonpath);
     }
 
     /** 
@@ -2254,7 +2269,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      */
     public void deleteUDF() throws AdminException {
         deleteExtensionModule(FUNCTION_DEFINITIONS_MODEL);
-        setSystemProperty("metamatrix.server.UDFClasspath", ""); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	@Override

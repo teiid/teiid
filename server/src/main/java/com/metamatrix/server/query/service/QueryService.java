@@ -61,6 +61,7 @@ import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.dqp.config.PlatformConfigSource;
 import com.metamatrix.server.util.LogConstants;
+import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * Wraps up a QueryServiceEngine to tie it into the platform concept of services.  Is a remote object.
@@ -71,7 +72,6 @@ import com.metamatrix.server.util.LogConstants;
  */
 public class QueryService extends AbstractService implements QueryServiceInterface {
     
-	private static final String UDF_CLASSPATH_PROPERTY = "metamatrix.server.UDFClasspath"; //$NON-NLS-1$
 	private static final String CLASSPATH_DELIMITER = ";"; //$NON-NLS-1$
     private static final String CODE_TABLE_CACHE_NAME = "CodeTableCache"; //$NON-NLS-1$
     private static final String PLAN_CACHE_NAME = "PreparedPlanCache"; //$NON-NLS-1$
@@ -107,7 +107,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     private void registerUDFSource(String udfSource) throws IOException {
     	URL[] urls = null;
     	
-    	String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(UDF_CLASSPATH_PROPERTY);
+    	String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
         if (extensionClasspath != null && extensionClasspath.trim().length() > 0){
             try {
                 urls = URLFactory.parseURLs(extensionClasspath, CLASSPATH_DELIMITER);

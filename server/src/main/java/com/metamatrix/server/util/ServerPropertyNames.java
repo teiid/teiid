@@ -44,5 +44,5 @@ public final class ServerPropertyNames {
      */
     public static final String CACHE_CLASS_LOADERS      = "metamatrix.server.cacheConnectorClassLoaders"; //$NON-NLS-1$
    
-
+	public static final String COMMON_EXTENSION_CLASPATH = "metamatrix.extension.CommonClasspath"; //$NON-NLS-1$
 }

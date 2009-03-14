@@ -95,6 +95,8 @@ public class ConnectorPropertyNames {
     public static final String USING_CUSTOM_CLASSLOADER = "UsingCustomClassloader"; //$NON-NLS-1$
     
     public static final String CONNECTOR_CLASSPATH = "ConnectorClassPath"; //$NON-NLS-1$
+
+    public static final String CONNECTOR_TYPE_CLASSPATH = "ConnectorTypeClassPath"; //$NON-NLS-1$
     
     public static final String IS_XA = "IsXA"; //$NON-NLS-1$
     

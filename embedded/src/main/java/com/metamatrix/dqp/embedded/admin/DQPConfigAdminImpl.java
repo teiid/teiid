@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import com.metamatrix.admin.api.embedded.EmbeddedConfigAdmin;
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -208,7 +209,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 saveConnectorType(type);
             }
             else {
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", new Object[] {deployName})); //$NON-NLS-1$
+                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", deployName)); //$NON-NLS-1$
             }
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
@@ -259,7 +260,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             if (bindingExists(deployName)) {
                 // Based on users preference, either add or replace or ignore 
                 if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", new String[] {deployName})); //$NON-NLS-1$
+                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", deployName)); //$NON-NLS-1$
                 }
                 else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                     binding = getDataService().getConnectorBinding(deployName);
@@ -270,7 +271,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // Get the connector type
             ConnectorBindingType ctype = getConfigurationService().getConnectorType(type);
             if (ctype == null) {
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.connector_type_not_exists", new String[] {type})); //$NON-NLS-1$
+                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.connector_type_not_exists", type)); //$NON-NLS-1$
             }
             
             // Build the connector binding with informatin we know.
@@ -330,7 +331,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             if (bindingExists(deployName)) {
                 // Based on users preference, either add or replace or ignore 
                 if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", new String[] {deployName})); //$NON-NLS-1$
+                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", deployName)); //$NON-NLS-1$
                 }
                 else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                     binding = getDataService().getConnectorBinding(deployName);
@@ -347,7 +348,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // preferences in the admin options, same rules apply as binding.            
             if (bindingTypeExists(type.getName())) {
                 if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBinding_type_exists", new String[] {deployName, type.getName()})); //$NON-NLS-1$
+                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBinding_type_exists", deployName, type.getName())); //$NON-NLS-1$
                 }                
             }
             
@@ -528,7 +529,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             
             if (bindingExists(deployName)) {
                 if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", new String[] {binding.getDeployedName()})); //$NON-NLS-1$
+                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBindingEixists", binding.getDeployedName())); //$NON-NLS-1$
                 }                    
             }
             
@@ -636,7 +637,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 getConfigurationService().saveExtensionModule(extModule);
             }
             else {
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", new Object[] {sourceName})); //$NON-NLS-1$
+                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", sourceName)); //$NON-NLS-1$
             }
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
@@ -867,7 +868,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 
                     // if not asked to overwrite/skip writing them
                     if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                        throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", new Object[] {connectorName})); //$NON-NLS-1$            
+                        throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Connector_type_exists", connectorName)); //$NON-NLS-1$            
                     } else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                         continue;
                     } else if (options.containsOption(AdminOptions.OnConflict.OVERWRITE)){
@@ -933,7 +934,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             
             // if we found it take approprite action.
             if(previousModule != null && options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", new Object[] {previousModule.getFullName()})); //$NON-NLS-1$
+                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", previousModule.getFullName())); //$NON-NLS-1$
             }
             else if (previousModule != null && options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                 add = false;
@@ -1030,9 +1031,24 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			// add the function definitions as extension modules
 			addExtensionModule(ExtensionModule.FUNCTION_DEFINITION_TYPE,ConfigurationService.USER_DEFINED_FUNCTION_MODEL,modelFileContents, "User Defined Functions File"); //$NON-NLS-1$
 			
+	        String commonpath = getConfigurationService().getSystemProperties().getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
+	        
+	        StringBuilder sb = new StringBuilder();
+	        if (classpath != null && classpath.length() > 0 ) {
+	        	StringTokenizer st = new StringTokenizer(classpath, ";"); //$NON-NLS-1$
+	        	while (st.hasMoreTokens()) {
+	        		String partpath = st.nextToken();
+	        		if (commonpath.indexOf(partpath) == -1) {
+	        			sb.append(partpath).append(";"); //$NON-NLS-1$
+	        		}
+	        	}
+	        }
+	        setSystemProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, sb.toString()+commonpath);
+			
+			
 			// then update the properties
 			Properties p = new Properties();
-			p.setProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS_CLASPATH,classpath);
+			p.setProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, classpath);
 			getConfigurationService().updateSystemProperties(p);
 			// reload the new UDF
 			getConfigurationService().loadUDF();

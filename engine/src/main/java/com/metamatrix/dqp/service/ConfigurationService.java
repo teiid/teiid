@@ -98,11 +98,11 @@ public interface ConfigurationService extends ApplicationService {
     public URL getUDFFile();
     
     /**
-     * Get the user defined function's implementation jar file classpath. The jar
+     * Get the user defined extension file classpath. The jar
      * files are loaded usually as the extension modules. 
      * @return URL[] - Classpath for the UDF jar files
      */
-    public URL[] getUDFClasspath();
+    public URL[] getCommonExtensionClasspath();
     
     /**
      * URL to Log file name  

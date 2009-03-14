@@ -218,10 +218,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
 
     /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#getUDFClasspath()
+     * @see com.metamatrix.dqp.service.ConfigurationService#getCommonExtensionClasspath()
      */
-    public URL[] getUDFClasspath() {
-        String classpath= userPreferences.getProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS_CLASPATH);
+    public URL[] getCommonExtensionClasspath() {
+        String classpath= userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH);
         if (valid(classpath)) {            
             try {
                 URL context = getExtensionPath();
@@ -929,7 +929,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public void loadUDF() throws MetaMatrixComponentException {
         URL udfFile = getUDFFile();
         if(udfFile != null && exists(udfFile)) {
-            URL[] urls = getUDFClasspath();            
+            URL[] urls = getCommonExtensionClasspath();            
             try {
 				this.udfSource = new UDFSource(udfFile, urls);
 				FunctionLibraryManager.registerSource(this.udfSource);

@@ -53,6 +53,7 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager;
@@ -563,8 +564,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 
         try {
             // Ask the configuration if we can use the extension class loader. 
-            boolean useExtensionClassPath = (getConfigurationService().useExtensionClasspath());        
-            String classPath = connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
+            boolean useExtensionClassPath = (getConfigurationService().useExtensionClasspath());
+            String classPath = buildClasspath(connectorProperties);
             if (classPath == null || classPath.length() == 0) {
                 useExtensionClassPath = false;
             }
@@ -586,5 +587,22 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             throw new ApplicationLifecycleException(e);
         }
     }
+
+	private String buildClasspath(Properties connectorProperties) {
+		StringBuilder sb = new StringBuilder();
+		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
+        appendlasspath(connectorProperties.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH), sb); // this is common to the engine
+        appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
+        return sb.toString();
+	}
+	
+	private void appendlasspath(String path, StringBuilder builder) {
+        if (path != null && path.length() > 0) {
+        	builder.append(path);
+        	if (!path.endsWith(";")) { //$NON-NLS-1$
+        		builder.append(";"); //$NON-NLS-1$
+        	}
+        }
+	}
 
 }

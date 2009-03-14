@@ -264,7 +264,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // Decrypt masked properties
         Properties deMaskedProps = decryptMaskedProperties(props);
 
-        String urls = deMaskedProps.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
+        String urls = buildClasspath(deMaskedProps);
         
         ClassLoader loader = getCustomClassLoader(urls);
         // Build a Connector manager using the custom class loader and initialize
@@ -307,6 +307,23 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
     }
 
+	private String buildClasspath(Properties connectorProperties) {
+		StringBuilder sb = new StringBuilder();
+		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
+        appendlasspath(connectorProperties.getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH), sb); // this is common to the engine
+        appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
+        return sb.toString();
+	}
+	
+	private void appendlasspath(String path, StringBuilder builder) {
+        if (path != null && path.length() > 0) {
+        	builder.append(path);
+        	if (!path.endsWith(";")) { //$NON-NLS-1$
+        		builder.append(";"); //$NON-NLS-1$
+        	}
+        }
+	}    
+    
     /**
      * Close the service to new work if applicable. After this method is called
      * the service should no longer accept new work to perform but should continue
@@ -484,10 +501,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
                         try {
                             propValue = CryptoUtil.stringDecrypt(propValue);
                         } catch (CryptoException e) {
-                            throw new ApplicationInitializationException(e,
-                                                                         ServerPlugin.Util.getString(
-                                                                                 "ConnectorService.Failed_decrypting_masked_prop",   //$NON-NLS-1$
-                                                                                 propName));
+                            throw new ApplicationInitializationException(e,ServerPlugin.Util.getString("ConnectorService.Failed_decrypting_masked_prop", propName)); //$NON-NLS-1$
                         }
                     }
                     result.setProperty(propName, propValue);
