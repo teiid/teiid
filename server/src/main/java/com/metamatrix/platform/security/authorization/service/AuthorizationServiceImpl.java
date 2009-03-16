@@ -51,7 +51,6 @@ import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.DestroyObject;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.dqp.ResourceFinder;
@@ -419,31 +418,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0025);
                 throw new AuthorizationMgmtException(e, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
@@ -537,31 +524,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0025);
                 throw new AuthorizationMgmtException(e, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
@@ -640,31 +615,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0025);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0025, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
@@ -725,32 +688,20 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0029, policyID);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0029, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0029, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0030, policyID);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0030, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0030, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0031, policyID);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0031, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0031, e, exceptionMsg));
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0031, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy ID."); //$NON-NLS-1$
         }
@@ -788,32 +739,20 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0032);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0032, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0032, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0033);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0033, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0033, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0034);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0034, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0034, e, exceptionMsg));
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0034, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for all policy IDs."); //$NON-NLS-1$
         }
@@ -859,7 +798,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 }
             } catch (MetaMatrixSecurityException e) {
                 String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035, principal);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0035, e, msg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035, e, msg));
                 return Collections.EMPTY_SET;
             }
         }
@@ -914,31 +853,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0037, policyID);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0037, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0037, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0038, policyID);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0038, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0038, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0039, policyID);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0039, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting policy for ID (", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -948,6 +875,21 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         }
         return policy;
     }
+
+	private void completeTransaction(boolean success, AuthorizationSourceTransaction transaction) {
+		if (transaction != null) {
+		    try {
+		        if (success) {
+		            transaction.commit();
+		        } else {
+		            transaction.rollback();
+		        }
+		        transaction.close();
+		    } catch (Exception e) {
+		    	LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015,e));
+		    }
+		}
+	}
 
     /**
      * Verify that caller is in the specified logical role.
@@ -993,31 +935,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0040);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0040, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0040, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0041);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0041, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0041, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0042);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0042, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting role descriptions."); //$NON-NLS-1$
         }
@@ -1057,31 +987,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0043, roleName.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0043, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0043, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0044, roleName.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0044, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0044, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0045, roleName.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0045, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting principals for role \"", roleName.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1175,11 +1093,11 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0050, principal.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0050, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0050, e, exceptionMsg));
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0051, principal.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0051, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0051, e, exceptionMsg));
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0052, principal.toString());
@@ -1191,7 +1109,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                         transaction.close();
                     } catch (Exception e) {
                         String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, principal.toString());
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg);
+                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg));
                         throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0053, msg);
                     }
 
@@ -1206,7 +1124,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                             transaction.close();
                         } catch (Exception e) {
                             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0054, principal.toString());
-                            I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0054, e, msg);
+                            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0054, e, msg));
                             throw new AuthorizationMgmtException(e, msg);
                         }
                     }
@@ -1253,31 +1171,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0055, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0055, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0055, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0056, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0056, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0056, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0057, realm.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0057, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                }
+                completeTransaction(success, transaction);
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization PolicyIDs with permissions belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1322,32 +1228,20 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0060, realm.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0060, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1413,32 +1307,20 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0060, realm.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0060, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1495,32 +1377,20 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0060, realm.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0060, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
             LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1600,35 +1470,22 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0061, policyID.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0061, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0061, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0062, policyID.toString());
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0062, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0062, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0063, policyID.toString());
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0063, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
-                    new Object[]{"Attempting to retry getting permissions for policy \"", policyID.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting permissions for policy \"", policyID.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1814,12 +1671,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1829,23 +1686,10 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0071);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0071, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
-                    "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1889,12 +1733,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch ( AuthorizationSourceConnectionException e ) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch ( AuthorizationSourceException e ) {
@@ -1904,23 +1748,10 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0071);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0071, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
-                    "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1956,35 +1787,22 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0072);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0072, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0072, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0073);
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0073, e, exceptionMsg);
+                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0073, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0074);
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0074, exceptionMsg);
             } finally {
-                if (transaction != null) {
-                    try {
-                        if (success) {
-                            transaction.commit();
-                        } else {
-                            transaction.rollback();
-                        }
-                        transaction.close();
-                    } catch (Exception e) {
-                        I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0015,
-                                e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015));
-                    }
-                    transaction = null;                     // ensure the transaction is not retained
-                }
+            	completeTransaction(success, transaction);
+                transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
-                    "Attempting to retry search for policies with ID collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policies with ID collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -2308,18 +2126,15 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 //                    break;
                 } catch (AuthorizationSourceConnectionException e) {
                     exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, target);
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg);
+                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
                     exception = e;
                     success = false;
                 } catch (AuthorizationSourceException e) {
                     exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, target);
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg);
+                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
                     exception = e;
                     success = false;
                 }
-//                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
-//                        new Object[]{"Attempting to retry executing actions on target policy (", target, ")."}); //$NON-NLS-1$ //$NON-NLS-2$
-//            }
         } else {
             exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0077, target);
             throw new AuthorizationMgmtException(ErrorMessageKeys.SEC_AUTHORIZATION_0077, exceptionMsg);
