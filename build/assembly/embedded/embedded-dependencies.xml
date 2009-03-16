@@ -41,12 +41,6 @@
               <useDefaultExcludes>true</useDefaultExcludes>
               <excludes>
                 <exclude>teiid*</exclude>
-                
-                <!-- these should have been excluded by module dependency structure, but until we fix those this will help-->
-                <exclude>antlr*</exclude>
-                <exclude>bsh*</exclude>
-                <exclude>netty*</exclude>
-                <exclude>stringtemplate*</exclude>
               </excludes>              
             </dependencySet>
           </dependencySets>

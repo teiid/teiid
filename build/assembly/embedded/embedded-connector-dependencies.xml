@@ -12,36 +12,21 @@
     
   <moduleSets>
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
-               
         <includes>        	
             <include>org.jboss.teiid.connectors:connector-jdbc</include>
             <include>org.jboss.teiid.connectors:connector-xml</include>
+            <include>org.jboss.teiid.connectors:connector-xml-common</include>
             <include>org.jboss.teiid.connectors:connector-loopback</include>
             <include>org.jboss.teiid.connectors:connector-text</include>
             <include>org.jboss.teiid.connectors:connector-ldap</include>
             <include>org.jboss.teiid.connectors:connector-salesforce</include>
-            <include>org.jboss.teiid.connectors:salesforce-api</include>
         </includes>
         
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
+        <binaries>
+          <includeDependencies>false</includeDependencies>
+          <attachmentClassifier>bundle</attachmentClassifier>
           <unpack>true</unpack>
-                                    
-          <dependencySets>
-            <dependencySet>
-              <useProjectArtifact>false</useProjectArtifact>
-              <unpack>false</unpack>
-              <useTransitiveDependencies>false</useTransitiveDependencies>
-              <useDefaultExcludes>true</useDefaultExcludes>
-              <excludes>
-                <exclude>teiid*</exclude>
-              </excludes>              
-            </dependencySet>
-          </dependencySets>
-          
         </binaries>
-      
     </moduleSet>
   </moduleSets>
     

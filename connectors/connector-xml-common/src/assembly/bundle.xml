@@ -11,7 +11,7 @@
     
   <dependencySets>
     <dependencySet>
-      <useProjectArtifact>true</useProjectArtifact>      
+      <useProjectArtifact>false</useProjectArtifact>      
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <useTransitiveFiltering>false</useTransitiveFiltering>
       <useDefaultExcludes>true</useDefaultExcludes>

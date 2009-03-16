@@ -23,15 +23,7 @@
             <include>org.jboss.teiid:teiid-embedded</include>
         	<include>org.jboss.teiid:teiid-engine</include>
         	<include>org.jboss.teiid:teiid-metadata</include>
-        	<include>org.jboss.teiid:teiid-txn-jbossts</include>
-
-        	<include>org.jboss.teiid.connectors:connector-jdbc</include>
-            <include>org.jboss.teiid.connectors:connector-xml</include>
-            <include>org.jboss.teiid.connectors:connector-loopback</include>
-            <include>org.jboss.teiid.connectors:connector-text</include>
-            <include>org.jboss.teiid.connectors:connector-ldap</include>
-            <include>org.jboss.teiid.connectors:connector-salesforce</include>
-            <include>org.jboss.teiid.connectors:salesforce-api</include>                      
+        	<include>org.jboss.teiid:teiid-txn-jbossts</include>        	
         </includes>
         
         <binaries>
