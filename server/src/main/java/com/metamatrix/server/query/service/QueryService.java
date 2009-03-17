@@ -105,22 +105,10 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
      * @param udfSource the source file for function definitions
      */
     private void registerUDFSource(String udfSource) throws IOException {
-    	URL[] urls = null;
-    	
-    	String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
-        if (extensionClasspath != null && extensionClasspath.trim().length() > 0){
-            try {
-                urls = URLFactory.parseURLs(extensionClasspath, CLASSPATH_DELIMITER);
-            } catch (MalformedURLException e) {
-                String message = ServerPlugin.Util.getString("ExtensionFunctionMetadataSource.Cannot_parse_classpath___{0}___1", extensionClasspath); //$NON-NLS-1$
-                LogManager.logWarning(LogCommonConstants.CTX_CONFIG, e, message);            
-            }
-        }    	
-        
         try {
         	InputStream in = retrieveUDFStream(udfSource);
             if (in != null) {
-            	FunctionLibraryManager.registerSource(new UDFSource(in, urls));
+            	FunctionLibraryManager.registerSource(new UDFSource(in, Thread.currentThread().getContextClassLoader()));
             }        	
         } catch(ExtensionModuleNotFoundException e) {
         	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, e, ServerPlugin.Util.getString("QueryService.no_udf")); //$NON-NLS-1$

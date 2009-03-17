@@ -213,7 +213,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         
         if (className != null && className.length() > 0) {
             try {
-                domain = (MembershipDomain) Class.forName(className).newInstance();
+                domain = (MembershipDomain) Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
             } catch (Throwable e) {
                 String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0023, className);
                 throw new ServiceException(e, ErrorMessageKeys.SEC_MEMBERSHIP_0023, msg);

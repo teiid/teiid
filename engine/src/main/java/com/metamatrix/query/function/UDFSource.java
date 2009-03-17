@@ -51,7 +51,13 @@ public class UDFSource implements FunctionMetadataSource {
     public UDFSource(InputStream udfStream, URL[] classpath) throws IOException {
         this.classpath = classpath;
         loadFunctions(udfStream);
+    }
+    
+    public UDFSource(InputStream udfStream, ClassLoader classloader) throws IOException {
+        this.classLoader = classloader;
+        loadFunctions(udfStream);
     }    
+    
     
     public Collection getFunctionMethods() {
         return this.methods;
@@ -59,7 +65,7 @@ public class UDFSource implements FunctionMetadataSource {
 
     public Class getInvocationClass(String className) throws ClassNotFoundException {
         // If no classpath is specified then use the default classpath
-        if (classpath == null || classpath.length == 0) {
+        if (this.classLoader == null && (classpath == null || classpath.length == 0)) {
             return Class.forName(className);
         }
         

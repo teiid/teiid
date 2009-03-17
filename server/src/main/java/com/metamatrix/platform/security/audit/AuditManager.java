@@ -30,9 +30,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.properties.UnmodifiableProperties;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -102,27 +100,12 @@ import com.metamatrix.platform.util.LogMessageKeys;
  */
 public final class AuditManager {
 
-    /**
-     * The name of the Auditing service.
-     */
-    public static final String NAME = "AuditingService"; //$NON-NLS-1$
 
     /**
      * The name of the configuration property that contains the message level for the AuditManager.
      * This is an optional property that defaults to '0'.
      */
     public static final String SYSTEM_AUDIT_LEVEL_PROPERTY_NAME   = "metamatrix.audit.enabled"; //$NON-NLS-1$
-
-    /**
-     * The name of the configuration property that contains the set of comma-separated
-     * context names for messages <i>not</i> to be recorded.  A message context is simply
-     * some string that identifies something about the component that generates
-     * the message.  The value for the contexts is application specific.
-     * <p>
-     * This is an optional property that defaults to no contexts (i.e., messages
-     * with any context are recorded).
-     */
-    public static final String SYSTEM_AUDIT_CONTEXT_PROPERTY_NAME = "metamatrix.audit.contexts"; //$NON-NLS-1$
 
     /**
      * The name of the configuration property that contains 'true' if the log messages
@@ -145,75 +128,38 @@ public final class AuditManager {
     protected static final String DEFAULT_AUDIT_MAX_THREADS          = "1"; //$NON-NLS-1$
     protected static final String DEFAULT_AUDIT_THREAD_TTL           = "600000"; //$NON-NLS-1$
 
-    private static AuditManager INSTANCE = new AuditManager();
-    private static AuditConfiguration CONFIGURATION = null;
-    private static Properties AUDIT_PROPERTIES = new Properties();
-    private static Properties UNMODIFIABLE_AUDIT_PROPERTIES = new UnmodifiableProperties(AUDIT_PROPERTIES);
-
-    private List auditDestinations;
+    private static AuditConfiguration configuration = null;
+    private List auditDestinations = new ArrayList();
 	private WorkerPool workerPool;
-    private boolean isInitialized = false;
-    private boolean isStopped = false;
-    protected Object initializationLock = new Object();
-//    private List initializationMessages = new ArrayList();
 
-    static {
-
-        // Get the AuditConfiguration from the current configuration properties ...
-        AuditConfigurationFactory configFactory = new CurrentConfigAuditConfigurationFactory();
-        Properties currentConfigProperties = new Properties();
-        Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
- 
-        currentConfigProperties.putAll(globalProperties);
- 
-        AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
-        UNMODIFIABLE_AUDIT_PROPERTIES = new UnmodifiableProperties(AUDIT_PROPERTIES);
-
-        try {
-            CONFIGURATION = configFactory.getConfiguration( UNMODIFIABLE_AUDIT_PROPERTIES );
-        } catch ( AuditConfigurationException e ) {
-            LogManager.logWarning(LogSecurityConstants.CTX_AUDIT, e,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0004));
-            CONFIGURATION = new BasicAuditConfiguration();
-        }
-        CONFIGURATION = new UnmodifiableAuditConfiguration(CONFIGURATION);
-
-    }
-
-    protected void finalize() {
-        if ( this.isManagerStopped() ) {
-            stop();
-        }
-    }
-
-    private AuditManager() {
-        // Initialize the worker factory and message queue ...
-        // Doing this before anything else allows messages to be enqueue before
-        // and before the AuditManager is alive and before the destinations are created ...
-        this.auditDestinations = new ArrayList();
-    }
-
-    private void init() {
-    	synchronized( AuditManager.this.initializationLock ) {
-            if ( ! AuditManager.this.isInitialized() && !AuditManager.this.isManagerStopped() ) {
-                AuditManager.this.initialize();
-            }
-    	}
-    }
-
-    protected void initialize() {
-        // Log the beginning of the initialization
+    public AuditManager() {
+    	
+    	// Log the beginning of the initialization
         LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0001));
 
-        // Initialize the message destinations ...
-        if ( CONFIGURATION.getAuditLevel() != AuditLevel.NONE ) {
-            this.initializeDestinations();
+        Properties currentConfigProperties = new Properties();
+        Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
+
+        currentConfigProperties.putAll(globalProperties);
+
+        Properties auditProperties = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
+        auditProperties.setProperty(SingleFileAuditDestination.APPEND_PROPERTY_NAME,Boolean.TRUE.toString());
+        
+        AuditConfigurationFactory configFactory = new CurrentConfigAuditConfigurationFactory();
+        try {
+            configuration = configFactory.getConfiguration(auditProperties );
+        } catch ( AuditConfigurationException e ) {
+            LogManager.logWarning(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0004));
+            configuration = new BasicAuditConfiguration();
+        }
+        
+        configuration = new UnmodifiableAuditConfiguration(configuration);        // Initialize the message destinations ...
+        if ( configuration.getAuditLevel() != AuditLevel.NONE ) {
+            this.initializeDestinations(auditProperties);
         }
 
-        this.isInitialized = true;
-
         // Log the destinations for the log messages ...
-        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, CONFIGURATION.toString()));
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, configuration.toString()));
         Iterator iter = this.auditDestinations.iterator();
         StringBuffer dests = new StringBuffer();
         while ( iter.hasNext() ) {
@@ -233,68 +179,48 @@ public final class AuditManager {
     }
 
 
-    private void initializeDestinations() {
+    private void initializeDestinations(Properties auditProperties) {
         this.auditDestinations.clear();
 
-        // If this is the first initialization, then get the system properties ...
-        if ( ! this.isInitialized ) {
-            Properties currentConfigProperties = new Properties();
-            Properties globalProperties = CurrentConfiguration.getInstance().getProperties();
-
-            currentConfigProperties.putAll(globalProperties);
-
-            AUDIT_PROPERTIES = PropertiesUtils.clone(currentConfigProperties,System.getProperties(),true,false);
-        } else {
-            // If this is NOT the first initialization, make sure the file destination is appended ...
-            AUDIT_PROPERTIES.setProperty(SingleFileAuditDestination.APPEND_PROPERTY_NAME,Boolean.TRUE.toString());
-        }
-        UNMODIFIABLE_AUDIT_PROPERTIES = new UnmodifiableProperties(AUDIT_PROPERTIES);
-
         // Create and init the file destinations ...
-        String specifiedLogFileName = UNMODIFIABLE_AUDIT_PROPERTIES.getProperty(SingleFileAuditDestination.FILE_NAME_PROPERTY_NAME);
+        String specifiedLogFileName = auditProperties.getProperty(SingleFileAuditDestination.FILE_NAME_PROPERTY_NAME);
         if ( specifiedLogFileName != null && specifiedLogFileName.trim().length() != 0 ) {
             SingleFileAuditDestination destination = new SingleFileAuditDestination();
             try {
-                destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
+                destination.initialize(auditProperties);
                 this.auditDestinations.add(destination);
-                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, 
-                        PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
-                        PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         }
 
         // Create and init the database destination, if enabled ...
-        boolean dbEnabled = Boolean.valueOf(UNMODIFIABLE_AUDIT_PROPERTIES.getProperty(DatabaseAuditDestination.DATABASE_PROPERTY_NAME)).booleanValue();
+        boolean dbEnabled = Boolean.valueOf(auditProperties.getProperty(DatabaseAuditDestination.DATABASE_PROPERTY_NAME)).booleanValue();
         if ( dbEnabled ) {
             DatabaseAuditDestination destination = new DatabaseAuditDestination();
             try {
-                destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
+                destination.initialize(auditProperties);
                 this.auditDestinations.add(destination);
-                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
-                        PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
+                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-                LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
-                        PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
+                LogManager.logError(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         } else {
-        	LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
-                    PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0005));
+        	LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0005));
         }
 
         // Create the console destinations ...
-        boolean includeConsole = Boolean.valueOf( UNMODIFIABLE_AUDIT_PROPERTIES.getProperty(SYSTEM_AUDIT_CONSOLE_PROPERTY_NAME) ).booleanValue();
+        boolean includeConsole = Boolean.valueOf(auditProperties.getProperty(SYSTEM_AUDIT_CONSOLE_PROPERTY_NAME) ).booleanValue();
         if ( includeConsole || this.auditDestinations.size() == 0 ) {
             ConsoleAuditDestination destination = new ConsoleAuditDestination();
             try {
-                destination.initialize(UNMODIFIABLE_AUDIT_PROPERTIES);
+                destination.initialize(auditProperties);
                 this.auditDestinations.add(destination);
                 LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
                         PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0004, destination.getDescription()));
             } catch( AuditDestinationInitFailedException e ) {
-            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
-                        PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0006, destination.getDescription()));
             }
         }
 
@@ -309,20 +235,8 @@ public final class AuditManager {
                 1,
                 Integer.parseInt(threadTTLString));
         } catch ( Exception e ) {
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0007, e,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0007));
+            LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0007, e));
         }
-    }
-
-    private boolean isInitialized() {
-        return this.isInitialized;
-    }
-
-    protected static AuditManager getInstance() {
-        if ( ! INSTANCE.isInitialized() ) {
-            INSTANCE.init();
-        }
-        return INSTANCE;
     }
 
     /**
@@ -340,9 +254,23 @@ public final class AuditManager {
      * @param permissions A collection of <code>AuthorizationPermission</code>s
      * that contain resources the given principal wishes to access.
      */
-    public static void record(String context, String activity, String principal, Collection permissions) {
+    public void record(String context, String activity, String principal, Collection permissions) {
         if (permissions != null && ! permissions.isEmpty()) {
-            AuditManager.getInstance().recordMessage(context,activity,principal,permissions);
+            if ( this.isLevelDiscarded( AuditLevel.FULL ) ) {
+                return;
+            }
+            List resources = new ArrayList(permissions.size());
+            Iterator permItr = permissions.iterator();
+            while ( permItr.hasNext() ) {
+                resources.add(((AuthorizationPermission)permItr.next()).getResourceName());
+            }
+
+            AuditMessage msg = new AuditMessage( context, activity, principal, resources.toArray());
+            try {
+                addMessageToQueue(msg);
+            } catch ( Exception e2 ) {
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010, e2));
+            }
         }
     }
 
@@ -362,9 +290,18 @@ public final class AuditManager {
      * @param principal the principal attempting access to the given resources.
      * @param resources the resources that the given proncipal is attempting to access.
      */
-    public static void record(String context, String activity, String principal, Object[] resources) {
+    public void record(String context, String activity, String principal, Object[] resources) {
         if (resources != null) {
-            AuditManager.getInstance().recordMessage(context,activity,principal,resources);
+            if ( this.isLevelDiscarded( AuditLevel.FULL ) ) {
+                return;
+            }
+
+            AuditMessage msg = new AuditMessage( context, activity, principal, resources);
+            try {
+                addMessageToQueue(msg);
+            } catch ( Exception e2 ) {
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010, e2));
+            }
         }
     }
 
@@ -384,18 +321,27 @@ public final class AuditManager {
      * @param principal the principal attempting access to the given resources.
      * @param resource the resource that the given proncipal is attempting to access.
      */
-    public static void record(String context, String activity, String principal, String resource) {
+    public void record(String context, String activity, String principal, String resource) {
         if (resource != null) {
-            AuditManager.getInstance().recordMessage(context,activity,principal,resource);
+            if ( this.isLevelDiscarded( AuditLevel.FULL ) ) {
+                return;
+            }
+
+            AuditMessage msg = new AuditMessage( context, activity, principal, new Object[]{resource});
+            try {
+                addMessageToQueue(msg);
+            } catch ( Exception e2 ) {
+            	LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010, e2));
+            }       
         }
     }
 
     private boolean isLevelDiscarded( int msgLevel ) {
-        return CONFIGURATION.isLevelDiscarded(msgLevel);
+        return configuration.isLevelDiscarded(msgLevel);
     }
 
     private boolean isContextDiscarded( String context ) {
-        return CONFIGURATION.isContextDiscarded(context);
+        return configuration.isContextDiscarded(context);
     }
 
     /**
@@ -408,65 +354,43 @@ public final class AuditManager {
      * This method is designed to be called by an application that wishes to
      * exit gracefully yet have all messages sent to the audit destinations.
      */
-    public static void stop() {
-        AuditManager manager = AuditManager.getInstance();  // may thread off the initialization if called first
-        synchronized( manager.initializationLock ) {
-            if ( ! isStopped() ) {
-                LogManager.logInfo(LogSecurityConstants.CTX_AUDIT,
-                        PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0006));
-                try {
-                    if ( manager.workerPool != null ) {
-                        manager.workerPool.shutdown();
-                    }
-
-                    // Sleep for another 1 second to allow the worker threads
-                    // to finish processing the last messages ...
-                    manager.workerPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
-                    Iterator iter = manager.auditDestinations.iterator();
-                    while(iter.hasNext()) {
-                        AuditDestination dest = (AuditDestination) iter.next();
-                        dest.shutdown();
-                    }
-                    manager.auditDestinations.clear();
-                } catch (Exception e) {
-                    LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,
-                            PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0008));
-                }
-                manager.isStopped = manager.workerPool.isTerminated();
-            } else {
-                LogManager.logWarning(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0009));
+    public synchronized void stop() {
+        LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0006));
+        try {
+            if (this.workerPool != null ) {
+                this.workerPool.shutdown();
             }
+
+            // Sleep for another 1 second to allow the worker threads
+            // to finish processing the last messages ...
+            this.workerPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
+            Iterator iter = this.auditDestinations.iterator();
+            while(iter.hasNext()) {
+                AuditDestination dest = (AuditDestination) iter.next();
+                dest.shutdown();
+            }
+            this.auditDestinations.clear();
+        } catch (Exception e) {
+            LogManager.logError(LogSecurityConstants.CTX_AUDIT, e,PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0008));
         }
-    }
-
-    /**
-     * Utility method to return whether the log manager for this VM is currently stopped.
-     * @return true if the log manager is currently stopped.
-     */
-    public static boolean isStopped() {
-        return getInstance().isManagerStopped();
-    }
-
-    protected boolean isManagerStopped() {
-        return this.isStopped;
     }
 
     /**
      * Utility method to obtain the current log configuration for the AuditManager.
      * @return the current log configuration
      */
-    public static AuditConfiguration getAuditConfiguration() {
-        return CONFIGURATION;
+    public AuditConfiguration getAuditConfiguration() {
+        return configuration;
     }
 
-    public static void setAuditConfiguration( AuditConfiguration config ) {
+    public void setAuditConfiguration( AuditConfiguration config ) {
         if ( config != null ) {
             LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0008, config));
             if ( config instanceof UnmodifiableAuditConfiguration ) {
                 UnmodifiableAuditConfiguration unmodConfig = (UnmodifiableAuditConfiguration) config;
-                CONFIGURATION = (AuditConfiguration) unmodConfig.deepClone();
+                configuration = (AuditConfiguration) unmodConfig.deepClone();
             } else {
-                CONFIGURATION = new UnmodifiableAuditConfiguration( (AuditConfiguration) config.clone() );
+                configuration = new UnmodifiableAuditConfiguration( (AuditConfiguration) config.clone() );
             }
         }
     }
@@ -478,21 +402,20 @@ public final class AuditManager {
      * @return true if the message would be recorded if sent to the AuditManager,
      * or false if it would be discarded by the AuditManager.
      */
-    public static boolean isMessageToBeRecorded(String context) {
+    public boolean isMessageToBeRecorded(String context) {
         if ( context == null ) {
             return false;
         }
 
         // If the messsage's level is greater than the logging level,
         // then the message should NOT be recorded ...
-        AuditManager manager = AuditManager.getInstance();
-        if ( manager.isLevelDiscarded(AuditLevel.FULL) ) {
+        if ( isLevelDiscarded(AuditLevel.FULL) ) {
             return false;
         }
 
         // If the set contains the message's context and the msgLevel is
         // not withing the requested recording levell, then do not log
-        if ( manager.isContextDiscarded( context ) ) {
+        if ( isContextDiscarded( context ) ) {
             return false;
         }
         return true;
@@ -505,89 +428,19 @@ public final class AuditManager {
      * @return true if the message would be recorded if sent to the AuditManager,
      * or false if it would be discarded by the AuditManager.
      */
-    public static boolean isMessageToBeRecorded(AuditMessage message) {
+    public boolean isMessageToBeRecorded(AuditMessage message) {
         if ( message == null ) {
             return false;
         }
 
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        AuditManager manager = AuditManager.getInstance();
-        if ( manager.isLevelDiscarded(AuditLevel.FULL) ) {
+        if ( isLevelDiscarded(AuditLevel.FULL) ) {
             return false;
         }
 
-        // If the set contains the message's context and the msgLevel is
-        // not withing the requested recording levell, then do not log
-        if ( manager.isContextDiscarded( message.getContext() ) ) {
+        if ( isContextDiscarded( message.getContext() ) ) {
             return false;
         }
         return true;
-    }
-
-    protected void recordMessage(String context, String activity, String principal, String resource) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        if ( this.isLevelDiscarded( AuditLevel.FULL ) ) {
-//AuditMessage msg = new AuditMessage( context, activity, principal, new Object[]{resource});
-//System.out.println("Discarding message: " + msg );
-            return;
-        }
-
-        AuditMessage msg = new AuditMessage( context, activity, principal, new Object[]{resource});
-        try {
-//System.out.println("Enqueuing message: " + msg );
-            addMessageToQueue(msg);
-        } catch ( Exception e2 ) {
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0010, e2,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010));
-        }
-    }
-
-    protected void recordMessage(String context, String activity, String principal, Object[] resources) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        if ( this.isLevelDiscarded( AuditLevel.FULL ) ) {
-//AuditMessage msg = new AuditMessage( context, activity, principal, resources);
-//System.out.println("Discarding message: " + msg );
-            return;
-        }
-
-        AuditMessage msg = new AuditMessage( context, activity, principal, resources);
-        try {
-//System.out.println("Enqueuing message: " + msg );
-            addMessageToQueue(msg);
-        } catch ( Exception e2 ) {
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0010, e2,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010));
-        }
-    }
-
-    protected void recordMessage(String context, String activity, String principal, Collection permissions) {
-        // Check quickly the level of the message:
-        // If the messsage's level is greater than the logging level,
-        // then the message should NOT be recorded ...
-        if ( this.isManagerStopped() || this.isLevelDiscarded( AuditLevel.FULL ) ) {
-//AuditMessage msg = new AuditMessage( context, activity, principal, resources);
-//System.out.println("Discarding message: " + msg );
-            return;
-        }
-        List resources = new ArrayList(permissions.size());
-        Iterator permItr = permissions.iterator();
-        while ( permItr.hasNext() ) {
-            resources.add(((AuthorizationPermission)permItr.next()).getResourceName());
-        }
-
-        AuditMessage msg = new AuditMessage( context, activity, principal, resources.toArray());
-        try {
-//System.out.println("Enqueuing message: " + msg );
-            addMessageToQueue(msg);
-        } catch ( Exception e2 ) {
-            I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0010, e2,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0010));
-        }
     }
 
     /**

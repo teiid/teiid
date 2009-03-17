@@ -55,19 +55,15 @@ public abstract class AbstractAuditDestination implements AuditDestination {
                                  "\"; using default class \"",formatterClassName,"\""}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         try {
-            LogManager.logTrace(LogSecurityConstants.CTX_AUDIT,
-                    new Object[]{"Initializing audit message format class \"",formatterClassName,"\""}); //$NON-NLS-1$ //$NON-NLS-2$
-            Class formatterClass = Class.forName(formatterClassName);
+            LogManager.logTrace(LogSecurityConstants.CTX_AUDIT, new Object[]{"Initializing audit message format class \"",formatterClassName,"\""}); //$NON-NLS-1$ //$NON-NLS-2$
+            Class formatterClass = Thread.currentThread().getContextClassLoader().loadClass(formatterClassName);
             formatter = (AuditMessageFormat) formatterClass.newInstance();
         } catch ( ClassNotFoundException e ) {
-            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0016,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0016, formatterClassName));
+            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0016, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0016, formatterClassName));
         } catch ( ClassCastException e ) {
-            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0017,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0017, formatterClassName, AuditMessageFormat.class.getName()));
+            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0017, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0017, formatterClassName, AuditMessageFormat.class.getName()));
         } catch ( Exception e ) {
-            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0018,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0018, formatterClassName));
+            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0018, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0018, formatterClassName));
         }
 	}
 
@@ -75,8 +71,7 @@ public abstract class AbstractAuditDestination implements AuditDestination {
 	 * Init the destination.
 	 */
 	public void initialize(Properties props) throws AuditDestinationInitFailedException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUDIT,
-                new Object[]{"Initializing audit destination class \"",this.getClass().getName(),"\""}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogSecurityConstants.CTX_AUDIT, new Object[]{"Initializing audit destination class \"",this.getClass().getName(),"\""}); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**

@@ -310,7 +310,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
 	private String buildClasspath(Properties connectorProperties) {
 		StringBuilder sb = new StringBuilder();
 		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
-        appendlasspath(connectorProperties.getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH), sb); // this is common to the engine
         appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
         return sb.toString();
 	}

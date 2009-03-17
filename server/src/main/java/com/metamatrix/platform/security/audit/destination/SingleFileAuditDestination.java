@@ -119,10 +119,7 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
         int index = fileName.indexOf(VM_NAME_TOKEN);
         if ( index != -1 ) {
             StringBuffer tempFileName = new StringBuffer(fileName);
-            String processName = VMNaming.getProcessName();
-            if ( processName == null || processName.trim().length() == 0 ) {
-                processName = VMNaming.getConfigName();
-            }
+            String processName = VMNaming.getConfigName()+"_"+VMNaming.getProcessName(); //$NON-NLS-1$
             tempFileName.replace(index,index+VM_NAME_TOKEN.length(),processName);
             fileName = tempFileName.toString();
         }
@@ -131,8 +128,7 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
         try {
             fileWriter = new FileWriter(fileName, append);
         } catch(IOException e) {
-            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0023,
-                    PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0023, fileName, new Boolean(append)));
+            throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0023, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0023, fileName, new Boolean(append)));
     	}
 	}
 

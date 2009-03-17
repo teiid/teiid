@@ -45,7 +45,7 @@ public class DQPGuiceModule extends AbstractModule {
 			Class clazz = defaults.get(serviceName);
 			if (clazz != null && className != null) {
 				try {
-					clazz = Class.forName(className);
+					clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
 				} catch (ClassNotFoundException e) {
 					throw new MetaMatrixRuntimeException(e);
 				}

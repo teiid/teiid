@@ -161,7 +161,7 @@ public class SessionServiceImpl extends AbstractService implements
         while (iter.hasNext()) {
             String handler = (String)iter.next();
             try {
-                SessionTerminationHandler sth = (SessionTerminationHandler)Class.forName(handler).newInstance();
+                SessionTerminationHandler sth = (SessionTerminationHandler)Thread.currentThread().getContextClassLoader().loadClass(handler).newInstance();
                 terminationHandlerMap.put(sth.getProductName(), sth);
             } catch (ClassNotFoundException e) {
                 LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0002, new Object[] {handler}));

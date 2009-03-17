@@ -207,7 +207,7 @@ public class CustomizableTrackingService implements TrackingService {
 			props.setProperty(name, value);
 		}
         
-        ClassLoader loader = this.getClass().getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         try {
             CommandLoggerSPI logger = (CommandLoggerSPI)loader.loadClass(commandLoggerClassname).newInstance();
             logger.initialize(props);

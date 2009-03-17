@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Properties;
 
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
-import com.metamatrix.common.log.I18nLogManager;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.PlatformPlugin;
@@ -187,8 +187,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 	        	ex = e;
 	        }
        }
-       I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT, ErrorMessageKeys.SEC_AUDIT_0019, ex,
-               PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0019));
+       LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0019, ex));
     }
 
 
@@ -199,7 +198,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 	 */
 	public void recordMsg(AuditMessage message) throws SQLException {
 		// Add values to Prepared statement
-		Connection connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+		Connection connection = JDBCConnectionPoolHelper.getInstance().getConnection(); 
 		PreparedStatement stmt = null;
 		try {
 			stmt = connection.prepareStatement(insertStr.toString());
@@ -240,17 +239,13 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 					stmt.close();
 				}
 			} catch (SQLException e) {
-				I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT,
-						ErrorMessageKeys.SEC_AUDIT_0020, e, PlatformPlugin.Util
-								.getString(ErrorMessageKeys.SEC_AUDIT_0020));
+				LogManager.logError(LogSecurityConstants.CTX_AUDIT,PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0020, e));
 			}
 
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				I18nLogManager.logError(LogSecurityConstants.CTX_AUDIT,
-						ErrorMessageKeys.SEC_AUDIT_0021, e, PlatformPlugin.Util
-								.getString(ErrorMessageKeys.SEC_AUDIT_0021));
+				LogManager.logError(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0021,e));
 			}
 
 		}

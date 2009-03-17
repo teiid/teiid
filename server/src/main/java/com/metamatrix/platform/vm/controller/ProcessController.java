@@ -25,6 +25,7 @@ package com.metamatrix.platform.vm.controller;
 import java.io.File;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -40,6 +41,7 @@ import com.metamatrix.admin.server.ServerAdminImpl;
 import com.metamatrix.admin.util.AdminMethodRoleResolver;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
+import com.metamatrix.common.classloader.URLFilteringClassLoader;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.common.comm.platform.socket.server.LogonImpl;
@@ -59,6 +61,7 @@ import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogConfiguration;
@@ -115,6 +118,7 @@ import com.metamatrix.server.admin.api.TransactionAdminAPI;
 import com.metamatrix.server.admin.apiimpl.QueryAdminAPIImpl;
 import com.metamatrix.server.admin.apiimpl.RuntimeMetadataAdminAPIImpl;
 import com.metamatrix.server.admin.apiimpl.TransactionAdminAPIImpl;
+import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * This class is used to start up a server process and start all services that are 
@@ -700,7 +704,20 @@ public abstract class ProcessController implements ProcessManagement {
     private void startService(ClientServiceRegistry serverListenerRegistry, ServiceID serviceID, DeployedComponent deployedComponent,final String serviceClass,ProductServiceConfigID pscID,Properties serviceProps) {
         String serviceInstanceName = null;
 
+        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+
+	        String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
+	        if (extensionClasspath != null && extensionClasspath.length() > 0) {
+	        	try {
+	        		ClassLoader commonExtensionClassLoader = new URLFilteringClassLoader(URLFactory.parseURLs(extensionClasspath, ";"), currentClassLoader); //$NON-NLS-1$
+					Thread.currentThread().setContextClassLoader(commonExtensionClassLoader);
+					logMessage(PlatformPlugin.Util.getString("commonextensionspath_in_use", extensionClasspath, serviceID)); //$NON-NLS-1$
+				} catch (MalformedURLException e) {
+					logMessage(PlatformPlugin.Util.getString("commonextensionspath_not_in_use",extensionClasspath, serviceID)); //$NON-NLS-1$
+				}
+	        }
+        	
         	if (serviceID == null) {
         		serviceID = this.createServiceID();        		
         	}
@@ -718,7 +735,7 @@ public abstract class ProcessController implements ProcessManagement {
             }
 
             // Create an instance of serviceClass
-            final ServiceInterface service  = (ServiceInterface) Class.forName(serviceClass).newInstance();
+            final ServiceInterface service  = (ServiceInterface) Thread.currentThread().getContextClassLoader().loadClass(serviceClass).newInstance();
 
             // Create ServiceRegistryBinding and register
             final ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, service, routingID,serviceInstanceName, componentType, serviceInstanceName,host.getFullName(), deployedComponent, pscID, service.getCurrentState(), service.getStateChangeTime(),essential, this.messageBus);
@@ -739,6 +756,8 @@ public abstract class ProcessController implements ProcessManagement {
 
         } catch (Exception e) {
             throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
+        } finally {
+        	Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
     }    
     

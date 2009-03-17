@@ -116,6 +116,8 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     * The transaction mgr for ManagedConnections.
     */
     private TransactionMgr transMgr;
+    
+    private AuditManager auditManager;
 
     // -----------------------------------------------------------------------------------
     //                 S E R V I C E - R E L A T E D    M E T H O D S
@@ -127,6 +129,8 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     protected void initService(Properties env) {
 
         try {
+        	this.auditManager = new AuditManager();
+        	
             membershipServiceProxy = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
 
             if (env == null) {
@@ -185,13 +189,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     protected void closeService() throws Exception {
         if ( ! serviceClosed ) {
             String instanceName = this.getInstanceName();
-            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION,
-                    PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0001, instanceName));
+            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0001, instanceName));
 
             serviceClosed = true;
+            auditManager.stop();
 
-            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION, 
-                    PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0002, instanceName));
+            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0002, instanceName));
         }
     }
 
@@ -239,13 +242,13 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             throws InvalidSessionException, AuthorizationMgmtException {
         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"checkAccess(", sessionToken, ", ", contextName, ", ", request, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         // Audit - request
-        AuditManager.record(contextName, "checkAccess-request", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
+        auditManager.record(contextName, "checkAccess-request", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
 
         boolean hasAccess = checkAccess(sessionToken, contextName, request, false);
 
         if (!hasAccess) {
             // Audit - denied
-            AuditManager.record(contextName, "checkAccess-denied", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
+        	auditManager.record(contextName, "checkAccess-denied", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
         }
         return hasAccess;
     }
@@ -293,8 +296,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     public Collection getInaccessibleResources(SessionToken sessionToken, String contextName, Collection requests)
             throws InvalidSessionException, AuthorizationMgmtException {
         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        
         // Audit - request
-        AuditManager.record(contextName, "getInaccessibleResources-request", sessionToken.getUsername(), requests); //$NON-NLS-1$
+        auditManager.record(contextName, "getInaccessibleResources-request", sessionToken.getUsername(), requests); //$NON-NLS-1$
         
         if (isEntitled(sessionToken.getUsername())) {
             return Collections.EMPTY_LIST;
@@ -324,10 +328,10 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 
         if (results.isEmpty()) {
             // Audit - granted all requests
-            AuditManager.record(contextName, "getInaccessibleResources-granted all", sessionToken.getUsername(), requests); //$NON-NLS-1$
+        	auditManager.record(contextName, "getInaccessibleResources-granted all", sessionToken.getUsername(), requests); //$NON-NLS-1$
         } else {
             // Audit - denied
-            AuditManager.record(contextName, "getInaccessibleResources-denied", sessionToken.getUsername(), results); //$NON-NLS-1$
+        	auditManager.record(contextName, "getInaccessibleResources-denied", sessionToken.getUsername(), results); //$NON-NLS-1$
         }
         return results;
     }
@@ -1104,15 +1108,16 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0052, exceptionMsg);
             } finally {
                 if (success) {
-                    try {
-                        transaction.commit();           // commit the transaction
-                        transaction.close();
-                    } catch (Exception e) {
-                        String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, principal.toString());
-                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg));
-                        throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0053, msg);
-                    }
-
+                	if (transaction != null) {
+	                    try {
+	                        transaction.commit();           // commit the transaction
+	                        transaction.close();
+	                    } catch (Exception e) {
+	                        String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, principal.toString());
+	                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg));
+	                        throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0053, msg);
+	                    }
+                	}
                     // Clear cache so that Auth serv reflects latest state next time around
                     Collection removedPrincPolicyIDs = this.authorizationCache.findPolicyIDs(principal, caller);
                     this.authorizationCache.removePolicysFromCache(removedPrincPolicyIDs);
@@ -1524,7 +1529,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             return result;
         }
         // Audit - access modify
-        AuditManager.record(SecurityAuditContexts.CTX_AUTHORIZATION, "executeTransaction-modify", administrator.getUsername(), this.printActions(actions)); //$NON-NLS-1$
+        auditManager.record(SecurityAuditContexts.CTX_AUTHORIZATION, "executeTransaction-modify", administrator.getUsername(), this.printActions(actions)); //$NON-NLS-1$
 
         List actionsWithSameTarget = new ArrayList(7);   // guessing at an initial size, probably high
         Object currentTarget = null;
