@@ -217,14 +217,14 @@ public class TestMMURL extends TestCase {
     }
 
     public final void testHostInfoEquals() {
-        HostInfo expectedResults = new HostInfo("localhost","31000");  //$NON-NLS-1$//$NON-NLS-2$
+        HostInfo expectedResults = new HostInfo("localhost",31000);  //$NON-NLS-1$
         MMURL url = new MMURL("mm://localhost:31000"); //$NON-NLS-1$
         HostInfo actualResults = url.getHostInfo().get(0);
         assertEquals(expectedResults,actualResults);
     }
         
     public final void testWithEmbeddedSpaces() {
-        HostInfo expectedResults = new HostInfo("localhost","12345");  //$NON-NLS-1$ //$NON-NLS-2$
+        HostInfo expectedResults = new HostInfo("localhost",12345);  //$NON-NLS-1$
         
         MMURL url = new MMURL("mm://localhost : 12345"); //$NON-NLS-1$
         List hosts = url.getHostInfo();
@@ -235,7 +235,7 @@ public class TestMMURL extends TestCase {
     }
     
     public final void testHostPortConstructor() {
-        HostInfo expectedResults = new HostInfo("myhost","12345");  //$NON-NLS-1$ //$NON-NLS-2$
+        HostInfo expectedResults = new HostInfo("myhost", 12345);  //$NON-NLS-1$
         
         MMURL url = new MMURL("myhost", 12345, false); //$NON-NLS-1$
         List hosts = url.getHostInfo();
@@ -247,7 +247,7 @@ public class TestMMURL extends TestCase {
     }
     
     public final void testHostPortConstructorSSL() {
-        HostInfo expectedResults = new HostInfo("myhost","12345");  //$NON-NLS-1$ //$NON-NLS-2$
+        HostInfo expectedResults = new HostInfo("myhost",12345);  //$NON-NLS-1$ 
         
         MMURL url = new MMURL("myhost", 12345, true); //$NON-NLS-1$
         List hosts = url.getHostInfo();
@@ -258,12 +258,4 @@ public class TestMMURL extends TestCase {
         assertEquals("mms://myhost:12345", url.getAppServerURL()); //$NON-NLS-1$
     }
     
-    public final void testHostPortConstructor_NoHost() {
-        try {
-            new MMURL("", 12345, false); //$NON-NLS-1$
-            fail("Should have failed."); //$NON-NLS-1$
-        } catch (Exception e) {
-            // Success
-        }
-    }  
 }

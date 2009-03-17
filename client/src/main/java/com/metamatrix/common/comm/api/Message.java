@@ -48,13 +48,7 @@ public class Message implements Externalizable {
 
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		try {
-			this.contents = (Serializable) in.readObject();
-		} catch (IOException t) {
-			throw t;
-		} catch (Throwable t) {
-			this.contents = t;
-		}
+		this.contents = (Serializable) in.readObject();
 		this.messageKey = (Serializable) in.readObject();
 	}
 

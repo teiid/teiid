@@ -26,20 +26,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
-
-import javax.net.ssl.SSLEngine;
 
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.Handshake;
-import com.metamatrix.common.comm.platform.socket.SocketUtil;
-import com.metamatrix.common.comm.platform.socket.SocketUtil.SSLEngineFactory;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
@@ -65,8 +62,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	public static final int DEFAULT_MAX_THREADS = 15;
 	public static final long DEFAULT_TTL = 120000L;
 	public static final long DEFAULT_SYNCH_TTL = 120000L;
-	public static final int DEFAULT_SOCKET_INPUT_BUFFER_SIZE = 102400;
-	public static final int DEFAULT_SOCKET_OUTPUT_BUFFER_SIZE = 102400;
+	public static final int DEFAULT_SOCKET_INPUT_BUFFER_SIZE = 0;
+	public static final int DEFAULT_SOCKET_OUTPUT_BUFFER_SIZE = 0;
 	
 	private static final String URL = "URL"; //$NON-NLS-1$
 	
@@ -75,7 +72,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
     private ObjectChannelFactory channelFactory;
 	private Timer pingTimer;
 	private Properties props;
-	private SSLEngineFactory sslEngineFactory;
 	
 	public static synchronized SocketServerConnectionFactory getInstance() {
 		if (INSTANCE == null) {
@@ -95,7 +91,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					}
 				}
 			}
-			INSTANCE.init(props, true);
+			INSTANCE.init(props);
 		}
 		return INSTANCE;
 	}
@@ -104,33 +100,15 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 	}
 	
-	public void init(Properties props, boolean usePing) {
+	public void init(final Properties props) {
 		this.props = props;
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
-		this.channelFactory = new NioObjectChannelFactory(
-				getConserveBandwidth(), getInputBufferSize(),
-				getOutputBufferSize(), Thread.currentThread()
-						.getContextClassLoader(), getMaxThreads());
+		this.channelFactory = new OioOjbectChannelFactory(getConserveBandwidth(), getInputBufferSize(), getOutputBufferSize(), props);
 	}
 			
-	public SocketServerInstance createServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
-		SSLEngine sslEngine = null;
-		if (ssl) {
-			synchronized (this) {
-				if (this.sslEngineFactory == null) {
-					try {
-						this.sslEngineFactory = SocketUtil.getSSLEngineFactory(this.props);
-					} catch (NoSuchAlgorithmException e) {
-						throw new CommunicationException(e);
-					} catch (IOException e) {
-						throw new CommunicationException(e);
-					}
-				}
-				sslEngine = this.sslEngineFactory.getSSLEngine();
-			}
-		}
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, sslEngine, getSynchronousTTL());
-		ssii.connect(this.channelFactory, Handshake.HANDSHAKE_TIMEOUT);
+	public SocketServerInstance getServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, ssl, getSynchronousTTL());
+		ssii.connect(this.channelFactory);
 		return ssii;
 	}
 	

@@ -117,14 +117,14 @@ public class ServerWorkItem implements Runnable {
 					throw e.getCause();
 				}
 				if (ResultsFuture.class.isAssignableFrom(m.getReturnType()) && methodResult != null) {
-					ResultsFuture future = (ResultsFuture) methodResult;
-					future.addCompletionListener(new ResultsFuture.CompletionListener() {
+					ResultsFuture<Serializable> future = (ResultsFuture<Serializable>) methodResult;
+					future.addCompletionListener(new ResultsFuture.CompletionListener<Serializable>() {
 
 								public void onCompletion(
-										ResultsFuture completedFuture) {
+										ResultsFuture<Serializable> completedFuture) {
 									Message asynchResult = new Message();
 									try {
-										asynchResult.setContents((Serializable) completedFuture.get());
+										asynchResult.setContents(completedFuture.get());
 									} catch (InterruptedException e) {
 										asynchResult.setContents(processException(e, serviceStruct.targetClass));
 									} catch (ExecutionException e) {

@@ -20,24 +20,19 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.api;
+package com.metamatrix.common.comm.platform.socket;
 
-import java.io.Serializable;
+import com.metamatrix.common.comm.exception.CommunicationException;
 
-/**
- * <p>The MessageListener is used for asynchronous message callbacks and 
- * will receive a message with a messageKey that was sent with the 
- * message originally.  Typically the messageKey is a unique key generated
- * by the client so that it can distinguish between return messages.  The 
- * MessageListener is typically implemented by the application.</p>
- */
-public interface MessageListener {
+public interface ChannelListener {
+	
+	public interface ChannelListenerFactory {
+		ChannelListener createChannelListener(ObjectChannel channel);
+	}
 
-    /**
-     * Deliver a message to the listener.
-     * @param message The message being delivered
-     * @param messageKey The key identifying the message, may be null depending on the application
-     */
-    void deliverMessage(Message message, Serializable messageKey);
-    
+	void receivedMessage(Object msg) throws CommunicationException;
+	
+	void exceptionOccurred(Throwable t);
+	
+	void onConnection() throws CommunicationException;
 }

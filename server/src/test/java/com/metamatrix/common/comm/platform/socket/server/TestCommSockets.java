@@ -22,6 +22,9 @@
  */
 package com.metamatrix.common.comm.platform.socket.server;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import java.net.InetSocketAddress;
@@ -29,7 +32,8 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLEngine;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.LogonException;
@@ -49,18 +53,17 @@ import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
-public class TestCommSockets extends TestCase {
+public class TestCommSockets {
 
 	SocketListener listener;
 
-	@Override
-	protected void tearDown() throws Exception {
+	@Before public void tearDown() throws Exception {
 		if (listener != null) {
 			listener.stop();
 		}
 	}
 
-	public void testFailedConnect() throws Exception {
+	@Test public void testFailedConnect() throws Exception {
 		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry();
 		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
@@ -80,7 +83,7 @@ public class TestCommSockets extends TestCase {
 		}
 	}
 
-	public void testConnect() throws Exception {
+	@Test public void testConnect() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false, null);
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
@@ -98,7 +101,7 @@ public class TestCommSockets extends TestCase {
 		assertEquals(0, stats.sockets);
 	}
 
-	public void testConnectWithoutClientEncryption() throws Exception {
+	@Test public void testConnectWithoutClientEncryption() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false, null, false, new Properties());
 		assertTrue(((SocketServerInstanceImpl) conn
 				.selectServerInstance()).getCryptor() instanceof NullCryptor);
@@ -138,11 +141,11 @@ public class TestCommSockets extends TestCase {
 				secure).getAppServerURL()); 
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		SocketServerConnectionFactory sscf = new SocketServerConnectionFactory();
-		sscf.init(socketConfig, false);
+		sscf.init(socketConfig);
 		return sscf.createConnection(p);
 	}
 
-	public void testSSLConnectWithNonSSLServer() throws Exception {
+	@Test public void testSSLConnectWithNonSSLServer() throws Exception {
 		try {
 			helpEstablishConnection(true, null);
 			fail("exception expected"); //$NON-NLS-1$
@@ -151,7 +154,7 @@ public class TestCommSockets extends TestCase {
 		}
 	}
 
-	public void testAnonSSLConnect() throws Exception {
+	@Test public void testAnonSSLConnect() throws Exception {
 		SSLEngine engine = SocketUtil.getAnonSSLContext().createSSLEngine();
 		engine.setUseClientMode(false);
 		engine.setEnabledCipherSuites(new String[] { SocketUtil.ANON_CIPHER_SUITE });
@@ -160,5 +163,5 @@ public class TestCommSockets extends TestCase {
 		SocketServerConnection conn = helpEstablishConnection(true, engine, true, p);
 		conn.shutdown();
 	}
-
+	
 }

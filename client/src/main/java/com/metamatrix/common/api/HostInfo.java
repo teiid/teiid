@@ -26,93 +26,52 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import com.metamatrix.common.util.NetUtils;
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
- * HostInfo is used internally by Metamatirx to store the host information used in creating the Service Object reference
- * 
+ * Defines the hostname/port or {@link InetAddress} to connect to a host.
  * @since 4.2
  */
 public class HostInfo {
     // Host Name and Port Number
     private String hostName;
+    private int portNumber = 0;
     private InetAddress inetAddress;
-    private int portNumber  = 0;
 
-    public HostInfo(String host, String port) {
-        this(host, parsePort(port));
+    public InetAddress getInetAddress() throws UnknownHostException {
+    	if (inetAddress != null) {
+    		return inetAddress;
+    	}
+    	return NetUtils.resolveHostByName(hostName);
     }
-
-	private static int parsePort(String port) {
-		try {
-            return Integer.parseInt(port);
-        } catch (NumberFormatException nfe) {
-            throw new IllegalArgumentException("port must be numeric:" + port); //$NON-NLS-1$
-        }
-	}
     
     public HostInfo (String host, int port) {
-    	this(host, port, null);
-    }
-    
-    /**
-     * @since 4.2
-     */
-    public HostInfo(String host, int port, InetAddress inetAddress) {
-    	if (host == null || host.equals("")) { //$NON-NLS-1$
-            throw new IllegalArgumentException("hostname can't be null"); //$NON-NLS-1$
-        }
-        if( host.equalsIgnoreCase("localhost")) { //$NON-NLS-1$
-            try {
-            	InetAddress addr = NetUtils.getInstance().getInetAddress();
-				this.hostName = addr.getCanonicalHostName();
-			} catch (UnknownHostException e) {
-				this.hostName = host.toLowerCase();
+    	ArgCheck.isNotNull(host);
+		this.hostName = host.toLowerCase();
+    	this.portNumber = port;
+    	
+    	//only cache inetaddresses if they represent the ip. 
+    	try {
+			InetAddress addr = NetUtils.resolveHostByName(hostName);
+			if (addr.getHostAddress().equalsIgnoreCase(hostName)) {
+				this.inetAddress = addr;
 			}
-        } else {
-        	this.hostName = host.toLowerCase();
-        }
-        if (inetAddress == null) {
-            try {
-				this.inetAddress = InetAddress.getByName(hostName);
-			} catch (UnknownHostException e) {
-				//ignore
-			}
-        } else {
-        	this.inetAddress = inetAddress;
-        }
-        portNumber = port;
-        
-        if (portNumber < 0 || portNumber > 0xFFFF) {
-            throw new IllegalArgumentException("port out of range:" + portNumber); //$NON-NLS-1$
-        }
-        if (hostName == null) {
-            throw new IllegalArgumentException("hostname can't be null");  //$NON-NLS-1$
-        }
+		} catch (UnknownHostException e) {
+		}
     }
     
     public String getHostName() {
         return hostName;
     }
 
-    public void setPortNumber(int thePortNumber) {
-        portNumber = thePortNumber;
-    }
-
     public int getPortNumber() {
         return portNumber;
     }
-
-    public InetAddress getInetAddress() {
-        return inetAddress;
-    }
-
-    public String toString() {
+    
+	public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(hostName).append(":").append(portNumber); //$NON-NLS-1$
-        if (inetAddress != null) {
-            sb.append(inetAddress);
-        }
         return sb.toString();
     }
     
@@ -128,10 +87,7 @@ public class HostInfo {
     		return false;
     	}
         HostInfo hostInfo = (HostInfo) obj;
-        if (inetAddress == null || hostInfo.getInetAddress() == null) {
-            return hostName.equals(hostInfo.getHostName()) && portNumber == hostInfo.getPortNumber();
-        }
-        return inetAddress.equals(hostInfo.getInetAddress()) && portNumber == hostInfo.getPortNumber();
+        return hostName.equals(hostInfo.getHostName()) && portNumber == hostInfo.getPortNumber();
     }
 
     /** 
@@ -139,16 +95,8 @@ public class HostInfo {
      * @since 4.2
      */
     public int hashCode() {
-        int hc = 0;
-
-        if (inetAddress != null) {
-        	hc = HashCodeUtil.hashCode(hc, inetAddress.getHostAddress());
-        } else {
-        	hc = HashCodeUtil.hashCode(hc, hostName);
-        }
-        hc = HashCodeUtil.hashCode(hc, portNumber);
-        
-        return hc;
+        int hc = HashCodeUtil.hashCode(0, hostName);
+        return HashCodeUtil.hashCode(hc, portNumber);
     }
 
 }

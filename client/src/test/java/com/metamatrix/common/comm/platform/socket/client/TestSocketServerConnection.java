@@ -78,7 +78,7 @@ public class TestSocketServerConnection extends TestCase {
 				Properties connectionProperties)
 				throws LogonException,
 				MetaMatrixComponentException {
-			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), 1, "fake"); //$NON-NLS-1$
+			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
@@ -122,23 +122,23 @@ public class TestSocketServerConnection extends TestCase {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			@Override
-			public SocketServerInstance createServerInstance(HostInfo info,
+			public SocketServerInstance getServerInstance(HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				throw new SingleInstanceCommunicationException();
 			}
 		};
-		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("mm://host1:1,host2:2"));
+		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL("mm://host1:1,host2:2")); //$NON-NLS-1$
 		try {
 			new SocketServerConnection(instanceFactory, false, discovery, p, null);
-			fail("exception expected");
+			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage());
+			assertEquals("No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	
 	public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
-		assertEquals("00000000-0000-0001-0000-000000000001", connection.getLogonResult().getSessionID().toString());
+		assertEquals("00000000-0000-0001-0000-000000000001", connection.getLogonResult().getSessionID().toString()); //$NON-NLS-1$
 	}
 	
 	/**
@@ -155,14 +155,14 @@ public class TestSocketServerConnection extends TestCase {
 		ILogon logon = connection.getService(ILogon.class);
 		try {
 			logon.ping();
-			fail("expected exception");
+			fail("expected exception"); //$NON-NLS-1$
 		} catch (MetaMatrixComponentException e) {
 			
 		}
 	}
 
 	private SocketServerConnection createConnection(final Throwable throwException) throws CommunicationException, ConnectionException {
-		return createConnection(throwException, new HostInfo("foo", 1));
+		return createConnection(throwException, new HostInfo("foo", 1)); //$NON-NLS-1$
 	}
 	
 	private SocketServerConnection createConnection(final Throwable t, HostInfo hostInfo)
@@ -171,7 +171,7 @@ public class TestSocketServerConnection extends TestCase {
 		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			@Override
-			public SocketServerInstance createServerInstance(final HostInfo info,
+			public SocketServerInstance getServerInstance(final HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
 				Mockito.stub(instance.getCryptor()).toReturn(new NullCryptor());
@@ -188,8 +188,8 @@ public class TestSocketServerConnection extends TestCase {
 	}
 	
 	public void testIsSameInstance() throws Exception {
-		SocketServerConnection conn = createConnection(null, new HostInfo("foo", 1));
-		SocketServerConnection conn1 = createConnection(null, new HostInfo("bar", 1));
+		SocketServerConnection conn = createConnection(null, new HostInfo("foo", 1)); //$NON-NLS-1$
+		SocketServerConnection conn1 = createConnection(null, new HostInfo("bar", 1)); //$NON-NLS-1$
 		
 		ClientSideDQP dqp = conn.getService(ClientSideDQP.class);
 		ClientSideDQP dqp1 = conn1.getService(ClientSideDQP.class);

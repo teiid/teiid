@@ -1,100 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <parent>
-    <artifactId>teiid</artifactId>
-    <groupId>org.jboss.teiid</groupId>
-    <version>6.0.0-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>teiid-server</artifactId>
-  <name>Server</name>
-  <description>Standalone server/cluster infrastructure.</description>
-  
-  <build>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<parent>
+		<artifactId>teiid</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>6.0.0-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>teiid-server</artifactId>
+	<name>Server</name>
+	<description>Standalone server/cluster infrastructure.</description>
+	<build>
     <!-- Zips all the .sql files into single file and adds as artifact to the maven repository -->
-  	<plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-2</version>      
-        <configuration>
-              <descriptors>
-                  <descriptor>src/assembly/repository-sql.xml</descriptor>
-              </descriptors>
-              <outputDirectory>target/distribution</outputDirectory>
-              <workDirectory>target/assembly/work</workDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase> 
-            <goals>
-              <goal>attached</goal> 
-            </goals>
-          </execution>
-        </executions>        
-      </plugin>   
-    </plugins>
-  </build>
-  
-  <dependencies>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-engine</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-engine</artifactId>
-      <type>test-jar</type>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-    </dependency>
-    
-    <!-- this dependency can easily be removed -->
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-txn-jbossts</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-common-core</artifactId>
-      <type>test-jar</type>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-common-internal</artifactId>
-      <type>test-jar</type>
-    </dependency>
-            
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-client</artifactId>
-      <type>test-jar</type>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-      <type>test-jar</type>
-    </dependency>
-    
-    <dependency>
-    	<groupId>com.google.code.guice</groupId>
-		<artifactId>guice</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-cache-jbosscache</artifactId>
-    </dependency>
-    
-  </dependencies>
- 
-  
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-2</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/assembly/repository-sql.xml</descriptor>
+					</descriptors>
+					<outputDirectory>target/distribution</outputDirectory>
+					<workDirectory>target/assembly/work</workDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>attached</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+		</dependency>
+		<dependency>
+    		<!-- this dependency can easily be removed -->
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-txn-jbossts</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-internal</artifactId>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-cache-jbosscache</artifactId>
+		</dependency>
+		
+		<!-- External dependencies -->
+		<dependency>
+			<groupId>org.jboss.netty</groupId>
+			<artifactId>netty</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.guice</groupId>
+			<artifactId>guice</artifactId>
+		</dependency>
+	</dependencies>
 </project>

@@ -27,12 +27,8 @@ import java.io.IOException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.exception.CommunicationException;
 
-
-/**
- * Sockets implementation of the communication framework ServerConnectionFactory interface.
- */
 public interface SocketServerInstanceFactory {
 	
-	SocketServerInstance createServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException;
+	SocketServerInstance getServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException;
 
 }

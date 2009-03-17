@@ -30,6 +30,10 @@ import java.util.concurrent.TimeoutException;
 
 import com.metamatrix.common.comm.api.ResultsReceiver;
 
+/**
+ * Implements a call back based future that can also have
+ * completion listeners.
+ */
 public class ResultsFuture<T> implements Future<T> {
 	
 	public interface CompletionListener<T> {
@@ -41,36 +45,37 @@ public class ResultsFuture<T> implements Future<T> {
 	private T result;
 	private Throwable exception;
 	private boolean done;
+	private ResultsReceiver<T> resultsReceiver = new ResultsReceiver<T> () {
+		public void exceptionOccurred(Throwable e) {
+			synchronized (ResultsFuture.this) {
+				if (done) {
+					throw new IllegalStateException("Already sent results"); //$NON-NLS-1$
+				}
+				exception = e;
+				done = true;
+				ResultsFuture.this.notifyAll();
+			}
+			done();
+		}
+		public void receiveResults(T results) {
+			synchronized (ResultsFuture.this) {
+				if (done) {
+					throw new IllegalStateException("Already sent results"); //$NON-NLS-1$
+				}
+				result = results;
+				done = true;
+				ResultsFuture.this.notifyAll();
+			}
+			done();
+		}
+	}; 
 	
 	public ResultsFuture() {
 		
 	}
 	
 	public ResultsReceiver<T> getResultsReceiver() {
-		return new ResultsReceiver<T> () {
-			public void exceptionOccurred(Throwable e) {
-				synchronized (ResultsFuture.this) {
-					if (done) {
-						throw new IllegalStateException("Already sent results"); //$NON-NLS-1$
-					}
-					exception = e;
-					done = true;
-					ResultsFuture.this.notifyAll();
-				}
-				done();
-			}
-			public void receiveResults(T results) {
-				synchronized (ResultsFuture.this) {
-					if (done) {
-						throw new IllegalStateException("Already sent results"); //$NON-NLS-1$
-					}
-					result = results;
-					done = true;
-					ResultsFuture.this.notifyAll();
-				}
-				done();
-			}
-		};
+		return resultsReceiver; 
 	}
 	
 	public boolean cancel(boolean mayInterruptIfRunning) {

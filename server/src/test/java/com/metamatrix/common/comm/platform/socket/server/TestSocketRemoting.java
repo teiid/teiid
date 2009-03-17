@@ -40,7 +40,7 @@ import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.api.MessageListener;
+import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
@@ -73,7 +73,7 @@ public class TestSocketRemoting extends TestCase {
 	private static class FakeServiceImpl implements FakeService {
 
 		public ResultsFuture<Integer> asynchResult() {
-			ResultsFuture<Integer> result = new ResultsFuture();
+			ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 			result.getResultsReceiver().receiveResults(new Integer(5));
 			return result;
 		}
@@ -87,9 +87,9 @@ public class TestSocketRemoting extends TestCase {
 	private static class FakeClientServerInstance extends SocketServerInstanceImpl implements ClientInstance {
 		
 		ClientServiceRegistry clientServiceRegistry;
-		private MessageListener listener;
+		private ResultsReceiver<Object> listener;
 
-		public FakeClientServerInstance(ClientServiceRegistry clientServiceRegistry) throws CommunicationException, IOException {
+		public FakeClientServerInstance(ClientServiceRegistry clientServiceRegistry) {
 			super();
 			this.clientServiceRegistry = clientServiceRegistry;
 		}
@@ -101,9 +101,11 @@ public class TestSocketRemoting extends TestCase {
 		public boolean isOpen() {
 			return true;
 		}
-
-		public void send(Message message, MessageListener listener,
-				Serializable messageKey) throws CommunicationException {
+		
+		@Override
+		public void send(Message message, ResultsReceiver<Object> listener,
+				Serializable messageKey) throws CommunicationException,
+				InterruptedException {
 			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, clientServiceRegistry, SimpleMock.createSimpleMock(SessionServiceInterface.class));
 			this.listener = listener;
 			workItem.run();
@@ -122,7 +124,7 @@ public class TestSocketRemoting extends TestCase {
 		}
 
 		public void send(Message message, Serializable messageKey) {
-			this.listener.deliverMessage(message, messageKey);
+			this.listener.receiveResults(message.getContents());
 		}
 		
 	}
@@ -208,7 +210,7 @@ public class TestSocketRemoting extends TestCase {
 		SocketServerConnection connection = new SocketServerConnection(new SocketServerInstanceFactory() {
 		
 			@Override
-			public SocketServerInstance createServerInstance(HostInfo info,
+			public SocketServerInstance getServerInstance(HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				return serverInstance;
 			}

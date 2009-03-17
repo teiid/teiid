@@ -70,8 +70,6 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<forkMode>once</forkMode>
-					<argLine>-XX:MaxPermSize=128m</argLine>
 					<includes>
 						<include>**/*TestCase.java</include>
 						<include>**/*Test.java</include>

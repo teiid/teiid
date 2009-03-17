@@ -452,9 +452,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public ResultsFuture<?> closeRequest(long requestId) throws MetaMatrixProcessingException {
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         closeRequest(workContext.getRequestID(requestId));
-        ResultsFuture<Void> resultsFuture = new ResultsFuture<Void>();
-        resultsFuture.getResultsReceiver().receiveResults(null);
-        return resultsFuture;
+        return null;
 	}
     
     /**

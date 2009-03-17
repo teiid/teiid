@@ -90,11 +90,7 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 				if (!processObject.isEnabled()) {
 					continue;
 				}
-				if (useUrlHost) {
-					this.knownHosts.add(new HostInfo(lastHostInfo.getHostName(), processObject.getPort()));
-				} else {
-					this.knownHosts.add(new HostInfo(processObject.getInetAddress().getHostName(), processObject.getPort(), processObject.getInetAddress()));
-				}
+				this.knownHosts.add(new HostInfo(useUrlHost?lastHostInfo.getHostName():processObject.getInetAddress().getHostName(), processObject.getPort()));
 			}
 			discoveredHosts = true;
 		} catch (AdminException e) {

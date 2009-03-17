@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -37,7 +38,7 @@ import java.util.Properties;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -68,17 +69,17 @@ public class SocketUtil {
     public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
     public static final String ANON_PROTOCOL = "TLS"; //$NON-NLS-1$
     
-    public static class SSLEngineFactory {
+    public static class SSLSocketFactory {
     	private boolean isAnon;
-    	private SSLContext context;
+    	private javax.net.ssl.SSLSocketFactory factory;
     	
-    	public SSLEngineFactory(SSLContext context, boolean isAnon) {
-			this.context = context;
+    	public SSLSocketFactory(SSLContext context, boolean isAnon) {
+			this.factory = context.getSocketFactory();
 			this.isAnon = isAnon;
 		}
 
-		public SSLEngine getSSLEngine() {
-    		SSLEngine result = context.createSSLEngine();
+		public synchronized Socket getSocket() throws IOException {
+    		SSLSocket result = (SSLSocket)factory.createSocket();
     		result.setUseClientMode(true);
     		if (isAnon) {
     			addCipherSuite(result, ANON_CIPHER_SUITE);
@@ -87,7 +88,7 @@ public class SocketUtil {
     	}
     }
     
-    public static SSLEngineFactory getSSLEngineFactory(Properties props) throws IOException, NoSuchAlgorithmException{
+    public static SSLSocketFactory getSSLSocketFactory(Properties props) throws IOException, GeneralSecurityException{
     	// -Dcom.metamatrix.ssl.keyStore
         String keystore = props.getProperty(KEYSTORE_FILENAME); 
         // -Dcom.metamatrix.ssl.keyStorePassword
@@ -123,11 +124,12 @@ public class SocketUtil {
         } else {
         	result = SSLContext.getDefault();
         }
-        return new SSLEngineFactory(result, anon);
+        return new SSLSocketFactory(result, anon);
     }
     
     /**
      * create socket factory for the client socket.  
+     * @throws GeneralSecurityException 
      */
     static SSLContext getClientSSLContext(String keystore,
                                             String password,
@@ -135,11 +137,11 @@ public class SocketUtil {
                                             String truststorePassword,
                                             String algorithm,
                                             String keystoreType,
-                                            String protocol) throws IOException {
+                                            String protocol) throws IOException, GeneralSecurityException {
         return getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol);
     }
     
-    public static void addCipherSuite(SSLEngine engine, String cipherSuite) {
+    public static void addCipherSuite(SSLSocket engine, String cipherSuite) {
         Assertion.assertTrue(Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite));
 
         String[] suites = engine.getEnabledCipherSuites();
@@ -152,7 +154,7 @@ public class SocketUtil {
         engine.setEnabledCipherSuites(newSuites);
     }
 
-    public static SSLContext getAnonSSLContext() throws IOException {
+    public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
         return getSSLContext(null, null, null, null, null, null, ANON_PROTOCOL);
     }
     
@@ -162,43 +164,37 @@ public class SocketUtil {
                                             String truststorePassword,
                                             String algorithm,
                                             String keystoreType,
-                                            String protocol) throws IOException {
+                                            String protocol) throws IOException, GeneralSecurityException {
         
-        try {
-        	if (algorithm == null) {
-        		algorithm = KeyManagerFactory.getDefaultAlgorithm();
-        	}
-            // Configure the Keystore Manager
-            KeyManager[] keyManagers = null;
-            if (keystore != null) {
-                KeyStore ks = loadKeyStore(keystore, password, keystoreType);
-                if (ks != null) {
-                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-                    kmf.init(ks, password.toCharArray());
-                    keyManagers = kmf.getKeyManagers();
-                }
+    	if (algorithm == null) {
+    		algorithm = KeyManagerFactory.getDefaultAlgorithm();
+    	}
+        // Configure the Keystore Manager
+        KeyManager[] keyManagers = null;
+        if (keystore != null) {
+            KeyStore ks = loadKeyStore(keystore, password, keystoreType);
+            if (ks != null) {
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+                kmf.init(ks, password.toCharArray());
+                keyManagers = kmf.getKeyManagers();
             }
-            
-            // Configure the Trust Store Manager
-            TrustManager[] trustManagers = null;
-            if (truststore != null) {
-                KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
-                if (ks != null) {
-                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-                    tmf.init(ks);
-                    trustManagers = tmf.getTrustManagers();
-                }
-            } 
-
-            // Configure the SSL
-            SSLContext sslc = SSLContext.getInstance(protocol);
-            sslc.init(keyManagers, trustManagers, null);
-            return sslc;
-        } catch (GeneralSecurityException err) {
-            IOException exception = new IOException(err.getMessage());
-            exception.initCause(err);
-            throw exception;
+        }
+        
+        // Configure the Trust Store Manager
+        TrustManager[] trustManagers = null;
+        if (truststore != null) {
+            KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
+            if (ks != null) {
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+                tmf.init(ks);
+                trustManagers = tmf.getTrustManagers();
+            }
         } 
+
+        // Configure the SSL
+        SSLContext sslc = SSLContext.getInstance(protocol);
+        sslc.init(keyManagers, trustManagers, null);
+        return sslc;
     }
     
     /**

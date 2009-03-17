@@ -22,26 +22,15 @@
 
 package com.metamatrix.common.comm.platform.socket;
 
+import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.concurrent.Future;
-
-import com.metamatrix.common.comm.exception.CommunicationException;
-
-
 
 public interface ObjectChannel {
 	
-	public interface ChannelListenerFactory {
-		ChannelListener createChannelListener(ObjectChannel channel);
-	}
+	Object read() throws IOException, ClassNotFoundException;
 	
-	public interface ChannelListener {
-		
-		void receivedMessage(Object msg) throws CommunicationException;
-		
-		void exceptionOccurred(Throwable t);
-		
-		void onConnection() throws CommunicationException;
-	}
+	SocketAddress getRemoteAddress();
 		
 	Future<?> write(Object msg);
 	

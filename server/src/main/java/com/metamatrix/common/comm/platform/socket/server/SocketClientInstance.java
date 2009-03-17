@@ -23,15 +23,17 @@
 package com.metamatrix.common.comm.platform.socket.server;
 
 import java.io.Serializable;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
+import com.metamatrix.common.comm.platform.socket.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -67,6 +69,12 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         this.server = server;
         this.usingEncryption = isClientEncryptionEnabled;
         this.sessionService = sessionService;
+        SocketAddress address = this.objectSocket.getRemoteAddress();
+        if (address instanceof InetSocketAddress) {
+        	InetSocketAddress addr = (InetSocketAddress)address;
+        	this.workContext.setClientAddress(addr.getAddress().getHostAddress());
+        	this.workContext.setClientHostname(addr.getHostName());
+        }
     }
     
     public void send(Message message, Serializable messageKey) {

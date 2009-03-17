@@ -22,17 +22,13 @@
 
 package com.metamatrix.dqp.internal.process;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.Serializable;
 
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
-public class DQPWorkContext implements Externalizable {
+public class DQPWorkContext implements Serializable {
 	
 	private static final long serialVersionUID = -6389893410233192977L;
 	
@@ -50,7 +46,6 @@ public class DQPWorkContext implements Externalizable {
 		CONTEXTS.set(context);
 	}
 	
-    private String connectionID;
     private MetaMatrixSessionID sessionId;
     private String userName;
     private Serializable trustedPayload;
@@ -58,6 +53,8 @@ public class DQPWorkContext implements Externalizable {
     private String vdbVersion;
     private String appName;
     private SessionToken sessionToken;
+    private String clientAddress;
+    private String clientHostname;
     
     public DQPWorkContext() {
 	}
@@ -119,7 +116,7 @@ public class DQPWorkContext implements Externalizable {
     }
 
 	public String getConnectionID() {
-		return connectionID;
+		return this.sessionId!=null?this.sessionId.toString():null;
 	}
 	
 	public MetaMatrixSessionID getSessionId() {
@@ -128,7 +125,6 @@ public class DQPWorkContext implements Externalizable {
 
 	public void setSessionId(MetaMatrixSessionID sessionId) {
 		this.sessionId = sessionId;
-		this.connectionID = sessionId.toString();
 	}
 
 	public void setAppName(String appName) {
@@ -151,25 +147,20 @@ public class DQPWorkContext implements Externalizable {
 		return sessionToken;
 	}
 
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		this.setSessionId((MetaMatrixSessionID)in.readObject());
-		this.setUserName((String)in.readObject());
-		this.setTrustedPayload((Serializable)in.readObject());
-		this.setVdbName((String)in.readObject());
-		this.setVdbVersion((String)in.readObject());
-		this.setAppName((String)in.readObject());
-		this.setSessionToken((SessionToken)in.readObject());
+	public void setClientAddress(String clientAddress) {
+		this.clientAddress = clientAddress;
 	}
 
-	public void writeExternal(ObjectOutput out) throws IOException {
-	    out.writeObject(sessionId);
-	    out.writeObject(userName);
-	    out.writeObject(trustedPayload);
-	    out.writeObject(vdbName);
-	    out.writeObject(vdbVersion);
-	    out.writeObject(appName);
-	    out.writeObject(sessionToken);
+	public String getClientAddress() {
+		return clientAddress;
+	}
+
+	public void setClientHostname(String clientHostname) {
+		this.clientHostname = clientHostname;
+	}
+
+	public String getClientHostname() {
+		return clientHostname;
 	}
 
 }

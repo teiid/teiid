@@ -25,6 +25,8 @@
  */
 package com.metamatrix.common.comm.platform.socket;
 
+import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,8 +56,6 @@ import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 
 /**
  * Main class for creating Netty Nio Channels 
@@ -78,11 +78,21 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		public boolean isOpen() {
 			return channel.isOpen();
 		}
+		
+		public SocketAddress getRemoteAddress() {
+			return channel.getRemoteAddress();
+		}
+		
+		@Override
+		public Object read() throws IOException,
+				ClassNotFoundException {
+			throw new UnsupportedOperationException();
+		}
 
 		public Future<?> write(Object msg) {
 			final ChannelFuture future = channel.write(msg);
 			future.addListener(completionListener);
-			return new Future() {
+			return new Future<Void>() {
 
 				@Override
 				public boolean cancel(boolean arg0) {
@@ -90,7 +100,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 				}
 
 				@Override
-				public Object get() throws InterruptedException,
+				public Void get() throws InterruptedException,
 						ExecutionException {
 					future.await();
 					if (!future.isSuccess()) {
@@ -100,7 +110,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 				}
 
 				@Override
-				public Object get(long arg0, TimeUnit arg1)
+				public Void get(long arg0, TimeUnit arg1)
 						throws InterruptedException, ExecutionException,
 						TimeoutException {
 					if (future.await(arg0, arg1)) {
@@ -125,7 +135,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		}
 	}
 	
-	private final ChannelListenerFactory listenerFactory;
+	private final ChannelListener.ChannelListenerFactory listenerFactory;
 	private final SSLEngine engine;
 	private final ClassLoader classLoader;
 	private Map<Channel, ChannelListener> listeners = Collections.synchronizedMap(new HashMap<Channel, ChannelListener>());
@@ -145,7 +155,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		
 	};
 	 
-	public SSLAwareChannelHandler(ChannelListenerFactory listenerFactory,
+	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory,
 			SSLEngine engine, ClassLoader classloader) {
 		this.listenerFactory = listenerFactory;
 		this.engine = engine;
@@ -215,7 +225,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	    if (engine != null) {
 	        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 	    }
-	    pipeline.addLast("decoder", new ObjectDecoder(2 << 24, this.classLoader)); //$NON-NLS-1$
+	    pipeline.addLast("decoder", new ObjectDecoder(1 << 24, classLoader)); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
 	    return pipeline;

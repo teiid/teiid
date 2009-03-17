@@ -20,17 +20,31 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.platform.socket.client;
+package com.metamatrix.common.comm.platform.socket;
 
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
 
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+public final class ObjectInputStreamWithClassloader extends
+		ObjectInputStream {
+	private final ClassLoader cl;
 
-public interface ObjectChannelFactory {
+	public ObjectInputStreamWithClassloader(InputStream in,
+			ClassLoader cl) throws IOException {
+		super(in);
+		this.cl = cl;
+	}
 
-	ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
-			CommunicationException;
-	
+	@Override
+	protected Class<?> resolveClass(ObjectStreamClass desc)
+			throws IOException, ClassNotFoundException {
+		//see java bug id 6434149
+		try {
+			return Class.forName(desc.getName(), false, cl);
+		} catch (ClassNotFoundException e) {
+			return super.resolveClass(desc);
+		}
+	}
 }

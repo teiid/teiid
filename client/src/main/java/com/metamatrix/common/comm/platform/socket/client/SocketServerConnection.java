@@ -40,6 +40,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +71,7 @@ public class SocketServerConnection implements ServerConnection {
 	private Map<HostInfo, SocketServerInstance> existingConnections = new HashMap<HostInfo, SocketServerInstance>();
 	private SocketServerInstanceFactory connectionFactory;
     private ServerDiscovery serverDiscovery;
-    private static Logger log = Logger.getLogger("org.teiid.client.sockets");
+    private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
 	private boolean secure;
     private Properties connProps;
@@ -78,7 +80,7 @@ public class SocketServerConnection implements ServerConnection {
     private volatile LogonResult logonResult;
     private ILogon logon;
     private Timer pingTimer;
-    private volatile boolean closed;
+    private boolean closed;
     
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
@@ -131,7 +133,7 @@ public class SocketServerConnection implements ServerConnection {
 			}
 			Exception ex = null;
 			try {
-				instance = connectionFactory.createServerInstance(hostInfo, secure);
+				instance = connectionFactory.getServerInstance(hostInfo, secure);
 				if (this.logonResult != null) {
 					ILogon newLogon = instance.getService(ILogon.class);
 					newLogon.assertIdentity(logonResult.getSessionID());
@@ -236,12 +238,9 @@ public class SocketServerConnection implements ServerConnection {
 	            }
 	            if (exception instanceof SingleInstanceCommunicationException
 						|| exception.getCause() instanceof SingleInstanceCommunicationException) {
-	            	if (!isOpen()) {
+	            	if (!failOver || !isOpen()) {
 	            		break;
 	            	}
-	            	if (!failOver) {
-			        	break;
-		        	}
 	            	invalidateTarget();
 	            } else {
 	            	break;
@@ -275,7 +274,7 @@ public class SocketServerConnection implements ServerConnection {
 		try {
 			//make a best effort to send the logoff
 			Future<?> writeFuture = this.logon.logoff();
-			writeFuture.get();
+			writeFuture.get(5000, TimeUnit.MILLISECONDS);
 		} catch (InvalidSessionException e) {
 			//ignore
 		} catch (MetaMatrixComponentException e) {
@@ -283,6 +282,8 @@ public class SocketServerConnection implements ServerConnection {
 		} catch (InterruptedException e) {
 			//ignore
 		} catch (ExecutionException e) {
+			//ignore
+		} catch (TimeoutException e) {
 			//ignore
 		}
 
@@ -294,7 +295,7 @@ public class SocketServerConnection implements ServerConnection {
 		this.serverDiscovery.shutdown();
 	}
 
-	public boolean isOpen() {
+	public synchronized boolean isOpen() {
 		if (this.closed) {
 			return false;
 		}

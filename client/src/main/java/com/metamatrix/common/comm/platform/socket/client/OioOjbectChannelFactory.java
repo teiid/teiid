@@ -1,0 +1,183 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package com.metamatrix.common.comm.platform.socket.client;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
+import java.security.GeneralSecurityException;
+import java.util.Properties;
+import java.util.concurrent.Future;
+import java.util.logging.Logger;
+
+import org.jboss.netty.handler.codec.serialization.ObjectDecoderInputStream;
+import org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream;
+
+import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import com.metamatrix.common.comm.platform.socket.SocketUtil;
+import com.metamatrix.common.comm.platform.socket.SocketUtil.SSLSocketFactory;
+import com.metamatrix.dqp.client.ResultsFuture;
+
+final class OioOjbectChannelFactory implements ObjectChannelFactory {
+	
+	private final static int STREAM_BUFFER_SIZE = 1<<15;
+	private final static int SO_TIMEOUT = 3000;
+	
+	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
+	
+	final static class OioObjectChannel implements ObjectChannel {
+		private final Socket socket;
+		private ObjectOutputStream outputStream;
+		private ObjectInputStream inputStream;
+		private Object readLock = new Object();
+
+		private OioObjectChannel(Socket socket) throws IOException {
+			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
+			this.socket = socket;
+            socket.setSoTimeout(SO_TIMEOUT);
+            BufferedOutputStream bos = new BufferedOutputStream( socket.getOutputStream(), STREAM_BUFFER_SIZE);
+            outputStream = new ObjectEncoderOutputStream( new DataOutputStream(bos), 512);
+            //The output stream must be flushed on creation in order to write some initialization data
+            //through the buffered stream to the input stream on the other side
+            outputStream.flush();
+            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
+            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, 1 << 25);
+		}
+
+		@Override
+		public void close() {
+			log.finer("closing socket"); //$NON-NLS-1$
+			try {
+		        outputStream.flush();
+		    } catch (IOException e) {
+		        // ignore
+		    }
+		    try {
+		        outputStream.close();
+		    } catch (IOException e) {
+		        // ignore
+		    }
+		    try {
+		        inputStream.close();
+		    } catch (IOException e) {
+		        // ignore
+		    }
+		    try {
+		        socket.close();
+		    } catch (IOException e) {
+		        // ignore
+		    }
+		}
+
+		@Override
+		public SocketAddress getRemoteAddress() {
+			return socket.getRemoteSocketAddress();
+		}
+
+		@Override
+		public boolean isOpen() {
+			return !socket.isClosed();
+		}
+
+		@Override
+		public Object read() throws IOException, ClassNotFoundException {
+			log.finer("reading message from socket"); //$NON-NLS-1$
+			synchronized (readLock) {
+				try {
+					return inputStream.readObject();
+				} catch (SocketTimeoutException e) {
+					throw e;
+		        } catch (IOException e) {
+		            close();
+		            throw e;
+		        }
+			}
+		}
+
+		@Override
+		public synchronized Future<?> write(Object msg) {
+			log.finer("writing message to socket"); //$NON-NLS-1$
+		    ResultsFuture<Void> result = new ResultsFuture<Void>();
+		    try {
+		        outputStream.writeObject(msg);
+		        outputStream.flush();     
+		        outputStream.reset();
+		    	result.getResultsReceiver().receiveResults(null);
+		    } catch (IOException e) {
+		        close();
+		    	result.getResultsReceiver().exceptionOccurred(e);
+		    }
+		    return result;
+		}
+	}
+
+	private Properties props;
+	private int inputBufferSize;
+	private int outputBufferSize;
+	private boolean conserveBandwidth;
+	private volatile SSLSocketFactory sslSocketFactory;
+
+	public OioOjbectChannelFactory(boolean conserveBandwidth,
+			int inputBufferSize, int outputBufferSize, Properties props) {
+		this.conserveBandwidth = conserveBandwidth;
+		this.inputBufferSize = inputBufferSize;
+		this.outputBufferSize = outputBufferSize;
+		this.props = props;
+	}
+
+	@Override
+	public ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
+			CommunicationException {
+		final Socket socket;
+		if (ssl) {
+			if (this.sslSocketFactory == null) {
+				try {
+					sslSocketFactory = SocketUtil.getSSLSocketFactory(props);
+				} catch (GeneralSecurityException e) {
+					throw new CommunicationException(e);
+				}
+			}
+			socket = sslSocketFactory.getSocket();
+		} else {
+			socket = new Socket();
+		}
+		if (inputBufferSize > 0) {
+			socket.setReceiveBufferSize(inputBufferSize);
+		}
+		if (outputBufferSize > 0) {
+			socket.setSendBufferSize(outputBufferSize);
+		}
+	    socket.setTcpNoDelay(!conserveBandwidth); // enable Nagle's algorithm to conserve bandwidth
+	    socket.connect(address);
+	    return new OioObjectChannel(socket);
+	}
+}

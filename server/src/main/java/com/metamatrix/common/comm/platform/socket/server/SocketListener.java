@@ -35,11 +35,11 @@ import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 import com.metamatrix.common.comm.ClientServiceRegistry;
+import com.metamatrix.common.comm.platform.socket.ChannelListener;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SSLAwareChannelHandler;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
+import com.metamatrix.common.comm.platform.socket.ChannelListener.ChannelListenerFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;

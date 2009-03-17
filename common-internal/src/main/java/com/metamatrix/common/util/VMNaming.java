@@ -36,8 +36,7 @@ public final class VMNaming {
 
     /*
      * HOST_ADDRESS refers to to the host-name/ip, that is given to clients to connect where
-     * the server is. So, in case of Firewall, this may be firewall name, but the bind_address 
-     * would be the physical address of the server
+     * the server is.
      */
     private static InetAddress HOST_ADDRESS = null;
     
@@ -79,23 +78,22 @@ public final class VMNaming {
     	boolean bindAddressDefined = (bindAddress != null && bindAddress.length() > 0);
     	boolean hostNameDefined = (hostName != null && hostName.length() > 0);
 
+    	if (hostNameDefined) {
+			HOST_ADDRESS = NetUtils.resolveHostByName(hostName);
+		}
     	    	
-    	if (bindAddressDefined && hostNameDefined) {
+    	if (bindAddressDefined) {
     		BIND_ADDRESS = bindAddress;
-    		HOST_ADDRESS = NetUtils.resolveHostByName(hostName);
-    	}
-    	else if (bindAddressDefined && !hostNameDefined) {
-    		BIND_ADDRESS = bindAddress;
-    		HOST_ADDRESS = InetAddress.getByAddress(BIND_ADDRESS.getBytes());
-    	}
-    	else if (!bindAddressDefined && hostNameDefined) {
-    		HOST_ADDRESS = NetUtils.resolveHostByName(hostName);
-    		BIND_ADDRESS = HOST_ADDRESS.getCanonicalHostName();
+    		
+    		if (!hostNameDefined) { 
+    			HOST_ADDRESS = InetAddress.getByName(bindAddress);
+    		}
     	}
     	else {
-    		InetAddress addr = NetUtils.getInstance().getInetAddress();
-    		BIND_ADDRESS = addr.getHostAddress();
-    		HOST_ADDRESS = addr;
+    		if (!hostNameDefined) {
+	    		HOST_ADDRESS = NetUtils.getInstance().getInetAddress();
+	    	}
+    		BIND_ADDRESS = HOST_ADDRESS.getHostAddress();
     	}
     }
     

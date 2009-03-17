@@ -23,6 +23,7 @@
 package com.metamatrix.common.net;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -121,7 +122,7 @@ public class ServerSocketConfiguration {
         sslProtocol = props.getProperty(SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);            
     } 
     
-    public SSLEngine getServerSSLEngine() throws IOException {
+    public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isServerSSLEnabled()) {
         	return null;
         }

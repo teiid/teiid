@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-import com.metamatrix.core.CorePlugin;
+import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 
 /**
  * Class to encapsulate URL to a Clustered Metamatrix Server with multiple host
@@ -92,7 +92,7 @@ public class MMURL {
 
     public static final String FORMAT_SERVER = "mm[s]://server1:port1[,server2:port2]"; //$NON-NLS-1$
 
-    public static final String INVALID_FORMAT_SERVER = CorePlugin.Util.getString("MMURL.INVALID_FORMAT", new Object[] {FORMAT_SERVER}); //$NON-NLS-1$
+    public static final String INVALID_FORMAT_SERVER = CommPlatformPlugin.Util.getString("MMURL.INVALID_FORMAT", new Object[] {FORMAT_SERVER}); //$NON-NLS-1$
 
 
     
@@ -234,7 +234,19 @@ public class MMURL {
             try {
                 String host = st2.nextToken().trim();
                 String port = st2.nextToken().trim();
-                HostInfo hostInfo = new HostInfo(host, port);
+                if (host.equals("")) { //$NON-NLS-1$
+                    throw new IllegalArgumentException("hostname can't be empty"); //$NON-NLS-1$
+                }
+                int portNumber;
+                try {
+                    portNumber = Integer.parseInt(port);
+                } catch (NumberFormatException nfe) {
+                    throw new IllegalArgumentException("port must be numeric:" + port); //$NON-NLS-1$
+                }
+                if (portNumber < 0 || portNumber > 0xFFFF) {
+                    throw new IllegalArgumentException("port out of range:" + portNumber); //$NON-NLS-1$
+                }
+                HostInfo hostInfo = new HostInfo(host, portNumber);
                 hosts.add(hostInfo);
             } catch (NoSuchElementException nsee) {
                 throw new IllegalArgumentException(exceptionMessage);

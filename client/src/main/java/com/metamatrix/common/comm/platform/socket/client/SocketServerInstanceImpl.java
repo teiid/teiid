@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -37,16 +38,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.SSLEngine;
-
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.api.MessageListener;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ExceptionHolder;
@@ -54,8 +53,6 @@ import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListener;
-import com.metamatrix.common.comm.platform.socket.ObjectChannel.ChannelListenerFactory;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
@@ -69,77 +66,42 @@ import com.metamatrix.dqp.client.ResultsFuture;
  * On construction this class will create a channel and exchange a handshake.
  * That handshake will establish a {@link Cryptor} to be used for secure traffic.
  */
-public class SocketServerInstanceImpl implements ChannelListener, SocketServerInstance {
+public class SocketServerInstanceImpl implements SocketServerInstance {
 	
 	private AtomicInteger MESSAGE_ID = new AtomicInteger();
 
 	private HostInfo hostInfo;
-	private SSLEngine engine;
+	private boolean ssl;
     private ObjectChannel socketChannel;
-    private Logger log = Logger.getLogger("org.teiid.client.sockets");
+    private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
     private long synchTimeout;
 
     private Cryptor cryptor;
     
-    private Map<Serializable, MessageListener> asynchronousListeners = new ConcurrentHashMap<Serializable, MessageListener>();
-    
-    private boolean handshakeCompleted;
-    private CommunicationException handshakeError;
+    private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
     
     public SocketServerInstanceImpl() {
     	
     }
 
-    public SocketServerInstanceImpl(final HostInfo host, SSLEngine engine, long synchTimeout) {
+    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, long synchTimeout) {
         this.hostInfo = host;
-        this.engine = engine;
+        this.ssl = ssl;
         this.synchTimeout = synchTimeout;
     }
     
-    public void connect(ObjectChannelFactory channelFactory, long handShakeTimeout) throws CommunicationException, IOException {
-        InetSocketAddress address = null;
-        if (hostInfo.getInetAddress() != null) {
-            address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
-        } else {
-            address = new InetSocketAddress(hostInfo.getHostName(), hostInfo.getPortNumber());
+    public void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
+        InetSocketAddress address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
+        this.socketChannel = channelFactory.createObjectChannel(address, ssl);
+        try {
+        	doHandshake();
+        } catch (CommunicationException e) {
+        	this.socketChannel.close();
+        	throw e;
+        } catch (IOException e) {
+        	this.socketChannel.close();
+        	throw e;
         }
-		channelFactory.createObjectChannel(address, engine, new ChannelListenerFactory() {
-
-			public ChannelListener createChannelListener(
-					ObjectChannel channel) {
-				synchronized (SocketServerInstanceImpl.this) {
-					if (SocketServerInstanceImpl.this.handshakeError != null) {
-						channel.close();
-					}
-					SocketServerInstanceImpl.this.socketChannel = channel;
-				}
-				return SocketServerInstanceImpl.this;
-			}
-			
-		});
-		synchronized (this) {
-			long endTime = System.currentTimeMillis() + handShakeTimeout;
-			while (!this.handshakeCompleted && this.handshakeError == null) {
-				long remainingTimeout = endTime - System.currentTimeMillis();
-				if (remainingTimeout <= 0) {
-					break;
-				}
-				try {
-					this.wait(remainingTimeout);
-				} catch (InterruptedException e) {
-					break;
-				}
-			}
-			if (!this.handshakeCompleted || this.handshakeError != null) {
-				if (this.socketChannel != null) {
-					this.socketChannel.close();
-				}
-				if (this.handshakeError == null) {
-					this.handshakeError = new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_timeout")); //$NON-NLS-1$
-				}	
-				throw this.handshakeError;
-			}
-		}
     }
     
     /**
@@ -153,11 +115,22 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         return MetaMatrixProductVersion.VERSION_NUMBER;
     }
     
-    private synchronized void receivedHahdshake(Handshake handshake) {
+    private void doHandshake() throws IOException, CommunicationException {
+    	final Handshake handshake;
+        try {
+			Object obj = this.socketChannel.read();
+			
+			if (!(obj instanceof Handshake)) {
+				throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
+			}
+			handshake = (Handshake)obj;
+		} catch (ClassNotFoundException e1) {
+			throw new CommunicationException(e1);
+		}
+
         try {
             if (!getVersionInfo().equals(handshake.getVersion())) {
-                this.handshakeError = new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
-                return;
+                throw new CommunicationException(CommPlatformPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
             }
             
             handshake.setVersion(getVersionInfo());
@@ -174,11 +147,8 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
             }
             
             this.socketChannel.write(handshake);
-            this.handshakeCompleted = true;
         } catch (CryptoException err) {
-        	this.handshakeError = new CommunicationException(err);
-        } finally {
-			this.notify();
+        	throw new CommunicationException(err);
         }
     }
 
@@ -186,7 +156,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         return socketChannel.isOpen();
     }
 
-    public void send(Message message, MessageListener listener, Serializable messageKey)
+    public void send(Message message, ResultsReceiver<Object> listener, Serializable messageKey)
         throws CommunicationException, InterruptedException {
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
@@ -213,52 +183,40 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 	public void exceptionOccurred(Throwable e) {
     	if (e instanceof CommunicationException) {
 	        if (e.getCause() instanceof InvalidClassException) {
-	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$ //$NON-NLS-2$
+	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$ 
 	        } else {
-	            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ //$NON-NLS-2$
+	            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ 
 	        }
     	} else if (e instanceof EOFException) {
-            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ //$NON-NLS-2$
+            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ 
     	} else {
-            log.log(Level.WARNING, "Unable to read: unexpected exception", e); //$NON-NLS-1$ //$NON-NLS-2$
+            log.log(Level.WARNING, "Unable to read: unexpected exception", e); //$NON-NLS-1$ 
     	}
-    	
-		synchronized (this) {
-			if (!handshakeCompleted) {
-				this.handshakeError = new SingleInstanceCommunicationException(e, CommPlatformPlugin.Util.getString(engine!=null?"SocketServerInstanceImpl.secure_error_during_handshake":"SocketServerInstanceImpl.error_during_handshake")); //$NON-NLS-1$ //$NON-NLS-2$  
-				this.notify();
-			}
-		}
-		
-        Message messageHolder = new Message();
-        messageHolder.setContents(e instanceof SingleInstanceCommunicationException?e:new SingleInstanceCommunicationException(e));
+    			
+        if (!(e instanceof SingleInstanceCommunicationException)) {
+        	e = new SingleInstanceCommunicationException(e);
+        }
 
-        Set<Map.Entry<Serializable, MessageListener>> entries = this.asynchronousListeners.entrySet();
-        for (Iterator<Map.Entry<Serializable, MessageListener>> iterator = entries.iterator(); iterator.hasNext();) {
-			Map.Entry<Serializable, MessageListener> entry = iterator.next();
+        Set<Map.Entry<Serializable, ResultsReceiver<Object>>> entries = this.asynchronousListeners.entrySet();
+        for (Iterator<Map.Entry<Serializable, ResultsReceiver<Object>>> iterator = entries.iterator(); iterator.hasNext();) {
+			Map.Entry<Serializable, ResultsReceiver<Object>> entry = iterator.next();
 			iterator.remove();
-			entry.getValue().deliverMessage(messageHolder, entry.getKey());
+			entry.getValue().exceptionOccurred(e);
 		}
     }
 
 	public void receivedMessage(Object packet) {
-		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$ //$NON-NLS-2$
+		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$ 
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
-            processAsynchronousPacket(messagePacket);
-        } else if (packet instanceof Handshake) {
-        	receivedHahdshake((Handshake)packet);
+        	Serializable messageKey = messagePacket.getMessageKey();
+            log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ 
+            ResultsReceiver<Object> listener = asynchronousListeners.remove(messageKey);
+            if (listener != null) {
+                listener.receiveResults(messagePacket.getContents());
+            }
         } else {
-        	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-    }
-
-    private void processAsynchronousPacket(Message message) {
-        Serializable messageKey = message.getMessageKey();
-        log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
-    	MessageListener listener = asynchronousListeners.remove(messageKey);
-        if (listener != null) {
-            listener.deliverMessage(message, messageKey);
+        	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ 
         }
     }
     
@@ -273,10 +231,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
         return this.cryptor;
     }
 
-	public void onConnection() {
-		
-	}
-
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T getService(Class<T> iface) {
 		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
@@ -303,7 +258,7 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 				if (secure) {
 					message.setContents(getCryptor().sealObject(message.getContents()));
 				}
-				ResultsFuture results = new ResultsFuture() {
+				ResultsFuture<Object> results = new ResultsFuture<Object>() {
 					@Override
 					protected Object convertResult() throws ExecutionException {
 						try {
@@ -319,24 +274,53 @@ public class SocketServerInstanceImpl implements ChannelListener, SocketServerIn
 							throw new ExecutionException(e);
 						}
 					}
-				};
-				final ResultsReceiver receiver = results.getResultsReceiver();
-	
-				send(message, new MessageListener() {
-	
-					public void deliverMessage(Message responseMessage,
-							Serializable messageKey) {
-						Serializable result = responseMessage.getContents();
-						receiver.receiveResults(result);
+					
+					@Override
+					public synchronized Object get()
+							throws InterruptedException, ExecutionException {
+						throw new UnsupportedOperationException();
 					}
+					
+					/**
+					 * get calls are overridden to provide a thread in which to perform
+					 * the actual reads. 
+					 */
+					@Override
+					public synchronized Object get(long timeout, TimeUnit unit)
+							throws InterruptedException, ExecutionException,
+							TimeoutException {
+						int timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
+						while (!isDone()) {
+							if (timeoutMillis <= 0) {
+								throw new TimeoutException();
+							}
+							long start = System.currentTimeMillis();
+							try {
+								receivedMessage(socketChannel.read());
+							} catch (IOException e) {
+								if (e instanceof SocketTimeoutException) {
+									timeoutMillis -= (System.currentTimeMillis() - start);
+									continue;
+								}
+								exceptionOccurred(e);
+							} catch (ClassNotFoundException e) {
+								exceptionOccurred(e);
+							}
+						}
+						return super.get(timeout, unit);
+					}
+				};
+				final ResultsReceiver<Object> receiver = results.getResultsReceiver();
 	
-				}, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
+				send(message, receiver, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
 				if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
 					return results;
 				}
 				return results.get(synchTimeout, TimeUnit.MILLISECONDS);
 			} catch (ExecutionException e) {
 				t = e.getCause();
+			} catch (TimeoutException e) {
+				t = new SingleInstanceCommunicationException(e);
 			} catch (Throwable e) {
 				t = e;
 			}
