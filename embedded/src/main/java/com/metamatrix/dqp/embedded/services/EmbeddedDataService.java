@@ -24,6 +24,7 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,7 +54,6 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager;
@@ -566,6 +566,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             // Ask the configuration if we can use the extension class loader. 
             boolean useExtensionClassPath = (getConfigurationService().useExtensionClasspath());
             String classPath = buildClasspath(connectorProperties);
+            
             if (classPath == null || classPath.length() == 0) {
                 useExtensionClassPath = false;
             }
@@ -573,11 +574,20 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             if (!useExtensionClassPath) {
                 return new ConnectorManager();
             }
+            
             DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
             URL context = getConfigurationService().getExtensionPath();
-            URL[] urlPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, context);
+
+            URL[] userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, context);
+
+            // since we are using the extensions, get the common extension path 
+            URL[] commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
+            ArrayList<URL> urlPath = new ArrayList<URL>();
             
-            ClassLoader classLoader = new URLFilteringClassLoader(urlPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            urlPath.addAll(Arrays.asList(userPath));
+            urlPath.addAll(Arrays.asList(commonExtensionPath));
+            
+            ClassLoader classLoader = new URLFilteringClassLoader(urlPath.toArray(new URL[urlPath.size()]), Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             Class cmgrImplClass = classLoader.loadClass(CONNECTOR_MGR_IMPL);
             
             ConnectorManager cm = (ConnectorManager)cmgrImplClass.newInstance();
@@ -592,7 +602,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 		StringBuilder sb = new StringBuilder();
 		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
         appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
-        appendlasspath(connectorProperties.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH), sb); // this is common to whole the engine
         return sb.toString();
 	}
 	
