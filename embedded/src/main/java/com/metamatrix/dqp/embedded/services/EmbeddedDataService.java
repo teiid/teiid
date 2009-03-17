@@ -591,8 +591,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 	private String buildClasspath(Properties connectorProperties) {
 		StringBuilder sb = new StringBuilder();
 		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
-        appendlasspath(connectorProperties.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH), sb); // this is common to the engine
         appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
+        appendlasspath(connectorProperties.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH), sb); // this is common to whole the engine
         return sb.toString();
 	}
 	
