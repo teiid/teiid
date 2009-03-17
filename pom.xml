@@ -123,19 +123,15 @@
 				<version>2.2-beta-2</version>
 				<configuration>
 					<descriptors>
-                    <!-- 
 						<descriptor>build/assembly/src.xml</descriptor>
 						<descriptor>build/assembly/bin.xml</descriptor>
-                         -->
                         <descriptor>build/assembly/embedded/embedded-client-jar.xml</descriptor>            
 						<descriptor>build/assembly/embedded/embedded-dependencies.xml</descriptor>
 						<descriptor>build/assembly/embedded/embedded-connector-dependencies.xml</descriptor>
                         <descriptor>build/assembly/embedded/embedded-jar.xml</descriptor>
 						<descriptor>build/assembly/embedded/embedded-dist.xml</descriptor>
-                        <!-- 
 						<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
 						<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
-                         -->
 					</descriptors>
 					<outputDirectory>target/distribution</outputDirectory>
 					<workDirectory>target/assembly/work</workDirectory>
