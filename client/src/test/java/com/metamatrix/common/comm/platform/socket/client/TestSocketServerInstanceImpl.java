@@ -98,6 +98,11 @@ public class TestSocketServerInstanceImpl extends TestCase {
 			return this;
 		}
 		
+		@Override
+		public int getSoTimeout() {
+			return 1;
+		}
+		
 	}
 
 	public void testHandshakeTimeout() throws Exception {

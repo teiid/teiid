@@ -956,7 +956,7 @@ public final class PropertiesUtils {
 	            String shortName = propertyName.toLowerCase();
 	            String propertyValue = null;
 	            if (prefix != null) {
-	            	propertyValue = connProps.getProperty(prefix + "." + shortName);
+	            	propertyValue = connProps.getProperty(prefix + "." + shortName); //$NON-NLS-1$
 	            } else {
 	            	propertyValue = connProps.getProperty(shortName);
 	            }

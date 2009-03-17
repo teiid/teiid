@@ -24,14 +24,25 @@ package com.metamatrix.common.comm.platform.socket.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -41,38 +52,97 @@ import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
+import com.metamatrix.platform.security.api.ILogon;
 
 public class SocketServerConnectionFactory implements ServerConnectionFactory, SocketServerInstanceFactory {
 
-	/**Java system property.  The loglevel that SocketLog will use.  Should be a String value {NONE|CRITICAL|ERROR|WARNING|INFO|DETAIL|TRACE}*/
-	public static final String SOCKET_LOG_LEVEL   = "metamatrix.sockets.log.level";  //$NON-NLS-1$
-	/**Java system property.  Maximum number of threads used to read sockets*/
-	public static final String SOCKET_MAX_THREADS   = "metamatrix.sockets.max.threads"; //$NON-NLS-1$
-	/**Java system property.  Maximum time to live for a socket reader thread asynchronous calls.  If it times out, it will be removed, and recreated later when needed.*/
-	public static final String SOCKET_TTL           = "metamatrix.sockets.ttl"; //$NON-NLS-1$
-	/**Java system property.  Maximum time to live for a socket reader thread synchronous calls.  If it times out, it will be removed, and recreated later when needed.*/    
-	public static final String SYNCH_SOCKET_TTL           = "metamatrix.synchronous.sockets.ttl"; //$NON-NLS-1$
-	/**Java system property.  Input buffer size of the physical sockets.*/
-	public static final String SOCKET_INPUT_BUFFER_SIZE           = "metamatrix.sockets.inputBufferSize"; //$NON-NLS-1$
-	/**Java system property.  Output buffer size of the physical sockets.*/
-	public static final String SOCKET_OUTPUT_BUFFER_SIZE           = "metamatrix.sockets.outputBufferSize"; //$NON-NLS-1$
-	/**Java system property.  Value of the conserve-bandwidth flag of the physical sockets.*/
-	public static final String SOCKET_CONSERVE_BANDWIDTH           = "metamatrix.sockets.conserveBandwidth"; //$NON-NLS-1$
-	public static final String DEFAULT_SOCKET_LOG_LEVEL = "ERROR"; //$NON-NLS-1$
-	public static final int DEFAULT_MAX_THREADS = 15;
-	public static final long DEFAULT_TTL = 120000L;
-	public static final long DEFAULT_SYNCH_TTL = 120000L;
-	public static final int DEFAULT_SOCKET_INPUT_BUFFER_SIZE = 0;
-	public static final int DEFAULT_SOCKET_OUTPUT_BUFFER_SIZE = 0;
-	
 	private static final String URL = "URL"; //$NON-NLS-1$
 	
 	private static SocketServerConnectionFactory INSTANCE;
 	
+	private final class ShutdownHandler implements InvocationHandler {
+		private final CachedInstance key;
+
+		private ShutdownHandler(CachedInstance key) {
+			this.key = key;
+		}
+
+		@Override
+		public Object invoke(Object arg0, Method arg1, Object[] arg2)
+				throws Throwable {
+			if (arg1.getName().equals("shutdown")) { //$NON-NLS-1$
+				CachedInstance purge = null;
+				if (!key.actual.isOpen()) {
+					return null; //nothing to do
+				}
+				synchronized (instancePool) {
+					instancePool.put(key, key);
+					if (instancePool.size() > maxCachedInstances) {
+						Iterator<CachedInstance> iter = instancePool.keySet().iterator();
+						purge = iter.next();
+						iter.remove();
+					}
+				}
+				if (purge != null) {
+					purge.actual.shutdown();
+				}
+				return null;
+			}
+			try {
+				return arg1.invoke(key.actual, arg2);
+			} catch (InvocationTargetException e) {
+				throw e.getTargetException();
+			}
+		}
+	}
+
+	private static class CachedInstance {
+		HostInfo info;
+		Integer instance;
+		boolean ssl;
+		SocketServerInstance actual;
+		SocketServerInstance proxy;
+		
+		public CachedInstance(HostInfo info, boolean ssl) {
+			this.info = info;
+			this.ssl = ssl;
+		}
+
+		@Override
+		public int hashCode() {
+			return info.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof CachedInstance)) {
+				return false;
+			}
+			CachedInstance other = (CachedInstance) obj;
+			if (!info.equals(other.info) || ssl != other.ssl) {
+				return false;
+			}
+			if (instance == null || other.instance == null) {
+				return true;
+			} 
+			return instance.equals(other.instance);
+		}
+	}
+	
     private ObjectChannelFactory channelFactory;
 	private Timer pingTimer;
-	private Properties props;
 	
+	//instance pooling
+	private AtomicInteger instanceCount = new AtomicInteger();
+	private Map<CachedInstance, CachedInstance> instancePool = new LinkedHashMap<CachedInstance, CachedInstance>();
+
+	//config properties
+	private long synchronousTtl = 120000l;
+	private int maxCachedInstances=16;
+
 	public static synchronized SocketServerConnectionFactory getInstance() {
 		if (INSTANCE == null) {
 			INSTANCE = new SocketServerConnectionFactory();
@@ -99,16 +169,61 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	public SocketServerConnectionFactory() {
 		
 	}
-	
+		
 	public void init(final Properties props) {
-		this.props = props;
+		PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets"); //$NON-NLS-1$
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
-		this.channelFactory = new OioOjbectChannelFactory(getConserveBandwidth(), getInputBufferSize(), getOutputBufferSize(), props);
+		this.channelFactory = new OioOjbectChannelFactory(props);
 	}
 			
 	public SocketServerInstance getServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, ssl, getSynchronousTTL());
+		CachedInstance key = null;
+		CachedInstance instance = null;
+		boolean useCache = this.maxCachedInstances > 0; 
+		if (useCache) {
+			key = new CachedInstance(info, ssl);
+			synchronized (instancePool) {
+				instance = instancePool.remove(key);
+			}
+			if (instance != null) {
+				ILogon logon = instance.actual.getService(ILogon.class);
+				boolean valid = false;
+				try {
+					Future<?> success = logon.ping();
+					success.get(this.channelFactory.getSoTimeout(), TimeUnit.MICROSECONDS);
+					valid = true;
+				} catch (MetaMatrixComponentException e) {
+				} catch (InvalidSessionException e) {
+				} catch (InterruptedException e) {
+				} catch (ExecutionException e) {
+				} catch (TimeoutException e) {
+				}
+				if (valid) {
+					return instance.proxy;
+				}
+				instance.actual.shutdown();
+				//technically we only want to remove instances with the same inetaddress 
+				while (true) {
+					CachedInstance invalid = null;
+					synchronized (instancePool) {
+						invalid = instancePool.remove(key);
+					}
+					if (invalid == null) {
+						break;
+					}
+					invalid.actual.shutdown();
+				}
+			}
+		}
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, ssl, getSynchronousTtl());
 		ssii.connect(this.channelFactory);
+		if (useCache) {
+			key.actual = ssii;
+			key.instance = instanceCount.getAndIncrement();
+			//create a proxied socketserverinstance that will pool itself on shutdown
+			key.proxy = (SocketServerInstance)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {SocketServerInstance.class}, new ShutdownHandler(key));
+			return key.proxy;
+		}
 		return ssii;
 	}
 	
@@ -140,48 +255,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties, pingTimer);
 	}
 
-	/*
-	 * Retrieve the asynchronous call Time-To-Live
-	 *  
-	 * @return number of ms 
-	 * @since 4.2
-	 */
-	public long getTTL() {
-	    return PropertiesUtils.getLongProperty(props, SOCKET_TTL, DEFAULT_TTL);
-	}
-
-	/*
-	 * Retrieve the synchronous call Time-To-Live
-	 *  
-	 * @return number of ms 
-	 * @since 4.2
-	 */
-	public long getSynchronousTTL() {
-	    return PropertiesUtils.getLongProperty(props, SYNCH_SOCKET_TTL, DEFAULT_SYNCH_TTL);
-	}
-
-	/* 
-	 * Get the max number of threads
-	 * 
-	 * @return max number
-	 * @since 4.2
-	 */
-	public int getMaxThreads() {
-	    return PropertiesUtils.getIntProperty(props, SOCKET_MAX_THREADS, DEFAULT_MAX_THREADS);
-	}
-
-	public int getInputBufferSize() {
-	    return PropertiesUtils.getIntProperty(props, SOCKET_INPUT_BUFFER_SIZE, DEFAULT_SOCKET_INPUT_BUFFER_SIZE);
-	}
-
-	public int getOutputBufferSize() {
-	    return PropertiesUtils.getIntProperty(props, SOCKET_OUTPUT_BUFFER_SIZE, DEFAULT_SOCKET_OUTPUT_BUFFER_SIZE);
-	}
-
-	public boolean getConserveBandwidth() {
-	    return PropertiesUtils.getBooleanProperty(props, SOCKET_CONSERVE_BANDWIDTH, false); 
-	}
-
 	static void updateConnectionProperties(Properties connectionProperties) {
 		try {
 			InetAddress addr = NetUtils.getInstance().getInetAddress();
@@ -190,6 +263,22 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
         } catch (UnknownHostException err1) {
         	connectionProperties.put(MMURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
         }
+	}
+
+	public long getSynchronousTtl() {
+		return synchronousTtl;
+	}
+
+	public void setSynchronousTtl(long synchronousTTL) {
+		this.synchronousTtl = synchronousTTL;
+	}
+
+	public int getMaxCachedInstances() {
+		return maxCachedInstances;
+	}
+	
+	public void setMaxCachedInstances(int maxCachedInstances) {
+		this.maxCachedInstances = maxCachedInstances;
 	}
 
 }

@@ -33,4 +33,6 @@ public interface ObjectChannelFactory {
 	ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
 			CommunicationException;
 	
+	int getSoTimeout();
+	
 }

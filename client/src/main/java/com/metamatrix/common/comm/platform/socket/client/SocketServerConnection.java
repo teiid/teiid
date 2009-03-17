@@ -32,9 +32,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -68,7 +66,6 @@ public class SocketServerConnection implements ServerConnection {
 	
 	private static final int RETRY_COUNT = 3;
 
-	private Map<HostInfo, SocketServerInstance> existingConnections = new HashMap<HostInfo, SocketServerInstance>();
 	private SocketServerInstanceFactory connectionFactory;
     private ServerDiscovery serverDiscovery;
     private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
@@ -122,23 +119,13 @@ public class SocketServerConnection implements ServerConnection {
 		while (hostKeys.size() > 0) {
 			HostInfo hostInfo = hostKeys.remove((int) (Math.random() * hostKeys.size()));
 
-			SocketServerInstance instance = existingConnections.get(hostInfo);
-			if (instance != null) {
-				if (instance.isOpen()) {
-					this.serverInstance = instance;
-					return this.serverInstance;
-				}
-				existingConnections.remove(hostInfo);
-				hostKeys.add(hostInfo);
-			}
 			Exception ex = null;
 			try {
-				instance = connectionFactory.getServerInstance(hostInfo, secure);
+				SocketServerInstance instance = connectionFactory.getServerInstance(hostInfo, secure);
 				if (this.logonResult != null) {
 					ILogon newLogon = instance.getService(ILogon.class);
 					newLogon.assertIdentity(logonResult.getSessionID());
 				}
-				this.existingConnections.put(hostInfo, instance);
 				this.serverDiscovery.connectionSuccessful(hostInfo, instance);
 				this.serverInstance = instance;
 				return this.serverInstance;
@@ -286,11 +273,12 @@ public class SocketServerConnection implements ServerConnection {
 		} catch (TimeoutException e) {
 			//ignore
 		}
-
-		for (SocketServerInstance instance : existingConnections.values()) {
-			instance.shutdown();
+		
+		if (this.serverInstance != null) {
+			this.serverInstance.shutdown();
+			this.serverInstance = null;
 		}
-		existingConnections.clear();
+
 		this.closed = true;
 		this.serverDiscovery.shutdown();
 	}
@@ -318,9 +306,11 @@ public class SocketServerConnection implements ServerConnection {
 		try {
 			ServerConnectionInvocationHandler handler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(service);
 			ServerConnectionInvocationHandler otherHandler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(otherService);
-			return handler.getInstance().getHostInfo().equals(otherHandler.getInstance().getHostInfo());
+			return handler.getInstance().getHostInfo().getInetAddress().equals(otherHandler.getInstance().getHostInfo().getInetAddress());
 		} catch (IllegalArgumentException e) {
 			return false;
+		} catch (UnknownHostException e) {
+			throw new CommunicationException(e);
 		}
 	}
 	

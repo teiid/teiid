@@ -32,6 +32,7 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLEngine;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +45,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerInstanceImpl;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
@@ -56,15 +56,20 @@ import com.metamatrix.platform.vm.controller.SocketListenerStats;
 public class TestCommSockets {
 
 	SocketListener listener;
+	private SocketServerConnectionFactory sscf;
+	private InetSocketAddress addr;
 
-	@Before public void tearDown() throws Exception {
+	@Before public void setUp() {
+		addr = new InetSocketAddress(0);
+	}
+	
+	@After public void tearDown() throws Exception {
 		if (listener != null) {
 			listener.stop();
 		}
 	}
 
 	@Test public void testFailedConnect() throws Exception {
-		InetSocketAddress addr = new InetSocketAddress(0);
 		ClientServiceRegistry csr = new ClientServiceRegistry();
 		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
 		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -83,8 +88,10 @@ public class TestCommSockets {
 		}
 	}
 
-	@Test public void testConnect() throws Exception {
-		SocketServerConnection conn = helpEstablishConnection(false, null);
+	@Test public void testConnectWithoutPooling() throws Exception {
+		Properties p = new Properties();
+		p.setProperty("org.teiid.sockets.maxCachedInstances", String.valueOf(0)); //$NON-NLS-1$
+		SocketServerConnection conn = helpEstablishConnection(false, null, true, p);
 		SocketListenerStats stats = listener.getStats();
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
@@ -100,11 +107,29 @@ public class TestCommSockets {
 		stats = listener.getStats();
 		assertEquals(0, stats.sockets);
 	}
+	
+	@Test public void testConnectWithPooling() throws Exception {
+		SocketServerConnection conn = helpEstablishConnection(false, null);
+		SocketListenerStats stats = listener.getStats();
+		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(1, stats.sockets);
+		conn.shutdown();
+		stats = listener.getStats();
+		assertEquals(1, stats.maxSockets);
+		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
+		stats = listener.getStats();
+		assertEquals(1, stats.sockets);
+		conn = helpEstablishConnection(false, null);
+		conn.shutdown();
+		stats = listener.getStats();
+		assertEquals(1, stats.sockets);
+		assertEquals(1, stats.maxSockets);
+	}
+
 
 	@Test public void testConnectWithoutClientEncryption() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false, null, false, new Properties());
-		assertTrue(((SocketServerInstanceImpl) conn
-				.selectServerInstance()).getCryptor() instanceof NullCryptor);
+		assertTrue(conn.selectServerInstance().getCryptor() instanceof NullCryptor);
 		conn.shutdown();
 	}
 
@@ -116,32 +141,34 @@ public class TestCommSockets {
 	private SocketServerConnection helpEstablishConnection(boolean secure,
 			SSLEngine serverSSL, boolean isClientEncryptionEnabled, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
-		InetSocketAddress addr = new InetSocketAddress(0);
-		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
-		ClientServiceRegistry csr = new ClientServiceRegistry();
-		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster") { //$NON-NLS-1$
-			@Override
-			public LogonResult logon(Properties connProps)
-					throws LogonException, ComponentNotFoundException {
-				return new LogonResult();
-			}
-		}, "foo"); //$NON-NLS-1$
-		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
-				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled, sessionService); //$NON-NLS-1$
-
-		SocketListenerStats stats = listener.getStats();
-		assertEquals(0, stats.maxSockets);
-		assertEquals(0, stats.objectsRead);
-		assertEquals(0, stats.objectsWritten);
-		assertEquals(0, stats.sockets);
+		if (listener == null) {
+			SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
+			ClientServiceRegistry csr = new ClientServiceRegistry();
+			csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster") { //$NON-NLS-1$
+				@Override
+				public LogonResult logon(Properties connProps)
+						throws LogonException, ComponentNotFoundException {
+					return new LogonResult();
+				}
+			}, "foo"); //$NON-NLS-1$
+			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
+					csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
+							"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled, sessionService); //$NON-NLS-1$
+			SocketListenerStats stats = listener.getStats();
+			assertEquals(0, stats.maxSockets);
+			assertEquals(0, stats.objectsRead);
+			assertEquals(0, stats.objectsWritten);
+			assertEquals(0, stats.sockets);
+		}
 
 		Properties p = new Properties();
 		p.setProperty(MMURL.CONNECTION.SERVER_URL, new MMURL(addr.getHostName(), listener.getPort(),
 				secure).getAppServerURL()); 
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
-		SocketServerConnectionFactory sscf = new SocketServerConnectionFactory();
-		sscf.init(socketConfig);
+		if (sscf == null) {
+			sscf = new SocketServerConnectionFactory();
+			sscf.init(socketConfig);
+		}
 		return sscf.createConnection(p);
 	}
 

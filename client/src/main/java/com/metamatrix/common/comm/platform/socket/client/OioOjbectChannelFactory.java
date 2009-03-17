@@ -44,12 +44,13 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.SocketUtil.SSLSocketFactory;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.client.ResultsFuture;
 
-final class OioOjbectChannelFactory implements ObjectChannelFactory {
+public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	
 	private final static int STREAM_BUFFER_SIZE = 1<<15;
-	private final static int SO_TIMEOUT = 3000;
+	private final static int MAX_OBJECT_SIZE = 1 << 25;
 	
 	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 	
@@ -62,7 +63,6 @@ final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private OioObjectChannel(Socket socket) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
 			this.socket = socket;
-            socket.setSoTimeout(SO_TIMEOUT);
             BufferedOutputStream bos = new BufferedOutputStream( socket.getOutputStream(), STREAM_BUFFER_SIZE);
             outputStream = new ObjectEncoderOutputStream( new DataOutputStream(bos), 512);
             //The output stream must be flushed on creation in order to write some initialization data
@@ -70,7 +70,7 @@ final class OioOjbectChannelFactory implements ObjectChannelFactory {
             outputStream.flush();
             final ClassLoader cl = Thread.currentThread().getContextClassLoader();
             BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
-            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, 1 << 25);
+            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, MAX_OBJECT_SIZE);
 		}
 
 		@Override
@@ -141,17 +141,15 @@ final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	}
 
 	private Properties props;
-	private int inputBufferSize;
-	private int outputBufferSize;
+	private int receiveBufferSize = 0;
+	private int sendBufferSize = 0;
 	private boolean conserveBandwidth;
+	private int soTimeout = 3000;
 	private volatile SSLSocketFactory sslSocketFactory;
 
-	public OioOjbectChannelFactory(boolean conserveBandwidth,
-			int inputBufferSize, int outputBufferSize, Properties props) {
-		this.conserveBandwidth = conserveBandwidth;
-		this.inputBufferSize = inputBufferSize;
-		this.outputBufferSize = outputBufferSize;
+	public OioOjbectChannelFactory(Properties props) {
 		this.props = props;
+		PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets"); //$NON-NLS-1$
 	}
 
 	@Override
@@ -170,14 +168,47 @@ final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		} else {
 			socket = new Socket();
 		}
-		if (inputBufferSize > 0) {
-			socket.setReceiveBufferSize(inputBufferSize);
+		if (receiveBufferSize > 0) {
+			socket.setReceiveBufferSize(receiveBufferSize);
 		}
-		if (outputBufferSize > 0) {
-			socket.setSendBufferSize(outputBufferSize);
+		if (sendBufferSize > 0) {
+			socket.setSendBufferSize(sendBufferSize);
 		}
 	    socket.setTcpNoDelay(!conserveBandwidth); // enable Nagle's algorithm to conserve bandwidth
 	    socket.connect(address);
+	    socket.setSoTimeout(soTimeout);
 	    return new OioObjectChannel(socket);
+	}
+	
+	public int getSendBufferSize() {
+		return sendBufferSize;
+	}
+
+	public void setSendBufferSize(int sendBufferSize) {
+		this.sendBufferSize = sendBufferSize;
+	}
+
+	public int getReceiveBufferSize() {
+		return receiveBufferSize;
+	}
+
+	public void setReceiveBufferSize(int receiveBufferSize) {
+		this.receiveBufferSize = receiveBufferSize;
+	}
+
+	public boolean isConserveBandwidth() {
+		return conserveBandwidth;
+	}
+
+	public void setConserveBandwidth(boolean conserveBandwidth) {
+		this.conserveBandwidth = conserveBandwidth;
+	}
+	
+	public void setSoTimeout(int soTimeout) {
+		this.soTimeout = soTimeout;
+	}
+
+	public int getSoTimeout() {
+		return soTimeout;
 	}
 }

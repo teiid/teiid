@@ -188,8 +188,8 @@ public class TestSocketServerConnection extends TestCase {
 	}
 	
 	public void testIsSameInstance() throws Exception {
-		SocketServerConnection conn = createConnection(null, new HostInfo("foo", 1)); //$NON-NLS-1$
-		SocketServerConnection conn1 = createConnection(null, new HostInfo("bar", 1)); //$NON-NLS-1$
+		SocketServerConnection conn = createConnection(null, new HostInfo("0.0.0.0", 1)); //$NON-NLS-1$
+		SocketServerConnection conn1 = createConnection(null, new HostInfo("0.0.0.1", 1)); //$NON-NLS-1$
 		
 		ClientSideDQP dqp = conn.getService(ClientSideDQP.class);
 		ClientSideDQP dqp1 = conn1.getService(ClientSideDQP.class);

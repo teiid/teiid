@@ -53,13 +53,13 @@ import com.metamatrix.core.util.Assertion;
  */
 public class SocketUtil {
     
-    static final String TRUSTSTORE_PASSWORD = "com.metamatrix.ssl.trustStorePassword"; //$NON-NLS-1$
-    public static final String TRUSTSTORE_FILENAME = "com.metamatrix.ssl.trustStore"; //$NON-NLS-1$
-    static final String KEYSTORE_ALGORITHM = "com.metamatrix.ssl.algorithm"; //$NON-NLS-1$
-    static final String PROTOCOL = "com.metamatrix.ssl.protocol"; //$NON-NLS-1$
-    static final String KEYSTORE_TYPE = "com.metamatrix.ssl.keyStoreType"; //$NON-NLS-1$
-    static final String KEYSTORE_PASSWORD = "com.metamatrix.ssl.keyStorePassword"; //$NON-NLS-1$
-    static final String KEYSTORE_FILENAME = "com.metamatrix.ssl.keyStore"; //$NON-NLS-1$
+    static final String TRUSTSTORE_PASSWORD = "org.teiid.ssl.trustStorePassword"; //$NON-NLS-1$
+    public static final String TRUSTSTORE_FILENAME = "org.teiid.ssl.trustStore"; //$NON-NLS-1$
+    static final String KEYSTORE_ALGORITHM = "org.teiid.ssl.algorithm"; //$NON-NLS-1$
+    static final String PROTOCOL = "org.teiid.ssl.protocol"; //$NON-NLS-1$
+    static final String KEYSTORE_TYPE = "org.teiid.ssl.keyStoreType"; //$NON-NLS-1$
+    static final String KEYSTORE_PASSWORD = "org.teiid.ssl.keyStorePassword"; //$NON-NLS-1$
+    static final String KEYSTORE_FILENAME = "org.teiid.ssl.keyStore"; //$NON-NLS-1$
     
     static final String DEFAULT_KEYSTORE_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
@@ -89,19 +89,12 @@ public class SocketUtil {
     }
     
     public static SSLSocketFactory getSSLSocketFactory(Properties props) throws IOException, GeneralSecurityException{
-    	// -Dcom.metamatrix.ssl.keyStore
         String keystore = props.getProperty(KEYSTORE_FILENAME); 
-        // -Dcom.metamatrix.ssl.keyStorePassword
         String keystorePassword = props.getProperty(KEYSTORE_PASSWORD); 
-        // -Dcom.metamatrix.ssl.keyStoreType (default JKS)
         String keystoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE); 
-        // -Dcom.metamatrix.ssl.protocol (default SSLv3)
         String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_KEYSTORE_PROTOCOL); 
-        // -Dcom.metamatrix.ssl.algorithm (default SunX509)
         String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM); 
-        // -Dcom.metamatrix.ssl.trustStore (if null; keystore filename used)
         String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
-        // -Dcom.metamatrix.ssl.trustStorePassword (if null; keystore password used)
         String truststorePassword = props.getProperty(TRUSTSTORE_PASSWORD, keystorePassword); 
         
         boolean anon = NONE.equalsIgnoreCase(truststore);
