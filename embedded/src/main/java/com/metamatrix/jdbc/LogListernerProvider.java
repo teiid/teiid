@@ -74,7 +74,7 @@ class LogListernerProvider implements Provider<LogListener> {
 	                URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
                     File file = new File(logURL.getPath());
                     PlatformLog log = new PlatformLog();
-                    log.addListener(new FileLimitSizeLogWriter(file));
+                    log.addListener(new FileLimitSizeLogWriter(file, false));
                     return log;
 	            }
         	}
