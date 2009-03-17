@@ -184,7 +184,7 @@ public class DataServiceWebServiceImpl {
 					returnFragment = set.getString(1);
 
 				} else {
-					final String[] params = { procedure };
+					final String params = procedure;
 					LogUtil.log(LogConfiguration.ERROR, SOAPPlugin.Util.getString("DataServiceWebServiceImpl.8")); //$NON-NLS-1$
 					createSOAPFaultMessage(new Exception(SOAPPlugin.Util
 							.getString("DataServiceWebServiceImpl.7", params)), //$NON-NLS-1$
@@ -194,7 +194,7 @@ public class DataServiceWebServiceImpl {
 				}
 
 				if (set.next()) {
-					final String[] params = { procedure };
+					final String params = procedure;
 					String message = SOAPPlugin.Util.getString(
 							"DataServiceWebServiceImpl.1", params); //$NON-NLS-1$
 					createSOAPFaultMessage(new SQLException(message), message,
@@ -307,9 +307,8 @@ public class DataServiceWebServiceImpl {
 			connection = connectionSource.getConnection(connectionProperties);
 
 		} catch (Exception e) {
-			final String[] param = { userName, e.getMessage() };
 			throw new SOAPException(SOAPPlugin.Util.getString(
-					"DataServiceWebServiceImpl.12", param) //$NON-NLS-1$
+					"DataServiceWebServiceImpl.12", userName, e.getMessage()) //$NON-NLS-1$
 					, e);
 		}
 		return connection;

@@ -155,7 +155,7 @@ class RelationalPlanExecutor implements PlanExecutor {
             try {
                 this.tupleSource = this.bufferMgr.getTupleSource(this.internalResultID);
             } catch (TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("tuple_not_found", new String[] {this.resultInfo.getResultSetName()})); //$NON-NLS-1$                
+                throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("tuple_not_found", this.resultInfo.getResultSetName())); //$NON-NLS-1$                
             }
         }
         

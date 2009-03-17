@@ -82,7 +82,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getCurrentRow(aliasResultName);
             }
-            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", new String[] {aliasResultName})); //$NON-NLS-1$
+            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
         }
         return executor.currentRow();
     }
@@ -99,7 +99,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getNextRow(aliasResultName);
             }
-            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", new String[] {aliasResultName})); //$NON-NLS-1$
+            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
         }
         return executor.nextRow();
     }
@@ -137,7 +137,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getOutputElements(resultName);
             }
-            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", new String[] {resultName})); //$NON-NLS-1$
+            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("results_not_found", resultName)); //$NON-NLS-1$
         }
         return executor.getOutputElements();        
     }

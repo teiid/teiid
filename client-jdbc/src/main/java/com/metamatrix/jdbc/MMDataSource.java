@@ -458,7 +458,7 @@ public class MMDataSource extends BaseDataSource {
     		}
     	}
     	if ( reasonCount < 1 ) return null;
-    	return JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", new String[] { "" + reasonCount, reason }); //$NON-NLS-1$ //$NON-NLS-2$
+    	return JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", String.valueOf(reasonCount), reason); //$NON-NLS-1$
     }
  
     /** 

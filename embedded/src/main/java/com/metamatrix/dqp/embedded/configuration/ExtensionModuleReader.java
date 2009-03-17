@@ -60,9 +60,9 @@ public class ExtensionModuleReader {
             in = extModuleURL.openStream();                               
             contents = ByteArrayHelper.toByteArray(in);
         } catch (FileNotFoundException e) {
-            throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_does_not_exist", new String[] {extModuleName})); //$NON-NLS-1$
+            throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_does_not_exist", extModuleName)); //$NON-NLS-1$
         } catch (IOException e) {
-            throw new MetaMatrixComponentException(e, DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_failed_to_read", new String[] {extModuleName})); //$NON-NLS-1$
+            throw new MetaMatrixComponentException(e, DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_failed_to_read", extModuleName)); //$NON-NLS-1$
         } finally {
             if (in != null) {
                 try{in.close();}catch(IOException e) {}

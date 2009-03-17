@@ -143,7 +143,7 @@ public class StandardAuthorizationActions implements Serializable, Authorization
      */
     public static AuthorizationActions getAuthorizationActions(String[] labels) {
         if (labels == null || labels.length == 0 || labels.length > LABELS_COUNT ) {
-            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0068, labels));
+            throw new IllegalArgumentException(SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0068, (Object[])labels));
         }
         Iterator iter = actionSet.values().iterator();
         while ( iter.hasNext() ) {
