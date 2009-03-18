@@ -35,13 +35,13 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
