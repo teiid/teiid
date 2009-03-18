@@ -37,6 +37,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +75,7 @@ public final class EmbeddedDriver extends BaseDriver {
     
     static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     static final String MM_IO_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
     
     private static EmbeddedTransport currentTransport = null;
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
@@ -111,6 +113,10 @@ public final class EmbeddedDriver extends BaseDriver {
         parseURL(url, info);            
         conn = createConnection(info);
 
+        // logging
+        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
+        logger.info(logMsg);
+        
         return conn;
 
     }
@@ -226,7 +232,7 @@ public final class EmbeddedDriver extends BaseDriver {
      * @param jdbcURL
      * @return default connection URL
      */
-    String getDefaultConnectionURL() {        
+    static String getDefaultConnectionURL() {        
         return "classpath:/deploy.properties"; //$NON-NLS-1$
     }
     
@@ -349,15 +355,17 @@ public final class EmbeddedDriver extends BaseDriver {
             //Load the properties from dqp.properties file
             Properties props = loadDQPProperties(dqpURL);
             props.putAll(info);
-            
+                        
             this.classLoader = this.getClass().getClassLoader();
             
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspath = new ArrayList<URL>();
 
             // find jars in the "lib" directory; patches is reverse alpaha and not case sensitive so small letters then capitals
-            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
-            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/", MMURLConnection.DATE)); //$NON-NLS-1$
+            if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
+	            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
+	            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/", MMURLConnection.DATE)); //$NON-NLS-1$
+            }
             
             URL[] dqpClassPath = runtimeClasspath.toArray(new URL[runtimeClasspath.size()]);
             this.classLoader = new NonDelegatingClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());

@@ -585,7 +585,9 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             ArrayList<URL> urlPath = new ArrayList<URL>();
             
             urlPath.addAll(Arrays.asList(userPath));
-            urlPath.addAll(Arrays.asList(commonExtensionPath));
+            if (commonExtensionPath != null) {
+            	urlPath.addAll(Arrays.asList(commonExtensionPath));
+            }
             
             ClassLoader classLoader = new URLFilteringClassLoader(urlPath.toArray(new URL[urlPath.size()]), Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             Class cmgrImplClass = classLoader.loadClass(CONNECTOR_MGR_IMPL);
