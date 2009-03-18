@@ -29,10 +29,10 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.query.sql.lang.Command;
 
 /**

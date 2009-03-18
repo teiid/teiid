@@ -27,9 +27,9 @@ import javax.transaction.SystemException;
 import javax.transaction.xa.XAResource;
 
 import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
 public interface TransactionServer {
     

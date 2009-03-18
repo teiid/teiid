@@ -29,10 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 

@@ -24,12 +24,13 @@ package com.metamatrix.dqp.message;
 
 import java.util.Date;
 
+import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.internal.datamgr.language.TestQueryImpl;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 public class TestAtomicRequestMessage extends TestCase {

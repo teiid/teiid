@@ -29,11 +29,11 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.dqp.internal.process.DQPCore;
 
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeAbstractService;

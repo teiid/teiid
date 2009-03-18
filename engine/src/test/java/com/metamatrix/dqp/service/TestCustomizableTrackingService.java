@@ -35,6 +35,9 @@ import java.util.concurrent.TimeoutException;
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -42,9 +45,6 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.dqp.internal.datamgr.impl.FakeTransactionService;
-import com.metamatrix.dqp.internal.process.DQPCore;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;

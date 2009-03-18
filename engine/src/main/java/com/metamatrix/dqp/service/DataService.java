@@ -25,6 +25,8 @@ package com.metamatrix.dqp.service;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
@@ -32,7 +34,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
