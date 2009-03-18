@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.teiid.connector.jdbc.oracle.OracleCapabilities;
+import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.CapabilitiesConverter;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.processor.HardcodedDataManager;

@@ -29,12 +29,12 @@ import java.util.Set;
 import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.LanguageUtil;
+import org.teiid.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
-import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 /**
  */

@@ -32,12 +32,12 @@ import junit.framework.TestCase;
 import org.teiid.connector.jdbc.JDBCQueryExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ISelect;
+import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
+import org.teiid.dqp.internal.datamgr.language.QueryImpl;
+import org.teiid.dqp.internal.datamgr.language.SelectImpl;
+import org.teiid.dqp.internal.datamgr.language.SelectSymbolImpl;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.internal.datamgr.language.LiteralImpl;
-import com.metamatrix.dqp.internal.datamgr.language.QueryImpl;
-import com.metamatrix.dqp.internal.datamgr.language.SelectImpl;
-import com.metamatrix.dqp.internal.datamgr.language.SelectSymbolImpl;
 
 public class TestJDBCExecutionHelper extends TestCase{
     

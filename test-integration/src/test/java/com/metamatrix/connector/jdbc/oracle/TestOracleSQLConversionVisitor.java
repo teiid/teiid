@@ -33,15 +33,15 @@ import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
+import org.teiid.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
+import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
