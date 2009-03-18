@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender;
 import org.apache.log4j.spi.LoggingEvent;
+import org.teiid.dqp.internal.transaction.TransactionProvider;
 
 import com.arjuna.ats.arjuna.common.Configuration;
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
@@ -56,7 +57,6 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.internal.transaction.TransactionProvider;
 import com.metamatrix.dqp.service.TransactionService;
 
 public class ArjunaTransactionProvider implements TransactionProvider {
@@ -83,7 +83,7 @@ public class ArjunaTransactionProvider implements TransactionProvider {
     }
     
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#init(java.lang.String)
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#init(java.lang.String)
      */
     public void init(Properties props) throws XATransactionException {
         // unique name for this txn manager
@@ -151,28 +151,28 @@ public class ArjunaTransactionProvider implements TransactionProvider {
     }
     
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#getXATerminator()
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#getXATerminator()
      */
     public XATerminator getXATerminator() {
         return terminator;
     }
 
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#getTransactionManager()
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#getTransactionManager()
      */
     public TransactionManager getTransactionManager() {
         return com.arjuna.ats.jta.TransactionManager.transactionManager();
     }
     
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#importTransaction(com.metamatrix.common.xa.MMXid, int)
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#importTransaction(com.metamatrix.common.xa.MMXid, int)
      */
     public Transaction importTransaction(MMXid xid, int timeout) throws XAException {
         return TxImporter.importTransaction(xid, timeout);
     }
 
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#getTransactionID(javax.transaction.Transaction)
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#getTransactionID(javax.transaction.Transaction)
      */
     public String getTransactionID(Transaction tx) {
         TransactionImple arjunaTx = (TransactionImple)tx;
@@ -180,7 +180,7 @@ public class ArjunaTransactionProvider implements TransactionProvider {
     }
 
     /** 
-     * @see com.metamatrix.dqp.internal.transaction.TransactionProvider#shutdown()
+     * @see org.teiid.dqp.internal.transaction.TransactionProvider#shutdown()
      */
     public void shutdown() {
         if (this.recoveryManager != null) {

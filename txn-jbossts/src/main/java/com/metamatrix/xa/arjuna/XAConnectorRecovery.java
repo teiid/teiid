@@ -30,8 +30,9 @@ import java.util.Map;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
+
 import com.arjuna.ats.jta.recovery.XAResourceRecovery;
-import com.metamatrix.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
 
 /** 
