@@ -28,14 +28,14 @@ import java.util.List;
 
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
+import org.teiid.dqp.internal.datamgr.language.LanguageFactoryImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
-import com.metamatrix.dqp.internal.datamgr.language.LanguageFactoryImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.AliasGenerator;
 import com.metamatrix.query.parser.QueryParser;

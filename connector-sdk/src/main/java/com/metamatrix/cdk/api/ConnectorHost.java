@@ -39,14 +39,14 @@ import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
+import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
+import org.teiid.dqp.internal.datamgr.language.BatchedUpdatesImpl;
 
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
-import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
-import com.metamatrix.dqp.internal.datamgr.language.BatchedUpdatesImpl;
 import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 
 /**

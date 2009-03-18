@@ -29,9 +29,9 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
+import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
-import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 /**
  * A utility factory class to create connector environment objects that are normally supplied
