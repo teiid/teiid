@@ -28,13 +28,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;

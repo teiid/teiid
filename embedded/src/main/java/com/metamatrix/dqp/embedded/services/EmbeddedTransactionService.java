@@ -24,6 +24,8 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.util.Properties;
 
+import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -32,7 +34,6 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.internal.transaction.TransactionServerImpl;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.transaction.XAServer;

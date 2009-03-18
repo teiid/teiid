@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.process.DQPCore;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -44,7 +46,6 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
