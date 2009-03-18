@@ -25,11 +25,11 @@ package com.metamatrix.connector.metadata;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 

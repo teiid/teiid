@@ -34,13 +34,13 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.QueryMetadataInterfaceBuilder;
 

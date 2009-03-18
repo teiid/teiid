@@ -31,13 +31,13 @@ import java.util.List;
 
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
 import com.metamatrix.metadata.runtime.FakeQueryMetadata;
 

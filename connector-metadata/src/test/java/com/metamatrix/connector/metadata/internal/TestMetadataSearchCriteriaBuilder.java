@@ -29,13 +29,13 @@ import java.util.Map;
 
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.connector.metadata.index.MetadataInCriteria;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
-import com.metamatrix.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;

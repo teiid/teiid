@@ -36,6 +36,8 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
+import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 
 import junit.framework.TestCase;
 
@@ -48,8 +50,6 @@ import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.TestConnectorHost;
 import com.metamatrix.connector.metadata.internal.TestObjectQueryProcessor;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
-import com.metamatrix.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
 import com.metamatrix.metadata.runtime.FakeQueryMetadata;
