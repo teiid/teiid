@@ -51,6 +51,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.util.ResultSetUtil;
 
@@ -116,6 +117,8 @@ public class TestMMDatabaseMetaData {
                 Object expectedValue = null;
                 Object expectedReturn = expectedMap.get(methods[i].getName());
                 Object[] params = null;
+                
+                if (methods[i].getName().equalsIgnoreCase(DQP_CONFIG_FILE))
 
                 if (expectedReturn instanceof List) {
                     // has input parameters
@@ -1473,13 +1476,13 @@ public class TestMMDatabaseMetaData {
         expected.put("usesLocalFilePerTable", Boolean.FALSE); //$NON-NLS-1$
 
         // return type -- int
-        expected.put("getDatabaseMinorVersion", new Integer(EmbeddedDriver.MINOR_VERSION)); //$NON-NLS-1$
-        expected.put("getDatabaseMajorVersion", new Integer(EmbeddedDriver.MAJOR_VERSION)); //$NON-NLS-1$
+        expected.put("getDatabaseMinorVersion", new Integer(ApplicationInfo.getInstance().getMinorReleaseVersion())); //$NON-NLS-1$
+        expected.put("getDatabaseMajorVersion", new Integer(ApplicationInfo.getInstance().getMajorReleaseVersion())); //$NON-NLS-1$
         expected.put("getJDBCMajorVersion", new Integer(3)); //$NON-NLS-1$
         expected.put("getJDBCMinorVersion", new Integer(0)); //$NON-NLS-1$
         expected.put("getDefaultTransactionIsolation", new Integer(Connection.TRANSACTION_NONE)); //$NON-NLS-1$
-        expected.put("getDriverMajorVersion", new Integer(EmbeddedDriver.MAJOR_VERSION)); //$NON-NLS-1$
-        expected.put("getDriverMinorVersion", new Integer(EmbeddedDriver.MINOR_VERSION)); //$NON-NLS-1$
+        expected.put("getDriverMajorVersion", new Integer(ApplicationInfo.getInstance().getMajorReleaseVersion())); //$NON-NLS-1$
+        expected.put("getDriverMinorVersion", new Integer(ApplicationInfo.getInstance().getMinorReleaseVersion())); //$NON-NLS-1$
         expected.put("getMaxBinaryLiteralLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
         expected.put("getMaxCatalogNameLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
         expected.put("getMaxCharLiteralLength", new Integer(NO_LIMIT)); //$NON-NLS-1$
@@ -1509,7 +1512,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getDatabaseProductName", "MetaMatrix Query"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductVersion", "5.5"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDriverName", "MetaMatrix Query JDBC Driver"); //$NON-NLS-1$ //$NON-NLS-2$
-        expected.put("getDriverVersion", "5.5"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDriverVersion", ApplicationInfo.getInstance().getMajorReleaseVersion()+"."+ApplicationInfo.getInstance().getMinorReleaseVersion()); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getExtraNameCharacters", ".@"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getIdentifierQuoteString", "\""); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getNumericFunctions", MMDatabaseMetaData.NUMERIC_FUNCTIONS); //$NON-NLS-1$

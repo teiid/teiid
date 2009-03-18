@@ -38,12 +38,6 @@ public class TestEmbeddedDriver extends TestCase {
 
     EmbeddedDriver driver = new EmbeddedDriver();
     
-    public void testGetVersion() {
-        assertEquals(EmbeddedDriver.MAJOR_VERSION, driver.getMajorVersion());
-        assertEquals(EmbeddedDriver.MINOR_VERSION, driver.getMinorVersion());
-        assertEquals(EmbeddedDriver.DRIVER_NAME, driver.getDriverName());
-    }
-    
     /*
      * Test method for 'com.metamatrix.jdbc.EmbeddedDriver.acceptsURL(String)'
      * // (\\w:[\\\\,\\/]|file:\\/\\/|\\/|\\\\|(\\.){1,2}){1}
