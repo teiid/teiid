@@ -45,6 +45,7 @@ import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.common.protocol.MMURLConnection;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -69,9 +70,7 @@ public final class EmbeddedDriver extends BaseDriver {
      */
     static final String URL_PATTERN = "jdbc:metamatrix:(\\w+)@(([^;]*)[;]?)((.*)*)"; //$NON-NLS-1$
     static final String BASE_PATTERN = "jdbc:metamatrix:((\\w+)[;]?)(;([^@])+)*"; //$NON-NLS-1$
-    public static final int MAJOR_VERSION = 5;
-    public static final int MINOR_VERSION = 5;
-    public static final String DRIVER_NAME = "MetaMatrix Query JDBC Driver"; //$NON-NLS-1$
+    public static final String DRIVER_NAME = "Teiid Embedded JDBC Driver"; //$NON-NLS-1$
     
     static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     static final String MM_IO_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
@@ -301,7 +300,7 @@ public final class EmbeddedDriver extends BaseDriver {
      * @return major version number of the driver.
      */
     public int getMajorVersion() {
-        return MAJOR_VERSION;
+        return ApplicationInfo.getInstance().getMajorReleaseVersion();
     }
 
     /**
@@ -309,7 +308,7 @@ public final class EmbeddedDriver extends BaseDriver {
      * @return major version number of the driver.
      */
     public int getMinorVersion() {
-        return MINOR_VERSION;
+        return ApplicationInfo.getInstance().getMinorReleaseVersion();
     }
 
     /**

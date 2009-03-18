@@ -102,7 +102,7 @@ public class EmbeddedDataSource extends BaseDataSource {
 
         if (this.getBootstrapFile() != null && this.getBootstrapFile().trim().length() != 0) {
             try {
-            	if (this.getBootstrapFile().equals(this.driver.getDefaultConnectionURL())) {
+            	if (this.getBootstrapFile().equals(EmbeddedDriver.getDefaultConnectionURL())) {
             		props.put("vdb.definition", getDatabaseName() +".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
             	}
                 props.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, URLHelper.buildURL(this.getBootstrapFile().trim()));
@@ -119,7 +119,7 @@ public class EmbeddedDataSource extends BaseDataSource {
 
         // we do not have bootstrap file, make sure we have a default one.
         if (getBootstrapFile() == null && getDatabaseName() != null) {
-            setBootstrapFile(this.driver.getDefaultConnectionURL());
+            setBootstrapFile(EmbeddedDriver.getDefaultConnectionURL());
         }
         
         String reason = reasonWhyInvalidConfigFile(this.bootstrapFile);

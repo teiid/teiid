@@ -39,6 +39,7 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.jdbc.api.ConnectionProperties;
@@ -59,9 +60,7 @@ public final class MMDriver extends BaseDriver {
 	
     static final String JDBC = BaseDataSource.JDBC;
     static final String URL_PREFIX = JDBC + BaseDataSource.METAMATRIX_PROTOCOL; 
-    static final int MAJOR_VERSION = 5;
-    static final int MINOR_VERSION = 5;
-    static final String DRIVER_NAME = "MetaMatrix JDBC Driver"; //$NON-NLS-1$
+    static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$
     /**
      *  Suports JDBC URLS of format
      *  - jdbc:metamatrix:BQT@mm://localhost:####;version=1
@@ -128,11 +127,10 @@ public final class MMDriver extends BaseDriver {
         } catch (MetaMatrixCoreException e) {
             DriverManager.println(e.getMessage());
             throw MMSQLException.create(e, e.getMessage());
-            //throw new MMSQLException(e.getMessage(), e);
         }
 
         // logging
-        String logMsg = JDBCPlugin.Util.getString("MMDriver.Connection_sucess"); //$NON-NLS-1$
+        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
         logger.info(logMsg);
 
         return myConnection;
@@ -208,7 +206,7 @@ public final class MMDriver extends BaseDriver {
      * @return major version number of the driver.
      */
     public int getMajorVersion() {
-        return MAJOR_VERSION;
+        return ApplicationInfo.getInstance().getMajorReleaseVersion();
     }
 
     /**
@@ -216,7 +214,7 @@ public final class MMDriver extends BaseDriver {
      * @return major version number of the driver.
      */
     public int getMinorVersion() {
-        return MINOR_VERSION;
+        return ApplicationInfo.getInstance().getMinorReleaseVersion();
     }
 
     /** 
