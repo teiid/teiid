@@ -20,9 +20,8 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.ssl;
+package org.teiid.connector.jdbc.oracle;
 
-import org.teiid.connector.jdbc.oracle.OracleCapabilities;
 
 
 /** 

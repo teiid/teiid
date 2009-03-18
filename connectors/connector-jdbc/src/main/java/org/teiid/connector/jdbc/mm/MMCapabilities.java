@@ -158,4 +158,14 @@ public class MMCapabilities extends JDBCCapabilities {
     public boolean supportsRowOffset() {
         return true;
     }
+    
+    @Override
+    public boolean supportsExcept() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsIntersect() {
+    	return true;
+    }
 }
