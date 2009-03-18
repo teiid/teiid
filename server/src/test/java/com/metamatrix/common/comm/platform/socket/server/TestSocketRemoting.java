@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import junit.framework.TestCase;
 
 
@@ -54,7 +56,6 @@ import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;

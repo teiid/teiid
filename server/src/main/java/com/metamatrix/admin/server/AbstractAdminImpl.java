@@ -36,6 +36,7 @@ import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -64,7 +65,6 @@ import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;

@@ -22,7 +22,8 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.platform.admin.api.SubSystemAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 

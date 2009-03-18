@@ -24,10 +24,11 @@ package com.metamatrix.admin.server;
 
 import java.util.Collection;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.core.util.SimpleMock;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;

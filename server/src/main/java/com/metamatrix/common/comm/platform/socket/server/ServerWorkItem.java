@@ -32,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.crypto.SealedObject;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -47,7 +49,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;

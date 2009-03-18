@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.exception.CommunicationException;
@@ -41,7 +43,6 @@ import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 /**

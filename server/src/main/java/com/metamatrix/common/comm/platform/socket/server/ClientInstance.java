@@ -24,10 +24,11 @@ package com.metamatrix.common.comm.platform.socket.server;
 
 import java.io.Serializable;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.util.crypto.Cryptor;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 
 /**
  * Represents a ClientConnection from the server's point of view.  This interface

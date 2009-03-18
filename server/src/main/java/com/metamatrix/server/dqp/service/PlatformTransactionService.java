@@ -26,6 +26,8 @@ package com.metamatrix.server.dqp.service;
 
 import java.util.Properties;
 
+import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -41,7 +43,6 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.dqp.internal.transaction.TransactionServerImpl;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.transaction.XAServer;

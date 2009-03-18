@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.process.DQPCore;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
@@ -50,7 +52,6 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
-import com.metamatrix.dqp.internal.process.DQPCore;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;

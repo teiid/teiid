@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -42,7 +43,6 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;

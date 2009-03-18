@@ -26,6 +26,8 @@ import java.lang.reflect.Proxy;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.admin.api.exception.AdminException;
@@ -35,7 +37,6 @@ import com.metamatrix.admin.util.AdminMethodRoleResolver;
 import com.metamatrix.common.comm.platform.FakeAdminHelper;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.core.util.SimpleMock;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.admin.apiimpl.IAdminHelper;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;

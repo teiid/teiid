@@ -43,6 +43,9 @@ import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -78,9 +81,6 @@ import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
-import com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager;
-import com.metamatrix.dqp.internal.process.DQPCore;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;

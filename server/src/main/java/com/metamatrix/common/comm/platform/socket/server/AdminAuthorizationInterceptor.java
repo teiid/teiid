@@ -26,6 +26,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.admin.util.AdminMethodRoleResolver;
@@ -37,7 +39,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.admin.apiimpl.IAdminHelper;
 import com.metamatrix.platform.security.api.SessionToken;
 

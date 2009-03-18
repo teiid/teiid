@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.google.inject.Inject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -39,7 +41,6 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationPermission;

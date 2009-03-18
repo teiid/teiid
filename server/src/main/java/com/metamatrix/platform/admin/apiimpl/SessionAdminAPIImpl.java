@@ -24,12 +24,13 @@ package com.metamatrix.platform.admin.apiimpl;
 
 import java.util.Collection;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
-import com.metamatrix.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.platform.admin.api.SessionAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
