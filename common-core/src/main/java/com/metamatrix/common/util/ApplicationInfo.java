@@ -69,8 +69,19 @@ public final class ApplicationInfo implements Serializable {
 	}
     
 	public String getMajorReleaseNumber() {
-		return getReleaseNumber().substring(0, getReleaseNumber().lastIndexOf('.')); //$NON-NLS-1$
+		return getReleaseNumber().substring(0, getReleaseNumber().lastIndexOf('.')); 
 	}
+	
+	public int getMajorReleaseVersion() {
+		String version = getReleaseNumber().substring(0, getReleaseNumber().indexOf('.'));
+		return Integer.parseInt(version);
+	}
+	
+    public int getMinorReleaseVersion() {
+    	int majorIndex = getReleaseNumber().indexOf('.');
+    	String version = getReleaseNumber().substring(majorIndex+1, getReleaseNumber().indexOf('.', majorIndex+1));
+        return Integer.parseInt(version);
+    }
 	
 	public String getBuildNumber() {
 		return props.getProperty("build.number"); //$NON-NLS-1$
