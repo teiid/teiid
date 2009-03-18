@@ -155,5 +155,7 @@ public interface ExecutionContext {
      * @param ex
      */
     void addWarning(Exception ex);
+    
+    boolean isTransactional();
 
 }
