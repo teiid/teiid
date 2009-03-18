@@ -266,26 +266,34 @@ public class ReflectionHelper {
 
     public static final Object create(String className, Collection ctorObjs, 
                                       final ClassLoader classLoader) throws MetaMatrixCoreException {
+    	try {
+	        int size = (ctorObjs == null ? 0 : ctorObjs.size());
+	        Class[] names = new Class[size];
+	        Object[] objArray = new Object[size];
+	        int i = 0;
+	
+	        if (size > 0) {
+	            for (Iterator it=ctorObjs.iterator(); it.hasNext(); ) {
+	                Object obj = it.next();
+	                names[i] = loadClass(obj.getClass().getName(),classLoader);
+	                objArray[i] = obj;
+	                i++;
+	            }
+	        } 
+	        return create(className, objArray, names, classLoader);
+    	} catch (Exception e) {
+    		throw new MetaMatrixCoreException(e);
+    	}
+    }
+    	
+    public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes, 
+                final ClassLoader classLoader) throws MetaMatrixCoreException {
         try {
-            int size = (ctorObjs == null ? 0 : ctorObjs.size());
-            Class[] names = new Class[size];
-            Object[] objArray = new Object[size];
-            int i = 0;
-
-            if (size > 0) {
-                for (Iterator it=ctorObjs.iterator(); it.hasNext(); ) {
-                    Object obj = it.next();
-                    names[i] = loadClass(obj.getClass().getName(),classLoader);
-                    objArray[i] = obj;
-                    i++;
-                }
-            }
-
             final Class cls = loadClass(className,classLoader);
 
-            Constructor ctor = cls.getDeclaredConstructor(names);
+            Constructor ctor = cls.getDeclaredConstructor(argTypes);
 
-            return ctor.newInstance(objArray);
+            return ctor.newInstance(ctorObjs);
             
         } catch(Exception e) {
             throw new MetaMatrixCoreException(e);
