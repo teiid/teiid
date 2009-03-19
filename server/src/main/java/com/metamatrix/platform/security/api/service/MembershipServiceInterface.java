@@ -31,6 +31,7 @@ import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -58,7 +59,7 @@ public interface MembershipServiceInterface extends ServiceInterface {
     public static final String DOMAIN_NAME = "domainName"; //$NON-NLS-1$
     
     public static final String DEFAULT_ADMIN_USERNAME = "metamatrixadmin"; //$NON-NLS-1$
-    public static final String DEFAULT_WSDL_USERNAME = "teiidanonymous"; //$NON-NLS-1$
+    public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
     public static final String ADMIN_PASSWORD = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_PASSWORD;
     public static final String ADMIN_USERNAME = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME;
