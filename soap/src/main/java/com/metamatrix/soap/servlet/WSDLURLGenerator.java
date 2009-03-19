@@ -41,6 +41,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.core.log.LogListener;
@@ -55,20 +57,11 @@ import com.metamatrix.soap.util.SOAPConstants;
  * @since 4.2
  */
 public class WSDLURLGenerator extends HttpServlet {
+	
+	static Logger log = Logger.getLogger(WSDLURLGenerator.class);
 
-    public LogListener newListener = null;
-    public FileLogWriter logWriter = null;
-
-    MMGetVDBResourcePlatformLog platformLog = MMGetVDBResourcePlatformLog.getInstance();
-    
     synchronized public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        String logFile = getServletContext().getInitParameter("logfile"); //$NON-NLS-1$
-
-        File log = new File(logFile);
-        logWriter = new FileLogWriter(log);
-        platformLog.getPlatformLog().addListener(logWriter);
     }
 
     public void doGet(HttpServletRequest req,
@@ -102,7 +95,7 @@ public class WSDLURLGenerator extends HttpServlet {
             checkFormValue(targetHost, WSDLServletUtil.TARGET_HOST_KEY);
 
         } catch (Exception e) {
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
+            log.error(e);
             resp.getOutputStream().println(e.getMessage());
             return;
         }
@@ -142,7 +135,7 @@ public class WSDLURLGenerator extends HttpServlet {
         	}
         } catch (MalformedURLException mue) {
             String message = SOAPPlugin.Util.getString(ErrorMessageKeys.SERVICE_0021, mmServerHost);
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, mue, message);
+            log.error(message, mue);
             resp.getOutputStream().println(message);
             return;
         }
@@ -182,7 +175,7 @@ public class WSDLURLGenerator extends HttpServlet {
                     error.append((char)c);
                 }
                 String message = SOAPPlugin.Util.getString(ErrorMessageKeys.SERVICE_0022, servletPath, error.toString());
-                MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, message);
+                log.error(message);                
                 resp.getOutputStream().println(message);
             } finally {
                 reader.close();
@@ -208,7 +201,7 @@ public class WSDLURLGenerator extends HttpServlet {
             }
         } catch (NumberFormatException nfe) {
             String message = SOAPPlugin.Util.getString(error_key, integer);
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, nfe, message);
+            log.error(message, nfe);
             resp.getOutputStream().println(message);
             return false;
         }

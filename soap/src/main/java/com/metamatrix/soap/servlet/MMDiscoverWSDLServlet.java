@@ -31,6 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.util.WSDLServletUtil;
@@ -64,11 +66,6 @@ public class MMDiscoverWSDLServlet extends MMGetWSDLServlet {
 	synchronized public void init( ServletConfig config ) throws ServletException {
 		super.init(config);
 
-		String logFile = getServletContext().getInitParameter("logfile"); //$NON-NLS-1$
-		File log = new File(logFile);
-		logWriter = new FileLogWriter(log);
-		platformLog.getPlatformLog().addListener(logWriter);
-
 		mmServer = getServletContext().getInitParameter("mmServer"); //$NON-NLS-1$
 		mmProtocol = getServletContext().getInitParameter("mmProtocol"); //$NON-NLS-1$        
 	}
@@ -94,13 +91,13 @@ public class MMDiscoverWSDLServlet extends MMGetWSDLServlet {
 			getServletConfig().getServletContext().getRequestDispatcher("/wsdlurls.jsp").forward(req, resp); //$NON-NLS-1$
 
 		} catch (LogonException e) {
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
+			log.error(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.2"), e);
 			resp.getOutputStream().println(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.2") + e.getMessage()); //$NON-NLS-1$
 		} catch (AdminException e) {
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
+			log.error(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.2"), e);
 			resp.getOutputStream().println(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.2") + e.getMessage()); //$NON-NLS-1$
 		} catch (Exception e) {
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, e, e.getMessage());
+			log.error(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.1"), e);
 			resp.getOutputStream().println(SOAPPlugin.Util.getString("MMDiscoverWSDLServlet.1") + e.getMessage()); //$NON-NLS-1$
 		}
 	}

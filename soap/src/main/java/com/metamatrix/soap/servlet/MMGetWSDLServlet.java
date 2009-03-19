@@ -32,6 +32,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.core.log.MessageLevel;
@@ -52,17 +54,13 @@ public class MMGetWSDLServlet extends MMGetVDBResourceServlet {
 	/** MM Server host/port/protocol */
 	private String mmServer = StringUtil.Constants.EMPTY_STRING;
 	private String mmProtocol = StringUtil.Constants.EMPTY_STRING;
+    static Logger log = Logger.getLogger(MMGetVDBResourceServlet.class);
 
 	public MMGetWSDLServlet() {
 	}
 
 	synchronized public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-
-		String logFile = getServletContext().getInitParameter("logfile"); //$NON-NLS-1$
-		File log = new File(logFile);
-		logWriter = new FileLogWriter(log);
-		platformLog.getPlatformLog().addListener(logWriter);
 
 		mmServer = getServletContext().getInitParameter("mmServer"); //$NON-NLS-1$
 		mmProtocol = getServletContext().getInitParameter("mmProtocol"); //$NON-NLS-1$        
@@ -117,8 +115,7 @@ public class MMGetWSDLServlet extends MMGetVDBResourceServlet {
 		} catch (Exception e) {
 			String message = SOAPPlugin.Util
 					.getString(ErrorMessageKeys.SERVICE_0006); // ;
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(
-					MessageLevel.ERROR, e, message);
+			log.error(message, e);
 			resp.getOutputStream().println(message);
 			return;
 		}
@@ -169,22 +166,16 @@ public class MMGetWSDLServlet extends MMGetVDBResourceServlet {
 
 		} catch (SQLException se) {
 			resp.getOutputStream().println(se.getMessage());
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(
-					MessageLevel.ERROR, se,
-					SOAPPlugin.Util.getString("MMGetVDBResourceServlet.7")); //$NON-NLS-1$            
+			log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.7"), se);
 		} catch (Exception e) {
-			MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(
-					MessageLevel.ERROR, e,
-					SOAPPlugin.Util.getString("MMGetVDBResourceServlet.8")); //$NON-NLS-1$                                                                    
+			log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.8"), e);
 			resp.getOutputStream().println(e.getMessage());
 		} finally {
 			try {
 				// Cleanup our connection
 				connection.close();
 			} catch (SQLException e) {
-				MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(
-						MessageLevel.ERROR, e,
-						SOAPPlugin.Util.getString("MMGetVDBResourceServlet.0")); //$NON-NLS-1$
+				log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.0"), e);
 				resp.setHeader(WSDL_ERROR, WSDL_ERROR);
 				resp.getOutputStream().println(e.getMessage());
 			}

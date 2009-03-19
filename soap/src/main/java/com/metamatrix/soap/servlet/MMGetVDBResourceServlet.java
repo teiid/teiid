@@ -45,6 +45,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.CoreConstants;
@@ -81,18 +83,13 @@ public class MMGetVDBResourceServlet extends HttpServlet {
     /** DataService Endpoint */
     private String dataServiceEndpoint = StringUtil.Constants.EMPTY_STRING;
     
-    protected LogListener newListener = null;
-    protected FileLogWriter logWriter = null;
-
-    MMGetVDBResourcePlatformLog platformLog=MMGetVDBResourcePlatformLog.getInstance();
-
+    static Logger log = Logger.getLogger(MMGetVDBResourceServlet.class);
+    
     public MMGetVDBResourceServlet() {
     }
     
     synchronized public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        
-        String logFile=getServletContext().getInitParameter("logfile"); //$NON-NLS-1$
         
         /* Check for override of Data Service endpoint. This is to allow for backwards compatibility
          * of WSDL for pre-5.5 data services.
@@ -101,10 +98,6 @@ public class MMGetVDBResourceServlet extends HttpServlet {
         if (dataServiceEndpoint==null || dataServiceEndpoint.equals(StringUtil.Constants.EMPTY_STRING)){
         	dataServiceEndpoint=DATASERVICE;
         }
-        
-        File log = new File(logFile);
-        logWriter=new FileLogWriter(log);
-        platformLog.getPlatformLog().addListener(logWriter);
     }
     
     
@@ -146,9 +139,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
             SOAPPlugin.Util.getString("MMGetVDBResourceServlet.Application_Name")); //$NON-NLS-1$
             
         } catch (Exception e) {
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                    e, 
-                                                                    e.getMessage());
+            log.error(e);
             resp.getOutputStream().println(e.getMessage());
             return;
         }
@@ -157,8 +148,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
             connection = getConnection(WebServiceUtil.WSDLUSER, WebServiceUtil.WSDLPASSWORD, vdbName, vdbVersion, serverURL);
         } catch (Exception e) {
             String message = SOAPPlugin.Util.getString(ErrorMessageKeys.SERVICE_0006); //;
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                    e, message);                                                                    
+            log.error(message, e);
             resp.getOutputStream().println(message);
             return;
         }
@@ -202,22 +192,16 @@ public class MMGetVDBResourceServlet extends HttpServlet {
 
         } catch (SQLException se) {            
             resp.getOutputStream().println(se.getMessage());
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                    se, 
-                                                                    SOAPPlugin.Util.getString("MMGetVDBResourceServlet.7")); //$NON-NLS-1$            
+            log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.7"), se);
         } catch (Exception e) {
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                    e, 
-                                                                    SOAPPlugin.Util.getString("MMGetVDBResourceServlet.8")); //$NON-NLS-1$                                                                    
+            log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.8"), e);
             resp.getOutputStream().println(e.getMessage());        
         } finally {
             try {
                 //Cleanup our connection
                 connection.close();
             } catch (SQLException e) {
-                MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                           e, 
-                                                                           SOAPPlugin.Util.getString("MMGetVDBResourceServlet.0"));                                                                     //$NON-NLS-1$
+                log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.0"), e);
                 resp.setHeader(WSDL_ERROR, WSDL_ERROR);
                 resp.getOutputStream().println(e.getMessage());
             }
@@ -302,7 +286,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
             rs = statement.getResultSet();
         }else {
             String message = SOAPPlugin.Util.getString("MMGetVDBResourceServlet.12"); //$NON-NLS-1$
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, message);
+            log.error(message);
             resp.getOutputStream().println(message); 
             return;
         }
@@ -311,7 +295,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
             clob = rs.getClob(1);                      
         }else {
             String message = SOAPPlugin.Util.getString("MMGetVDBResourceServlet.14"); //$NON-NLS-1$
-            MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR, message);
+            log.error(message);
             resp.getOutputStream().println(message); 
             return;
         }
@@ -426,9 +410,7 @@ public class MMGetVDBResourceServlet extends HttpServlet {
                         // make sure to encode the parameter values so they do not violate URL protocols.
                         parameterValue = URLEncoder.encode(((String[])parameterMap.get(keyString))[0], "UTF-8"); //$NON-NLS-1$
                     } catch (UnsupportedEncodingException err) {
-                        MMGetVDBResourcePlatformLog.getInstance().getLogFile().log(MessageLevel.ERROR,
-                                                                                   err, 
-                                                                                   SOAPPlugin.Util.getString("MMGetVDBResourceServlet.15"));  //$NON-NLS-1$
+                        log.error(SOAPPlugin.Util.getString("MMGetVDBResourceServlet.15", err));
                     }
                 }
                 suffixString = suffixString + keyString + "=" + parameterValue; //$NON-NLS-1$ 
