@@ -45,7 +45,7 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     public static final int CONTEXT_DELETE = 3;
     public static final int CONTEXT_PROCEDURE = 4;
     
-    public static final String DEFAULT_WSDL_USERNAME = "metamatrixwsdluser";
+    public static final String DEFAULT_WSDL_USERNAME = CoreCon
     
     /**
      * Determine which of a set of resources a connection does not have permission to
