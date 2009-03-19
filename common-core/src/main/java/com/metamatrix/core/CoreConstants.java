@@ -111,7 +111,12 @@ public interface CoreConstants {
      * @see #URL_SUFFIX_FOR_VDB
      * @see #URL_ROOT_FOR_VDB
      */
-    public static final String URL_FOR_DATA_WEBSERVICE = "http://vdb.dataservice.metamatrix.com"; //$NON-NLS-1$
+    public static final String URL_FOR_DATA_WEBSERVICE = "http://vdb.dataservice.metamatrix.com"; //$NON-NLS-1$\
+    
+    /**
+     * Constant for the anonymous Teiid system username  
+     */
+    public static final String DEFAULT_ANON_USERNAME = "teiidanonymous";
     
 
 }
