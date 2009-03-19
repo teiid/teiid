@@ -38,7 +38,7 @@ public class TestExecutionContextImpl extends TestCase {
 
     public ExecutionContextImpl createContext(String requestID, String partID) {
         return new ExecutionContextImpl("vdb", "1", "user", null, null,   //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-                                        "Connection", "Connector", requestID, partID, "0", false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                        "Connection", "Connector", requestID, partID, "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     public void testEqivalenceSemanticsSame() {

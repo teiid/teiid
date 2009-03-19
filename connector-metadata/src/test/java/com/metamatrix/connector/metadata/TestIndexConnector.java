@@ -163,7 +163,7 @@ public class TestIndexConnector extends TestCase {
     }
     
     private ExecutionContext helpGetSecurityContext() {
-        return new ExecutionContextImpl("testname", "1", null, null, null, null, null, null, null, null, false); //$NON-NLS-1$ //$NON-NLS-2$
+        return new ExecutionContextImpl("testname", "1", null, null, null, null, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
     }
     /* 
      * @see junit.framework.TestCase#tearDown()

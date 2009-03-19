@@ -26,23 +26,31 @@
  */
 package org.teiid.dqp.internal.datamgr.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.connector.internal.ConnectorPropertyNames;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
+import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeMetadataService;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -51,18 +59,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability
 /**
  * JUnit test for TestConnectorManagerImpl
  */
-public final class TestConnectorManagerImpl extends TestCase {
-    // =========================================================================
-    //                        F R A M E W O R K
-    // =========================================================================
-    /**
-     * Constructor for TestConnectorManagerImpl.
-     * @param name
-     */
-    public TestConnectorManagerImpl(final String name) {
-        super(name);
-    }
-
+public final class TestConnectorManagerImpl {
     private Properties helpGetAppProps() {
         Properties appProperties = new Properties();
 
@@ -77,7 +74,7 @@ public final class TestConnectorManagerImpl extends TestCase {
     //                         T E S T   C A S E S
     // =========================================================================
 
-    public void testStartFailsWithNullRequiredProp() throws Exception {
+    @Test public void testStartFailsWithNullRequiredProp() throws Exception {
         ConnectorManager cm = new ConnectorManager();
         Properties appProperties = helpGetAppProps();
         // Remove required property
@@ -92,7 +89,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         } 
     }
 
-    public void testReceive() throws Exception {
+    @Test public void testReceive() throws Exception {
     	ConnectorManager cm = new ConnectorManager();
     	startConnectorManager(cm, helpGetAppProps());
         
@@ -103,7 +100,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.stop();
     }
     
-    public void testConnectorCapabilitiesOverride() throws Exception {
+    @Test public void testConnectorCapabilitiesOverride() throws Exception {
     	ConnectorManager cm = new ConnectorManager();
     	startConnectorManager(cm, helpGetAppProps());
 
@@ -134,7 +131,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.start(env);
 	}
     
-    public void testIsXA() throws Exception {
+    @Test public void testIsXA() throws Exception {
     	ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
@@ -144,7 +141,7 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.stop();
     }
     
-    public void testIsXA_Failure() throws Exception {
+    @Test public void testIsXA_Failure() throws Exception {
         ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeSourceConnectionFactory.class.getName());
@@ -157,7 +154,51 @@ public final class TestConnectorManagerImpl extends TestCase {
         cm.stop();
     }
     
-    public void testDefect19049() throws Exception {
+    @Test public void testCaching() throws Exception {
+    	ConnectorManager cm = new ConnectorManager() {
+    		@Override
+    		protected ResultSetCache createResultSetCache(
+    				Properties rsCacheProps)
+    				throws MetaMatrixComponentException {
+    			assertEquals(rsCacheProps.get(ResultSetCache.RS_CACHE_MAX_AGE), String.valueOf(0));
+    			return new ResultSetCache(rsCacheProps, new FakeCache.FakeCacheFactory());
+    		}
+    	};
+        Properties props = new Properties();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
+        props.setProperty(ConnectorPropertyNames.USE_RESULTSET_CACHE, Boolean.TRUE.toString());
+        startConnectorManager(cm, props);
+        ConnectorWrapper wrapper = cm.getConnector();
+        FakeConnector fc = (FakeConnector)wrapper.getActualConnector();
+        assertEquals(0, fc.getConnectionCount());
+        assertEquals(0, fc.getExecutionCount());
+        AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
+        request.setUseResultSetCache(true);
+        QueueResultsReceiver receiver = new QueueResultsReceiver();
+        cm.executeRequest(receiver, request);
+        AtomicResultsMessage arm = receiver.getResults().poll(1000, TimeUnit.MILLISECONDS);
+        assertEquals(-1, arm.getFinalRow());
+        //get the last batch - it will be 0 sized
+        cm.requstMore(request.getAtomicRequestID());
+        assertNotNull(receiver.getResults().poll(1000, TimeUnit.MILLISECONDS));
+        cm.closeRequest(request.getAtomicRequestID());
+        assertEquals(1, fc.getConnectionCount());
+        assertEquals(1, fc.getExecutionCount());
+
+        //this request should hit the cache
+        AtomicRequestMessage request1 = TestConnectorWorkItem.createNewAtomicRequestMessage(2, 1);
+        request1.setUseResultSetCache(true);
+        QueueResultsReceiver receiver1 = new QueueResultsReceiver();
+        cm.executeRequest(receiver1, request1);
+        arm = receiver1.getResults().poll(1000, TimeUnit.MILLISECONDS);
+        assertEquals(5, arm.getFinalRow());
+        assertEquals(1, fc.getConnectionCount());
+        assertEquals(1, fc.getExecutionCount());
+        
+        cm.stop();
+    }
+    
+    @Test public void testDefect19049() throws Exception {
         ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         final String connectorName = FakeConnector.class.getName();

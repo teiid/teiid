@@ -74,8 +74,7 @@ public class TestSQLConversionVisitor extends TestCase {
                                                                             "ExecutionPayload",  //$NON-NLS-1$            
                                                                             "ConnectionID",   //$NON-NLS-1$
                                                                             "Connector",
-                                                                            "RequestID", "PartID", "ExecCount", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                                                            false);    
+                                                                            "RequestID", "PartID", "ExecCount");    
     /**
      * Constructor for TestSQLConversionVisitor.
      * @param name

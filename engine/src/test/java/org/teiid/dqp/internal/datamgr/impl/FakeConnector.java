@@ -60,6 +60,17 @@ public class FakeConnector extends BasicConnector implements XAConnector {
     private long simulatedBatchRetrievalTime = 1000L;
     private ClassLoader classloader;
     
+    private int connectionCount;
+    private int executionCount;
+    
+    public int getConnectionCount() {
+		return connectionCount;
+	}
+    
+    public int getExecutionCount() {
+		return executionCount;
+	}
+    
     @Override
     public Connection getConnection(org.teiid.connector.api.ExecutionContext context) throws ConnectorException {
         return new FakeConnection();
@@ -78,8 +89,14 @@ public class FakeConnector extends BasicConnector implements XAConnector {
 	}
 	
     private class FakeConnection extends BasicConnection implements XAConnection {
+    	
+    	public FakeConnection() {
+			connectionCount++;
+		}
+    	
         public boolean released = false;
         public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
+        	executionCount++;
             return new FakeBlockingExecution(executionContext);
         }
         public ConnectorCapabilities getCapabilities() {

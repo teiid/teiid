@@ -55,8 +55,6 @@ public class ExecutionContextImpl implements ExecutionContext {
     private Serializable executionPayload;
     // ID of the parent JDBC Connection which is executing the statement
     private String requestConnectionID;
-    // uses the result set chache or not
-	private boolean useResultSetCache;
     // Execute count of the query
     private String executeCount;
     // keep the execution object alive during the processing. default:false 
@@ -71,7 +69,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     public ExecutionContextImpl(String vdbName, String vdbVersion, String userName,
                                 Serializable trustedPayload, Serializable executionPayload, 
-                                String originalConnectionID, String connectorId, String requestId, String partId, String execCount, boolean useResultSetCache) {
+                                String originalConnectionID, String connectorId, String requestId, String partId, String execCount) {
         
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
@@ -83,7 +81,6 @@ public class ExecutionContextImpl implements ExecutionContext {
         this.partID = partId;        
         this.requestConnectionID = originalConnectionID;
         this.executeCount = execCount;
-        this.useResultSetCache = useResultSetCache;        
     }
     
     public String getConnectorIdentifier() {
@@ -124,10 +121,6 @@ public class ExecutionContextImpl implements ExecutionContext {
 		return requestConnectionID;
 	}
 
-	public boolean useResultSetCache() {
-		return useResultSetCache;
-	}
-    
     public void keepExecutionAlive(boolean alive) {
         this.keepAlive = alive;
     }    

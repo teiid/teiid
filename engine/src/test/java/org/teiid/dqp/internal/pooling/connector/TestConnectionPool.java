@@ -71,7 +71,7 @@ public class TestConnectionPool extends TestCase{
     }
         
     public static ExecutionContext createContext(final String user, boolean userIdentity) {
-    	ExecutionContextImpl context = new ExecutionContextImpl(null, null, user, null, null, null, null, null, null, null, false);
+    	ExecutionContextImpl context = new ExecutionContextImpl(null, null, user, null, null, null, null, null, null, null);
     	if (userIdentity) {
     		context.setConnectorIdentity(new MappedUserIdentity(context.getUser(), null, null));
     	}

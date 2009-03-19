@@ -58,6 +58,7 @@ import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -72,6 +73,7 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -103,11 +105,13 @@ public class ConnectorManager implements ApplicationService {
     private ConnectorID connectorID;
     private WorkerPool connectorWorkerPool;
     private ResultSetCache rsCache;
+    private ConnectorWorkItemFactory workItemFactory;
 	private String connectorName;
     private int maxResultRows;
     private boolean exceptionOnMaxRows = true;
     private boolean synchWorkers;
     private boolean isXa;
+    private boolean isImmutable;
 
     //services acquired in start
     private MetadataService metadataService;
@@ -127,13 +131,11 @@ public class ConnectorManager implements ApplicationService {
     
     public void initialize(Properties props) {
     	this.props = props;
+    	this.isImmutable = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.IS_IMMUTABLE, false);
     }
     
     public boolean isImmutable() {
-    	if ( this.props == null ) {
-    		this.props = new Properties();
-    	}
-        return PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.IS_IMMUTABLE, false);
+        return isImmutable;
     }
 
     public ClassLoader getClassloader() {
@@ -160,7 +162,7 @@ public class ConnectorManager implements ApplicationService {
                         "capabilities-request", //$NON-NLS-1$
                         connectorID.getID(), 
                         requestID.toString(), 
-                        "capabilities-request", "0", false); //$NON-NLS-1$ //$NON-NLS-2$ 
+                        "capabilities-request", "0"); //$NON-NLS-1$ //$NON-NLS-2$ 
 
             	conn = connector.getConnection(context);
             	caps = conn.getCapabilities();
@@ -183,19 +185,14 @@ public class ConnectorManager implements ApplicationService {
         	rsCache.clear();
         }
     }
-        
+     
     public void executeRequest(ResultsReceiver<AtomicResultsMessage> receiver, AtomicRequestMessage message) {
         // Set the connector ID to be used; if not already set. 
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
-    	
-    	ConnectorWorkItem item = null;
-    	if (synchWorkers) {
-    		item = new SynchConnectorWorkItem(message, this, receiver);
-    	} else {
-    		item = new AsynchConnectorWorkItem(message, this, receiver);
-    	}
 
+    	ConnectorWorkItem item = workItemFactory.createWorkItem(message, receiver);
+    	
         Assertion.isNull(requestStates.put(atomicRequestId, item), "State already existed"); //$NON-NLS-1$
         message.markProcessingStart();
         enqueueRequest(item);
@@ -337,7 +334,19 @@ public class ConnectorManager implements ApplicationService {
 
         // Initialize and start the connector
         initStartConnector(connectorEnv);
-
+        try {
+            //check result set cache
+            if(PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.USE_RESULTSET_CACHE, false)) {
+	            Properties rsCacheProps = new Properties();
+	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, "0")); //$NON-NLS-1$
+	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, "0")); //$NON-NLS-1$
+	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
+	    		this.rsCache = createResultSetCache(rsCacheProps);
+            }
+		} catch (MetaMatrixComponentException e) {
+			throw new ApplicationLifecycleException(e);
+		}
+		this.workItemFactory = new ConnectorWorkItemFactory(this, this.rsCache, synchWorkers);
         this.started = true;
     }
     
@@ -457,6 +466,11 @@ public class ConnectorManager implements ApplicationService {
         }         
         return c;
     }
+    
+    protected ResultSetCache createResultSetCache(Properties rsCacheProps)
+			throws MetaMatrixComponentException {
+		return new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
+	}
 
     /**
      * Queries the Connector Manager, if it already has been started. 
@@ -642,6 +656,10 @@ public class ConnectorManager implements ApplicationService {
 	
 	public void setClassloader(ClassLoader classloader) {
 		this.classloader = classloader;
+	}
+	
+	public void setWorkItemFactory(ConnectorWorkItemFactory workItemFactory) {
+		this.workItemFactory = workItemFactory;
 	}
 	
 	/**

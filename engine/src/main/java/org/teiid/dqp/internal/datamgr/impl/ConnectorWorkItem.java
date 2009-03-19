@@ -86,8 +86,8 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     private List<Integer> convertToDesiredRuntimeType;
         
     /* End state information */    
-    private boolean lastBatch;
-    private int rowCount;
+    protected boolean lastBatch;
+    protected int rowCount;
     
     protected enum RequestState {
     	NEW, MORE, CLOSE
@@ -100,33 +100,31 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     private volatile boolean closeRequested;
     private boolean isClosed;
 
-    ResultsReceiver<AtomicResultsMessage> resultsReceiver;
+    protected ResultsReceiver<AtomicResultsMessage> resultsReceiver;
     
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
         this.resultsReceiver = resultsReceiver;
+        AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
+        this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
+                requestMsg.getWorkContext().getVdbVersion(),
+                requestMsg.getWorkContext().getUserName(),
+                requestMsg.getWorkContext().getTrustedPayload(),
+                requestMsg.getExecutionPayload(),                                                                       
+                requestMsg.getWorkContext().getConnectionID(),                                                                      
+                requestMsg.getConnectorID().getID(),
+                requestMsg.getRequestID().toString(),
+                Integer.toString(requestID.getNodeID()),
+                Integer.toString(requestID.getExecutionId())
+                );
+        this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
     }
 
     protected void createConnection(Connector connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating connection for atomic-request"});  //$NON-NLS-1$
-        AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
-        this.securityContext = new ExecutionContextImpl(requestMsg.getWorkContext().getVdbName(),
-                                                       requestMsg.getWorkContext().getVdbVersion(),
-                                                       requestMsg.getWorkContext().getUserName(),
-                                                       requestMsg.getWorkContext().getTrustedPayload(),
-                                                       requestMsg.getExecutionPayload(),                                                                       
-                                                       requestMsg.getWorkContext().getConnectionID(),                                                                      
-                                                       requestMsg.getConnectorID().getID(),
-                                                       requestMsg.getRequestID().toString(),
-                                                       Integer.toString(requestID.getNodeID()),
-                                                       Integer.toString(requestID.getExecutionId()),
-                                                       requestMsg.useResultSetCache()
-                                                       && (requestMsg.getCommand()).areResultsCachable()
-                                                       ); 
-        this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
-
+         
         if (requestMsg.isTransactional()){
         	if (manager.isXa()) {
 	    		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
@@ -273,7 +271,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
 		this.resultsReceiver.receiveResults(response);
 	}
     
-    protected void processNewRequest() throws ConnectorException, CommunicationException {
+    protected void processNewRequest() throws ConnectorException {
     	// Execute query
     	this.execution.execute();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
@@ -404,33 +402,38 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         		if (row != null) {
         			correctTypes(row);
         			rows.add(row);
+        			this.rowCount++;
         		}
         	}
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$
         }   
         
         if (sendResults) {
-        	int currentRowCount = rows.size();
-            if ( !lastBatch && currentRowCount == 0 ) {
-                // Defect 13366 - Should send all batches, even if they're zero size.
-                // Log warning if received a zero-size non-last batch from the connector.
-                LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorID())); //$NON-NLS-1$
-            }
-
-            AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
-            
-            // if we need to keep the execution alive, then we can not support
-            // implicit close.
-            response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
-            response.setTransactional(this.securityContext.isTransactional());
-            response.setWarnings(this.securityContext.getWarnings());
-
-            if ( lastBatch ) {
-                response.setFinalRow(rowCount);
-            } 
-            this.resultsReceiver.receiveResults(response);
+        	sendResults(rows);
         }
     }
+
+	protected void sendResults(List<List> rows) {
+		int currentRowCount = rows.size();
+		if ( !lastBatch && currentRowCount == 0 ) {
+		    // Defect 13366 - Should send all batches, even if they're zero size.
+		    // Log warning if received a zero-size non-last batch from the connector.
+		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorID())); //$NON-NLS-1$
+		}
+
+		AtomicResultsMessage response = createResultsMessage(this.requestMsg, rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());
+		
+		// if we need to keep the execution alive, then we can not support
+		// implicit close.
+		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
+		response.setTransactional(this.securityContext.isTransactional());
+		response.setWarnings(this.securityContext.getWarnings());
+
+		if ( lastBatch ) {
+		    response.setFinalRow(rowCount);
+		} 
+		this.resultsReceiver.receiveResults(response);
+	}
 
 	private void correctTypes(List row) throws ConnectorException {
 		//TODO: add a proper source schema

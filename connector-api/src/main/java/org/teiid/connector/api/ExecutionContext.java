@@ -130,12 +130,6 @@ public interface ExecutionContext {
     String getConnectionIdentifier();
     
     /**
-     * Whether to use ResultSet cache if it is enabled.
-     * @return True if use ResultSet cache; false otherwise.
-     */
-    boolean useResultSetCache();
-    
-    /**
      * When the execution is turned on with "alive=true", the execution object will not
      * be implicitly closed at the end of the last batch.  It will only be closed at end
      * of the user query. This is useful in keeping the connection open for 

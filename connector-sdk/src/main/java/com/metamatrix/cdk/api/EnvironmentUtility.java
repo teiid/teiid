@@ -98,7 +98,7 @@ public class EnvironmentUtility {
      * @return A SecurityContext / ExecutionContext instance
      */
     public static ExecutionContext createSecurityContext(String user) {
-        return new ExecutionContextImpl("vdb", "1", user, null, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0", false);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+        return new ExecutionContextImpl("vdb", "1", user, null, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
     }
 
     /**
@@ -111,7 +111,7 @@ public class EnvironmentUtility {
      * @return A SecurityContext / ExecutionContext instance
      */
     public static ExecutionContext createSecurityContext(String vdbName, String vdbVersion, String user, Serializable trustedToken) {
-        return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0", false);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, null, "Connection", "ConnectorID<CDK>", "Request", "1", "0");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**
@@ -122,7 +122,7 @@ public class EnvironmentUtility {
      * @return A SecurityContext / ExecutionContext instance
      */
     public static ExecutionContext createExecutionContext(String requestID, String partID) {
-        return new ExecutionContextImpl("vdb", "1", "user", null, null, "Connection", "ConnectorID<CDK>", requestID, partID, "0", false);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+        return new ExecutionContextImpl("vdb", "1", "user", null, null, "Connection", "ConnectorID<CDK>", requestID, partID, "0");   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     }
 
     /**
@@ -142,7 +142,7 @@ public class EnvironmentUtility {
     public static ExecutionContext createExecutionContext(String vdbName, String vdbVersion, String user,
                                                         Serializable trustedToken, Serializable executionPayload,                                                         
 														String connectionID, String connectorID, String requestID, String partID, boolean useResultSetCache) {
-        return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, executionPayload, connectionID, connectorID, requestID, partID, "0", useResultSetCache); //$NON-NLS-1$
+        return new ExecutionContextImpl(vdbName, vdbVersion, user, trustedToken, executionPayload, connectionID, connectorID, requestID, partID, "0"); //$NON-NLS-1$
     }
 
 }

@@ -111,7 +111,7 @@ public class TestPerUserPool extends TestCase {
         }
     	
         // session payload
-        ExecutionContextImpl impl = new ExecutionContextImpl(null, null, null, credentials, null, null, null, null, null, null, false);
+        ExecutionContextImpl impl = new ExecutionContextImpl(null, null, null, credentials, null, null, null, null, null, null);
         impl.setConnectorIdentity(factory.createIdentity(impl));
         return impl;
     }

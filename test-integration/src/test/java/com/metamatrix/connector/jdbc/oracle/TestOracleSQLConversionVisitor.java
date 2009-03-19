@@ -407,7 +407,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         String output = "SELECT /*+ ALL_ROWS */ PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
                
         String hint = "/*+ ALL_ROWS */"; //$NON-NLS-1$
-        ExecutionContext context = new ExecutionContextImpl(null, null, null, null, hint, null, "", null, null, null, false); //$NON-NLS-1$
+        ExecutionContext context = new ExecutionContextImpl(null, null, null, null, hint, null, "", null, null, null); //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
             input, 

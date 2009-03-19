@@ -22,15 +22,27 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorException;
+
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class AsynchConnectorWorkItem extends ConnectorWorkItem {
                 
     AsynchConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager, ResultsReceiver<AtomicResultsMessage> resultsReceiver) {
     	super(message, manager, resultsReceiver);
+    }
+    
+    @Override
+    protected void createConnection(Connector connector,
+    		QueryMetadataInterface queryMetadata) throws ConnectorException,
+    		MetaMatrixComponentException {
+    	super.createConnection(connector, queryMetadata);
     	Assertion.assertTrue(!this.isTransactional, "Asynch work items are not suitable for transactions"); //$NON-NLS-1$
     }
     
