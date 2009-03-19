@@ -21,6 +21,12 @@
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-internal</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client-jdbc</artifactId>
       <version>${project.version}</version>
       <exclusions>
@@ -258,6 +264,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+  
 
   </dependencies>
 	
