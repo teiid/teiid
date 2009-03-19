@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 
 /**
@@ -45,7 +46,7 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     public static final int CONTEXT_DELETE = 3;
     public static final int CONTEXT_PROCEDURE = 4;
     
-    public static final String DEFAULT_WSDL_USERNAME = CoreCon
+    public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
     /**
      * Determine which of a set of resources a connection does not have permission to
