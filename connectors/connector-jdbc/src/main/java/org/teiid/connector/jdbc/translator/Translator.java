@@ -106,7 +106,12 @@ public class Translator {
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
-    private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>();
+    private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
+    	@Override
+    	protected Calendar initialValue() {
+    		return Calendar.getInstance();
+    	}
+    };
 
 	private Map<String, FunctionModifier> functionModifiers = new HashMap<String, FunctionModifier>();
     private ConnectorEnvironment environment;
@@ -135,8 +140,6 @@ public class Translator {
         	TimeZone tz = TimeZone.getTimeZone(timeZone);
             if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
         		CALENDAR.set(Calendar.getInstance(tz));
-            } else {
-            	CALENDAR.set(Calendar.getInstance());
             }
         }   
         

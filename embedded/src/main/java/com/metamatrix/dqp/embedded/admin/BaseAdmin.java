@@ -300,7 +300,7 @@ abstract class BaseAdmin {
      * @since 4.3
      */
     private com.metamatrix.admin.api.objects.ConnectorBinding convertConnectorType(final com.metamatrix.common.config.api.ConnectorBinding src, final Object parent) {
-        MMConnectorBinding binding = new MMConnectorBinding(new String[] {src.getDeployedName(), "Embedded"}); //$NON-NLS-1$
+        MMConnectorBinding binding = new MMConnectorBinding(new String[] {src.getDeployedName()});
         
         binding.setConnectorTypeName(src.getComponentTypeID().getFullName());
         binding.setCreated(src.getCreatedDate());
