@@ -41,6 +41,7 @@ import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.soap.SOAPPlugin;
 import com.metamatrix.soap.exceptions.SOAPProcessingException;
@@ -59,7 +60,7 @@ public class WebServiceUtil {
 	 * to assure that the getUpdatedVDBResources is the only procedure used by this account. The password 
 	 * is not checked so it's value is not important, it just can't be blank.
 	 */
-	public static final String WSDLUSER = "MetaMatrixWSDLUser"; //$NON-NLS-1$
+	public static final String WSDLUSER = CoreConstants.DEFAULT_ANON_USERNAME;
 	public static final String WSDLPASSWORD = "mmx"; //$NON-NLS-1$
 
 	/**
