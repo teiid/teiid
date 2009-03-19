@@ -24,11 +24,6 @@
 -->
 <web-app>
 
-	<context-param>
-		<param-name>logfile</param-name>
-		<param-value>../../log/MetaMatrixWebServices.log</param-value>
-	</context-param>
-	
 	<!-- The optional BasicAuthInterceptor filter is for use with HTTP Basic authentication. It allows circumvention
 	     of preemptive authentication which may not always be desired. Comment/uncomment the filter
 	     and it's mapping accordingly to achieve the preferred behavior.  -->
@@ -62,7 +57,7 @@
 	
 	<!-- 
 	*   mmServer and mmProtocol parameters are used to obtain the WSDL from Web Service VDBs. 
-	*   They should be set accordingly to your environment.
+	*   They should be set accordingly for your environment.
 	*
 	*   mmServer is the target Metamatrix host and port. For a clustered environment, comma delimit server/port combinations 
 	*   mmProtocol should be set to "mms" if the target MetaMatrix server or cluster has SSL enabled. 
