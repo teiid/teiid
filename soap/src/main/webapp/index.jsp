@@ -1,8 +1,31 @@
 <%@ page import="com.metamatrix.common.util.WSDLServletUtil" %>
 
+<!--
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+-->
 <html>
 	<head>
-		<title>MetaMatrix Web Service Utilities</title>
+		<title>JBEDSP Web Service Utilities</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<style type="text/css">
 		<!--
@@ -34,26 +57,27 @@
   		<div align="center">
   		<p><table width="900" border="0" cellspacing="0" cellpadding="0">
   		  <tr bgcolor="#edf0f6">
-	  		  <td width="300">
-	  		  	<a href="http://www.redhat.com/metamatrix"><img src="images/mmlogo.gif" border="no" title=""></img></a>
+	  		  <td colspan="2" align="center">
+	  		  	<span class="MMSOAPTitle"><a href="http://www.jboss.com/products/platforms/dataservices/" target="_blank">JBoss Enterprise Data Services Platform (JBEDSP)</a></span>
 	  		  </td>
-	  		  <td width="600">
-	  		  	<span class="MMSOAPTitle">Web Service Utilities</span>
+	  	  </tr>
+	  	  <tr bgcolor="#edf0f6">
+	  		  <td colspan="2" align="center">
+	  		  	<span class="MMSOAPTitle">&nbsp;Web Service Utilities</span>
 	  		  </td>
   		  </tr>
   		   <tr>
 		      <td>&nbsp;<td>	
-		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td colspan="2" class="MMSOAPTitle"><b><u>MetaMatrix Web Service WSDL URL Generator</u></b><td>		      
+		      <td colspan="2" class="MMSOAPTitle"><b><u>JBEDSP Web Service WSDL URL Generator</u></b><td>		      
    		  </tr>
 	      <tr>
 		      <td>&nbsp;<td>	
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td colspan="2"><b>VDBs that contain Web Service models expose WSDL when deployed to a MetaMatrix Server that describes the web service operations in those models. This form can be used to generate a parameterized WSDL URL for such a VDB.</b><td>		      
+		      <td colspan="2"><b>VDBs that contain Web Service models expose WSDL when deployed to a JBEDSP Server that describes the web service operations in those models. This form can be used to generate a parameterized WSDL URL for such a VDB.</b><td>		      
 	      </tr>
 	      <tr>
 		      <td>&nbsp;<td>	
@@ -72,21 +96,21 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      	      <tr>
-		      <td colspan="2" class="MMSOAPTitle"><b><u>Discover MetaMatrix Web Services</u></b><td>		      
+		      <td colspan="2" class="MMSOAPTitle"><b><u>Discover JBEDSP Web Services</u></b><td>		      
    		  </tr>
 	      <tr>
 		      <td>&nbsp;<td>	
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td colspan="2"><b>To auto discover web service VDB WSDL URLs using predefined MetaMatrix server values, the MetaMatrix Server or cluster of MetaMatrix servers must be defined in the web.xml file of the MetaMatrix SOAP web application. Also, the defined WSDL user needs to be assigned the Admin.ReadOnlyAdmin role. This WSDL URL is more concise than the parameterized version, but is only valid with MetaMatrix SOAP web applications were the MetaMatrix server values have been defined.</b><td>		      
+		      <td colspan="2"><b>To auto discover web service VDB WSDL URLs using predefined JBEDSP server values, the JBEDSP Server or cluster of JBEDSP servers must be defined in the web.xml file of the JBEDSP SOAP web application. This WSDL URL is more concise than the parameterized version, but is only valid with JBEDSP SOAP web applications were the JBEDSP server values have been defined.</b><td>		      
 	      </tr>
 	      <tr>
 		      <td>&nbsp;<td>	
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td><a href="<%= request.getContextpath() %>/servlet/DiscoverWSDLServlet" target="wsdlUrls" title="Discover MetaMatrix Web Services">Discover MetaMatrix Web Services</a><td>	
+		      <td><a href="<%= request.getContextPath() %>/servlet/DiscoverWSDLServlet" target="wsdlUrls" title="Discover MetaMatrix Web Services">Discover JBEDSP Web Services</a><td>	
 		      <td>&nbsp;<td>	
 	      </tr>
    	      <tr>
@@ -112,7 +136,7 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), <%= request.getContextpath() %>, false) %>" title="SQL Query Web Service WSDL (Non-secure)">SQL Query Web Service WSDL (Non-secure)</a><td>	
+		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), request.getContextPath(), false) %>" title="SQL Query Web Service WSDL (Non-secure)">SQL Query Web Service WSDL (Non-secure)</a><td>	
    		      <td>&nbsp;<td>
 	      </tr>	      
 	      <tr>
@@ -120,7 +144,7 @@
 		      <td>&nbsp;<td>	
 	      </tr>
 	      <tr>
-		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), <%= request.getContextpath() %>, true) %>" title="SQL Query Web Service WSDL (Secure SSL)">SQL Query Web Service WSDL (Secure SSL)</a><td>	
+		      <td align="left"><a target="_blank" href="<%= WSDLServletUtil.getSqlQueryWebServiceUrl(request.getServerName(), request.getContextPath(), true) %>" title="SQL Query Web Service WSDL (Secure SSL)">SQL Query Web Service WSDL (Secure SSL)</a><td>	
    		      <td>&nbsp;<td>
 	      </tr>	      
 	      <tr>
