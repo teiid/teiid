@@ -31,114 +31,114 @@ package org.teiid.connector.api;
 public class SourceSystemFunctions {
 	
 	//arithmetic
-	public static final String MULTIPLY_OP = "*";
-	public static final String ADD_OP = "+";
-	public static final String SUBTRACT_OP = "-";
-	public static final String DIVIDE_OP = "/";
+	public static final String MULTIPLY_OP = "*"; //$NON-NLS-1$
+	public static final String ADD_OP = "+"; //$NON-NLS-1$
+	public static final String SUBTRACT_OP = "-"; //$NON-NLS-1$
+	public static final String DIVIDE_OP = "/"; //$NON-NLS-1$
 	
 	//String
-	public static final String ASCII = "ascii";
-	public static final String CHAR = "char";
-	public static final String CONCAT = "concat";
+	public static final String ASCII = "ascii"; //$NON-NLS-1$
+	public static final String CHAR = "char"; //$NON-NLS-1$
+	public static final String CONCAT = "concat"; //$NON-NLS-1$
 	//public static final String DIFFERENCE = "difference";
-	public static final String INITCAP = "initcap";
-	public static final String INSERT = "insert";
-	public static final String LCASE = "lcase";
-	public static final String LPAD = "lpad";
-	public static final String LEFT = "left";
-	public static final String LENGTH = "length";
-	public static final String LOCATE = "locate";
-	public static final String LTRIM = "ltrim";
-	public static final String REPEAT = "repeat";
-	public static final String REPLACE = "replace";
-	public static final String RIGHT = "right";
-	public static final String RPAD = "rpad";
-	public static final String RTRIM = "rtrim";
+	public static final String INITCAP = "initcap"; //$NON-NLS-1$
+	public static final String INSERT = "insert"; //$NON-NLS-1$
+	public static final String LCASE = "lcase"; //$NON-NLS-1$
+	public static final String LPAD = "lpad"; //$NON-NLS-1$
+	public static final String LEFT = "left"; //$NON-NLS-1$
+	public static final String LENGTH = "length"; //$NON-NLS-1$
+	public static final String LOCATE = "locate"; //$NON-NLS-1$
+	public static final String LTRIM = "ltrim"; //$NON-NLS-1$
+	public static final String REPEAT = "repeat"; //$NON-NLS-1$
+	public static final String REPLACE = "replace"; //$NON-NLS-1$
+	public static final String RIGHT = "right"; //$NON-NLS-1$
+	public static final String RPAD = "rpad"; //$NON-NLS-1$
+	public static final String RTRIM = "rtrim"; //$NON-NLS-1$
 	//public static final String SOUNDEX = "soundex";
-	public static final String SUBSTRING = "substring";
-	public static final String UCASE = "ucase";
+	public static final String SUBSTRING = "substring"; //$NON-NLS-1$
+	public static final String UCASE = "ucase"; //$NON-NLS-1$
 	
 	//numeric
-	public static final String ABS = "abs";
-	public static final String ACOS = "acos";
-	public static final String ASIN = "asin";
-	public static final String ATAN = "atan";
-	public static final String ATAN2 = "atan2";
-	public static final String CEILING = "ceiling";
-	public static final String COS = "cos";
-	public static final String COT = "cot";
-	public static final String DEGREES = "degrees";
-	public static final String EXP = "exp";
-	public static final String FLOOR = "floor";
-	public static final String FORMATINTEGER = "formatinteger";
-	public static final String FORMATLONG = "formatlong";
-	public static final String FORMATDOUBLE = "formatdouble";
-	public static final String FORMATFLOAT = "formatfloat";
-	public static final String FORMATBIGINTEGER = "formatbiginteger";
-	public static final String FORMATBIGDECIMAL = "formatbigdecimal";
-	public static final String LOG = "log";
-	public static final String LOG10 = "log10";
-	public static final String MOD = "mod";
-	public static final String PARSEINTEGER = "parseinteger";
-	public static final String PARSELONG = "parselong";
-	public static final String PARSEDOUBLE = "parsedouble";
-	public static final String PARSEFLOAT = "parsefloat";
-	public static final String PARSEBIGINTEGER = "parsebiginteger";
-	public static final String PARSEBIGDECIMAL = "parsebigdecimal";
-	public static final String PI = "pi";
-	public static final String POWER = "power";
-	public static final String RADIANS = "radians";
-	public static final String RAND = "rand";
-	public static final String ROUND = "round";
-	public static final String SIGN = "sign";
-	public static final String SIN = "sin";
-	public static final String SQRT = "sqrt";
-	public static final String TAN = "tan";
-	public static final String TRANSLATE = "translate";
-	public static final String TRUNCATE = "truncate";
+	public static final String ABS = "abs"; //$NON-NLS-1$
+	public static final String ACOS = "acos"; //$NON-NLS-1$
+	public static final String ASIN = "asin"; //$NON-NLS-1$
+	public static final String ATAN = "atan"; //$NON-NLS-1$
+	public static final String ATAN2 = "atan2"; //$NON-NLS-1$
+	public static final String CEILING = "ceiling"; //$NON-NLS-1$
+	public static final String COS = "cos"; //$NON-NLS-1$
+	public static final String COT = "cot"; //$NON-NLS-1$
+	public static final String DEGREES = "degrees"; //$NON-NLS-1$
+	public static final String EXP = "exp"; //$NON-NLS-1$
+	public static final String FLOOR = "floor"; //$NON-NLS-1$
+	public static final String FORMATINTEGER = "formatinteger"; //$NON-NLS-1$
+	public static final String FORMATLONG = "formatlong"; //$NON-NLS-1$
+	public static final String FORMATDOUBLE = "formatdouble"; //$NON-NLS-1$
+	public static final String FORMATFLOAT = "formatfloat"; //$NON-NLS-1$
+	public static final String FORMATBIGINTEGER = "formatbiginteger"; //$NON-NLS-1$
+	public static final String FORMATBIGDECIMAL = "formatbigdecimal"; //$NON-NLS-1$
+	public static final String LOG = "log"; //$NON-NLS-1$
+	public static final String LOG10 = "log10"; //$NON-NLS-1$
+	public static final String MOD = "mod"; //$NON-NLS-1$
+	public static final String PARSEINTEGER = "parseinteger"; //$NON-NLS-1$
+	public static final String PARSELONG = "parselong"; //$NON-NLS-1$
+	public static final String PARSEDOUBLE = "parsedouble"; //$NON-NLS-1$
+	public static final String PARSEFLOAT = "parsefloat"; //$NON-NLS-1$
+	public static final String PARSEBIGINTEGER = "parsebiginteger"; //$NON-NLS-1$
+	public static final String PARSEBIGDECIMAL = "parsebigdecimal"; //$NON-NLS-1$
+	public static final String PI = "pi"; //$NON-NLS-1$
+	public static final String POWER = "power"; //$NON-NLS-1$
+	public static final String RADIANS = "radians"; //$NON-NLS-1$
+	public static final String RAND = "rand"; //$NON-NLS-1$
+	public static final String ROUND = "round"; //$NON-NLS-1$
+	public static final String SIGN = "sign"; //$NON-NLS-1$
+	public static final String SIN = "sin"; //$NON-NLS-1$
+	public static final String SQRT = "sqrt"; //$NON-NLS-1$
+	public static final String TAN = "tan"; //$NON-NLS-1$
+	public static final String TRANSLATE = "translate"; //$NON-NLS-1$
+	public static final String TRUNCATE = "truncate"; //$NON-NLS-1$
 	
 	//bit
-	public static final String BITAND = "bitand";
-	public static final String BITOR = "bitor";
-	public static final String BITNOT = "bitnot";
-	public static final String BITXOR = "bitxor";
+	public static final String BITAND = "bitand"; //$NON-NLS-1$
+	public static final String BITOR = "bitor"; //$NON-NLS-1$
+	public static final String BITNOT = "bitnot"; //$NON-NLS-1$
+	public static final String BITXOR = "bitxor"; //$NON-NLS-1$
 	
 	//date functions
-	public static final String CURDATE = "curdate";
-	public static final String CURTIME = "curtime";
-	public static final String DAYNAME = "dayname";
-	public static final String DAYOFMONTH = "dayofmonth";
-	public static final String DAYOFWEEK = "dayofweek";
-	public static final String DAYOFYEAR = "dayofyear";
-	public static final String FORMATDATE = "formatdate";
-	public static final String FORMATTIME = "formattime";
-	public static final String FORMATTIMESTAMP = "formattimestamp";
-	public static final String HOUR = "hour";
-	public static final String MINUTE = "minute";
-	public static final String MODIFYTIMEZONE = "modifytimezone";
-	public static final String MONTH = "month";
-	public static final String MONTHNAME = "monthname";
-	public static final String NOW = "now";
-	public static final String PARSEDATE = "parsedate";
-	public static final String PARSETIME = "parsetime";
-	public static final String PARSETIMESTAMP = "parsetimestamp";
-	public static final String QUARTER = "quarter";
-	public static final String SECOND = "second";
-	public static final String TIMESTAMPADD = "timestampadd";
-	public static final String TIMESTAMPCREATE = "timestampcreate";
-	public static final String TIMESTAMPDIFF = "timestampdiff";
-	public static final String WEEK = "week";
-	public static final String YEAR = "year";
+	public static final String CURDATE = "curdate"; //$NON-NLS-1$
+	public static final String CURTIME = "curtime"; //$NON-NLS-1$
+	public static final String DAYNAME = "dayname"; //$NON-NLS-1$
+	public static final String DAYOFMONTH = "dayofmonth"; //$NON-NLS-1$
+	public static final String DAYOFWEEK = "dayofweek"; //$NON-NLS-1$
+	public static final String DAYOFYEAR = "dayofyear"; //$NON-NLS-1$
+	public static final String FORMATDATE = "formatdate"; //$NON-NLS-1$
+	public static final String FORMATTIME = "formattime"; //$NON-NLS-1$
+	public static final String FORMATTIMESTAMP = "formattimestamp"; //$NON-NLS-1$
+	public static final String HOUR = "hour"; //$NON-NLS-1$
+	public static final String MINUTE = "minute"; //$NON-NLS-1$
+	public static final String MODIFYTIMEZONE = "modifytimezone"; //$NON-NLS-1$
+	public static final String MONTH = "month"; //$NON-NLS-1$
+	public static final String MONTHNAME = "monthname"; //$NON-NLS-1$
+	public static final String NOW = "now"; //$NON-NLS-1$
+	public static final String PARSEDATE = "parsedate"; //$NON-NLS-1$
+	public static final String PARSETIME = "parsetime"; //$NON-NLS-1$
+	public static final String PARSETIMESTAMP = "parsetimestamp"; //$NON-NLS-1$
+	public static final String QUARTER = "quarter"; //$NON-NLS-1$
+	public static final String SECOND = "second"; //$NON-NLS-1$
+	public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$
+	public static final String TIMESTAMPCREATE = "timestampcreate"; //$NON-NLS-1$
+	public static final String TIMESTAMPDIFF = "timestampdiff"; //$NON-NLS-1$
+	public static final String WEEK = "week"; //$NON-NLS-1$
+	public static final String YEAR = "year"; //$NON-NLS-1$
 	
 	//system functions
-	public static final String IFNULL = "ifnull";
-	public static final String COALESCE = "coalesce";
-	public static final String NULLIF = "nullif";
+	public static final String IFNULL = "ifnull"; //$NON-NLS-1$
+	public static final String COALESCE = "coalesce"; //$NON-NLS-1$
+	public static final String NULLIF = "nullif"; //$NON-NLS-1$
 	
 	//conversion functions
-	public static final String CONVERT = "convert";
+	public static final String CONVERT = "convert"; //$NON-NLS-1$
 	
 	//xml
-	public static final String XPATHVALUE = "xpathvalue";
+	public static final String XPATHVALUE = "xpathvalue"; //$NON-NLS-1$
 
 }

@@ -396,10 +396,10 @@
 						</entry>
 						<entry>
 							<para>Round x to y places; negative values of y indicate
-								places to the right of the decimal point</para>
+								places to the left of the decimal point</para>
 						</entry>
 						<entry>
-							<para>x in {integer, float, double} y is integer, return is same
+							<para>x in {integer, float, double, bigdecimal} y is integer, return is same
 								type as x</para>
 						</entry>
 					</row>

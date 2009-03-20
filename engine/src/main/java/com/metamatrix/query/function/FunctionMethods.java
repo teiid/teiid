@@ -295,49 +295,28 @@ public final class FunctionMethods {
 		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"power", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
 	}
 
-    // ================== Function = power =====================
-
-    public static  Object round(Object number, Object places) throws FunctionExecutionException {
-        // Null inputs generate null output
-        if(number == null || places == null) {
-            return null;
+    public static int round(int number, int places) {
+        if(places < 0){
+        	return round(new BigDecimal(number), places).intValue();
         }
-
-        // Places will always be an Integer
-        int intValuePlaces = ((Integer)places).intValue();
-        double placeMultiplier = Math.pow(10,intValuePlaces);
-
-        if(number instanceof Integer) {
-            Integer integerNumber = (Integer)number;
-            if(intValuePlaces <= 0){
-                return new Integer((int)((Math.round((integerNumber.intValue()*placeMultiplier)))/placeMultiplier));
-            }
-            return number;
-        } else if(number instanceof Float) {
-            Float floatNumber = (Float)number;
-            return new Float((float)((Math.round((floatNumber.floatValue()*placeMultiplier)))/placeMultiplier));
-        } else if(number instanceof Double) {
-            Double doubleNumber = (Double)number;
-            return new Double((Math.round((doubleNumber.doubleValue()*placeMultiplier)))/placeMultiplier);
-        } else if(number instanceof BigDecimal) {
-            BigDecimal bigDecimalNumber = (BigDecimal)number;
-            int scale = bigDecimalNumber.scale();
-            bigDecimalNumber = bigDecimalNumber.multiply(new BigDecimal("" + placeMultiplier)); //$NON-NLS-1$
-            bigDecimalNumber = bigDecimalNumber.setScale(0,BigDecimal.ROUND_HALF_UP);
-
-            BigDecimal bigDecimalMultiplier = new BigDecimal("" + placeMultiplier); //$NON-NLS-1$
-            if(intValuePlaces > 0){
-                bigDecimalNumber = bigDecimalNumber.setScale(scale,BigDecimal.ROUND_HALF_UP);
-                bigDecimalNumber = bigDecimalNumber.divide(bigDecimalMultiplier,BigDecimal.ROUND_HALF_UP);
-            }else{
-                bigDecimalNumber = bigDecimalNumber.divide(bigDecimalMultiplier,BigDecimal.ROUND_HALF_UP);
-                bigDecimalNumber = bigDecimalNumber.setScale(scale,BigDecimal.ROUND_HALF_UP);
-            }
-            return bigDecimalNumber;
-        } else {
-            Object[] params = new Object[] { "round", number.getClass().getName(), places.getClass().getName() }; //$NON-NLS-1$
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0065, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0065, params));
+        return number;
+    }
+    
+    public static float round(float number, int places) {
+    	return round(new BigDecimal(number), places).floatValue();
+    }
+    
+    public static double round(double number, int places) {
+    	return round(new BigDecimal(number), places).doubleValue();
+    }
+    
+    public static BigDecimal round(BigDecimal bigDecimalNumber, int places) {
+        int scale = bigDecimalNumber.scale();
+        if (scale <= places) {
+        	return bigDecimalNumber;
         }
+        bigDecimalNumber = bigDecimalNumber.setScale(places,BigDecimal.ROUND_HALF_UP);
+        return bigDecimalNumber.setScale(scale,BigDecimal.ROUND_HALF_UP);
     }
 
 	// ================== Function = sign =====================

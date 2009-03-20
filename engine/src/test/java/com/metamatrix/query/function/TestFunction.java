@@ -144,17 +144,24 @@ public class TestFunction extends TestCase {
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
 
-    public static void helpTestRound(Object number, Integer places, Object expected) throws FunctionExecutionException {
+    public static void helpTestRound(Integer number, Integer places, Object expected) throws FunctionExecutionException {
+        Object actual = FunctionMethods.round(number, places);
+        assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    public static void helpTestRound(Float number, Integer places, Object expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.round(number, places);
         assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public static void helpTestRoundFail(Object number, Integer places) {
-        try {
-            Object actual = FunctionMethods.round(number, places);
-            fail("Expected exception, but got = " + actual); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        } 
+    public static void helpTestRound(Double number, Integer places, Object expected) throws FunctionExecutionException {
+        Object actual = FunctionMethods.round(number, places);
+        assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
+    public static void helpTestRound(BigDecimal number, Integer places, Object expected) throws FunctionExecutionException {
+        Object actual = FunctionMethods.round(number, places);
+        assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public static void helpTestHour1(String timeStr, int expected) throws FunctionExecutionException {
@@ -739,6 +746,10 @@ public class TestFunction extends TestCase {
     public void testRoundFloat9() throws FunctionExecutionException {
         helpTestRound(new Float(123.456F), new Integer(-4), new Float(0F));
     }
+    
+    public void testRoundFloat10() throws FunctionExecutionException {
+        helpTestRound(new Float(123.456F), new Integer(4000), new Float(123.456F));
+    }
 
     public void testRoundDouble1() throws FunctionExecutionException {
         helpTestRound(new Double(123.456), new Integer(4), new Double(123.456));
@@ -775,7 +786,11 @@ public class TestFunction extends TestCase {
     public void testRoundDouble9() throws FunctionExecutionException {
         helpTestRound(new Double(123.456), new Integer(-4), new Double(0));
     }
-
+    
+    public void testRoundDouble10() throws FunctionExecutionException {
+        helpTestRound(new Double(-3.5), new Integer(0), new Double(-4));
+    }
+    
     public void testRoundBigDecimal1() throws FunctionExecutionException {
         helpTestRound(new BigDecimal("123.456"), new Integer(4), new BigDecimal("123.456")); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -811,19 +826,7 @@ public class TestFunction extends TestCase {
     public void testRoundBigDecimal9() throws FunctionExecutionException {
         helpTestRound(new BigDecimal("123.456"), new Integer(-4), new BigDecimal("0.000")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-
-    public void testRoundFail1() {
-        helpTestRoundFail("123.456", new Integer(-4)); //$NON-NLS-1$
-    }
-
-    public void testRoundNull1() throws FunctionExecutionException {
-        helpTestRound(null, new Integer(0), null);
-    }
-
-    public void testRoundNull2() throws FunctionExecutionException {
-        helpTestRound(new Integer(0), null, null);
-    }
-
+    
     public void testHour1() throws FunctionExecutionException {
         helpTestHour1("00:00:00", 0); //$NON-NLS-1$
     }
