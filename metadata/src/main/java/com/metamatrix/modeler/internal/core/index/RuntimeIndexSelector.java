@@ -337,7 +337,11 @@ public class RuntimeIndexSelector extends AbstractIndexSelector {
                     // create a file at the temporary location writing
                     // the contents of the zip entry to this file
                     File entryFile = new File(getIndexDirectoryPath(), entry.getName());
-                    FileUtils.write(zipInputStream, entryFile, length);
+                    if (entryFile.isDirectory()) {
+                    	entryFile.mkdirs();
+                    } else {
+                    	FileUtils.write(zipInputStream, entryFile, length);
+                    }
 
                     if (SimpleIndexUtil.indexFileExists(entryFile)) {
                         tmp.add( new Index(entryFile.getAbsolutePath(), true) );
