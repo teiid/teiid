@@ -59,6 +59,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
+import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -487,7 +488,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
                 throw  new ApplicationInitializationException(msg);
             }
 
-            Collection compTypeDefns = componentType.getComponentTypeDefinitions();
+            Collection compTypeDefns = configModel.getAllComponentTypeDefinitions((ComponentTypeID)componentType.getID());
             String propValue;
             String propName;
             for ( Iterator compTypeDefnItr = compTypeDefns.iterator(); compTypeDefnItr.hasNext(); ) {

@@ -50,6 +50,7 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.ExtensionModule;
+import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
@@ -878,7 +879,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void saveConnectorType(ConnectorBindingType type) throws MetaMatrixComponentException {
-        loadedConnectorTypes.put(type.getName(), type);
+        loadedConnectorTypes.put(type.getName(), addFullPropertyDefns(type));
 
         // Also add binding type to the configuration and save.        
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_type_save", new Object[] {type.getName()}); //$NON-NLS-1$
@@ -1092,7 +1093,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             for (Iterator it = def.getConnectorTypes().values().iterator(); it.hasNext();) {
                 ConnectorBindingType type= (ConnectorBindingType)it.next();
                 if (!loadedConnectorTypes.containsKey(type.getName())) {
-                    loadedConnectorTypes.put(type.getName(), type);
+                    loadedConnectorTypes.put(type.getName(), addFullPropertyDefns(type));
                 }
             }                        
             
@@ -1110,7 +1111,13 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         }
     }
 
-    /** 
+    private ComponentType addFullPropertyDefns(ConnectorBindingType type) {
+    	BasicComponentType baseType = (BasicComponentType)type;
+    	baseType.setComponentTypeDefinitions(this.configurationModel.getAllComponentTypeDefinitions((ComponentTypeID)baseType.getID()));
+		return baseType;
+	}
+
+	/** 
      * Add the connnector binding with new deployment name
      * @param binding
      * @param deployedName

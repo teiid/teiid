@@ -293,7 +293,7 @@ public class BasicComponentType extends BasicObject implements ComponentType, Se
 
 
 
-    void setComponentTypeDefinitions(Collection newDefinitions){
+    public void setComponentTypeDefinitions(Collection newDefinitions){
 
         if (newDefinitions == null) {
         	return;
