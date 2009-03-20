@@ -22,6 +22,9 @@
 
 package com.metamatrix.common.util;
 
+import java.util.regex.Pattern;
+
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
 
 /**
@@ -32,6 +35,7 @@ public class SqlUtil {
     public static final char NL_CHAR = StringUtil.Constants.NEW_LINE_CHAR;
     public static final char SPACE_CHAR = StringUtil.Constants.SPACE_CHAR;
     public static final char TAB_CHAR = StringUtil.Constants.TAB_CHAR;
+	private static Pattern PATTERN = Pattern.compile("^([\\s]|(/\\*.*\\*/))*(insert|update|delete|create|drop|(select([\\s]|(/\\*.*\\*/))+.*into([\\s]|(/\\*.*\\*/))+)).*", Pattern.CASE_INSENSITIVE|Pattern.MULTILINE); //$NON-NLS-1$
     
     private SqlUtil() {
         super();
@@ -47,48 +51,8 @@ public class SqlUtil {
      * query or an update
      */
     public static boolean isUpdateSql(String sql) throws IllegalArgumentException {
-        if(sql != null && sql.length() > 0) {
-            int length = sql.length();
-            
-            for(int i=0; i<length; i++) {
-                char c = sql.charAt(i);
-                if(Character.isWhitespace(c)) {
-                    continue;
-                } else if(c == 'i' || c =='I' || c == 'u' || c == 'U' || c == 'd' || c == 'D' || c == 'c' || c == 'C') {
-                    if(i+6 > length) {
-                        return false;
-                    }
-                    String word = sql.substring(i, i+6);
-                    if(word.equalsIgnoreCase("insert") || word.equalsIgnoreCase("update") || word.equalsIgnoreCase("delete")) { //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-3$
-                        return true;
-                    }
-                    return false;
-                }else if(c == 's' || c == 'S'){
-                    if(i+6 > length) {
-                        return false;
-                    }
-                    String word = sql.substring(i, i+6);
-                    if(word.equalsIgnoreCase("select")){ //$NON-NLS-1$
-                    	String upperCaseSql = sql.toUpperCase();
-                    	int intoIndex = upperCaseSql.indexOf(" INTO ", i); //$NON-NLS-1$
-                    	if(intoIndex == -1){
-                    		return false;
-                    	}
-
-                        int fromIndex = upperCaseSql.indexOf(" FROM ", intoIndex); //$NON-NLS-1$
-                        if(fromIndex == -1 || fromIndex > intoIndex){
-                        	return true;
-                        }                       
-                    }
-                    return false;
-                }else {
-                    return false;
-                }
-            }
-        }
-
-        // Bad sql string
-        throw new IllegalArgumentException();
+        ArgCheck.isNotNull(sql);
+        return PATTERN.matcher(sql).matches();
     }
     
     /**

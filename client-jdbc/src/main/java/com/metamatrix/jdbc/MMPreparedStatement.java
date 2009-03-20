@@ -207,6 +207,10 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
      *             if there is an error executing
      */
     public ResultSet executeQuery() throws SQLException {
+    	if (isUpdateSql(prepareSql)) {
+    		throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.no_result_set")); //$NON-NLS-1$
+    	}
+    	
         internalExecuteQuery();
         
         if (!hasResultSet()) {

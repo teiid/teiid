@@ -481,6 +481,9 @@ public class MMStatement extends WrapperImpl implements Statement {
      *             if there is an error executing the query
      */
     public ResultSet executeQuery(String sql) throws SQLException {
+    	if (isUpdateSql(sql)) {
+    		throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.no_result_set")); //$NON-NLS-1$
+    	}
         executeSql(new String[] {sql}, false);
         if (!hasResultSet()) {
     		throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.no_result_set")); //$NON-NLS-1$
@@ -1125,11 +1128,10 @@ public class MMStatement extends WrapperImpl implements Statement {
      * 0 length, etc.
      */
     protected boolean isUpdateSql(String sql) throws SQLException {
-        try {
-            return SqlUtil.isUpdateSql(sql);
-        } catch(IllegalArgumentException e) {
+    	if (sql == null || sql.length() == 0) {
             throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_query_type", sql)); //$NON-NLS-1$
         }
+    	return SqlUtil.isUpdateSql(sql);
     }
 
 	protected void setAnalysisInfo(ResultsMessage resultsMsg) {

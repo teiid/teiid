@@ -80,5 +80,13 @@ public class TestSqlUtil extends TestCase {
     public void testSelectInto4() {
         helpTest("SELECT x into z", true); //$NON-NLS-1$
     }
+    
+    public void testCreate() {
+    	helpTest(" create table x", true); //$NON-NLS-1$
+    }
+    
+    public void testDrop() {
+    	helpTest("/* */ drop table x", true); //$NON-NLS-1$
+    }
 
 }
