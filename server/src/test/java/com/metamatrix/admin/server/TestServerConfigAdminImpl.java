@@ -30,6 +30,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.Host;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -297,6 +298,22 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	// Check results - expect to have no bindings
     	expectedBindingNames = new HashSet();
     	helpCheckBindings(model,expectedBindingNames);
+    }
+    
+    public void testDeassignNonexistantBinding() throws Exception {
+    	// The FakeConfiguration has 3 connectors available, connectorBinding1, 2 and 3.
+    	
+    	// Assign multiple connector bindings, connectorBinding1 , 2 and 3
+    	String[] bindings = new String[] {"connectorBinding1", "connectorBinding2", "connectorBinding3"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	
+    	admin.assignBindingsToModel(bindings,VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);  
+    	
+    	String[] debindings = new String[] {"connectorBindingx"}; //$NON-NLS-1$ 
+    	try {
+    		admin.deassignBindingsFromModel(debindings,VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);  
+    	} catch (AdminProcessingException e) {
+    		assertEquals("Connector Binding connectorBindingx not found in Configuration", e.getMessage()); //$NON-NLS-1$ 
+    	}
     }
     
     public void testAddAuthenticationProvider() throws Exception {

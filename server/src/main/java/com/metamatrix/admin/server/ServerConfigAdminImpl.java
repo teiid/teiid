@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1583,22 +1584,20 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
     }
 
-    
-    
-    
-    private ConnectorBinding getConnectorBindingByName(String name) throws ConfigurationException, ServiceException {
+    private ConnectorBinding getConnectorBindingByName(String name) throws ConfigurationException, ServiceException, AdminProcessingException {
         Configuration nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
         ConnectorBinding cb = nextStartupConfig.getConnectorBinding(name);
+        if (cb == null) {
+        	throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration", name)); //$NON-NLS-1$
+        }
         return cb;
     }
     
-    protected List getConnectorBindingsByName(String[] bindingNames) throws ConfigurationException, ServiceException {
-    	List bindingList = new ArrayList(bindingNames.length);
+    protected List<ConnectorBinding> getConnectorBindingsByName(String[] bindingNames) throws ConfigurationException, ServiceException, AdminProcessingException {
+    	List<ConnectorBinding> bindingList = new ArrayList<ConnectorBinding>(bindingNames.length);
     	
-        Configuration nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
         for(int i=0; i<bindingNames.length; i++) {
-        	ConnectorBinding cb = nextStartupConfig.getConnectorBinding(bindingNames[i]);
-        	bindingList.add(cb);
+        	bindingList.add(getConnectorBindingByName(bindingNames[i]));
         }
         return bindingList;
     }
@@ -1720,61 +1719,55 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                            String modelName) throws AdminException {
         try {
 
-            List bindingList = getConnectorBindingsByName(connectorBindingNames);
-            if (!bindingList.isEmpty()) {
+            List<ConnectorBinding> connectorList = getConnectorBindingsByName(connectorBindingNames);
 
-                Collection colVdbs = getVirtualDatabases();
-                if (colVdbs != null) {
-                    for (Iterator iter = colVdbs.iterator(); iter.hasNext();) {
-                        VirtualDatabase vdb = (VirtualDatabase)iter.next();
+            Collection colVdbs = getVirtualDatabases();
+            if (colVdbs == null) {
+            	return;
+            }
+            for (Iterator iter = colVdbs.iterator(); iter.hasNext();) {
+                VirtualDatabase vdb = (VirtualDatabase)iter.next();
 
-                        if (vdb.getName().equals(vdbName) && vdb.getVirtualDatabaseID().getVersion().equals(vdbVersion)) {
-                            VirtualDatabaseID vdbId = (VirtualDatabaseID)vdb.getID();
-                            Collection models = getModels(vdbId);
+                if (vdb.getName().equals(vdbName) && vdb.getVirtualDatabaseID().getVersion().equals(vdbVersion)) {
+                    VirtualDatabaseID vdbId = (VirtualDatabaseID)vdb.getID();
+                    Collection models = getModels(vdbId);
 
-                            if (models != null) {
-                                HashMap map = new HashMap(models.size());
-                                Iterator modelIter = models.iterator();
-                                while (modelIter.hasNext()) {
-                                    Model model = (Model)modelIter.next();
-            
-                                    if (model.getName().equals(modelName)) {                                       
-                                        if (model.getConnectorBindingNames().size() > 0) {
-                                             
-                                             // load all the existing bindings
-                                             Set bindingSet = new HashSet(model.getConnectorBindingNames().size());
-                                             bindingSet.addAll(model.getConnectorBindingNames());
-                                             
-                                             // remove the bindings passed in to be removed
-                                             List toBeRemovedBindings = getConnectorBindingsByName(connectorBindingNames);
-                                             Iterator toBeRemovedBindingsIter = toBeRemovedBindings.iterator();
-                                             while(toBeRemovedBindingsIter.hasNext()) {
-                                                	ConnectorBinding toBeRemovedBinding = (ConnectorBinding)toBeRemovedBindingsIter.next();
-                                                	bindingSet.remove(toBeRemovedBinding.getRoutingUUID());                                               
-                                             }
-                                             
-                                             // convert the set to a list for the map
- 			                                 List bindings = new ArrayList(model.getConnectorBindingNames().size());
-                                             bindings.addAll(bindingSet);
-                                             map.put(model.getName(), bindings);
-                                         }
-                                    } else {
-                                        //put the original name in the map, because the user is not changing this
-                                        map.put(model.getName(), model.getConnectorBindingNames());
-                                    }
-                                }
-                                
-                                setConnectorBindingNames(vdbId, map);
-
+                    if (models != null) {
+                        HashMap map = new HashMap(models.size());
+                        Iterator modelIter = models.iterator();
+                        while (modelIter.hasNext()) {
+                            Model model = (Model)modelIter.next();
+    
+                            if (model.getName().equals(modelName)) {                                       
+                                if (model.getConnectorBindingNames().size() > 0) {
+                                     
+                                     // load all the existing bindings
+                                     Set bindingSet = new HashSet(model.getConnectorBindingNames().size());
+                                     bindingSet.addAll(model.getConnectorBindingNames());
+                                     
+                                     // remove the bindings passed in to be removed
+                                     for (ConnectorBinding binding : connectorList) {
+                                        	bindingSet.remove(binding.getRoutingUUID());                                               
+                                     }
+                                     
+                                     // convert the set to a list for the map
+	                                 List bindings = new ArrayList(model.getConnectorBindingNames().size());
+                                     bindings.addAll(bindingSet);
+                                     map.put(model.getName(), bindings);
+                                 }
+                            } else {
+                                //put the original name in the map, because the user is not changing this
+                                map.put(model.getName(), model.getConnectorBindingNames());
                             }
-                            setVDBState(vdbId, VDB.ACTIVE);
-                            // done
-                            break;
                         }
+                        
+                        setConnectorBindingNames(vdbId, map);
+
                     }
+                    setVDBState(vdbId, VDB.ACTIVE);
+                    // done
+                    break;
                 }
-            } else {
-                throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_not_found_in_Configuration")); //$NON-NLS-1$
             }
         } catch (VirtualDatabaseException e) {
         	throw new AdminComponentException(e);
