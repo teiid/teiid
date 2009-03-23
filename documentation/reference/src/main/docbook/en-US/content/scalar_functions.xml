@@ -1935,7 +1935,7 @@
                 meaningful result for non-text nodes.</para>
             </entry>
             <entry>
-              <para>Doc and xpath are strings. Return value is a string.
+              <para>Doc in {string, xml} and xpath in {string}. Return value is a string.
               </para>
             </entry>
           </row>
