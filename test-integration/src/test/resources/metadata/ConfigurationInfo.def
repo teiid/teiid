@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VDB>
+    <Header>
+        <VDBExporterVersion>4.1</VDBExporterVersion>
+        <ApplicationCreatedBy>MetaBase Modeler</ApplicationCreatedBy>
+        <UserCreatedBy>VDBWriter</UserCreatedBy>
+        <MetaMatrixSystemVersion>5.5</MetaMatrixSystemVersion>
+        <Time>2009-02-03T16:43:53.407-06:00</Time>
+    </Header>
+    <VDBInfo>
+        <Property Name="Name" Value="TestExtensions" />
+        <Property Name="GUID" Value="mmuuid:aab3f642-0a99-111f-b214-b4f3aeb96b39" />
+        <Property Name="Version" Value="1" />
+        <Property Name="VDBArchiveName" Value="TestExtensions.vdb" />
+    </VDBInfo>
+    <Model>
+        <Property Name="Name" Value="ExtensionModel" />
+        <Property Name="Visibility" Value="Public" />
+        <Property Name="MultiSourceEnabled" Value="false" />
+    </Model>
+    <Model>
+        <Property Name="Name" Value="AnyModel" />
+        <Property Name="Visibility" Value="Public" />
+        <Property Name="MultiSourceEnabled" Value="false" />
+        <ConnectorBindings>
+            <Connector Name="AnyModel Connector" />
+        </ConnectorBindings>
+    </Model>
+    <ComponentTypes>
+        <ComponentType Name="Fake Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-11-13T13:26:45.416-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-11-13T13:26:45.416-06:00">
+            <PropertyDefinition Name="CapabilitiesClass" DisplayName="Capabilities Class" ShortDescription="" DefaultValue="com.metamatrix.connector.loopback.LoopbackCapabilities" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="RowCount" DisplayName="Rows Per Query" ShortDescription="" DefaultValue="1" Multiplicity="1" IsExpert="true" IsPreferred="true" />
+            <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.loopback.LoopbackConnector" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="WaitTime" DisplayName="Max Random Wait Time" ShortDescription="" DefaultValue="0" Multiplicity="1" IsExpert="true" />
+            <PropertyDefinition Name="Standard" DisplayName="Standard Type" ShortDescription="Standard Built-in Connector Type" DefaultValue="true" PropertyType="Boolean" IsExpert="true" IsModifiable="false" />
+            <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" DefaultValue="extensionjar:connector_patch.jar;extensionjar:loopbackconn.jar;extensionjar:jdbcconn.jar" Multiplicity="1" />
+        </ComponentType>
+    </ComponentTypes>
+    <ConnectorBindings>
+        <Connector Name="AnyModel Connector" ComponentType="Fake Connector" QueuedService="false" routingUUID="mmuuid:2a20b100-1032-111f-b214-b4f3aeb96b39">
+            <Properties>
+                <Property Name="MaxResultRows">10000</Property>
+                <Property Name="Standard">true</Property>
+                <Property Name="ExceptionOnMaxRows">true</Property>
+                <Property Name="ConnectorThreadTTL">120000</Property>
+                <Property Name="ServiceMonitoringEnabled">true</Property>
+                <Property Name="ConnectorMaxThreads">20</Property>
+                <Property Name="SourceConnectionTestInterval">600</Property>
+                <Property Name="metamatrix.service.essentialservice">false</Property>
+                <Property Name="ConnectorClassPath"></Property>
+                <Property Name="RowCount">1</Property>
+                <Property Name="ConnectorClass">org.teiid.connector.metadata.runtime.MockConnector</Property>
+                <Property Name="DeployedName">TestExtensions_1.AnyModel Connector</Property>
+                <Property Name="WaitTime">0</Property>
+                <Property Name="Immutable">false</Property>
+            </Properties>
+        </Connector>
+    </ConnectorBindings>
+</VDB>
+
