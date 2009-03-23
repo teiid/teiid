@@ -30,7 +30,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -69,7 +68,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
         
     // Execution state
     private Random randomNumber = new Random(System.currentTimeMillis());
-    private List row;
+    private List<Object> row;
     private boolean waited = false;
     private int rowsReturned = 0;
     private boolean asynch = false;
@@ -83,7 +82,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     }
     
     @Override
-    public List next() throws ConnectorException, DataNotAvailableException {
+    public List<?> next() throws ConnectorException, DataNotAvailableException {
         // Wait on first batch if necessary
         if(waitTime > 0 && !waited) {
             // Wait a random amount of time up to waitTime milliseconds
@@ -119,7 +118,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
     @Override
     public void execute() throws ConnectorException {
         // Get poll interval
-        String pollIntervalString = env.getProperties().getProperty(LoopbackProperties.POLL_INTERVAL);              //$NON-NLS-1$
+        String pollIntervalString = env.getProperties().getProperty(LoopbackProperties.POLL_INTERVAL);            
         if (pollIntervalString != null) {
         	asynch = true;
 	        try {
@@ -164,7 +163,7 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
         
         // Prepare for execution
         List types = determineOutputTypes(this.command);
-        this.row = createDummyRow(types);        
+        createDummyRow(types);        
     }
     
     @Override
@@ -210,21 +209,17 @@ public class LoopbackExecution extends BasicExecution implements UpdateExecution
         if (command instanceof IProcedure) {
         	return Arrays.asList(((IProcedure)command).getResultSetColumnTypes());
         }
-        List types = new ArrayList();
+        List<Class<?>> types = new ArrayList<Class<?>>(1);
         types.add(Integer.class);
         return types;
     }
     
-    private List createDummyRow(List types) throws ConnectorException {
-        List row = new ArrayList(types.size());
+    private void createDummyRow(List<Class<?>> types) {
+        row = new ArrayList<Object>(types.size());
         
-        Iterator iter = types.iterator();
-        while(iter.hasNext()) {
-            Class type = (Class) iter.next();
+        for (Class<?> type : types) {
             row.add( getValue(type) );
         }   
-        
-        return row;
     }
 
     /**

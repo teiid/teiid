@@ -91,7 +91,9 @@ import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.Option;
+import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
+import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -146,7 +148,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
     
     private int chunkSize;
     
-    protected Command command;
+    protected Command userCommand;
+    protected boolean returnsUpdateCount;
 
     void initialize(RequestMessage requestMsg,
                               ApplicationEnvironment env,
@@ -234,7 +237,28 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
     
-    protected void createCommandContext(Command command) {
+    protected void createCommandContext(Command command) throws QueryValidatorException {
+    	boolean returnsResultSet = false;
+    	this.returnsUpdateCount = true;
+        if(command instanceof Query) {
+        	Query query = (Query)command;
+    		returnsResultSet = query.getInto() == null;
+    		returnsUpdateCount = !returnsResultSet;
+        } else if (command instanceof SetQuery) {
+        	returnsResultSet = true;
+        	returnsUpdateCount = false;
+        } else if (command instanceof XQuery) {
+        	returnsResultSet = true;
+        	returnsUpdateCount = false;
+        } else if (command instanceof StoredProcedure) {
+        	returnsUpdateCount = false;
+        	StoredProcedure proc = (StoredProcedure)command;
+        	returnsResultSet = proc.returnsResultSet();
+        }
+    	if (this.requestMsg.getRequireResultSet() != null && this.requestMsg.getRequireResultSet() != returnsResultSet) {
+        	throw new QueryValidatorException(DQPPlugin.Util.getString(this.requestMsg.getRequireResultSet()?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
+
     	// Create command context, used in rewriting, planning, and processing
         // Identifies a "group" of requests on a per-connection basis to allow later
         // cleanup of all resources in the group on connection shutdown
@@ -329,7 +353,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             }
         }
         
-        this.command = preRewrite;
+        this.userCommand = preRewrite;
         return command;
     }
     
@@ -424,7 +448,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             
             if(ExecutionProperties.AUTO_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
-            } else if ( command.updatingModelCount(metadata) > 1) { 
+            } else if ( userCommand.updatingModelCount(metadata) > 1) { 
                 if (ExecutionProperties.AUTO_WRAP_OPTIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){ 
                     String msg = DQPPlugin.Util.getString("Request.txn_needed_wrong_mode", requestId); //$NON-NLS-1$
                     throw new MetaMatrixComponentException(msg);
@@ -598,15 +622,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         generatePlan();
         
-        validateEntitlement(command);
+        validateEntitlement(userCommand);
         
-        setSchemasForXMLPlan(command, metadata);
+        setSchemasForXMLPlan(userCommand, metadata);
         
         createProcessor();
     }
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
-		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && command instanceof XQuery;
+		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && userCommand instanceof XQuery;
 		
 		ParseInfo parseInfo = new ParseInfo();
 		if (isRootXQuery && requestMsg.isDoubleQuotedVariableAllowed()) {

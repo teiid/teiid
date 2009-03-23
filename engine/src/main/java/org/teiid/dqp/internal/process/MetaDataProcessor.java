@@ -147,7 +147,7 @@ public class MetaDataProcessor {
                         columnMetadata = new Map[1];
                         columnMetadata[0] = createXMLColumnMetadata((Query)originalCommand);
                     } else if (((Query)originalCommand).getInto() != null) {
-                        columnMetadata = createUpdateMetadata();
+                        columnMetadata = null;
                     } else {
                         columnMetadata = createProjectedSymbolMetadata(originalCommand);
                     }
@@ -163,7 +163,7 @@ public class MetaDataProcessor {
             case Command.TYPE_DELETE:
             case Command.TYPE_CREATE:    
             case Command.TYPE_DROP:
-                columnMetadata = createUpdateMetadata();
+                columnMetadata = null;
                 break;    
             case Command.TYPE_XQUERY:
                 columnMetadata = new Map[1];
@@ -330,29 +330,6 @@ public class MetaDataProcessor {
 
     private Map createTypedMetadata(String shortColumnName, SingleElementSymbol symbol) {
         return getDefaultColumn(vdbName, vdbVersion, null, shortColumnName, symbol.getType());
-    }
-    
-    private Map[] createUpdateMetadata() {
-        Map[] metadata = new Map[1];
-        metadata[0] = new HashMap();
-        metadata[0].put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
-        metadata[0].put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.FALSE);
-        metadata[0].put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
-        metadata[0].put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.DefaultDataTypes.INTEGER);
-        metadata[0].put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.getMaxDisplaySize(DataTypeManager.DefaultDataTypes.INTEGER));
-        metadata[0].put(ResultsMetadataConstants.ELEMENT_LABEL, null); 
-        metadata[0].put(ResultsMetadataConstants.ELEMENT_NAME, ResultsMetadataDefaults.UPDATE_COLUMN);
-        metadata[0].put(ResultsMetadataConstants.GROUP_NAME, null);
-        metadata[0].put(ResultsMetadataConstants.NULLABLE, ResultsMetadataConstants.NULL_TYPES.NOT_NULL);        
-        metadata[0].put(ResultsMetadataConstants.PRECISION, ResultsMetadataDefaults.getDefaultPrecision(DataTypeManager.DefaultDataTypes.INTEGER)); 
-        metadata[0].put(ResultsMetadataConstants.RADIX, new Integer(10));
-        metadata[0].put(ResultsMetadataConstants.SCALE, new Integer(0)); 
-        metadata[0].put(ResultsMetadataConstants.SEARCHABLE, ResultsMetadataConstants.SEARCH_TYPES.UNSEARCHABLE);        
-        metadata[0].put(ResultsMetadataConstants.SIGNED, Boolean.TRUE); 
-        metadata[0].put(ResultsMetadataConstants.WRITABLE, Boolean.FALSE);
-        metadata[0].put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, vdbName); 
-        metadata[0].put(ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, vdbVersion);
-        return metadata;        
     }
     
     private int getColumnPrecision(Class dataType, Object elementID) throws QueryMetadataException, MetaMatrixComponentException {

@@ -96,20 +96,16 @@ public class TestMetaDataProcessor extends TestCase {
 
     public void testSimpleUpdate() throws Exception {
         Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
-        assertNotNull(metadata);
-        assertEquals(1, metadata.length);
+        assertNull(metadata);
         
         metadata = helpGetMetadata("DELETE FROM pm1.g1 WHERE e1 = 'x'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
-        assertNotNull(metadata);
-        assertEquals(1, metadata.length);
+        assertNull(metadata);
         
         metadata = helpGetMetadata("UPDATE pm1.g1 SET e1='y' WHERE e1 = 'x'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
-        assertNotNull(metadata);
-        assertEquals(1, metadata.length);
+        assertNull(metadata);
         
         metadata = helpGetMetadata("SELECT e1, e2, e3, e4 INTO pm1.g2 FROM pm1.g1", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
-        assertNotNull(metadata);
-        assertEquals(1, metadata.length);
+        assertNull(metadata);
     }
     
     public void testElementLabel() throws Exception {

@@ -48,19 +48,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
-import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.client.MetadataResult;
-import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
@@ -75,8 +72,6 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  */
 
 public class MMPreparedStatement extends MMStatement implements PreparedStatement {
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	
     // sql, which this prepared statement is operating on
     protected String prepareSql;
 
@@ -148,36 +143,6 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
             parameterMap.clear();
         }
     }
-
-    /**
-     * In many cases, it is desirable to immediately release a Statements's database
-     * and JDBC resources instead of waiting for this to happen when it is automatically
-     * closed; the close method provides this immediate release.
-     * @throws SQLException should never occur.
-     */
-    public void close() throws SQLException {
-        prepareSql = null;
-        super.close();
-    }
-
-    /**
-     * <p>Executes the SQL statement contained in the PreparedStatement object and
-     * indicates whether the first result is a result set, an update count, or
-     * there are no results.
-     * @return true is has result set
-     */
-    public boolean execute() throws SQLException {
-
-        // check if the statement is open
-        checkStatement();
-
-        if(isUpdateSql(prepareSql)) {
-            executeUpdate();
-            return false;
-        }
-        internalExecuteQuery();
-        return hasResultSet();
-    }
     
     @Override
     public boolean execute(String sql) throws SQLException {
@@ -196,140 +161,53 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
     	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
         throw new MMSQLException(msg);
     }
+    
+    @Override
+    public void addBatch(String sql) throws SQLException {
+    	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
+        throw new MMSQLException(msg);
+    }
 
-    /**
-     * <p>
-     * Executes a prepared SQL query and returns the result set in a ResultSet object. This method should be used only for SQL
-     * statements that return a result set; any other result will cause an exception.
-     * 
-     * @return ResultSet object that results in the execution of this statement
-     * @throws SQLException
-     *             if there is an error executing
-     */
-    public ResultSet executeQuery() throws SQLException {
-    	if (isUpdateSql(prepareSql)) {
-    		throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.no_result_set")); //$NON-NLS-1$
+    @Override
+    public boolean execute() throws SQLException {
+        executeSql(new String[] {this.prepareSql}, false, null);
+        return hasResultSet();
+    }
+    
+    @Override
+    public int[] executeBatch() throws SQLException {
+    	if (batchParameterList == null || batchParameterList.isEmpty()) {
+   	     	return new int[0];
     	}
-    	
-        internalExecuteQuery();
-        
-        if (!hasResultSet()) {
-        	throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.no_result_set")); //$NON-NLS-1$
-        }
+	   	try{
+	   		executeSql(new String[] {this.prepareSql}, true, false);
+	   	}finally{
+	   		batchParameterList.clear();
+	   	}
+	   	return this.updateCounts;
+    }
 
+    @Override
+    public ResultSet executeQuery() throws SQLException {
+        executeSql(new String[] {this.prepareSql}, false, true);
         return resultSet;
     }
 
-	private void internalExecuteQuery() throws SQLException, MMSQLException {
-		checkStatement();
-
-        // See NOTE1
-        resetExecutionState();
-
-        processQueryMessage(internalExecute(new String[] {prepareSql}, false));
-
-        // handle exception
-        MMSQLException ex = getException();
-        if ( ex == null && resultSet == null ) {
-            if ( commandStatus == TIMED_OUT ) {
-                String msg = JDBCPlugin.Util.getString("MMStatement.Timeout_before_execute"); //$NON-NLS-1$
-                setException(new MMSQLException(msg));
-            } else if ( commandStatus == CANCELLED ) {
-                String msg = JDBCPlugin.Util.getString("MMStatement.Cancel_before_execute"); //$NON-NLS-1$
-                setException(new MMSQLException(msg));
-            }
-        }
-
-        ex = getException();
-        if(ex != null) {
-            clearParameters();
-            throw ex;
-        }
-
-        logger.info(JDBCPlugin.Util.getString("MMStatement.Success_query", prepareSql)); //$NON-NLS-1$
-	}
-    
-    private void processUpdateMessage(ResultsMessage resultsMsg) throws SQLException {
-        // get results from ResultsMessage
-        MetaMatrixException resultsExp = resultsMsg.getException();
-        // warnings thrown
-        List resultsWarning = resultsMsg.getWarnings();
-
-        MMPreparedStatement.this.setAnalysisInfo(resultsMsg);
-
-        if (resultsExp != null) {
-            setException(resultsExp);
-        } else {
-            // save warnings if have any
-            if (resultsWarning != null) {
-                accumulateWarnings(resultsWarning);
-            }
-            // wrap results into ResultSet, only one update count
-            resultSet = new MMResultSet(resultsMsg, this);
-        }
-    }
-
-    /**
-     * <p>Executes an SQL INSERT, UPDATE or DELETE statement and returns the number
-     * of rows that were affected.
-     * @return int value that results in the execution of this statement
-     */
+    @Override
     public int executeUpdate() throws SQLException {
-    	executeUpdate(false);
-    	return super.getUpdateCount();
+        executeSql(new String[] {this.prepareSql}, false, false);
+        return this.updateCounts[0];
     }
     
-    private void executeUpdate(boolean isBatchedUpdate) throws SQLException {
-        //Check to see the statement is closed and throw an exception
-        checkStatement();
-        if (getMMConnection().isReadOnly()) {
-            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", prepareSql)); //$NON-NLS-1$
-        }
-        
-        // See NOTE1
-        resetExecutionState();
-
-        processUpdateMessage(internalExecute(new String[] {prepareSql}, isBatchedUpdate));
-
-        // handle exception
-        MMSQLException ex = getException();
-        if ( ex == null ) {
-            if ( commandStatus == TIMED_OUT ) {
-            	String msg = JDBCPlugin.Util.getString("MMStatement.Timeout_before_execute"); //$NON-NLS-1$
-            	setException(new MMSQLException(msg));
-        	} else if ( commandStatus == CANCELLED ) {
-            	String msg = JDBCPlugin.Util.getString("MMStatement.Cancel_before_execute"); //$NON-NLS-1$
-            	setException(new MMSQLException(msg));
-        	} else if (resultSet.next()) {
-            	try {
-                	if (isBatchedUpdate) {
-                		Object result = resultSet.getObject(1);
-                		if(result instanceof int[]){
-                			updateCounts = (int[])resultSet.getObject(1);
-                		}else{
-                            int commandIndex = 0;
-                            updateCounts = new int[batchParameterList.size()];
-                            do {
-                                updateCounts[commandIndex++] = resultSet.getInt(1);
-                            } while (resultSet.next());
-                		}            		
-                	}else{
-                		rowsAffected = resultSet.getInt(1);
-                	}
-                	logger.info(JDBCPlugin.Util.getString("MMStatement.Success_update", prepareSql)); //$NON-NLS-1$
-	            } catch (SQLException se) {
-        	        setException(MMSQLException.create(se, JDBCPlugin.Util.getString("MMStatement.Err_getting_update_row"))); //$NON-NLS-1$
-            	} finally {
-                	resultSet.close();
-                	resultSet = null;
-            	}
-        	}
-        }
-
-        ex = getException();
-        if(ex != null) {
-            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Err_update", prepareSql, ex.getMessage())); //$NON-NLS-1$
-        }
+    @Override
+    protected RequestMessage createRequestMessage(String[] commands,
+    		boolean isBatchedCommand, Boolean requiresResultSet)
+    		throws MMSQLException {
+    	RequestMessage message = super.createRequestMessage(commands, false, requiresResultSet);
+    	message.setPreparedStatement(true);
+    	message.setParameterValues(isBatchedCommand?getParameterValuesList(): getParameterValues());
+    	message.setPreparedBatchUpdate(isBatchedCommand);
+    	return message;
     }
 
     /**
@@ -345,13 +223,10 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         // check if the statement is open
         checkStatement();
 
-        //if update return null
-        if(SqlUtil.isUpdateSql(this.prepareSql)){
-        	return null;
-        }
-        
         if(metadata == null) {
-            if(resultSet != null) {
+        	if (updateCounts != null) {
+        		return null;
+        	} else if(resultSet != null) {
                 metadata = resultSet.getMetaData();
             } else {
     			MetadataResult results;
@@ -361,6 +236,9 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 					throw MMSQLException.create(e);
 				} catch (MetaMatrixProcessingException e) {
 					throw MMSQLException.create(e);
+				}
+				if (results.getColumnMetadata() == null) {
+					return null;
 				}
                 StaticMetadataProvider provider = StaticMetadataProvider.createWithData(results.getColumnMetadata(), results.getParameterCount());
                 metadata = ResultsMetadataWithProvider.newInstance(provider);
@@ -754,20 +632,6 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         setObject(parameterIndex, x);
     }
 
-    /**
-     * Internal Execution method.
-     * @param sql Request Message's sql.
-     * @param listener Message Listener
-     * @throws SQLException thrown when fail to create the {@link AllResultsImpl}
-     */
-    protected ResultsMessage internalExecute(String[] commands, boolean isPreparedBatchUpdate) throws SQLException  {
-        try {
-        	return sendRequestMessageAndWait(commands, true, false, isPreparedBatchUpdate? getParameterValuesList(): getParameterValues(), false, isPreparedBatchUpdate);
-        } catch ( Throwable ex ) {
-            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0])); //$NON-NLS-1$
-        }
-    }
-
     List getParameterValuesList() {
     	if(batchParameterList == null || batchParameterList.isEmpty()){
     		return Collections.EMPTY_LIST;
@@ -797,18 +661,6 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         this.serverCalendar = serverCalendar;
     }
 
-    public int[] executeBatch() throws SQLException {
-    	if (batchParameterList == null || batchParameterList.isEmpty()) {
-    	     return new int[0];
-    	}
-    	try{
-    	 	executeUpdate(true);
-    	}finally{
-    		batchParameterList.clear();
-    	}
-    	return updateCounts;
-    }
-    
 	public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
 		setObject(parameterIndex, xmlObject);
 	}

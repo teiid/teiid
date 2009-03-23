@@ -22,6 +22,8 @@
 
 package com.metamatrix.cdk;
 
+import org.junit.Test;
+
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
@@ -30,11 +32,7 @@ public class TestLoopbackConnector extends AbstractMMQueryTestCase {
 	private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/dqp/dqp.properties"; //$NON-NLS-1$
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
         
-    public TestLoopbackConnector(String name) {
-        super(name); 
-    }
-    
-    public void test() {
+    @Test public void test() {
     	getConnection(VDB, DQP_PROP_FILE);
     	
     	executeAndAssertResults("select * from parts", new String[] { //$NON-NLS-1$

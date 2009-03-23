@@ -22,8 +22,7 @@
 
 package com.metamatrix.jdbc;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.*;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -38,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.core.log.Logger;
 import com.metamatrix.dqp.client.ClientSideDQP;
 
 public class TestMMResultSet extends TestCase {

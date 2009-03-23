@@ -22,10 +22,7 @@
 
 package com.metamatrix.jdbc;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -43,10 +40,12 @@ import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.query.unittest.TimestampUtil;
 
 public class TestAllResultsImpl extends TestCase {
 
@@ -800,15 +799,15 @@ public class TestAllResultsImpl extends TestCase {
 	}
 
 	// /////////////////////Helper Method///////////////////
-	static List[] exampleResults1(int length) {
+	static List<Object>[] exampleResults1(int length) {
 		return exampleResults1(length, 1);
 	}
 	
-	static List[] exampleResults1(int length, int begin) {
-		List[] results = new List[length];
+	static List<Object>[] exampleResults1(int length, int begin) {
+		List<Object>[] results = new List[length];
 
 		for (int i = 0; i < results.length; i++) {
-			results[i] = new ArrayList();
+			results[i] = new ArrayList<Object>();
 			results[i].add(new Integer(begin + i));
 		}
 
@@ -858,14 +857,16 @@ public class TestAllResultsImpl extends TestCase {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg1() {
+		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
+	}
+	
+	private ResultsMessage exampleMessage(List<Object>[] results, String[] columnNames, String[] datatypes) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage(request);
-		List[] results = exampleResults1(5);
 		resultsMsg.setResults(results);
-		resultsMsg.setColumnNames(new String[] { "IntNum" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER }); 
-		resultsMsg.setPartialResults(false);
+		resultsMsg.setColumnNames(columnNames);
+		resultsMsg.setDataTypes(datatypes); 
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
@@ -876,22 +877,7 @@ public class TestAllResultsImpl extends TestCase {
 
 	/** without metadata info. */
 	private ResultsMessage exampleResultsMsg2() {
-		RequestMessage request = new RequestMessage();
-		request.setExecutionId(REQUEST_ID);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
-		List[] results = exampleResults2();
-		resultsMsg.setResults(results);
-		resultsMsg.setColumnNames(new String[] { "IntNum", "StringNum" }); //$NON-NLS-1$ //$NON-NLS-2$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER,
-				MMJDBCSQLTypeInfo.STRING });
-		resultsMsg.setPartialResults(false);
-		resultsMsg.setFinalRow(results.length);
-		resultsMsg.setLastRow(results.length);
-		resultsMsg.setFirstRow(1);
-		resultsMsg.setFetchSize(500);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
-
-		return resultsMsg;
+		return exampleMessage(exampleResults2(), new String[] { "IntNum", "StringNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/** with limited metadata info. */
@@ -902,7 +888,6 @@ public class TestAllResultsImpl extends TestCase {
 		resultsMsg.setColumnNames(columnNames());
 
 		resultsMsg.setResults(results);
-		resultsMsg.setPartialResults(false);
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
@@ -914,22 +899,7 @@ public class TestAllResultsImpl extends TestCase {
 
 	/** no rows. */
 	private ResultsMessage exampleResultsMsg3() {
-		List[] results = new List[0];
-		RequestMessage request = new RequestMessage();
-		request.setExecutionId(REQUEST_ID);
-		ResultsMessage resultsMsg = new ResultsMessage(request);
-		resultsMsg.setResults(results);
-		resultsMsg.setColumnNames(new String[] { "IntNum", "StringNum" }); //$NON-NLS-1$ //$NON-NLS-2$
-		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER,
-				MMJDBCSQLTypeInfo.STRING });
-		resultsMsg.setPartialResults(false);
-		resultsMsg.setFinalRow(0);
-		resultsMsg.setLastRow(0);
-		resultsMsg.setFirstRow(1);
-		resultsMsg.setFetchSize(500);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
-
-		return resultsMsg;
+		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private static ResultsMessage exampleResultsMsg4(int begin, int length, int fetchSize, boolean lastBatch) {
@@ -987,6 +957,61 @@ public class TestAllResultsImpl extends TestCase {
 		
 		//will be the same as the original
 		assertEquals(new Timestamp(0), rs.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("GMT-05:00")))); //$NON-NLS-1$
+	}
+	
+	public void testWasNull() throws SQLException{
+		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$ //$NON-NLS-1$
+				new String[] { MMJDBCSQLTypeInfo.STRING });
+		MMResultSet rs = new MMResultSet(message, statement);
+		assertTrue(rs.next());
+		assertEquals(Boolean.FALSE.booleanValue(), rs.getBoolean(1));
+		assertTrue(rs.wasNull());
+		assertEquals(0, rs.getShort(1));
+		assertTrue(rs.wasNull());
+		assertEquals(0, rs.getInt(1));
+		assertTrue(rs.wasNull());
+		assertEquals(0l, rs.getLong(1));
+		assertTrue(rs.wasNull());
+		assertEquals(0f, rs.getFloat(1));
+		assertTrue(rs.wasNull());		
+		assertEquals(0d, rs.getDouble(1));
+		assertTrue(rs.wasNull());
+		assertNull(rs.getString(1));
+		assertTrue(rs.wasNull());
+		assertTrue(rs.next());
+		assertEquals(1, rs.getShort(1));
+		assertFalse(rs.wasNull());
+		assertFalse(rs.next());
+	}
+	
+	public void testGetters() throws SQLException{
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00")); //$NON-NLS-1$
+		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$ 
+				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ 
+				new String[] { MMJDBCSQLTypeInfo.INTEGER, MMJDBCSQLTypeInfo.TIME, MMJDBCSQLTypeInfo.DATE, MMJDBCSQLTypeInfo.TIMESTAMP, MMJDBCSQLTypeInfo.STRING });
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+		MMResultSet rs = new MMResultSet(message, statement);
+		assertTrue(rs.next());
+		assertEquals(Boolean.TRUE.booleanValue(), rs.getBoolean(1));
+		assertEquals(1, rs.getShort(1));
+		assertEquals(1, rs.getInt(1));
+		assertEquals(1l, rs.getLong(1));
+		assertEquals(1f, rs.getFloat(1));
+		assertEquals(1d, rs.getDouble(1));
+		assertEquals("1", rs.getString(1)); //$NON-NLS-1$
+		assertEquals(Integer.valueOf(1), rs.getObject(1)); 
+		//the mock statement is in GMT-6 the server results are from GMT-5, so we expect them to display the same
+		assertEquals(TimestampUtil.createTime(0, 0, 0), rs.getTime(2)); 
+		assertEquals(TimestampUtil.createDate(1, 1, 1), rs.getDate(3));
+		assertEquals(TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), rs.getTimestamp(4));
+		assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>", rs.getSQLXML(5).getString()); //$NON-NLS-1$
+		try {
+			rs.getSQLXML(1);
+		} catch (SQLException e) {
+			assertEquals("Unable to transform the column value 1 to a SQLXML.", e.getMessage()); //$NON-NLS-1$
+		}
+		assertFalse(rs.next());
+		TimestampWithTimezone.resetCalendar(null);
 	}
 
 }

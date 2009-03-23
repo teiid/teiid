@@ -27,9 +27,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
@@ -48,22 +49,14 @@ public class TestPartsDatabaseMetadata extends AbstractMMQueryTestCase {
     public TestPartsDatabaseMetadata() {
     	// this is needed because the result files are generated 
     	// with another tool which uses tab as delimiter 
-    	super.DELIMITER = "\t";
+    	super.DELIMITER = "\t"; //$NON-NLS-1$
     }
     
-    public static Test suite() {
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite(TestPartsDatabaseMetadata.class);
-		return createOnceRunSuite(suite, new ConnectionFactory() {
-
-			public com.metamatrix.jdbc.api.Connection createSingleConnection()
-					throws Exception {
-				com.metamatrix.jdbc.api.Connection result = createConnection(VDB, DQP_PROP_FILE, "");
-				dbMetadata = result.getMetaData();
-				return result;
-			}});
-	}    
-    
+    @Before public void setUp() throws SQLException {
+    	getConnection(VDB, DQP_PROP_FILE);
+    	dbMetadata = this.internalConnection.getMetaData();
+    }
+        
     private void checkResult(String testName, ResultSet actualResults)  throws Exception {
     	ResultSetMetaData resultMetadata = actualResults.getMetaData();
         
@@ -74,55 +67,55 @@ public class TestPartsDatabaseMetadata extends AbstractMMQueryTestCase {
         assertResultsSetEquals(actualResults, new File(filename));
     }
         
-    public void testExportedKeys()  throws Exception {
-        checkResult("testExportedKeys", dbMetadata.getExportedKeys(null, VDB, "%")); //$NON-NLS-1$
+    @Test public void testExportedKeys()  throws Exception {
+        checkResult("testExportedKeys", dbMetadata.getExportedKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testImportedKeys()  throws Exception {
-        checkResult("testImportedKeys", dbMetadata.getImportedKeys(null, VDB, "%")); //$NON-NLS-1$
+    @Test public void testImportedKeys()  throws Exception {
+        checkResult("testImportedKeys", dbMetadata.getImportedKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testPrimaryKeys()  throws Exception {
-        checkResult("testPrimaryKeys", dbMetadata.getPrimaryKeys(null, VDB, "%")); //$NON-NLS-1$
+    @Test public void testPrimaryKeys()  throws Exception {
+        checkResult("testPrimaryKeys", dbMetadata.getPrimaryKeys(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testProcedures()  throws Exception {
-        checkResult("testProcedures", dbMetadata.getProcedures(null, VDB, "%")); //$NON-NLS-1$
+    @Test public void testProcedures()  throws Exception {
+        checkResult("testProcedures", dbMetadata.getProcedures(null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testProcedureColumns()  throws Exception {
-        checkResult("testProcedureColumns", dbMetadata.getProcedureColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testProcedureColumns()  throws Exception {
+        checkResult("testProcedureColumns", dbMetadata.getProcedureColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testUDTs()  throws Exception {
-        checkResult("testUDTs", dbMetadata.getUDTs(null, VDB, "%", null)); //$NON-NLS-1$
+    @Test public void testUDTs()  throws Exception {
+        checkResult("testUDTs", dbMetadata.getUDTs(null, VDB, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testIndexInfo()  throws Exception {
-        checkResult("testIndexInfo", dbMetadata.getIndexInfo(null, VDB, "%", true, true)); //$NON-NLS-1$
+    @Test public void testIndexInfo()  throws Exception {
+        checkResult("testIndexInfo", dbMetadata.getIndexInfo(null, VDB, "%", true, true)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCrossReference()  throws Exception {
-        checkResult("testCrossReference", dbMetadata.getCrossReference(null, VDB, "%", null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testCrossReference()  throws Exception {
+        checkResult("testCrossReference", dbMetadata.getCrossReference(null, VDB, "%", null, VDB, "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testTypeInfo()  throws Exception {
-        checkResult("testTypeInfo",dbMetadata.getTypeInfo());
+    @Test public void testTypeInfo()  throws Exception {
+        checkResult("testTypeInfo",dbMetadata.getTypeInfo()); //$NON-NLS-1$
     }
     
-    public void testCatalogs()  throws Exception {
-        checkResult("testCatalogs", dbMetadata.getCatalogs());
+    @Test public void testCatalogs()  throws Exception {
+        checkResult("testCatalogs", dbMetadata.getCatalogs()); //$NON-NLS-1$
     }
     
-    public void testSchemas()  throws Exception {
-        checkResult("testSchemas", dbMetadata.getSchemas());
+    @Test public void testSchemas()  throws Exception {
+        checkResult("testSchemas", dbMetadata.getSchemas()); //$NON-NLS-1$
     }
 
-    public void testTables()  throws Exception {
-        checkResult("testTables", dbMetadata.getTables(null,VDB, "%", null)); //$NON-NLS-1$
+    @Test public void testTables()  throws Exception {
+        checkResult("testTables", dbMetadata.getTables(null,VDB, "%", null)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testColumns() throws Exception {
-        checkResult("testColumns", dbMetadata.getColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testColumns() throws Exception {
+        checkResult("testColumns", dbMetadata.getColumns(null, VDB, "%", "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }    
 }

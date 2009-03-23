@@ -54,6 +54,7 @@ public class RequestMessage implements Serializable {
     private String txnAutoWrapMode;
     private String XMLFormat;
     private String styleSheet;
+    private Boolean requireResultSet;
 
     /**The time when the command was created by the client.*/
     private Date submittedTimestamp;
@@ -395,6 +396,14 @@ public class RequestMessage implements Serializable {
 
 	public boolean isBatchedUpdate() {
 		return isBatchedUpdate;
+	}
+	
+	public Boolean getRequireResultSet() {
+		return requireResultSet;
+	}
+	
+	public void setRequireResultSet(Boolean requireResultSet) {
+		this.requireResultSet = requireResultSet;
 	}
 
 }

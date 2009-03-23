@@ -23,13 +23,14 @@
 package com.metamatrix.jdbc.api;
 
 
+import static org.junit.Assert.*;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.sql.CallableStatement;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,10 +38,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import junit.extensions.TestSetup;
 import junit.framework.Assert;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.junit.After;
 
 import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -55,52 +55,22 @@ import com.metamatrix.script.io.StringArrayReader;
  * integration testing. Just like the scripted one this one should provide all
  * those required flexibility in testing.
  */
-public class AbstractMMQueryTestCase extends TestCase {
+public class AbstractMMQueryTestCase {
 	
 	static {
 		new EmbeddedDriver();
 	}
 	
-	public interface ConnectionFactory {
-		
-		com.metamatrix.jdbc.api.Connection createSingleConnection() throws Exception;
-	}
-    
     protected com.metamatrix.jdbc.api.Connection internalConnection = null;
-    protected static com.metamatrix.jdbc.api.Connection SINGLE_CONNECTION;
     protected ResultSet internalResultSet = null;
     protected Statement internalStatement = null;
+    protected int updateCount = -1;
     protected String DELIMITER = "    "; //$NON-NLS-1$ 
     
-    public AbstractMMQueryTestCase() {
+    @After public void tearDown() throws Exception {
+    	closeConnection();
     }
     
-    public AbstractMMQueryTestCase(String name) {
-    	super(name);
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-    	if (SINGLE_CONNECTION != null) {
-    		this.internalConnection = SINGLE_CONNECTION;
-    	}
-    }
-    
-    public static TestSetup createOnceRunSuite(TestSuite suite, final ConnectionFactory factory) {
-		TestSetup wrapper = new TestSetup(suite) {
-			@Override
-			protected void setUp() throws Exception {
-				SINGLE_CONNECTION = factory.createSingleConnection();
-			}
-			@Override
-			protected void tearDown() throws Exception {
-				SINGLE_CONNECTION.close();
-				SINGLE_CONNECTION = null;
-			}
-		};
-		return wrapper;
-	}
-          
     public com.metamatrix.jdbc.api.Connection getConnection(String vdb){
         String propsFile = UnitTestUtil.getTestDataPath()+"/mmquery/mm.properties"; //$NON-NLS-1$
         return getConnection(vdb, propsFile);
@@ -120,6 +90,9 @@ public class AbstractMMQueryTestCase extends TestCase {
     }
     
     public com.metamatrix.jdbc.api.Connection getConnection(String vdb, String propsFile, String addtionalStuff){
+    	closeResultSet();
+    	closeStatement();
+    	closeConnection();
         try {
 			this.internalConnection = createConnection(vdb, propsFile, addtionalStuff);
 		} catch (SQLException e) {
@@ -132,64 +105,43 @@ public class AbstractMMQueryTestCase extends TestCase {
         String url = "jdbc:metamatrix:"+vdb+"@" + propsFile+addtionalStuff; //$NON-NLS-1$ //$NON-NLS-2$
         return (com.metamatrix.jdbc.api.Connection)DriverManager.getConnection(url); 
     }    
-    
-    
-    public ResultSet execute(String sql) {
+        
+    public boolean execute(String sql) {
         return execute(sql, new Object[] {});
     }
     
-    public ResultSet execute(String sql, Object[] params) {
+    public boolean execute(String sql, Object[] params) {
+    	closeResultSet();
+    	closeStatement();
+    	this.updateCount = -1;
         try {
             assertNotNull(this.internalConnection);
             assertTrue(!this.internalConnection.isClosed());
-            
-            if (sql.indexOf("?") != -1) { //$NON-NLS-1$
-                executePreparedStatement(sql, params);
+            boolean result = false;
+            if (params != null) {
+            	if (sql.startsWith("exec ")) { //$NON-NLS-1$
+                    sql = sql.substring(5);
+	                this.internalStatement = this.internalConnection.prepareCall("{?=call "+sql+"}"); //$NON-NLS-1$ //$NON-NLS-2$
+                } else {
+                	this.internalStatement = this.internalConnection.prepareStatement(sql);
+                }
+                setParameters((PreparedStatement)this.internalStatement, params);
+                result = ((PreparedStatement)this.internalStatement).execute();
+            } else {
+	            this.internalStatement = this.internalConnection.createStatement();
+	            result = this.internalStatement.execute(sql);
             }
-            
-            this.internalStatement = this.internalConnection.createStatement();
-            this.internalResultSet = this.internalStatement.executeQuery(sql);
-            return this.internalResultSet;
+            if (result) {
+            	this.internalResultSet = this.internalStatement.getResultSet();
+            } else {
+            	this.updateCount = this.internalStatement.getUpdateCount();
+            }
+            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }        
     }
-    
-    public ResultSet executePreparedStatement(String sql, Object[] params) {
-        try {
-            assertNotNull(this.internalConnection);
-            assertTrue(!this.internalConnection.isClosed());
             
-            if (sql.startsWith("exec ")) { //$NON-NLS-1$
-                executeStoredProcedure(sql, params);
-            }
-            
-            this.internalStatement = this.internalConnection.prepareStatement(sql);
-            setParameters((PreparedStatement)this.internalStatement, params);
-            this.internalResultSet = ((PreparedStatement)this.internalStatement).executeQuery();
-            return this.internalResultSet;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }        
-    }    
-    
-    public ResultSet executeStoredProcedure(String sql, Object[] params) {
-        try {
-            assertNotNull(this.internalConnection);
-            assertTrue(!this.internalConnection.isClosed());
-
-            if (sql.startsWith("exec ")) { //$NON-NLS-1$
-                sql = sql.substring(5);
-            }
-            this.internalStatement = this.internalConnection.prepareCall("{?=call "+sql+"}"); //$NON-NLS-1$ //$NON-NLS-2$
-            setParameters((CallableStatement)this.internalStatement, params);
-            this.internalResultSet = ((CallableStatement)this.internalStatement).executeQuery();
-            return this.internalResultSet;                        
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }        
-    }
-    
     private void setParameters(PreparedStatement stmt, Object[] params) throws SQLException{
         for (int i = 0; i < params.length; i++) {
             stmt.setObject(i+1, params[i]);
@@ -275,7 +227,7 @@ public class AbstractMMQueryTestCase extends TestCase {
         }
     }
     
-    public void assertEquals(Reader expected, Reader reader) {
+    public void assertReaderEquals(Reader expected, Reader reader) {
         
         BufferedReader  resultReader = null;
         BufferedReader  expectedReader = null;        
@@ -424,7 +376,10 @@ public class AbstractMMQueryTestCase extends TestCase {
             throw new RuntimeException(e);
         }        
     }
-
+    
+    public void assertUpdateCount(int expected) {
+    	assertEquals(expected, updateCount);
+    }
 
     public void assertRowCount(int expected) {
         int count = getRowCount();
@@ -471,13 +426,16 @@ public class AbstractMMQueryTestCase extends TestCase {
 
     public void closeConnection() {
         closeStatement();
-        if (this.internalConnection != null) {
-            try {
-                this.internalConnection.close();
-                this.internalConnection = null;
-            } catch(SQLException e) {
-            	throw new RuntimeException(e);
-            }
+        try {
+	        if (this.internalConnection != null) {
+	            try {
+	                this.internalConnection.close();
+	            } catch(SQLException e) {
+	            	throw new RuntimeException(e);
+	            }
+	        }
+        } finally {
+            this.internalConnection = null;
         }
     }
     

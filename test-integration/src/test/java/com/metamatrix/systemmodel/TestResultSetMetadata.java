@@ -22,8 +22,8 @@
 
 package com.metamatrix.systemmodel;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
@@ -36,94 +36,89 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     public TestResultSetMetadata() {
     	// this is needed because the result files are generated 
     	// with another tool which uses tab as delimiter 
-    	super.DELIMITER = "\t";
+    	super.DELIMITER = "\t"; //$NON-NLS-1$
     }
     
-    public static Test suite() {
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite(TestResultSetMetadata.class);
-		return createOnceRunSuite(suite, new ConnectionFactory() {
-
-			public com.metamatrix.jdbc.api.Connection createSingleConnection() throws Exception {
-				// TODO Auto-generated method stub
-				return createConnection(VDB, DQP_PROP_FILE, "");
-			}});
-	} 
+    @Before public void setUp() {
+    	getConnection(VDB, DQP_PROP_FILE);
+    }
     
     private void executeTest(String sql, String[] expected) throws Exception {
-    	java.sql.ResultSet rs = execute(sql);
+    	execute(sql);
+    	java.sql.ResultSet rs = this.internalResultSet;
     	assertResultsSetMetadataEquals(rs.getMetaData(), expected);
     }
     
     private void executePreparedTest(String sql, String[] expected) throws Exception {
-    	java.sql.ResultSet rs = executePreparedStatement(sql, new Object[] {});
+    	execute(sql, new Object[] {});
+    	java.sql.ResultSet rs = this.internalResultSet;
     	assertResultsSetMetadataEquals(rs.getMetaData(), expected);
     }
     
-    public void testCount()  throws Exception {
+    @Test public void testCount()  throws Exception {
     	String[] expected = {
-    		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	
-    		    "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null"
+    		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
+    		    "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executeTest("select count(*) from parts", expected);
+    	executeTest("select count(*) from parts", expected); //$NON-NLS-1$
     }
 
-    public void testStar()  throws Exception {
+    @Test public void testStar()  throws Exception {
     	String[] expected = {
-		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	
-		    "PART_ID	12	string	java.lang.String	0	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-		    "PART_NAME	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-		    "PART_COLOR	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-		    "PART_WEIGHT	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null"
+		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
+		    "PART_ID	12	string	java.lang.String	0	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_NAME	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_COLOR	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_WEIGHT	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executeTest("select * from parts", expected);
+    	executeTest("select * from parts", expected); //$NON-NLS-1$
     }
 
-    public void testTempGroupStar()  throws Exception {
+    @Test public void testTempGroupStar()  throws Exception {
     	String[] expected = { 
-		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	
-		    "PART_ID	12	string	java.lang.String	0	FOO	PartsSupplier	null",
-		    "PART_NAME	12	string	java.lang.String	1	FOO	PartsSupplier	null",
-		    "PART_COLOR	12	string	java.lang.String	1	FOO	PartsSupplier	null",
-		    "PART_WEIGHT	12	string	java.lang.String	1	FOO	PartsSupplier	null"
+		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
+		    "PART_ID	12	string	java.lang.String	0	FOO	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_NAME	12	string	java.lang.String	1	FOO	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_COLOR	12	string	java.lang.String	1	FOO	PartsSupplier	null", //$NON-NLS-1$
+		    "PART_WEIGHT	12	string	java.lang.String	1	FOO	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executeTest("select * from (select * from parts) foo", expected);
+    	executeTest("select * from (select * from parts) foo", expected); //$NON-NLS-1$
     }
 
-    public void testCountAndElement()  throws Exception {
+    @Test public void testCountAndElement()  throws Exception {
     	String[] expected = {
-	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	
-	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null",
-	        "part_name	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null"
+	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
+	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null", //$NON-NLS-1$
+	        "part_name	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executeTest("select count(*), part_name from parts group by part_name", expected);
+    	executeTest("select count(*), part_name from parts group by part_name", expected); //$NON-NLS-1$
     }
 
-    public void testStar_PreparedStatement()  throws Exception {
+    @Test public void testStar_PreparedStatement()  throws Exception {
     	String[] expected = {
-	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",
-	        "PART_ID	12	string	java.lang.String	0	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-	        "PART_NAME	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-	        "PART_COLOR	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null",
-	        "PART_WEIGHT	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null"
+	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
+	        "PART_ID	12	string	java.lang.String	0	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+	        "PART_NAME	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+	        "PART_COLOR	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null", //$NON-NLS-1$
+	        "PART_WEIGHT	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null" //$NON-NLS-1$
     	};    	
-    	executePreparedTest("select * from parts", expected);
+    	executePreparedTest("select * from parts", expected); //$NON-NLS-1$
     }
 
-    public void testCount_PreparedStatement()  throws Exception {
+    @Test public void testCount_PreparedStatement()  throws Exception {
     	String[] expected = {
-	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",
-	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null"
+	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
+	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executePreparedTest("select count(*) from parts", expected);
+    	executePreparedTest("select count(*) from parts", expected); //$NON-NLS-1$
     }
 
-    public void testCountAndElement_PreparedStatement()  throws Exception {
+    @Test public void testCountAndElement_PreparedStatement()  throws Exception {
     	String[] expected = {
-	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",
-	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null",
-	        "part_name	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null"
+	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
+	        "count	4	integer	java.lang.Integer	1	null	PartsSupplier	null", //$NON-NLS-1$
+	        "part_name	12	string	java.lang.String	1	PartsSupplier.PARTSSUPPLIER.PARTS	PartsSupplier	null" //$NON-NLS-1$
     	};
-    	executePreparedTest("select count(*), part_name from parts group by part_name", expected);
+    	executePreparedTest("select count(*), part_name from parts group by part_name", expected); //$NON-NLS-1$
     }
 }

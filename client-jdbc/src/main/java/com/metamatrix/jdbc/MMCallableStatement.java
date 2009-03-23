@@ -43,7 +43,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import com.metamatrix.common.util.TimestampWithTimezone;
-import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.message.RequestMessage;
 
 /**
  * <p> This class inherits Statement methods, which deal with SQL statements in
@@ -81,7 +81,17 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
         super(connection, procedureCall, resultSetType, resultSetConcurrency);
         this.prepareSql = procedureCall;
     }
-
+    
+    @Override
+    protected RequestMessage createRequestMessage(String[] commands,
+    		boolean isBatchedCommand, Boolean requiresResultSet)
+    		throws MMSQLException {
+    	RequestMessage message = super.createRequestMessage(commands, isBatchedCommand, requiresResultSet);
+    	message.setCallableStatement(true);
+    	message.setPreparedStatement(false);
+    	return message;
+    }
+    
     /**
      * In many cases, it is desirable to immediately release a Statements's database
      * and JDBC resources instead of waiting for this to happen when it is automatically
@@ -381,20 +391,6 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
         return parameterValue == null;
     }
 
-    /**
-     * Internal Execution method.
-     * @param sql Request Message's sql.
-     * @param listener Message Listener
-     * @throws SQLException thrown when fail to create the {@link AllResultsImpl}
-     */
-    protected ResultsMessage internalExecute(String[] commands, boolean isBatchedCommand) throws SQLException  {
-        try {
-            return sendRequestMessageAndWait(commands, false, true, getParameterValues(), false, isBatchedCommand);
-        } catch ( Throwable ex ) {
-            throw MMSQLException.create(ex, JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", commands[0])); //$NON-NLS-1$
-        }
-    }
-    
 	public SQLXML getSQLXML(int parameterIndex) throws SQLException {
 		return DataTypeTransformer.getSQLXML(getObject(parameterIndex));
 	}

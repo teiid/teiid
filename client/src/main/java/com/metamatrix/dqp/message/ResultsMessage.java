@@ -96,6 +96,7 @@ public class ResultsMessage implements Externalizable {
      */
     private Collection annotations;
     
+    private boolean isUpdateResult;
 
     public ResultsMessage(){
     }
@@ -360,6 +361,7 @@ public class ResultsMessage implements Externalizable {
         cursorType = in.readInt();
         debugLog = (String)in.readObject();
         annotations = (Collection)in.readObject();
+        isUpdateResult = in.readBoolean();
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -393,6 +395,7 @@ public class ResultsMessage implements Externalizable {
         out.writeInt(cursorType);
         out.writeObject(debugLog);
         out.writeObject(annotations);
+        out.writeBoolean(isUpdateResult);
     }
 
     /**
@@ -434,5 +437,13 @@ public class ResultsMessage implements Externalizable {
             .append(finalRow)
             .toString();
     }
+
+	public void setUpdateResult(boolean isUpdateResult) {
+		this.isUpdateResult = isUpdateResult;
+	}
+
+	public boolean isUpdateResult() {
+		return isUpdateResult;
+	}
 }
 

@@ -768,7 +768,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * @return fetch direction for this ResultSet. This cannot be set and is
 	 * 	alwayd FETCH_FORWARD.
 	 * @throws SQLException
-	 * 		, should never occur
 	 */
 	public int getFetchDirection() throws SQLException {
 		checkClosed(); // check to see if the ResultSet is closed
@@ -1072,10 +1071,9 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 
 	 * @return A boolean value showing if the lastvalue read in was null or not.
 	 * @throws SQLException
-	 * 		, should never occur
 	 */
 	public boolean wasNull() throws SQLException {
-
+		
 		checkClosed(); // check to see if the ResultSet is closed
 
 		return currentValue == null;
@@ -1106,7 +1104,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	 * 
 	 * @return The requestID for the query that created these results
 	 * @throws SQLException
-	 * 		This should never occur.
 	 */
 	public String getCursorName() throws SQLException {
 		return null;

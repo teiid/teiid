@@ -123,7 +123,7 @@ public class PreparedStatementRequest extends Request {
         List values = requestMsg.getParameterValues();
         if(requestMsg.isPreparedBatchUpdate()){
         	if(values.size() > 1){
-        		((PreparedBatchUpdate)command).setUpdatingModelCount(2);
+        		((PreparedBatchUpdate)userCommand).setUpdatingModelCount(2);
         	}
         	for(int i=0; i<values.size(); i++){
         	   if (params.size() != ((List)values.get(i)).size()) {
@@ -178,7 +178,7 @@ public class PreparedStatementRequest extends Request {
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
             
-            this.command = command;
+            this.userCommand = command;
             createCommandContext(command);
         }
         

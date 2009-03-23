@@ -208,7 +208,7 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
             IFunction function = (IFunction) expression;
             String key = function.getName().toLowerCase();        
             if(functionModifiers.containsKey(key)) {
-                FunctionModifier modifier = (FunctionModifier) functionModifiers.get(key);
+                FunctionModifier modifier = functionModifiers.get(key);
                 
                 // Modify function and return it
                 return modifier.modify(function);                                        

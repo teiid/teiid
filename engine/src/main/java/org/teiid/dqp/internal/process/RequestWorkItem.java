@@ -145,6 +145,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     private TransactionContext transactionContext;
     private TupleSourceID resultsID;
     private Collection schemas;     // These are schemas associated with XML results
+    private boolean returnsUpdateCount;
     
     /*
      * maintained during processing
@@ -370,7 +371,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 	protected void processNew() throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		request.processRequest();
-		originalCommand = request.command;
+		originalCommand = request.userCommand;
 		processor = request.processor;
 		processor.setBatchHandler(new BatchHandler() {
 			public void batchProduced(TupleBatch batch)
@@ -407,7 +408,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	    if (analysisRecord.recordQueryPlan()) {
 	        analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
 	    }
-
+	    this.returnsUpdateCount = request.returnsUpdateCount;
 		request = null;
 	}
 
@@ -441,7 +442,7 @@ public class RequestWorkItem extends AbstractWorkItem {
             ResultsMessage response = createResultsMessage(requestMsg, batch.getAllTuples(), this.processor.getProcessorPlan().getOutputElements(), analysisRecord);
             response.setFirstRow(batch.getBeginRow());
             response.setLastRow(batch.getEndRow());
-
+            response.setUpdateResult(this.returnsUpdateCount);
             // set final row
             response.setFinalRow(finalRowCount);
             // Results are partial if the rowcount is not yet known,

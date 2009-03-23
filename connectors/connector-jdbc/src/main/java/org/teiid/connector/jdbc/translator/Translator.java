@@ -84,6 +84,7 @@ public class Translator {
     private static final int TIMESTAMP_CODE = 8;
     private static final int BLOB_CODE = 9;
     private static final int CLOB_CODE = 10;
+    private static final int BOOLEAN_CODE = 11;
     
     static {
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
@@ -97,6 +98,8 @@ public class Translator {
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
     }
 	
     private static final ThreadLocal<MessageFormat> COMMENT = new ThreadLocal<MessageFormat>() {
@@ -562,7 +565,7 @@ public class Translator {
 	 * @return
 	 * @throws SQLException
 	 */
-    public Object retrieveValue(ResultSet results, int columnIndex, Class expectedType) throws SQLException {
+    public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
         Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
             // Calling the specific methods here is more likely to get uniform (and fast) results from different
@@ -633,7 +636,10 @@ public class Translator {
     					// ignore
     				}
     				break;
-    			}    
+    			}  
+    			case BOOLEAN_CODE: {
+    				return results.getBoolean(columnIndex);
+    			}
             }
         }
 
@@ -712,6 +718,9 @@ public class Translator {
     				} catch (SQLException e) {
     					// ignore
     				}
+    			}
+    			case BOOLEAN_CODE: {
+    				return results.getBoolean(parameterIndex);
     			}
             }
         }

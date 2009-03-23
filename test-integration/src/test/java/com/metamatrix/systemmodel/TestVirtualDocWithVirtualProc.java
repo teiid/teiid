@@ -22,10 +22,8 @@
 
 package com.metamatrix.systemmodel;
 
-import java.sql.Connection;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
@@ -39,26 +37,17 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 	private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp.properties"; //$NON-NLS-1$
     private static final String VDB = "xmlvp"; //$NON-NLS-1$
 
-    static Connection connection;
-    
     public TestVirtualDocWithVirtualProc() {
     	// this is needed because the result files are generated 
     	// with another tool which uses tab as delimiter 
     	super.DELIMITER = "\t"; //$NON-NLS-1$
     }
     
-    public static Test suite() {
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite(TestVirtualDocWithVirtualProc.class);
-		return createOnceRunSuite(suite, new ConnectionFactory() {
-
-			public com.metamatrix.jdbc.api.Connection createSingleConnection()
-					throws Exception {
-				return createConnection(VDB, DQP_PROP_FILE, ""); //$NON-NLS-1$
-			}});
-	}    
-        
-    public void testDefect15241() {
+    @Before public void setUp() {
+    	getConnection(VDB, DQP_PROP_FILE);
+    }
+    
+    @Test public void testDefect15241() {
 
     	String sql = "SELECT ModelName, Name, Description FROM System.Groups WHERE Name = 'yyyTestDocument'"; //$NON-NLS-1$
 
@@ -70,7 +59,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	executeAndAssertResults(sql, expected);
     }
 
-    public void testDefect15241a() {
+    @Test public void testDefect15241a() {
     	String sql = "SELECT GroupName, Name, Description FROM System.Elements WHERE Name = 'IntKey'"; //$NON-NLS-1$
     	String[] expected ={
 		    "GroupName[string]	Name[string]	Description[string]",	 //$NON-NLS-1$
@@ -86,7 +75,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	executeAndAssertResults(sql, expected);
     }
 
-    public void testDefect15241b() {
+    @Test public void testDefect15241b() {
     	
     	String sql = "SELECT GroupName, Name, Value, UID FROM System.GroupProperties WHERE ModelName = 'testDoc'"; //$NON-NLS-1$
     	String[] expected ={

@@ -74,7 +74,7 @@ public class TestMMCallableStatement extends TestCase {
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
 		resultsMsg.setParameters(Arrays.asList(new ParameterInfo(ParameterInfo.RESULT_SET, 1), new ParameterInfo(ParameterInfo.OUT, 1), new ParameterInfo(ParameterInfo.OUT, 1)));
-		mmcs.processQueryMessage(resultsMsg);
+		mmcs.createResultSet(resultsMsg);
 		assertEquals(1, mmcs.getInt(1));
 		assertEquals(2, mmcs.getInt(2));
 	}
