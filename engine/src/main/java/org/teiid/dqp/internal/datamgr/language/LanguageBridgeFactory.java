@@ -113,7 +113,6 @@ import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
-import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -151,7 +150,7 @@ public class LanguageBridgeFactory {
         } else if (command instanceof BatchedUpdateCommand) {
             return translate((BatchedUpdateCommand)command);
         }
-        return null;
+        throw new AssertionError();
     }
     
     IQueryCommand translate(QueryCommand command) throws MetaMatrixComponentException {
@@ -194,7 +193,7 @@ public class LanguageBridgeFactory {
         return q;
     }
 
-    ISelect translate(Select select) throws MetaMatrixComponentException {
+    public ISelect translate(Select select) throws MetaMatrixComponentException {
         List symbols = select.getSymbols();
         List translatedSymbols = new ArrayList(symbols.size());
         for (Iterator i = symbols.iterator(); i.hasNext();) {
@@ -225,7 +224,7 @@ public class LanguageBridgeFactory {
         return new SelectImpl(translatedSymbols, select.isDistinct());
     }
     
-    IFrom translate(From from) throws MetaMatrixComponentException {
+    public IFrom translate(From from) throws MetaMatrixComponentException {
         List clauses = from.getClauses();
         List items = new ArrayList();
         for (Iterator i = clauses.iterator(); i.hasNext();) {
@@ -234,7 +233,7 @@ public class LanguageBridgeFactory {
         return new FromImpl(items);
     }
 
-    IFromItem translate(FromClause clause) throws MetaMatrixComponentException {
+    public IFromItem translate(FromClause clause) throws MetaMatrixComponentException {
         if (clause == null) return null;
         if (clause instanceof JoinPredicate) {
             return translate((JoinPredicate)clause);
@@ -243,7 +242,7 @@ public class LanguageBridgeFactory {
         } else if (clause instanceof UnaryFromClause) {
             return translate((UnaryFromClause)clause);
         }
-        return null;
+        throw new AssertionError();
     }
 
     IJoin translate(JoinPredicate join) throws MetaMatrixComponentException {
@@ -280,7 +279,7 @@ public class LanguageBridgeFactory {
         return translate(clause.getGroup());
     }
 
-    ICriteria translate(Criteria criteria) throws MetaMatrixComponentException {
+    public ICriteria translate(Criteria criteria) throws MetaMatrixComponentException {
         if (criteria == null) return null;
         if (criteria instanceof CompareCriteria) {
             return translate((CompareCriteria)criteria);
@@ -301,7 +300,7 @@ public class LanguageBridgeFactory {
         } else if (criteria instanceof SubquerySetCriteria) {
             return translate((SubquerySetCriteria)criteria);
         }
-        return null;
+        throw new AssertionError();
     }
 
     ICompareCriteria translate(CompareCriteria criteria) throws MetaMatrixComponentException {
@@ -424,7 +423,7 @@ public class LanguageBridgeFactory {
         return new NotCriteriaImpl(translate(criteria.getCriteria()));
     }
 
-    IGroupBy translate(GroupBy groupBy) throws MetaMatrixComponentException {
+    public IGroupBy translate(GroupBy groupBy) throws MetaMatrixComponentException {
         if(groupBy == null){
             return null;
         }
@@ -436,7 +435,7 @@ public class LanguageBridgeFactory {
         return new GroupByImpl(translatedItems);
     }
 
-    IOrderBy translate(OrderBy orderBy) throws MetaMatrixComponentException {
+    public IOrderBy translate(OrderBy orderBy) throws MetaMatrixComponentException {
         if(orderBy == null){
             return null;
         }
@@ -463,11 +462,9 @@ public class LanguageBridgeFactory {
 
 
     /* Expressions */
-    IExpression translate(Expression expr) throws MetaMatrixComponentException {
+    public IExpression translate(Expression expr) throws MetaMatrixComponentException {
         if (expr == null) return null;
-        if (expr instanceof CaseExpression) {
-            return translate((CaseExpression)expr);
-        } else if (expr instanceof Constant) {
+        if (expr instanceof Constant) {
             return translate((Constant)expr);
         } else if (expr instanceof Function) {
             return translate((Function)expr);
@@ -480,7 +477,7 @@ public class LanguageBridgeFactory {
         } else if (expr instanceof SingleElementSymbol) {
             return translate((SingleElementSymbol)expr);
         }
-        return null;
+        throw new AssertionError();
     }
 
     ILiteral translate(Constant constant) {
@@ -530,7 +527,7 @@ public class LanguageBridgeFactory {
         } else if (symbol instanceof ExpressionSymbol) {
             return translate((ExpressionSymbol)symbol);
         }
-        return null;
+        throw new AssertionError();
     }
 
     IExpression translate(AliasSymbol symbol) throws MetaMatrixComponentException {
@@ -663,7 +660,7 @@ public class LanguageBridgeFactory {
         return new ParameterImpl(param.getIndex(), direction, param.getValue(), param.getClassType(), metadataParam);                
     }
 
-    IGroup translate(GroupSymbol symbol) throws MetaMatrixComponentException {
+    public IGroup translate(GroupSymbol symbol) throws MetaMatrixComponentException {
         GroupImpl group = new GroupImpl(symbol.getOutputName(), symbol.getOutputDefinition(), null);
 		if (symbol.getMetadataID() instanceof TempMetadataID) {
 			return group;
