@@ -50,7 +50,7 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductType;
+//import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.SharedResource;
@@ -1145,7 +1145,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         List connectorBindings = lists[CONNECTORS_INDEX];
 
         List configurationIDs = lists[CONFIGURATION_IDS_INDEX];
-        List productTypeIDs = lists[PRODUCT_TYPE_IDS_INDEX];
+    //    List productTypeIDs = lists[PRODUCT_TYPE_IDS_INDEX];
         List hostIDs = lists[HOST_IDS_INDEX];
         List serviceComponentDefnIDs = lists[SERVICE_COMPONENT_DEFN_IDS_INDEX];
         List vmComponentDefnIDs = lists[VM_COMPONENT_DEFN_IDS_INDEX];
@@ -1162,7 +1162,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         serviceComponentDefnIDs.add(null);
         connectorBindingsIDs.add(null);
         productServiceConfigIDs.add(null);
-        productTypeIDs.add(null);
+    //    productTypeIDs.add(null);
         componentTypeIDs.add(null);
 
         // now we must iterate through each object type, pull out any references
@@ -1191,7 +1191,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
                 throwObjectsNotResolvable(deployedComponent, deployedComponent.getProductServiceConfigID(), "psc"); //$NON-NLS-1$
             }
 
-            checkComponentTypeID(deployedComponent, componentTypeIDs, productTypeIDs);
+            checkComponentTypeID(deployedComponent, componentTypeIDs);
         }
 
         iterator = resources.iterator();
@@ -1219,14 +1219,14 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         iterator = serviceComponentDefns.iterator();
         while (iterator.hasNext()) {
             ServiceComponentDefn defn = (ServiceComponentDefn)iterator.next();
-            checkComponentTypeID(defn, componentTypeIDs, productTypeIDs);
+            checkComponentTypeID(defn, componentTypeIDs);
             checkConfigurationID(defn, configurationIDs);
         }
 
         iterator = vmComponentDefns.iterator();
         while (iterator.hasNext()) {
             VMComponentDefn defn = (VMComponentDefn)iterator.next();
-            checkComponentTypeID(defn, componentTypeIDs, productTypeIDs);
+            checkComponentTypeID(defn, componentTypeIDs);
             checkConfigurationID(defn, configurationIDs);
         }
 
@@ -1236,7 +1236,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
             ProductServiceConfig config = (ProductServiceConfig)iterator.next();
             
             // psc's component types are based on products, not actual component types
-            checkPSCProductTypeID(config, productTypeIDs);
+//            checkPSCProductTypeID(config);
             
 //          checkComponentTypeID(config, componentTypeIDs, productTypeIDs);
             checkConfigurationID(config, configurationIDs);
@@ -1258,7 +1258,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         while (iterator.hasNext()) {
             ComponentType type = (ComponentType)iterator.next();
             checkForComponentTypeID(type.getSuperComponentTypeID(), componentTypeIDs);
-            checkForProductTypeID(type, type.getParentComponentTypeID(), productTypeIDs, componentTypeIDs);
+ //           checkForProductTypeID(type, type.getParentComponentTypeID(), productTypeIDs, componentTypeIDs);
         }
 
 //        iterator = productTypes.iterator();
@@ -1277,13 +1277,13 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         iterator  = configurations.iterator();
         while (iterator.hasNext()) {
             Configuration config = (Configuration)iterator.next();
-            checkComponentTypeID(config, componentTypeIDs, productTypeIDs);
+            checkComponentTypeID(config, componentTypeIDs);
         }
 
         iterator = hosts.iterator();
         while (iterator.hasNext()) {
             Host host = (Host)iterator.next();
-            checkComponentTypeID(host, componentTypeIDs, productTypeIDs);
+            checkComponentTypeID(host, componentTypeIDs);
         }
 
 //***        LogManager.logTrace(LogCommonConstants.CTX_CONFIG, "Configuration objects resolved properly.");
@@ -1320,13 +1320,14 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
 //        throw e;
 //    }
 
-    private void checkComponentTypeID(ComponentObject object, List componentTypeIDs, List productTypeIDs) throws ConfigObjectsNotResolvableException{
-        if (!(componentTypeIDs.contains(object.getComponentTypeID())||productTypeIDs.contains(object.getComponentTypeID()))) {
- //           LogManager.logTrace(LogCommonConstants.CTX_CONFIG, "The ComponentTypeID: " + object.getComponentTypeID() + " was not found in the list of ComponentTypeIDs: " + componentTypeIDs + " or the list of Product TypeIDs: " + productTypeIDs);
- 		throwObjectsNotResolvable(object, object.getComponentTypeID(), "component type"); //$NON-NLS-1$
-//            throwConfigObjectsNotResolvableException(object, object.getComponentTypeID());
-        }
-    }
+//    private void checkComponentTypeID(ComponentObject object, List componentTypeIDs) throws ConfigObjectsNotResolvableException{
+//        if (!(componentTypeIDs.contains(object.getComponentTypeID()))) {
+//        //		||productTypeIDs.contains(object.getComponentTypeID()))) {
+// //           LogManager.logTrace(LogCommonConstants.CTX_CONFIG, "The ComponentTypeID: " + object.getComponentTypeID() + " was not found in the list of ComponentTypeIDs: " + componentTypeIDs + " or the list of Product TypeIDs: " + productTypeIDs);
+// 		throwObjectsNotResolvable(object, object.getComponentTypeID(), "component type"); //$NON-NLS-1$
+////            throwConfigObjectsNotResolvableException(object, object.getComponentTypeID());
+//        }
+//    }
 
     private void checkConfigurationID(ComponentDefn defn, List configurationIDs) throws ConfigObjectsNotResolvableException {
         if (!configurationIDs.contains(defn.getConfigurationID())) {
@@ -1355,13 +1356,13 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
      * @throws ConfigObjectsNotResolvableException
      * @since 4.2
      */
-    private void checkPSCProductTypeID(ProductServiceConfig object, List productTypeIDs) throws ConfigObjectsNotResolvableException{
-        if (!(productTypeIDs.contains(object.getComponentTypeID()))) {
- //           LogManager.logTrace(LogCommonConstants.CTX_CONFIG, "The ComponentTypeID: " + object.getComponentTypeID() + " was not found in the list of ComponentTypeIDs: " + componentTypeIDs + " or the list of Product TypeIDs: " + productTypeIDs);
-        throwObjectsNotResolvable(object, object.getComponentTypeID(), "component type"); //$NON-NLS-1$
-//            throwConfigObjectsNotResolvableException(object, object.getComponentTypeID());
-        }
-    }    
+//    private void checkPSCProductTypeID(ProductServiceConfig object, List productTypeIDs) throws ConfigObjectsNotResolvableException{
+//        if (!(productTypeIDs.contains(object.getComponentTypeID()))) {
+// //           LogManager.logTrace(LogCommonConstants.CTX_CONFIG, "The ComponentTypeID: " + object.getComponentTypeID() + " was not found in the list of ComponentTypeIDs: " + componentTypeIDs + " or the list of Product TypeIDs: " + productTypeIDs);
+//        throwObjectsNotResolvable(object, object.getComponentTypeID(), "component type"); //$NON-NLS-1$
+////            throwConfigObjectsNotResolvableException(object, object.getComponentTypeID());
+//        }
+//    }    
 
 
     private void checkForComponentTypeID(ComponentTypeID id, List componentTypeIDs) throws ConfigObjectsNotResolvableException{
@@ -1432,12 +1433,8 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
             Object obj = iterator.next();
 
           // product types need to go before component type
-        if (obj instanceof ProductType) {
 
-            productTypes.add(obj);
-            productTypeIDs.add(((ProductType)obj).getID());              
-
-            } else if (obj instanceof ComponentType) {
+            if (obj instanceof ComponentType) {
 
                     componentTypes.add(obj);
                     componentTypeIDs.add(((BaseObject)obj).getID());
@@ -1476,16 +1473,10 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
 //                        ComponentDefn cd = (ComponentDefn) obj;
 //***                        LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "The ComponentDefn: " + cd.getFullName() + " could not be categorized as a Standard Configuration Object and will be ignored. Its class type is: " + cd.getClass());
                     }
-                } else {
-
-//                        ComponentObject co = (ComponentObject) obj;
-//***                        LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "The ComponentObject: " + co.getFullName() + " could not be categorized as a Standard Configuration Object and will be ignored. Its class type is: " + co.getClass());
-
-                }
-            }else {
-//***                LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "The Object: " + obj + " could not be categorized as a Standard Configuration Object and will be ignored. Its class type is: " + obj.getClass());
+                } 
             }
         }
+
 
         lists[CONFIGURATIONS_INDEX] = configurations;
         lists[PRODUCT_TYPES_INDEX] = productTypes;
