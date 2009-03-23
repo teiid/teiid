@@ -6,7 +6,7 @@
 	    <attribute name="LockParentForChildInsertRemove">true</attribute>
 	  
       <attribute name="CacheMode">LOCAL</attribute>
-	    <attribute name="UseLazyDeserialization">true</attribute>
+	  <!-- <attribute name="UseLazyDeserialization">true</attribute> -->
 
      <!--
      	The max amount of time (in milliseconds) we wait until the
