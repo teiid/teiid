@@ -24,6 +24,7 @@ package com.metamatrix.platform.config.spi.xml;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -300,7 +301,8 @@ public class XMLConfigurationConnector extends BaseTransaction implements Config
     }
     
     public Collection getProductTypes(boolean includedeprecated) throws ConfigurationException {
-        return getConfigurationReader().getProductTypes(includedeprecated);
+    	return Collections.EMPTY_LIST;
+//        return getConfigurationReader().getProductTypes(includedeprecated);
     }
     
 
