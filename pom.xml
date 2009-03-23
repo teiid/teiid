@@ -42,7 +42,62 @@
 			</roles>
 			<timezone>-6</timezone>
 		</developer>
+		<developer>
+			<name>Van Halbert</name>
+			<id>van</id>
+			<email>vhalbert@redhat.com</email>
+			<organization>Red Hat</organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
+		<developer>
+			<name>Ted Jones</name>
+			<id>ted</id>
+			<email>tejones@redhat.com</email>
+			<organization>Red Hat</organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
 	</developers>
+	<profiles>
+		<profile>
+		  <!-- 
+          This profile is activated manually, as in "mvn ... -P release ..."
+		  -->
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<version>2.2-beta-2</version>
+						<configuration>
+							<descriptors>
+								<descriptor>build/assembly/src.xml</descriptor>
+								<!-- <descriptor>build/assembly/bin.xml</descriptor>-->
+								<descriptor>build/assembly/embedded/embedded-client-jar.xml</descriptor>
+								<descriptor>build/assembly/embedded/embedded-dependencies.xml</descriptor>
+								<descriptor>build/assembly/embedded/embedded-connector-dependencies.xml</descriptor>
+								<descriptor>build/assembly/embedded/embedded-jar.xml</descriptor>
+								<descriptor>build/assembly/embedded/embedded-dist.xml</descriptor>
+								<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
+								<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
+								<descriptor>documentation/assembly/docs.xml</descriptor>
+							</descriptors>
+							<outputDirectory>target/distribution</outputDirectory>
+							<workDirectory>target/assembly/work</workDirectory>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<modules>
+				<module>documentation</module>
+			</modules>
+		</profile>
+	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
 		<pluginManagement>
@@ -116,25 +171,6 @@
 							<Implementation-URL>${pom.url}</Implementation-URL>
 						</manifestEntries>
 					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-2</version>
-				<configuration>
-					<descriptors>
-						<descriptor>build/assembly/src.xml</descriptor>
-						<descriptor>build/assembly/bin.xml</descriptor>
-                        <descriptor>build/assembly/embedded/embedded-client-jar.xml</descriptor>            
-						<descriptor>build/assembly/embedded/embedded-dependencies.xml</descriptor>
-						<descriptor>build/assembly/embedded/embedded-connector-dependencies.xml</descriptor>
-                        <descriptor>build/assembly/embedded/embedded-jar.xml</descriptor>
-						<descriptor>build/assembly/embedded/embedded-dist.xml</descriptor>
-						<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
-						<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
-					</descriptors>
-					<outputDirectory>target/distribution</outputDirectory>
-					<workDirectory>target/assembly/work</workDirectory>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -2,11 +2,12 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <parent>
     <artifactId>sandbox</artifactId>
-    <groupId>org.jboss.teiid.connectors.sandbox</groupId>
+    <groupId>org.jboss.teiid.connectors</groupId>
     <version>6.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connector-oracle-spatial</artifactId>
+  <groupId>org.jboss.teiid.connectors.sandbox</groupId>
   <name>Oracle Spatial Connector</name>
   <description>Oracle Spatial Connector</description>
   <dependencies>
