@@ -1257,7 +1257,7 @@ public abstract class XMLConfig_Base_ImportExportUtility implements Configuratio
         iterator = componentTypes.iterator();
         while (iterator.hasNext()) {
             ComponentType type = (ComponentType)iterator.next();
-            checkForComponentTypeID(type.getSuperComponentTypeID(), componentTypeIDs);
+          //  checkForComponentTypeID(type.getSuperComponentTypeID(), componentTypeIDs);
  //           checkForProductTypeID(type, type.getParentComponentTypeID(), productTypeIDs, componentTypeIDs);
         }
 
