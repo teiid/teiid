@@ -233,6 +233,7 @@ public interface ConfigurationTransaction extends TransactionInterface {
      *    included in the returned list, or false if only non-deprecated constants should be returned.
      * @return Collection of type <code>ComponentType</code>
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
+     * @deprecated as of v 2.0 beta 1 use {@link #getDesignatedConfigurationID}
      *
      */
     Collection getProductTypes(boolean includeDeprecated) throws ConfigurationException;
