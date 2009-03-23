@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.language;
+package org.teiid.connector.language;
 
 import java.util.HashSet;
 import java.util.List;

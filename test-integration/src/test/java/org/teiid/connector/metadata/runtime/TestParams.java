@@ -20,19 +20,16 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.metadata.runtime;
+package org.teiid.connector.metadata.runtime;
 
-import java.io.File;
 import java.sql.Timestamp;
 import java.util.List;
+
+import junit.framework.TestCase;
 
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.metadata.runtime.Parameter;
-import org.teiid.connector.metadata.runtime.TypeModel;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -54,7 +51,7 @@ public class TestParams extends TestCase {
     }
 
     private static String getTestVDBName() {
-        return UnitTestUtil.getTestDataPath() + ""+File.separator+"sptest"+File.separator+"spvdb.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/sptest/spvdb.vdb"; //$NON-NLS-1$
     }
     
     public static TranslationUtility createTranslationUtility(String vdbName) {

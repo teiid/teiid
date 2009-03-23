@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.metadata.runtime;
+package org.teiid.connector.metadata.runtime;
 
 import java.util.Properties;
 
@@ -57,7 +57,7 @@ public class TestElement extends TestCase {
 
     public Element getElement(String groupName, String elementName, TranslationUtility transUtil) throws Exception {
         IQuery query = (IQuery) transUtil.parseCommand("SELECT " + elementName + " FROM " + groupName); //$NON-NLS-1$ //$NON-NLS-2$
-        ISelectSymbol symbol = (ISelectSymbol) query.getSelect().getSelectSymbols().get(0);
+        ISelectSymbol symbol = query.getSelect().getSelectSymbols().get(0);
         IElement element = (IElement) symbol.getExpression();
         return element.getMetadataObject();
     }

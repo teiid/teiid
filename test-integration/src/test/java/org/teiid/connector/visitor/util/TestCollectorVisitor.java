@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.visitor.util;
+package org.teiid.connector.visitor.util;
 
 import java.util.*;
 

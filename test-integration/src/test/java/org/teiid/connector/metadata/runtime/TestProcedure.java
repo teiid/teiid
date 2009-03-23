@@ -20,18 +20,17 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.metadata.runtime;
+package org.teiid.connector.metadata.runtime;
 
 import java.util.List;
 import java.util.Properties;
+
+import junit.framework.TestCase;
 
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.Parameter;
 import org.teiid.connector.metadata.runtime.Procedure;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -92,9 +91,8 @@ public class TestProcedure extends TestCase {
     }   
     
     public void testProcedureWithResultSet() throws Exception {
-        RuntimeMetadata rmd = CONNECTOR_METADATA_UTILITY.createRuntimeMetadata();
         Procedure proc = getProcedure("ConnectorMetadata.TestProc2", 1, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
-        assertEquals(null, proc.getNameInSource()); //$NON-NLS-1$
+        assertEquals(null, proc.getNameInSource());
         
         String[] nameInSource = new String[] { null, "Result set name in source" }; //$NON-NLS-1$
         int[] direction = new int[] { Parameter.IN, Parameter.RESULT_SET };

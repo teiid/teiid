@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.data.metadata.runtime;
+package org.teiid.connector.metadata.runtime;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -1,4 +1,4 @@
-package com.metamatrix.data.metadata.runtime;
+package org.teiid.connector.metadata.runtime;
 
 import java.util.Properties;
 
