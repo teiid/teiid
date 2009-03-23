@@ -103,7 +103,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateORACLE_ANSIConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(ORACLE_ANSI); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(ORACLE_ANSI); 
         helpTestConnectorBinding(ct, "TestOracleANSI"); //$NON-NLS-1$
     }
  
@@ -115,7 +115,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateORACLE_8ConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(ORACLE_8); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(ORACLE_8); 
         helpTestConnectorBinding(ct, "ORACLE_8"); //$NON-NLS-1$
     }
  
@@ -127,7 +127,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateDB2ConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(DB2); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(DB2); 
         helpTestConnectorBinding(ct, "DB2"); //$NON-NLS-1$
     }
  
@@ -139,7 +139,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateSYBASE_ANSIConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(SYBASE_ANSI); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(SYBASE_ANSI); 
         helpTestConnectorBinding(ct, "SYBASE_ANSI"); //$NON-NLS-1$
     }
     
@@ -151,7 +151,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateSYBASE_11ConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(SYBASE_11); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(SYBASE_11); 
         helpTestConnectorBinding(ct, "SYBASE_11"); //$NON-NLS-1$
     }
     
@@ -163,7 +163,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateSQL_SERVERConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(SQL_SERVER); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(SQL_SERVER); 
         helpTestConnectorBinding(ct, "SQL_SERVER"); //$NON-NLS-1$
     }
     
@@ -175,7 +175,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateJDBC_GENERICConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(JDBC_GENERIC); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(JDBC_GENERIC); 
         helpTestConnectorBinding(ct, "JDBC_GENERIC"); //$NON-NLS-1$
     }
     
@@ -187,7 +187,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateMS_ACCESSConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(MS_ACCESS); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(MS_ACCESS); 
         helpTestConnectorBinding(ct, "MS_ACCESS"); //$NON-NLS-1$
     }
     
@@ -199,7 +199,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateJDBC_ODBCConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(JDBC_ODBC); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(JDBC_ODBC); 
         helpTestConnectorBinding(ct, "JDBC_ODBC"); //$NON-NLS-1$
     }
     
@@ -211,7 +211,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateTEXT_FILEConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(TEXT_FILE); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(TEXT_FILE); 
         helpTestConnectorBinding(ct, "TEXT_FILE"); //$NON-NLS-1$
     }
     
@@ -223,7 +223,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateMYSQLConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(MYSQL); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(MYSQL); 
         helpTestConnectorBinding(ct, "MYSQL"); //$NON-NLS-1$
     }
     
@@ -235,7 +235,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreatePOSTGRESQLConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(POSTGRESQL); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(POSTGRESQL); 
         helpTestConnectorBinding(ct, "POSTGRESQL"); //$NON-NLS-1$
     }
     
@@ -247,7 +247,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateAPACHE_DERBY_EMBEDDEDConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(APACHE_DERBY_EMBEDDED); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(APACHE_DERBY_EMBEDDED); 
         helpTestConnectorBinding(ct, "APACHE_DERBY_EMBEDDED"); //$NON-NLS-1$
     }
     
@@ -259,7 +259,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateAPACHE_DERBY_NETWORKConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(APACHE_DERBY_NETWORK); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(APACHE_DERBY_NETWORK); 
         helpTestConnectorBinding(ct, "APACHE_DERBY_NETWORK"); //$NON-NLS-1$
     }
     
@@ -271,7 +271,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateSECURE_DATA_SOURCEConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(SECURE_DATA_SOURCE); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(SECURE_DATA_SOURCE); 
         helpTestConnectorBinding(ct, "SECURE_DATA_SOURCE"); //$NON-NLS-1$
     }
     
@@ -283,7 +283,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateSOAPConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(SOAP); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(SOAP); 
         helpTestConnectorBinding(ct, "SOAP"); //$NON-NLS-1$
     }
     
@@ -295,7 +295,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateXML_FILEConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(XML_FILE); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(XML_FILE); 
         helpTestConnectorBinding(ct, "XML_FILE"); //$NON-NLS-1$
     }
     
@@ -307,7 +307,7 @@ public class ConnectorBindingCreationTest extends TestCase {
      */
     public void testCreateXML_HTTPConnectorBinding() throws Exception {
         
-        ComponentType ct = config.getComponentType(XML_HTTP); //$NON-NLS-1$
+        ComponentType ct = config.getComponentType(XML_HTTP); 
         helpTestConnectorBinding(ct, "XML_HTTP"); //$NON-NLS-1$
     }
     

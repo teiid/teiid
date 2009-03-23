@@ -146,8 +146,7 @@ public class TestSocketServerInstanceImpl extends TestCase {
 			createInstance(channel);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			e.printStackTrace();
-			assertEquals("Handshake failed due to version mismatch -- Client Version: 6.0, Server Version: foo", e.getMessage()); //$NON-NLS-1$
+			assertTrue(e.getMessage().startsWith("Handshake failed due to version mismatch")); //$NON-NLS-1$
 		}
 	}
 
