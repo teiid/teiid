@@ -51,7 +51,7 @@ public class TestConnectorShell extends CommandShellTest {
         connectorShell = new ConnectorShell(commandTarget);
         connectorShell.setSilent(true);
         connectorShell.setPrintStackTraceOnException(false);
-        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); //$NON-NLS-1$
+        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); 
     }
 
     public void testLoad() {
@@ -60,7 +60,7 @@ public class TestConnectorShell extends CommandShellTest {
     }
     
     private String loadLoopBackConnector() {
-        return connectorShell.execute("load com.metamatrix.connector.loopback.LoopbackConnector partssupplier/PartsSupplier.vdb"); //$NON-NLS-1$  //$NON-NLS-2$
+        return connectorShell.execute("load com.metamatrix.connector.loopback.LoopbackConnector partssupplier/PartsSupplier.vdb"); //$NON-NLS-1$  
     }
     
     private void start() {
@@ -89,7 +89,7 @@ public class TestConnectorShell extends CommandShellTest {
     }
     
     private void setScriptFile(String fileName) {
-        connectorShell.execute("setScriptFile " + UnitTestUtil.getTestDataPath() + File.separator + fileName); //$NON-NLS-1$ //$NON-NLS-2$
+        connectorShell.execute("setScriptFile " + UnitTestUtil.getTestDataPath() + File.separator + fileName); //$NON-NLS-1$ 
     }
     
     public void testCallingScriptFromAnotherScriptFile() {
@@ -119,25 +119,25 @@ public class TestConnectorShell extends CommandShellTest {
     }
     
     public void testSetProperty() {
-        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); //$NON-NLS-1$
+        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); 
         setScriptFile();
         String result = connectorShell.execute("run testSetProperty"); //$NON-NLS-1$
-        assertEquals("", result); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("", result); //$NON-NLS-1$ 
     }
     
     public void testSetPropertyAfterConnectorHostStart() {
-        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); //$NON-NLS-1$
+        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); 
         setScriptFile();
         start();
         String result = connectorShell.execute("run testSetPropertyAfterConnectorHostStart"); //$NON-NLS-1$
-        assertEquals("", result); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("", result); //$NON-NLS-1$ 
     }
     
     public void testLoadingClearsProperties() {
-        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); //$NON-NLS-1$
+        connectorShell.setDefaultFilePath(UnitTestUtil.getTestDataPath() + File.separator); 
         setScriptFile();
         String result = connectorShell.execute("run testLoadingClearsProperties"); //$NON-NLS-1$
-        assertEquals("", result); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("", result); //$NON-NLS-1$ 
     }
     
     public void testRunAllTestsWithoutSetup() {
@@ -156,7 +156,7 @@ public class TestConnectorShell extends CommandShellTest {
     }
     
     public void testInvokingAsCommandLine() {
-        ConnectorShell.main(new String[] {"quit"});         //$NON-NLS-1$
+        new ConnectorShell(new ConnectorShellCommandTarget()).run(new String[] {"quit"}, UnitTestUtil.getTestScratchPath() + "/connector_shell.log"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     

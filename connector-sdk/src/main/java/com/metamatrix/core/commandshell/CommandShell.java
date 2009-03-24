@@ -52,11 +52,7 @@ public class CommandShell implements Cloneable {
     private static final String JAVA_LANG_PREFIX = "java.lang."; //$NON-NLS-1$
 
     
-    public final static String DEFAULT_LOG_FILE = "..\\log\\command_shell.log"; //$NON-NLS-1$
-    
-    private static final String PROPERTY_LOG_CONSOLE = "metamatrix.log.console"; //$NON-NLS-1$
-
-    
+    public final static String DEFAULT_LOG_FILE = "../log/command_shell.log"; //$NON-NLS-1$
     
     private CommandTarget commandTarget;
     private boolean exceptionHandlingOn = false;
@@ -113,8 +109,8 @@ public class CommandShell implements Cloneable {
     /**
      * Start reading commands from standard input.
      */
-    public void run(String[] args) {
-        redirectLogging();
+    public void run(String[] args, String logFile) {
+        redirectLogging(logFile);
         
         
         writeln(CorePlugin.Util.getString("CommandShell.Started")); //$NON-NLS-1$
@@ -142,9 +138,9 @@ public class CommandShell implements Cloneable {
     }
 
     
-    private void redirectLogging() {
+    private void redirectLogging(String logFile) {
         //add a listener that writes to a file
-        File file = new File(DEFAULT_LOG_FILE);
+        File file = new File(logFile);
 		FileLogWriter flw = new FileLogWriter(file);
 
         PlatformLog logger = new PlatformLog();

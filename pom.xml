@@ -12,6 +12,9 @@
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
+	<scm>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/branches/6.0.x</developerConnection>
+	</scm>
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License</name>
