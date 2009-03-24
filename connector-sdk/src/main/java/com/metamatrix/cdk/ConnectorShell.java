@@ -29,6 +29,8 @@ import com.metamatrix.core.commandshell.CommandShell;
  * Command line utility to execute queries on a connector.
  */
 public class ConnectorShell extends CommandShell {
+	
+	
 
     public ConnectorShell(IConnectorHost host) {
         super(new ConnectorShellCommandTarget(host));
@@ -41,7 +43,7 @@ public class ConnectorShell extends CommandShell {
     public static void main(String[] args) {
         System.out.println("Starting"); //$NON-NLS-1$
         
-        new ConnectorShell(new ConnectorShellCommandTarget()).run(args);
+        new ConnectorShell(new ConnectorShellCommandTarget()).run(args, DEFAULT_LOG_FILE);
     }
     
     protected boolean showHelpFor(String methodName) {

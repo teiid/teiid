@@ -25,6 +25,7 @@ package com.metamatrix.core.commandshell;
 import junit.framework.TestCase;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.StringUtilities;
+import com.metamatrix.core.util.UnitTestUtil;
 
 public class TestShell extends TestCase {
 
@@ -36,7 +37,7 @@ public class TestShell extends TestCase {
 
     public void testInvalidMethodNameViaRun() {
         try {
-            shell.run(new String[] {"foo"}); //$NON-NLS-1$
+            shell.run(new String[] {"foo"}, UnitTestUtil.getTestScratchPath() + "/connector_shell.log"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (MetaMatrixRuntimeException e) {
             assertEquals( "Could not find method 'com.metamatrix.core.commandshell.FakeCommandTarget.foo'.", e.getMessage() ); //$NON-NLS-1$
         }

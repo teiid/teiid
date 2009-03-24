@@ -12,6 +12,9 @@
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
+	<scm>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
+	</scm>
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License</name>
@@ -456,4 +459,10 @@
 		<module>cache-jbosscache</module>
 		<module>server-installer</module>
 	</modules>
+	<distributionManagement>
+		<repository>
+			<id>repository.jboss.org</id>
+			<url>${jboss.repository.root}</url>
+		</repository>
+	</distributionManagement>
 </project>
