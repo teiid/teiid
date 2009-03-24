@@ -25,7 +25,7 @@
                                     
           <dependencySets>
             <dependencySet>
-              <useProjectArtifact>false</useProjectArtifact>
+              <useProjectArtifact>true</useProjectArtifact>
               <unpack>false</unpack>
               <useTransitiveDependencies>false</useTransitiveDependencies>
               <useDefaultExcludes>true</useDefaultExcludes>
