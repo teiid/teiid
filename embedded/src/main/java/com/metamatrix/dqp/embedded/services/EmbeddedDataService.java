@@ -72,9 +72,6 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
  * @since 4.3
  */
 public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataService {
-    private static final String SYSTEM_PHYSICAL_MODEL_CONNECTOR_BINDING_CLASSNAME = "com.metamatrix.dqp.embedded.services.DefaultIndexConnectorBinding";     //$NON-NLS-1$
-    private static final String CONNECTOR_MGR_IMPL = "com.metamatrix.dqp.internal.datamgr.impl.ConnectorManager"; //$NON-NLS-1$    
-    
     // Map of connector binding name to ConnectorID
     private Map connectorIDs = new HashMap();
 
@@ -542,16 +539,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @return
      * @since 4.3
      */
-    ConnectorBinding getSystemModelBinding() 
-        throws MetaMatrixComponentException{
-        try {
-            // may be we need to externalize the class name later here..
-            Class serviceClass = Class.forName(SYSTEM_PHYSICAL_MODEL_CONNECTOR_BINDING_CLASSNAME);            
-            return (ConnectorBinding) serviceClass.newInstance();
-        } catch (Exception e) {
-            DQPEmbeddedPlugin.logError(e, "DataService.Connector_failed_start", new Object[] {"SystemPhysical"}); //$NON-NLS-1$ //$NON-NLS-2$
-            throw new MetaMatrixComponentException(e);
-        }          
+    ConnectorBinding getSystemModelBinding() {
+        return new DefaultIndexConnectorBinding();          
     }    
         
     /**
@@ -590,9 +579,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             }
             
             ClassLoader classLoader = new URLFilteringClassLoader(urlPath.toArray(new URL[urlPath.size()]), Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
-            Class cmgrImplClass = classLoader.loadClass(CONNECTOR_MGR_IMPL);
             
-            ConnectorManager cm = (ConnectorManager)cmgrImplClass.newInstance();
+            ConnectorManager cm = new ConnectorManager();
             cm.setClassloader(classLoader);
             return cm;
         } catch (Exception e) {
