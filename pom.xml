@@ -458,4 +458,10 @@
 		<module>cache-jbosscache</module>
 		<module>server-installer</module>
 	</modules>
+	<distributionManagement>
+		<repository>
+			<id>repository.jboss.org</id>
+			<url>${jboss.repository.root}</url>
+		</repository>
+	</distributionManagement>
 </project>
