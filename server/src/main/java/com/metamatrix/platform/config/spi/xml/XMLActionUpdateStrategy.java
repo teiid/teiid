@@ -89,7 +89,9 @@ import com.metamatrix.common.config.model.ConfigurationModel;
 import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
 import com.metamatrix.common.config.model.PropertyValidations;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.namedobject.BaseID;
+import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.util.Assertion;
@@ -2037,8 +2039,6 @@ public class XMLActionUpdateStrategy  {
     									ComponentType type,
     									ConfigurationModelContainerImpl config,
     									String principal) throws InvalidPropertyValueException, ConfigurationException {
-// 		System.out.println("STRATEGY: Process Property Changes 5 " + propName + " value: " + propValue );
-
            validateProperty.isPropertyValid(propName, propValue);
 
             if (propValue != null && propValue.trim().length() > 0 &&
@@ -2046,28 +2046,24 @@ public class XMLActionUpdateStrategy  {
                 ! CryptoUtil.isValueEncrypted(propValue)) {
 	            char[] pwd = null;
 	            try {
-//		System.out.println("STRATEGY: Process Property Changes 5a" );
-
 	            	propValue = CryptoUtil.getCryptor().encrypt(propValue);
 	            } catch ( CryptoException e ) {
 	                throw new InvalidPropertyValueException(e, ConfigMessages.CONFIG_0108, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0108));
 	            }
             }
 
-//		System.out.println("STRATEGY: Process Property Changes 5b " + propName + " value: " + propValue );
-
             if (operation == ConfigurationObjectEditor.ADD) {
+            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "adding", propName, "with value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
                 ConfigurationObjectEditorHelper.addProperty(object, propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.SET) {
+            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "setting", propName, "to value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
                 ConfigurationObjectEditorHelper.setProperty(object, propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.REMOVE) {
+            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "removing", propName); //$NON-NLS-1$
             	ConfigurationObjectEditorHelper.removeProperty(object, propName);
-
             }
-// 		System.out.println("STRATEGY: Process Property Changes 6" );
-
     }
 
     /**
